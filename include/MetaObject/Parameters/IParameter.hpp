@@ -14,109 +14,134 @@ THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
 IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-https://github.com/dtmoodie/parameters
+https://github.com/dtmoodie/MetaObject
 */
 #pragma once
+#include "MetaObject/Detail/Export.hpp"
+#include "MetaObject/Detail/TypeInfo.h"
 
-#include "Parameter_def.hpp"
+#include <boost/core/noncopyable.hpp>
+#include <boost/parameter/name.hpp>
+
 #include <string>
-#include <parameters/LokiTypeInfo.h>
 #include <mutex>
-#include <signals/signal.h>
-namespace cv
+#include <memory>
+namespace mo
 {
-    namespace cuda
-    {
-        class Stream;
-    }
-}
-namespace Signals
-{
-    class context;
-    class connection;
-}
-namespace Parameters
-{
+    class Context;
+	class Connection;
+	class ISignal;
+	template<class T> class TypedSignal;
+	class TypeInfo;
+
     enum ParameterType
     {
-        kNone = 0,
-        kInput = 1,
-        kOutput = 2,
-        kState = 4,
-        kControl = 8,
-        kBuffer = 16
+        None_e = 0,
+        Input_e = 1,
+        Output_e = 2,
+        State_e = 4,
+        Control_e = 8,
+        Buffer_e = 16
     };
-    class PARAMETER_EXPORTS Parameter
+
+
+	
+
+    class MO_EXPORTS IParameter: boost::noncopyable
     {
     public:
-        typedef std::shared_ptr<Parameter> Ptr;
-        typedef std::function<void(Signals::context*, Parameter*)> update_f;
-        typedef std::function<void(Parameter*)> delete_f;
-        Parameter(const std::string& name_ = "", ParameterType flags_ = kControl);
-        virtual ~Parameter();
-        
-        Parameter*         SetName(const std::string& name_);
-        Parameter*         SetTreeRoot(const std::string& tree_root_);
-        Parameter*         SetContext(Signals::context* ctx);
-        virtual Parameter* SetTimeIndex(long long index_ = -1);
+        typedef std::shared_ptr<IParameter> Ptr;
+        typedef std::function<void(Context*, IParameter*)> update_f;
+        typedef std::function<void(IParameter*)> delete_f;
 
-        const std::string& GetName() const;
-        const std::string  GetTreeName() const;
-        const std::string& GetTreeRoot() const;
-        long long          GetTimeIndex() const;
-        Signals::context*  GetContext() const;
+		IParameter(const std::string& name_ = "", ParameterType flags_ = Control_e, long long ts = -1, Context* ctx = nullptr);
+
+        virtual ~IParameter();
+
+        IParameter*         SetName(const std::string& name_);
+		IParameter*         SetTreeRoot(const std::string& tree_root_);
+        IParameter*         SetContext(Context* ctx);
+        virtual IParameter* SetTimestamp(long long ts_ = -1);
+
+        const std::string& GetName()      const;
+        const std::string  GetTreeName()  const;
+        const std::string& GetTreeRoot()  const;
+        long long          GetTimestamp() const;
+        Context*           GetContext()   const;
+
+		virtual void Subscribe();
+		virtual void Unsubscribe();
+		bool HasSubscriptions() const;
 
         // Implemented in concrete type
-        virtual Loki::TypeInfo     GetTypeInfo() const = 0;
+        virtual TypeInfo     GetTypeInfo() const = 0;
 
         // Update with the values from another parameter
-        virtual bool        Update(Parameter* other, Signals::context* ctx = nullptr);
-        virtual Parameter*  DeepCopy() const = 0;
+        virtual bool         Update(IParameter* other);
+        virtual IParameter*  DeepCopy() const = 0;
 
-        std::shared_ptr<Signals::connection> RegisterUpdateNotifier(update_f f);
-        std::shared_ptr<Signals::connection> RegisterDeleteNotifier(delete_f f);
+        std::shared_ptr<Connection> RegisterUpdateNotifier(update_f f);
+        std::shared_ptr<Connection> RegisterDeleteNotifier(delete_f f);
 
         // Sets changed to true and emits update signal
-        void OnUpdate(Signals::context* ctx = nullptr);
-        Parameter* Commit(long long index_ = -1, Signals::context* ctx = nullptr);
+        void OnUpdate(Context* ctx = nullptr);
+        IParameter* Commit(long long timestamp_= -1, Context* ctx = nullptr);
         
         template<class Archive> void serialize(Archive& ar);
-        template<typename T> T* GetData(long long time_index_ = -1);
+        
+		
+		template<typename T> T*   GetDataPtr(long long ts_ = -1, Context* ctx = nullptr);
+		template<typename T> T    GetData(long long ts_ = -1, Context* ctx = nullptr);
+		template<typename T> bool GetData(T& value, long long ts = -1, Context* ctx = nullptr);
 
         virtual std::recursive_mutex& mtx();
 
-        ParameterType flags;
-        bool changed;
-        unsigned short subscribers;
-        Signals::typed_signal_base<void(Signals::context*, Parameter*)> update_signal;
-        Signals::typed_signal_base<void(Parameter*)> delete_signal;
-    protected:
-        std::string          _name;
-        std::string          _tree_root;
-        long long            _current_time_index;
-        std::recursive_mutex _mtx;
-        Signals::context*    _ctx; // Context of object that owns this parameter
+		void SetFlags(ParameterType flags_);
+		void AppendFlags(ParameterType flags_);
+		bool CheckFlags(ParameterType flag);
+
+
+        bool modified;
+		std::weak_ptr<TypedSignal<void(Context*, IParameter*)>> update_signal;
+		std::weak_ptr<TypedSignal<void(IParameter*)>>           delete_signal;
+	protected:
+		std::string          _name;
+		std::string          _tree_root;
+		long long            _timestamp;
+		std::recursive_mutex _mtx;
+		Context*             _ctx; // Context of object that owns this parameter
+		int                  _subscribers;
+		ParameterType        _flags;
     };
 
-    struct ParameterInfo
-    {
-        Loki::TypeInfo data_type;
-        std::string name;
-        std::string tooltip;
-        std::string description;
-        ParameterType type_flags;
-    };
-
-    template<typename Archive> void Parameter::serialize(Archive& ar)
+    template<typename Archive> void IParameter::serialize(Archive& ar)
     {
         ar(_name);
         ar(_tree_root);
-        ar(_current_time_index);
-        ar(flags);
+        ar(_timestamp);
+        ar(_flags);
     }
+
     template<typename T> class ITypedParameter;
-    template<typename T> T* Parameter::GetData(long long time_index_)
+    
+	template<typename T> T* IParameter::GetDataPtr(long long ts_, Context* ctx)
     {
-        return static_cast<ITypedParameter<T>*>(this)->GetData(time_index_);
+		if (auto typed = dynamic_cast<ITypedParameter<T>*>(this))
+			return typed->GetDataPtr(ts_, ctx);
+		return nullptr;
     }
+
+	template<typename T> T IParameter::GetData(long long ts_, Context* ctx)
+	{
+		if (auto typed = dynamic_cast<ITypedParameter<T>*>(this))
+			return typed->GetData(ts_, ctx);
+		throw "Bad cast. Requested " << typeid(T).name() << " actual " << GetTypeInfo().name();
+	}
+
+	template<typename T> bool GetData(T& value, long long ts, Context* ctx)
+	{
+		if (auto typed = dynamic_cast<ITypedParameter<T>*>(this))
+			return typed->GetData(value, ts_, ctx);
+		return false;
+	}
 }

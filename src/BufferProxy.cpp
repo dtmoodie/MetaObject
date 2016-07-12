@@ -1,14 +1,14 @@
-#include "parameters/buffers/BufferProxy.hpp"
+#include "MetaObject/Buffers/BufferProxy.hpp"
 #include "parameters/Parameter.hpp"
-using namespace Parameters;
-using namespace Parameters::Buffer;
+using namespace mo;
+using namespace mo::Buffer;
 
 ParameterProxyBufferFactory* ParameterProxyBufferFactory::Instance()
 {
     static ParameterProxyBufferFactory inst;
     return &inst;
 }
-void ParameterProxyBufferFactory::RegisterFunction(Loki::TypeInfo type, const create_buffer_f& func, buffer_type buffer_type_)
+void ParameterProxyBufferFactory::RegisterFunction(TypeInfo type, const create_buffer_f& func, buffer_type buffer_type_)
 {
     _registered_buffer_factories[type][buffer_type_] = func;
 }

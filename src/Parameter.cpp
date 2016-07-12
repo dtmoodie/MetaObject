@@ -16,108 +16,158 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 https://github.com/dtmoodie/parameters
 */
-#include "parameters/Parameter.hpp"
+#include "MetaObject/Parameters/IParameter.hpp"
+#include <algorithm>
 
+using namespace mo;
 
-using namespace Parameters;
-
-Parameter::Parameter(const std::string& name_, ParameterType type_):
+IParameter::IParameter(const std::string& name_, ParameterType flags_, long long ts, Context* ctx) :
     _name(name_), 
-    flags(type_), 
+    _flags(flags_), 
     changed(false), 
-    subscribers(0), 
-    _current_time_index(-1),
-    _ctx(nullptr)
+    _subscribers(0), 
+    _timestamp(ts),
+    _ctx(ctx)
 {
     
 }
 
-Parameter::~Parameter()
+IParameter::~IParameter()
 {
-    delete_signal(this);
+	std::shared_ptr<TypedSignal<void(IParameter*)>> sig(delete_signal);
+	//if(sig)
+		//(*sig)(this);
 }
 
 
 
-Parameter* Parameter::SetName(const std::string& name_)
+IParameter* IParameter::SetName(const std::string& name_)
 {
     _name = name_;
     return this;
 }
 
-Parameter* Parameter::SetTreeRoot(const std::string& treeRoot_)
+IParameter* IParameter::SetTreeRoot(const std::string& treeRoot_)
 {
     _tree_root = treeRoot_;
     return this;
 }
 
-Parameter* Parameter::SetTimeIndex(long long index)
+IParameter* IParameter::SetTimestamp(long long ts)
 {
-    _current_time_index = index;
+    _timestamp = ts;
     return this;
 }
 
-Parameter* Parameter::SetContext(Signals::context* ctx)
+IParameter* IParameter::SetContext(Context* ctx)
 {
     _ctx = ctx;
     return this;
 }
 
-const std::string& Parameter::GetName() const
+const std::string& IParameter::GetName() const
 {
     return _name;
 }
 
-const std::string& Parameter::GetTreeRoot() const
+const std::string& IParameter::GetTreeRoot() const
 {
     return _tree_root;
 }
 
-const std::string Parameter::GetTreeName() const
+const std::string IParameter::GetTreeName() const
 {
     return _tree_root + ":" + _name;
 }
 
-long long Parameter::GetTimeIndex() const
+long long IParameter::GetTimestamp() const
 {
-    return _current_time_index;
+    return _timestamp;
 }
 
-Signals::context* Parameter::GetContext() const
+Context* IParameter::GetContext() const
 {
     return _ctx;
 }
 
-std::shared_ptr<Signals::connection> Parameter::RegisterUpdateNotifier(std::function<void(Signals::context*, Parameter*)> f)
+std::shared_ptr<Connection> IParameter::RegisterUpdateNotifier(update_f f)
 {
-    return update_signal.connect(f);
+	std::shared_ptr<TypedSignal<void(Context*, IParameter*)>> sig(update_signal);
+	if (sig)
+	{
+
+	}
+	return std::shared_ptr<Connection>();
 }
 
-std::shared_ptr<Signals::connection> Parameter::RegisterDeleteNotifier(std::function<void(Parameter*)> f)
+std::shared_ptr<Connection> IParameter::RegisterDeleteNotifier(delete_f f)
 {
-    return delete_signal.connect(f);
+	std::shared_ptr<TypedSignal<void(IParameter*)>> sig(delete_signal);
+	if (sig)
+	{
+
+	}
+	return std::shared_ptr<Connection>();
 }
 
-bool Parameter::Update(Parameter* other, Signals::context* ctx)
+bool IParameter::Update(IParameter* other)
 {
     return false;
 }
 
-void Parameter::OnUpdate(Signals::context* ctx)
+void IParameter::OnUpdate(Context* ctx)
 {
     changed = true;
-    update_signal(ctx, this);
+	if (!update_signal.expired())
+	{
+		std::shared_ptr<TypedSignal<void(Context*, IParameter*)>> sig(update_signal);
+		//(*sig)(ctx, this);
+	}
+	
 }
 
-Parameter* Parameter::Commit(long long index_, Signals::context* ctx)
+IParameter* IParameter::Commit(long long index_, Context* ctx)
 {
-    _current_time_index = index_;
+    _timestamp= index_;
     changed = true;
-    update_signal(ctx, this);
+	if (!update_signal.expired())
+	{
+		std::shared_ptr<TypedSignal<void(Context*, IParameter*)>> sig(update_signal);
+		//(*sig)(ctx, this);
+	}
     return this;
 }
 
-std::recursive_mutex& Parameter::mtx()
+std::recursive_mutex& IParameter::mtx()
 {
     return _mtx;
+}
+void IParameter::Subscribe()
+{
+	--_subscribers;
+	_subscribers = std::max(0, _subscribers);
+}
+
+void IParameter::Unsubscribe()
+{
+	++_subscribers;
+}
+
+bool IParameter::HasSubscriptions() const
+{
+	return _subscribers != 0;
+}
+void IParameter::SetFlags(ParameterType flags_)
+{
+	_flags = flags_;
+}
+
+void IParameter::AppendFlags(ParameterType flags_)
+{
+	_flags = ParameterType(_flags | flags_);
+}
+
+bool IParameter::CheckFlags(ParameterType flag)
+{
+	return _flags & flag;
 }

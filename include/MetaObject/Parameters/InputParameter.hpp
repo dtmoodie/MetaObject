@@ -17,21 +17,21 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/parameters
 */
 #pragma once
-#include "Parameter_def.hpp"
-#include "Parameter.hpp"
-#include "LokiTypeInfo.h"
+#include "MetaObject/Detail/TypeInfo.h"
+#include "MetaObject/Detail/Export.hpp"
 
 #include <functional>
 #include <string>
-namespace Parameters
+namespace mo
 {
-    class PARAMETER_EXPORTS InputParameter
+    class MO_EXPORTS InputParameter
     {
     public:
         typedef std::function<bool(Parameter*)> qualifier_f;
         typedef std::shared_ptr<InputParameter> Ptr;
-        virtual bool SetInput(const std::string& name_) = 0;
-        virtual bool SetInput(Parameter*param) = 0;
+
+        
+        virtual bool SetInput(Parameter* param) = 0;
         virtual Parameter* GetInput() = 0;
         virtual bool AcceptsInput(Parameter* param) = 0;
         virtual bool AcceptsType(const Loki::TypeInfo& type) = 0;

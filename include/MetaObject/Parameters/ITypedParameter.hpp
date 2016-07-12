@@ -1,3 +1,4 @@
+#pragma once
 /*
 Copyright (c) 2015 Daniel Moodie.
 All rights reserved.
@@ -16,65 +17,36 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 https://github.com/dtmoodie/parameters
 */
-#pragma once
+#include "IParameter.hpp"
 
-#include "Parameter.hpp"
-namespace cv
+namespace mo
 {
-    namespace cuda
-    {
-        class Stream;
-    }
-}
-namespace Parameters
-{
-    template<typename T> class PARAMETER_EXPORTS ITypedParameter : public Parameter
+    template<typename T> class MO_EXPORTS ITypedParameter : public IParameter
     {
     public:
         typedef std::shared_ptr<ITypedParameter<T>> Ptr;
         
-        ITypedParameter(const std::string& name, ParameterType flags = kControl);
+        ITypedParameter(const std::string& name, ParameterType flags = Control_e, long long ts = -1, Context* ctx);
 
         // The call is thread safe but the returned pointer may be modified by a different thread
-        // Time index is the index for which you are requesting data
+        // ts is the timestamp for which you are requesting data, -1 indicates newest
         // ctx is the context of the data request, such as the thread of the object requesting the data
-        virtual T*   GetData(long long time_index = -1, Signals::context* ctx = nullptr) = 0;
+        virtual T*   GetDataPtr(long long ts = -1, Context* ctx = nullptr) = 0;
+		
         // Copies data into value
         // Time index is the index for which you are requesting data
         // ctx is the context of the data request, such as the thread of the object requesting the data
-        virtual bool GetData(T& value, long long time_index = -1, Signals::context* ctx = nullptr) = 0;
+		virtual T    GetData(long long ts = -1, Context* ctx = nullptr) = 0;
+        virtual bool GetData(T& value, long long ts = -1, Context* ctx = nullptr) = 0;
         
         // Update data, will call update_signal and set changed to true
-        virtual ITypedParameter<T>* UpdateData(T& data_,       long long time_index = -1, Signals::context* ctx = nullptr) = 0;
-        virtual ITypedParameter<T>* UpdateData(const T& data_, long long time_index = -1, Signals::context* ctx = nullptr) = 0;
-        virtual ITypedParameter<T>* UpdateData(T* data_,       long long time_index = -1, Signals::context* ctx = nullptr) = 0;
+        virtual ITypedParameter<T>* UpdateData(T& data_,       long long ts = -1, Context* ctx = nullptr) = 0;
+        virtual ITypedParameter<T>* UpdateData(const T& data_, long long ts = -1, Context* ctx = nullptr) = 0;
+        virtual ITypedParameter<T>* UpdateData(T* data_,       long long ts = -1, Context* ctx = nullptr) = 0;
 
-        virtual Loki::TypeInfo GetTypeInfo() const;
+        virtual TypeInfo GetTypeInfo() const;
 
-        virtual bool Update(Parameter* other, Signals::context* other_ctx = nullptr);
-
+        virtual bool Update(IParameter* other, Signals::context* other_ctx = nullptr);
     };
-
-    template<typename T> ITypedParameter<T>::ITypedParameter(const std::string& name, ParameterType flags) :
-            Parameter(name, flags) 
-    {
-    }
-
-    template<typename T> Loki::TypeInfo ITypedParameter<T>::GetTypeInfo() const
-    {
-        return Loki::TypeInfo(typeid(T));
-    }
-
-    template<typename T> bool ITypedParameter<T>::Update(Parameter* other, Signals::context* other_ctx)
-    {
-        auto typedParameter = dynamic_cast<ITypedParameter<T>*>(other);
-        if (typedParameter)
-        {
-            std::lock_guard<std::recursive_mutex> lock(typedParameter->mtx());
-            UpdateData(typedParameter->GetData(), other->GetTimeIndex(), other_ctx);
-            OnUpdate(other_ctx);
-            return true;
-        }
-        return false;
-    }
 }
+#include "detail/ITypedParameterImpl.hpp"
