@@ -1,8 +1,7 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
-#include "MetaObject/Detail/TypeInfo.hpp"
+#include "MetaObject/Detail/TypeInfo.h"
 #include <functional>
-#include <map>
 #include <memory>
 namespace mo
 {
@@ -22,7 +21,7 @@ namespace mo
     class MO_EXPORTS ParameterFactory
     {
     public:
-        typedef std::function<Parameter*(void)> create_f;
+        typedef std::function<IParameter*(void)> create_f;
         static ParameterFactory* instance();
         
         // Each specialization of a parameter must have a unique type
@@ -30,11 +29,11 @@ namespace mo
         void RegisterConstructor(TypeInfo parameter_type, create_f function);
 
 		// Give datatype and parameter type enum
-        std::shared_ptr<Parameter> create(TypeInfo data_type, int parameter_type); 
+        std::shared_ptr<IParameter> create(TypeInfo data_type, int parameter_type); 
 		// Must give exact parameter type, such as TypedParameter<int>
-		std::shared_ptr<Parameter> create(TypeInfo parameter_type); 
+		std::shared_ptr<IParameter> create(TypeInfo parameter_type); 
     private:
-        std::map<Loki::TypeInfo, std::map<int, create_f>> _registered_constructors;
-        std::map<Loki::TypeInfo, create_f> _registered_constructors_exact;
+        struct impl;
+        std::shared_ptr<impl> pimpl;
     };
 }

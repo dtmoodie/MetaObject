@@ -24,7 +24,7 @@ using namespace mo;
 IParameter::IParameter(const std::string& name_, ParameterType flags_, long long ts, Context* ctx) :
     _name(name_), 
     _flags(flags_), 
-    changed(false), 
+    modified(false), 
     _subscribers(0), 
     _timestamp(ts),
     _ctx(ctx)
@@ -117,7 +117,7 @@ bool IParameter::Update(IParameter* other)
 
 void IParameter::OnUpdate(Context* ctx)
 {
-    changed = true;
+    modified = true;
 	if (!update_signal.expired())
 	{
 		std::shared_ptr<TypedSignal<void(Context*, IParameter*)>> sig(update_signal);
@@ -129,7 +129,7 @@ void IParameter::OnUpdate(Context* ctx)
 IParameter* IParameter::Commit(long long index_, Context* ctx)
 {
     _timestamp= index_;
-    changed = true;
+    modified = true;
 	if (!update_signal.expired())
 	{
 		std::shared_ptr<TypedSignal<void(Context*, IParameter*)>> sig(update_signal);

@@ -1,15 +1,16 @@
-#include "parameters/Demangle.hpp"
+#include "MetaObject/Parameters/Demangle.hpp"
+
 #include <map>
 
-using namespace Parameters;
-std::map<Loki::TypeInfo, const char*>& Registry()
+using namespace mo;
+std::map<TypeInfo, const char*>& Registry()
 {
-    static std::map<Loki::TypeInfo, const char*> inst;
+    static std::map<TypeInfo, const char*> inst;
     return inst;
 }
-std::string Demangle::TypeToName(Loki::TypeInfo type)
+std::string Demangle::TypeToName(TypeInfo type)
 {
-    std::map<Loki::TypeInfo, const char*>& reg = Registry();
+    std::map<TypeInfo, const char*>& reg = Registry();
     auto itr = reg.find(type);
     if(itr != reg.end())
     {
@@ -18,9 +19,9 @@ std::string Demangle::TypeToName(Loki::TypeInfo type)
     return type.name();
 }
 
-void Demangle::RegisterName(Loki::TypeInfo type, const char* name)
+void Demangle::RegisterName(TypeInfo type, const char* name)
 {
-    std::map<Loki::TypeInfo, const char*>& reg = Registry();
+    std::map<TypeInfo, const char*>& reg = Registry();
     auto itr = reg.find(type);
     if(itr == reg.end())
     {

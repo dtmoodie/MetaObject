@@ -9,20 +9,33 @@ set(link_libs "")
 set(Boost_required_components thread log log_setup)
 find_package(PythonLibs QUIET)
 if(PythonLibs_FOUND)
-  set(Boost_required_components "${Boost_required_components} python")
+  set(Boost_required_components "${Boost_required_components};python")
   list(APPEND link_libs "${PYTHON_LIBRAY}")
 endif()
 
+# ---------------------- External Dependencies ---------------------------------
+
+# ---------------------- Boost ---------------------------------
 find_package(Boost REQUIRED COMPONENTS ${Boost_required_components})
   include_directories(${Boost_INCLUDE_DIRS})
+  link_directories(${Boost_LIBRARY_DIR_DEBUG})
   IF(NOT WIN32)
     ADD_DEFINITIONS(-DBOOST_ALL_NO_LIB)
   ENDIF(NOT WIN32)
 
+# ---------------------- cereal ---------------------------------  
 find_package(cereal REQUIRED)
 if(cereal_FOUND)
   include_directories(${cereal_INCLUDE_DIRS})
 endif()
+
+# ---------------------- rcc ---------------------------------  
+SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+ADD_SUBDIRECTORY("dependencies/rcc")
+include_directories(${RCC_INCLUDE_DIRS})
+set_target_properties(RuntimeCompiler PROPERTIES FOLDER Dependencies)
+set_target_properties(RuntimeObjectSystem PROPERTIES FOLDER Dependencies)
+
 
 file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp")

@@ -20,128 +20,36 @@ https://github.com/dtmoodie/parameters
 #include "ITypedParameter.hpp"
 #include "InputParameter.hpp"
 
-namespace Parameters
+namespace mo
 {
     template<typename T> class TypedInputParameter : public ITypedParameter<T>, public InputParameter
     {
-        ITypedParameter<T>* input;
+    public:
+        TypedInputParameter(const std::string& name, std::function<bool(Parameter*)> qualifier_ = std::function<bool(Parameter*)>());
+        ~TypedInputParameter();
+
+        virtual bool SetInput(weak_ptr<IParameter> param);
+        std::weak_ptr<IParameter> GetInput();
+
+        virtual bool AcceptsInput(weak_ptr<IParameter> param) const;
+        virtual bool AcceptsType(TypeInfo type) const;
+
+        virtual T*   GetDataPtr(long long time_step = -1, Context* ctx = nullptr);
+        virtual T    GetData(long long ts = -1, Context* ctx = nullptr);
+        virtual bool GetData(T& value, long long ts = -1);
+
+        virtual void UpdateData(T& data_,       long long ts = -1, Context* ctx = nullptr);
+        virtual void UpdateData(const T& data_, long long ts = -1, Context* ctx = nullptr);
+        virtual void UpdateData(T* data_,       long long ts = -1, Context* ctx = nullptr);
+
+        virtual Loki::TypeInfo GetTypeInfo();
+        virtual IParameter::Ptr DeepCopy() const;
+    private:
+        std::shared_ptr<ITypedParameter<T>> input;
         std::shared_ptr<Signals::connection> inputConnection;
         std::shared_ptr<Signals::connection> deleteConnection;
-        virtual void onInputUpdate()
-        {
-            Parameter::OnUpdate(nullptr);
-        }
-        virtual void onInputDelete()
-        {
-            std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
-            input = nullptr;
-            Parameter::OnUpdate(nullptr);
-        }
-    public:
-        typedef std::shared_ptr<TypedInputParameter<T>> Ptr;
-
-        TypedInputParameter(const std::string& name, 
-            const std::string& tooltip = "", 
-            const std::function<bool(Parameter*)>& qualifier_ = std::function<bool(Parameter*)>()) :
-            ITypedParameter<T>(name, Parameter::ParameterType::Input, tooltip)
-        { 
-            qualifier = qualifier_;
-            input = nullptr;
-        }
-        ~TypedInputParameter()
-        {
-            if (input)
-                input->subscribers--;
-        }
-
-        virtual bool SetInput(const std::string& name_)
-        {
-            return false;
-        }
-
-        virtual bool SetInput(Parameter* param)
-        {
-            std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
-            if (param == nullptr)
-            {
-                if (input)
-                {
-                    input->subscribers--;
-                }
-                input = nullptr;
-                inputConnection.reset();
-                deleteConnection.reset();
-                Parameter::OnUpdate(nullptr);
-                return true;
-            }                
-            ITypedParameter<T>* castedParam = dynamic_cast<ITypedParameter<T>*>(param);
-            if(input)
-            {
-                input->subscribers--;
-            }
-            if (castedParam)
-            {
-                input = castedParam;
-                input->subscribers++;
-                inputConnection = castedParam->RegisterNotifier(std::bind(&TypedInputParameter<T>::onInputUpdate, this));
-                deleteConnection = castedParam->RegisterDeleteNotifier(std::bind(&TypedInputParameter<T>::onInputDelete, this));
-                Parameter::OnUpdate(nullptr);
-                return true;
-            }
-            return false;
-        }
-        Parameter* GetInput()
-        {
-            return input;
-        }
-
-        virtual bool AcceptsInput(Parameter* param)
-        {
-            if (qualifier)
-                return qualifier(param);
-            return Loki::TypeInfo(typeid(T)) == param->GetTypeInfo();
-        }
-
-        virtual bool AcceptsType(const Loki::TypeInfo& type)
-        {
-            return Loki::TypeInfo(typeid(T)) == type;
-        }
-        virtual T* Data(long long time_step = -1)
-        {
-            std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
-            if (input)
-                return input->Data(time_step);
-            return nullptr;
-        }
-        virtual bool GetData(T& value, long long time_step = -1)
-        {
-            std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
-            if (input)
-            {
-                return input->GetData(value, time_step);
-            }
-            return nullptr;
-        }
-        virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
-        {
-
-        }
-        virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
-        {
-
-        }
-        virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
-        {
-
-        }
-        virtual Loki::TypeInfo GetTypeInfo()
-        {
-            return Loki::TypeInfo(typeid(T));
-        }
-        virtual Parameter::Ptr DeepCopy() const
-        {
-            return Parameter::Ptr();
-        }
+        virtual void onInputUpdate();
+        virtual void onInputDelete();
     };
 
     template<typename T> class TypedInputParameterCopy : public MetaTypedParameter<T>, public InputParameter
@@ -253,108 +161,31 @@ namespace Parameters
     // IE int* myVar; 
     // auto typedParam = TypedInputParameterPtr(&myVar); // TypedInputParameter now updates myvar to point to whatever the
     // input variable is for typedParam.
-    template<typename T> class TypedInputParameterPtr : public MetaTypedParameter<T>, public InputParameter
+    template<typename T> class TypedInputParameterPtr : public InputParameter, public ITypedParameter<T>
     {
-        T** userVar; // Pointer to the user space pointer variable of type T
-        ITypedParameter<T>* input;
-        std::shared_ptr<Signals::connection> inputConnection;
-        std::shared_ptr<Signals::connection> deleteConnection;
-        virtual void onInputUpdate()
-        {
-            // The input variable has been updated, update user var
-            *userVar = input->Data();
-            Parameter::OnUpdate(nullptr);
-        }
-        virtual void onInputDelete()
-        {
-            // The input variable has been updated, update user var
-            input = nullptr;
-            inputConnection.reset();
-            deleteConnection.reset();
-            Parameter::OnUpdate(nullptr);
-        }
     public:
         typedef std::shared_ptr<TypedInputParameterPtr<T>> Ptr;
-        static Ptr create(T** userVar_)
-        {
-            return Ptr(new TypedInputParameterPtr(userVar_));
-        }
-        TypedInputParameterPtr(const std::string& name, T** userVar_, ParameterType type = kControl) :
-            userVar(userVar_)
-        {
-            input = nullptr;
-        }
-        
-        virtual bool SetInput(const std::string& name_)
-        {
-            return false;
-        }
-
-        virtual bool SetInput(Parameter* param)
-        {
-            if (param == nullptr)
-            {
-                if (input)
-                    --input->subscribers;
-                input = nullptr;
-                inputConnection.reset();
-                deleteConnection.reset();
-                Parameter::OnUpdate(nullptr);
-                return true;
-            }
-            typename ITypedParameter<T>::Ptr castedParam = std::dynamic_pointer_cast<ITypedParameter<T>>(param);
-            if (castedParam)
-            {
-                input = castedParam;
-                inputConnection.reset();
-                inputConnection = castedParam->RegisterNotifier(std::bind(&TypedInputParameterPtr<T>::onInputUpdate, this));
-                deleteConnection = castedParam->RegisterDeleteNotifier(std::bind(&TypedInputParameterPtr<T>::onInputDelete, this));
-                *userVar = input->Data();
-                return true;
-            }
-            return false;
-        }
-        std::shared_ptr<Parameter> GetInput()
-        {
-            return input;
-        }
-
-        virtual bool AcceptsInput(const Parameter::Ptr param)
-        {
-            if (qualifier)
-                return qualifier(param.get());
-            return Loki::TypeInfo(typeid(T)) == param->GetTypeInfo();
-        }
-
-        virtual bool AcceptsType(const Loki::TypeInfo& type)
-        {
-            return Loki::TypeInfo(typeid(T)) == type;
-        }
-        virtual T* Data()
-        {
-            if (input)
-                return input->Data();
-            return nullptr;
-        }
-        virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
-        {
-
-        }
-        virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
-        {
-
-        }
-        virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
-        {
-
-        }
-        virtual Loki::TypeInfo GetTypeInfo()
-        {
-            return Loki::TypeInfo(typeid(T));
-        }
-        virtual Parameter::Ptr DeepCopy() const
-        {
-            return Parameter::Ptr();
-        }
+        TypedInputParameterPtr(const std::string& name, T** userVar_, ParameterType type = Control_e);
+        virtual bool SetInput(std::shared_ptr<IParameter> param);
+        std::shared_ptr<IParameter> GetInput();
+        virtual bool AcceptsInput(std::weak_ptr<IParameter> param) const;
+        virtual bool AcceptsType(TypeInfo type) const;
+        virtual T* GetDataPtr(long long ts, Context* ctx = nullptr);
+        T GetData(long long ts = -1, Context* ctx = nullptr);
+        bool GetData(T& value, long long ts = -1, Context* ctx = nullptr);
+        virtual void UpdateData(T& data_, long long time_index = -1, Context* ctx = nullptr);
+        virtual void UpdateData(const T& data_, long long time_index = -1, Context* ctx = nullptr);
+        virtual void UpdateData(T* data_, long long time_index = -1, Context* ctx = nullptr);
+        virtual TypeInfo GetTypeInfo() const;
+        virtual IParameter::Ptr DeepCopy() const;
+    private:
+        T** userVar; // Pointer to the user space pointer variable of type T
+        std::shared_ptr<ITypedParameter<T>> input;
+        std::shared_ptr<Signals::connection> inputConnection;
+        std::shared_ptr<Signals::connection> deleteConnection;
+        virtual void onInputUpdate();
+        virtual void onInputDelete();
     };
 }
+#include "MetaObject/Parameters/detail/TypedInputParameterImpl.hpp"
+#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"

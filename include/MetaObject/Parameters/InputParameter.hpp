@@ -22,24 +22,24 @@ https://github.com/dtmoodie/parameters
 
 #include <functional>
 #include <string>
+#include <memory>
 namespace mo
 {
+    class IParameter;
     class MO_EXPORTS InputParameter
     {
     public:
-        typedef std::function<bool(Parameter*)> qualifier_f;
+        typedef std::function<bool(std::weak_ptr<IParameter>)> qualifier_f;
         typedef std::shared_ptr<InputParameter> Ptr;
 
-        
-        virtual bool SetInput(Parameter* param) = 0;
-        virtual Parameter* GetInput() = 0;
-        virtual bool AcceptsInput(Parameter* param) = 0;
-        virtual bool AcceptsType(const Loki::TypeInfo& type) = 0;
-        virtual void SetQualifier(const std::function<bool(Parameter*)>& f)
+        virtual bool SetInput(std::shared_ptr<IParameter> param) = 0;
+        virtual std::weak_ptr<IParameter> GetInput() = 0;
+        virtual bool AcceptsInput(std::weak_ptr<IParameter> param) const = 0;
+        virtual bool AcceptsType(TypeInfo type) const = 0;
+        virtual void SetQualifier(std::function<bool(std::weak_ptr<IParameter>)> f)
         {
             qualifier = f;
         }
-        virtual Loki::TypeInfo GetTypeInfo() = 0;
     protected:
         qualifier_f qualifier;
     };

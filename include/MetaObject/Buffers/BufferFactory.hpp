@@ -1,7 +1,9 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
 #include "MetaObject/Detail/TypeInfo.h"
-
+#include <map>
+#include <functional>
+#include <memory>
 namespace mo
 {
 	class IParameter;
@@ -23,7 +25,7 @@ namespace mo
 
 			static BufferFactory* Instance();
 		private:
-			std::map<Loki::TypeInfo, std::map<buffer_type, create_buffer_f>> _registered_buffer_factories;
+			std::map<TypeInfo, std::map<buffer_type, create_buffer_f>> _registered_buffer_factories;
 		};
 	}
 }

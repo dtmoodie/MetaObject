@@ -1,28 +1,26 @@
-#include "MetaObject/Buffers/BufferProxy.hpp"
-#include "parameters/Parameter.hpp"
+#include "MetaObject/Buffers/BufferFactory.hpp"
+#include "MetaObject/Parameters/IParameter.hpp"
+
 using namespace mo;
 using namespace mo::Buffer;
 
-ParameterProxyBufferFactory* ParameterProxyBufferFactory::Instance()
+BufferFactory* BufferFactory::Instance()
 {
-    static ParameterProxyBufferFactory inst;
+    static BufferFactory inst;
     return &inst;
 }
-void ParameterProxyBufferFactory::RegisterFunction(TypeInfo type, const create_buffer_f& func, buffer_type buffer_type_)
+void BufferFactory::RegisterFunction(TypeInfo type, const create_buffer_f& func, buffer_type buffer_type_)
 {
     _registered_buffer_factories[type][buffer_type_] = func;
 }
-Parameter*  ParameterProxyBufferFactory::CreateProxy(Parameter* param, buffer_type buffer_type_)
+std::shared_ptr<IParameter>  BufferFactory::CreateProxy(std::weak_ptr<IParameter> param_, buffer_type buffer_type_)
 {
+    std::shared_ptr<IParameter> param(param_);
     auto factory_func = _registered_buffer_factories.find(param->GetTypeInfo());
     if (factory_func != _registered_buffer_factories.end())
     {
         if(factory_func->second[buffer_type_])
-            return factory_func->second[buffer_type_](param);
+            return std::shared_ptr<IParameter>(factory_func->second[buffer_type_](param.get()));
     }
     return nullptr;
-}
-std::shared_ptr<Parameter>  ParameterProxyBufferFactory::CreateProxy(std::shared_ptr<Parameter> param, buffer_type buffer_type_)
-{
-    return std::shared_ptr<Parameter>(CreateProxy(param.get(), buffer_type_));
 }

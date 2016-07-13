@@ -1,7 +1,7 @@
 #pragma once
 
-#include "Defs.h"
-#include "logging_helper_macros.hpp"
+#include "MetaObject/Detail/Export.hpp"
+#include "MetaObject/Logging/LogHelperMacros.hpp"
 
 #include <boost/log/trivial.hpp>
 
@@ -87,9 +87,9 @@
 
 #define LOG_FIRST_N(severity, n) static int LOG_OCCURRENCES = 0; if(LOG_OCCURRENCES <= n) ++LOG_OCCURRENCES; if(LOG_OCCURRENCES <= n) LOG(severity)
 
-namespace Signals
+namespace mo
 {
-    class SIGNAL_EXPORTS throw_on_destroy {
+    class MO_EXPORTS throw_on_destroy {
     public:
         throw_on_destroy(const char* function, const char* file, int line);
         std::ostringstream &stream();
@@ -100,11 +100,11 @@ namespace Signals
         throw_on_destroy(const throw_on_destroy&);
         void operator=(const throw_on_destroy&);
     };
-    void SIGNAL_EXPORTS collect_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, const std::function<void(const std::string&)>& write);
-    std::string SIGNAL_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut);
-    std::string SIGNAL_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, std::stringstream& ss);
+    void MO_EXPORTS collect_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, const std::function<void(const std::string&)>& write);
+    std::string MO_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut);
+    std::string MO_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, std::stringstream& ss);
 
-    struct SIGNAL_EXPORTS IExceptionWithCallStackBase
+    struct MO_EXPORTS IExceptionWithCallStackBase
     {
         virtual const char * CallStack() const = 0;
         virtual ~IExceptionWithCallStackBase() throw() {}
