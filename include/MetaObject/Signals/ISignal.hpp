@@ -7,13 +7,14 @@
 namespace mo
 {
     class Context;
-    struct SignalInfo
+    struct MO_EXPORTS SignalInfo
     {
         TypeInfo signature;
         std::string name;
         std::string description;
     };
-    struct SlotInfo
+    
+    struct MO_EXPORTS SlotInfo
     {
         TypeInfo signature;
         std::string name;
@@ -24,7 +25,7 @@ namespace mo
     {
 	public:
         virtual ~ISignal(){}
-        virtual TypeInfo GetSignature() = 0;
+        virtual TypeInfo GetSignature() const = 0;
 
         Context* _ctx = nullptr;
     };

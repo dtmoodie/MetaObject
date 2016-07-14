@@ -12,6 +12,8 @@
 namespace mo
 {
     class IMetaObject;
+    template<class Sig> class TypedSignal{};
+
 	template<class R, class...T> class TypedSignal<R(T...)> : public ISignal, public boost::signals2::signal<R(T...)>
     {
     public:
@@ -56,30 +58,26 @@ namespace mo
                     },args...), destination_thread, obj);
                 };
 				if(This == nullptr)
-					return std::shared_ptr<connection>(new connection(boost::signals2::signal<R(T...)>::connect(f_)));
+					return std::shared_ptr<Connection>(new Connection(boost::signals2::signal<R(T...)>::connect(f_)));
 				else
-					return std::shared_ptr<connection>(new class_connection(boost::signals2::signal<R(T...)>::connect(f_), obj));
+					return std::shared_ptr<Connection>(new ClassConnection(boost::signals2::signal<R(T...)>::connect(f_), obj));
             }else
             {
-                return std::shared_ptr<connection>(new connection(boost::signals2::signal<R(T...)>::connect(f)));
+                return std::shared_ptr<Connection>(new Connection(boost::signals2::signal<R(T...)>::connect(f)));
             }
         }
-		std::shared_ptr<connection> connect_log_sink(const std::function<void(T...)>& f, size_t destination_thread = get_this_thread())
-		{
-            return connect(f, destination_thread);
-		}
 
-        std::shared_ptr<connection> connect(const std::function<R(T...)>& f, int dest_thread_type, bool force_queued = false, void* This = nullptr)
+        std::shared_ptr<Connection> Connect(const std::function<R(T...)>& f, int dest_thread_type, bool force_queued = false, void* This = nullptr)
         {
-            return connect(f, thread_registry::get_instance()->get_thread(dest_thread_type), force_queued, This);
+            return Connect(f, thread_registry::get_instance()->get_thread(dest_thread_type), force_queued, This);
         }
         void operator()(T... args)
         {
             boost::signals2::signal<R(T...)>::operator()(args...);
         }
-        virtual Loki::TypeInfo get_signal_type()
+        virtual TypeInfo GetSignature() const
         {
-            return Loki::TypeInfo(typeid(R(T...)));
+            return TypeInfo(typeid(R(T...)));
         }
     };
 }
