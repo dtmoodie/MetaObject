@@ -5,7 +5,7 @@
 namespace mo
 {
     class Context;
-    class ISignalManager;
+    class SignalManager;
     class ISignal;
     class ICallback;
     class Connection;
@@ -46,7 +46,7 @@ namespace mo
       then the ICallback* is casted to a TypedCallback<Signature> and then it is bound to the slot function
 
       How signals work.
-      Signals are owned by a ISignalManager object, the signal manager owns all signals, which are of type
+      Signals are owned by a SignalManager object, the signal manager owns all signals, which are of type
       TypedSignal which wraps boost::signals::signal2.  Any object that calls a signal will hold a pointer
       to the TypedSignal object that it will call.  Any call of a signal will then be routed to all slots
       connected to that signal.
@@ -63,7 +63,7 @@ namespace mo
         // Setup
         virtual void SetContext(Context* ctx);
         Context* GetContext() const;
-        virtual void SetupSignals(ISignalManager* mgr) = 0;
+        virtual void SetupSignals(SignalManager* mgr) = 0;
 
         // ------- Introspection
         // Get vector of info objects for each corresponding introspection class
@@ -75,8 +75,8 @@ namespace mo
         
         // -------- Signals / slots
         virtual bool ConnectByName(const std::string& name, ISignal* sig) = 0;
-        virtual int  ConnectByName(const std::string& name, ISignalManager* mgr) = 0;
-        virtual int  ConnectAll(ISignalManager* mgr) = 0;
+        virtual int  ConnectByName(const std::string& name, SignalManager* mgr) = 0;
+        virtual int  ConnectAll(SignalManager* mgr) = 0;
         virtual std::vector<ISignal*> GetAllSignals() const = 0;
         virtual std::vector<ISignal*> GetSignals(const std::string& name) const = 0;
         virtual std::vector<ISignal*> GetSignals(TypeInfo type) const = 0;
@@ -110,11 +110,13 @@ namespace mo
         std::weak_ptr<IParameter> AddParameter(std::shared_ptr<IParameter> param);
         template<class T> std::weak_ptr<ITypedParameter<T>> GetParameter(const std::string& name) const;
 
+        
     protected:
         virtual void AddConnection(std::shared_ptr<Connection>& connection, ISignal* sig);
         Context* _ctx;
         std::vector<std::shared_ptr<IParameter>> _explicit_parameters;
         std::vector<ICallback*> _explicit_callbacks;
+        SignalManager* _sig_manager;
     private:
         struct impl;
         impl* _pimpl;

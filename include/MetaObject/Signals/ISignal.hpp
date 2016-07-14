@@ -7,20 +7,6 @@
 namespace mo
 {
     class Context;
-    struct MO_EXPORTS SignalInfo
-    {
-        TypeInfo signature;
-        std::string name;
-        std::string description;
-    };
-    
-    struct MO_EXPORTS SlotInfo
-    {
-        TypeInfo signature;
-        std::string name;
-        std::string description;
-    };
-
     class MO_EXPORTS ISignal
     {
 	public:
