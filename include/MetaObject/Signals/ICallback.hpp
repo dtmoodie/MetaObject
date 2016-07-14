@@ -4,6 +4,10 @@
 namespace mo
 {
     class IMetaObject;
+    class Context;
+    // ICallback wraps std::function.
+    // ICallbacks cannot be called, only the explicit TypedCallback
+    // Calls of TypedCallback call slots in other objects
     class MO_EXPORTS ICallback
     {
     public:
@@ -11,5 +15,6 @@ namespace mo
         virtual TypeInfo GetSignature() const = 0;
         virtual void Disconnect() = 0;
         IMetaObject* receiver = nullptr;
+        Context* ctx = nullptr;
     };
 }

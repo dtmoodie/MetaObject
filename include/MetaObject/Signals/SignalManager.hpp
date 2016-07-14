@@ -45,14 +45,14 @@ namespace mo
         static SignalManager* Instance();
         static void SetInstance(SignalManager* inst);
 		
-        template<typename T> TypedSignal<T>* GetSignalOptional(const std::string& name);
+        template<typename T> std::weak_ptr<TypedSignal<T>> GetSignalOptional(const std::string& name);
 
-		template<typename T> TypedSignal<T>* GetSignal(const std::string& name);
+		template<typename T> std::weak_ptr<TypedSignal<T>> GetSignal(const std::string& name);
 
-		virtual std::vector<ISignal*> GetSignals(std::string name);
-		virtual std::vector<ISignal*> GetSignals(TypeInfo type);
-		virtual std::vector<ISignal*> GetSignals(TypeInfo type, std::string name);
-		virtual std::vector<ISignal*> GetSignals();
+		virtual std::vector<std::weak_ptr<ISignal>> GetSignals(std::string name);
+		virtual std::vector<std::weak_ptr<ISignal>> GetSignals(TypeInfo type);
+		virtual std::vector<std::weak_ptr<ISignal>> GetSignals(TypeInfo type, std::string name);
+		virtual std::vector<std::weak_ptr<ISignal>> GetSignals();
         virtual std::vector<std::string> GetSignalNames();
 		virtual void PrintSignalMap();
         
@@ -67,8 +67,8 @@ namespace mo
         virtual std::vector<sender> GetSenders(std::string name);
         virtual std::vector<sender> GetSenders();*/
 
-        virtual ISignal* GetSignalOptional(const std::string& name, const TypeInfo& type);
-        virtual ISignal* GetSignalOptional(const std::string& name, const std::string& type);
+        virtual std::weak_ptr<ISignal> GetSignalOptional(const std::string& name, const TypeInfo& type);
+        virtual std::weak_ptr<ISignal> GetSignalOptional(const std::string& name, const std::string& type);
 
     protected:
         virtual std::shared_ptr<ISignal>& GetSignal(const std::string& name, TypeInfo type);

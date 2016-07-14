@@ -1,13 +1,23 @@
 #pragma once
 #include <IObject.h>
 #include "MetaObject/Detail/TypeInfo.h"
+#include "MetaObject/Detail/Export.hpp"
 #include <memory>
+namespace boost
+{
+    namespace signals2
+    {
+        class connection;
+    }
+}
+
 namespace mo
 {
     class Context;
     class SignalManager;
     class ISignal;
     class ICallback;
+    class ISlot;
     class Connection;
     
     class IParameter;
@@ -54,7 +64,7 @@ namespace mo
     */
 
 
-    class IMetaObject: public IObject
+    class MO_EXPORTS IMetaObject: public IObject
     {
     public:
         IMetaObject();
@@ -63,43 +73,49 @@ namespace mo
         // Setup
         virtual void SetContext(Context* ctx);
         Context* GetContext() const;
-        virtual void SetupSignals(SignalManager* mgr) = 0;
+        virtual int SetupSignals(SignalManager* mgr) = 0;
+        virtual void BindSlots() = 0;
 
         // ------- Introspection
         // Get vector of info objects for each corresponding introspection class
         // optional name parameter can be used to get information for corresponding exact matches
-        virtual std::vector<ParameterInfo*> GetParameterInfo(const std::string& name = "") const = 0;
-        virtual std::vector<SignalInfo*>    GetSignalInfo(const std::string& name = "") const = 0;
-        virtual std::vector<SlotInfo*>      GetSlotInfo(const std::string& name = "") const = 0;
-        virtual std::vector<CallbackInfo*>  GetCallbackInfo(const std::string& name = "") const = 0;
+        virtual std::vector<ParameterInfo*> GetParameterInfo() const = 0;
+        virtual std::vector<SignalInfo*>    GetSignalInfo() const = 0;
+        virtual std::vector<SlotInfo*>      GetSlotInfo() const = 0;
+        virtual std::vector<CallbackInfo*>  GetCallbackInfo() const = 0;
+        virtual std::vector<ParameterInfo*> GetParameterInfo(const std::string& name) const;
+        virtual std::vector<SignalInfo*>    GetSignalInfo(const std::string& name) const;
+        virtual std::vector<SlotInfo*>      GetSlotInfo(const std::string& name) const;
+        virtual std::vector<CallbackInfo*>  GetCallbackInfo(const std::string& name) const;
         
         // -------- Signals / slots
         virtual bool ConnectByName(const std::string& name, ISignal* sig) = 0;
         virtual int  ConnectByName(const std::string& name, SignalManager* mgr) = 0;
         virtual int  ConnectAll(SignalManager* mgr) = 0;
-        virtual std::vector<ISignal*> GetAllSignals() const = 0;
-        virtual std::vector<ISignal*> GetSignals(const std::string& name) const = 0;
-        virtual std::vector<ISignal*> GetSignals(TypeInfo type) const = 0;
+        virtual std::vector<std::shared_ptr<ISignal>> GetAllSignals() const;
+        virtual std::vector<std::shared_ptr<ISignal>> GetSignals(const std::string& name) const;
+        virtual std::vector<std::shared_ptr<ISignal>> GetSignals(const TypeInfo& type) const;
         
         virtual int  ConnectByName(const std::string& name, IMetaObject* obj) = 0;
 
         // Connects all callbacks with callback_name to any accepting slot_name in the other IMetaObject
         // This allows mismatch of callback / slot names.
-        virtual int ConnectCallbacks(const std::string& callback_name, const std::string& slot_name, IMetaObject* obj) = 0;
+        int ConnectCallbacks(const std::string& callback_name, const std::string& slot_name, IMetaObject* slot_owner, bool force_queue = false);
 
         // Given input callback, connect to any matching slot with name
         // Return true on success, false on failure.  False should only occur if no callback exist with
         // the given name with the correct signature
         // force_queue will create a queued connection such that when the callback is called, the corresponding
         // slot on this object will be called when the event loop of _ctx->thread_id is called.
-        virtual bool ConnectCallback(ICallback* callback, const std::string& name, bool force_queue = false) = 0;
+        bool ConnectCallback(ICallback* callback, const std::string& name, bool force_queue = false);
 
         // Connects all callbacks by name of this object to all slots of corresponding name and
         // type in the other object
         // Requires exact name and signature match to connect
-        virtual int ConnectCallbacks(IMetaObject* obj) = 0;
+        int ConnectCallbacks(IMetaObject* obj, bool force_queue = false);
 
-        virtual int  DisconnectByName(const std::string& name) = 0;
+
+        virtual int  DisconnectByName(const std::string& name);
         virtual bool Disconnect(ISignal* sig);
         virtual int  Disconnect(IMetaObject* obj);
 
@@ -112,11 +128,15 @@ namespace mo
 
         
     protected:
-        virtual void AddConnection(std::shared_ptr<Connection>& connection, ISignal* sig);
-        Context* _ctx;
+        void AddConnection(std::shared_ptr<Connection>& connection, ISignal* sig);
+        void AddConnection(boost::signals2::connection& connection, ISignal* sig);
+        void AddCallback(ICallback*, const std::string& name);
+        void AddSignal(std::weak_ptr<ISignal> signal, const std::string& name);
+        void AddSlot(ISlot* slot, const std::string& name);
+        Context*                                 _ctx;
         std::vector<std::shared_ptr<IParameter>> _explicit_parameters;
-        std::vector<ICallback*> _explicit_callbacks;
-        SignalManager* _sig_manager;
+        
+        SignalManager*                           _sig_manager;
     private:
         struct impl;
         impl* _pimpl;

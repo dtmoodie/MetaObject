@@ -1,33 +1,15 @@
 #pragma once
-#include "MetaObject/Detail/TypeInfo.h"
+#include "IMetaObjectInfo.hpp"
 #include "MetaObject/Detail/Counter.hpp"
-#include "MetaObject/Detail/Export.hpp"
 #include "MetaObject/MetaObjectInfoDatabase.hpp"
-#include "IObjectInfo.h"
-#include <vector>
+
+
 
 namespace mo
 {
 	// Static object information available for each meta object
 	// Used for static introspection
-	struct ParameterInfo;
-	struct SignalInfo;
-	struct SlotInfo;
-    struct CallbackInfo;
-	struct MO_EXPORTS IMetaObjectInfo: IObjectInfo
-	{
-		virtual std::vector<ParameterInfo*> ListParameters() = 0;
-		virtual std::vector<SignalInfo*>    ListSignalInfo() = 0;
-		virtual std::vector<SlotInfo*>      ListSlotInfo() = 0;
-        virtual std::vector<CallbackInfo*>  ListCallbackInfo() = 0;
-		virtual std::string                 Tooltip() = 0;
-		virtual std::string                 Description() = 0;
-        virtual TypeInfo                    GetTypeInfo() = 0;
-        virtual std::string                 GetTypeName() = 0;
-        virtual std::string                 GetDisplayName() = 0;
-	};
-
-    template<class T, int N> struct MetaObjectInfo: public IObjectInfo
+    template<class T, int N> struct MetaObjectInfo: public IMetaObjectInfo
     {
         MetaObjectInfo()
         {
@@ -35,70 +17,75 @@ namespace mo
         }
         static std::vector<ParameterInfo*> ListParametersStatic()
         {
-            return T::list_parameters_(mo::_counter_<N>());
+            std::vector<ParameterInfo*> info;
+            T::list_parameter_info_(info, mo::_counter_<N>());
+            return info;
         }
-
-		static std::vector<SignalInfo*>    ListSignalInfoStatic()
+        static std::vector<SignalInfo*>    ListSignalInfoStatic()
         {
-            return T::list_signals_(mo::_counter_<N>());
+            std::vector<SignalInfo*> info; 
+            T::list_signal_info_(info, mo::_counter_<N>());
+            return info;
         }
-
-		static std::vector<SlotInfo*>      ListSlotInfoStatic()
+        static std::vector<SlotInfo*>      ListSlotInfoStatic()
         {
-            return T::list_slots_(mo::_counter_<N>());
+            std::vector<SlotInfo*> info;
+            T::list_slots_(info, mo::_counter_<N>());
+            return info;
         }
-
-        static std::vector<CallbackInfo*> ListCallbackInfoStatic()
+        static std::vector<CallbackInfo*>  ListCallbackInfoStatic()
         {
-            return T::list_callbacks_(mo::_counter_<N>());
+            std::vector<CallbackInfo*> info;
+            T::list_callbacks_(info, mo::_counter_<N>());
+            return info;
         }
-
 		static std::string                 TooltipStatic()
         {
-            return T::Tooltip();
+            return "";
         }
-
-		static std::string                 DescriptionStatic()
+        static std::string                 DescriptionStatic()
         {
-            return T::Description();
+            return "";
         }
-
         static TypeInfo                    GetTypeInfoStatic()
         {
             return TypeInfo(typeid(typename T::BASE_CLASS));
         }
-
-        std::vector<ParameterInfo*> ListParameters()
+        std::vector<ParameterInfo*>        ListParameters()
         {
             return ListParametersStatic();
         }
-		std::vector<SignalInfo*>    ListSignalInfo()
+		std::vector<SignalInfo*>           ListSignalInfo()
         {
             return ListSignalInfoStatic();
         }
-		std::vector<SlotInfo*>      ListSlotInfo()
+		std::vector<SlotInfo*>             ListSlotInfo()
         {
             return ListSlotInfoStatic();
         }
-        std::vector<CallbackInfo*>  ListCallbackInfo()
+        std::vector<CallbackInfo*>         ListCallbackInfo()
         {
             return ListCallbackInfoStatic();
         }
-		std::string                 Tooltip()
+		std::string                        GetObjectTooltip()
         {
             return TooltipStatic();
         }
-		std::string                 Description()
+		std::string                        GetObjectHelp()
         {
             return DescriptionStatic();
         }
-        TypeInfo                    GetTypeInfo()
+        TypeInfo                           GetTypeInfo()
         {
             return GetTypeInfoStatic();
         }
-        std::string                 GetTypeName()
+        std::string                        GetObjectName()
         {
             return T::GetTypeNameStatic();
+        }
+        int                                GetInterfaceId()
+        {
+            return T::s_interfaceID;
         }
     };
 }

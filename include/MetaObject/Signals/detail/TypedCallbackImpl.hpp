@@ -2,8 +2,15 @@
 
 namespace mo
 {
-    template<class R, class...T> class TypedCallback;
+    template<class Sig> class TypedCallback;
 
+    template<class R, class...T> TypedCallback<R(T...)>::TypedCallback()
+    {
+    }
+    template<class R, class...T> TypedCallback<R(T...)>::TypedCallback(const std::function<R(T...)>& f):
+        std::function<R(T...)>(f)
+    {
+    }
     template<class R, class...T> R TypedCallback<R(T...)>::operator()(T... args)
     {
         return std::function<R(T...)>::operator()(args...);

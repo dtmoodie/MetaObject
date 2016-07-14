@@ -129,7 +129,7 @@ std::shared_ptr<ISignal>& SignalManager::GetSignal(const std::string& name, Type
     return _pimpl->_signals[type][name];
 }
 
-ISignal* SignalManager::GetSignalOptional(const std::string& name, const TypeInfo& type)
+std::weak_ptr<ISignal> SignalManager::GetSignalOptional(const std::string& name, const TypeInfo& type)
 {
     auto itr = _pimpl->_signals.find(type);
     if(itr != _pimpl->_signals.end())
@@ -137,13 +137,13 @@ ISignal* SignalManager::GetSignalOptional(const std::string& name, const TypeInf
         auto itr2 = itr->second.find(name);
         if(itr2 != itr->second.end())
         {
-            return itr2->second.get();
+            return itr2->second;
         }
     }
-    return nullptr;
+    return std::weak_ptr<ISignal>();
 }
 
-ISignal* SignalManager::GetSignalOptional(const std::string& name, const std::string& type)
+std::weak_ptr<ISignal> SignalManager::GetSignalOptional(const std::string& name, const std::string& type)
 {
     for(auto& signature : _pimpl->_signals)
     {
@@ -153,11 +153,11 @@ ISignal* SignalManager::GetSignalOptional(const std::string& name, const std::st
             auto itr2 = signature.second.find(name);
             if(itr2 != signature.second.end())
             {
-                return itr2->second.get();
+                return itr2->second;
             }
         }
     }
-    return nullptr;
+    return std::weak_ptr<ISignal>();
 }
 
 
@@ -220,43 +220,43 @@ void signal_manager::register_receiver(Loki::TypeInfo signal_signature, const st
     register_receiver(signal_signature, signal_name, Loki::TypeInfo(typeid(*receiver)), receiver, receiver->get_description(), receiver->get_slot_description(signal_name));
 }
 */
-std::vector<ISignal*> SignalManager::GetSignals(std::string name)
+std::vector<std::weak_ptr<ISignal>> SignalManager::GetSignals(std::string name)
 {
-	std::vector<ISignal*> output;
+	std::vector<std::weak_ptr<ISignal>> output;
 	for (auto& itr : _pimpl->_signals)
 	{
 		auto itr2 = itr.second.find(name);
 		if (itr2 != itr.second.end())
 		{
-			output.push_back(itr2->second.get());
+			output.push_back(itr2->second);
 		}
 	}
 	return output;
 }
-std::vector<ISignal*> SignalManager::GetSignals(TypeInfo type)
+std::vector<std::weak_ptr<ISignal>> SignalManager::GetSignals(TypeInfo type)
 {
-	std::vector<ISignal*> output;
+	std::vector<std::weak_ptr<ISignal>> output;
 	for (auto& itr : _pimpl->_signals[type])
 	{
-		output.push_back(itr.second.get());
+		output.push_back(itr.second);
 	}
 	return output;
 }
-std::vector<ISignal*> SignalManager::GetSignals(TypeInfo type, std::string name)
+std::vector<std::weak_ptr<ISignal>> SignalManager::GetSignals(TypeInfo type, std::string name)
 {
-	std::vector<ISignal*> output;
+	std::vector<std::weak_ptr<ISignal>> output;
 	for (auto& itr : _pimpl->_signals)
 	{
 		for (auto& itr2 : itr.second)
 		{
-			output.push_back(itr2.second.get());
+			output.push_back(itr2.second);
 		}
 	}
 	return output;
 }
-std::vector<ISignal*> SignalManager::GetSignals()
+std::vector<std::weak_ptr<ISignal>> SignalManager::GetSignals()
 {
-	std::vector<ISignal*> output;
+	std::vector<std::weak_ptr<ISignal>> output;
 
 	return output;
 }
