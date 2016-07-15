@@ -20,8 +20,8 @@ namespace mo
 		if (typedParameter)
 		{
 			std::lock_guard<std::recursive_mutex> lock(typedParameter->mtx());
-			UpdateData(typedParameter->GetData(), other->GetTimeIndex(), other_ctx);
-			OnUpdate(other_ctx);
+			UpdateData(typedParameter->GetData(), other->GetTimestamp(), other->GetContext());
+			OnUpdate(other->GetContext());
 			return true;
 		}
 		return false;

@@ -20,9 +20,9 @@ https://github.com/dtmoodie/parameters
 #include "ITypedParameter.hpp"
 #include "ParameterFactory.hpp"
 
-namespace Parameters
+namespace mo
 {
-    template<typename T> class PARAMETER_EXPORTS TypedParameter : 
+    template<typename T> class MO_EXPORTS TypedParameter : 
         public ITypedParameter<T>
     {
     public:

@@ -2,86 +2,8 @@
 #include "ObjectInterfacePerModule.h"
 #include "MetaObject/MetaObjectInfo.hpp"
 
-#define CONNECT_START(N_) \
-template<int N> bool connect_(std::string name, mo::ISignal* signal, mo::_counter_<N> dummy) \
-{ \
-	return connect_(name, signal, --dummy); \
-} \
-template<int N> int connect_(std::string name, mo::SignalManager* manager, mo::_counter_<N> dummy) \
-{ \
-	return connect_(name, manager, --dummy); \
-} \
-template<int N> int connect_(mo::SignalManager* manager, mo::_counter_<N> dummy) \
-{ \
-	return connect_(manager, --dummy); \
-} \
-bool connect_(std::string name, mo::ISignal* signal, mo::_counter_<N_> dummy) \
-{ \
-	return false; \
-} \
-int connect_(std::string name, mo::SignalManager* manager, mo::_counter_<N_> dummy) \
-{ \
-	return 0; \
-} \
-int connect_(mo::SignalManager* manager, mo::_counter_<N_> dummy) \
-{ \
-	return 0; \
-}
 
-#define CONNECT_END(N) \
-bool ConnectByName(const std::string& name, mo::ISignal* signal) \
-{  \
-	if(call_parent_connect<THIS_CLASS>(name, signal, nullptr)) \
-		return true; \
-    return connect_(name, signal, mo::_counter_<N-1>()); \
-} \
-int ConnectByName(const std::string& name, SignalManager* manager) \
-{ \
-	int parent_count = call_parent_connect_by_name<THIS_CLASS>(name, manager, nullptr); \
-	return connect_(name, manager, mo::_counter_<N-1>()) + parent_count; \
-} \
-int Connect(SignalManager* manager) \
-{ \
-    return connect_(manager, mo::_counter_<N-1>()); \
-}\
-int ConnectAll(mo::SignalManager* mgr) \
-{ \
-    return 0; \
-} \
-int ConnectByName(const std::string& name, mo::IMetaObject* obj) \
-{ \
-    return 0; \
-} \
-
-#define DISCONNECT_START(N_) \
-template<int N> int disconnect_(mo::SignalManager* manager_, mo::_counter_<N> dummy) \
-{ \
-	return disconnect_(manager_, --dummy); \
-} \
-template<int N> int disconnect_by_name(std::string name, mo::SignalManager* manager_, mo::_counter_<N> dummy) \
-{ \
-	return disconnect_by_name(name, manager_, --dummy); \
-} \
-int disconnect_(mo::SignalManager* manager_, mo::_counter_<N_> dummy)\
-{ \
-	return 0; \
-} \
-int disconnect_by_name(std::string name, mo::SignalManager* manager_, mo::_counter_<N_> dummy) \
-{ \
-	return 0; \
-}
-
-#define DISCONNECT_END(N) \
-int disconnect(std::string name, SignalManager* manager_) \
-{ \
-	return disconnect_by_name(name, manager_, mo::_counter_<N-1>()); \
-} \
-int disconnect(SignalManager* manager_) \
-{ \
-	return disconnect_(manager_, mo::_counter_<N-1>()); \
-}
-
-
+// ---------------- SIGNAL_INFO ------------
 #define SIGNAL_INFO_START(N_) \
 template<int N> static void list_signal_info_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N> dummy) \
 { \
@@ -102,20 +24,44 @@ std::vector<mo::SignalInfo*> GetSignalInfo() const \
 { \
     return GetSignalInfoStatic(); \
 }
-
+// ---------------- SIGNALS ------------
 #define SIGNALS_START(N_) \
-template<int N> void init_signals_(SignalManager* mgr, mo::_counter_<N> dummy) \
+template<int N> int init_signals_(SignalManager* mgr, mo::_counter_<N> dummy) \
 { \
-    init_signals_(mgr, --dummy); \
+    return init_signals_(mgr, --dummy); \
 } \
-void init_signals_(SignalManager* mgr, mo::_counter_<N_> dummy) \
+int init_signals_(SignalManager* mgr, mo::_counter_<N_> dummy) \
 { \
+    return 0; \
+} \
+template<int N> int connect_by_name_(const std::string& name_, mo::SignalManager* mgr, mo::_counter_<N> dummy) \
+{ \
+    return connect_by_name_(name_, mgr, --dummy); \
+} \
+int connect_by_name_(const std::string& name_, mo::SignalManager* mgr, mo::_counter_<N_> dummy) \
+{ \
+    return 0; \
+} \
+template<int N> bool connect_by_name_(const std::string& name_, std::weak_ptr<ISignal> sig, mo::_counter_<N> dummy) \
+{ \
+    return connect_by_name_(name_, sig, --dummy); \
+} \
+bool connect_by_name_(const std::string& name_, std::weak_ptr<ISignal> sig, mo::_counter_<N_> dummy) \
+{ \
+    return false; \
 }
 
+#define SIGNALS_END(N_) \
+virtual bool ConnectByName(const std::string& name, std::weak_ptr<ISignal> sig) \
+{ \
+    return connect_by_name_(name, sig, mo::_counter_<N_-1>()); \
+} \
+virtual int ConnectByName(const std::string& name, mo::SignalManager* mgr) \
+{ \
+    return connect_by_name_(name, mgr, mo::_counter_<N_-1>()); \
+}
 
-#define SIGNALS_END(N_)
-
-
+// ---------------- SLOT INFO ------------
 #define SLOT_INFO_START(N_) \
 template<int N> static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy) \
 { \
@@ -136,7 +82,7 @@ std::vector<mo::SlotInfo*> GetSlotInfo() const \
 { \
     return GetSlotInfoStatic(); \
 }
-
+// ---------------- CALLBACK INFO ------------
 #define CALLBACK_INFO_START(N_) \
 template<int N> static void list_callbacks_(std::vector<mo::CallbackInfo*>& info, mo::_counter_<N> dummy) \
 { \
@@ -144,7 +90,8 @@ template<int N> static void list_callbacks_(std::vector<mo::CallbackInfo*>& info
 } \
 static void list_callbacks_(std::vector<mo::CallbackInfo*>& info, mo::_counter_<N_> dummy) \
 { \
-}
+} \
+
 
 #define CALLBACK_INFO_END(N) \
 static std::vector<mo::CallbackInfo*> GetCallbackInfoStatic()\
@@ -158,25 +105,20 @@ std::vector<mo::CallbackInfo*> GetCallbackInfo() const \
     return GetCallbackInfoStatic(); \
 }
 
+// ---------------- CALLBACKS ------------
 #define CALLBACK_START(N_) \
-template<int N> int connect_callbacks_(mo::IMetaObject* obj, bool queue, mo::_counter_<N> dummy) \
+template<int N> void add_callbacks_(mo::_counter_<N> dummy) \
 { \
-    return connect_callbacks_(obj, queue, --dummy); \
+    add_callbacks_(--dummy); \
 } \
-int connect_callbacks_(mo::IMetaObject* obj, bool queue, mo::_counter_<N_> dummy) \
+void add_callbacks_(mo::_counter_<N_> dummy) \
 { \
-    return 0; \
-} \
-template<int N> int connect_callbacks_(mo::IMetaObject* obj)
-
-
-
-#define CALLBACK_END(N_) \
-int ConnectCallbacks(mo::IMetaObject* obj, bool queue) \
-{ \
-    return connect_callbacks_(obj, queue, mo::_counter_<N_-1>()); \
 }
 
+#define CALLBACK_END(N_)
+
+
+// ---------------- PARAMETERS INFO ------------
 
 #define PARAMETER_INFO_START(N_) \
 template<int N> static void list_parameter_info_(std::vector<mo::ParameterInfo*>& info, mo::_counter_<N> dummy) \
@@ -186,6 +128,7 @@ template<int N> static void list_parameter_info_(std::vector<mo::ParameterInfo*>
 static void list_parameter_info_(std::vector<mo::ParameterInfo*>& info, mo::_counter_<N_> dummy) \
 { \
 }
+
 
 #define PARAMETER_INFO_END(N) \
 static std::vector<mo::ParameterInfo*> GetParameterInfoStatic() \
@@ -199,6 +142,23 @@ std::vector<mo::ParameterInfo*> GetParameterInfo() const \
     return GetParameterInfoStatic(); \
 }
 
+// ---------------- PARAMETERS ------------
+#define PARAMETER_START(N_) \
+template<int N> void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
+{ \
+    init_parameters_(firstInit, --dummy); \
+} \
+void init_parameters_(bool firstInit, mo::_counter_<N_> dummy) \
+{ \
+}
+
+#define PARAMETER_END(N_) \
+void InitParameters(bool firstInit) \
+{ \
+    init_parameters_(firstInit, mo::_counter_<N_ - 1>()); \
+}
+
+// -------------- SLOTS -------------
 #define SLOT_START(N_) \
 template<int N> void bind_slots_(mo::_counter_<N> dummy) \
 { \
@@ -219,26 +179,26 @@ void BindSlots() \
 
 #define MO_BEGIN_1(CLASS_NAME, N_) \
 typedef CLASS_NAME THIS_CLASS;      \
-CONNECT_START(N_) \
-DISCONNECT_START(N_) \
 CALLBACK_INFO_START(N_) \
+CALLBACK_START(N_) \
 SIGNAL_INFO_START(N_) \
 SIGNALS_START(N_) \
 SLOT_INFO_START(N_) \
 PARAMETER_INFO_START(N_) \
-SLOT_START(N_)
+SLOT_START(N_)\
+PARAMETER_START(N_)
 
 #define MO_BEGIN_2(CLASS_NAME, PARENT, N_) \
 typedef CLASS_NAME THIS_CLASS; \
 typedef PARENT PARENT_CLASS;  \
-CONNECT_START(N_) \
-DISCONNECT_START(N_) \
 CALLBACK_INFO_START(N_) \
+CALLBACK_START(N_) \
 SIGNAL_INFO_START(N_) \
 SIGNALS_START(N_) \
 SLOT_INFO_START(N_) \
 PARAMETER_INFO_START(N_) \
-SLOT_START(N_)
+SLOT_START(N_)\
+PARAMETER_START(N_)
 
 #define MO_END_(N) \
 template<typename T> int call_parent_setup(mo::SignalManager* manager, typename std::enable_if<mo::has_parent<T>::value, void>::type* = nullptr) \
@@ -272,18 +232,22 @@ virtual int SetupSignals(mo::SignalManager* manager) \
 { \
     int parent_signal_count = call_parent_setup<THIS_CLASS>(manager, nullptr); \
     _sig_manager = manager; \
-    bind_slots_(mo::_counter_<N-1>()); \
     init_signals_(manager, mo::_counter_<N-1>()); \
-    return Connect(manager) + parent_signal_count; \
+    return parent_signal_count; \
 } \
-CONNECT_END(N) \
-DISCONNECT_END(N) \
+virtual void InitCallbacks(bool firstInit) \
+{ \
+    add_callbacks_(mo::_counter_<N-1>()); \
+} \
 CALLBACK_INFO_END(N) \
+CALLBACK_END(N) \
 SIGNAL_INFO_END(N) \
 SLOT_INFO_END(N) \
 PARAMETER_INFO_END(N) \
 SIGNALS_END(N) \
-SLOT_END(N)
+SLOT_END(N) \
+PARAMETER_END(N)
+
 
 #define MO_REGISTER_OBJECT(TYPE) \
     static mo::MetaObjectInfo<TActual<TYPE>, __COUNTER__> TYPE##_info; \

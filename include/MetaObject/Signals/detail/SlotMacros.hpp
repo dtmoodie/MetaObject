@@ -4,61 +4,17 @@
 // -------------------------------------------------------------------------------------------
 #define SLOT__(NAME, N, RETURN, ...)\
     virtual RETURN NAME(__VA_ARGS__); \
-    bool connect_(std::string name, mo::ISignal* signal, mo::_counter_<N> dummy) \
-    {   \
-        if(name == #NAME) \
-        { \
-            auto TypedSignal = dynamic_cast<mo::TypedSignal<RETURN(__VA_ARGS__)>*>(signal); \
-            if(TypedSignal) \
-            { \
-				LOG(trace) << "[" #NAME " - " << TypedSignal->GetSignature().name() << "]"; \
-                _connections[signal] = TypedSignal->connect(my_bind((RETURN(THIS_CLASS::*)(__VA_ARGS__))&THIS_CLASS::NAME, this, make_int_sequence<BOOST_PP_VARIADIC_SIZE(__VA_ARGS__)>{} )); \
-                return true; \
-            } \
-        } \
-        return connect_(name, signal, dummy--); \
-    } \
-	int connect_(std::string name, manager* manager_, mo::_counter_<N> dummy) \
-	{ \
-		if(name == #NAME) \
-		{ \
-			auto sig = manager_->GetSignal<RETURN(__VA_ARGS__)>(#NAME); \
-			LOG(trace) << "Connecting slot with name: \"" #NAME "\" and signature <" << typeid(RETURN(__VA_ARGS__)).name() << "> to manager"; \
-			_connections[sig] = sig->connect(my_bind((RETURN(THIS_CLASS::*)(__VA_ARGS__))&THIS_CLASS::NAME, this, make_int_sequence<BOOST_PP_VARIADIC_SIZE(__VA_ARGS__)>{} )); \
-            manager_->register_receiver(Loki::TypeInfo(typeid(RETURN(__VA_ARGS__))), #NAME, this); \
-			return connect_(name, manager_, mo::_counter_<N-1>()) + 1; \
-		} \
-		return connect_(name, manager_, mo::_counter_<N-1>()); \
-	} \
-	int disconnect_by_name(std::string name, manager* manager_, mo::_counter_<N> dummy) \
-	{ \
-		if(name == #NAME) \
-		{ \
-			auto sig = manager_->get_signal_optional<RETURN(__VA_ARGS__)>(#NAME); \
-			if(sig)  \
-            { \
-                LOG(trace) << "[" #NAME " - " << sig->GetSignature().name() << "]"; \
-                manager_->remove_sender(this, #NAME); \
-            } \
-			return disconnect_by_name(name, manager_, mo::_counter_<N-1>()) + disconnect_from_signal(sig) ? 1 : 0; \
-		} \
-		return disconnect_by_name(name, manager_, mo::_counter_<N-1>()); \
-	} \
-	int disconnect_(manager* manager_, mo::_counter_<N> dummy) \
-	{ \
-		auto sig = manager_->get_signal_optional<RETURN(__VA_ARGS__)>(#NAME); \
-		if(sig) \
-        { \
-            LOG(trace) << "[" #NAME " - " << sig->GetSignature().name() << "]"; \
-            manager_->remove_sender(this, #NAME); \
-        } \
-		return disconnect_(manager_, mo::_counter_<N-1>()) + (disconnect_from_signal(sig) ? 1 : 0); \
-	} \
-    static std::vector<mo::slot_info> list_slots_(mo::_counter_<N> dummy) \
+    mo::TypedSlot<RETURN(__VA_ARGS__)> COMBINE(_slot_##NAME##_, N); \
+    void bind_slots_(mo::_counter_<N> dummy) \
     { \
-        auto slot_infos = list_slots_(mo::_counter_<N-1>()); \
-        slot_infos.push_back(mo::slot_info({Loki::TypeInfo(typeid(RETURN(__VA_ARGS__))), #NAME})); \
-        return slot_infos; \
+        COMBINE(_slot_##NAME##_, N) = my_bind((RETURN(THIS_CLASS::*)(__VA_ARGS__))&THIS_CLASS::NAME, this, make_int_sequence<BOOST_PP_VARIADIC_SIZE(__VA_ARGS__)>{} ); \
+        AddSlot(&COMBINE(_slot_##NAME##_, N), #NAME); \
+    } \
+    static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy) \
+    { \
+        list_slots_(info, mo::_counter_<N-1>()); \
+        static mo::SlotInfo s_info{mo::TypeInfo(typeid(RETURN(__VA_ARGS__))), #NAME}; \
+        info.push_back(&s_info); \
     }
 
 #define SLOT_1(RETURN, N, NAME) \

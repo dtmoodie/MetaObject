@@ -26,7 +26,7 @@ namespace mo
     public:
         typedef std::shared_ptr<ITypedParameter<T>> Ptr;
         
-        ITypedParameter(const std::string& name, ParameterType flags = Control_e, long long ts = -1, Context* ctx);
+        ITypedParameter(const std::string& name, ParameterType flags = Control_e, long long ts = -1, Context* ctx = nullptr);
 
         // The call is thread safe but the returned pointer may be modified by a different thread
         // ts is the timestamp for which you are requesting data, -1 indicates newest
@@ -46,7 +46,7 @@ namespace mo
 
         virtual TypeInfo GetTypeInfo() const;
 
-        virtual bool Update(IParameter* other, Signals::context* other_ctx = nullptr);
+        virtual bool Update(IParameter* other);
     };
 }
 #include "detail/ITypedParameterImpl.hpp"

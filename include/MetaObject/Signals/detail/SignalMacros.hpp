@@ -19,12 +19,41 @@ inline void sig_##name()\
             (*ptr)(); \
     } \
 } \
-void init_signals_(SignalManager* mgr, mo::_counter_<N> dummy) \
+bool connect_by_name_(const std::string& name_, std::weak_ptr<ISignal> sig, mo::_counter_<N> dummy) \
 { \
-    init_signals_(mgr, --dummy); \
+    if(name_ == #name) \
+    { \
+        if(auto ptr = sig.lock()) \
+        { \
+            if(ptr->GetSignature() == TypeInfo(typeid(void(void)))) \
+            { \
+                auto typed = std::dynamic_pointer_cast<mo::TypedSignal<void(void)>>(ptr); \
+                if(typed) \
+                { \
+                    COMBINE(_sig_##name##_,N).push_back(typed); \
+                    return true; \
+                } \
+            } \
+        } \
+    } \
+    return connect_by_name_(name_, sig, --dummy); \
+} \
+int connect_by_name_(const std::string& name_, mo::SignalManager* mgr, mo::_counter_<N> dummy) \
+{ \
+    if(name_ == #name) \
+    { \
+        auto sig = mgr->GetSignal<void(void)>(#name); \
+        COMBINE(_sig_##name##_,N).push_back(sig); \
+        AddSignal(sig, #name); \
+    } \
+    return connect_by_name_(name_, mgr, --dummy); \
+} \
+int init_signals_(SignalManager* mgr, mo::_counter_<N> dummy) \
+{ \
     auto sig = mgr->GetSignal<void(void)>(#name); \
     COMBINE(_sig_##name##_,N).push_back(sig); \
     AddSignal(sig, #name); \
+    return init_signals_(mgr, --dummy) + 1; \
 } \
 static void list_signal_info_(std::vector<mo::SignalInfo*>& output, mo::_counter_<N> dummy) \
 { \
@@ -44,12 +73,12 @@ inline void sig_##name(ARG1 arg1)\
             (*ptr)(arg1); \
     } \
 } \
-void init_signals_(SignalManager* mgr, mo::_counter_<N> dummy) \
+int init_signals_(SignalManager* mgr, mo::_counter_<N> dummy) \
 { \
-    init_signals_(mgr, --dummy); \
     auto sig = mgr->GetSignal<void(ARG1)>(#name);\
     COMBINE(_sig_##name##_,N).push_back(sig); \
     AddSignal(sig, #name); \
+    return init_signals_(mgr, --dummy) + 1; \
 } \
 static void list_signal_info_(std::vector<mo::SignalInfo*>& output, mo::_counter_<N> dummy) \
 { \
@@ -69,6 +98,13 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2)\
 	} \
 	(*COMBINE(_sig_##name##_,N))(arg1, arg2); \
 } \
+int init_signals_(SignalManager* mgr, mo::_counter_<N> dummy) \
+{ \
+    auto sig = mgr->GetSignal<void(ARG1, ARG2)>(#name);\
+    COMBINE(_sig_##name##_,N).push_back(sig); \
+    AddSignal(sig, #name); \
+    return init_signals_(mgr, --dummy) + 1; \
+} \
 static void list_signals_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N> dummy) \
 { \
     static mo::SignalInfo info{TypeInfo(typeid(void(ARG1,ARG2))), std::string(#name)}; \
@@ -86,6 +122,13 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3)\
         COMBINE(_sig_##name##_,N) = _sig_manager->GetSignal<void(ARG1, ARG2, ARG3)>(#name); \
 	} \
 	(*COMBINE(_sig_##name##_,N))(arg1, arg2, arg3); \
+} \
+int init_signals_(SignalManager* mgr, mo::_counter_<N> dummy) \
+{ \
+    auto sig = mgr->GetSignal<void(ARG1, ARG2, ARG3)>(#name);\
+    COMBINE(_sig_##name##_,N).push_back(sig); \
+    AddSignal(sig, #name); \
+    return init_signals_(mgr, --dummy) + 1; \
 } \
 static void list_signals_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N> dummy) \
 { \
@@ -105,6 +148,13 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4)\
 	} \
 	(*COMBINE(_sig_##name##_,N))(arg1, arg2, arg3, arg4); \
 } \
+int init_signals_(SignalManager* mgr, mo::_counter_<N> dummy) \
+{ \
+    auto sig = mgr->GetSignal<void(ARG1, ARG2, ARG3, ARG4)>(#name);\
+    COMBINE(_sig_##name##_,N).push_back(sig); \
+    AddSignal(sig, #name); \
+    return init_signals_(mgr, --dummy) + 1; \
+} \
 static void list_signals_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N> dummy) \
 { \
     static mo::SignalInfo info{TypeInfo(typeid(void(ARG1,ARG2,ARG3,ARG4))), std::string(#name)}; \
@@ -122,6 +172,13 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5)\
 		COMBINE(_sig_##name##_,N) = _sig_manager->GetSignal<void(ARG1, ARG2, ARG3, ARG4, ARG5)>(#name); \
 	} \
 	(*COMBINE(_sig_##name##_,N))(arg1, arg2, arg3, arg4, arg5); \
+} \
+int init_signals_(SignalManager* mgr, mo::_counter_<N> dummy) \
+{ \
+    auto sig = mgr->GetSignal<void(ARG1, ARG2, ARG3, ARG4, ARG5)>(#name);\
+    COMBINE(_sig_##name##_,N).push_back(sig); \
+    AddSignal(sig, #name); \
+    return init_signals_(mgr, --dummy) + 1; \
 } \
 static void list_signals_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N> dummy) \
 { \
@@ -141,6 +198,13 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5, AR
 	} \
 	(*COMBINE(_sig_##name##_,N))(arg1, arg2, arg3, arg4, arg5, arg6); \
 } \
+int init_signals_(SignalManager* mgr, mo::_counter_<N> dummy) \
+{ \
+    auto sig = mgr->GetSignal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6)>(#name);\
+    COMBINE(_sig_##name##_,N).push_back(sig); \
+    AddSignal(sig, #name); \
+    return init_signals_(mgr, --dummy) + 1; \
+} \
 static void list_signals_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N> dummy) \
 { \
     static mo::SignalInfo info{TypeInfo(typeid(void(ARG1,ARG2,ARG3,ARG4,ARG5,ARG6))), std::string(#name)}; \
@@ -158,6 +222,13 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5, AR
         COMBINE(_sig_##name##_,N) = _sig_manager->GetSignal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)>(#name); \
 	} \
 	(*COMBINE(_sig_##name##_,N))(arg1, arg2, arg3, arg4, arg5, arg6, arg7); \
+} \
+int init_signals_(SignalManager* mgr, mo::_counter_<N> dummy) \
+{ \
+    auto sig = mgr->GetSignal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7)>(#name);\
+    COMBINE(_sig_##name##_,N).push_back(sig); \
+    AddSignal(sig, #name); \
+    return init_signals_(mgr, --dummy) + 1; \
 } \
 static void list_signals_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N> dummy) \
 { \
@@ -177,6 +248,13 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5, AR
 	} \
 	(*COMBINE(_sig_##name##_,N))(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8); \
 } \
+int init_signals_(SignalManager* mgr, mo::_counter_<N> dummy) \
+{ \
+    auto sig = mgr->GetSignal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8)>(#name);\
+    COMBINE(_sig_##name##_,N).push_back(sig); \
+    AddSignal(sig, #name); \
+    return init_signals_(mgr, --dummy) + 1; \
+} \
 static void list_signals_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N> dummy) \
 { \
     static mo::SignalInfo info{TypeInfo(typeid(void(ARG1,ARG2,ARG3,ARG4,ARG5,ARG6,ARG7,ARG8))), std::string(#name)}; \
@@ -194,6 +272,13 @@ inline void sig_##name(ARG1 arg1, ARG2 arg2, ARG3 arg3, ARG4 arg4, ARG5 arg5, AR
         COMBINE(_sig_##name##_,N) = _sig_manager->GetSignal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)>(#name); \
 	} \
 	(*COMBINE(_sig_##name##_,N))(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8, arg9); \
+} \
+int init_signals_(SignalManager* mgr, mo::_counter_<N> dummy) \
+{ \
+    auto sig = mgr->GetSignal<void(ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8, ARG9)>(#name);\
+    COMBINE(_sig_##name##_,N).push_back(sig); \
+    AddSignal(sig, #name); \
+    return init_signals_(mgr, --dummy) + 1; \
 } \
 static void list_signals_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N> dummy) \
 { \

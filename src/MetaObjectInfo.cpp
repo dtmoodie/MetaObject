@@ -67,7 +67,7 @@ std::string IMetaObjectInfo::Print()
     auto slots = ListSlotInfo();
     if(slots.size())
     {
-        ss << "----------- Signals ---------------- \n";
+        ss << "----------- Slots ---------------- \n";
         for(auto& slot : slots)
         {
             ss << slot->name;

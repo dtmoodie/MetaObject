@@ -59,7 +59,7 @@
 #define LOGIF_EQ(lhs, rhs, severity) if(lhs == rhs)  LOG(severity) << "if(" << #lhs << " == " << #rhs << ")" << "[" << lhs << " == " << rhs << "]";
 #define LOGIF_NEQ(lhs, rhs, severity) if(lhs != rhs) LOG(severity) << "if(" << #lhs << " != " << #rhs << ")" << "[" << lhs << " != " << rhs << "]";
 
-#define ASSERT_OP(op, lhs, rhs) if(!(lhs op rhs)) Signals::throw_on_destroy(__FUNCTION__, __FILE__, __LINE__).stream()
+#define ASSERT_OP(op, lhs, rhs) if(!(lhs op rhs)) mo::throw_on_destroy(__FUNCTION__, __FILE__, __LINE__).stream()
 
 /*#define ASSERT_OP(op, lhs, rhs) \
     if(lhs op rhs) { \
