@@ -20,11 +20,9 @@ namespace mo
 		std::shared_ptr<Connection> Connect(const std::function<R(T...)>& f, size_t destination_thread = GetThisThread(), bool force_queue = false, void* obj = nullptr);
         std::shared_ptr<Connection> Connect(const std::function<R(T...)>& f, IMetaObject* obj);
         std::shared_ptr<Connection> Connect(const std::function<R(T...)>& f, int dest_thread_type, bool force_queued = false, void* obj = nullptr);
-        std::shared_ptr<Connection> Connect(const std::string& name, SignalManager* mgr);
-        std::shared_ptr<Connection> Connect(ISlot* slot) = 0;
+        std::shared_ptr<Connection> Connect(ISlot* slot);
 
         void Disconnect(const std::function<R(T...)>& f);
-        void Disconnect(const std::string& name, SignalManager* mgr);
         void Disconnect(ISlot* slot);
 
         void operator()(T... args)

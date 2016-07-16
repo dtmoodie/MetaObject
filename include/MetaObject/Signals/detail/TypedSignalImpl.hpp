@@ -64,6 +64,17 @@ namespace mo
     {
         return Connect(f, thread_registry::get_instance()->get_thread(dest_thread_type), force_queued, This);
     }
+    template<class R, class...T> std::shared_ptr<Connection> 
+        Connect(const std::string& name, SignalManager* mgr)
+    {
+        
+    }
+
+    template<class R, class...T> std::shared_ptr<Connection> 
+        Connect(ISlot* slot)
+    {
+        
+    }
 
     template<class R, class...T> void 
         TypedSignal<R(T...)>::operator()(T... args)
