@@ -9,6 +9,8 @@
 #include "MetaObject/Signals/detail/SlotMacros.hpp"
 #include "MetaObject/Signals/detail/CallbackMacros.hpp"
 #include "MetaObject/Parameters//ParameterMacros.hpp"
+#include "MetaObject/Parameters/TypedParameterPtr.hpp"
+#include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
 
@@ -70,15 +72,25 @@ struct test_meta_object_parameter: public IMetaObject
     MO_END;
 };
 
+struct test_meta_object_input: public IMetaObject
+{
+    MO_BEGIN(test_meta_object_input);
+        INPUT_PARAM(int, test_int, nullptr);
+    MO_END;
+};
+
+
 
 MO_REGISTER_OBJECT(test_meta_object_signals)
 MO_REGISTER_OBJECT(test_meta_object_slots)
 MO_REGISTER_OBJECT(test_meta_object_callback)
 MO_REGISTER_OBJECT(test_meta_object_parameter)
+MO_REGISTER_OBJECT(test_meta_object_input)
 
+RuntimeObjectSystem obj_sys;
 BOOST_AUTO_TEST_CASE(test_meta_object1)
 {
-    RuntimeObjectSystem obj_sys;
+    
     obj_sys.Initialise(nullptr, nullptr);
     SignalManager mgr;
     {
@@ -139,6 +151,19 @@ BOOST_AUTO_TEST_CASE(test_meta_object1)
         auto obj = constructor->Construct();
         obj->Init(true);
         test_meta_object_parameter* ptr = static_cast<test_meta_object_parameter*>(obj);
-
     }
+}
+BOOST_AUTO_TEST_CASE(test_parameters)
+{
+    SignalManager mgr;
+    auto constructor = obj_sys.GetObjectFactorySystem()->GetConstructor("test_meta_object_parameter");
+    auto obj = constructor->Construct();
+    obj->Init(true);
+    obj->SetupSignals(&mgr);
+    test_meta_object_parameter* ptr = static_cast<test_meta_object_parameter*>(obj);
+    constructor = obj_sys.GetObjectFactorySystem()->GetConstructor("test_meta_object_input");
+    obj = constructor->Construct();
+    obj->Init(true);
+    obj->SetupSignals(&mgr);
+    
 }

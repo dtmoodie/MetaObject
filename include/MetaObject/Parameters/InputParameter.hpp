@@ -19,22 +19,24 @@ https://github.com/dtmoodie/parameters
 #pragma once
 #include "MetaObject/Detail/TypeInfo.h"
 #include "MetaObject/Detail/Export.hpp"
-
+#include "MetaObject/Parameters/IParameter.hpp"
 #include <functional>
 #include <string>
 #include <memory>
 namespace mo
 {
-    class IParameter;
-    class MO_EXPORTS InputParameter
+    
+    class MO_EXPORTS InputParameter: public virtual IParameter
     {
     public:
         typedef std::function<bool(std::weak_ptr<IParameter>)> qualifier_f;
         typedef std::shared_ptr<InputParameter> Ptr;
 
         virtual bool SetInput(std::shared_ptr<IParameter> param) = 0;
-        virtual std::weak_ptr<IParameter> GetInput() = 0;
+        virtual bool SetInput(IParameter* param) = 0;
+        virtual IParameter* GetInput() = 0;
         virtual bool AcceptsInput(std::weak_ptr<IParameter> param) const = 0;
+        virtual bool AcceptsInput(IParameter* param) const = 0;
         virtual bool AcceptsType(TypeInfo type) const = 0;
         virtual void SetQualifier(std::function<bool(std::weak_ptr<IParameter>)> f)
         {

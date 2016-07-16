@@ -299,3 +299,25 @@ mo::throw_on_destroy::~throw_on_destroy()
     LOG(debug) << "Exception at" << mo::print_callstack(0, true, ss) << log_stream_.str();
     throw mo::ExceptionWithCallStack<std::string>(log_stream_.str(), ss.str());
 }
+mo::throw_on_destroy_trace::throw_on_destroy_trace(const char* function, const char* file, int line): throw_on_destroy(function, file, line) {}
+mo::throw_on_destroy_trace::~throw_on_destroy_trace()
+{
+    std::stringstream ss;
+    LOG(trace) << "Exception at" << mo::print_callstack(0, true, ss) << log_stream_.str();
+    throw mo::ExceptionWithCallStack<std::string>(log_stream_.str(), ss.str());
+}
+mo::throw_on_destroy_debug::throw_on_destroy_debug(const char* function, const char* file, int line): throw_on_destroy(function, file, line) {}
+mo::throw_on_destroy_info::throw_on_destroy_info(const char* function, const char* file, int line): throw_on_destroy(function, file, line) {}
+mo::throw_on_destroy_info::~throw_on_destroy_info()
+{
+    std::stringstream ss;
+    LOG(info) << "Exception at" << mo::print_callstack(0, true, ss) << log_stream_.str();
+    throw mo::ExceptionWithCallStack<std::string>(log_stream_.str(), ss.str());
+}
+mo::throw_on_destroy_warning::throw_on_destroy_warning(const char* function, const char* file, int line): throw_on_destroy(function, file, line) {}
+mo::throw_on_destroy_warning::~throw_on_destroy_warning()
+{
+    std::stringstream ss;
+    LOG(warning) << "Exception at" << mo::print_callstack(0, true, ss) << log_stream_.str();
+    throw mo::ExceptionWithCallStack<std::string>(log_stream_.str(), ss.str());
+}

@@ -17,6 +17,7 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/parameters
 */
 #include "MetaObject/Parameters/IParameter.hpp"
+#include "MetaObject/Signals/TypedSignal.hpp"
 #include <algorithm>
 
 using namespace mo;
@@ -34,9 +35,8 @@ IParameter::IParameter(const std::string& name_, ParameterType flags_, long long
 
 IParameter::~IParameter()
 {
-	std::shared_ptr<TypedSignal<void(IParameter*)>> sig(delete_signal);
-	//if(sig)
-		//(*sig)(this);
+	if(auto sig = delete_signal.lock())
+        (*sig)(this);
 }
 
 
@@ -121,9 +121,8 @@ void IParameter::OnUpdate(Context* ctx)
 	if (!update_signal.expired())
 	{
 		std::shared_ptr<TypedSignal<void(Context*, IParameter*)>> sig(update_signal);
-		//(*sig)(ctx, this);
+		(*sig)(ctx, this);
 	}
-	
 }
 
 IParameter* IParameter::Commit(long long index_, Context* ctx)
@@ -170,4 +169,8 @@ void IParameter::AppendFlags(ParameterType flags_)
 bool IParameter::CheckFlags(ParameterType flag)
 {
 	return _flags & flag;
+}
+std::shared_ptr<IParameter> IParameter::DeepCopy() const
+{
+    return std::shared_ptr<IParameter>();
 }

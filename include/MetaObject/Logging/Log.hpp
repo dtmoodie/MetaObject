@@ -87,6 +87,8 @@
 
 #define LOG_FIRST_N(severity, n) static int LOG_OCCURRENCES = 0; if(LOG_OCCURRENCES <= n) ++LOG_OCCURRENCES; if(LOG_OCCURRENCES <= n) LOG(severity)
 
+#define THROW(severity) mo::throw_on_destroy_##severity(__FUNCTION__, __FILE__, __LINE__).stream()
+
 namespace mo
 {
     class MO_EXPORTS throw_on_destroy {
@@ -95,11 +97,37 @@ namespace mo
         std::ostringstream &stream();
         ~throw_on_destroy();
 
-    private:
+    protected:
         std::ostringstream log_stream_;
-        throw_on_destroy(const throw_on_destroy&);
-        void operator=(const throw_on_destroy&);
     };
+
+    class MO_EXPORTS throw_on_destroy_trace: public throw_on_destroy 
+    {
+    public:
+        throw_on_destroy_trace(const char* function, const char* file, int line);
+        ~throw_on_destroy_trace();
+    };
+    
+    class MO_EXPORTS throw_on_destroy_debug: public throw_on_destroy 
+    {
+    public:
+        throw_on_destroy_debug(const char* function, const char* file, int line);
+    };
+
+    class MO_EXPORTS throw_on_destroy_info: public throw_on_destroy 
+    {
+    public:
+        throw_on_destroy_info(const char* function, const char* file, int line);
+        ~throw_on_destroy_info();
+    };
+
+    class MO_EXPORTS throw_on_destroy_warning: public throw_on_destroy
+    {
+    public:
+        throw_on_destroy_warning(const char* function, const char* file, int line);
+        ~throw_on_destroy_warning();
+    };
+
     void MO_EXPORTS collect_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, const std::function<void(const std::string&)>& write);
     std::string MO_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut);
     std::string MO_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, std::stringstream& ss);

@@ -29,7 +29,7 @@
 
 #ifndef IOBJECT_INCLUDED
 #define IOBJECT_INCLUDED
-
+#include "MetaObject/Detail/Export.hpp"
 #include "ObjectInterface.h"
 #include <iostream>
 #include <algorithm>
@@ -92,7 +92,7 @@ template< InterfaceID Tiid, typename TSuper> struct TInterface : public TSuper
 // IObject itself below is a special case as the base class
 // Also it doesn't hurt to have it coded up explicitly for reference
 
-struct IObject
+struct MO_EXPORTS IObject
 {
     static const InterfaceID s_interfaceID = IID_IOBJECT;
 

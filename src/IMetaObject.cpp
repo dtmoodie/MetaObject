@@ -4,20 +4,12 @@
 #include "MetaObject/Signals/ISlot.hpp"
 #include "MetaObject/Signals/SignalInfo.hpp"
 #include "MetaObject/Signals/SlotInfo.hpp"
-#include <map>
-#include <set>
+#include "MetaObject/Parameters/IParameter.hpp"
+#include "MetaObject/Logging/Log.hpp"
+#include "MetaObject/Detail/IMetaObject_pImpl.hpp"
+#include "MetaObject/Parameters/InputParameter.hpp"
 using namespace mo;
 
-
-struct IMetaObject::impl
-{
-    std::map<ISignal*, std::shared_ptr<Connection>> connections;
-    std::map<std::string, std::set<ICallback*>>        _callback_name_map;
-    std::map<TypeInfo, std::set<ICallback*>>           _callback_signature_map;
-    std::set<ICallback*>                  _explicit_callbacks;
-    std::map<std::string, std::map<TypeInfo, std::weak_ptr<ISignal>>> _signals;
-    std::map<std::string, std::map<TypeInfo, ISlot*>> _slots;
-};
 
 IMetaObject::IMetaObject()
 {
@@ -39,6 +31,32 @@ void IMetaObject::Init(bool firstInit)
 void IMetaObject::SetContext(Context* ctx)
 {
     _ctx = ctx;
+    for(auto& param : _pimpl->_implicit_parameters)
+    {
+        param.second->SetContext(ctx);
+    }
+    for(auto& param : _pimpl->_parameters)
+    {
+        param.second->SetContext(ctx);
+    }
+    for(auto& slots : _pimpl->_slots)
+    {
+        for(auto& slot : slots.second)
+        {
+            slot.second->_ctx = ctx;
+        }
+    }
+    for(auto& callback : _pimpl->_explicit_callbacks)
+    {
+        callback->ctx = ctx;
+    }
+    for(auto& signals : _pimpl->_signals)
+    {
+        for(auto& signal : signals.second)
+        {
+            signal.second.lock()->_ctx = ctx;
+        }
+    }
 }
 int IMetaObject::DisconnectByName(const std::string& name)
 {
@@ -98,15 +116,125 @@ void IMetaObject::AddConnection(std::shared_ptr<Connection>& connection, ISignal
     _pimpl->connections[sig] = connection;
 }
 
-std::vector<std::weak_ptr<IParameter>> IMetaObject::GetDisplayParameters() const
+std::vector<IParameter*> IMetaObject::GetDisplayParameters() const
 {
-    std::vector<std::weak_ptr<IParameter>> output;
-    for(auto& param : _explicit_parameters)
+    std::vector<IParameter*> output;
+    for(auto& param : _pimpl->_parameters)
     {
-        output.push_back(std::weak_ptr<IParameter>(param));
+        output.push_back(param.second);
+    }
+    for(auto& param : _pimpl->_implicit_parameters)
+    {
+        output.push_back(param.second.get());
     }
     return output;
 }
+
+IParameter* IMetaObject::GetParameter(const std::string& name) const
+{
+    auto itr = _pimpl->_parameters.find(name);
+    if(itr != _pimpl->_parameters.end())
+    {
+        return itr->second;
+    }
+    THROW(debug) << "Parameter with name \"" << name << "\" not found";
+    return nullptr;
+}
+
+IParameter* IMetaObject::GetParameterOptional(const std::string& name) const
+{
+    auto itr = _pimpl->_parameters.find(name);
+    if(itr != _pimpl->_parameters.end())
+    {
+        return itr->second;
+    }
+    LOG(trace) << "Parameter with name \"" << name << "\" not found";
+    return nullptr;
+}
+
+std::vector<InputParameter*> IMetaObject::GetInputs(const std::string& name_filter) const
+{
+    std::vector<InputParameter*> output;
+    for(auto param : _pimpl->_parameters)
+    {
+        if(param.second->CheckFlags(Input_e))
+        {
+            if(name_filter.size())
+            {
+                if(param.second->GetName().find(name_filter) != std::string::npos)
+                    if(auto out = dynamic_cast<InputParameter*>(param.second))
+                        output.push_back(out);
+            }else
+            {
+                if(auto out = dynamic_cast<InputParameter*>(param.second))
+                    output.push_back(out);
+            }
+        }
+    }
+    return output;
+}
+
+std::vector<InputParameter*> IMetaObject::GetInputs(const TypeInfo& type_filter) const
+{
+    std::vector<InputParameter*> output;
+    for(auto param : _pimpl->_parameters)
+    {
+        if(param.second->CheckFlags(Input_e))
+        {
+            if(param.second->GetTypeInfo() == type_filter)
+                if(auto out = dynamic_cast<InputParameter*>(param.second))
+                    output.push_back(out);
+        }
+    }
+    return output;
+}
+
+
+/*IParameter* IMetaObject::GetExplicitParameter(const std::string& name) const
+{
+    auto itr = _pimpl->_explicit_parameters.find(name);
+    if(itr != _pimpl->_explicit_parameters.end())
+    {
+        return itr->second;
+    }
+    THROW(debug) << "Parameter with name \"" << name << "\" not found";
+    return nullptr;
+}
+
+IParameter* IMetaObject::GetExplicitParameterOptional(const std::string& name) const
+{
+    auto itr = _pimpl->_explicit_parameters.find(name);
+    if(itr != _pimpl->_explicit_parameters.end())
+    {
+        return itr->second;
+    }
+    LOG(trace) << "Parameter with name \"" << name << "\" not found";
+    return nullptr;
+}
+*/
+std::weak_ptr<IParameter> IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
+{
+    _pimpl->_parameters[param->GetTreeName()] = param.get();
+    return param;
+}
+
+/*IParameter* IMetaObject::AddParameter(IParameter* param)
+{
+    _pimpl->_explicit_parameters[param->GetName()] = param;
+    return param;
+}*/
+void IMetaObject::SetParameterRoot(const std::string& root)
+{
+    for(auto& param : _pimpl->_parameters)
+    {
+        param.second->SetTreeRoot(root);
+    }
+    for(auto& param : _pimpl->_implicit_parameters)
+    {
+        param.second->SetTreeRoot(root);
+    }
+}
+
 std::vector<ParameterInfo*> IMetaObject::GetParameterInfo(const std::string& name) const
 {
     auto output = GetParameterInfo();

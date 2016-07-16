@@ -75,7 +75,7 @@ namespace mo
 
         // Update with the values from another parameter
         virtual bool         Update(IParameter* other);
-        virtual std::shared_ptr<IParameter> DeepCopy() const = 0;
+        virtual std::shared_ptr<IParameter> DeepCopy() const;
 
         std::shared_ptr<Connection> RegisterUpdateNotifier(update_f f);
         std::shared_ptr<Connection> RegisterDeleteNotifier(delete_f f);

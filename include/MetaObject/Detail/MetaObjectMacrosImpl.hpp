@@ -127,7 +127,7 @@ template<int N> static void list_parameter_info_(std::vector<mo::ParameterInfo*>
 } \
 static void list_parameter_info_(std::vector<mo::ParameterInfo*>& info, mo::_counter_<N_> dummy) \
 { \
-}
+} 
 
 
 #define PARAMETER_INFO_END(N) \
@@ -158,6 +158,7 @@ void InitParameters(bool firstInit) \
     init_parameters_(firstInit, mo::_counter_<N_ - 1>()); \
 }
 
+
 // -------------- SLOTS -------------
 #define SLOT_START(N_) \
 template<int N> void bind_slots_(mo::_counter_<N> dummy) \
@@ -186,7 +187,8 @@ SIGNALS_START(N_) \
 SLOT_INFO_START(N_) \
 PARAMETER_INFO_START(N_) \
 SLOT_START(N_)\
-PARAMETER_START(N_)
+PARAMETER_START(N_) \
+CONTEXT_START(N_)
 
 #define MO_BEGIN_2(CLASS_NAME, PARENT, N_) \
 typedef CLASS_NAME THIS_CLASS; \

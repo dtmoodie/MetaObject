@@ -1,84 +1,65 @@
 namespace mo
 {
     template<typename T> class TypedInputParameterPtr;
-    template<typename T> TypedInputParameterPtr<T>::TypedInputParameterPtr(const std::string& name, T** userVar_, ParameterType type) :
-            userVar(userVar_)
+    template<typename T> TypedInputParameterPtr<T>::TypedInputParameterPtr(const std::string& name, T** userVar_, Context* ctx) :
+            userVar(userVar_),
+            ITypedInputParameter(name, ctx)
     {
-        input = nullptr;
     }
         
     template<typename T>  bool TypedInputParameterPtr<T>::SetInput(std::shared_ptr<IParameter> param)
     {
-        if (param == nullptr)
+        if(ITypedInputParameter<T>::SetInput(param))
         {
-            if(input)
-                input->Unsubscribe();
-                
-            input = nullptr;
-            inputConnection.reset();
-            deleteConnection.reset();
-            IParameter::OnUpdate(nullptr);
-            return true;
-        }
-        auto castedParam = std::dynamic_pointer_cast<ITypedParameter<T>>(param);
-        if (castedParam)
-        {
-            if(input)
-                input->Unsubscribe();
-                
-            input = castedParam;
-            input->Subscribe();
-            inputConnection.reset();
-            inputConnection = castedParam->RegisterNotifier(std::bind(&TypedInputParameterPtr<T>::onInputUpdate, this));
-            deleteConnection = castedParam->RegisterDeleteNotifier(std::bind(&TypedInputParameterPtr<T>::onInputDelete, this));
-            *userVar = input->GetDataPtr();
+            if(userVar)
+            {
+                if(input)
+                    *userVar = input->GetDataPtr();
+                if(shared_input)
+                    *userVar = shared_input->GetDataPtr();
+            }
             return true;
         }
         return false;
     }
-    template<typename T> std::shared_ptr<IParameter> TypedInputParameterPtr<T>::GetInput()
+    template<typename T>  bool TypedInputParameterPtr<T>::SetInput(IParameter* param)
     {
-        return input;
-    }
-
-    template<typename T> bool TypedInputParameterPtr<T>::AcceptsInput(std::weak_ptr<IParameter> param) const
-    {
-        if (qualifier)
-            return qualifier(param);
-        return TypeInfo(typeid(T)) == param->GetTypeInfo();
-    }
-
-    template<typename T> bool TypedInputParameterPtr<T>::AcceptsType(TypeInfo type) const
-    {
-        return TypeInfo(typeid(T)) == type;
-    }
-    template<typename T> T* TypedInputParameterPtr<T>::GetDataPtr(long long ts, Context* ctx = nullptr)
-    {
-        if (input)
-            return input->Data();
-        return nullptr;
-    }
-    template<typename T> T TypedInputParameterPtr<T>::GetData(long long ts = -1, Context* ctx = nullptr)
-    {
-        if(input)
-            return input->GetData();
-
-    }
-    template<typename T> bool TypedInputParameterPtr<T>::GetData(T& value, long long ts = -1, Context* ctx = nullptr)
-    {
-        if(input)
-            return input->GetData(value, ts, ctx);
+        if(ITypedInputParameter<T>::SetInput(param))
+        {
+            if(userVar)
+            {
+                if(input)
+                    *userVar = input->GetDataPtr();
+                if(shared_input)
+                    *userVar = shared_input->GetDataPtr();
+            }
+            return true;
+        }
         return false;
     }
-    template<typename T> void TypedInputParameterPtr<T>::UpdateData(T& data_, long long time_index = -1, Context* ctx = nullptr){}
-    template<typename T> void TypedInputParameterPtr<T>::UpdateData(const T& data_, long long time_index = -1, Context* ctx = nullptr){}
-    template<typename T> void TypedInputParameterPtr<T>::UpdateData(T* data_, long long time_index = -1, Context* ctx = nullptr){}
-    template<typename T> TypeInfo TypedInputParameterPtr<T>::GetTypeInfo() const
+    template<typename T> void TypedInputParameterPtr<T>::SetUserDataPtr(T** user_var_)
     {
-        return TypeInfo(typeid(T));
+        userVar = user_var_;
     }
-    template<typename T> IParameter::Ptr DeepCopy() const
+
+    template<typename T> void TypedInputParameterPtr<T>::onInputUpdate(Context* ctx, IParameter* param)
     {
-        return IParameter::Ptr();
-    }  
+        if(input)
+        {
+            if(userVar)
+                *userVar = input->GetDataPtr();
+            SetTimestamp(input->GetTimestamp());
+        }else if(shared_input)
+        {
+            SetTimestamp(shared_input->GetTimestamp());
+            if(userVar)
+                *userVar = shared_input->GetDataPtr();
+        }
+    }
+
+    template<typename T> void TypedInputParameterPtr<T>::onInputDelete(IParameter* param)
+    {
+        shared_input.reset();
+        input = nullptr;
+    }
 }

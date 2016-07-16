@@ -17,67 +17,17 @@ namespace mo
 	template<class R, class...T> class TypedSignal<R(T...)> : public ISignal, public boost::signals2::signal<R(T...)>
     {
     public:
-        void Disconnect(const std::function<R(T...)>& f)
-		{
-			boost::signals2::signal<R(T...)>::disconnect(f);
-		}
-		std::shared_ptr<Connection> Connect(const std::function<R(T...)>& f, size_t destination_thread = GetThisThread(), bool force_queue = false, void* obj = nullptr)
-        {
-            if(destination_thread != get_this_thread() || force_queue)
-            {
-                auto f_ = [f, destination_thread, This](T... args)
-                {
-                    // Lambda function receives the call from the boost signal and then pipes the actual function call
-                    // over a queue to the correct thread
-                    ThreadSpecificQueue::Push(std::bind([f](T... args_)->void
-                    {
-                        f(args_...);
-                    },args...), destination_thread, obj);
-                };
-				if(obj == nullptr)
-					return std::shared_ptr<Connection>(new Connection(boost::signals2::signal<R(T...)>::connect(f_)));
-				else
-					return std::shared_ptr<Connection>(new ClassConnection(boost::signals2::signal<R(T...)>::connect(f_), obj));
-            }else
-            {
-                return std::shared_ptr<Connection>(new Connection(boost::signals2::signal<R(T...)>::connect(f)));
-            }
-        }
-        std::shared_ptr<Connection> Connect(const std::function<R(T...)>& f, IMetaObject* obj)
-        {
-            size_t destination_thread = obj->GetContext()->thread_id;
-            if(destination_thread!= get_this_thread() || force_queue)
-            {
-                auto f_ = [f, destination_thread, This](T... args)
-                {
-                    // Lambda function receives the call from the boost signal and then pipes the actual function call
-                    // over a queue to the correct thread
-                    ThreadSpecificQueue::Push(std::bind([f](T... args_)->void
-                    {
-                        f(args_...);
-                    },args...), destination_thread, obj);
-                };
-				if(This == nullptr)
-					return std::shared_ptr<Connection>(new Connection(boost::signals2::signal<R(T...)>::connect(f_)));
-				else
-					return std::shared_ptr<Connection>(new ClassConnection(boost::signals2::signal<R(T...)>::connect(f_), obj));
-            }else
-            {
-                return std::shared_ptr<Connection>(new Connection(boost::signals2::signal<R(T...)>::connect(f)));
-            }
-        }
+		std::shared_ptr<Connection> Connect(const std::function<R(T...)>& f, size_t destination_thread = GetThisThread(), bool force_queue = false, void* obj = nullptr);
+        std::shared_ptr<Connection> Connect(const std::function<R(T...)>& f, IMetaObject* obj);
+        std::shared_ptr<Connection> Connect(const std::function<R(T...)>& f, int dest_thread_type, bool force_queued = false, void* obj = nullptr);
+        std::shared_ptr<Connection> Connect(const std::string& name, SignalManager* mgr);
+        std::shared_ptr<Connection> Connect(ISlot* slot) = 0;
 
-        std::shared_ptr<Connection> Connect(const std::function<R(T...)>& f, int dest_thread_type, bool force_queued = false, void* This = nullptr)
-        {
-            return Connect(f, thread_registry::get_instance()->get_thread(dest_thread_type), force_queued, This);
-        }
+        void Disconnect(const std::function<R(T...)>& f);
+        void Disconnect(const std::string& name, SignalManager* mgr);
+        void Disconnect(ISlot* slot);
+
         void operator()(T... args)
-        {
-            boost::signals2::signal<R(T...)>::operator()(args...);
-        }
-        virtual TypeInfo GetSignature() const
-        {
-            return TypeInfo(typeid(R(T...)));
-        }
+        TypeInfo GetSignature() const
     };
 }

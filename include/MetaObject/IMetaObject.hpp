@@ -21,6 +21,7 @@ namespace mo
     class Connection;
     
     class IParameter;
+    class InputParameter;
     template<class T> class ITypedParameter;
 
     struct ParameterInfo;
@@ -151,10 +152,21 @@ namespace mo
         virtual int  Disconnect(IMetaObject* obj);
 
         // Parameters
-        virtual std::vector<std::weak_ptr<IParameter>> GetDisplayParameters() const;
-        std::weak_ptr<IParameter> GetParameter(const std::string& name) const;
-        std::weak_ptr<IParameter> GetParameterOptional(const std::string& name) const;
+        virtual std::vector<IParameter*> GetDisplayParameters() const;
+        
+        /*std::weak_ptr<IParameter> GetParameter(const std::string& name) const;
+        std::weak_ptr<IParameter> GetParameterOptional(const std::string& name) const;*/
+        std::vector<InputParameter*> GetInputs(const std::string& name_filter = "") const;
+        std::vector<InputParameter*> GetInputs(const TypeInfo& type_filter) const;
+
+        IParameter* GetParameter(const std::string& name) const;
+        IParameter* GetParameterOptional(const std::string& name) const;
+        std::vector<IParameter*> GetParameters(const std::string& filter) const;
+        std::vector<IParameter*> GetParameters(const TypeInfo& filter) const;
+
         std::weak_ptr<IParameter> AddParameter(std::shared_ptr<IParameter> param);
+        IParameter* AddParameter(IParameter* param);
+
         template<class T> std::weak_ptr<ITypedParameter<T>> GetParameter(const std::string& name) const;
         template<class Sig> bool ConnectCallback(const std::string& callback_name, const std::string& slot_name, IMetaObject* slot_owner, bool force_queue = false);
         
@@ -165,11 +177,10 @@ namespace mo
         void AddCallback(ICallback*, const std::string& name);
         void AddSignal(std::weak_ptr<ISignal> signal, const std::string& name);
         void AddSlot(ISlot* slot, const std::string& name);
+        void SetParameterRoot(const std::string& root);
 
         Context*                                 _ctx;
-        std::vector<std::shared_ptr<IParameter>> _explicit_parameters;
         SignalManager*                           _sig_manager;
-    private:
         struct impl;
         impl* _pimpl;
     };
