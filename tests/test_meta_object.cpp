@@ -159,11 +159,12 @@ BOOST_AUTO_TEST_CASE(test_parameters)
     auto constructor = obj_sys.GetObjectFactorySystem()->GetConstructor("test_meta_object_parameter");
     auto obj = constructor->Construct();
     obj->Init(true);
-    obj->SetupSignals(&mgr);
     test_meta_object_parameter* ptr = static_cast<test_meta_object_parameter*>(obj);
+	ptr->SetupSignals(&mgr);
     constructor = obj_sys.GetObjectFactorySystem()->GetConstructor("test_meta_object_input");
     obj = constructor->Construct();
     obj->Init(true);
-    obj->SetupSignals(&mgr);
+	test_meta_object_input* input = static_cast<test_meta_object_input*>(obj);
+    input->SetupSignals(&mgr);
     
 }

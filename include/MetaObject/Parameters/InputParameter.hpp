@@ -26,7 +26,7 @@ https://github.com/dtmoodie/parameters
 namespace mo
 {
     
-    class MO_EXPORTS InputParameter: public virtual IParameter
+    class MO_EXPORTS InputParameter
     {
     public:
         typedef std::function<bool(std::weak_ptr<IParameter>)> qualifier_f;

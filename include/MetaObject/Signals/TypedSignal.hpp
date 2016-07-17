@@ -1,5 +1,6 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
+#include <MetaObject/Detail/TypeInfo.h>
 #include "MetaObject/Detail/Placeholders.h"
 #include "MetaObject/Thread/ThreadRegistry.hpp"
 #include "MetaObject/Thread/InterThread.hpp"
@@ -25,7 +26,7 @@ namespace mo
         void Disconnect(const std::function<R(T...)>& f);
         void Disconnect(ISlot* slot);
 
-        void operator()(T... args)
-        TypeInfo GetSignature() const
+		void operator()(T... args);
+		TypeInfo GetSignature() const;
     };
 }

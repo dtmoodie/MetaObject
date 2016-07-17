@@ -37,25 +37,21 @@ namespace mo
                 {
                     // Check context jazz
 
-                    if(_ctx && ptr->_ctx)
-                    {
-                        if(_ctx->thread_id != ptr->_ctx->thread_id)
+						/*
+                        auto f_ = [this](T... args)->R
                         {
-                            auto f_ = [this](T... args)->R
-                            {
-                                // Lambda function receives the call from the boost signal and then pipes the actual function call
-                                // over a queue to the correct thread
+                            // Lambda function receives the call from the boost signal and then pipes the actual function call
+                            // over a queue to the correct thread
                                 
-                                ThreadSpecificQueue::Push(std::bind(
-                                    [this](T... args_)->void
-                                    {
-                                        (*this)(args_...);
-                                    },args...), _ctx->thread_id, this);
-                                return R(); // actual return values ignored when called from a signal
-                            };
-					        return std::shared_ptr<Connection>(new Connection(typed->connect(f_)));
-                        }
-                    }
+                            ThreadSpecificQueue::Push(std::bind(
+                                [this](T... args_)->void
+                                {
+                                    (*this)(args_...);
+                                },args...), _ctx->thread_id, this);
+                            return R(); // actual return values ignored when called from a signal
+                        };
+					    return std::shared_ptr<Connection>(new Connection(typed->connect(f_)));
+						*/
 					return std::shared_ptr<Connection>(new Connection(typed->connect(*this)));
                 }
             }
@@ -115,27 +111,21 @@ namespace mo
                 auto typed = std::dynamic_pointer_cast<TypedSignal<void(T...)>>(ptr);
                 if(typed)
                 {
-                    // Check context jazz
+                    // Check context jazz... 
 
-                    if(_ctx && ptr->_ctx)
+                    
+                    auto f_ = [this](T... args)
                     {
-                        if(_ctx->thread_id != ptr->_ctx->thread_id)
-                        {
-                            auto f_ = [this](T... args)
-                            {
-                                // Lambda function receives the call from the boost signal and then pipes the actual function call
-                                // over a queue to the correct thread
+                        // Lambda function receives the call from the boost signal and then pipes the actual function call
+                        // over a queue to the correct thread
                                 
-                                ThreadSpecificQueue::Push(std::bind(
-                                    [this](T... args_)->void
-                                    {
-                                        (*this)(args_...);
-                                    },args...), _ctx->thread_id, this);
-                            };
-					        return std::shared_ptr<Connection>(new Connection(typed->connect(f_)));
-                        }
-                    }
-					return std::shared_ptr<Connection>(new Connection(typed->connect(*this)));
+                        ThreadSpecificQueue::Push(std::bind(
+                            [this](T... args_)->void
+                            {
+                                (*this)(args_...);
+                            },args...), _ctx->thread_id, this);
+                    };
+					return std::shared_ptr<Connection>(new Connection(typed->connect(f_)));
                 }
             }
             return std::shared_ptr<Connection>();

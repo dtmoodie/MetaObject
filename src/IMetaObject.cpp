@@ -50,13 +50,6 @@ void IMetaObject::SetContext(Context* ctx)
     {
         callback->ctx = ctx;
     }
-    for(auto& signals : _pimpl->_signals)
-    {
-        for(auto& signal : signals.second)
-        {
-            signal.second.lock()->_ctx = ctx;
-        }
-    }
 }
 int IMetaObject::DisconnectByName(const std::string& name)
 {
