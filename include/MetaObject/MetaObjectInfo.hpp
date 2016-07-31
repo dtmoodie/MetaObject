@@ -33,12 +33,6 @@ namespace mo
             T::list_slots_(info, mo::_counter_<N>());
             return info;
         }
-        static std::vector<CallbackInfo*>  ListCallbackInfoStatic()
-        {
-            std::vector<CallbackInfo*> info;
-            T::list_callbacks_(info, mo::_counter_<N>());
-            return info;
-        }
 		static std::string                 TooltipStatic()
         {
             return "";
@@ -62,10 +56,6 @@ namespace mo
 		std::vector<SlotInfo*>             ListSlotInfo()
         {
             return ListSlotInfoStatic();
-        }
-        std::vector<CallbackInfo*>         ListCallbackInfo()
-        {
-            return ListCallbackInfoStatic();
         }
 		std::string                        GetObjectTooltip()
         {

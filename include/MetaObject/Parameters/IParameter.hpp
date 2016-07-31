@@ -19,7 +19,7 @@ https://github.com/dtmoodie/MetaObject
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
 #include "MetaObject/Detail/TypeInfo.h"
-
+#include "MetaObject/Signals/TypedSignal.hpp"
 #include <boost/core/noncopyable.hpp>
 #include <boost/parameter/name.hpp>
 
@@ -33,7 +33,9 @@ namespace mo
 	class ISignal;
 	template<class T> class TypedSignal;
 	class TypeInfo;
-
+	template<class T> class TypedSlot;
+	class ISignalRelay;
+	template<class T> class TypedSignalRelay;
     enum ParameterType
     {
         None_e = 0,
@@ -48,8 +50,8 @@ namespace mo
     {
     public:
         typedef std::shared_ptr<IParameter> Ptr;
-        typedef std::function<void(Context*, IParameter*)> update_f;
-        typedef std::function<void(IParameter*)> delete_f;
+        typedef TypedSlot<void(Context*, IParameter*)> update_f;
+        typedef TypedSlot<void(IParameter const*)> delete_f;
 
 		IParameter(const std::string& name_ = "", ParameterType flags_ = Control_e, long long ts = -1, Context* ctx = nullptr);
 
@@ -77,8 +79,16 @@ namespace mo
         virtual bool         Update(IParameter* other);
         virtual std::shared_ptr<IParameter> DeepCopy() const;
 
-        std::shared_ptr<Connection> RegisterUpdateNotifier(update_f f);
-        std::shared_ptr<Connection> RegisterDeleteNotifier(delete_f f);
+        std::shared_ptr<Connection> RegisterUpdateNotifier(update_f* f);
+		std::shared_ptr<Connection> RegisterUpdateNotifier(ISlot* f);
+		std::shared_ptr<Connection> RegisterUpdateNotifier(std::shared_ptr<ISignalRelay> relay);
+		std::shared_ptr<Connection> RegisterUpdateNotifier(std::shared_ptr<TypedSignalRelay<void(Context*, IParameter*)>>& relay);
+
+        std::shared_ptr<Connection> RegisterDeleteNotifier(delete_f* f);
+		std::shared_ptr<Connection> RegisterDeleteNotifier(ISlot* f);
+		std::shared_ptr<Connection> RegisterDeleteNotifier(std::shared_ptr<ISignalRelay> relay);
+		std::shared_ptr<Connection> RegisterDeleteNotifier(std::shared_ptr<TypedSignalRelay<void(IParameter const*)>>& relay);
+
 
         // Sets changed to true and emits update signal
         void OnUpdate(Context* ctx = nullptr);
@@ -99,8 +109,8 @@ namespace mo
 
 
         bool modified;
-		std::weak_ptr<TypedSignal<void(Context*, IParameter*)>> update_signal;
-		std::weak_ptr<TypedSignal<void(IParameter*)>>           delete_signal;
+		TypedSignal<void(Context*, IParameter*)> update_signal;
+		TypedSignal<void(IParameter const*)>	 delete_signal;
 	protected:
 		std::string          _name;
 		std::string          _tree_root;

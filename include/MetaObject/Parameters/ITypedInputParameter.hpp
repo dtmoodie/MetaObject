@@ -28,13 +28,13 @@ namespace mo
         ITypedParameter<T>* UpdateData(T* data_, long long ts, Context* ctx){return this;}
 
     protected:
-        virtual void onInputDelete(IParameter* param);
+        virtual void onInputDelete(IParameter const* param);
         virtual void onInputUpdate(Context* ctx, IParameter* param);
         std::shared_ptr<ITypedParameter<T>> shared_input;
         ITypedParameter<T>* input;
     private:
-        std::shared_ptr<Connection> inputConnection;
-        std::shared_ptr<Connection> deleteConnection;
+		TypedSlot<void(Context*, IParameter*)> update_slot;
+		TypedSlot<void(IParameter const*)> delete_slot;
     };
 }
 #include "detail/ITypedInputParameterImpl.hpp"

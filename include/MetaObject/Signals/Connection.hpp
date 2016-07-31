@@ -4,21 +4,48 @@
 #include <boost/signals2/connection.hpp>
 namespace mo
 {
+	class ISlot;
+	class ISignal;
+	class ISignalRelay;
+	class IMetaObject;
+
+	// A connection is only valid for as long as the underlying slot is valid
     class MO_EXPORTS Connection
     {
     public:
-        Connection(const boost::signals2::connection& connection_);
         virtual ~Connection();
-    private:
-        boost::signals2::scoped_connection _connection;
+		virtual bool Disconnect() = 0;
     };
 
-    class MO_EXPORTS ClassConnection: public Connection
+	class MO_EXPORTS SlotConnection : public Connection
+	{
+	public:
+		SlotConnection(ISlot* slot, std::shared_ptr<ISignalRelay> relay);
+		virtual bool Disconnect();
+	protected:
+		ISlot* _slot;
+		std::weak_ptr<ISignalRelay> _relay;
+	};
+
+    class MO_EXPORTS ClassConnection: public SlotConnection
     {
-        void* _connecting_class;
     public:
-        ClassConnection(const boost::signals2::connection& connection_, void* connecting_class_);
-        virtual ~ClassConnection();
+		ClassConnection(ISlot* slot, std::shared_ptr<ISignalRelay> relay, IMetaObject* obj);
+		~ClassConnection();
+		virtual bool Disconnect();
+	protected:
+		IMetaObject* _obj;
     };
+
+	class MO_EXPORTS SignalConnection : public Connection
+	{
+	public:
+		SignalConnection(ISignal* signal, std::shared_ptr<ISignalRelay> relay);
+		bool Disconnect();
+	protected:
+		ISignal* _signal;
+		std::weak_ptr<ISignalRelay> _relay;
+	};
+
     
 } // namespace Signals

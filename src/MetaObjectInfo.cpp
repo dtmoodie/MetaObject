@@ -1,7 +1,6 @@
 #include "MetaObject/MetaObjectInfo.hpp"
 #include "MetaObject/Parameters/ParameterInfo.hpp"
 #include "MetaObject/Signals/SignalInfo.hpp"
-#include "MetaObject/Signals/CallbackInfo.hpp"
 #include "MetaObject/Signals/SlotInfo.hpp"
 #include <sstream>
 using namespace mo;
@@ -48,22 +47,7 @@ std::string IMetaObjectInfo::Print()
                 ss << "    " << sig->description << "\n";
         }
     }
-    auto callbacks = ListCallbackInfo();
-    if(callbacks.size())
-    {
-        ss << "----------- Callbacks ---------------- \n";
-        for(auto& cb : callbacks)
-        {
-            ss << cb->name;
-            for(int i = 0; i < 20 - cb->name.size(); ++i)
-                ss << " ";
-            ss << " [" << cb->signature.name() << "]\n";
-            if(cb->tooltip.size())
-                ss << "    " << cb->tooltip << "\n";
-            if(cb->description.size())
-                ss << "    " << cb->description << "\n";
-        }
-    }
+    
     auto slots = ListSlotInfo();
     if(slots.size())
     {

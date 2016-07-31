@@ -57,7 +57,7 @@ namespace mo
         }
     }
 
-    template<typename T> void TypedInputParameterPtr<T>::onInputDelete(IParameter* param)
+    template<typename T> void TypedInputParameterPtr<T>::onInputDelete(IParameter const* param)
     {
         shared_input.reset();
         input = nullptr;

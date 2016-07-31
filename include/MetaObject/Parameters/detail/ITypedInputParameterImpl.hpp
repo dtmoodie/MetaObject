@@ -6,8 +6,10 @@ namespace mo
     template<class T> class ITypedInputParameter;
 
     template<class T> ITypedInputParameter<T>::ITypedInputParameter(const std::string& name, Context* ctx):
-            ITypedParameter(name, Input_e, -1, ctx)
+            ITypedParameter(name, Input_e, -1, ctx), input(nullptr)
     {
+		update_slot = std::bind(&ITypedInputParameter<T>::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2);
+		delete_slot = std::bind(&ITypedInputParameter<T>::onInputDelete, this, std::placeholders::_1);
     }
     template<class T> ITypedInputParameter<T>::~ITypedInputParameter()
     {
@@ -30,8 +32,6 @@ namespace mo
             }
             input = nullptr;
             shared_input.reset();
-            inputConnection.reset();
-            deleteConnection.reset();
             this->OnUpdate(nullptr);
             return true;
         }
@@ -42,10 +42,9 @@ namespace mo
             if(shared_input) shared_input->Unsubscribe();
 
             shared_input = casted_param;
-            inputConnection = casted_param->RegisterUpdateNotifier(
-                std::bind(&ITypedInputParameter<T>::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2));
-            deleteConnection = casted_param->RegisterDeleteNotifier(
-                std::bind(&ITypedInputParameter<T>::onInputDelete, this, std::placeholders::_1));
+            casted_param->RegisterUpdateNotifier(&update_slot);
+			casted_param->RegisterDeleteNotifier(&delete_slot);
+
             this->OnUpdate(casted_param->GetContext());
             return true;
         }
@@ -66,8 +65,6 @@ namespace mo
             }
             input = nullptr;
             shared_input.reset();
-            inputConnection.reset();
-            deleteConnection.reset();
             this->OnUpdate(nullptr);
             return true;
         }
@@ -78,10 +75,8 @@ namespace mo
             if(shared_input) shared_input->Unsubscribe();
 
             input = casted_param;
-            inputConnection = casted_param->RegisterUpdateNotifier(
-                std::bind(&ITypedInputParameter<T>::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2));
-            deleteConnection = casted_param->RegisterDeleteNotifier(
-                std::bind(&ITypedInputParameter<T>::onInputDelete, this, std::placeholders::_1));
+			casted_param->RegisterUpdateNotifier(&update_slot);
+			casted_param->RegisterDeleteNotifier(&delete_slot);
             this->OnUpdate(casted_param->GetContext());
             return true;
         }
@@ -138,7 +133,7 @@ namespace mo
     }
 
     // ---- protected functions
-    template<class T> void ITypedInputParameter<T>::onInputDelete(IParameter* param)
+    template<class T> void ITypedInputParameter<T>::onInputDelete(IParameter const* param)
     {
         std::lock_guard<std::recursive_mutex> lock(this->_mtx);
         this->shared_input.reset();

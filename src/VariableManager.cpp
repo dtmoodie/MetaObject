@@ -2,16 +2,20 @@
 #include "MetaObject/Parameters/IParameter.hpp"
 #include "MetaObject/Parameters/InputParameter.hpp"
 #include "MetaObject/Logging/Log.hpp"
+#include "MetaObject\Signals/TypedSlot.hpp"
+#include "MetaObject/Signals/TypedSignalRelay.hpp"
 #include <map>
 using namespace mo;
 struct VariableManager::impl
 {
     std::map<std::string, std::weak_ptr<IParameter>> _parameters;
     std::map<std::string, std::shared_ptr<Connection>> _delete_connections;
+	TypedSlot<void(IParameter*)> delete_slot;
 };
 VariableManager::VariableManager()
 {
     pimpl = new impl();
+	pimpl->delete_slot = std::bind(&VariableManager::RemoveParameter, this, std::placeholders::_1);
 }
 VariableManager::~VariableManager()
 {
@@ -20,7 +24,7 @@ VariableManager::~VariableManager()
 void VariableManager::AddParameter(std::shared_ptr<IParameter> param)
 {
     pimpl->_parameters[param->GetTreeName()] = param;
-    pimpl->_delete_connections[param->GetTreeName()] = param->RegisterDeleteNotifier(std::bind(&VariableManager::RemoveParameter, this, std::placeholders::_1));
+    pimpl->_delete_connections[param->GetTreeName()] = param->RegisterDeleteNotifier(&pimpl->delete_slot);
 }
 void VariableManager::RemoveParameter(IParameter* param)
 {

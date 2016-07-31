@@ -5,10 +5,11 @@
 #define SLOT__(NAME, N, RETURN, ...)\
     virtual RETURN NAME(__VA_ARGS__); \
     mo::TypedSlot<RETURN(__VA_ARGS__)> COMBINE(_slot_##NAME##_, N); \
-    void bind_slots_(mo::_counter_<N> dummy) \
+    void bind_slots_(bool firstInit, mo::_counter_<N> dummy) \
     { \
         COMBINE(_slot_##NAME##_, N) = my_bind((RETURN(THIS_CLASS::*)(__VA_ARGS__))&THIS_CLASS::NAME, this, make_int_sequence<BOOST_PP_VARIADIC_SIZE(__VA_ARGS__)>{} ); \
         AddSlot(&COMBINE(_slot_##NAME##_, N), #NAME); \
+		bind_slots_(firstInit, --dummy); \
     } \
     static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy) \
     { \
@@ -20,10 +21,11 @@
 #define SLOT_1(RETURN, N, NAME) \
     virtual RETURN NAME(); \
     mo::TypedSlot<RETURN(void)> COMBINE(_slot_##NAME##_, N); \
-    void bind_slots_(mo::_counter_<N> dummy) \
+    void bind_slots_(bool firstInit, mo::_counter_<N> dummy) \
     { \
         COMBINE(_slot_##NAME##_, N) = std::bind((RETURN(THIS_CLASS::*)())&THIS_CLASS::NAME, this); \
         AddSlot(&COMBINE(_slot_##NAME##_, N), #NAME); \
+		bind_slots_(firstInit, --dummy); \
     } \
     static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy) \
     { \
@@ -82,20 +84,20 @@ int connect_(mo::signal_manager* manager, mo::_counter_<N> dummy) \
 #define REGISTER_SLOT(NAME) REGISTER_SLOT_(NAME, __COUNTER__)
 
 #ifdef _MSC_VER
-#define SLOT_DEF(RET, ...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__)(RET, __COUNTER__, __VA_ARGS__), BOOST_PP_EMPTY())
+#define MO_SLOT(RET, ...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__)(RET, __COUNTER__, __VA_ARGS__), BOOST_PP_EMPTY())
 #else
-#define SLOT_DEF(NAME, ...) BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__)
+#define MO_SLOT(NAME, ...) BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__)
 #endif
 
 #ifdef _MSC_VER
-#define SLOT_OVERLOAD(NAME, ...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(SLOT_OVERLOAD_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__), BOOST_PP_EMPTY())
+#define MO_SLOT_OVERLOAD(NAME, ...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(SLOT_OVERLOAD_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__), BOOST_PP_EMPTY())
 #else
-#define SLOT_OVERLOAD(NAME, ...) BOOST_PP_OVERLOAD(SLOT_OVERLOAD_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__)
+#define MO_SLOT_OVERLOAD(NAME, ...) BOOST_PP_OVERLOAD(SLOT_OVERLOAD_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__)
 #endif
 
 #define CALL_REGISTER_SLOT(name) REGISTER_SLOT(name)
 #define REGISTER_SLOT_HELPER(NAME, ...) CALL_REGISTER_SLOT(NAME);
 
 #define AUTO_SLOT(RETURN, ...) \
-SLOT_DEF(RETURN, __VA_ARGS__); \
+MO_SLOT(RETURN, __VA_ARGS__); \
 REGISTER_SLOT_HELPER(__VA_ARGS__)

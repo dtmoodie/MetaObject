@@ -2,8 +2,8 @@
 #include "MetaObject/Logging/Log.hpp"
 namespace mo
 {
-    class SignalManager;
-    template<typename T> class TypedSignal;
+    //class SignalManager;
+    /*template<typename T> class TypedSignal;
 
     template<typename T> std::weak_ptr<TypedSignal<T>> SignalManager::GetSignalOptional(const std::string& name)
 	{
@@ -31,4 +31,5 @@ namespace mo
 		}
         return std::weak_ptr<TypedSignal<T>>(std::dynamic_pointer_cast<TypedSignal<T>>(sig));
     }
+	*/
 }

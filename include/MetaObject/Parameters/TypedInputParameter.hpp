@@ -98,7 +98,7 @@ namespace mo
         T** userVar; // Pointer to the user space pointer variable of type T
         void updateUserVar();
         virtual void onInputUpdate(Context* ctx, IParameter* param);
-        virtual void onInputDelete(IParameter* param);
+        virtual void onInputDelete(IParameter const* param);
     };
 }
 #include "MetaObject/Parameters/detail/TypedInputParameterImpl.hpp"

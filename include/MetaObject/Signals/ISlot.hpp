@@ -5,18 +5,22 @@
 namespace mo
 {
     class ISignal;
-    class ICallback;
     class Context;
     class Connection;
     class IMetaObject;
+	class ISignalRelay;
     class MO_EXPORTS ISlot
     {
     public:
         virtual ~ISlot();
-        virtual std::shared_ptr<Connection> Connect(std::weak_ptr<ISignal>& signal) = 0;
-        virtual bool Connect(std::weak_ptr<ICallback>& cb) const = 0;
-        virtual bool Connect(ICallback* cb) const = 0;
+        virtual std::shared_ptr<Connection> Connect(ISignal* sig) = 0;
+        virtual std::shared_ptr<Connection> Connect(std::shared_ptr<ISignalRelay>& relay) = 0;
+		virtual bool Disconnect(std::weak_ptr<ISignalRelay> relay) = 0;
         virtual TypeInfo GetSignature() const = 0;
-        Context* _ctx = nullptr;
+		IMetaObject* GetParent() const;
+	protected:
+		friend class IMetaObject;
+		void SetParent(IMetaObject* parent);
+		IMetaObject* _parent = nullptr;
     };
 }

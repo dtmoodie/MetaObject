@@ -1,90 +1,206 @@
 #pragma once
-
+#include "MetaObject/Signals/TypedSlot.hpp"
+#include "MetaObject/Signals/TypedSignalRelay.hpp"
+#include "MetaObject/Logging/Log.hpp"
+#include "MetaObject/Signals/Connection.hpp"
 namespace mo
 {
     template<class Sig> class TypedSignal;
-     
-    template<class R, class...T> void 
-        TypedSignal<R(T...)>::Disconnect(const std::function<R(T...)>& f)
+	template<class R, class...T>
+	TypedSignal<R(T...)>::TypedSignal()
 	{
-		boost::signals2::signal<R(T...)>::disconnect(f);
+		(void*)&_relay_factory;
 	}
 
-	template<class R, class...T> std::shared_ptr<Connection> 
-        TypedSignal<R(T...)>::Connect(const std::function<R(T...)>& f, size_t destination_thread = GetThisThread(), bool force_queue = false, void* obj = nullptr)
+    template<class R, class...T> 
+	R TypedSignal<R(T...)>::operator()(T... args)
     {
-        if(destination_thread != get_this_thread() || force_queue)
-        {
-            auto f_ = [f, destination_thread, This](T... args)
-            {
-                // Lambda function receives the call from the boost signal and then pipes the actual function call
-                // over a queue to the correct thread
-                ThreadSpecificQueue::Push(std::bind([f](T... args_)->void
-                {
-                    f(args_...);
-                },args...), destination_thread, obj);
-            };
-			if(obj == nullptr)
-				return std::shared_ptr<Connection>(new Connection(boost::signals2::signal<R(T...)>::connect(f_)));
-			else
-				return std::shared_ptr<Connection>(new ClassConnection(boost::signals2::signal<R(T...)>::connect(f_), obj));
-        }else
-        {
-            return std::shared_ptr<Connection>(new Connection(boost::signals2::signal<R(T...)>::connect(f)));
-        }
+		if (_typed_relay)
+		{
+			return (*_typed_relay)(this, args...);
+		}
+		THROW(debug) << "Not connected to a signal relay";
     }
 
-    template<class R, class...T> std::shared_ptr<Connection> 
-        TypedSignal<R(T...)>::Connect(const std::function<R(T...)>& f, IMetaObject* obj)
-    {
-        size_t destination_thread = obj->GetContext()->thread_id;
-        if(destination_thread!= get_this_thread() || force_queue)
-        {
-            auto f_ = [f, destination_thread, This](T... args)
-            {
-                // Lambda function receives the call from the boost signal and then pipes the actual function call
-                // over a queue to the correct thread
-                ThreadSpecificQueue::Push(std::bind([f](T... args_)->void
-                {
-                    f(args_...);
-                },args...), destination_thread, obj);
-            };
-			if(This == nullptr)
-				return std::shared_ptr<Connection>(new Connection(boost::signals2::signal<R(T...)>::connect(f_)));
-			else
-				return std::shared_ptr<Connection>(new ClassConnection(boost::signals2::signal<R(T...)>::connect(f_), obj));
-        }else
-        {
-            return std::shared_ptr<Connection>(new Connection(boost::signals2::signal<R(T...)>::connect(f)));
-        }
-    }
-
-    template<class R, class...T>std::shared_ptr<Connection> 
-        TypedSignal<R(T...)>::Connect(const std::function<R(T...)>& f, int dest_thread_type, bool force_queued, void* This)
-    {
-        return Connect(f, thread_registry::get_instance()->get_thread(dest_thread_type), force_queued, This);
-    }
-    template<class R, class...T> std::shared_ptr<Connection> 
-        Connect(const std::string& name, SignalManager* mgr)
-    {
-        
-    }
-
-    template<class R, class...T> std::shared_ptr<Connection> 
-        Connect(ISlot* slot)
-    {
-        
-    }
-
-    template<class R, class...T> void 
-        TypedSignal<R(T...)>::operator()(T... args)
-    {
-        boost::signals2::signal<R(T...)>::operator()(args...);
-    }
-
-    template<class R, class...T> TypeInfo 
-        TypedSignal<R(T...)>::GetSignature() const
+    template<class R, class...T> 
+	TypeInfo TypedSignal<R(T...)>::GetSignature() const
     {
         return TypeInfo(typeid(R(T...)));
     }
+
+	template<class R, class...T>
+	std::shared_ptr<Connection> TypedSignal<R(T...)>::Connect(ISlot* slot)
+	{
+		return slot->Connect(this);
+	}
+
+	template<class R, class...T>
+	std::shared_ptr<Connection> TypedSignal<R(T...)>::Connect(std::shared_ptr<ISignalRelay>& relay)
+	{
+		if (relay == nullptr)
+		{
+			relay.reset(new TypedSignalRelay<R(T...)>());
+		}
+		auto typed = std::dynamic_pointer_cast<TypedSignalRelay<R(T...)>>(relay);
+		if (typed)
+			return Connect(typed);
+		std::shared_ptr<Connection>();
+	}
+
+	template<class R, class...T>
+	std::shared_ptr<Connection> TypedSignal<R(T...)>::Connect(std::shared_ptr<TypedSignalRelay<R(T...)>>& relay)
+	{
+		if (relay == nullptr)
+		{
+			relay.reset(new TypedSignalRelay<R(T...)>());
+		}
+		if (relay != _typed_relay)
+		{
+			_typed_relay = relay;
+			return std::shared_ptr<Connection>(new SignalConnection(this, relay));
+		}
+		std::shared_ptr<Connection>();
+	}
+
+	template<class R, class...T>
+	bool TypedSignal<R(T...)>::Disconnect()
+	{
+		if (_typed_relay)
+		{
+			_typed_relay.reset();
+			return true;
+		}
+		return false;
+	}
+
+	template<class R, class...T>
+	bool TypedSignal<R(T...)>::Disconnect(ISlot* slot)
+	{
+		if (_typed_relay)
+		{
+			if (_typed_relay->_slot == slot)
+			{
+				_typed_relay.reset();
+				return true;
+			}
+		}
+		return false;
+	}
+
+	template<class R, class...T>
+	bool TypedSignal<R(T...)>::Disconnect(std::weak_ptr<ISignalRelay> relay_)
+	{
+		auto relay = relay_.lock();
+		if (_typed_relay == relay)
+		{
+			_typed_relay.reset();
+			return true;
+		}
+		return false;
+	}
+
+	template<class R, class...T> SignalRelayFactory<R(T...)> TypedSignal<R(T...)>::_relay_factory;
+	// ---------------------------------------------------------------------
+	// void specialization 
+	template<class...T> 
+	TypedSignal<void(T...)>::TypedSignal()
+	{
+		(void*)&_relay_factory;
+	}
+
+	template<class...T>
+	void TypedSignal<void(T...)>::operator()(T... args)
+	{
+		for (auto& relay : _typed_relays)
+		{
+			if (relay)
+			{
+				(*relay)(this, args...);
+			}
+		}
+	}
+
+	template<class...T>
+	TypeInfo TypedSignal<void(T...)>::GetSignature() const
+	{
+		return TypeInfo(typeid(void(T...)));
+	}
+
+	template<class...T>
+	std::shared_ptr<Connection> TypedSignal<void(T...)>::Connect(ISlot* slot)
+	{
+		return slot->Connect(this);
+	}
+
+	template<class...T>
+	std::shared_ptr<Connection> TypedSignal<void(T...)>::Connect(std::shared_ptr<ISignalRelay>& relay)
+	{
+		if (relay == nullptr)
+		{
+			relay.reset(new TypedSignalRelay<void(T...)>());
+		}
+		auto typed = std::dynamic_pointer_cast<TypedSignalRelay<void(T...)>>(relay);
+		if (typed)
+			return Connect(typed);
+		std::shared_ptr<Connection>();
+	}
+
+	template<class...T>
+	std::shared_ptr<Connection> TypedSignal<void(T...)>::Connect(std::shared_ptr<TypedSignalRelay<void(T...)>>& relay)
+	{
+		if (relay == nullptr)
+		{
+			relay.reset(new TypedSignalRelay<void(T...)>());
+		}
+		auto itr = std::find(_typed_relays.begin(), _typed_relays.end(), relay);
+		if (itr == _typed_relays.end())
+		{
+			_typed_relays.push_back(relay);
+			return std::shared_ptr<Connection>(new SignalConnection(this, relay));
+		}
+		std::shared_ptr<Connection>();
+	}
+
+	template<class...T>
+	bool TypedSignal<void(T...)>::Disconnect()
+	{
+		if (_typed_relays.size())
+		{
+			_typed_relays.clear();
+			return true;
+		}
+		return false;
+	}
+
+	template<class...T>
+	bool TypedSignal<void(T...)>::Disconnect(ISlot* slot_)
+	{
+		for (auto relay = _typed_relays.begin(); relay != _typed_relays.end(); ++relay)
+		{
+			for (auto& slot : (*relay)->_slots)
+			{
+				if (slot == slot_)
+				{
+					_typed_relays.erase(relay);
+					return true;
+				}
+			}
+		}
+		return false;
+	}
+
+	template<class...T>
+	bool TypedSignal<void(T...)>::Disconnect(std::weak_ptr<ISignalRelay> relay_)
+	{
+		auto relay = relay_.lock();
+		auto itr = std::find(_typed_relays.begin(), _typed_relays.end(), relay);
+		if (itr != _typed_relays.end())
+		{
+			_typed_relays.erase(itr);
+			return true;
+		}
+		return false;
+	}
+
+	template<class...T> SignalRelayFactory<void(T...)> TypedSignal<void(T...)>::_relay_factory;
 }

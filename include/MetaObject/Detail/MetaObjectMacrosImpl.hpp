@@ -24,41 +24,23 @@ std::vector<mo::SignalInfo*> GetSignalInfo() const \
 { \
     return GetSignalInfoStatic(); \
 }
+
 // ---------------- SIGNALS ------------
 #define SIGNALS_START(N_) \
-template<int N> int init_signals_(SignalManager* mgr, mo::_counter_<N> dummy) \
+template<int N> int init_signals_(bool firstInit, mo::_counter_<N> dummy) \
 { \
-    return init_signals_(mgr, --dummy); \
+    return init_signals_(firstInit, --dummy); \
 } \
-int init_signals_(SignalManager* mgr, mo::_counter_<N_> dummy) \
+int init_signals_(bool firstInit, mo::_counter_<N_> dummy) \
 { \
     return 0; \
-} \
-template<int N> int connect_by_name_(const std::string& name_, mo::SignalManager* mgr, mo::_counter_<N> dummy) \
-{ \
-    return connect_by_name_(name_, mgr, --dummy); \
-} \
-int connect_by_name_(const std::string& name_, mo::SignalManager* mgr, mo::_counter_<N_> dummy) \
-{ \
-    return 0; \
-} \
-template<int N> bool connect_by_name_(const std::string& name_, std::weak_ptr<ISignal> sig, mo::_counter_<N> dummy) \
-{ \
-    return connect_by_name_(name_, sig, --dummy); \
-} \
-bool connect_by_name_(const std::string& name_, std::weak_ptr<ISignal> sig, mo::_counter_<N_> dummy) \
-{ \
-    return false; \
 }
 
+
 #define SIGNALS_END(N_) \
-virtual bool ConnectByName(const std::string& name, std::weak_ptr<ISignal> sig) \
+virtual int InitSignals(bool firstInit) \
 { \
-    return connect_by_name_(name, sig, mo::_counter_<N_-1>()); \
-} \
-virtual int ConnectByName(const std::string& name, mo::SignalManager* mgr) \
-{ \
-    return connect_by_name_(name, mgr, mo::_counter_<N_-1>()); \
+	return init_signals_(firstInit, mo::_counter_<N_-1>()); \
 }
 
 // ---------------- SLOT INFO ------------
@@ -161,18 +143,18 @@ void InitParameters(bool firstInit) \
 
 // -------------- SLOTS -------------
 #define SLOT_START(N_) \
-template<int N> void bind_slots_(mo::_counter_<N> dummy) \
+template<int N> void bind_slots_(bool firstInit, mo::_counter_<N> dummy) \
 { \
-    bind_slots_(--dummy); \
+    bind_slots_(firstInit, --dummy); \
 } \
-void bind_slots_(mo::_counter_<N_> dummy)  \
+void bind_slots_(bool firstInit, mo::_counter_<N_> dummy)  \
 {  \
 }
 
 #define SLOT_END(N_) \
-void BindSlots() \
+void BindSlots(bool firstInit) \
 { \
-    bind_slots_(mo::_counter_<N_-1>()); \
+    bind_slots_(firstInit, mo::_counter_<N_-1>()); \
 }
 
 
@@ -202,21 +184,21 @@ SLOT_START(N_)\
 PARAMETER_START(N_)
 
 #define MO_END_(N) \
-template<typename T> int call_parent_setup(mo::SignalManager* manager, typename std::enable_if<mo::has_parent<T>::value, void>::type* = nullptr) \
+template<typename T> int call_parent_setup(mo::RelayManager* manager, typename std::enable_if<mo::has_parent<T>::value, void>::type* = nullptr) \
 { \
 	LOG(trace) << typeid(T::PARENT_CLASS).name(); \
     return T::PARENT_CLASS::SetupSignals(manager); \
 } \
-template<typename T> int call_parent_setup(mo::SignalManager* manager, typename std::enable_if<!mo::has_parent<T>::value, void>::type* = nullptr) \
+template<typename T> int call_parent_setup(mo::RelayManager* manager, typename std::enable_if<!mo::has_parent<T>::value, void>::type* = nullptr) \
 { \
 	return 0; \
 } \
-template<typename T> int call_parent_connect_by_name(const std::string& name, mo::SignalManager* manager, typename std::enable_if<mo::has_parent<T>::value, void>::type* = nullptr) \
+template<typename T> int call_parent_connect_by_name(const std::string& name, mo::RelayManager* manager, typename std::enable_if<mo::has_parent<T>::value, void>::type* = nullptr) \
 { \
 	LOG(trace) << typeid(T::PARENT_CLASS).name(); \
     return T::PARENT_CLASS::connect_by_name(name, manager); \
 } \
-template<typename T> int call_parent_connect_by_name(const std::string& name, mo::SignalManager* manager, typename std::enable_if<!mo::has_parent<T>::value, void>::type* = nullptr) \
+template<typename T> int call_parent_connect_by_name(const std::string& name, mo::RelayManager* manager, typename std::enable_if<!mo::has_parent<T>::value, void>::type* = nullptr) \
 { \
 	return 0; \
 } \
@@ -229,16 +211,11 @@ template<typename T> bool call_parent_connect(const std::string& name, mo::ISign
 { \
 	return false; \
 } \
-virtual int SetupSignals(mo::SignalManager* manager) \
+virtual int SetupSignals(mo::RelayManager* manager) \
 { \
     int parent_signal_count = call_parent_setup<THIS_CLASS>(manager, nullptr); \
     _sig_manager = manager; \
-    init_signals_(manager, mo::_counter_<N-1>()); \
     return parent_signal_count; \
-} \
-virtual void InitCallbacks(bool firstInit) \
-{ \
-    add_callbacks_(mo::_counter_<N-1>()); \
 } \
 CALLBACK_INFO_END(N) \
 CALLBACK_END(N) \
