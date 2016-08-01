@@ -59,4 +59,5 @@ bool SignalConnection::Disconnect()
 	{
 		return _signal->Disconnect(_relay);
 	}
+    return false;
 }

@@ -37,7 +37,7 @@ BOOST_AUTO_TEST_CASE(test_recompile)
     {
         virtual bool TestBuildCallback(const char* file, TestBuildResult type)
         {
-            std::cout << "[" << file << "] failed!\n";
+            std::cout << "[" << file << "] - ";
             switch(type)
             {
             case TESTBUILDRRESULT_SUCCESS:
@@ -119,7 +119,9 @@ BOOST_AUTO_TEST_CASE(test_obj_swap)
     BOOST_REQUIRE(state);
     auto ptr = state->GetSharedPtr();
     rcc::shared_ptr<test_meta_object_signals> typed_ptr(ptr);
+    BOOST_REQUIRE(!typed_ptr.empty());
     BOOST_REQUIRE_EQUAL(obj_sys.TestBuildAllRuntimeSourceFiles(nullptr, true), 0);
+    BOOST_REQUIRE(!typed_ptr.empty());
 }
 
 

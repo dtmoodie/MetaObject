@@ -1,7 +1,7 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
 #include <memory>
-#include <boost/signals2/connection.hpp>
+//#include <boost/signals2/connection.hpp>
 namespace mo
 {
 	class ISlot;

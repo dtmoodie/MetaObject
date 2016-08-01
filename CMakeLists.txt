@@ -14,6 +14,8 @@ if(PythonLibs_FOUND)
 endif()
 SET(CMAKE_CXX_FLAGS "/EHsc /FC /Zi /MP /Zm512 /bigobj" CACHE STRING "")
 SET(CMAKE_CXX_FLAGS_RELEASE "/Zo /d2Zi+ /Oy-" CACHE STRING "")
+set(CMAKE_DEBUG_POSTFIX "d")
+link_directories("${CMAKE_CURRENT_BINARY_DIR}")
 # ---------------------- External Dependencies ---------------------------------
 
 # ---------------------- Boost ---------------------------------
@@ -33,6 +35,9 @@ endif()
 
 # ---------------------- rcc ---------------------------------  
 SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${CMAKE_CURRENT_LIST_DIR}/include")
+set(RCC_LIBRARY_DIRS_DEBUG "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_CURRENT_BINARY_DIR}/Debug")
+set(RCC_LIBRARY_DIRS_RELWITHDEBINFO "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_CURRENT_BINARY_DIR}/RelWithDebInfo")
 ADD_SUBDIRECTORY("dependencies/rcc")
 include_directories(${RCC_INCLUDE_DIRS})
 set_target_properties(RuntimeCompiler PROPERTIES FOLDER Dependencies)
