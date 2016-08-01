@@ -52,7 +52,7 @@ namespace mo
 		{
 			return Connect(typed);
 		}
-		std::shared_ptr<Connection>();
+		return std::shared_ptr<Connection>();
 	}
 
 	template<class R, class...T>

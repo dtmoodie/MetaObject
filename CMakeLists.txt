@@ -12,7 +12,8 @@ if(PythonLibs_FOUND)
   set(Boost_required_components "${Boost_required_components};python")
   list(APPEND link_libs "${PYTHON_LIBRAY}")
 endif()
-
+SET(CMAKE_CXX_FLAGS "/EHsc /FC /Zi /MP /Zm512 /bigobj" CACHE STRING "")
+SET(CMAKE_CXX_FLAGS_RELEASE "/Zo /d2Zi+ /Oy-" CACHE STRING "")
 # ---------------------- External Dependencies ---------------------------------
 
 # ---------------------- Boost ---------------------------------

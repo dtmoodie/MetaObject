@@ -56,8 +56,8 @@ void test_meta_object_slots::test_void()
 struct test_meta_object_callback: public IMetaObject
 {
     MO_BEGIN(test_meta_object_callback);
-	MO_SLOT(int, test_int);
-	MO_SLOT(void, test_void);
+	    MO_SLOT(int, test_int);
+	    MO_SLOT(void, test_void);
     MO_END;
     
 };
@@ -119,17 +119,22 @@ BOOST_AUTO_TEST_CASE(test_meta_object_dynamic_introspection)
 	RelayManager mgr;
 	auto constructor = obj_sys.GetObjectFactorySystem()->GetConstructor("test_meta_object_signals");
 	auto obj = constructor->Construct();
-	auto meta_obj = static_cast<IMetaObject*>(obj);
-	meta_obj->SetupSignals(&mgr);
-	meta_obj->Init(true);
-	auto signal_info = meta_obj->GetSignalInfo();
-	
-	BOOST_REQUIRE_EQUAL(signal_info.size(), 2);
+    auto state = constructor->GetState(obj->GetPerTypeId());
+    auto weak_ptr = state->GetWeakPtr();
+    {
+        auto ptr = state->GetSharedPtr();
+        rcc::shared_ptr<IMetaObject> meta_obj(ptr);
+        meta_obj->SetupSignals(&mgr);
+        meta_obj->Init(true);
+        auto signal_info = meta_obj->GetSignalInfo();
+        BOOST_REQUIRE(!weak_ptr.empty());
+        BOOST_REQUIRE_EQUAL(signal_info.size(), 2);
 
-	auto signals = meta_obj->GetSignals();
-	BOOST_REQUIRE_EQUAL(signals.size(), 2);
-
-	delete obj;
+        auto signals = meta_obj->GetSignals();
+        BOOST_REQUIRE_EQUAL(signals.size(), 2);
+    }
+    BOOST_REQUIRE(weak_ptr.empty());
+    BOOST_REQUIRE_EQUAL(constructor->GetNumberConstructedObjects(), 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_meta_object_dynamic_access)

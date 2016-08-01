@@ -20,6 +20,7 @@ namespace mo
 			return (*_typed_relay)(this, args...);
 		}
 		THROW(debug) << "Not connected to a signal relay";
+        return R();
     }
 
     template<class R, class...T> 
@@ -44,7 +45,7 @@ namespace mo
 		auto typed = std::dynamic_pointer_cast<TypedSignalRelay<R(T...)>>(relay);
 		if (typed)
 			return Connect(typed);
-		std::shared_ptr<Connection>();
+		return std::shared_ptr<Connection>();
 	}
 
 	template<class R, class...T>
@@ -59,7 +60,7 @@ namespace mo
 			_typed_relay = relay;
 			return std::shared_ptr<Connection>(new SignalConnection(this, relay));
 		}
-		std::shared_ptr<Connection>();
+		return std::shared_ptr<Connection>();
 	}
 
 	template<class R, class...T>
@@ -142,7 +143,7 @@ namespace mo
 		auto typed = std::dynamic_pointer_cast<TypedSignalRelay<void(T...)>>(relay);
 		if (typed)
 			return Connect(typed);
-		std::shared_ptr<Connection>();
+		return std::shared_ptr<Connection>();
 	}
 
 	template<class...T>
@@ -158,7 +159,7 @@ namespace mo
 			_typed_relays.push_back(relay);
 			return std::shared_ptr<Connection>(new SignalConnection(this, relay));
 		}
-		std::shared_ptr<Connection>();
+		return std::shared_ptr<Connection>();
 	}
 
 	template<class...T>

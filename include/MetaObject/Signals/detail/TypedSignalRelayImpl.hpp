@@ -103,7 +103,7 @@ namespace mo
 	}
 	template<class...T> bool TypedSignalRelay<void(T...)>::HasSlots() const
 	{
-		return _slots.size();
+		return _slots.size() !=  0;
 	}
 	template<class...T> SignalRelayFactory<void(T...)> TypedSignalRelay<void(T...)>::_factory;
 	// ------------------------------------------------------------------
