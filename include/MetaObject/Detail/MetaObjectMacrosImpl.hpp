@@ -168,8 +168,9 @@ SIGNAL_INFO_START(N_) \
 SIGNALS_START(N_) \
 SLOT_INFO_START(N_) \
 PARAMETER_INFO_START(N_) \
-SLOT_START(N_)\
-PARAMETER_START(N_)
+SLOT_START(N_) \
+PARAMETER_START(N_) \
+static rcc::shared_ptr<CLASS_NAME> Create();
 
 #define MO_BEGIN_2(CLASS_NAME, PARENT, N_) \
 typedef CLASS_NAME THIS_CLASS; \
@@ -229,4 +230,10 @@ PARAMETER_END(N)
 
 #define MO_REGISTER_OBJECT(TYPE) \
     static mo::MetaObjectInfo<TActual<TYPE>, __COUNTER__> TYPE##_info; \
+    rcc::shared_ptr<TYPE> TYPE::Create() \
+    { \
+        auto obj = IRuntimeObjectSystem::Instance()->GetObjectFactorySystem()->GetConstructor(#TYPE)->Construct(); \
+        obj->Init(true); \
+        return rcc::shared_ptr<TYPE>(obj); \
+    } \
     REGISTERCLASS(TYPE, &TYPE##_info);

@@ -7,6 +7,8 @@
 #include "MetaObject/Logging/Log.hpp"
 #include "MetaObject/Detail/IMetaObject_pImpl.hpp"
 #include "MetaObject/Parameters/InputParameter.hpp"
+#include "ISimpleSerializer.h"
+#include "IObjectState.hpp"
 using namespace mo;
 int IMetaObject::Connect(IMetaObject* sender, const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name)
 {
@@ -67,11 +69,43 @@ void IMetaObject::Init(bool firstInit)
     InitParameters(firstInit);
 	InitSignals(firstInit);
     BindSlots(firstInit);
+    if(firstInit == false)
+    {
+        // Rebuild connections
+        for(auto& connection : _pimpl->_connections)
+        {
+            if(!connection.obj.empty())
+            {
+                auto signals = this->GetSignals(connection.signal_name);
+                auto slots = connection.obj->GetSlots(connection.slot_name);
+                for (auto signal : signals)
+                {
+                    for (auto slot : slots)
+                    {
+                        if (signal->GetSignature() == slot->GetSignature())
+                        {
+                            auto connection_ = slot->Connect(signal);
+                            if (connection_)
+                            {
+                                connection.connection = connection_;
+                            }
+                            break;
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+void IMetaObject::Serialize(ISimpleSerializer *pSerializer)
+{
+    SerializeConnections(pSerializer);
 }
 
 void IMetaObject::SerializeConnections(ISimpleSerializer* pSerializer)
 {
-
+    SERIALIZE(_pimpl->_connections);
 }
 
 void IMetaObject::SetContext(Context* ctx)
@@ -189,28 +223,6 @@ std::vector<InputParameter*> IMetaObject::GetInputs(const TypeInfo& type_filter)
 }
 
 
-/*IParameter* IMetaObject::GetExplicitParameter(const std::string& name) const
-{
-    auto itr = _pimpl->_explicit_parameters.find(name);
-    if(itr != _pimpl->_explicit_parameters.end())
-    {
-        return itr->second;
-    }
-    THROW(debug) << "Parameter with name \"" << name << "\" not found";
-    return nullptr;
-}
-
-IParameter* IMetaObject::GetExplicitParameterOptional(const std::string& name) const
-{
-    auto itr = _pimpl->_explicit_parameters.find(name);
-    if(itr != _pimpl->_explicit_parameters.end())
-    {
-        return itr->second;
-    }
-    LOG(trace) << "Parameter with name \"" << name << "\" not found";
-    return nullptr;
-}
-*/
 std::weak_ptr<IParameter> IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 {
     _pimpl->_parameters[param->GetTreeName()] = param.get();
@@ -402,18 +414,7 @@ int IMetaObject::ConnectAll(RelayManager* mgr)
     return count;
 }
 
-/*int IMetaObject::ConnectByName(const std::string& name, IMetaObject* receiver, const std::string& slot_name)
-{
-    int count = 0;
-    auto slots = receiver->GetSlots(slot_name);
-	for (auto& slot : slots)
-	{
-		if (ConnectByName(name, slot))
-			++count;
-	}
-    
-    return count;
-}*/
+
 
 void IMetaObject::AddSlot(ISlot* slot, const std::string& name)
 {
@@ -481,7 +482,7 @@ void IMetaObject::AddConnection(std::shared_ptr<Connection>& connection, const s
 {
 	ConnectionInfo info;
 	info.connection = connection;
-	info.obj = obj;
+	info.obj = rcc::weak_ptr<IMetaObject>(obj);
 	info.signal_name = signal_name;
 	info.slot_name = slot_name;
 	info.signature = signature;

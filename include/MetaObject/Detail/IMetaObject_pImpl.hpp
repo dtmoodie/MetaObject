@@ -1,6 +1,7 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
 #include "MetaObject/Detail/TypeInfo.h"
+#include "shared_ptr.hpp"
 #include <string>
 #include <memory>
 #include <map>
@@ -19,7 +20,7 @@ namespace mo
 		std::string signal_name;
 		std::string slot_name;
 		TypeInfo signature;
-		IMetaObject* obj;
+		rcc::weak_ptr<IMetaObject> obj;
 		std::shared_ptr<Connection> connection;
 	};
     struct MO_EXPORTS IMetaObject::impl

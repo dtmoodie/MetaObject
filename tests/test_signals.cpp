@@ -7,7 +7,6 @@
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
 #include "MetaObject/Signals/detail/SlotMacros.hpp"
-#include "MetaObject/Signals/detail/CallbackMacros.hpp"
 #include "MetaObject/Parameters//ParameterMacros.hpp"
 #include "MetaObject/Parameters/TypedParameterPtr.hpp"
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
@@ -34,7 +33,7 @@ BOOST_AUTO_TEST_CASE(signals)
 
 		BOOST_CHECK_EQUAL(signal(4), 8);
 	}
-	BOOST_CHECK_THROW(signal(4), std::string)
+	BOOST_CHECK_THROW(signal(4), std::string);
 	
 	
 }

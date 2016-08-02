@@ -12,19 +12,19 @@
 #endif
 
 #ifndef MetaObject_EXPORTS
+#include "RuntimeLinkLibrary.h"
   #ifdef WIN32
     #pragma comment(lib, "Advapi32.lib")
     #ifdef _DEBUG
-      #pragma comment(lib, "MetaObjectd.lib")
+      RUNTIME_COMPILER_LINKLIBRARY("MetaObjectd.lib")
       #pragma comment(lib, "RuntimeCompilerd.lib")
       #pragma comment(lib, "RuntimeObjectSystemd.lib")
     #else
-      #pragma comment(lib, "MetaObject.lib")
+      RUNTIME_COMPILER_LINKLIBRARY("MetaObject.lib")
       #pragma comment(lib, "RuntimeCompiler.lib")
       #pragma comment(lib, "RuntimeObjectSystem.lib")
     #endif
   #else
-    #include "RuntimeLinkLibrary.h"
     #ifdef _DEBUG
       RUNTIME_COMPILER_LINKLIBRARY("-lMetaObjectd")
       RUNTIME_COMPILER_LINKLIBRARY("-lRuntimeCompilerd")

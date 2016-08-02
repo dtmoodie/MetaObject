@@ -83,6 +83,7 @@ namespace mo
         virtual void InitParameters(bool firstInit) = 0;
 		virtual int InitSignals(bool firstInit) = 0;
 		// TODO figure out serialization of connections
+        virtual void Serialize(ISimpleSerializer *pSerializer);
 		virtual void SerializeConnections(ISimpleSerializer* pSerializer);
 
         // ------- Introspection
