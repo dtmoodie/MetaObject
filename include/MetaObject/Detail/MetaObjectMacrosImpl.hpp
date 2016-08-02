@@ -132,13 +132,25 @@ template<int N> void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
 } \
 void init_parameters_(bool firstInit, mo::_counter_<N_> dummy) \
 { \
+} \
+template<int N> void _serialize_parameters(ISimpleSerializer* pSerializer, mo::_counter_<N> dummy) \
+{ \
+    _serialize_parameters(pSerializer, --dummy); \
+} \
+void _serialize_parameters(ISimpleSerializer* pSerializer, mo::_counter_<N_> dummy) \
+{ \
 }
 
 #define PARAMETER_END(N_) \
 void InitParameters(bool firstInit) \
 { \
     init_parameters_(firstInit, mo::_counter_<N_ - 1>()); \
-}
+} \
+void SerializeParameters(ISimpleSerializer* pSerializer) \
+{ \
+    _serialize_parameters(pSerializer, mo::_counter_<N_ - 1>()); \
+} 
+
 
 
 // -------------- SLOTS -------------

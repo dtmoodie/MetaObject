@@ -11,7 +11,7 @@
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
-
+#include "shared_ptr.hpp"
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE "MetaObject"
@@ -37,12 +37,31 @@ struct test_meta_object_slots: public IMetaObject
     MO_BEGIN(test_meta_object_slots);
     MO_SLOT(void, test_void);
     MO_SLOT(void, test_int, int);
+    PROPERTY(int, call_count, 0);
     MO_END;
-    int call_count = 0;
 };
+
+struct test_meta_object_parameters: public IMetaObject
+{
+    MO_BEGIN(test_meta_object_parameters);
+    PARAM(int, test, 5);
+    MO_END;
+};
+
+void test_meta_object_slots::test_void()
+{
+    ++call_count;
+}
+
+void test_meta_object_slots::test_int(int value)
+{
+    call_count += value;
+}
+
 
 MO_REGISTER_OBJECT(test_meta_object_signals);
 MO_REGISTER_OBJECT(test_meta_object_slots);
+MO_REGISTER_OBJECT(test_meta_object_parameters);
 
 class build_callback: public ITestBuildNotifier
 {
@@ -111,12 +130,14 @@ protected:
     char m_buff[LOGSYSTEM_MAX_BUFFER];
 
 };
-StdioLogSystem logger;
-build_callback cb;
+StdioLogSystem* logger = nullptr;
+build_callback* cb = nullptr;
 BOOST_AUTO_TEST_CASE(test_recompile)
 {
-    IRuntimeObjectSystem::Instance()->Initialise(&logger, nullptr);
-    //BOOST_REQUIRE_EQUAL(IRuntimeObjectSystem::Instance()->TestBuildAllRuntimeSourceFiles(&cb, true), 0);
+    logger = new StdioLogSystem();
+    cb = new build_callback;
+    IRuntimeObjectSystem::Instance()->Initialise(logger, nullptr);
+    BOOST_REQUIRE_EQUAL(IRuntimeObjectSystem::Instance()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_obj_swap)
@@ -130,20 +151,134 @@ BOOST_AUTO_TEST_CASE(test_obj_swap)
     auto ptr = state->GetSharedPtr();
     rcc::shared_ptr<test_meta_object_signals> typed_ptr(ptr);
     BOOST_REQUIRE(!typed_ptr.empty());
-    BOOST_REQUIRE_EQUAL(IRuntimeObjectSystem::Instance()->TestBuildAllRuntimeSourceFiles(&cb, true), 0);
+    BOOST_REQUIRE_EQUAL(IRuntimeObjectSystem::Instance()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
     BOOST_REQUIRE(!typed_ptr.empty());
     auto signals = typed_ptr->GetSignalInfo();
     BOOST_REQUIRE_EQUAL(signals.size(), 2);
 }
 
+BOOST_AUTO_TEST_CASE(test_pointer_mechanics)
+{
+    auto obj = test_meta_object_signals::Create();
+    BOOST_REQUIRE(!obj.empty());
+    BOOST_REQUIRE(obj.GetState());
+    BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 1);
+    BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 1);
+    // Test construction of weak pointers from shared pointers
+    {
+        rcc::weak_ptr<test_meta_object_signals> weak_ptr(obj);
+        BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 1);
+        BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 2);
+    }
+    BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 1);
+    BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 1);
+    
+    {
+        rcc::weak_ptr<IMetaObject> weak_ptr_meta_object;
+        weak_ptr_meta_object = rcc::weak_ptr<IMetaObject>(obj);
+        BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 1);
+        BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 2);
+    }
+    BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 1);
+    BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 1);
+
+    // Test construction of weak pointers from raw object pointer
+    {
+        rcc::weak_ptr<IMetaObject> weak_ptr_meta_object(obj.Get());
+        BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 1);
+        BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 2);
+    }
+
+    BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 1);
+    BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 1);
+
+    {
+        rcc::weak_ptr<IMetaObject> weak_ptr_meta_object = rcc::weak_ptr<IMetaObject>(obj.Get());
+        BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 1);
+        BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 2);
+    }
+
+    BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 1);
+    BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 1);
+
+    // Test shared pointer mechanics
+    {
+        rcc::shared_ptr<test_meta_object_signals> shared(obj);
+        BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 2);
+        BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 2);
+    }
+    BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 1);
+    BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 1);
+
+    {
+        rcc::shared_ptr<IMetaObject> shared_ptr_meta_object;
+        shared_ptr_meta_object = rcc::shared_ptr<IMetaObject>(obj);
+        BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 2);
+        BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 2);
+    }
+    BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 1);
+    BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 1);
+
+    // Test construction of weak pointers from raw object pointer
+    {
+        rcc::shared_ptr<IMetaObject> shared_ptr_meta_object(obj.Get());
+        BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 2);
+        BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 2);
+    }
+
+    BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 1);
+    BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 1);
+
+    {
+        rcc::shared_ptr<IMetaObject> shared_ptr_meta_object = rcc::shared_ptr<IMetaObject>(obj.Get());
+        BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 2);
+        BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 2);
+    }
+
+    BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 1);
+    BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 1);
+
+}
+
 BOOST_AUTO_TEST_CASE(test_creation_function)
 {
     auto obj = test_meta_object_signals::Create();
-    BOOST_REQUIRE_EQUAL(IRuntimeObjectSystem::Instance()->TestBuildAllRuntimeSourceFiles(&cb, true), 0);
+    BOOST_REQUIRE_EQUAL(IRuntimeObjectSystem::Instance()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_reconnect_signals)
 {
+    auto signals = test_meta_object_signals::Create();
+    auto slots = test_meta_object_slots::Create();
+    auto state = signals->GetConstructor()->GetState(signals->GetPerTypeId());
+    IMetaObject::Connect(signals.Get(), "test_int", slots.Get(), "test_int");
+    int value  = 5;
+    signals->sig_test_int(value);
+    BOOST_REQUIRE_EQUAL(slots->call_count, value);
+    BOOST_REQUIRE_EQUAL(IRuntimeObjectSystem::Instance()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
     
+    signals->sig_test_int(value);
+    BOOST_REQUIRE_EQUAL(slots->call_count, 10);
+}
 
+BOOST_AUTO_TEST_CASE(test_parameter_persistence_recompile)
+{
+    auto obj = test_meta_object_parameters::Create();
+    BOOST_REQUIRE_EQUAL(obj->test, 5);
+    obj->test = 10;
+    BOOST_REQUIRE_EQUAL(IRuntimeObjectSystem::Instance()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
+    BOOST_REQUIRE_EQUAL(obj->test, 10);
+}
+
+BOOST_AUTO_TEST_CASE(test_object_cleanup)
+{
+    AUDynArray<IObjectConstructor*> constructors;
+    IRuntimeObjectSystem::Instance()->GetObjectFactorySystem()->GetAll(constructors);
+    for(int i = 0; i < constructors.Size(); ++i)
+    {
+        BOOST_REQUIRE_EQUAL(constructors[i]->GetNumberConstructedObjects(), 0);
+    }
+    delete IRuntimeObjectSystem::Instance();
+    delete logger;
+    delete cb;
 }

@@ -17,6 +17,17 @@ namespace mo
 	class IMetaObject;
 	struct MO_EXPORTS ConnectionInfo
 	{
+        ConnectionInfo()
+        {
+        }
+        ConnectionInfo(const ConnectionInfo& info)
+        {
+            signal_name = info.signal_name;
+            slot_name = info.slot_name;
+            signature = info.signature;
+            obj = info.obj;
+            connection = info.connection;
+        }
 		std::string signal_name;
 		std::string slot_name;
 		TypeInfo signature;

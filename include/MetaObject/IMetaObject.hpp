@@ -85,6 +85,7 @@ namespace mo
 		// TODO figure out serialization of connections
         virtual void Serialize(ISimpleSerializer *pSerializer);
 		virtual void SerializeConnections(ISimpleSerializer* pSerializer);
+        virtual void SerializeParameters(ISimpleSerializer* pSerializer);
 
         // ------- Introspection
         // Get vector of info objects for each corresponding introspection class

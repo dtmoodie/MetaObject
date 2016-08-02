@@ -76,21 +76,27 @@ void IMetaObject::Init(bool firstInit)
         {
             if(!connection.obj.empty())
             {
-                auto signals = this->GetSignals(connection.signal_name);
-                auto slots = connection.obj->GetSlots(connection.slot_name);
-                for (auto signal : signals)
+                auto signal = this->GetSignal(connection.signal_name, connection.signature);
+                auto slot = connection.obj->GetSlot(connection.slot_name, connection.signature);
+                if(signal == nullptr)
                 {
-                    for (auto slot : slots)
+                    LOG(debug) << "Unable to find signal with name \"" << connection.signal_name << "\" and signature: " << connection.signature.name() << " in new object of type " << this->GetTypeName();
+                }
+                if(slot == nullptr)
+                {
+                    connection.obj->BindSlots(firstInit);
+                    slot = connection.obj->GetSlot(connection.slot_name, connection.signature);
+                    if(slot == nullptr)
                     {
-                        if (signal->GetSignature() == slot->GetSignature())
-                        {
-                            auto connection_ = slot->Connect(signal);
-                            if (connection_)
-                            {
-                                connection.connection = connection_;
-                            }
-                            break;
-                        }
+                        LOG(debug) << "Unable to find slot with name \"" << connection.slot_name << "\" and signature: " << connection.signature.name() << " in new object of type " << connection.obj->GetTypeName();
+                    }
+                }
+                if(signal && slot)
+                {
+                    auto connection_ = slot->Connect(signal);
+                    if (connection_)
+                    {
+                        connection.connection = connection_;
                     }
                 }
             }
@@ -101,13 +107,17 @@ void IMetaObject::Init(bool firstInit)
 void IMetaObject::Serialize(ISimpleSerializer *pSerializer)
 {
     SerializeConnections(pSerializer);
+    SerializeParameters(pSerializer);
 }
 
 void IMetaObject::SerializeConnections(ISimpleSerializer* pSerializer)
 {
     SERIALIZE(_pimpl->_connections);
 }
+void IMetaObject::SerializeParameters(ISimpleSerializer* pSerializer)
+{
 
+}
 void IMetaObject::SetContext(Context* ctx)
 {
     _ctx = ctx;

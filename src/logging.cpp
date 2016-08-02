@@ -284,38 +284,38 @@ static inline wcstring utf16(const std::wstring& p)
 
 #endif
     }
-mo::throw_on_destroy::throw_on_destroy(const char* function, const char* file, int line) 
+mo::ThrowOnDestroy::ThrowOnDestroy(const char* function, const char* file, int line) 
 {
     log_stream_ <<"[" << file << ":"
                       << line << "]";
 }
-std::ostringstream &mo::throw_on_destroy::stream()
+std::ostringstream &mo::ThrowOnDestroy::stream()
 { 
     return log_stream_; 
 }
-mo::throw_on_destroy::~throw_on_destroy() 
+mo::ThrowOnDestroy::~ThrowOnDestroy() 
 {
     std::stringstream ss;
     LOG(debug) << "Exception at" << mo::print_callstack(0, true, ss) << log_stream_.str();
     throw mo::ExceptionWithCallStack<std::string>(log_stream_.str(), ss.str());
 }
-mo::throw_on_destroy_trace::throw_on_destroy_trace(const char* function, const char* file, int line): throw_on_destroy(function, file, line) {}
-mo::throw_on_destroy_trace::~throw_on_destroy_trace()
+mo::ThrowOnDestroy_trace::ThrowOnDestroy_trace(const char* function, const char* file, int line): ThrowOnDestroy(function, file, line) {}
+mo::ThrowOnDestroy_trace::~ThrowOnDestroy_trace()
 {
     std::stringstream ss;
     LOG(trace) << "Exception at" << mo::print_callstack(0, true, ss) << log_stream_.str();
     throw mo::ExceptionWithCallStack<std::string>(log_stream_.str(), ss.str());
 }
-mo::throw_on_destroy_debug::throw_on_destroy_debug(const char* function, const char* file, int line): throw_on_destroy(function, file, line) {}
-mo::throw_on_destroy_info::throw_on_destroy_info(const char* function, const char* file, int line): throw_on_destroy(function, file, line) {}
-mo::throw_on_destroy_info::~throw_on_destroy_info()
+mo::ThrowOnDestroy_debug::ThrowOnDestroy_debug(const char* function, const char* file, int line): ThrowOnDestroy(function, file, line) {}
+mo::ThrowOnDestroy_info::ThrowOnDestroy_info(const char* function, const char* file, int line): ThrowOnDestroy(function, file, line) {}
+mo::ThrowOnDestroy_info::~ThrowOnDestroy_info()
 {
     std::stringstream ss;
     LOG(info) << "Exception at" << mo::print_callstack(0, true, ss) << log_stream_.str();
     throw mo::ExceptionWithCallStack<std::string>(log_stream_.str(), ss.str());
 }
-mo::throw_on_destroy_warning::throw_on_destroy_warning(const char* function, const char* file, int line): throw_on_destroy(function, file, line) {}
-mo::throw_on_destroy_warning::~throw_on_destroy_warning()
+mo::ThrowOnDestroy_warning::ThrowOnDestroy_warning(const char* function, const char* file, int line): ThrowOnDestroy(function, file, line) {}
+mo::ThrowOnDestroy_warning::~ThrowOnDestroy_warning()
 {
     std::stringstream ss;
     LOG(warning) << "Exception at" << mo::print_callstack(0, true, ss) << log_stream_.str();

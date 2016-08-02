@@ -18,6 +18,7 @@
   #include <execinfo.h>
   #include <cxxabi.h>
 #endif
+
 #ifdef LOG
 #undef LOG
 #endif
@@ -49,6 +50,7 @@
 #undef LOG_FIRST_N
 #endif
 
+#define DISCARD_MESSAGE true ? (void)0 : mo::LogMessageVoidify() & mo::eat_message().stream()
 
 #define LOG(severity) BOOST_LOG_TRIVIAL(severity) << "[" << __FUNCTION__ << "] "
 #define DOIF(condition, expression, severity) if(condition) { LOG(severity) << #condition << " is true, thus performing " << #expression; expression;} else { LOG(severity) << #condition << " failed";}
@@ -59,14 +61,7 @@
 #define LOGIF_EQ(lhs, rhs, severity) if(lhs == rhs)  LOG(severity) << "if(" << #lhs << " == " << #rhs << ")" << "[" << lhs << " == " << rhs << "]";
 #define LOGIF_NEQ(lhs, rhs, severity) if(lhs != rhs) LOG(severity) << "if(" << #lhs << " != " << #rhs << ")" << "[" << lhs << " != " << rhs << "]";
 
-#define ASSERT_OP(op, lhs, rhs) if(!(lhs op rhs)) mo::throw_on_destroy(__FUNCTION__, __FILE__, __LINE__).stream()
-
-/*#define ASSERT_OP(op, lhs, rhs) \
-    if(lhs op rhs) { \
-        LOG(debug) << #lhs << " " << #op << " " << #rhs << " [ " << lhs << " " << #op << " " << rhs << "]"; \
-        std::stringstream ss; \
-        ss << #lhs " " #op " " #rhs " [" << lhs << " " #op " " << rhs << "]"; \
-        throw ExceptionWithCallStack<std::exception>(ss.str()); }*/
+#define ASSERT_OP(op, lhs, rhs) if(!(lhs op rhs)) mo::ThrowOnDestroy(__FUNCTION__, __FILE__, __LINE__).stream()
 
 #define ASSERT_EQ(lhs, rhs)  ASSERT_OP(==, lhs, rhs)
 #define ASSERT_NE(lhs, rhs)  ASSERT_OP(!=, lhs, rhs)
@@ -78,6 +73,7 @@
 #define CHECK_OP(op, lhs, rhs, severity) if(lhs op rhs)  LOG(severity) << #lhs << " " << #op << " " << #rhs << " [ " << lhs << " " << #op << " " << rhs << "]"
 
 
+
 #define CHECK_EQ(lhs, rhs, severity) CHECK_OP(==, lhs, rhs, severity)
 #define CHECK_NE(lhs, rhs, severity) CHECK_OP(!=, lhs, rhs, severity)
 #define CHECK_LE(lhs, rhs, severity) CHECK_OP(<=, lhs, rhs, severity)
@@ -85,47 +81,85 @@
 #define CHECK_GE(lhs, rhs, severity) CHECK_OP(>=, lhs, rhs, severity)
 #define CHECK_GT(lhs, rhs, severity) CHECK_OP(> , lhs, rhs, severity)
 
+#ifdef _DEBUG
+#define DBG_CHECK_EQ(lhs, rhs, severity) CHECK_OP(==, lhs, rhs, severity)
+#define DBG_CHECK_NE(lhs, rhs, severity) CHECK_OP(!=, lhs, rhs, severity)
+#define DBG_CHECK_LE(lhs, rhs, severity) CHECK_OP(<=, lhs, rhs, severity)
+#define DBG_CHECK_LT(lhs, rhs, severity) CHECK_OP(< , lhs, rhs, severity)
+#define DBG_CHECK_GE(lhs, rhs, severity) CHECK_OP(>=, lhs, rhs, severity)
+#define DBG_CHECK_GT(lhs, rhs, severity) CHECK_OP(> , lhs, rhs, severity)
+#else
+#define DBG_CHECK_EQ(lhs, rhs, severity) DISCARD_MESSAGE
+#define DBG_CHECK_NE(lhs, rhs, severity) DISCARD_MESSAGE
+#define DBG_CHECK_LE(lhs, rhs, severity) DISCARD_MESSAGE
+#define DBG_CHECK_LT(lhs, rhs, severity) DISCARD_MESSAGE
+#define DBG_CHECK_GE(lhs, rhs, severity) DISCARD_MESSAGE
+#define DBG_CHECK_GT(lhs, rhs, severity) DISCARD_MESSAGE
+#endif
+
+
+
 #define LOG_FIRST_N(severity, n) static int LOG_OCCURRENCES = 0; if(LOG_OCCURRENCES <= n) ++LOG_OCCURRENCES; if(LOG_OCCURRENCES <= n) LOG(severity)
 
-#define THROW(severity) mo::throw_on_destroy_##severity(__FUNCTION__, __FILE__, __LINE__).stream()
+#define THROW(severity) mo::ThrowOnDestroy_##severity(__FUNCTION__, __FILE__, __LINE__).stream()
 
 namespace mo
 {
-    class MO_EXPORTS throw_on_destroy {
+    class MO_EXPORTS ThrowOnDestroy {
     public:
-        throw_on_destroy(const char* function, const char* file, int line);
+        ThrowOnDestroy(const char* function, const char* file, int line);
         std::ostringstream &stream();
-        ~throw_on_destroy();
+        ~ThrowOnDestroy();
 
     protected:
         std::ostringstream log_stream_;
     };
 
-    class MO_EXPORTS throw_on_destroy_trace: public throw_on_destroy 
+    class MO_EXPORTS ThrowOnDestroy_trace: public ThrowOnDestroy 
     {
     public:
-        throw_on_destroy_trace(const char* function, const char* file, int line);
-        ~throw_on_destroy_trace();
+        ThrowOnDestroy_trace(const char* function, const char* file, int line);
+        ~ThrowOnDestroy_trace();
     };
     
-    class MO_EXPORTS throw_on_destroy_debug: public throw_on_destroy 
+    class MO_EXPORTS ThrowOnDestroy_debug: public ThrowOnDestroy 
     {
     public:
-        throw_on_destroy_debug(const char* function, const char* file, int line);
+        ThrowOnDestroy_debug(const char* function, const char* file, int line);
     };
 
-    class MO_EXPORTS throw_on_destroy_info: public throw_on_destroy 
+    class MO_EXPORTS ThrowOnDestroy_info: public ThrowOnDestroy 
     {
     public:
-        throw_on_destroy_info(const char* function, const char* file, int line);
-        ~throw_on_destroy_info();
+        ThrowOnDestroy_info(const char* function, const char* file, int line);
+        ~ThrowOnDestroy_info();
     };
 
-    class MO_EXPORTS throw_on_destroy_warning: public throw_on_destroy
+    class MO_EXPORTS ThrowOnDestroy_warning: public ThrowOnDestroy
     {
     public:
-        throw_on_destroy_warning(const char* function, const char* file, int line);
-        ~throw_on_destroy_warning();
+        ThrowOnDestroy_warning(const char* function, const char* file, int line);
+        ~ThrowOnDestroy_warning();
+    };
+
+    class MO_EXPORTS EatMessage
+    {
+    public:
+        EatMessage(){}
+        std::stringstream &stream(){return eat;}
+    private:
+        std::stringstream eat;
+        EatMessage(const EatMessage&);
+        void operator=(const EatMessage&);
+    };
+
+    class MO_EXPORTS LogMessageVoidify 
+    {
+    public:
+        LogMessageVoidify() { }
+        // This has to be an operator with a precedence lower than << but
+        // higher than ?:
+        void operator&(std::ostream&) { }
     };
 
     void MO_EXPORTS collect_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, const std::function<void(const std::string&)>& write);

@@ -75,6 +75,7 @@ struct test_meta_object_parameter: public IMetaObject
 {
     MO_BEGIN(test_meta_object_parameter);
         PARAM(int, test_int, 5);
+        TOOLTIP(test_int, "test tooltip")
     MO_END;
 };
 

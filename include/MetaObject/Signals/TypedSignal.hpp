@@ -17,7 +17,7 @@ namespace mo
 	class Context;
     template<class Sig> class TypedSignal{};
 
-	template<class...T> class TypedSignal<void(T...)> : public ISignal
+	template<class...T> class MO_EXPORTS TypedSignal<void(T...)> : public ISignal
 	{
 	public:
 		TypedSignal();
@@ -36,7 +36,7 @@ namespace mo
 		static SignalRelayFactory<void(T...)> _relay_factory;
 	};
 
-	template<class R, class...T> class TypedSignal<R(T...)> : public ISignal
+	template<class R, class...T> class MO_EXPORTS TypedSignal<R(T...)> : public ISignal
     {
     public:
 		TypedSignal();
