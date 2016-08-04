@@ -23,7 +23,13 @@ std::string IMetaObjectInfo::Print()
             ss <<  param->name;
             for(int i = 0; i < 20 - param->name.size(); ++i)
                 ss << " ";
-            ss<< " [" << param->data_type.name() << "]\n";
+            if(param->type_flags & Control_e)
+                ss << "C";
+            if(param->type_flags & Input_e)
+                ss << "I";
+            if(param->type_flags & Output_e)
+                ss << "O";
+            ss << " [" << param->data_type.name() << "]\n";
             if(param->tooltip.size())
                 ss << "    " << param->tooltip << "\n";
             if(param->description.size())

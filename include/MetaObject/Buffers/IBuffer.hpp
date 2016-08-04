@@ -1,10 +1,11 @@
 #pragma once
-#include <parameters/Parameter_def.hpp>
-namespace Parameters
+#include "MetaObject/Detail/Export.hpp"
+
+namespace mo
 {
     namespace Buffer
     {
-        class PARAMETER_EXPORTS IBuffer
+        class MO_EXPORTS IBuffer
         {
         public:
             virtual ~IBuffer() {}

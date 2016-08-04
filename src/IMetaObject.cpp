@@ -235,13 +235,13 @@ std::vector<InputParameter*> IMetaObject::GetInputs(const TypeInfo& type_filter)
 
 std::weak_ptr<IParameter> IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 {
-    _pimpl->_parameters[param->GetTreeName()] = param.get();
+    _pimpl->_parameters[param->GetName()] = param.get();
     return param;
 }
 
 IParameter* IMetaObject::AddParameter(IParameter* param)
 {
-    _pimpl->_parameters[param->GetTreeName()] = param;
+    _pimpl->_parameters[param->GetName()] = param;
     return param;
 }
 

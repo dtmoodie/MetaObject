@@ -18,123 +18,56 @@ https://github.com/dtmoodie/parameters
 */
 #pragma once
 
-#include "parameters/ITypedParameter.hpp"
+#include "MetaObject/Parameters/ITypedInputParameter.hpp"
 #include "IBuffer.hpp"
 #include <map>
 
-namespace Parameters
+namespace mo
 {
+    class Context;
     namespace Buffer
     {
-        template<typename T> class Map: public ITypedParameter<T>, public IBuffer
+        template<typename T> class Map: public ITypedInputParameter<T>, public IBuffer
         {
+        public:
+            typedef T ParameterType;
+            Map(const std::string& name = "");
+
+            T*   GetDataPtr(long long ts = -1, Context* ctx = nullptr);
+            bool GetData(T& value, long long ts = -1, Context* ctx = nullptr);
+            T    GetData(long long ts = -1, Context* ctx = nullptr);
+            
+            ITypedParameter<T>* UpdateData(T& data_, long long ts = -1, Context* ctx = nullptr);
+            ITypedParameter<T>* UpdateData(const T& data_, long long ts = -1, Context* ctx = nullptr);
+            ITypedParameter<T>* UpdateData(T* data_, long long ts = -1, Context* ctx = nullptr);
+
+            bool Update(IParameter* other, Context* ctx = nullptr);
+            std::shared_ptr<IParameter> DeepCopy() const;
+
+            void SetSize(long long size);
+            long long GetSize();
+            void GetTimestampRange(long long& start, long long& end);
         protected:
             std::map<long long, T> _data_buffer;
-        public:
-            Map(const std::string& name,
-                const T& init = T(), long long time_index = -1,
-                ParameterType type = Buffer) :
-                ITypedParameter<T>(name, type)
-            {
-            }
-            virtual T* GetData(long long time_index = -1, Signals::context* ctx = nullptr)
-            {
-                std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
-                if (time_index == -1 && _data_buffer.size())
-                {
-                    return &(_data_buffer.rbegin()->second);
-                }
-                else
-                {
-                    auto itr = _data_buffer.find(time_index);
-                    if (itr != _data_buffer.end())
-                    {
-                        return &itr->second;
-                    }
-                }
-                return nullptr;
-            }
-            virtual bool GetData(T& value, long long time_index = -1, Signals::context* ctx = nullptr)
-            {
-                std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
-                if (time_index == -1 && _data_buffer.size())
-                {
-                    value = _data_buffer.rbegin()->second;
-                    return true;
-                }
-                auto itr = _data_buffer.find(time_index);
-                if (itr != _data_buffer.end())
-                {
-                    value = itr->second;
-                }
-                return false;
-            }
-            virtual ITypedParameter<T>* UpdateData(T& data_, long long time_index = -1, Signals::context* ctx = nullptr)
-            {
-                std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
-                _data_buffer[time_index] = data_;
-                Parameter::changed = true;
-                Parameter::OnUpdate(stream);
-            }
-            virtual ITypedParameter<T>* UpdateData(const T& data_, long long time_index = -1, Signals::context* ctx = nullptr)
-            {
-                std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
-                _data_buffer[time_index] = data_;
-                Parameter::changed = true;
-                Parameter::OnUpdate(stream);
-            }
-            virtual ITypedParameter<T>* UpdateData(T* data_, long long time_index = -1, Signals::context* ctx = nullptr)
-            {
-                std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
-                _data_buffer[time_index] = *data_;
-                Parameter::changed = true;
-                Parameter::OnUpdate(stream);
-            }
-
-            virtual Loki::TypeInfo GetTypeInfo() const
-            {
-                return Loki::TypeInfo(typeid(T));
-            }
-            virtual bool Update(Parameter* other, Signals::context* ctx = nullptr)
-            {
-                auto typedParameter = std::dynamic_pointer_cast<ITypedParameter<T>*>(other);
-                if (typedParameter)
-                {
-                    auto ptr = typedParameter->Data();
-                    if (ptr)
-                    {
-                        std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
-                        _data_buffer[typedParameter->GetTimeIndex()] = *ptr;
-                        Parameter::changed = true;
-                        Parameter::OnUpdate(stream);
-                    }
-                }
-                return false;
-            }
-            virtual void SetSize(long long size)
-            {
-                
-            }
-            virtual long long GetSize() 
-            {
-                std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
-                return _data_buffer.size();
-            }
-            virtual void GetTimestampRange(long long& start, long long& end) 
-            {
-                if (_data_buffer.size())
-                {
-                    std::lock_guard<std::recursive_mutex> lock(Parameter::_mtx);
-                    start = _data_buffer.begin()->first;
-                    end = _data_buffer.rbegin()->first;
-                }
-            }
-            virtual Parameter* DeepCopy() const
-            {
-                auto ptr = new Map<T>(Parameter::name);
-                ptr->_data_buffer = this->_data_buffer;
-                return Parameter::Ptr(ptr);
-            }
+            virtual void onInputUpdate(Context* ctx, IParameter* param);
         };
     }
+
+#define MO_METAPARAMETER_INSTANCE_MAP_(N) \
+    template<class T> struct MetaParameter<T, N>: public MetaParameter<T, N-1> \
+    { \
+        static ParameterConstructor<Buffer::Map<T>, T, Map_e> _map_parameter_constructor; \
+        static BufferConstructor<Buffer::Map<T>, Buffer::BufferFactory::map> _map_constructor;  \
+        MetaParameter<T, N>(const char* name): \
+            MetaParameter<T, N-1>(name) \
+        { \
+            (void)&_map_parameter_constructor; \
+            (void)&_map_constructor; \
+        } \
+    }; \
+    template<class T> ParameterConstructor<Buffer::Map<T>, T, Map_e> MetaParameter<T, N>::_map_parameter_constructor; \
+    template<class T> BufferConstructor<Buffer::Map<T>, Buffer::BufferFactory::map> MetaParameter<T, N>::_map_constructor;
+
+    MO_METAPARAMETER_INSTANCE_MAP_(__COUNTER__)
 }
+#include "detail/MapImpl.hpp"

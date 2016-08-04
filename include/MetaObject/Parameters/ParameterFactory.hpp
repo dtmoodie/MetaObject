@@ -12,10 +12,11 @@ namespace mo
     enum ParameterTypeFlags
     {
         TypedParameter_e = 0,
-        CircularBuffer_e = 1,
-        Map_e = 2,
-        ConstMap_e = 3,
-        RangedParameter_e = 4
+        CircularBuffer_e,
+        Map_e,
+        ConstMap_e,
+        StreamBuffer_e,
+        RangedParameter_e
     };
 
     class MO_EXPORTS ParameterFactory

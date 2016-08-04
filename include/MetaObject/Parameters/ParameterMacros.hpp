@@ -8,7 +8,7 @@ PARAM_(type, name, init, __COUNTER__)
 
 #define RANGED_PARAM(type, name, init, min, max)
 
-#define INPUT_PARAM(type, name, init) \
+#define INPUT(type, name, init) \
 type* name = init; \
 mo::TypedInputParameterPtr<type> name##_param; \
 INPUT_PARAM_(type, name, init, __COUNTER__)
@@ -24,3 +24,10 @@ type name = init; \
 STATUS_(type, name, init, __COUNTER__)
 
 #define TOOLTIP(name, TOOLTIP) TOOLTIP_(name, TOOLTIP, __COUNTER__)
+
+#define DESCRIPTION(name, DESCRIPTION)
+
+#define OUTPUT(type, name, init) \
+type name = init; \
+mo::TypedParameterPtr<type> name##_param; \
+OUTPUT_(type, name, init, __COUNTER__)

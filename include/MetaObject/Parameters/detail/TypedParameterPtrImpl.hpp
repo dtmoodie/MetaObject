@@ -14,22 +14,25 @@ namespace mo
 			delete ptr;
 	}
 
-    template<typename T> T* TypedParameterPtr<T>::GetDataPtr(long long time_index = -1, Context* ctx = nullptr)
+    template<typename T> T* TypedParameterPtr<T>::GetDataPtr(long long ts, Context* ctx)
 	{
-		LOGIF_NEQ(time_index, IParameter::_timestamp, trace);
+        if(ts != -1)
+		    LOGIF_NEQ(ts, IParameter::_timestamp, trace);
 		return ptr;
 	}
-	template<typename T> T TypedParameterPtr<T>::GetData(long long time_index = -1, Context* ctx = nullptr)
+	template<typename T> T TypedParameterPtr<T>::GetData(long long ts, Context* ctx)
 	{
         std::lock_guard<std::recursive_mutex> lock(IParameter::_mtx);
-		LOGIF_NEQ(time_index, IParameter::_timestamp, trace);
+        if(ts != -1)
+		    LOGIF_NEQ(ts, IParameter::_timestamp, trace);
         ASSERT_NE(ptr, nullptr);
 		return *ptr;
 	}
-	template<typename T> bool TypedParameterPtr<T>::GetData(T& value, long long time_index = -1, Context* ctx = nullptr)
+	template<typename T> bool TypedParameterPtr<T>::GetData(T& value, long long ts, Context* ctx)
 	{
 		std::lock_guard<std::recursive_mutex> lock(IParameter::_mtx);
-		LOGIF_NEQ(time_index, IParameter::_timestamp, trace);
+        if(ts != -1)
+		    LOGIF_NEQ(ts, IParameter::_timestamp, trace);
 		if (ptr)
 		{
 			value = *ptr;
