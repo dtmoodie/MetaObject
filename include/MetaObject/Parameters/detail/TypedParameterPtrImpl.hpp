@@ -3,10 +3,13 @@
 namespace mo
 {
 	template<typename T> class TypedParameterPtr;
+    template<typename T, int N> class MetaParameter;
+    
 
 	template<typename T> TypedParameterPtr<T>::TypedParameterPtr(const std::string& name, T* ptr_, ParameterType type, bool ownsData_) :
 		ptr(ptr_), ownsData(ownsData_), ITypedParameter<T>(name, type)
 	{
+        (void)&_meta_parameter;
 	}
 	template<typename T> TypedParameterPtr<T>::~TypedParameterPtr()
 	{
@@ -84,4 +87,5 @@ namespace mo
 	{
 		return std::shared_ptr<IParameter>(new TypedParameterPtr<T>(IParameter::GetName(), ptr));
 	}
+    template<typename T> MetaParameter<T, 300> TypedParameterPtr<T>::_meta_parameter;
 }

@@ -1,9 +1,9 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
 #include "MetaObject/Parameters/MetaParameter.hpp"
-#include "MetaObject/Buffers/CircularBuffer.hpp"
-#include "MetaObject/Buffers/StreamBuffer.hpp"
-#include "MetaObject/Buffers/Map.hpp"
+#include "MetaObject/Parameters/Buffers/CircularBuffer.hpp"
+#include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
+#include "MetaObject/Parameters/Buffers/Map.hpp"
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Signals/TypedSignal.hpp"
 #include "MetaObject/Detail/Counter.hpp"
@@ -14,7 +14,7 @@
 #include "MetaObject/Parameters/TypedParameterPtr.hpp"
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "MetaObject/Logging/CompileLogger.hpp"
-#include "MetaObject/Buffers/BufferFactory.hpp"
+#include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
 
@@ -29,10 +29,13 @@ using namespace mo;
 
 INSTANTIATE_META_PARAMETER(int);
 
+
+
 struct output_parametered_object: public IMetaObject
 {
     MO_BEGIN(output_parametered_object)
         OUTPUT(int, test_output, 0);
+        OUTPUT(double, test_double, 0.0);
     MO_END;
     void increment()
     {

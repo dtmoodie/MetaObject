@@ -1,8 +1,9 @@
 #pragma once
 #include "ITypedParameter.hpp"
+#include "MetaParameter.hpp"
 namespace mo
 {
-	template<typename T> class TypedParameterPtr :public ITypedParameter < T >
+	template<typename T> class TypedParameterPtr :public ITypedParameter< T >
 	{
 	public:
 		TypedParameterPtr(const std::string& name = "", T* ptr_ = nullptr, ParameterType type = Control_e, bool ownsData_ = false);
@@ -20,6 +21,7 @@ namespace mo
 	protected:
 		T* ptr;
 		bool ownsData;
+        static MetaParameter<T, 300> _meta_parameter;
 	};
 }
 #include "detail/TypedParameterPtrImpl.hpp"

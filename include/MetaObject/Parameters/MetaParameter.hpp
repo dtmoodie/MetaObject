@@ -5,14 +5,15 @@ namespace mo
 {
     template<class T, int N> struct MetaParameter: public MetaParameter<T, N-1>
     {
-        MetaParameter(const char* name):
+        MetaParameter(const char* name = nullptr):
             MetaParameter<T, N-1>(name){}
     };
     template<class T> struct MetaParameter<T, 0>
     {
-        MetaParameter(const char* name)
+        MetaParameter(const char* name = nullptr)
         {
-            mo::Demangle::RegisterName(mo::TypeInfo(typeid(T)), name);
+            if(name)
+                mo::Demangle::RegisterName(mo::TypeInfo(typeid(T)), name);
         }
     };
 }

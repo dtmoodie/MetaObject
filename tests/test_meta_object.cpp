@@ -82,7 +82,7 @@ struct test_meta_object_parameter: public IMetaObject
 struct test_meta_object_input: public IMetaObject
 {
     MO_BEGIN(test_meta_object_input);
-        INPUT_PARAM(int, test_int, nullptr);
+        INPUT(int, test_int, nullptr);
     MO_END;
 };
 

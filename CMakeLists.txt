@@ -42,6 +42,27 @@ if(cereal_FOUND)
   include_directories(${cereal_INCLUDE_DIRS})
 endif()
 
+
+# ---------------------- Optional dependencies ------------------
+find_package(Qt5 QUIET COMPONENTS Core Widgets Gui)
+if(Qt5_FOUND)
+  message("Building with qt support")
+  add_definitions(-DHAVE_QT5)
+  QT5_WRAP_CPP(MOC "include/MetaObject/Parameters/UI/Qt/SignalProxy.hpp")
+  INCLUDE_DIRECTORIES(${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS})
+else()
+  message("Building without qt support")
+endif()
+
+find_package(OpenCV QUIET COMPONENTS core)
+if(OpenCV_FOUND)
+  message("Building with opencv support")
+  add_definitions(-DHAVE_OPENCV)
+else()
+  message("Building without opencv support")
+endif()
+
+
 # ---------------------- rcc ---------------------------------  
 SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${CMAKE_CURRENT_LIST_DIR}/include")
