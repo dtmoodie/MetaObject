@@ -51,8 +51,7 @@ void WidgetFactory::RegisterConstructor(const TypeInfo& type, WidgetFactory::Han
     if(itr == _pimpl->registry.end())
     {
         _pimpl->registry[type] = f;
-    }
-    
+    }   
 }
 std::string print_types(std::map<TypeInfo, WidgetFactory::HandlerConstructor_f>& registry)
 {

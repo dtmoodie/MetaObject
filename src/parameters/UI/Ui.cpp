@@ -18,7 +18,7 @@ https://github.com/dtmoodie/parameters
 */
 #include "MetaObject/Parameters/UI/UI.hpp"
 
-using namespace mo::UI;
+/*using namespace mo::UI;
 
 
 
@@ -121,4 +121,4 @@ void ProcessingThreadCallbackService::post(std::function<void(void)> f, std::pai
         return;
     }
     instance->io_queue.push(std::make_pair(source, f));
-}
+}*/

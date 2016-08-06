@@ -13,20 +13,22 @@ namespace mo
     {
         namespace qt
         {
+            template<typename T, typename Enable = void> class THandler;
+
             // **********************************************************************************
             // *************************** cv::Rect *********************************************
             // **********************************************************************************
-            template<typename T> class Handler<typename ::cv::Rect_<T>, void> : public UiUpdateHandler
+            template<typename T> class THandler<typename ::cv::Rect_<T>, void> : public UiUpdateHandler
             {
                 bool _currently_updating;
-                Handler<T> _x_handler;
-                Handler<T> _y_handler;
-                Handler<T> _width_handler;
-                Handler<T> _height_handler;
+                THandler<T> _x_handler;
+                THandler<T> _y_handler;
+                THandler<T> _width_handler;
+                THandler<T> _height_handler;
                 cv::Rect_<T>* _data;
             public:
                 static const bool IS_DEFAULT = false;
-                Handler(): _currently_updating(false), _data(nullptr)
+                THandler(): _currently_updating(false), _data(nullptr)
                 {}
 
                 virtual void UpdateUi( ::cv::Rect_<T>* data)
@@ -109,15 +111,15 @@ namespace mo
             // *************************** cv::Range *********************************************
             // **********************************************************************************
 
-            template<> class Handler<cv::Range, void> : public UiUpdateHandler
+            template<> class THandler<cv::Range, void> : public UiUpdateHandler
             {
-                Handler<int> _start_handler;
-                Handler<int> _end_handler;
+                THandler<int> _start_handler;
+                THandler<int> _end_handler;
                 cv::Range* _data;
                 bool _currently_updating;
             public:
                 static const bool IS_DEFAULT = false;
-                Handler() : 
+                THandler() : 
                     _data(nullptr), 
                     _currently_updating(false) 
                 {}
@@ -173,7 +175,7 @@ namespace mo
             // **********************************************************************************
             // *************************** cv::Matx *********************************************
             // **********************************************************************************
-            template<typename T, int ROW, int COL> class Handler<typename ::cv::Matx<T, ROW, COL>, void> : public UiUpdateHandler
+            template<typename T, int ROW, int COL> class THandler<typename ::cv::Matx<T, ROW, COL>, void> : public UiUpdateHandler
             {
                 QTableWidget* table;
                 std::vector<QTableWidgetItem*> items;
@@ -181,7 +183,7 @@ namespace mo
                 bool _currently_updating;
             public:
                 static const bool IS_DEFAULT = false;
-                Handler() : table(nullptr), matData(nullptr), _currently_updating(false), UiUpdateHandler()
+                THandler() : table(nullptr), matData(nullptr), _currently_updating(false), UiUpdateHandler()
                 {
                     
                     table = new QTableWidget();
@@ -279,17 +281,17 @@ namespace mo
                     return output;
                 }
             };
-            template<typename T, int ROW> class Handler<typename ::cv::Vec<T, ROW>, void> : public Handler<::cv::Matx<T,ROW,1>>
+            template<typename T, int ROW> class THandler<typename ::cv::Vec<T, ROW>, void> : public THandler<::cv::Matx<T,ROW,1>>
             {
             };
 
-            template<typename T> class Handler<typename ::cv::Scalar_<T>, void> : public Handler<::cv::Vec<T, 4>>
+            template<typename T> class THandler<typename ::cv::Scalar_<T>, void> : public THandler<::cv::Vec<T, 4>>
             {
             };
             // **********************************************************************************
             // *************************** cv::Point_ *********************************************
             // **********************************************************************************
-            template<typename T> class Handler<typename ::cv::Point_<T>, void> : public UiUpdateHandler
+            template<typename T> class THandler<typename ::cv::Point_<T>, void> : public UiUpdateHandler
             {
                 QTableWidget* table;
                 QTableWidgetItem* first;
@@ -298,7 +300,7 @@ namespace mo
                 bool _currently_updating;
             public:
                 static const bool IS_DEFAULT = false;
-                Handler():ptData(nullptr), _currently_updating(false)
+                THandler():ptData(nullptr), _currently_updating(false)
                 {
                     
                     table = new QTableWidget();
@@ -385,7 +387,7 @@ namespace mo
             // **********************************************************************************
             // *************************** cv::Point3_ *********************************************
             // **********************************************************************************
-            template<typename T> class Handler<typename ::cv::Point3_<T>, void> : public UiUpdateHandler
+            template<typename T> class THandler<typename ::cv::Point3_<T>, void> : public UiUpdateHandler
             {
                 QTableWidget* table;
                 QTableWidgetItem* first;
@@ -395,7 +397,7 @@ namespace mo
                 bool _updating;
             public:
                 static const bool IS_DEFAULT = false;
-                Handler():ptData(nullptr)
+                THandler():ptData(nullptr)
                 {
                     
                     table = new QTableWidget();

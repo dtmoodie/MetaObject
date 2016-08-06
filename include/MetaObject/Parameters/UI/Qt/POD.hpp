@@ -1,6 +1,6 @@
 #pragma once
 #ifdef HAVE_QT5
-
+#include "MetaObject/Detail/Export.hpp"
 #include "THandler.hpp"
 #include "UiUpdateHandler.hpp"
 #include "MetaObject/Parameters/UI/Qt/SignalProxy.hpp"
@@ -29,7 +29,7 @@ namespace mo
             // **********************************************************************************
             // *************************** Bool ************************************************
             // **********************************************************************************
-            template<> class THandler<bool, void> : public UiUpdateHandler
+            template<> class MO_EXPORTS THandler<bool, void> : public UiUpdateHandler
             {
                 QCheckBox* chkBox;
                 bool* boolData;
@@ -49,7 +49,7 @@ namespace mo
             // *************************** std::string ******************************************
             // **********************************************************************************
 
-            template<> class THandler<std::string, void> : public UiUpdateHandler
+            template<> class MO_EXPORTS THandler<std::string, void> : public UiUpdateHandler
             {
                 std::string* strData;
                 QLineEdit* lineEdit;
@@ -68,7 +68,7 @@ namespace mo
             // *************************** std::function<void(void)> **************************
             // **********************************************************************************
 
-            template<> class THandler<std::function<void(void)>, void> : public UiUpdateHandler
+            template<> class MO_EXPORTS THandler<std::function<void(void)>, void> : public UiUpdateHandler
             {
                 std::function<void(void)>* funcData;
                 QPushButton* btn;
@@ -247,7 +247,7 @@ namespace mo
             // **********************************************************************************
             // *************************** Enums ************************************************
             // **********************************************************************************
-            template<> class THandler<EnumParameter, void> : public UiUpdateHandler
+            template<> class MO_EXPORTS THandler<EnumParameter, void> : public UiUpdateHandler
             {
                 QComboBox* enumCombo;
                 EnumParameter* enumData;
@@ -267,7 +267,7 @@ namespace mo
             // *************************** Files ************************************************
             // **********************************************************************************
 
-            template<> class THandler<WriteDirectory, void> : public UiUpdateHandler
+            template<> class MO_EXPORTS THandler<WriteDirectory, void> : public UiUpdateHandler
             {
                 QPushButton* btn;
                 QWidget* parent;
@@ -282,7 +282,7 @@ namespace mo
                 WriteDirectory* GetData();
                 virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent_);
             };
-            template<> class THandler<ReadDirectory, void> : public UiUpdateHandler
+            template<> class MO_EXPORTS THandler<ReadDirectory, void> : public UiUpdateHandler
             {
                 QPushButton* btn;
                 QWidget* parent;
@@ -297,7 +297,7 @@ namespace mo
                 ReadDirectory* GetData();
                 virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent_);
             };
-            template<> class THandler<WriteFile, void> : public UiUpdateHandler
+            template<> class MO_EXPORTS THandler<WriteFile, void> : public UiUpdateHandler
             {
                 QPushButton* btn;
                 QWidget* parent;
@@ -312,7 +312,7 @@ namespace mo
                 WriteFile* GetData();
                 virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent_);
             };
-            template<> class THandler<ReadFile, void> : public UiUpdateHandler
+            template<> class MO_EXPORTS THandler<ReadFile, void> : public UiUpdateHandler
             {
                 QPushButton* btn;
                 QWidget* parent;

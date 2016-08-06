@@ -1,27 +1,34 @@
 #pragma once
 
 #include "POD.hpp"
-namespace Parameters
+#include "IHandler.hpp"
+namespace mo
 {
     namespace UI
     {
         namespace qt
         {
+            struct UiUpdateListener;
+            template<class T, typename Enable = void> class THandler; 
             // **********************************************************************************
             // *************************** std::pair ********************************************
             // **********************************************************************************
 
-            template<typename T1> class Handler<std::pair<T1, T1>>  : public IHandler
+            template<typename T1> class THandler<std::pair<T1, T1>>  : public IHandler
             {
                 std::pair<T1,T1>* pairData;
-                Handler<T1> _handler1;
-                Handler<T1> _handler2;
+                THandler<T1> _handler1;
+                THandler<T1> _handler2;
                 bool _currently_updating;
             public:
                 static const bool IS_DEFAULT = false;
-                Handler() : pairData(nullptr), _currently_updating(false) {}
+                THandler() : 
+                    pairData(nullptr), 
+                    _currently_updating(false) 
+                {
+                }
 
-                virtual void UpdateUi( std::pair<T1, T1>* data)
+                void UpdateUi( std::pair<T1, T1>* data)
                 {
                     _currently_updating = true;
                     if(data)
@@ -35,7 +42,7 @@ namespace Parameters
                     }
                     _currently_updating = false;
                 }
-                virtual void OnUiUpdate(QObject* sender)
+                void OnUiUpdate(QObject* sender)
                 {
                     if(_currently_updating || !IHandler::GetParamMtx())
                         return;
@@ -78,12 +85,12 @@ namespace Parameters
                 }
             };
 
-            template<typename T1, typename T2> class Handler<std::pair<T1, T2>>: public Handler<T1>, public Handler<T2>
+            template<typename T1, typename T2> class THandler<std::pair<T1, T2>>: public THandler<T1>, public THandler<T2>
             {
                 std::pair<T1,T2>* pairData;
             public:
                 static const bool IS_DEFAULT = false;
-                Handler() : pairData(nullptr) {}
+                THandler() : pairData(nullptr) {}
 
                 virtual void UpdateUi( std::pair<T1, T2>* data)
                 {
@@ -121,7 +128,7 @@ namespace Parameters
             // **********************************************************************************
             // *************************** std::vector ******************************************
             // **********************************************************************************
-            template<typename T> class Handler<std::vector<T>> : public Handler < T >, public UiUpdateListener
+            template<typename T> class THandler<std::vector<T>, void> : public THandler < T, void >, public UiUpdateListener
             {
                 std::vector<T>* vectorData;
                 T _appendData;
@@ -129,11 +136,14 @@ namespace Parameters
                 bool _currently_updating;
             public:
                 static const bool IS_DEFAULT = false;
-                Handler(): index(new QSpinBox()), vectorData(nullptr), _currently_updating(false) 
+                THandler(): 
+                    index(new QSpinBox()), 
+                    vectorData(nullptr), 
+                    _currently_updating(false) 
                 {
-                    Handler<T>::SetUpdateListener(this);
+                    THandler<T>::SetUpdateListener(this);
                 }
-                virtual void UpdateUi( std::vector<T>* data)
+                void UpdateUi( std::vector<T>* data)
                 {
                     if (data && data->size())
                     {
@@ -141,13 +151,14 @@ namespace Parameters
                         _currently_updating = true;
                         index->setMaximum(data->size());
                         if(index->value() < data->size())
-                            Handler<T>::UpdateUi(&(*data)[index->value()]);
+                            THandler<T>::UpdateUi(&(*data)[index->value()]);
                         else
-                            Handler<T>::UpdateUi(&_appendData);
+                            THandler<T>::UpdateUi(&_appendData);
                         _currently_updating = false;
                     }
                 }
-                virtual void OnUiUpdate(QObject* sender, int idx = 0)
+
+                void OnUiUpdate(QObject* sender, int idx = 0)
                 {
                     if(_currently_updating || !IHandler::GetParamMtx())
                         return;
@@ -156,16 +167,17 @@ namespace Parameters
                         if(vectorData->size() && idx < vectorData->size())
                         {
                             std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
-                            Handler<T>::SetData(&(*vectorData)[idx]);
-                            Handler<T>::OnUiUpdate(sender);
+                            THandler<T>::SetData(&(*vectorData)[idx]);
+                            THandler<T>::OnUiUpdate(sender);
                         }else
                         {
-                            Handler<T>::SetData(&_appendData);
-                            Handler<T>::OnUiUpdate(sender);
+                            THandler<T>::SetData(&_appendData);
+                            THandler<T>::OnUiUpdate(sender);
                         }   
                     }
                 }
-                virtual void SetData(std::vector<T>* data_)
+                
+                void SetData(std::vector<T>* data_)
                 {
                     vectorData = data_;
                     if (vectorData)
@@ -173,34 +185,36 @@ namespace Parameters
                         if (data_->size())
                         {
                             if (index && index->value() < vectorData->size())
-                                Handler<T>::SetData(&(*vectorData)[index->value()]);
+                                THandler<T>::SetData(&(*vectorData)[index->value()]);
                         }
                     }
                 }
+                
                 std::vector<T>* GetData()
                 {
                     return vectorData;
                 }
-                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
+                
+                std::vector<QWidget*> GetUiWidgets(QWidget* parent)
                 {
-                    auto output = Handler<T>::GetUiWidgets(parent);
+                    auto output = THandler<T>::GetUiWidgets(parent);
                     index->setParent(parent);
                     index->setMinimum(0);
                     IHandler::proxy->connect(index, SIGNAL(valueChanged(int)), IHandler::proxy, SLOT(on_update(int)));
                     output.push_back(index);
                     return output;
                 }
-                virtual void OnUpdate(IHandler* handler)
+                
+                void OnUpdate(IHandler* handler)
                 {
-                    if(Handler<T>::GetData() == &_appendData && vectorData)
+                    if(THandler<T>::GetData() == &_appendData && vectorData)
                     {
                         vectorData->push_back(_appendData);
-                        Handler<T>::SetData(&vectorData->back());
+                        THandler<T>::SetData(&vectorData->back());
                         index->setMaximum(vectorData->size());
                     }
                 }
             };
-
         }
     }
 }

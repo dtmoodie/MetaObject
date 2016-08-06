@@ -18,31 +18,32 @@ https://github.com/dtmoodie/parameters
 */
 #pragma once
 #include "ITypedParameter.hpp"
-#include "ParameterFactory.hpp"
-
+#include "ParameterConstructor.hpp"
+#include "MetaObject/Parameters/MetaParameter.hpp"
 namespace mo
 {
-    template<typename T> class MO_EXPORTS TypedParameter : 
-        public ITypedParameter<T>
+    template<typename T> 
+    class MO_EXPORTS TypedParameter : public ITypedParameter<T>
     {
     public:
-        TypedParameter(const std::string& name = "", const T& init = T(), ParameterType type = kControl, long lnog ts = -1, Context* ctx = nullptr);
+        TypedParameter(const std::string& name = "", const T& init = T(), ParameterType type = Control_e, long long ts = -1, Context* ctx = nullptr);
         
-		virtual T    GetData(long long ts= -1, Context* ctx = nullptr);
-        virtual T*   GetDataPtr(long long ts= -1, Context* ctx = nullptr);
-        virtual bool GetData(T& value, long long ts= -1, Context* ctx = nullptr);
+		T    GetData(long long ts= -1, Context* ctx = nullptr);
+        T*   GetDataPtr(long long ts= -1, Context* ctx = nullptr);
+        bool GetData(T& value, long long ts= -1, Context* ctx = nullptr);
 
-        virtual ITypedParameter<T>* UpdateData(T& data_,       long long ts = -1, Context* ctx = nullptr);
-        virtual ITypedParameter<T>* UpdateData(const T& data_, long long ts = -1, Context* ctx = nullptr);
-        virtual ITypedParameter<T>* UpdateData(T* data_,       long long ts = -1, Context* ctx = nullptr);
+        ITypedParameter<T>* UpdateData(T& data_,       long long ts = -1, Context* ctx = nullptr);
+        ITypedParameter<T>* UpdateData(const T& data_, long long ts = -1, Context* ctx = nullptr);
+        ITypedParameter<T>* UpdateData(T* data_,       long long ts = -1, Context* ctx = nullptr);
 
-        virtual IParameter* DeepCopy() const;
-        virtual bool Update(IParameter* other);
-        template<class Archive> void serialize(Archive& ar);
+        virtual std::shared_ptr<IParameter> DeepCopy() const;
+        bool Update(IParameter* other, Context* ctx);
+        
     protected:
         T data;
     private:
-        static FactoryRegisterer<TypedParameter<T>, T, TypedParameter_c> _typed_parameter_constructor;
+        static ParameterConstructor<TypedParameter<T>, T, TypedParameter_e> _typed_parameter_constructor;
+        static MetaParameter<T, 300> _meta_parameter;
     };
 }
 #include "detail/TypedParameterImpl.hpp"

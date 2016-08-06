@@ -19,6 +19,10 @@ SET(CMAKE_CXX_FLAGS "/EHsc /FC /Zi /MP /Zm512 /bigobj /FS" CACHE STRING "")
 SET(CMAKE_CXX_FLAGS_RELEASE "/Zo /d2Zi+ /Oy-" CACHE STRING "")
 set(CMAKE_DEBUG_POSTFIX "d")
 link_directories("${CMAKE_CURRENT_BINARY_DIR}")
+file(GLOB_RECURSE src "src/*.cpp")
+file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp")
+include_directories("${CMAKE_CURRENT_LIST_DIR}/include")
+
 # ---------------------- External Dependencies ---------------------------------
 
 # ---------------------- Boost ---------------------------------
@@ -49,7 +53,9 @@ if(Qt5_FOUND)
   message("Building with qt support")
   add_definitions(-DHAVE_QT5)
   QT5_WRAP_CPP(MOC "include/MetaObject/Parameters/UI/Qt/SignalProxy.hpp")
+  list(APPEND src ${MOC})
   INCLUDE_DIRECTORIES(${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS})
+  list(APPEND link_libs Qt5::Core Qt5::Widgets Qt5::Gui)
 else()
   message("Building without qt support")
 endif()
@@ -58,6 +64,7 @@ find_package(OpenCV QUIET COMPONENTS core)
 if(OpenCV_FOUND)
   message("Building with opencv support")
   add_definitions(-DHAVE_OPENCV)
+  include_directories(${OpenCV_INCLUDE_DIRS})
 else()
   message("Building without opencv support")
 endif()
@@ -73,16 +80,13 @@ include_directories(${RCC_INCLUDE_DIRS})
 set_target_properties(RuntimeCompiler PROPERTIES FOLDER Dependencies)
 set_target_properties(RuntimeObjectSystem PROPERTIES FOLDER Dependencies)
 
-
-file(GLOB_RECURSE src "src/*.cpp")
-file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp")
-include_directories("${CMAKE_CURRENT_LIST_DIR}/include")
 GroupSources(include)
 GroupSources(src)
   
 add_library(MetaObject SHARED ${src} ${hdr})
-target_link_libraries(MetaObject RuntimeObjectSystem RuntimeCompiler)
+target_link_libraries(MetaObject RuntimeObjectSystem RuntimeCompiler ${link_libs})
 
+# ----------------------- tests -----------------------------------
 if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
   file(GLOB_RECURSE test_srcs "tests/*.cpp")
   include(CTest)
@@ -100,3 +104,6 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
     endif()
   endforeach()
 endif()
+
+# ----------------------- examples ---------------------------
+ADD_SUBDIRECTORY("examples")

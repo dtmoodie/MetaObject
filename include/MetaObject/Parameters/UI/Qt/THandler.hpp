@@ -21,7 +21,7 @@ namespace mo
                 THandler():
                     currentData(nullptr)
                 {
-                    LOG(debug) << "Creating handler for default unspecialized parameter " << Demangle::TypeToName(typeid(T).name());
+                    LOG(debug) << "Creating handler for default unspecialized parameter " << Demangle::TypeToName(typeid(T));
                 }
                 virtual void UpdateUi( T* data){}
                 virtual void OnUiUpdate(QObject* sender){}
@@ -35,7 +35,7 @@ namespace mo
                 }
                 virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
                 {
-                    LOG(debug) << "Creating widget for default unspecialized parameter " << Demangle::TypeToName(typeid(T).name());
+                    LOG(debug) << "Creating widget for default unspecialized parameter " << Demangle::TypeToName(typeid(T));
                     return std::vector<QWidget*>();
                 }
                 static bool UiUpdateRequired()

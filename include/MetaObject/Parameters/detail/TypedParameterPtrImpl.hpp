@@ -3,7 +3,7 @@
 namespace mo
 {
 	template<typename T> class TypedParameterPtr;
-    template<typename T, int N> class MetaParameter;
+    template<typename T, int N, typename Enable = void> struct MetaParameter;
     
 
 	template<typename T> TypedParameterPtr<T>::TypedParameterPtr(const std::string& name, T* ptr_, ParameterType type, bool ownsData_) :
@@ -28,7 +28,9 @@ namespace mo
         std::lock_guard<std::recursive_mutex> lock(IParameter::_mtx);
         if(ts != -1)
 		    LOGIF_NEQ(ts, IParameter::_timestamp, trace);
-        ASSERT_NE(ptr, nullptr);
+        //ASSERT_NE(ptr, nullptr);
+        if(ptr == nullptr)
+            THROW(debug) << "Data pointer not set";
 		return *ptr;
 	}
 	template<typename T> bool TypedParameterPtr<T>::GetData(T& value, long long ts, Context* ctx)
@@ -87,5 +89,5 @@ namespace mo
 	{
 		return std::shared_ptr<IParameter>(new TypedParameterPtr<T>(IParameter::GetName(), ptr));
 	}
-    template<typename T> MetaParameter<T, 300> TypedParameterPtr<T>::_meta_parameter;
+    template<typename T> MetaParameter<T, 300, void> TypedParameterPtr<T>::_meta_parameter;
 }

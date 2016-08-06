@@ -9,6 +9,8 @@
 #include "MetaObject/Parameters//ParameterMacros.hpp"
 #include "MetaObject/Parameters/TypedParameterPtr.hpp"
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
+#include "MetaObject/Parameters/UI/Qt/POD.hpp"
+#include "MetaObject/Parameters/UI/Qt/TParameterProxy.hpp"
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
 
@@ -131,8 +133,8 @@ BOOST_AUTO_TEST_CASE(test_meta_object_dynamic_introspection)
         BOOST_REQUIRE(!weak_ptr.empty());
         BOOST_REQUIRE_EQUAL(signal_info.size(), 2);
 
-        auto signals = meta_obj->GetSignals();
-        BOOST_REQUIRE_EQUAL(signals.size(), 2);
+        auto signals_= meta_obj->GetSignals();
+        BOOST_REQUIRE_EQUAL(signals_.size(), 2);
     }
     BOOST_REQUIRE(weak_ptr.empty());
     BOOST_REQUIRE_EQUAL(constructor->GetNumberConstructedObjects(), 0);
@@ -146,8 +148,8 @@ BOOST_AUTO_TEST_CASE(test_meta_object_dynamic_access)
 	auto meta_obj = static_cast<IMetaObject*>(obj);
 	meta_obj->SetupSignals(&mgr);
 	meta_obj->Init(true);
-	auto signals = meta_obj->GetSignals();
-	BOOST_REQUIRE_EQUAL(signals.size(), 2);
+	auto signals_ = meta_obj->GetSignals();
+	BOOST_REQUIRE_EQUAL(signals_.size(), 2);
 	delete obj;
 }
 

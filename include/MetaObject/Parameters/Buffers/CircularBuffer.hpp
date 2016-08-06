@@ -60,7 +60,7 @@ namespace mo
     }
     
     #define MO_METAPARAMETER_INSTANCE_CBUFFER_(N) \
-    template<class T> struct MetaParameter<T, N>: public MetaParameter<T, N-1> \
+    template<class T> struct MetaParameter<T, N>: public MetaParameter<T, N-1, void> \
     { \
         static ParameterConstructor<Buffer::CircularBuffer<T>, T, CircularBuffer_e> _circular_buffer_parameter_constructor; \
         static BufferConstructor<Buffer::CircularBuffer<T>, Buffer::BufferFactory::cbuffer> _circular_buffer_constructor;  \
