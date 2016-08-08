@@ -20,7 +20,7 @@ MainWindow::MainWindow(QWidget *parent) :
 {
     ui->setupUi(this);
     {
-        /*auto param = new mo::TypedParameter<std::vector<float>>(0.0,"vector float");
+        /*auto param = new mo::RangedParameter<std::vector<float>>(0.0,20,"vector float");
         param->GetDataPtr()->push_back(15.0);
         param->GetDataPtr()->push_back(14.0);
         param->GetDataPtr()->push_back(13.0);
@@ -50,6 +50,7 @@ MainWindow::MainWindow(QWidget *parent) :
         parameters.push_back(std::shared_ptr<IParameter>(param));
     }
     {
+#ifdef HAVE_OPENCV
         std::shared_ptr<IParameter> param(new TypedParameterPtr<std::vector<cv::Point2f>>("Vector cv::Point2f", &testRefVec));
         testRefVec.push_back(cv::Point2f(0, 1));
         testRefVec.push_back(cv::Point2f(2, 3));
@@ -62,6 +63,7 @@ MainWindow::MainWindow(QWidget *parent) :
         parameters.push_back(param);
     }
     {
+
         std::shared_ptr<IParameter> param(new mo::TypedParameterPtr<std::vector<cv::Scalar>>("Vector cv::Scalar", &testRefScalar));
         testRefScalar.push_back(cv::Scalar(0));
         testRefScalar.push_back(cv::Scalar(1));
@@ -74,17 +76,20 @@ MainWindow::MainWindow(QWidget *parent) :
         testRefScalar.push_back(cv::Scalar(8));
         param->OnUpdate(nullptr);
         parameters.push_back(param);
+#endif
     }
     {
         auto param = new TypedParameter<int>("int");
         *param->GetDataPtr() = 10;
         parameters.push_back(std::shared_ptr<IParameter>(param));
     }
+#ifdef HAVE_OPENCV
     {
         auto param = new TypedParameter<cv::Scalar>("scalar");
         parameters.push_back(std::shared_ptr<IParameter>(param));
     }
     {
+
         auto param = new TypedParameter<cv::Matx<double,4,4>>("Mat4x4d");
         parameters.push_back(std::shared_ptr<IParameter>(param));
     }
@@ -92,6 +97,7 @@ MainWindow::MainWindow(QWidget *parent) :
         auto param = new TypedParameter<cv::Vec<double, 6>>("Vec6d");
         parameters.push_back(std::shared_ptr<IParameter>(param));
     }
+#endif
     for (int i = 0; i < parameters.size(); ++i)
     {
         auto proxy = mo::UI::qt::WidgetFactory::Instance()->CreateProxy(parameters[i].get());
