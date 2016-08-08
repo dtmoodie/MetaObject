@@ -10,7 +10,7 @@ namespace mo
         BufferConstructor()
         {
             Buffer::BufferFactory::RegisterFunction(
-                TypeInfo(typeid(typename T::ParameterType)),
+                TypeInfo(typeid(typename T::ValueType)),
                 std::bind(&BufferConstructor<T, type>::create, std::placeholders::_1), 
                 type);
         }

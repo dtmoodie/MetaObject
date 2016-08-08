@@ -1,5 +1,5 @@
 #pragma once
-
+#ifdef HAVE_QT5
 #include "POD.hpp"
 #include "IHandler.hpp"
 namespace mo
@@ -218,3 +218,4 @@ namespace mo
         }
     }
 }
+#endif

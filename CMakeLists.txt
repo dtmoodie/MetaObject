@@ -86,6 +86,19 @@ GroupSources(src)
 add_library(MetaObject SHARED ${src} ${hdr})
 target_link_libraries(MetaObject RuntimeObjectSystem RuntimeCompiler ${link_libs})
 
+# -------------------- instantiations --------------------------
+file(GLOB_RECURSE instantiations_src "instantiations/*.cpp")
+include_directories("instantiations")
+add_library(instantiations SHARED ${instantiations_src})
+target_link_libraries(instantiations MetaObject)
+if(Qt5_FOUND)
+  target_link_libraries(instantiations Qt5::Core Qt5::Gui Qt5::Widgets)
+endif()
+if(OpenCV_FOUND)
+  target_link_libraries(instantiations ${OpenCV_LIBS})
+endif()
+
+
 # ----------------------- tests -----------------------------------
 if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
   file(GLOB_RECURSE test_srcs "tests/*.cpp")

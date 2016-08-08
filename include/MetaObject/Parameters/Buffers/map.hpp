@@ -30,7 +30,7 @@ namespace mo
         template<typename T> class Map: public ITypedInputParameter<T>, public IBuffer
         {
         public:
-            typedef T ParameterType;
+            typedef T ValueType;
             Map(const std::string& name = "");
 
             T*   GetDataPtr(long long ts = -1, Context* ctx = nullptr);

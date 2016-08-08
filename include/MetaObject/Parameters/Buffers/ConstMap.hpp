@@ -11,6 +11,7 @@ namespace Parameters
             int _size;
             static FactoryRegisterer<ConstMap<T>, T, ConstMap_c> _constructor;
         public:
+            typedef T ValueType;
             ConstMap(const std::string& name = "",
                 const T& init = T(), long long time_index = -1,
                 ParameterType& type = kControl,

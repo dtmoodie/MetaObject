@@ -19,4 +19,4 @@ namespace mo
 }
 
 #define INSTANTIATE_META_PARAMETER(TYPE) \
-static MetaParameter<TYPE, __COUNTER__> COMBINE(g_meta_parameter, __LINE__)(#TYPE);
+static mo::MetaParameter<TYPE, __COUNTER__> COMBINE(g_meta_parameter, __LINE__)(#TYPE);
