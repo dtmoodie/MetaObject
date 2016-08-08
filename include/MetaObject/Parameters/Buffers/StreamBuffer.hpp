@@ -10,7 +10,7 @@ namespace mo
         template<class T> class MO_EXPORTS StreamBuffer: public Map<T>
         {
         public:
-            typedef T ParameterType;
+            typedef T ValueType;
 
             StreamBuffer(const std::string& name = "");
 

@@ -3,21 +3,27 @@
 #include "MetaObject/Parameters/UI/WidgetFactory.hpp"
 #include "MetaObject/Parameters/UI/Qt/IParameterProxy.hpp"
 #include "MetaObject/Parameters/UI/Qt/TParameterProxy.hpp"
-#include "MetaObject/Parameters/UI/Qt/POD.hpp"
+
+// The following lines are commented out to demonstrate user interface instantiation in a different translation unit
+// Since the instantiation library is included, instantiations of several types are registered with the full user
+// interface code for those types.  Thus the following are not needed for those types.  However, not all types are
+// included, so a few of the parameters will use the default met parameter
+//#include "MetaObject/Parameters/UI/Qt/POD.hpp"
 #ifdef HAVE_OPENCV
-#include "MetaObject/Parameters/UI/Qt/OpenCV.hpp"
+//#include "MetaObject/Parameters/UI/Qt/OpenCV.hpp"
 #endif
-#include "MetaObject/Parameters/UI/Qt/Containers.hpp"
+//#include "MetaObject/Parameters/UI/Qt/Containers.hpp"
 
 #include "MetaObject/Parameters/TypedParameter.hpp"
 #include "MetaObject/Parameters/TypedParameterPtr.hpp"
 //#include "MetaObject/Parameters/RangedParameter.hpp"
-
+#include "instantiate.hpp"
 using namespace mo;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
+    mo::instantiations::initialize();
     ui->setupUi(this);
     {
         /*auto param = new mo::RangedParameter<std::vector<float>>(0.0,20,"vector float");

@@ -35,7 +35,7 @@ namespace mo
             static BufferConstructor<CircularBuffer<T>, BufferFactory::cbuffer> _circular_buffer_constructor;
             boost::circular_buffer<std::pair<long long, T>> _data_buffer;
         public:
-            typedef T ParameterType;
+            typedef T ValueType;
             CircularBuffer(const std::string& name = "",
                 const T& init = T(), long long ts = -1,
                 ParameterType type = Buffer_e);

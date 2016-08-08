@@ -6,6 +6,7 @@
 #include <opencv2/core/matx.hpp>
 
 #include <qtablewidget.h>
+#include "qheaderview.h"
 
 namespace mo
 {
