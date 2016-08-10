@@ -1,5 +1,5 @@
 #include "MetaObject/Parameters/Serialization/Serialization.hpp"
-#include <cereal/cereal.hpp>
+//#include <cereal/cereal.hpp>
 
 using namespace mo;
 using namespace mo::Serialization;
@@ -18,5 +18,5 @@ void Serialization::Deserialize(IMetaObject& obj, BinaryInoutArchive& ar)
 
 IMetaObject* Serialization::Deserialize(BinaryInoutArchive& ar)
 {
-
+    return nullptr;
 }

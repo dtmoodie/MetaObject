@@ -70,6 +70,7 @@
 #define ASSERT_GE(lhs, rhs)  ASSERT_OP(>=, lhs, rhs)
 #define ASSERT_GT(lhs, rhs)  ASSERT_OP(> , lhs, rhs)
 
+
 #define CHECK_OP(op, lhs, rhs, severity) if(lhs op rhs)  LOG(severity) << #lhs << " " << #op << " " << #rhs << " [ " << lhs << " " << #op << " " << rhs << "]"
 
 
@@ -109,7 +110,7 @@ namespace mo
     public:
         ThrowOnDestroy(const char* function, const char* file, int line);
         std::ostringstream &stream();
-        ~ThrowOnDestroy();
+        ~ThrowOnDestroy() throw();
 
     protected:
         std::ostringstream log_stream_;
@@ -119,7 +120,7 @@ namespace mo
     {
     public:
         ThrowOnDestroy_trace(const char* function, const char* file, int line);
-        ~ThrowOnDestroy_trace();
+        ~ThrowOnDestroy_trace() throw();
     };
     
     class MO_EXPORTS ThrowOnDestroy_debug: public ThrowOnDestroy 
@@ -132,14 +133,14 @@ namespace mo
     {
     public:
         ThrowOnDestroy_info(const char* function, const char* file, int line);
-        ~ThrowOnDestroy_info();
+        ~ThrowOnDestroy_info() throw();
     };
 
     class MO_EXPORTS ThrowOnDestroy_warning: public ThrowOnDestroy
     {
     public:
         ThrowOnDestroy_warning(const char* function, const char* file, int line);
-        ~ThrowOnDestroy_warning();
+        ~ThrowOnDestroy_warning() throw();
     };
 
     class MO_EXPORTS EatMessage
@@ -169,7 +170,7 @@ namespace mo
     struct MO_EXPORTS IExceptionWithCallStackBase
     {
         virtual const char * CallStack() const = 0;
-        virtual ~IExceptionWithCallStackBase() throw() {}
+        virtual ~IExceptionWithCallStackBase() throw();
     };
 
     // Exception wrapper to include native call stack string

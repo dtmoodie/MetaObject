@@ -42,6 +42,7 @@ find_package(Boost REQUIRED COMPONENTS ${Boost_required_components})
   ENDIF(NOT WIN32)
 
 # ---------------------- cereal ---------------------------------  
+set(cereal_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include" CACHE PATH "")
 find_package(cereal REQUIRED)
 if(cereal_FOUND)
   include_directories(${cereal_INCLUDE_DIRS})
