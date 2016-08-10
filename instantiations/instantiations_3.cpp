@@ -1,3 +1,4 @@
+#ifdef HAVE_OPENCV
 #include "MetaObject/Parameters/MetaParameter.hpp"
 #include "MetaObject/Parameters/UI/Qt/OpenCV.hpp"
 #include "MetaObject/Parameters/UI/Qt/Containers.hpp"
@@ -19,3 +20,4 @@ INSTANTIATE_META_PARAMETER(cv::Vec2f);
 INSTANTIATE_META_PARAMETER(cv::Vec3f);
 INSTANTIATE_META_PARAMETER(cv::Vec2b);
 INSTANTIATE_META_PARAMETER(cv::Vec3b);
+#endif
