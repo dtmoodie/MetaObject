@@ -1,7 +1,8 @@
 #pragma once
 #include "ObjectInterfacePerModule.h"
 #include "MetaObject/MetaObjectInfo.hpp"
-
+#include "MetaObject/MetaObjectPolicy.hpp"
+#include "MetaObject/MetaObjectFactory.hpp"
 
 // ---------------- SIGNAL_INFO ------------
 #define SIGNAL_INFO_START(N_) \
@@ -139,7 +140,14 @@ template<int N> void _serialize_parameters(ISimpleSerializer* pSerializer, mo::_
 } \
 void _serialize_parameters(ISimpleSerializer* pSerializer, mo::_counter_<N_> dummy) \
 { \
-}
+} \
+template<class T, int N> void _serialize_parameters(T& ar, mo::_counter_<N> dummy) \
+{ \
+    _serialize_parameters<T>(ar, --dummy); \
+} \
+template<class T> void _serialize_parameters(T& ar, mo::_counter_<N_> dummy) \
+{ \
+} \
 
 #define PARAMETER_END(N_) \
 void InitParameters(bool firstInit) \
@@ -149,7 +157,11 @@ void InitParameters(bool firstInit) \
 void SerializeParameters(ISimpleSerializer* pSerializer) \
 { \
     _serialize_parameters(pSerializer, mo::_counter_<N_ - 1>()); \
-} 
+} \
+template<class T> void serialize(T& ar) \
+{ \
+    _serialize_parameters<T>(ar, mo::_counter_<N_ -1>()); \
+} \
 
 
 
@@ -242,10 +254,10 @@ PARAMETER_END(N)
 
 #define MO_REGISTER_OBJECT(TYPE) \
     static mo::MetaObjectInfo<TActual<TYPE>, __COUNTER__> TYPE##_info; \
+    static mo::MetaObjectPolicy<TActual<TYPE>, __COUNTER__, void> TYPE##_policy; \
     rcc::shared_ptr<TYPE> TYPE::Create() \
     { \
-        auto obj = IRuntimeObjectSystem::Instance()->GetObjectFactorySystem()->GetConstructor(#TYPE)->Construct(); \
-        obj->Init(true); \
+        auto obj = mo::MetaObjectFactory::Instance()->Create(#TYPE); \
         return rcc::shared_ptr<TYPE>(obj); \
     } \
     REGISTERCLASS(TYPE, &TYPE##_info);

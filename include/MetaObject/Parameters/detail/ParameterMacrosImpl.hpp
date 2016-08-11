@@ -1,9 +1,14 @@
 #pragma once
 #include "MetaObject/Parameters/ParameterInfo.hpp"
 #include "ISimpleSerializer.h"
-
+#include "cereal/cereal.hpp"
 
 #define PARAM_(type, name, init, N) \
+template<class T> void _serialize_parameters(T& ar, mo::_counter_<N> dummy) \
+{ \
+    _serialize_parameters(ar, --dummy); \
+    ar(CEREAL_NVP(name)); \
+} \
 void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
 { \
     if(firstInit) \
@@ -60,6 +65,11 @@ static void list_parameter_info_(std::vector<mo::ParameterInfo*>& info, mo::_cou
 }
 
 #define STATUS_(type, name, init, N)\
+template<class T> void _serialize_parameters(T& ar, mo::_counter_<N> dummy) \
+{ \
+    _serialize_parameters(ar, --dummy); \
+    ar(CEREAL_NVP(name)); \
+} \
 void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
 { \
     if(firstInit) \

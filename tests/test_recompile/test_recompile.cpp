@@ -130,28 +130,26 @@ protected:
     char m_buff[LOGSYSTEM_MAX_BUFFER];
 
 };
-StdioLogSystem* logger = nullptr;
+
 build_callback* cb = nullptr;
 BOOST_AUTO_TEST_CASE(test_recompile)
 {
-    logger = new StdioLogSystem();
     cb = new build_callback;
-    IRuntimeObjectSystem::Instance()->Initialise(logger, nullptr);
-    BOOST_REQUIRE_EQUAL(IRuntimeObjectSystem::Instance()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
+    MetaObjectFactory::Instance()->GetObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
+    BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_obj_swap)
 {
-    auto constructor = IRuntimeObjectSystem::Instance()->GetObjectFactorySystem()->GetConstructor("test_meta_object_signals");
-    BOOST_REQUIRE(constructor);
+    auto constructor = MetaObjectFactory::Instance()->GetObjectSystem()->GetObjectFactorySystem()->GetConstructor("test_meta_object_signals");
     auto obj = constructor->Construct();
-    obj->Init(true);
+    BOOST_REQUIRE(obj);
     auto state = constructor->GetState(obj->GetPerTypeId());
     BOOST_REQUIRE(state);
     auto ptr = state->GetSharedPtr();
     rcc::shared_ptr<test_meta_object_signals> typed_ptr(ptr);
     BOOST_REQUIRE(!typed_ptr.empty());
-    BOOST_REQUIRE_EQUAL(IRuntimeObjectSystem::Instance()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
+    BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
     BOOST_REQUIRE(!typed_ptr.empty());
     auto signals = typed_ptr->GetSignalInfo();
     BOOST_REQUIRE_EQUAL(signals.size(), 2);
@@ -243,7 +241,7 @@ BOOST_AUTO_TEST_CASE(test_pointer_mechanics)
 BOOST_AUTO_TEST_CASE(test_creation_function)
 {
     auto obj = test_meta_object_signals::Create();
-    BOOST_REQUIRE_EQUAL(IRuntimeObjectSystem::Instance()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
+    BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_reconnect_signals)
@@ -255,7 +253,7 @@ BOOST_AUTO_TEST_CASE(test_reconnect_signals)
     int value  = 5;
     signals->sig_test_int(value);
     BOOST_REQUIRE_EQUAL(slots->call_count, value);
-    BOOST_REQUIRE_EQUAL(IRuntimeObjectSystem::Instance()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
+    BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
     
     signals->sig_test_int(value);
     BOOST_REQUIRE_EQUAL(slots->call_count, 10);
@@ -266,19 +264,17 @@ BOOST_AUTO_TEST_CASE(test_parameter_persistence_recompile)
     auto obj = test_meta_object_parameters::Create();
     BOOST_REQUIRE_EQUAL(obj->test, 5);
     obj->test = 10;
-    BOOST_REQUIRE_EQUAL(IRuntimeObjectSystem::Instance()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
+    BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
     BOOST_REQUIRE_EQUAL(obj->test, 10);
 }
 
 BOOST_AUTO_TEST_CASE(test_object_cleanup)
 {
     AUDynArray<IObjectConstructor*> constructors;
-    IRuntimeObjectSystem::Instance()->GetObjectFactorySystem()->GetAll(constructors);
+    MetaObjectFactory::Instance()->GetObjectSystem()->GetObjectFactorySystem()->GetAll(constructors);
     for(int i = 0; i < constructors.Size(); ++i)
     {
         BOOST_REQUIRE_EQUAL(constructors[i]->GetNumberConstructedObjects(), 0);
     }
-    delete IRuntimeObjectSystem::Instance();
-    delete logger;
     delete cb;
 }

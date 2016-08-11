@@ -100,6 +100,7 @@ RuntimeObjectSystem obj_sys;
 
 BOOST_AUTO_TEST_CASE(test_meta_object_static_introspection_global)
 {
+    MetaObjectFactory::Instance()->GetObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
 	auto info = MetaObjectInfoDatabase::Instance()->GetMetaObjectInfo();
 	BOOST_REQUIRE(info.size());
 	for (auto& item : info)

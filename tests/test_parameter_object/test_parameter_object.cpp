@@ -53,13 +53,12 @@ struct input_parametered_object: public IMetaObject
 MO_REGISTER_OBJECT(input_parametered_object)
 MO_REGISTER_OBJECT(output_parametered_object)
 
-CompileLogger* logger = nullptr;
+
 BuildCallback* cb = nullptr;
 BOOST_AUTO_TEST_CASE(input_parameter_manual)
 {
-    logger = new CompileLogger;
+    MetaObjectFactory::Instance()->GetObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
     cb = new BuildCallback();
-    IRuntimeObjectSystem::Instance()->Initialise(logger, nullptr);
     auto input = input_parametered_object::Create();
     auto output = output_parametered_object::Create();
     input->test_input_param.SetInput(&output->test_output_param);
@@ -194,9 +193,7 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
 
 BOOST_AUTO_TEST_CASE(cleanup)
 {
-    delete IRuntimeObjectSystem::Instance();
     delete cb;
-    delete logger;
 }
 
 
