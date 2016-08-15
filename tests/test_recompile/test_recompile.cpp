@@ -135,7 +135,8 @@ build_callback* cb = nullptr;
 BOOST_AUTO_TEST_CASE(test_recompile)
 {
     cb = new build_callback;
-    MetaObjectFactory::Instance()->GetObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
+    //MetaObjectFactory::Instance()->GetObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
+	MetaObjectFactory::Instance()->RegisterTranslationUnit();
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
 }
 
