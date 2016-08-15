@@ -15,6 +15,7 @@
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "MetaObject/Logging/CompileLogger.hpp"
 #include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
+
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
 
@@ -24,7 +25,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
 #include <iostream>
-
+#include <fstream>
 using namespace mo;
 
 INSTANTIATE_META_PARAMETER(int);
@@ -66,6 +67,8 @@ BOOST_AUTO_TEST_CASE(input_parameter_manual)
     BOOST_REQUIRE_EQUAL(input->test_input, &output->test_output);
     BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);    
 }
+
+
 
 BOOST_AUTO_TEST_CASE(input_parameter_programatic)
 {

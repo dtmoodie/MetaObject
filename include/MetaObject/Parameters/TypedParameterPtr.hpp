@@ -21,7 +21,7 @@ namespace mo
 	protected:
 		T* ptr;
 		bool ownsData;
-        static MetaParameter<T, 300> _meta_parameter;
+        static MetaParameter<T, 100> _meta_parameter;
 	};
 }
 #include "detail/TypedParameterPtrImpl.hpp"

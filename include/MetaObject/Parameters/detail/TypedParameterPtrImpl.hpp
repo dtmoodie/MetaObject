@@ -89,5 +89,5 @@ namespace mo
 	{
 		return std::shared_ptr<IParameter>(new TypedParameterPtr<T>(IParameter::GetName(), ptr));
 	}
-    template<typename T> MetaParameter<T, 300, void> TypedParameterPtr<T>::_meta_parameter;
+    template<typename T> MetaParameter<T, 100, void> TypedParameterPtr<T>::_meta_parameter;
 }
