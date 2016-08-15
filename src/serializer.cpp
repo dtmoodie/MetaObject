@@ -5,6 +5,8 @@
 #include <cereal/archives/portable_binary.hpp>
 #include <cereal/archives/xml.hpp>
 #include <cereal/types/string.hpp>
+#include <cereal/types/memory.hpp>
+#include <cereal/types/polymorphic.hpp>
 #include <map>
 using namespace mo;
 std::map<std::string, SerializerFactory::BinarySerialize_f> _binary_serialization_functions;
@@ -33,7 +35,48 @@ void SerializerFactory::RegisterDeSerializationFunctionXML(const char* obj_type,
     _xml_deserialization_functions[obj_type] = f;
 }
 
-void SerializerFactory::Serialize(IMetaObject* obj, std::ostream& os, SerializationType type)
+SerializerFactory::BinarySerialize_f SerializerFactory::GetSerializationFunctionBinary(const char* obj_type)
+{
+	auto itr = _binary_serialization_functions.find(obj_type);
+	if (itr != _binary_serialization_functions.end())
+	{
+		return itr->second;
+	}
+	return SerializerFactory::BinarySerialize_f();
+}
+
+SerializerFactory::BinaryDeSerialize_f SerializerFactory::GetDeSerializationFunctionBinary(const char* obj_type)
+{
+	auto itr = _binary_deserialization_functions.find(obj_type);
+	if (itr != _binary_deserialization_functions.end())
+	{
+		return itr->second;
+	}
+	return SerializerFactory::BinaryDeSerialize_f();
+}
+
+SerializerFactory::XMLSerialize_f SerializerFactory::GetSerializationFunctionXML(const char* obj_type)
+{
+	auto itr = _xml_serialization_functions.find(obj_type);
+	if (itr != _xml_serialization_functions.end())
+	{
+		return itr->second;
+	}
+	return SerializerFactory::XMLSerialize_f();
+}
+
+SerializerFactory::XMLDeSerialize_f SerializerFactory::GetDeSerializationFunctionXML(const char* obj_type)
+{
+	auto itr = _xml_deserialization_functions.find(obj_type);
+	if (itr != _xml_deserialization_functions.end())
+	{
+		return itr->second;
+	}
+	return SerializerFactory::XMLDeSerialize_f();
+}
+
+
+void SerializerFactory::Serialize(const rcc::shared_ptr<IMetaObject>& obj, std::ostream& os, SerializationType type)
 {
     if(type == Binary_e)
     {
@@ -42,7 +85,7 @@ void SerializerFactory::Serialize(IMetaObject* obj, std::ostream& os, Serializat
         auto func_itr = _binary_serialization_functions.find(obj->GetTypeName());
         if (func_itr != _binary_serialization_functions.end())
         {
-            func_itr->second(obj, ar);
+            func_itr->second(obj.Get(), ar);
         }
     }else if(type == xml_e)
     {
@@ -52,7 +95,7 @@ void SerializerFactory::Serialize(IMetaObject* obj, std::ostream& os, Serializat
         auto func_itr = _xml_serialization_functions.find(obj->GetTypeName());
         if (func_itr != _xml_serialization_functions.end())
         {
-            func_itr->second(obj, ar);
+            func_itr->second(obj.Get(), ar);
         }
     }
 }
@@ -84,7 +127,7 @@ void SerializerFactory::DeSerialize(IMetaObject* obj, std::istream& is, Serializ
     }
 }
 
-IMetaObject* SerializerFactory::DeSerialize(std::istream& os, SerializationType type)
+rcc::shared_ptr<IMetaObject> SerializerFactory::DeSerialize(std::istream& os, SerializationType type)
 {
     IMetaObject* obj = nullptr;
     if (type == Binary_e)

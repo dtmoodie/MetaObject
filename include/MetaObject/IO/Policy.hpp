@@ -18,9 +18,9 @@ namespace mo
             SerializerFactory::RegisterSerializationFunctionXML(T::GetTypeNameStatic(), std::bind(&SerializationPolicyImpl<T>::SerializeXml, std::placeholders::_1, std::placeholders::_2));
             SerializerFactory::RegisterDeSerializationFunctionXML(T::GetTypeNameStatic(), std::bind(&SerializationPolicyImpl<T>::DeSerializeXml, std::placeholders::_1, std::placeholders::_2));
         }
-        static void SerializeBinary(IMetaObject* obj, cereal::PortableBinaryOutputArchive& ar)
+        static void SerializeBinary(const IMetaObject* obj, cereal::PortableBinaryOutputArchive& ar)
         {
-            T* typed = static_cast<T*>(obj);
+            const T* typed = static_cast<const T*>(obj);
             if(typed)
             {
                 ar(*typed);
@@ -34,9 +34,9 @@ namespace mo
                 ar(*typed);
             }
         }
-        static void SerializeXml(IMetaObject* obj, cereal::XMLOutputArchive& ar)
+        static void SerializeXml(const IMetaObject* obj, cereal::XMLOutputArchive& ar)
         {
-            T* typed = static_cast<T*>(obj);
+            const T* typed = static_cast<const T*>(obj);
             if (typed)
             {
                 ar(*typed);
