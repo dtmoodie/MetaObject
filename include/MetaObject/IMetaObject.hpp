@@ -1,6 +1,5 @@
 #pragma once
 #include <IObject.h>
-//#include "MetaObject/Detail/TypeInfo.h"
 #include "MetaObject/Detail/Export.hpp"
 #include <memory>
 namespace boost

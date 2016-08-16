@@ -31,7 +31,7 @@ namespace mo
     };
 
 #define INSTANTIATE_PYTHON_POLICY_(N) \
-template<class T> class MetaObjectPolicy<T, N, void>: public mo::MetaObjectPolicy<T, N - 1, void>, mo::PythonPolicy<T> \
+template<class T> struct MetaObjectPolicy<T, N, void>: public mo::MetaObjectPolicy<T, N - 1, void>, mo::PythonPolicy<T> \
 { \
     MetaObjectPolicy(): \
         PythonPolicy<T>(T::GetTypenameStatic()) \
