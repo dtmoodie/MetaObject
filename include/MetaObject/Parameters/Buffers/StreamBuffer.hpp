@@ -21,7 +21,7 @@ namespace mo
             std::shared_ptr<IParameter> DeepCopy() const;
         private:
             void prune();
-            int _current_timestamp;
+            long long _current_timestamp;
             int _padding;
         };
     }

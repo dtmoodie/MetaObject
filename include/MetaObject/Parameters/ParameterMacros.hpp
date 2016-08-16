@@ -1,4 +1,5 @@
 #pragma once
+#include "MetaObject/Parameters/TypedParameterPtr.hpp"
 #include "detail/ParameterMacrosImpl.hpp"
 
 #define PARAM(type, name, init) \
