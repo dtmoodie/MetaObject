@@ -1,3 +1,6 @@
 if(Qt5_FOUND)
   ADD_SUBDIRECTORY("qt_gui")
 endif()
+if(Boost_PYTHON3_LIBRARY_RELEASE)
+  ADD_SUBDIRECTORY("python")
+endif()
