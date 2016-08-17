@@ -36,7 +36,7 @@ ThreadRegistry::~ThreadRegistry()
     delete _pimpl;
 }
 
-void ThreadRegistry::register_thread(int type, size_t id)
+void ThreadRegistry::RegisterThread(ThreadType type, size_t id)
 {
     std::lock_guard<std::mutex> lock(_pimpl->mtx);
     auto& threads = _pimpl->_thread_map[type];
@@ -44,7 +44,7 @@ void ThreadRegistry::register_thread(int type, size_t id)
         threads.push_back(id);
 }
 
-size_t ThreadRegistry::get_thread(int type)
+size_t ThreadRegistry::GetThread(int type)
 {
     std::lock_guard<std::mutex> lock(_pimpl->mtx);
     // TODO some kind of load balancing for multiple threads of a specific type
@@ -61,7 +61,7 @@ size_t ThreadRegistry::get_thread(int type)
     return current_thread;
 }
 
-ThreadRegistry* ThreadRegistry::get_instance()
+ThreadRegistry* ThreadRegistry::Instance()
 {
     static ThreadRegistry* inst = nullptr;
     if(inst == nullptr)

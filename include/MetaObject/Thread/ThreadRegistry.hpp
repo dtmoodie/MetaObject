@@ -7,13 +7,16 @@ namespace mo
     class MO_EXPORTS ThreadRegistry
     {
     public:
-        virtual void register_thread(int type, size_t id = GetThisThread());
-        virtual size_t get_thread(int type);
+        enum ThreadType
+        {
+            GUI,
+            ANY
+        };
+        void RegisterThread(ThreadType type, size_t id = GetThisThread());
+        size_t GetThread(int type);
 
-        static ThreadRegistry* get_instance();
-
+        static ThreadRegistry* Instance();
     private:
-        
         ThreadRegistry();
         ~ThreadRegistry();
         

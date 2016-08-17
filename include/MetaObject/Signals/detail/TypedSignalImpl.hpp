@@ -23,6 +23,17 @@ namespace mo
         return R();
     }
 
+    template<class R, class...T>
+    R TypedSignal<R(T...)>::operator()(Context* ctx, T... args)
+    {
+        if (_typed_relay)
+        {
+            return (*_typed_relay)(ctx, args...);
+        }
+        THROW(debug) << "Not connected to a signal relay";
+        return R();
+    }
+
     template<class R, class...T> 
 	TypeInfo TypedSignal<R(T...)>::GetSignature() const
     {
@@ -120,6 +131,17 @@ namespace mo
 			}
 		}
 	}
+    template<class...T>
+    void TypedSignal<void(T...)>::operator()(Context* ctx, T... args)
+    {
+        for (auto& relay : _typed_relays)
+        {
+            if (relay)
+            {
+                (*relay)(ctx, args...);
+            }
+        }
+    }
 
 	template<class...T>
 	TypeInfo TypedSignal<void(T...)>::GetSignature() const

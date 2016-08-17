@@ -206,7 +206,8 @@ SIGNALS_START(N_) \
 SLOT_INFO_START(N_) \
 PARAMETER_INFO_START(N_) \
 SLOT_START(N_)\
-PARAMETER_START(N_)
+PARAMETER_START(N_) \
+static rcc::shared_ptr<CLASS_NAME> Create();
 
 #define MO_END_(N) \
 template<typename T> int call_parent_setup(mo::RelayManager* manager, typename std::enable_if<mo::has_parent<T>::value, void>::type* = nullptr) \

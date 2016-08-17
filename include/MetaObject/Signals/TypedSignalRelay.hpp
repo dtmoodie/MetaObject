@@ -26,6 +26,7 @@ namespace mo
 	public:
 		void operator()(TypedSignal<void(T...)>* sig, T&... args);
 		void operator()(T&... args);
+        void operator()(Context* ctx, T&... args);
 		TypeInfo GetSignature() const;
 		bool HasSlots() const;
 	protected:
@@ -52,6 +53,7 @@ namespace mo
 		TypedSignalRelay();
 		R operator()(TypedSignal<R(T...)>* sig, T&... args);
 		R operator()(T&... args);
+        R operator()(Context* ctx, T&... args);
 		TypeInfo GetSignature() const;
 		bool HasSlots() const;
 	protected:

@@ -16,9 +16,8 @@ namespace mo
 		static void RegisterPythonSetupFunction(const char* name, std::function<void(void)> f);
 	};
 
-    template<class T> class PythonPolicy
+    template<class T> struct PythonPolicy
     {
-    public:
         PythonPolicy(const char* name)
         {
             PythonClassRegistry::RegisterPythonSetupFunction(name, std::bind(&PythonPolicy<T>::PythonSetup, name));
@@ -31,7 +30,7 @@ namespace mo
     };
 
 #define INSTANTIATE_PYTHON_POLICY_(N) \
-template<class T> struct MetaObjectPolicy<T, N, void>: public mo::MetaObjectPolicy<T, N - 1, void>, mo::PythonPolicy<T> \
+template<class T> struct MetaObjectPolicy<T, N, void>: public mo::MetaObjectPolicy<T, N - 1, void>, public mo::PythonPolicy<T> \
 { \
     MetaObjectPolicy(): \
         PythonPolicy<T>(T::GetTypenameStatic()) \

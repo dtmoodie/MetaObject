@@ -236,12 +236,31 @@ std::vector<InputParameter*> IMetaObject::GetInputs(const TypeInfo& type_filter)
 IParameter* IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 {
     _pimpl->_implicit_parameters[param->GetName()] = param;
+    std::shared_ptr<TypedSlot<void(Context*, IParameter*)> update_slot(
+        new TypedSlot<void(Context*, IParameter*)>(
+            [this](Context* ctx, IParameter* param)
+            {
+                this->_pimpl->_sig_parameter_updated(ctx, param);
+            }));
+
+    param->RegisterUpdateNotifier(update_slot.get());
+    _pimpl->_parameter_update_slots[param->GetName()] = update_slot;
+    _pimpl->_sig_parameter_added(this, param.get());
     return param;
 }
 
 IParameter* IMetaObject::AddParameter(IParameter* param)
 {
     _pimpl->_parameters[param->GetName()] = param;
+    std::shared_ptr < TypedSlot<void(Context*, IParameter*)> update_slot(
+        new TypedSlot<void(Context*, IParameter*)>(
+            [this](Context* ctx, IParameter* param)
+    {
+        this->_pimpl->_sig_parameter_updated(ctx, param);
+    }));
+    param->RegisterUpdateNotifier(update_slot.get());
+    _pimpl->_parameter_update_slots[param->GetName()] = update_slot;
+    _pimpl->_sig_parameter_added(this, param);
     return param;
 }
 

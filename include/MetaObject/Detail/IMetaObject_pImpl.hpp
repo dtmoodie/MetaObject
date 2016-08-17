@@ -1,6 +1,7 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
 #include "MetaObject/Detail/TypeInfo.h"
+#include "MetaObject/Signals/TypedSignal.hpp"
 #include "shared_ptr.hpp"
 #include <string>
 #include <memory>
@@ -36,6 +37,11 @@ namespace mo
 	};
     struct MO_EXPORTS IMetaObject::impl
     {
+        impl()
+        {
+            _signals["parameter_updated"][_sig_parameter_updated.GetSignature()] = &_sig_parameter_updated;
+            _signals["parameter_added"][_sig_parameter_updated.GetSignature()] = &_sig_parameter_added;
+        }
         std::map<std::string, std::map<TypeInfo, ISignal*>> _signals;
         std::map<std::string, std::map<TypeInfo, ISlot*>>   _slots;
 
@@ -43,5 +49,9 @@ namespace mo
 
         std::map<std::string, std::shared_ptr<IParameter>>  _implicit_parameters; // Can be changed at runtime
 		std::list<ConnectionInfo> _connections;
+        std::map<std::string, std::shared_ptr<TypedSlot<void(Context*, IParameter*)>>> _parameter_update_slots;
+
+        TypedSignal<void(IMetaObject*, IParameter*)> _sig_parameter_updated;
+        TypedSignal<void(IMetaObject*, IParameter*)> _sig_parameter_added;
     };
 }

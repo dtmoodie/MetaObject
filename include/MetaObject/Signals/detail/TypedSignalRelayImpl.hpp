@@ -26,7 +26,14 @@ namespace mo
 			(*slot)(args...);
 		}
 	}
-
+    template<class...T> 
+    void TypedSignalRelay<void(T...)>::operator()(Context* ctx, T&... args)
+    {
+        for (auto slot : _slots)
+        {
+            (*slot)(args...);
+        }
+    }
 	template<class...T>
 	void TypedSignalRelay<void(T...)>::operator()(T&... args)
 	{
@@ -124,7 +131,16 @@ namespace mo
 		THROW(debug) << "Slot not connected";
 		return R();
 	}
-	
+
+    template<class R, class...T>
+    R TypedSignalRelay<R(T...)>::operator()(Context* ctx, T&... args)
+    {
+        if(_slot)
+            return (*slot)(args...);
+        THROW(debug) << "Slot not connected";
+        return R();
+    }
+
 	template<class R, class...T> 
 	bool TypedSignalRelay<R(T...)>::Connect(ISlot* slot)
 	{

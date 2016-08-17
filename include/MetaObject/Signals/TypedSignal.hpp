@@ -22,6 +22,7 @@ namespace mo
 	public:
 		TypedSignal();
 		void operator()(T... args);
+        void operator()(Context* ctx, T... args);
 		TypeInfo GetSignature() const;
 
 		std::shared_ptr<Connection> Connect(ISlot* slot);
@@ -41,6 +42,7 @@ namespace mo
     public:
 		TypedSignal();
 		R operator()(T... args);
+        R operator()(Context* ctx, T... args);
 		TypeInfo GetSignature() const;
 
 		std::shared_ptr<Connection> Connect(ISlot* slot);

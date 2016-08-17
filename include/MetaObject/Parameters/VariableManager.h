@@ -12,16 +12,16 @@ namespace mo
     public:
         VariableManager();
         ~VariableManager();
-        virtual void AddParameter(std::shared_ptr<IParameter> param);
+        virtual void AddParameter(IParameter* param);
         virtual void RemoveParameter(IParameter* param);
 
-        virtual std::vector<std::shared_ptr<IParameter>> GetOutputParameters(TypeInfo type);
-        virtual std::vector<std::shared_ptr<IParameter>> GetAllParmaeters();
-        virtual std::vector<std::shared_ptr<IParameter>> GetAllOutputParameters();
+        virtual std::vector<IParameter*> GetOutputParameters(TypeInfo type);
+        virtual std::vector<IParameter*> GetAllParmaeters();
+        virtual std::vector<IParameter*> GetAllOutputParameters();
 
-        virtual std::shared_ptr<IParameter> GetOutputParameter(std::string name);
-        virtual std::shared_ptr<IParameter> GetParameter(std::string name);
-        virtual void LinkParameters(std::weak_ptr<IParameter> output, std::weak_ptr<IParameter> input);
+        virtual IParameter* GetOutputParameter(std::string name);
+        virtual IParameter* GetParameter(std::string name);
+        virtual void LinkParameters(IParameter* output, IParameter* input);
 
     private:
         struct impl;

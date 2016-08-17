@@ -8,8 +8,8 @@
 using namespace mo;
 struct VariableManager::impl
 {
-    std::map<std::string, std::weak_ptr<IParameter>> _parameters;
-    std::map<std::string, std::shared_ptr<Connection>> _delete_connections;
+    std::map<std::string, IParameter*> _parameters;
+    //std::map<std::string, std::shared_ptr<Connection>> _delete_connections;
 	TypedSlot<void(IParameter*)> delete_slot;
 };
 VariableManager::VariableManager()
@@ -21,19 +21,18 @@ VariableManager::~VariableManager()
 {
     delete pimpl;
 }
-void VariableManager::AddParameter(std::shared_ptr<IParameter> param)
+void VariableManager::AddParameter(IParameter* param)
 {
     pimpl->_parameters[param->GetTreeName()] = param;
-    pimpl->_delete_connections[param->GetTreeName()] = param->RegisterDeleteNotifier(&pimpl->delete_slot);
+    param->RegisterDeleteNotifier(&pimpl->delete_slot);
 }
 void VariableManager::RemoveParameter(IParameter* param)
 {
     pimpl->_parameters.erase(param->GetTreeName());
-    pimpl->_delete_connections.erase(param->GetTreeName());
 }
-std::vector<std::shared_ptr<IParameter>> VariableManager::GetOutputParameters(TypeInfo type)
+std::vector<IParameter*> VariableManager::GetOutputParameters(TypeInfo type)
 {
-    std::vector<std::shared_ptr<IParameter>> valid_outputs;
+    std::vector<IParameter*> valid_outputs;
     for(auto itr = pimpl->_parameters.begin(); itr != pimpl->_parameters.end(); ++itr)
     {
         IParameter::Ptr param(itr->second);
@@ -47,48 +46,51 @@ std::vector<std::shared_ptr<IParameter>> VariableManager::GetOutputParameters(Ty
     }
     return valid_outputs;
 }
-std::vector<std::shared_ptr<IParameter>> VariableManager::GetAllParmaeters()
+std::vector<IParameter*> VariableManager::GetAllParmaeters()
 {
-    std::vector<std::shared_ptr<IParameter>> output;
+    std::vector<IParameter*> output;
     for(auto& itr : pimpl->_parameters)
     {
-        output.push_back(IParameter::Ptr(itr.second));
+        output.push_back(itr.second);
     }
     return output;
 }
-std::vector<std::shared_ptr<IParameter>> VariableManager::GetAllOutputParameters()
+std::vector<IParameter*> VariableManager::GetAllOutputParameters()
 {
-    std::vector<std::shared_ptr<IParameter>> output;
+    std::vector<IParameter*> output;
     for(auto& itr : pimpl->_parameters)
     {
-        IParameter::Ptr param(itr.second);
-        if(param && param->CheckFlags(Output_e))
+        if(itr.second->CheckFlags(Output_e))
         {
-            output.push_back(param);
+            output.push_back(itr.second);
         }
-        
     }
     return output;    
 }
-std::shared_ptr<IParameter> VariableManager::GetParameter(std::string name)
-{
-    return GetOutputParameter(name);
-}
-
-std::shared_ptr<IParameter> VariableManager::GetOutputParameter(std::string name)
+IParameter* VariableManager::GetParameter(std::string name)
 {
     auto itr = pimpl->_parameters.find(name);
     if(itr != pimpl->_parameters.end())
     {
-        return std::shared_ptr<IParameter>(itr->second);
+        return itr.second;
+    }
+    return nullptr;
+}
+
+IParameter* VariableManager::GetOutputParameter(std::string name)
+{
+    auto itr = pimpl->_parameters.find(name);
+    if(itr != pimpl->_parameters.end())
+    {
+        return itr->second;
     }
     // Check if the passed in value is the item specific name
-    std::vector<std::shared_ptr<IParameter>> potentials;
+    std::vector<IParameter*> potentials;
     for(auto& itr : pimpl->_parameters)
     {
         if(auto pos = itr.first.find(name) != std::string::npos)
         {
-            potentials.push_back(std::shared_ptr<IParameter>(itr.second));
+            potentials.push_back(itr.second);
         }
     }
     if(potentials.size())
@@ -105,8 +107,8 @@ std::shared_ptr<IParameter> VariableManager::GetOutputParameter(std::string name
     LOG(debug) << "Unable to find parameter named " << name;
     return nullptr;
 }
-void VariableManager::LinkParameters(std::weak_ptr<IParameter> output, std::weak_ptr<IParameter> input)
+void VariableManager::LinkParameters(IParameter* output, IParameter* input)
 {
-    if(auto input_param = std::dynamic_pointer_cast<InputParameter>(std::shared_ptr<IParameter>(input)))
-        input_param->SetInput(IParameter::Ptr(output));
+    if(auto input_param = dynamic_cast<InputParameter*>(input))
+        input_param->SetInput(output);
 }
