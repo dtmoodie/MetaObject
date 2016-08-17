@@ -68,7 +68,7 @@ int init_signals_(bool firstInit, mo::_counter_<C> dummy) \
 } \
 static void list_signal_info_(std::vector<mo::SignalInfo*>& output, mo::_counter_<C> dummy) \
 { \
-    static mo::SignalInfo info{TypeInfo(typeid(RETURN(__VA_ARGS__))), std::string(#NAME)}; \
+    static mo::SignalInfo info{mo::TypeInfo(typeid(RETURN(__VA_ARGS__))), std::string(#NAME)}; \
     list_signal_info_(output, --dummy); \
     output.push_back(&info); \
 }

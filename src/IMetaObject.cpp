@@ -233,9 +233,9 @@ std::vector<InputParameter*> IMetaObject::GetInputs(const TypeInfo& type_filter)
 }
 
 
-std::weak_ptr<IParameter> IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
+IParameter* IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 {
-    _pimpl->_parameters[param->GetName()] = param.get();
+    _pimpl->_implicit_parameters[param->GetName()] = param;
     return param;
 }
 

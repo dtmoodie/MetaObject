@@ -40,6 +40,7 @@ namespace mo
         std::map<std::string, std::map<TypeInfo, ISlot*>>   _slots;
 
         std::map<std::string, IParameter*>				    _parameters; // statically defined in object
+
         std::map<std::string, std::shared_ptr<IParameter>>  _implicit_parameters; // Can be changed at runtime
 		std::list<ConnectionInfo> _connections;
     };

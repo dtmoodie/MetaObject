@@ -19,6 +19,7 @@ namespace mo
     class ISlot;
     class Connection;
 	class TypeInfo;
+    class IVariableManager;
     
     class IParameter;
     class InputParameter;
@@ -76,7 +77,8 @@ namespace mo
         // Setup
         virtual void SetContext(Context* ctx);
         Context* GetContext() const;
-        virtual int SetupSignals(RelayManager* mgr) = 0;
+        virtual int SetupSignals(RelayManager* mgr);
+        virtual int SetupVariableManager(IVariableManager* mgr);
         virtual void BindSlots(bool firstInit) = 0;
         virtual void Init(bool firstInit);
         virtual void InitParameters(bool firstInit) = 0;
@@ -160,16 +162,25 @@ namespace mo
         std::vector<IParameter*> GetParameters(const std::string& filter) const;
         std::vector<IParameter*> GetParameters(const TypeInfo& filter) const;
 
+        template<class T> T GetParameterValue(const std::string& name, long long ts = -1, Context* ctx = nullptr) const;
         template<class T> ITypedParameter<T>* GetParameter(const std::string& name) const;
+        template<class T> ITypedParameter<T>* GetParameterOptional(const std::string& name) const;
+        
         
     protected:
 		friend class RelayManager;
-		std::weak_ptr<IParameter> AddParameter(std::shared_ptr<IParameter> param);
-		IParameter* AddParameter(IParameter* param);
+		
+        IParameter* AddParameter(std::shared_ptr<IParameter> param);
+        IParameter* AddParameter(IParameter* param);
+
+        template<class T> ITypedParameter<T>* UpdateParameter(const std::string& name, T&& value, long long ts = -1, Context* ctx = nullptr);
+        template<class T> ITypedParameter<T>* UpdateParameterPtr(const std::string& name, T& ptr);
+
         void AddSignal(ISignal* signal, const std::string& name);
         void AddSlot(ISlot* slot, const std::string& name);
         void SetParameterRoot(const std::string& root);
 		void AddConnection(std::shared_ptr<Connection>& connection, const std::string& signal_name, const std::string& slot_name, const TypeInfo& signature, IMetaObject* obj = nullptr);
+
         struct	impl;
 
         impl*			_pimpl;

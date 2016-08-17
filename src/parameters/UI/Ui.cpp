@@ -48,7 +48,7 @@ UiCallbackService * UiCallbackService::Instance()
     static UiCallbackService instance;
     return &instance;   
 }
-void UiCallbackService::post(std::function<void()> f, std::pair<void*, Loki::TypeInfo> source)
+void UiCallbackService::post(std::function<void()> f, std::pair<void*, mo::TypeInfo> source)
 {
     if(user_thread_callback_service)
     {
@@ -64,7 +64,7 @@ size_t UiCallbackService::queue_size()
     return io_queue.size();
 }
 
-void UiCallbackService::setCallback(std::function<void(std::function<void()>, std::pair<void*, Loki::TypeInfo>)> f)
+void UiCallbackService::setCallback(std::function<void(std::function<void()>, std::pair<void*, mo::TypeInfo>)> f)
 {
     Instance()->user_thread_callback_service = f;
 }
@@ -75,7 +75,7 @@ void UiCallbackService::setCallback(std::function<void(void)>& f)
 
 void UiCallbackService::run()
 {
-    std::pair<std::pair<void*, Loki::TypeInfo>, std::function<void(void)>> data;
+    std::pair<std::pair<void*, mo::TypeInfo>, std::function<void(void)>> data;
     auto inst = Instance();
     while (inst->io_queue.try_pop(data))
     {
@@ -93,7 +93,7 @@ ProcessingThreadCallbackService* ProcessingThreadCallbackService::Instance()
     return &instance;
 }
 
-void ProcessingThreadCallbackService::setCallback(std::function<void(std::function<void(void)>, std::pair<void*, Loki::TypeInfo>)> f)
+void ProcessingThreadCallbackService::setCallback(std::function<void(std::function<void(void)>, std::pair<void*, mo::TypeInfo>)> f)
 {
     Instance()->user_processing_thread_callback_function = f;
 }
@@ -101,7 +101,7 @@ void ProcessingThreadCallbackService::setCallback(std::function<void(std::functi
 
 void ProcessingThreadCallbackService::run()
 {
-    std::pair<std::pair<void*, Loki::TypeInfo>, std::function<void(void)>> data;
+    std::pair<std::pair<void*, mo::TypeInfo>, std::function<void(void)>> data;
     auto inst = Instance();
     while (inst->io_queue.try_pop(data))
     {
@@ -112,7 +112,7 @@ void ProcessingThreadCallbackService::run()
     }
 }
 
-void ProcessingThreadCallbackService::post(std::function<void(void)> f, std::pair<void*, Loki::TypeInfo> source)
+void ProcessingThreadCallbackService::post(std::function<void(void)> f, std::pair<void*, mo::TypeInfo> source)
 {
     auto instance = Instance();
     if (instance->user_processing_thread_callback_function)
