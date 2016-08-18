@@ -18,23 +18,26 @@ https://github.com/dtmoodie/MetaObject
 */
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
-#include "MetaObject/Detail/TypeInfo.h"
 #include "MetaObject/Signals/TypedSignal.hpp"
 #include <boost/core/noncopyable.hpp>
-#include <boost/parameter/name.hpp>
+
 
 #include <string>
-#include <mutex>
 #include <memory>
+namespace std
+{
+    class recursive_mutex;
+}
 namespace mo
 {
     class Context;
 	class Connection;
 	class ISignal;
-	template<class T> class TypedSignal;
+    class ISignalRelay;
 	class TypeInfo;
+
+    template<class T> class TypedSignal;
 	template<class T> class TypedSlot;
-	class ISignalRelay;
 	template<class T> class TypedSignalRelay;
     enum ParameterType
     {
@@ -68,12 +71,12 @@ namespace mo
         long long          GetTimestamp() const;
         Context*           GetContext()   const;
 
-		virtual void Subscribe();
-		virtual void Unsubscribe();
+		void Subscribe();
+		void Unsubscribe();
 		bool HasSubscriptions() const;
 
         // Implemented in concrete type
-        virtual TypeInfo     GetTypeInfo() const = 0;
+        virtual const TypeInfo&     GetTypeInfo() const = 0;
 
         // Update with the values from another parameter
         virtual bool         Update(IParameter* other);
@@ -101,7 +104,8 @@ namespace mo
 		template<typename T> T    GetData(long long ts_ = -1, Context* ctx = nullptr);
 		template<typename T> bool GetData(T& value, long long ts = -1, Context* ctx = nullptr);
 
-        virtual std::recursive_mutex& mtx();
+        std::recursive_mutex& mtx();
+        void SetMtx(std::recursive_mutex* mtx);
 
 		void SetFlags(ParameterType flags_);
 		void AppendFlags(ParameterType flags_);
@@ -115,10 +119,11 @@ namespace mo
 		std::string          _name;
 		std::string          _tree_root;
 		long long            _timestamp;
-		std::recursive_mutex _mtx;
-		Context*             _ctx; // Context of object that owns this parameter
-		int                  _subscribers;
+		std::recursive_mutex* _mtx = nullptr; 
+		Context*             _ctx = nullptr; // Context of object that owns this parameter
+		int                  _subscribers = 0;
 		ParameterType        _flags;
+        bool                 _owns_mutex = false;
     };
 
     template<typename Archive> void IParameter::serialize(Archive& ar)

@@ -163,8 +163,6 @@ BOOST_AUTO_TEST_CASE(serialize_multi_by_policy_binary)
 	}
 }
 
-
-
 BOOST_AUTO_TEST_CASE(cleanup)
 {
     delete cb;

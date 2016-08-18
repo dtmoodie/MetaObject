@@ -20,7 +20,7 @@ namespace mo
     }
     template<class T> bool ITypedInputParameter<T>::SetInput(std::shared_ptr<IParameter> param)
     {
-        std::lock_guard<std::recursive_mutex> lock(this->_mtx);
+        std::lock_guard<std::recursive_mutex> lock(this->mtx());
         if(param == nullptr)
         {
             if(shared_input)
@@ -53,7 +53,7 @@ namespace mo
 
     template<class T> bool ITypedInputParameter<T>::SetInput(IParameter* param)
     {
-        std::lock_guard<std::recursive_mutex> lock(this->_mtx);
+        std::lock_guard<std::recursive_mutex> lock(this->mtx());
         if(param == nullptr)
         {
             if(shared_input)
@@ -135,7 +135,7 @@ namespace mo
     // ---- protected functions
     template<class T> void ITypedInputParameter<T>::onInputDelete(IParameter const* param)
     {
-        std::lock_guard<std::recursive_mutex> lock(this->_mtx);
+        std::lock_guard<std::recursive_mutex> lock(this->mtx());
         this->shared_input.reset();
         this->input = nullptr;
         this->OnUpdate(GetContext());

@@ -38,6 +38,8 @@ IParameter::IParameter(const std::string& name_, ParameterType flags_, long long
 IParameter::~IParameter()
 {
 	delete_signal(this);
+    if(_owns_mutex)
+        delete _mtx;
 }
 
 
@@ -171,7 +173,16 @@ IParameter* IParameter::Commit(long long index_, Context* ctx)
 
 std::recursive_mutex& IParameter::mtx()
 {
-    return _mtx;
+    if(_mtx == nullptr)
+    {
+        _mtx = new std::recursive_mutex();
+        _owns_mutex = true;
+    }
+    return *_mtx;
+}
+void IParameter::SetMtx(std::recursive_mutex* mtx_)
+{
+    _mtx = mtx_;
 }
 void IParameter::Subscribe()
 {

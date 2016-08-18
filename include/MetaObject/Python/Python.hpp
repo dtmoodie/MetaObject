@@ -33,7 +33,7 @@ namespace mo
 template<class T> struct MetaObjectPolicy<T, N, void>: public mo::MetaObjectPolicy<T, N - 1, void>, public mo::PythonPolicy<T> \
 { \
     MetaObjectPolicy(): \
-        PythonPolicy<T>(T::GetTypenameStatic()) \
+        PythonPolicy<T>(T::GetTypeNameStatic()) \
     { \
     } \
 };

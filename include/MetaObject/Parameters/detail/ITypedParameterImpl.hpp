@@ -9,9 +9,9 @@ namespace mo
 	{
 	}
 
-	template<typename T> TypeInfo ITypedParameter<T>::GetTypeInfo() const
+	template<typename T> const TypeInfo& ITypedParameter<T>::GetTypeInfo() const
 	{
-		return TypeInfo(typeid(T));
+		return _type_info;
 	}
 
 	template<typename T> bool ITypedParameter<T>::Update(IParameter* other)
@@ -26,4 +26,5 @@ namespace mo
 		}
 		return false;
 	}
+    template<typename T> const TypeInfo ITypedParameter<T>::_type_info(typeid(T));
 }

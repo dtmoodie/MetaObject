@@ -44,9 +44,11 @@ namespace mo
         virtual ITypedParameter<T>* UpdateData(const T& data_, long long ts = -1, Context* ctx = nullptr) = 0;
         virtual ITypedParameter<T>* UpdateData(T* data_,       long long ts = -1, Context* ctx = nullptr) = 0;
 
-        virtual TypeInfo GetTypeInfo() const;
+        virtual const TypeInfo& GetTypeInfo() const;
 
         virtual bool Update(IParameter* other);
+    private:
+        static const TypeInfo _type_info; // = TypeInfo(typeid(T));
     };
 }
 #include "detail/ITypedParameterImpl.hpp"

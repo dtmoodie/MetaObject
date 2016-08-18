@@ -25,7 +25,7 @@ namespace mo
 	}
 	template<typename T> T TypedParameterPtr<T>::GetData(long long ts, Context* ctx)
 	{
-        std::lock_guard<std::recursive_mutex> lock(IParameter::_mtx);
+        std::lock_guard<std::recursive_mutex> lock(IParameter::mtx());
         if(ts != -1)
 		    LOGIF_NEQ(ts, IParameter::_timestamp, trace);
         //ASSERT_NE(ptr, nullptr);
@@ -35,7 +35,7 @@ namespace mo
 	}
 	template<typename T> bool TypedParameterPtr<T>::GetData(T& value, long long ts, Context* ctx)
 	{
-		std::lock_guard<std::recursive_mutex> lock(IParameter::_mtx);
+		std::lock_guard<std::recursive_mutex> lock(IParameter::mtx());
         if(ts != -1)
 		    LOGIF_NEQ(ts, IParameter::_timestamp, trace);
 		if (ptr)

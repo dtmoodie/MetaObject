@@ -261,6 +261,7 @@ std::vector<InputParameter*> IMetaObject::GetInputs(const TypeInfo& type_filter)
 
 IParameter* IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 {
+    param->SetMtx(&_mtx);
     _pimpl->_implicit_parameters[param->GetName()] = param;
     std::shared_ptr<TypedSlot<void(Context*, IParameter*)>> update_slot(
         new TypedSlot<void(Context*, IParameter*)>(
@@ -277,6 +278,7 @@ IParameter* IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 
 IParameter* IMetaObject::AddParameter(IParameter* param)
 {
+    param->SetMtx(&_mtx);
     _pimpl->_parameters[param->GetName()] = param;
     std::shared_ptr < TypedSlot<void(Context*, IParameter*)>> update_slot(
         new TypedSlot<void(Context*, IParameter*)>(
