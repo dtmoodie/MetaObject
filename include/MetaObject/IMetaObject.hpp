@@ -2,6 +2,7 @@
 #include <IObject.h>
 #include "MetaObject/Detail/Export.hpp"
 #include <memory>
+#include <mutex>
 namespace boost
 {
     namespace signals2
@@ -127,6 +128,7 @@ namespace mo
         virtual std::vector<ISlot*> GetSlots(const std::string& name) const;
         virtual std::vector<std::pair<ISlot*, std::string>> GetSlots(const TypeInfo& signature) const;
         virtual ISlot* GetSlot(const std::string& name, const TypeInfo& signature) const;
+        template<class T> ISlot* GetSlot(const std::string& name) const;
 
         
 
@@ -159,7 +161,7 @@ namespace mo
 
         IParameter* GetParameter(const std::string& name) const;
         IParameter* GetParameterOptional(const std::string& name) const;
-        std::vector<IParameter*> GetParameters(const std::string& filter) const;
+        std::vector<IParameter*> GetParameters(const std::string& filter = "") const;
         std::vector<IParameter*> GetParameters(const TypeInfo& filter) const;
 
         template<class T> T GetParameterValue(const std::string& name, long long ts = -1, Context* ctx = nullptr) const;
@@ -186,5 +188,10 @@ namespace mo
         impl*			_pimpl;
 		Context*        _ctx;
 		RelayManager*  _sig_manager;
+        std::recursive_mutex _mtx;
     };
+    template<class T> ISlot* IMetaObject::GetSlot(const std::string& name) const
+    {
+        return this->GetSlot(name, TypeInfo(typeid(T)));
+    }
 }

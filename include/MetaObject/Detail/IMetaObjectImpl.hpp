@@ -7,7 +7,7 @@ namespace mo
     class IMetaObject;
 
     template<class T> 
-    ITypedParameter<T>* IMetaObject::GetParameter(const std::string& name) const;
+    ITypedParameter<T>* IMetaObject::GetParameter(const std::string& name) const
     {
         auto param = GetParameter(name);
         auto typed = static_cast<ITypedParameter<T>*>(param);
@@ -43,7 +43,7 @@ namespace mo
             return param;
         }else
         {
-            std::shared_ptr<ITypedParameter<T>> new_param(new TypedParameter<T>(name, value);
+            std::shared_ptr<ITypedParameter<T>> new_param(new TypedParameter<T>(name, value));
             AddParameter(new_param);
             return new_param.get();
         }
@@ -59,4 +59,5 @@ namespace mo
     {
         ConnectCallback(TypedInfo(typeid(Sig)), callback_name, slot_name, slot_owner, force_queue);
     }
+
 }

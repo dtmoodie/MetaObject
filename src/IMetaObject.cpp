@@ -104,6 +104,16 @@ void IMetaObject::Init(bool firstInit)
     }
 }
 
+int IMetaObject::SetupSignals(RelayManager* manager)
+{
+    return 0;
+}
+
+int IMetaObject::SetupVariableManager(IVariableManager* manager)
+{
+    return 0;
+}
+
 void IMetaObject::Serialize(ISimpleSerializer *pSerializer)
 {
     SerializeConnections(pSerializer);
@@ -183,6 +193,22 @@ IParameter* IMetaObject::GetParameter(const std::string& name) const
     THROW(debug) << "Parameter with name \"" << name << "\" not found";
     return nullptr;
 }
+std::vector<IParameter*> IMetaObject::GetParameters(const std::string& filter) const
+{
+    std::vector<IParameter*> output;
+    for(auto& itr : _pimpl->_parameters)
+    {
+        if(filter.size())
+        {
+            if(itr.first.find(filter) != std::string::npos)
+                output.push_back(itr.second);
+        }else
+        {
+            output.push_back(itr.second);
+        }
+    }
+    return output;
+}
 
 IParameter* IMetaObject::GetParameterOptional(const std::string& name) const
 {
@@ -236,27 +262,27 @@ std::vector<InputParameter*> IMetaObject::GetInputs(const TypeInfo& type_filter)
 IParameter* IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 {
     _pimpl->_implicit_parameters[param->GetName()] = param;
-    std::shared_ptr<TypedSlot<void(Context*, IParameter*)> update_slot(
+    std::shared_ptr<TypedSlot<void(Context*, IParameter*)>> update_slot(
         new TypedSlot<void(Context*, IParameter*)>(
             [this](Context* ctx, IParameter* param)
             {
-                this->_pimpl->_sig_parameter_updated(ctx, param);
+                this->_pimpl->_sig_parameter_updated(this, param);
             }));
 
     param->RegisterUpdateNotifier(update_slot.get());
     _pimpl->_parameter_update_slots[param->GetName()] = update_slot;
     _pimpl->_sig_parameter_added(this, param.get());
-    return param;
+    return param.get();
 }
 
 IParameter* IMetaObject::AddParameter(IParameter* param)
 {
     _pimpl->_parameters[param->GetName()] = param;
-    std::shared_ptr < TypedSlot<void(Context*, IParameter*)> update_slot(
+    std::shared_ptr < TypedSlot<void(Context*, IParameter*)>> update_slot(
         new TypedSlot<void(Context*, IParameter*)>(
             [this](Context* ctx, IParameter* param)
     {
-        this->_pimpl->_sig_parameter_updated(ctx, param);
+        this->_pimpl->_sig_parameter_updated(this, param);
     }));
     param->RegisterUpdateNotifier(update_slot.get());
     _pimpl->_parameter_update_slots[param->GetName()] = update_slot;

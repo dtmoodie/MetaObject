@@ -35,14 +35,10 @@ std::vector<IParameter*> VariableManager::GetOutputParameters(TypeInfo type)
     std::vector<IParameter*> valid_outputs;
     for(auto itr = pimpl->_parameters.begin(); itr != pimpl->_parameters.end(); ++itr)
     {
-        IParameter::Ptr param(itr->second);
-        if(param)
+        if(itr->second->GetTypeInfo() == type && itr->second->CheckFlags(Output_e))
         {
-            if(param->GetTypeInfo() == type && param->CheckFlags(Output_e))
-            {
-                valid_outputs.push_back(param);
-            }
-        }
+            valid_outputs.push_back(itr->second);
+        }   
     }
     return valid_outputs;
 }
@@ -72,7 +68,7 @@ IParameter* VariableManager::GetParameter(std::string name)
     auto itr = pimpl->_parameters.find(name);
     if(itr != pimpl->_parameters.end())
     {
-        return itr.second;
+        return itr->second;
     }
     return nullptr;
 }

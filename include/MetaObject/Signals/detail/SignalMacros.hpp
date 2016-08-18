@@ -5,6 +5,7 @@
 #include "MetaObject/Signals/SignalInfo.hpp"
 #include "MetaObject/Signals/detail/SignalManagerImpl.hpp"
 #include "MetaObject/Detail/HelperMacros.hpp"
+#include "MetaObject/Signals/TypedSignal.hpp"
 
 #define SIGNAL_CALL_1(N, name, ret) \
 inline ret sig_##name() \
@@ -18,46 +19,46 @@ inline ret sig_##name(ARG1& arg1) \
 	return COMBINE(_sig_##name##_,N)(arg1); \
 }
 
-#define SIGNAL_CALL_3(name, obj, ret, ARG1, ARG2) \
+#define SIGNAL_CALL_3(N, name, ret, ARG1, ARG2) \
 inline ret sig_##name(ARG1& arg1, ARG2& arg2) \
 { \
-	return obj(arg1, arg2); \
+	return COMBINE(_sig_##name##_,N)(arg1, arg2); \
 }
 
-#define SIGNAL_CALL_4(name, obj, ret, ARG1, ARG2, ARG3) \
+#define SIGNAL_CALL_4(N, name, ret, ARG1, ARG2, ARG3) \
 inline ret sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3) \
 { \
-	return obj(arg1, arg2, arg3); \
+	return COMBINE(_sig_##name##_,N)(arg1, arg2, arg3); \
 }
 
-#define SIGNAL_CALL_5(name, obj, ret, ARG1, ARG2, ARG3, ARG4) \
+#define SIGNAL_CALL_5(N, name, ret, ARG1, ARG2, ARG3, ARG4) \
 inline ret sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4) \
 { \
-	return obj(arg1, arg2, arg3, arg4); \
+	return COMBINE(_sig_##name##_,N)(arg1, arg2, arg3, arg4); \
 }
 
-#define SIGNAL_CALL_6(name, obj, ret, ARG1, ARG2, ARG3, ARG4, ARG5) \
+#define SIGNAL_CALL_6(N, name, ret, ARG1, ARG2, ARG3, ARG4, ARG5) \
 inline ret sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg5) \
 { \
-	return obj(arg1, arg2, arg3, arg4, arg5); \
+	return COMBINE(_sig_##name##_,N)(arg1, arg2, arg3, arg4, arg5); \
 }
 
-#define SIGNAL_CALL_7(name, obj, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) \
-inline void sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg5, ARG6& arg6) \
+#define SIGNAL_CALL_7(N, name, ret, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6) \
+inline ret sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg5, ARG6& arg6) \
 { \
-	obj(arg1, arg2, arg3, arg4, arg5, arg6); \
+	return COMBINE(_sig_##name##_,N)(arg1, arg2, arg3, arg4, arg5, arg6); \
 }
 
-#define SIGNAL_CALL_8(name, obj, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) \
-inline void sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg5, ARG6& arg6, ARG7& arg7) \
+#define SIGNAL_CALL_8(N, name, ret, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7) \
+inline ret sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg5, ARG6& arg6, ARG7& arg7) \
 { \
-	obj(arg1, arg2, arg3, arg4, arg5, arg6, arg7); \
+	return COMBINE(_sig_##name##_,N)(arg1, arg2, arg3, arg4, arg5, arg6, arg7); \
 }
 
-#define SIGNAL_CALL_9(name, obj, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) \
-inline void sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg5, ARG6& arg6, ARG7& arg7, ARG8& arg8) \
+#define SIGNAL_CALL_9(N, name, ret, ARG1, ARG2, ARG3, ARG4, ARG5, ARG6, ARG7, ARG8) \
+inline ret sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg5, ARG6& arg6, ARG7& arg7, ARG8& arg8) \
 { \
-	obj(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8); \
+	return COMBINE(_sig_##name##_,N)(arg1, arg2, arg3, arg4, arg5, arg6, arg7, arg8); \
 }
 
 #define INIT_SIGNALS_(N, C, RETURN, NAME, ...) \

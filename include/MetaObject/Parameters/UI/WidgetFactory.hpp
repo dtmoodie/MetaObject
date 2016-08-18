@@ -20,6 +20,7 @@ https://github.com/dtmoodie/parameters
 #include "MetaObject/Detail/Export.hpp"
 #include <memory>
 #include <functional>
+class QWidget;
 namespace mo
 {
     class TypeInfo;
@@ -33,6 +34,7 @@ namespace mo
             // *****************************************************************************
             //                                WidgetFactory
             // *****************************************************************************
+            
             class MO_EXPORTS WidgetFactory
             {
             public:

@@ -22,14 +22,17 @@ MetaObjectFactory::MetaObjectFactory(SystemTable* table)
 {
     _pimpl = new impl(table);
 }
+
 MetaObjectFactory::~MetaObjectFactory()
 {
     delete _pimpl;
 }
+
 IRuntimeObjectSystem* MetaObjectFactory::GetObjectSystem()
 {
     return &_pimpl->obj_system;
 }
+
 MetaObjectFactory* MetaObjectFactory::Instance(SystemTable* table)
 {
     static MetaObjectFactory* g_inst = nullptr;
@@ -39,11 +42,17 @@ MetaObjectFactory* MetaObjectFactory::Instance(SystemTable* table)
     }
     return g_inst;
 }
-IMetaObject* MetaObjectFactory::Create(const char* type_name)
+
+IMetaObject* MetaObjectFactory::Create(const char* type_name, int interface_id)
 {
     auto constructor = _pimpl->obj_system.GetObjectFactorySystem()->GetConstructor(type_name);
     if(constructor)
     {
+        if(interface_id != -1)
+        {
+            if(constructor->GetInterfaceId() != interface_id)
+                return nullptr;
+        }
         IObject* obj = constructor->Construct();
         if(IMetaObject* mobj = dynamic_cast<IMetaObject*>(obj))
         {
@@ -57,14 +66,39 @@ IMetaObject* MetaObjectFactory::Create(const char* type_name)
     return nullptr;
 }
 
-std::vector<std::string> MetaObjectFactory::ListConstructableObjects() const
+std::vector<std::string> MetaObjectFactory::ListConstructableObjects(int interface_id) const
 {
     std::vector<std::string> output;
     AUDynArray<IObjectConstructor*> constructors;
     _pimpl->obj_system.GetObjectFactorySystem()->GetAll(constructors);
     for(int i = 0; i < constructors.Size(); ++i)
     {
-        output.emplace_back(constructors[i]->GetName());
+        if(interface_id == -1)
+            output.emplace_back(constructors[i]->GetName());
+        else
+            if(constructors[i]->GetInterfaceId() == interface_id)
+                output.emplace_back(constructors[i]->GetName());
+    }
+    return output;
+}
+IObjectConstructor* MetaObjectFactory::GetConstructor(const char* type_name) const
+{
+    return _pimpl->obj_system.GetObjectFactorySystem()->GetConstructor(type_name);
+}
+
+
+std::vector<IObjectConstructor*> MetaObjectFactory::GetConstructors(int interface_id) const
+{
+    std::vector<IObjectConstructor*> output;
+    AUDynArray<IObjectConstructor*> constructors;
+    _pimpl->obj_system.GetObjectFactorySystem()->GetAll(constructors);
+    for(int i = 0; i < constructors.Size(); ++i)
+    {
+        if(interface_id == -1)
+            output.emplace_back(constructors[i]);
+        else
+            if(constructors[i]->GetInterfaceId() == interface_id)
+                output.emplace_back(constructors[i]);
     }
     return output;
 }

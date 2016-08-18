@@ -33,7 +33,7 @@ namespace mo
         typedef std::shared_ptr<InputParameter> Ptr;
 
         virtual bool SetInput(std::shared_ptr<IParameter> param) = 0;
-        virtual bool SetInput(IParameter* param) = 0;
+        virtual bool SetInput(IParameter* param = nullptr) = 0;
         virtual IParameter* GetInput() = 0;
         virtual bool AcceptsInput(std::weak_ptr<IParameter> param) const = 0;
         virtual bool AcceptsInput(IParameter* param) const = 0;
