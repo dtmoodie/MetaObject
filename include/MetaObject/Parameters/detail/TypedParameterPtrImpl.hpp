@@ -11,19 +11,24 @@ namespace mo
 	{
         (void)&_meta_parameter;
 	}
-	template<typename T> TypedParameterPtr<T>::~TypedParameterPtr()
+	
+    template<typename T> 
+    TypedParameterPtr<T>::~TypedParameterPtr()
 	{
 		if (ownsData && ptr)
 			delete ptr;
 	}
 
-    template<typename T> T* TypedParameterPtr<T>::GetDataPtr(long long ts, Context* ctx)
+    template<typename T> 
+    T* TypedParameterPtr<T>::GetDataPtr(long long ts, Context* ctx)
 	{
         if(ts != -1)
 		    LOGIF_NEQ(ts, IParameter::_timestamp, trace);
 		return ptr;
 	}
-	template<typename T> T TypedParameterPtr<T>::GetData(long long ts, Context* ctx)
+	
+    template<typename T> 
+    T TypedParameterPtr<T>::GetData(long long ts, Context* ctx)
 	{
         std::lock_guard<std::recursive_mutex> lock(IParameter::mtx());
         if(ts != -1)
@@ -33,7 +38,9 @@ namespace mo
             THROW(debug) << "Data pointer not set";
 		return *ptr;
 	}
-	template<typename T> bool TypedParameterPtr<T>::GetData(T& value, long long ts, Context* ctx)
+	
+    template<typename T> 
+    bool TypedParameterPtr<T>::GetData(T& value, long long ts, Context* ctx)
 	{
 		std::lock_guard<std::recursive_mutex> lock(IParameter::mtx());
         if(ts != -1)
@@ -45,7 +52,9 @@ namespace mo
 		}
 		return false;
 	}
-	template<typename T> ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(T& data_, long long time_index, Context* ctx)
+	
+    template<typename T> 
+    ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(T& data_, long long time_index, Context* ctx)
 	{
 		ptr = &data_;
 		IParameter::_timestamp = time_index;
@@ -53,7 +62,9 @@ namespace mo
 		IParameter::OnUpdate(ctx);
         return this;
 	}
-	template<typename T> ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(const T& data_, long long time_index, Context* ctx)
+	
+    template<typename T> 
+    ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(const T& data_, long long time_index, Context* ctx)
 	{
 		if (ptr)
 		{
@@ -64,7 +75,9 @@ namespace mo
 		}
         return this;
 	}
-	template<typename T> ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(T* data_, long long time_index, Context* ctx)
+	
+    template<typename T> 
+    ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(T* data_, long long time_index, Context* ctx)
 	{
 		ptr = data_;
 		IParameter::_timestamp = time_index;
@@ -72,7 +85,9 @@ namespace mo
 		IParameter::OnUpdate(ctx);
         return this;
 	}
-	template<typename T> bool TypedParameterPtr<T>::Update(IParameter* other)
+	
+    template<typename T> 
+    bool TypedParameterPtr<T>::Update(IParameter* other)
 	{
 		auto typed = dynamic_cast<ITypedParameter<T>*>(other);
 		if (typed)
@@ -85,9 +100,12 @@ namespace mo
 		}
 		return false;
 	}
-	template<typename T> std::shared_ptr<IParameter> TypedParameterPtr<T>::DeepCopy() const
+	
+    template<typename T> 
+    std::shared_ptr<IParameter> TypedParameterPtr<T>::DeepCopy() const
 	{
 		return std::shared_ptr<IParameter>(new TypedParameterPtr<T>(IParameter::GetName(), ptr));
 	}
+    
     template<typename T> MetaParameter<T, 100, void> TypedParameterPtr<T>::_meta_parameter;
 }

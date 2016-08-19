@@ -25,6 +25,7 @@ namespace mo
     class IParameter;
     class InputParameter;
     template<class T> class ITypedParameter;
+    template<class T> class ITypedInputParameter;
 
     struct ParameterInfo;
     struct SignalInfo;
@@ -157,7 +158,17 @@ namespace mo
         virtual std::vector<IParameter*> GetDisplayParameters() const;
         
         std::vector<InputParameter*> GetInputs(const std::string& name_filter = "") const;
-        std::vector<InputParameter*> GetInputs(const TypeInfo& type_filter) const;
+        std::vector<InputParameter*> GetInputs(const TypeInfo& type_filter, const std::string& name_filter = "") const;
+        template<class T> std::vector<InputParameter*> GetInputs(const std::string& name_filter = "") const;
+        InputParameter* GetInput(const std::string& name) const;
+        template<class T> ITypedInputParameter<T>* GetInput(const std::string& name);
+
+        std::vector<IParameter*> GetOutputs(const std::string& name_filter = "") const;
+        std::vector<IParameter*> GetOutputs(const TypeInfo& type_filter, const std::string& name_filter = "") const;
+        template<class T> std::vector<IParameter*> GetOutputs(const std::string& name_filter = "") const;
+        IParameter* GetOutput(const std::string& name) const;
+        template<class T> ITypedParameter<T>* GetOutput(const std::string& name);
+
 
         IParameter* GetParameter(const std::string& name) const;
         IParameter* GetParameterOptional(const std::string& name) const;
@@ -172,8 +183,8 @@ namespace mo
     protected:
 		friend class RelayManager;
 		
-        IParameter* AddParameter(std::shared_ptr<IParameter> param);
-        IParameter* AddParameter(IParameter* param);
+        virtual IParameter* AddParameter(std::shared_ptr<IParameter> param);
+        virtual IParameter* AddParameter(IParameter* param);
 
         template<class T> ITypedParameter<T>* UpdateParameter(const std::string& name, T&& value, long long ts = -1, Context* ctx = nullptr);
         template<class T> ITypedParameter<T>* UpdateParameterPtr(const std::string& name, T& ptr);
@@ -190,8 +201,4 @@ namespace mo
 		RelayManager*  _sig_manager;
         std::recursive_mutex _mtx;
     };
-    template<class T> ISlot* IMetaObject::GetSlot(const std::string& name) const
-    {
-        return this->GetSlot(name, TypeInfo(typeid(T)));
-    }
 }

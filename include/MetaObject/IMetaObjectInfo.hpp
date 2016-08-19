@@ -11,12 +11,12 @@ namespace mo
 	struct SlotInfo;
 	struct MO_EXPORTS IMetaObjectInfo: IObjectInfo
 	{
-		virtual std::vector<ParameterInfo*> ListParameters() = 0;
-		virtual std::vector<SignalInfo*>    ListSignalInfo() = 0;
-		virtual std::vector<SlotInfo*>      ListSlotInfo() = 0;
-        virtual TypeInfo                    GetTypeInfo() = 0;
-        virtual std::string                 Print();
-        virtual std::string                 GetDisplayName()
+		virtual std::vector<ParameterInfo*> ListParameters() const = 0;
+		virtual std::vector<SignalInfo*>    ListSignalInfo() const = 0;
+		virtual std::vector<SlotInfo*>      ListSlotInfo() const = 0;
+        virtual TypeInfo                    GetTypeInfo() const = 0;
+        virtual std::string                 Print() const;
+        virtual std::string                 GetDisplayName() const
         {
             return GetObjectName();
         }

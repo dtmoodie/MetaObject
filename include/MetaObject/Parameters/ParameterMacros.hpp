@@ -29,6 +29,6 @@ STATUS_(type, name, init, __COUNTER__)
 #define DESCRIPTION(name, DESCRIPTION)
 
 #define OUTPUT(type, name, init) \
-type name = init; \
 mo::TypedParameterPtr<type> name##_param; \
-OUTPUT_(type, name, init, __COUNTER__)
+OUTPUT_(type, name, init, __COUNTER__); \
+type name = init;

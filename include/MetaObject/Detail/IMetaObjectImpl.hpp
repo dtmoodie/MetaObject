@@ -59,5 +59,45 @@ namespace mo
     {
         ConnectCallback(TypedInfo(typeid(Sig)), callback_name, slot_name, slot_owner, force_queue);
     }
+    template<class T> 
+    ISlot* IMetaObject::GetSlot(const std::string& name) const
+    {
+        return this->GetSlot(name, TypeInfo(typeid(T)));
+    }
+    template<class T> 
+    std::vector<IParameter*> IMetaObject::GetOutputs(const std::string& name_filter) const
+    {
+        return GetOutputs(TypeInfo(typeid(T)), name_filter);
+    }
 
+    template<class T> 
+    std::vector<InputParameter*> IMetaObject::GetInputs(const std::string& name_filter) const
+    {
+        return GetInputs(TypeInfo(typeid(T)), name_filter);
+    }
+
+    template<class T> 
+    ITypedInputParameter<T>* IMetaObject::GetInput(const std::string& name)
+    {
+        auto ptr = GetInput(name);
+        if(ptr)
+        {
+            if(reinterpret_cast<IParameter*>(ptr)->GetTypeInfo() == TypeInfo(typeid(T)))
+                return reinterpret_cast<ITypedInputParameter<T>*>(ptr);
+        }
+        return nullptr;
+    }
+    template<class T> 
+    ITypedParameter<T>* IMetaObject::GetOutput(const std::string& name)
+    {
+        auto ptr = GetOutput(name);
+        if(ptr)
+        {
+            if(ptr->GetTypeInfo() == TypeInfo(typeid(T)))
+            {
+                return reinterpret_cast<ITypedParameter<T>*>(ptr);
+            }
+        }
+        return nullptr;
+    }
 }

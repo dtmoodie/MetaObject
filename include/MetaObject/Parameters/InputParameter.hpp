@@ -32,13 +32,14 @@ namespace mo
         typedef std::function<bool(std::weak_ptr<IParameter>)> qualifier_f;
         typedef std::shared_ptr<InputParameter> Ptr;
 
+        virtual bool GetInput(long long ts = -1) = 0;
         virtual bool SetInput(std::shared_ptr<IParameter> param) = 0;
         virtual bool SetInput(IParameter* param = nullptr) = 0;
         virtual IParameter* GetInput() = 0;
         virtual bool AcceptsInput(std::weak_ptr<IParameter> param) const = 0;
         virtual bool AcceptsInput(IParameter* param) const = 0;
         virtual bool AcceptsType(TypeInfo type) const = 0;
-        virtual void SetQualifier(std::function<bool(std::weak_ptr<IParameter>)> f)
+        void SetQualifier(std::function<bool(std::weak_ptr<IParameter>)> f)
         {
             qualifier = f;
         }

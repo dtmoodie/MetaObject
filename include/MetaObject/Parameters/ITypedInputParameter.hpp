@@ -17,6 +17,8 @@ namespace mo
         virtual bool AcceptsInput(IParameter* param) const;
         virtual bool AcceptsType(TypeInfo type) const;
         IParameter* GetInput();
+        
+        bool GetInput(long long ts);
 
         T* GetDataPtr(long long ts = -1, Context* ctx = nullptr);
         bool GetData(T& value, long long time_step = -1, Context* ctx = nullptr);

@@ -21,7 +21,7 @@ namespace mo
 	template<typename T> 
     bool TypedParameter<T>::GetData(T& value, long long ts, Context* ctx)
 	{
-		std::lock_guard<std::recursive_mutex> lock(_mtx);
+		std::lock_guard<std::recursive_mutex> lock(mtx());
 		if (ts == -1)
         {
             value = data;
@@ -40,7 +40,7 @@ namespace mo
     template<typename T>
     T TypedParameter<T>::GetData(long long ts, Context* ctx)
     {
-        std::lock_guard<std::recursive_mutex> lock(_mtx);
+        std::lock_guard<std::recursive_mutex> lock(mtx());
         if(ts == -1)
         {
             return data;

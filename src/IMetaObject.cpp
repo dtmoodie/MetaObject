@@ -221,6 +221,27 @@ IParameter* IMetaObject::GetParameterOptional(const std::string& name) const
     return nullptr;
 }
 
+InputParameter* IMetaObject::GetInput(const std::string& name) const
+{
+    auto itr = _pimpl->_implicit_parameters.find(name);
+    if(itr != _pimpl->_implicit_parameters.end())
+    {
+        if(itr->second->CheckFlags(Input_e))
+        {
+            return reinterpret_cast<InputParameter*>(itr->second.get());
+        }
+    }
+    auto itr2 = _pimpl->_parameters.find(name);
+    if(itr2 != _pimpl->_parameters.end())
+    {
+        if(itr2->second->CheckFlags(Input_e))
+        {
+            return reinterpret_cast<InputParameter*>(itr2->second);
+        }
+    }
+    return nullptr;
+}
+
 std::vector<InputParameter*> IMetaObject::GetInputs(const std::string& name_filter) const
 {
     std::vector<InputParameter*> output;
@@ -231,11 +252,27 @@ std::vector<InputParameter*> IMetaObject::GetInputs(const std::string& name_filt
             if(name_filter.size())
             {
                 if(param.second->GetName().find(name_filter) != std::string::npos)
-                    if(auto out = dynamic_cast<InputParameter*>(param.second))
+                    if(auto out = reinterpret_cast<InputParameter*>(param.second))
                         output.push_back(out);
             }else
             {
-                if(auto out = dynamic_cast<InputParameter*>(param.second))
+                if(auto out = reinterpret_cast<InputParameter*>(param.second))
+                    output.push_back(out);
+            }
+        }
+    }
+    for(auto param : _pimpl->_implicit_parameters)
+    {
+        if(param.second->CheckFlags(Input_e))
+        {
+            if(name_filter.size())
+            {
+                if(param.second->GetName().find(name_filter) != std::string::npos)
+                    if(auto out = reinterpret_cast<InputParameter*>(param.second.get()))
+                        output.push_back(out);
+            }else
+            {
+                if(auto out = reinterpret_cast<InputParameter*>(param.second.get()))
                     output.push_back(out);
             }
         }
@@ -243,7 +280,7 @@ std::vector<InputParameter*> IMetaObject::GetInputs(const std::string& name_filt
     return output;
 }
 
-std::vector<InputParameter*> IMetaObject::GetInputs(const TypeInfo& type_filter) const
+std::vector<InputParameter*> IMetaObject::GetInputs(const TypeInfo& type_filter, const std::string& name_filter) const
 {
     std::vector<InputParameter*> output;
     for(auto param : _pimpl->_parameters)
@@ -251,13 +288,135 @@ std::vector<InputParameter*> IMetaObject::GetInputs(const TypeInfo& type_filter)
         if(param.second->CheckFlags(Input_e))
         {
             if(param.second->GetTypeInfo() == type_filter)
-                if(auto out = dynamic_cast<InputParameter*>(param.second))
-                    output.push_back(out);
+            {
+                if(name_filter.size())
+                {
+                    if(name_filter.find(param.first) != std::string::npos)
+                        if(auto out = reinterpret_cast<InputParameter*>(param.second))
+                            output.push_back(out);
+                }else
+                {
+                    if(auto out = reinterpret_cast<InputParameter*>(param.second))
+                        output.push_back(out);
+                }
+            }
+        }
+    }
+    for(auto param : _pimpl->_implicit_parameters)
+    {
+        if(param.second->CheckFlags(Input_e))
+        {
+            if(param.second->GetTypeInfo() == type_filter)
+            {
+                if(name_filter.size())
+                {
+                    if(name_filter.find(param.first) != std::string::npos)
+                        if(auto out = reinterpret_cast<InputParameter*>(param.second.get()))
+                            output.push_back(out);
+                }else
+                {
+                    if(auto out = reinterpret_cast<InputParameter*>(param.second.get()))
+                        output.push_back(out);
+                }
+            }
         }
     }
     return output;
 }
 
+IParameter* IMetaObject::GetOutput(const std::string& name) const
+{
+    auto itr = _pimpl->_parameters.find(name);
+    if(itr != _pimpl->_parameters.end())
+    {
+        return itr->second;
+    }
+    auto itr2 = _pimpl->_implicit_parameters.find(name);
+    if(itr2 != _pimpl->_implicit_parameters.end())
+    {
+        return itr2->second.get();
+    }
+    return nullptr;
+}
+std::vector<IParameter*> IMetaObject::GetOutputs(const std::string& name_filter) const
+{
+    std::vector<IParameter*> output;
+    for(auto param : _pimpl->_parameters)
+    {
+        if(param.second->CheckFlags(Output_e))
+        {
+            if(name_filter.size())
+            {
+                if(param.first.find(name_filter) != std::string::npos)
+                {
+                    output.push_back(param.second);
+                }
+            }else
+            {
+                output.push_back(param.second);
+            }
+        }
+    }
+    for(auto param : _pimpl->_implicit_parameters)
+    {
+        if(param.second->CheckFlags(Output_e))
+        {
+            if(name_filter.size())
+            {
+                if(param.first.find(name_filter) != std::string::npos)
+                {
+                    output.push_back(param.second.get());
+                }
+            }else
+            {
+                output.push_back(param.second.get());
+            }
+        }
+    }
+    return output;
+}
+
+std::vector<IParameter*> IMetaObject::GetOutputs(const TypeInfo& type_filter, const std::string& name_filter) const
+{
+    std::vector<IParameter*> output;
+    for(auto param : _pimpl->_parameters)
+    {
+        if(param.second->CheckFlags(Output_e))
+        {
+            if(name_filter.size())
+            {
+                if(name_filter.find(param.first) != std::string::npos)
+                {
+                    if(param.second->GetTypeInfo() == type_filter)
+                        output.push_back(param.second);
+                }
+            }else
+            {
+                if(param.second->GetTypeInfo() == type_filter)
+                    output.push_back(param.second);
+            }
+        }
+    }
+    for(auto param : _pimpl->_implicit_parameters)
+    {
+        if(param.second->CheckFlags(Output_e))
+        {
+            if(name_filter.size())
+            {
+                if(name_filter.find(param.first) != std::string::npos)
+                {
+                    if(param.second->GetTypeInfo() == type_filter)
+                        output.push_back(param.second.get());
+                }
+            }else
+            {
+                if(param.second->GetTypeInfo() == type_filter)
+                    output.push_back(param.second.get());
+            }
+        }
+    }
+    return output;
+}
 
 IParameter* IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 {

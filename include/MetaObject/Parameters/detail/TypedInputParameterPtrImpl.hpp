@@ -56,6 +56,24 @@ namespace mo
                 *userVar = shared_input->GetDataPtr();
         }
     }
+    template<typename T>
+    bool TypedInputParameterPtr<T>::GetInput(long long ts)
+    {
+        if(userVar)
+        {
+            if(shared_input)
+            {
+                *userVar = shared_input->GetDataPtr(ts, this->_ctx);
+                return true;
+            }
+            if(input)
+            {
+                *userVar = input->GetDataPtr(ts, this->_ctx);
+                return true;
+            }
+        }
+        return false;
+    }
 
     template<typename T> void TypedInputParameterPtr<T>::onInputDelete(IParameter const* param)
     {

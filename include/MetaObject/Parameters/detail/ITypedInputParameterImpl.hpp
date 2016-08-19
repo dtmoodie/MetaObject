@@ -132,6 +132,11 @@ namespace mo
         return T();
     }
 
+    template<class T>
+    bool ITypedInputParameter<T>::GetInput(long long ts)
+    {
+        return true;
+    }
     // ---- protected functions
     template<class T> void ITypedInputParameter<T>::onInputDelete(IParameter const* param)
     {
@@ -140,6 +145,7 @@ namespace mo
         this->input = nullptr;
         this->OnUpdate(GetContext());
     }
+    
     
     template<class T> void ITypedInputParameter<T>::onInputUpdate(Context* ctx, IParameter* param)
     {

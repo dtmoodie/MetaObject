@@ -1,10 +1,11 @@
-#include "MetaObject/MetaObjectInfo.hpp"
+#include "MetaObject/IMetaObjectInfo.hpp"
 #include "MetaObject/Parameters/ParameterInfo.hpp"
 #include "MetaObject/Signals/SignalInfo.hpp"
 #include "MetaObject/Signals/SlotInfo.hpp"
 #include <sstream>
 using namespace mo;
-std::string IMetaObjectInfo::Print()
+
+std::string IMetaObjectInfo::Print() const
 {
     std::stringstream ss;
     ss << GetInterfaceId() << " ---- " << GetObjectName() << " -------\n";

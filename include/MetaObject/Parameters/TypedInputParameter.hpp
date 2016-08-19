@@ -94,6 +94,7 @@ namespace mo
         bool SetInput(std::shared_ptr<IParameter> input);
         bool SetInput(IParameter* input);
         void SetUserDataPtr(T** user_var_);
+        bool GetInput(long long ts = -1);
     protected:
         T** userVar; // Pointer to the user space pointer variable of type T
         void updateUserVar();

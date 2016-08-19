@@ -45,35 +45,35 @@ namespace mo
         {
             return TypeInfo(typeid(typename T::BASE_CLASS));
         }
-        std::vector<ParameterInfo*>        ListParameters()
+        std::vector<ParameterInfo*>        ListParameters() const
         {
             return ListParametersStatic();
         }
-		std::vector<SignalInfo*>           ListSignalInfo()
+		std::vector<SignalInfo*>           ListSignalInfo() const
         {
             return ListSignalInfoStatic();
         }
-		std::vector<SlotInfo*>             ListSlotInfo()
+		std::vector<SlotInfo*>             ListSlotInfo() const
         {
             return ListSlotInfoStatic();
         }
-		std::string                        GetObjectTooltip()
+		std::string                        GetObjectTooltip() const
         {
             return TooltipStatic();
         }
-		std::string                        GetObjectHelp()
+		std::string                        GetObjectHelp() const
         {
             return DescriptionStatic();
         }
-        TypeInfo                           GetTypeInfo()
+        TypeInfo                           GetTypeInfo() const
         {
             return GetTypeInfoStatic();
         }
-        std::string                        GetObjectName()
+        std::string                        GetObjectName() const
         {
             return T::GetTypeNameStatic();
         }
-        int                                GetInterfaceId()
+        int                                GetInterfaceId() const
         {
             return T::s_interfaceID;
         }
