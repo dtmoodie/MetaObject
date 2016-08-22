@@ -100,7 +100,7 @@ BOOST_AUTO_TEST_CASE(buffered_input)
     BOOST_REQUIRE(output_);
     auto input_param = dynamic_cast<InputParameter*>(input_);
 
-    auto cbuffer = Buffer::BufferFactory::CreateProxy(output_, Buffer::BufferFactory::cbuffer);
+    auto cbuffer = Buffer::BufferFactory::CreateProxy(output_, cbuffer_e);
     BOOST_REQUIRE(cbuffer);
     BOOST_REQUIRE(input_param->SetInput(cbuffer));
     output->test_output_param.UpdateData(0, 0);
@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
     BOOST_REQUIRE(output_);
     auto input_param = dynamic_cast<InputParameter*>(input_);
 
-    auto cbuffer = Buffer::BufferFactory::CreateProxy(output_, Buffer::BufferFactory::cbuffer);
+    auto cbuffer = Buffer::BufferFactory::CreateProxy(output_, cbuffer_e);
     BOOST_REQUIRE(cbuffer);
     BOOST_REQUIRE(input_param->SetInput(cbuffer));
     output->test_output_param.UpdateData(0, 0);
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
     BOOST_REQUIRE(output_);
     auto input_param = dynamic_cast<InputParameter*>(input_);
 
-    auto buffer = Buffer::BufferFactory::CreateProxy(output_, Buffer::BufferFactory::StreamBuffer);
+    auto buffer = Buffer::BufferFactory::CreateProxy(output_, StreamBuffer_e);
     BOOST_REQUIRE(buffer);
     BOOST_REQUIRE(input_param->SetInput(buffer));
     output->test_output_param.UpdateData(0, 0);

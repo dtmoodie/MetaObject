@@ -29,12 +29,29 @@ boost::shared_ptr<mo::MetaObjectFactory> GetObjectFactory()
     return boost::shared_ptr<mo::MetaObjectFactory>(mo::MetaObjectFactory::Instance(), NullDeleter());
 }
 
+template <typename T> T* get_pointer(rcc::shared_ptr<T> const& p) {
+    //notice the const_cast<> at this point
+    //for some unknown reason, bp likes to have it like that
+    return const_cast<T*>(p.Get());
+}
+
+namespace boost { namespace python {
+
+    template <typename T> struct pointee<rcc::shared_ptr<T>> 
+    {
+        typedef T type;
+    };
+
+} }
 
 BOOST_PYTHON_MODULE(MetaPython)
 {
     mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
+
     boost::python::scope().attr("__version__") = "0.1";
+
     mo::PythonClassRegistry::SetupPythonModule();
+
     bp::class_<mo::MetaObjectFactory, boost::shared_ptr<mo::MetaObjectFactory>, boost::noncopyable>("MetaObjectFactory", bp::no_init)
         .def("Instance", &GetObjectFactory).staticmethod("Instance")
         .def("ListConstructableObjects", &mo::MetaObjectFactory::ListConstructableObjects)

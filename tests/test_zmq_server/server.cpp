@@ -15,6 +15,7 @@
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "MetaObject/Parameters/TypedParameter.hpp"
 #include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
+#include "MetaObject/Parameters/IO/Policy.hpp"
 #include "cereal/archives/portable_binary.hpp"
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
@@ -35,13 +36,14 @@ BOOST_AUTO_TEST_CASE(server)
     zmq::context_t ctx(1);
 
     zmq::socket_t socket(ctx, ZMQ_PUB);
-    socket.bind("tcp://localhost:5566");
+    socket.bind("tcp://*:5566");
     std::string topic_name = "update_topic";
     zmq::message_t topic(topic_name.size());
 
     TypedParameter<int> parameter;
     parameter.UpdateData(0);
     auto serialize_func = SerializationFunctionRegistry::Instance()->GetBinarySerializationFunction(parameter.GetTypeInfo());
+    BOOST_REQUIRE(serialize_func);
     int count = 0;
     while(1)
     {

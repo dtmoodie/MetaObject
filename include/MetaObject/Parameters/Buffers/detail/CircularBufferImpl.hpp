@@ -143,7 +143,7 @@ namespace mo
                 UpdateData(input->GetDataPtr(), input->GetTimestamp(), ctx);
             }
         }
-        template<typename T> ParameterConstructor<CircularBuffer<T>, T, CircularBuffer_e> CircularBuffer<T>::_circular_buffer_parameter_constructor;
-        template<typename T> BufferConstructor<CircularBuffer<T>, BufferFactory::cbuffer> CircularBuffer<T>::_circular_buffer_constructor;
+        template<typename T> ParameterConstructor<CircularBuffer<T>> CircularBuffer<T>::_circular_buffer_parameter_constructor;
+        template<typename T> BufferConstructor<CircularBuffer<T>> CircularBuffer<T>::_circular_buffer_constructor;
     }
 }

@@ -31,8 +31,8 @@ namespace mo
     {
         template<typename T> class CircularBuffer: public IBuffer, public ITypedInputParameter<T>
         {
-            static ParameterConstructor<CircularBuffer<T>, T, CircularBuffer_e> _circular_buffer_parameter_constructor;
-            static BufferConstructor<CircularBuffer<T>, BufferFactory::cbuffer> _circular_buffer_constructor;
+            static ParameterConstructor<CircularBuffer<T>> _circular_buffer_parameter_constructor;
+            static BufferConstructor<CircularBuffer<T>> _circular_buffer_constructor;
             boost::circular_buffer<std::pair<long long, T>> _data_buffer;
         public:
             typedef T ValueType;
