@@ -64,7 +64,7 @@ BOOST_AUTO_TEST_CASE(client)
 
 
 #else
-#incude <iostream>
+#include <iostream>
 int main()
 {
     std::cout << "Not build with zero mq supprt";

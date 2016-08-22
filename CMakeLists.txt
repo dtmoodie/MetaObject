@@ -85,7 +85,7 @@ endif()
 
 # ZeroMQ
 find_package(ZeroMQ QUIET)
-if(ZeroMQ_FOUND)
+if(${ZeroMQ_FOUND})
   message("Building with ZeroMQ")
   include_directories(${ZeroMQ_INCLUDE_DIR})
   include_directories("${CMAKE_CURRENT_LIST_DIR}/dependencies/cppzmq") # cpp bindings

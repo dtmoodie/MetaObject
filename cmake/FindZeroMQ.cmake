@@ -106,11 +106,11 @@ function(extract_version_value value_name file_name value)
   string(STRIP ${val} val)
   set(${value} ${val} PARENT_SCOPE)
 endfunction(extract_version_value)
-
-extract_version_value("ZMQ_VERSION_MAJOR" ${ZeroMQ_INCLUDE_DIR}/zmq.h MAJOR)
-extract_version_value("ZMQ_VERSION_MINOR" ${ZeroMQ_INCLUDE_DIR}/zmq.h MINOR)
-extract_version_value("ZMQ_VERSION_PATCH" ${ZeroMQ_INCLUDE_DIR}/zmq.h PATCH)
-
+if(ZEROMQ_FOUND)
+  extract_version_value("ZMQ_VERSION_MAJOR" ${ZeroMQ_INCLUDE_DIR}/zmq.h MAJOR)
+  extract_version_value("ZMQ_VERSION_MINOR" ${ZeroMQ_INCLUDE_DIR}/zmq.h MINOR)
+  extract_version_value("ZMQ_VERSION_PATCH" ${ZeroMQ_INCLUDE_DIR}/zmq.h PATCH)
+endif()
 set(ZeroMQ_VER "${MAJOR}.${MINOR}.${PATCH}")
 
 #We are using the 2.8.10 signature of find_package_handle_standard_args,
