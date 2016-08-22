@@ -13,7 +13,7 @@ void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
 { \
     if(firstInit) \
         name = init; \
-    name##_param.UpdateData(&name); \
+    name##_param.UpdatePtr(&name); \
     name##_param.SetContext(_ctx); \
     name##_param.SetName(#name); \
     AddParameter(&name##_param); \
@@ -32,7 +32,7 @@ void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
 { \
     if(firstInit) \
         name = init; \
-    name##_param.UpdateData(&name); \
+    name##_param.UpdatePtr(&name); \
     name##_param.SetContext(_ctx); \
     name##_param.SetName(#name); \
     name##_param.SetFlags(mo::ParameterType::Output_e); \
@@ -74,7 +74,7 @@ void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
 { \
     if(firstInit) \
         name = init; \
-    name##_param.UpdateData(&name); \
+    name##_param.UpdatePtr(&name); \
     name##_param.SetContext(_ctx); \
     name##_param.SetName(#name); \
     name##_param.SetFlags(mo::ParameterType::State_e); \

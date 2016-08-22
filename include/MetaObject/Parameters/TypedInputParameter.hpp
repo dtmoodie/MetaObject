@@ -26,7 +26,7 @@ namespace mo
     {
     public:
         TypedInputParameterCopy(const std::string& name, T* userVar_,
-            ParameterType type = kControl) :
+            ParameterType type = Control_e) :
             MetaTypedParameter<T>(name, type, tooltip), userVar(userVar_) 
         {
             input = nullptr;

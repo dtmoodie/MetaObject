@@ -56,10 +56,13 @@ namespace mo
     template<typename T> 
     ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(T& data_, long long time_index, Context* ctx)
 	{
-		ptr = &data_;
-		IParameter::_timestamp = time_index;
-		IParameter::modified = true;
-		IParameter::OnUpdate(ctx);
+        if(ptr)
+        {
+            *ptr = data_;
+            IParameter::_timestamp = time_index;
+            IParameter::modified = true;
+            IParameter::OnUpdate(ctx);
+        }
         return this;
 	}
 	
@@ -79,10 +82,13 @@ namespace mo
     template<typename T> 
     ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(T* data_, long long time_index, Context* ctx)
 	{
-		ptr = data_;
-		IParameter::_timestamp = time_index;
-		IParameter::modified = true;
-		IParameter::OnUpdate(ctx);
+        if(ptr)
+        {
+            *ptr = *data_;
+            IParameter::_timestamp = time_index;
+            IParameter::modified = true;
+            IParameter::OnUpdate(ctx);
+        }
         return this;
 	}
 	
@@ -106,6 +112,13 @@ namespace mo
 	{
 		return std::shared_ptr<IParameter>(new TypedParameterPtr<T>(IParameter::GetName(), ptr));
 	}
+
+    template<typename T>
+    ITypedParameter<T>* TypedParameterPtr<T>::UpdatePtr(T* ptr)
+    {
+        this->ptr = ptr;
+        return this;
+    }
     
     template<typename T> MetaParameter<T, 100, void> TypedParameterPtr<T>::_meta_parameter;
 }

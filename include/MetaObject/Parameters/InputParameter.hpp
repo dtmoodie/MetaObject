@@ -32,18 +32,31 @@ namespace mo
         typedef std::function<bool(std::weak_ptr<IParameter>)> qualifier_f;
         typedef std::shared_ptr<InputParameter> Ptr;
 
+        InputParameter(){}
+        virtual ~InputParameter() {}
+
+        // This loads the value at the requested timestamp into the input
+        // parameter such that it can be read
         virtual bool GetInput(long long ts = -1) = 0;
+
+        // This gets a pointer to the variable that feeds into this input
+        virtual IParameter* GetInputParam() = 0;
+
         virtual bool SetInput(std::shared_ptr<IParameter> param) = 0;
         virtual bool SetInput(IParameter* param = nullptr) = 0;
-        virtual IParameter* GetInput() = 0;
+        
         virtual bool AcceptsInput(std::weak_ptr<IParameter> param) const = 0;
         virtual bool AcceptsInput(IParameter* param) const = 0;
         virtual bool AcceptsType(TypeInfo type) const = 0;
+        
         void SetQualifier(std::function<bool(std::weak_ptr<IParameter>)> f)
         {
             qualifier = f;
         }
     protected:
+        InputParameter( const InputParameter& ) = delete;
+        InputParameter& operator=(const InputParameter& ) = delete;
+        InputParameter& operator=(InputParameter&& ) = delete;
         qualifier_f qualifier;
     };
 }

@@ -59,6 +59,7 @@ endif()
 
 
 # ---------------------- Optional dependencies ------------------
+# Qt5
 find_package(Qt5 QUIET COMPONENTS Core Widgets Gui)
 if(Qt5_FOUND)
   message("Building with qt support")
@@ -72,6 +73,7 @@ else()
   message("Building without qt support")
 endif()
 
+# OpenCV
 find_package(OpenCV QUIET COMPONENTS core)
 if(OpenCV_FOUND)
   message("Building with opencv support")
@@ -80,6 +82,18 @@ if(OpenCV_FOUND)
 else()
   message("Building without opencv support")
 endif()
+
+# ZeroMQ
+find_package(ZeroMQ QUIET)
+if(ZeroMQ_FOUND)
+  message("Building with ZeroMQ")
+  include_directories(${ZeroMQ_INCLUDE_DIR})
+  include_directories("${CMAKE_CURRENT_LIST_DIR}/dependencies/cppzmq") # cpp bindings
+  list(APPEND link_libs "optimized;${ZeroMQ_LIBRARY_RELEASE};debug;${ZeroMQ_LIBRARY_DEBUG}")
+  add_definitions(-DHAVE_ZEROMQ)
+endif()
+
+
 
 
 # ---------------------- rcc ---------------------------------  

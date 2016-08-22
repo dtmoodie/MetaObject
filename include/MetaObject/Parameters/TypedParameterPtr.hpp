@@ -18,6 +18,7 @@ namespace mo
 		virtual ITypedParameter<T>* UpdateData(T* data_,       long long ts = -1, Context* ctx = nullptr);
 		virtual bool Update(IParameter* other);
 		virtual std::shared_ptr<IParameter> DeepCopy() const;
+        ITypedParameter<T>* UpdatePtr(T* ptr);
 	protected:
 		T* ptr;
 		bool ownsData;

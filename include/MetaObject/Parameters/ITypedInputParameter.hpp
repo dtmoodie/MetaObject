@@ -16,7 +16,7 @@ namespace mo
         virtual bool AcceptsInput(std::weak_ptr<IParameter> param) const;
         virtual bool AcceptsInput(IParameter* param) const;
         virtual bool AcceptsType(TypeInfo type) const;
-        IParameter* GetInput();
+        IParameter* GetInputParam();
         
         bool GetInput(long long ts);
 
@@ -25,9 +25,24 @@ namespace mo
         T GetData(long long ts = -1, Context* ctx = nullptr);
 
 
-        ITypedParameter<T>* UpdateData(T& data_, long long ts, Context* ctx){ return this;}
-        ITypedParameter<T>* UpdateData(const T& data_, long long ts, Context* ctx){return this;}
-        ITypedParameter<T>* UpdateData(T* data_, long long ts, Context* ctx){return this;}
+        ITypedParameter<T>* UpdateData(T& data_, long long ts, Context* ctx)
+        { 
+            if(ts != -1)
+                _timestamp = ts;
+            return this;
+        }
+        ITypedParameter<T>* UpdateData(const T& data_, long long ts, Context* ctx)
+        { 
+            if(ts != -1)
+                _timestamp = ts;
+            return this;
+        }
+        ITypedParameter<T>* UpdateData(T* data_, long long ts, Context* ctx)
+        { 
+            if(ts != -1)
+                _timestamp = ts;
+            return this;
+        }
 
     protected:
         virtual void onInputDelete(IParameter const* param);

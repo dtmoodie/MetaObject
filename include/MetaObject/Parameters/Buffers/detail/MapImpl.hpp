@@ -80,6 +80,7 @@ namespace mo
             std::lock_guard<std::recursive_mutex> lock(IParameter::mtx());
             _data_buffer[ts] = *data_;
             IParameter::modified = true;
+            this->_timestamp = ts;
             IParameter::OnUpdate(ctx);
             return this;
         }

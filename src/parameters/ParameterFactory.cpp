@@ -19,7 +19,7 @@ ParameterFactory* ParameterFactory::instance()
     return inst;
 }
 
-void ParameterFactory::RegisterConstructor(TypeInfo data_type, create_f function, int parameter_type)
+void ParameterFactory::RegisterConstructor(TypeInfo data_type, create_f function, ParameterTypeFlags parameter_type)
 {
     pimpl->_registered_constructors[data_type][parameter_type] = function;
 }
@@ -28,7 +28,7 @@ void ParameterFactory::RegisterConstructor(TypeInfo parameter_type, create_f fun
     pimpl->_registered_constructors_exact[parameter_type] = function;
 }
 
-std::shared_ptr<IParameter> ParameterFactory::create(TypeInfo data_type, int parameter_type)
+std::shared_ptr<IParameter> ParameterFactory::create(TypeInfo data_type, ParameterTypeFlags parameter_type)
 {
     auto itr = pimpl->_registered_constructors.find(data_type);
     if(itr != pimpl->_registered_constructors.end())

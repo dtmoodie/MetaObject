@@ -1,6 +1,6 @@
 #pragma once
-#include "parameters/ITypedParameter.hpp"
-namespace Parameters
+#include "MetaObject/Parameters/ITypedParameter.hpp"
+namespace mo
 {
     template<typename T> class ITypedParameter;
     namespace Buffer

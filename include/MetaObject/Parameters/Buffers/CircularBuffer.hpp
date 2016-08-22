@@ -36,6 +36,8 @@ namespace mo
             boost::circular_buffer<std::pair<long long, T>> _data_buffer;
         public:
             typedef T ValueType;
+            static const ParameterTypeFlags Type = cbuffer_e;
+
             CircularBuffer(const std::string& name = "",
                 const T& init = T(), long long ts = -1,
                 ParameterType type = Buffer_e);
@@ -62,8 +64,8 @@ namespace mo
     #define MO_METAPARAMETER_INSTANCE_CBUFFER_(N) \
     template<class T> struct MetaParameter<T, N>: public MetaParameter<T, N-1, void> \
     { \
-        static ParameterConstructor<Buffer::CircularBuffer<T>, T, CircularBuffer_e> _circular_buffer_parameter_constructor; \
-        static BufferConstructor<Buffer::CircularBuffer<T>, Buffer::BufferFactory::cbuffer> _circular_buffer_constructor;  \
+        static ParameterConstructor<Buffer::CircularBuffer<T>> _circular_buffer_parameter_constructor; \
+        static BufferConstructor<Buffer::CircularBuffer<T>> _circular_buffer_constructor;  \
         MetaParameter<T, N>(const char* name): \
             MetaParameter<T, N-1>(name) \
         { \
@@ -71,8 +73,8 @@ namespace mo
             (void)&_circular_buffer_parameter_constructor; \
         } \
     }; \
-    template<class T> ParameterConstructor<Buffer::CircularBuffer<T>, T, CircularBuffer_e> MetaParameter<T, N>::_circular_buffer_parameter_constructor; \
-    template<class T> BufferConstructor<Buffer::CircularBuffer<T>, Buffer::BufferFactory::cbuffer> MetaParameter<T, N>::_circular_buffer_constructor;
+    template<class T> ParameterConstructor<Buffer::CircularBuffer<T>> MetaParameter<T, N>::_circular_buffer_parameter_constructor; \
+    template<class T> BufferConstructor<Buffer::CircularBuffer<T>> MetaParameter<T, N>::_circular_buffer_constructor;
     
     MO_METAPARAMETER_INSTANCE_CBUFFER_(__COUNTER__)
 }

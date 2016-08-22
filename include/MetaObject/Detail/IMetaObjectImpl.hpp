@@ -9,8 +9,8 @@ namespace mo
     template<class T> 
     ITypedParameter<T>* IMetaObject::GetParameter(const std::string& name) const
     {
-        auto param = GetParameter(name);
-        auto typed = static_cast<ITypedParameter<T>*>(param);
+        IParameter* param = GetParameter(name);
+        ITypedParameter<T>* typed = dynamic_cast<ITypedParameter<T>*>(param);
         if(typed)
         {
             return typed;
@@ -21,25 +21,25 @@ namespace mo
     template<class T> 
     T IMetaObject::GetParameterValue(const std::string& name, long long ts, Context* ctx) const
     {
-        return GetParameter<T>(name)->_Get_data(ts, ctx);
+        return GetParameter<T>(name)->GetData(ts, ctx);
     }
     template<class T> 
     ITypedParameter<T>* IMetaObject::GetParameterOptional(const std::string& name) const
     {
         auto param = GetParameterOptional(name);
-        auto typed = static_cast<ITypedParameter<T>*>(param);
+        ITypedParameter<T>* typed = dynamic_cast<ITypedParameter<T>*>(param);
         return typed;
     }
 
     template<class T> 
-    ITypedParameter<T>* IMetaObject::UpdateParameter(const std::string& name, T&& value, long long ts, Context* ctx)
+    ITypedParameter<T>* IMetaObject::UpdateParameter(const std::string& name, T& value, long long ts, Context* ctx)
     {
         if(ctx == nullptr)
             ctx = _ctx;
         auto param = GetParameterOptional<T>(name);
         if(param)
         {
-            param->UpdateData(std::forward<T>(value), ts, ctx);
+            param->UpdateData(value, ts, ctx);
             return param;
         }else
         {
@@ -82,8 +82,7 @@ namespace mo
         auto ptr = GetInput(name);
         if(ptr)
         {
-            if(reinterpret_cast<IParameter*>(ptr)->GetTypeInfo() == TypeInfo(typeid(T)))
-                return reinterpret_cast<ITypedInputParameter<T>*>(ptr);
+            return dynamic_cast<ITypedInputParameter<T>*>(ptr);
         }
         return nullptr;
     }
@@ -95,9 +94,14 @@ namespace mo
         {
             if(ptr->GetTypeInfo() == TypeInfo(typeid(T)))
             {
-                return reinterpret_cast<ITypedParameter<T>*>(ptr);
+                return dynamic_cast<ITypedParameter<T>*>(ptr);
             }
         }
         return nullptr;
+    }
+    template<class T> 
+    bool IMetaObject::Connect(IMetaObject* sender, const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name)
+    {
+        return Connect(sender, signal_name, receiver, slot_name, TypeInfo(typeid(T)));
     }
 }

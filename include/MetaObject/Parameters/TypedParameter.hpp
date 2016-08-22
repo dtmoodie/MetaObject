@@ -26,6 +26,9 @@ namespace mo
     class MO_EXPORTS TypedParameter : public ITypedParameter<T>
     {
     public:
+        typedef T ValueType;
+        static const ParameterTypeFlags Type = TypedParameter_e;
+
         TypedParameter(const std::string& name = "", const T& init = T(), ParameterType type = Control_e, long long ts = -1, Context* ctx = nullptr);
         
 		T    GetData(long long ts= -1, Context* ctx = nullptr);
@@ -42,7 +45,7 @@ namespace mo
     protected:
         T data;
     private:
-        static ParameterConstructor<TypedParameter<T>, T, TypedParameter_e> _typed_parameter_constructor;
+        static ParameterConstructor<TypedParameter<T>> _typed_parameter_constructor;
         static MetaParameter<T, 300> _meta_parameter;
     };
 }

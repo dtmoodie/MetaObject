@@ -46,14 +46,20 @@ namespace mo
     {
         if(input)
         {
-            if(userVar)
-                *userVar = input->GetDataPtr();
-            SetTimestamp(input->GetTimestamp());
+            if(ctx == this->_ctx)
+            {
+                SetTimestamp(input->GetTimestamp());
+                if(userVar)
+                    *userVar = input->GetDataPtr();
+            }
         }else if(shared_input)
         {
-            SetTimestamp(shared_input->GetTimestamp());
-            if(userVar)
-                *userVar = shared_input->GetDataPtr();
+            if(ctx == this->_ctx)
+            {
+                SetTimestamp(shared_input->GetTimestamp());
+                if(userVar)
+                    *userVar = shared_input->GetDataPtr();
+            }
         }
     }
     template<typename T>
@@ -64,12 +70,12 @@ namespace mo
             if(shared_input)
             {
                 *userVar = shared_input->GetDataPtr(ts, this->_ctx);
-                return true;
+                return *userVar != nullptr;
             }
             if(input)
             {
                 *userVar = input->GetDataPtr(ts, this->_ctx);
-                return true;
+                return *userVar != nullptr;
             }
         }
         return false;

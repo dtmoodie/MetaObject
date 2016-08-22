@@ -14,6 +14,7 @@ namespace mo
     class MO_EXPORTS Context
     {
     public:
+        Context();
         size_t process_id = 0;
         size_t thread_id = 0;
         std::string host_name;

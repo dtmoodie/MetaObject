@@ -11,6 +11,7 @@ namespace mo
         {
         public:
             typedef T ValueType;
+            static const ParameterTypeFlags Type = StreamBuffer_e;
 
             StreamBuffer(const std::string& name = "");
 
@@ -25,5 +26,22 @@ namespace mo
             int _padding;
         };
     }
+
+#define MO_METAPARAMETER_INSTANCE_SBUFFER_(N) \
+    template<class T> struct MetaParameter<T, N>: public MetaParameter<T, N-1, void> \
+    { \
+        static BufferConstructor<Buffer::StreamBuffer<T>> _stream_buffer_constructor;  \
+        static ParameterConstructor<Buffer::StreamBuffer<T>> _stream_buffer_parameter_constructor; \
+        MetaParameter<T, N>(const char* name): \
+            MetaParameter<T, N-1>(name) \
+        { \
+            (void)&_stream_buffer_constructor; \
+            (void)&_stream_buffer_parameter_constructor; \
+        } \
+    }; \
+    template<class T> BufferConstructor<Buffer::StreamBuffer<T>> MetaParameter<T, N>::_stream_buffer_constructor; \
+    template<class T> ParameterConstructor<Buffer::StreamBuffer<T>> MetaParameter<T, N>::_stream_buffer_parameter_constructor;
+
+    MO_METAPARAMETER_INSTANCE_SBUFFER_(__COUNTER__)
 }
 #include "detail/StreamBufferImpl.hpp"

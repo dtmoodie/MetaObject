@@ -40,7 +40,10 @@ namespace mo
         {
             if(input) input->Unsubscribe();
             if(shared_input) shared_input->Unsubscribe();
-
+            if(casted_param->GetTimestamp() != -1)
+            {
+                UpdateData(casted_param->GetDataPtr(), casted_param->GetTimestamp(), casted_param->GetContext());
+            }
             shared_input = casted_param;
             casted_param->RegisterUpdateNotifier(&update_slot);
 			casted_param->RegisterDeleteNotifier(&delete_slot);
@@ -73,7 +76,10 @@ namespace mo
         {
             if(input) input->Unsubscribe();
             if(shared_input) shared_input->Unsubscribe();
-
+            if(casted_param->GetTimestamp() != -1)
+            {
+                UpdateData(casted_param->GetDataPtr(), casted_param->GetTimestamp(), casted_param->GetContext());
+            }
             input = casted_param;
 			casted_param->RegisterUpdateNotifier(&update_slot);
 			casted_param->RegisterDeleteNotifier(&delete_slot);
@@ -100,7 +106,7 @@ namespace mo
         return type == GetTypeInfo();
     }
 
-    template<class T> IParameter* ITypedInputParameter<T>::GetInput()
+    template<class T> IParameter* ITypedInputParameter<T>::GetInputParam()
     {
         if(shared_input)
             return shared_input.get();

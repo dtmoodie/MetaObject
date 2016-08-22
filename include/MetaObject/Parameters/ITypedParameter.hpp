@@ -25,6 +25,7 @@ namespace mo
     {
     public:
         typedef std::shared_ptr<ITypedParameter<T>> Ptr;
+        typedef T ValueType;
         
         ITypedParameter(const std::string& name, ParameterType flags = Control_e, long long ts = -1, Context* ctx = nullptr);
 

@@ -66,8 +66,8 @@ namespace mo
 #define MO_METAPARAMETER_INSTANCE_STREAM_BUFFER_(N) \
     template<class T> struct MetaParameter<T, N>: public MetaParameter<T, N-1> \
     { \
-        static ParameterConstructor<Buffer::StreamBuffer<T>, T, StreamBuffer_e> _stream_buffer_parameter_constructor; \
-        static BufferConstructor<Buffer::StreamBuffer<T>, Buffer::BufferFactory::StreamBuffer> _stream_buffer_constructor;  \
+        static ParameterConstructor<Buffer::StreamBuffer<T>> _stream_buffer_parameter_constructor; \
+        static BufferConstructor<Buffer::StreamBuffer<T>> _stream_buffer_constructor;  \
         MetaParameter<T, N>(const char* name): \
             MetaParameter<T, N-1>(name) \
         { \
@@ -75,8 +75,8 @@ namespace mo
             (void)&_stream_buffer_constructor; \
         } \
     }; \
-    template<class T> ParameterConstructor<Buffer::StreamBuffer<T>, T, StreamBuffer_e> MetaParameter<T, N>::_stream_buffer_parameter_constructor; \
-    template<class T> BufferConstructor<Buffer::StreamBuffer<T>, Buffer::BufferFactory::StreamBuffer> MetaParameter<T, N>::_stream_buffer_constructor;
+    template<class T> ParameterConstructor<Buffer::StreamBuffer<T>> MetaParameter<T, N>::_stream_buffer_parameter_constructor; \
+    template<class T> BufferConstructor<Buffer::StreamBuffer<T>> MetaParameter<T, N>::_stream_buffer_constructor;
 
     MO_METAPARAMETER_INSTANCE_STREAM_BUFFER_(__COUNTER__)
 }

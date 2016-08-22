@@ -14,7 +14,13 @@ namespace mo
     T* TypedParameter<T>::GetDataPtr(long long ts, Context* ctx)
 	{
 		if (ts != -1)
-			LOGIF_NEQ(ts, this->_timestamp, trace);
+        {
+            if(ts != this->_timestamp)
+            {
+                LOG(debug) << "Requested timestamp " << ts << " != " << this->_timestamp;
+                return nullptr;
+            }
+        }
 		return &data;
 	}
 
@@ -96,6 +102,6 @@ namespace mo
 		return false;
 	}
 
-	template<typename T> ParameterConstructor<TypedParameter<T>, T, TypedParameter_e> TypedParameter<T>::_typed_parameter_constructor;
+	template<typename T> ParameterConstructor<TypedParameter<T>> TypedParameter<T>::_typed_parameter_constructor;
     template<typename T> MetaParameter<T, 300>  TypedParameter<T>::_meta_parameter;
 }

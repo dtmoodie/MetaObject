@@ -1,14 +1,21 @@
 #include "MetaObject/IMetaObject.hpp"
+
+#include "MetaObject/Logging/Log.hpp"
+#include "MetaObject/Parameters/Demangle.hpp"
 #include "MetaObject/Signals/ISignal.hpp"
 #include "MetaObject/Signals/ISlot.hpp"
 #include "MetaObject/Signals/SignalInfo.hpp"
 #include "MetaObject/Signals/SlotInfo.hpp"
-#include "MetaObject/Parameters/IParameter.hpp"
-#include "MetaObject/Logging/Log.hpp"
+
 #include "MetaObject/Detail/IMetaObject_pImpl.hpp"
+
+#include "MetaObject/Parameters/IParameter.hpp"
 #include "MetaObject/Parameters/InputParameter.hpp"
+#include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
+
 #include "ISimpleSerializer.h"
 #include "IObjectState.hpp"
+
 using namespace mo;
 int IMetaObject::Connect(IMetaObject* sender, const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name)
 {
@@ -228,7 +235,7 @@ InputParameter* IMetaObject::GetInput(const std::string& name) const
     {
         if(itr->second->CheckFlags(Input_e))
         {
-            return reinterpret_cast<InputParameter*>(itr->second.get());
+            return dynamic_cast<InputParameter*>(itr->second.get());
         }
     }
     auto itr2 = _pimpl->_parameters.find(name);
@@ -236,7 +243,7 @@ InputParameter* IMetaObject::GetInput(const std::string& name) const
     {
         if(itr2->second->CheckFlags(Input_e))
         {
-            return reinterpret_cast<InputParameter*>(itr2->second);
+            return dynamic_cast<InputParameter*>(itr2->second);
         }
     }
     return nullptr;
@@ -252,11 +259,11 @@ std::vector<InputParameter*> IMetaObject::GetInputs(const std::string& name_filt
             if(name_filter.size())
             {
                 if(param.second->GetName().find(name_filter) != std::string::npos)
-                    if(auto out = reinterpret_cast<InputParameter*>(param.second))
+                    if(auto out = dynamic_cast<InputParameter*>(param.second))
                         output.push_back(out);
             }else
             {
-                if(auto out = reinterpret_cast<InputParameter*>(param.second))
+                if(auto out = dynamic_cast<InputParameter*>(param.second))
                     output.push_back(out);
             }
         }
@@ -268,11 +275,11 @@ std::vector<InputParameter*> IMetaObject::GetInputs(const std::string& name_filt
             if(name_filter.size())
             {
                 if(param.second->GetName().find(name_filter) != std::string::npos)
-                    if(auto out = reinterpret_cast<InputParameter*>(param.second.get()))
+                    if(auto out = dynamic_cast<InputParameter*>(param.second.get()))
                         output.push_back(out);
             }else
             {
-                if(auto out = reinterpret_cast<InputParameter*>(param.second.get()))
+                if(auto out = dynamic_cast<InputParameter*>(param.second.get()))
                     output.push_back(out);
             }
         }
@@ -292,11 +299,11 @@ std::vector<InputParameter*> IMetaObject::GetInputs(const TypeInfo& type_filter,
                 if(name_filter.size())
                 {
                     if(name_filter.find(param.first) != std::string::npos)
-                        if(auto out = reinterpret_cast<InputParameter*>(param.second))
+                        if(auto out = dynamic_cast<InputParameter*>(param.second))
                             output.push_back(out);
                 }else
                 {
-                    if(auto out = reinterpret_cast<InputParameter*>(param.second))
+                    if(auto out = dynamic_cast<InputParameter*>(param.second))
                         output.push_back(out);
                 }
             }
@@ -311,11 +318,11 @@ std::vector<InputParameter*> IMetaObject::GetInputs(const TypeInfo& type_filter,
                 if(name_filter.size())
                 {
                     if(name_filter.find(param.first) != std::string::npos)
-                        if(auto out = reinterpret_cast<InputParameter*>(param.second.get()))
+                        if(auto out = dynamic_cast<InputParameter*>(param.second.get()))
                             output.push_back(out);
                 }else
                 {
-                    if(auto out = reinterpret_cast<InputParameter*>(param.second.get()))
+                    if(auto out = dynamic_cast<InputParameter*>(param.second.get()))
                         output.push_back(out);
                 }
             }
@@ -417,7 +424,56 @@ std::vector<IParameter*> IMetaObject::GetOutputs(const TypeInfo& type_filter, co
     }
     return output;
 }
-
+bool IMetaObject::ConnectInput(const std::string& input_name, IParameter* output, ParameterTypeFlags type_)
+{
+    auto input = GetInput(input_name);
+    if(input && input->AcceptsInput(output))
+    {
+        // Check contexts to see if a buffer needs to be setup
+        auto output_ctx = output->GetContext();
+        if(output_ctx && _ctx)
+        {
+            if(output_ctx->thread_id != _ctx->thread_id)
+            {
+                auto buffer = Buffer::BufferFactory::CreateProxy(output, type_);
+                if(buffer)
+                {
+                    bool ret = input->SetInput(buffer);
+                    if(ret == false)
+                    {
+                        LOG(debug) << "Failed to connect output " << output->GetName() << "[" << Demangle::TypeToName(output->GetTypeInfo()) 
+                            << "] to input " << input_name << "[" << Demangle::TypeToName(dynamic_cast<IParameter*>(input)->GetTypeInfo()) << "]";
+                    }
+                    return ret;
+                }else
+                {
+                    LOG(debug) << "No buffer of desired type found for type " << Demangle::TypeToName(output->GetTypeInfo());
+                }
+            }
+        }else
+        {
+            bool ret = input->SetInput(output);
+            if(ret == false)
+            {
+                LOG(debug) << "Failed to connect output " << output->GetName() << "[" << Demangle::TypeToName(output->GetTypeInfo()) 
+                    << "] to input " << input_name << "[" << Demangle::TypeToName(dynamic_cast<IParameter*>(input)->GetTypeInfo()) << "]";
+            }
+            return ret;
+        }
+    }
+    auto inputs = GetInputs();
+    auto print_inputs = [inputs]()->std::string
+    {
+        std::stringstream ss;
+        for(auto _input : inputs)
+        {
+            ss << dynamic_cast<IParameter*>(_input)->GetName() << ", ";
+        }
+        return ss.str();
+    };
+    LOG(debug) << "Unable to find input by name " << input_name << " in object " << this->GetTypeName() << " with inputs [" << print_inputs() << "]";
+    return false;
+}
 IParameter* IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 {
     param->SetMtx(&_mtx);

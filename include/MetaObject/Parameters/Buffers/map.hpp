@@ -19,6 +19,8 @@ https://github.com/dtmoodie/parameters
 #pragma once
 
 #include "MetaObject/Parameters/ITypedInputParameter.hpp"
+#include "MetaObject/Parameters/ParameterConstructor.hpp"
+#include "BufferConstructor.hpp"
 #include "IBuffer.hpp"
 #include <map>
 
@@ -31,6 +33,8 @@ namespace mo
         {
         public:
             typedef T ValueType;
+            static const ParameterTypeFlags Type = map_e;
+
             Map(const std::string& name = "");
 
             T*   GetDataPtr(long long ts = -1, Context* ctx = nullptr);
@@ -56,8 +60,8 @@ namespace mo
 #define MO_METAPARAMETER_INSTANCE_MAP_(N) \
     template<class T> struct MetaParameter<T, N>: public MetaParameter<T, N-1> \
     { \
-        static ParameterConstructor<Buffer::Map<T>, T, Map_e> _map_parameter_constructor; \
-        static BufferConstructor<Buffer::Map<T>, Buffer::BufferFactory::map> _map_constructor;  \
+        static ParameterConstructor<Buffer::Map<T>> _map_parameter_constructor; \
+        static BufferConstructor<Buffer::Map<T>> _map_constructor;  \
         MetaParameter<T, N>(const char* name): \
             MetaParameter<T, N-1>(name) \
         { \
@@ -65,8 +69,8 @@ namespace mo
             (void)&_map_constructor; \
         } \
     }; \
-    template<class T> ParameterConstructor<Buffer::Map<T>, T, Map_e> MetaParameter<T, N>::_map_parameter_constructor; \
-    template<class T> BufferConstructor<Buffer::Map<T>, Buffer::BufferFactory::map> MetaParameter<T, N>::_map_constructor;
+    template<class T> ParameterConstructor<Buffer::Map<T>> MetaParameter<T, N>::_map_parameter_constructor; \
+    template<class T> BufferConstructor<Buffer::Map<T>> MetaParameter<T, N>::_map_constructor;
 
     MO_METAPARAMETER_INSTANCE_MAP_(__COUNTER__)
 }

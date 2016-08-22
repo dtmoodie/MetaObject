@@ -2,6 +2,7 @@
 #define BOOST_TEST_MAIN
 
 #include "MetaObject/IMetaObject.hpp"
+#include "MetaObject/Detail/IMetaObjectImpl.hpp"
 #include "MetaObject/Signals/TypedSignal.hpp"
 #include "MetaObject/Detail/Counter.hpp"
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
@@ -20,6 +21,24 @@
 #include <iostream>
 
 using namespace mo;
+
+struct parametered_object: public IMetaObject
+{
+    MO_BEGIN(parametered_object);
+        PARAM(int, int_value, 0);
+        PARAM(float, float_value, 0);
+        PARAM(double, double_value, 0);
+
+        INPUT(int, int_input, 0);
+        OUTPUT(int, int_output, 0);
+    MO_END;
+    void update(int value)
+    {
+        this->UpdateParameter<int>("int_value", value);
+    }
+};
+
+MO_REGISTER_OBJECT(parametered_object)
 
 BOOST_AUTO_TEST_CASE(wrapped_parameter)
 {
@@ -63,5 +82,16 @@ BOOST_AUTO_TEST_CASE(input_parameter)
 	BOOST_REQUIRE_EQUAL(update_handler_called, true);
 }
 
+BOOST_AUTO_TEST_CASE(access_parameter)
+{
+    MetaObjectFactory::Instance()->RegisterTranslationUnit();
 
+    auto obj = rcc::shared_ptr<parametered_object>::Create();
+    obj->GetParameter<int>("int_value");
+    obj->GetParameter<double>("double_value");
+    BOOST_REQUIRE_EQUAL(obj->GetParameterValue<int>("int_value"), 0);
+    obj->update(10);
+    BOOST_REQUIRE_EQUAL(obj->GetParameterValue<int>("int_value"), 10);
+
+}
 

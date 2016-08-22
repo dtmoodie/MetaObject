@@ -5,15 +5,15 @@
 using namespace mo;
 using namespace mo::Buffer;
 
-static std::map<TypeInfo, std::map<BufferFactory::buffer_type, BufferFactory::create_buffer_f>>& registry()
+static std::map<TypeInfo, std::map<ParameterTypeFlags, BufferFactory::create_buffer_f>>& registry()
 {
-    static std::map<TypeInfo, std::map<BufferFactory::buffer_type, BufferFactory::create_buffer_f>> g_inst;
+    static std::map<TypeInfo, std::map<ParameterTypeFlags, BufferFactory::create_buffer_f>> g_inst;
     return g_inst;
 }
  
 
 
-void BufferFactory::RegisterFunction(TypeInfo type, const create_buffer_f& func, buffer_type buffer_type_)
+void BufferFactory::RegisterFunction(TypeInfo type, const create_buffer_f& func, ParameterTypeFlags buffer_type_)
 {
     auto& reg = registry();
     auto itr1 = reg.find(type);
@@ -25,7 +25,7 @@ void BufferFactory::RegisterFunction(TypeInfo type, const create_buffer_f& func,
     }
     registry()[type][buffer_type_] = func;
 }
-std::shared_ptr<IParameter>  BufferFactory::CreateProxy(IParameter* param, buffer_type buffer_type_)
+std::shared_ptr<IParameter>  BufferFactory::CreateProxy(IParameter* param, ParameterTypeFlags buffer_type_)
 {
     auto factory_func = registry().find(param->GetTypeInfo());
     if (factory_func != registry().end())

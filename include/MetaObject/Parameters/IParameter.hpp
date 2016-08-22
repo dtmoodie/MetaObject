@@ -18,6 +18,7 @@ https://github.com/dtmoodie/MetaObject
 */
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
+#include "MetaObject/Detail/Enums.hpp"
 #include "MetaObject/Signals/TypedSignal.hpp"
 #include <boost/core/noncopyable.hpp>
 
@@ -39,15 +40,7 @@ namespace mo
     template<class T> class TypedSignal;
 	template<class T> class TypedSlot;
 	template<class T> class TypedSignalRelay;
-    enum ParameterType
-    {
-        None_e = 0,
-        Input_e = 1,
-        Output_e = 2,
-        State_e = 4,
-        Control_e = 8,
-        Buffer_e = 16
-    };
+
 
     class MO_EXPORTS IParameter: boost::noncopyable
     {
