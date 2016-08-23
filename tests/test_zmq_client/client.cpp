@@ -15,6 +15,7 @@
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "MetaObject/Parameters/TypedParameter.hpp"
 #include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
+#include "MetaObject/Parameters/ParameterClient.hpp"
 #include "cereal/archives/portable_binary.hpp"
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
@@ -31,7 +32,12 @@ using namespace mo;
 
 BOOST_AUTO_TEST_CASE(client)
 {
-    zmq::context_t ctx(1);
+    auto inst = ParameterClient::Instance();
+    inst->Connect("tcp://localhost:5566");
+    
+
+
+    /*zmq::context_t ctx(1);
 
     zmq::socket_t socket(ctx, ZMQ_SUB);
     socket.connect("tcp://localhost:5566");
@@ -47,7 +53,7 @@ BOOST_AUTO_TEST_CASE(client)
         if(socket.recv(&msg))
         {
             std::istringstream iss(static_cast<char*>(msg.data()));
-            cereal::PortableBinaryInputArchive ar(iss);
+            cereal::BinaryInputArchive ar(iss);
             deserialization_func(&parameter, ar);
             long long ts = parameter.GetTimestamp();
             int value = parameter.GetData();
@@ -56,7 +62,7 @@ BOOST_AUTO_TEST_CASE(client)
             if(count > 100)
                 break;
         }
-    }
+    }*/
 }
 
 

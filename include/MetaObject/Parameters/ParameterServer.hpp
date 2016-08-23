@@ -1,14 +1,13 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
+#include <string>
 
-namespace std
-{
-    class string;
-}
 
 namespace mo
 {
     class IVariableManager;
+    class Context;
+    class IParameter;
     class MO_EXPORTS ParameterServer
     {
     public:
@@ -30,7 +29,12 @@ namespace mo
         bool Bind(const std::string& adapter);
     private:
         ParameterServer();
+        ~ParameterServer();
         ParameterServer(const ParameterServer& other) = delete;
         ParameterServer& operator=(const ParameterServer& other) = delete;
+        void onParameterUpdate(Context* ctx, IParameter* param);
+        void onParameterDelete(IParameter const* param);
+        struct impl;
+        impl* _pimpl;
     };
 }

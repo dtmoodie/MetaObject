@@ -16,6 +16,8 @@
 #include "MetaObject/Parameters/TypedParameter.hpp"
 #include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
 #include "MetaObject/Parameters/IO/Policy.hpp"
+#include "MetaObject/Parameters/VariableManager.h"
+#include "MetaObject/Parameters/ParameterServer.hpp"
 #include "cereal/archives/portable_binary.hpp"
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
@@ -33,7 +35,14 @@ using namespace mo;
 
 BOOST_AUTO_TEST_CASE(server)
 {
-    zmq::context_t ctx(1);
+    VariableManager mgr;
+    TypedParameter<int> param("test");
+    mgr.AddParameter(&param);
+    auto inst = ParameterServer::Instance();
+    inst->Bind("tcp://*:5566");
+    inst->Publish(&mgr, ":test");
+    std::this_thread::sleep_for(std::chrono::seconds(100));
+    /*zmq::context_t ctx(1);
 
     zmq::socket_t socket(ctx, ZMQ_PUB);
     socket.bind("tcp://*:5566");
@@ -51,14 +60,15 @@ BOOST_AUTO_TEST_CASE(server)
         socket.send(topic, ZMQ_SNDMORE);
         std::stringstream oss;
         {
-            cereal::PortableBinaryOutputArchive ar(oss);
+            cereal::BinaryOutputArchive ar(oss);
             serialize_func(&parameter, ar);
         }
         std::string msg = oss.str();
         zmq::message_t msg_(msg.c_str(), msg.size());
         socket.send(msg_);
         ++count;
-    }
+    }*/
+
 }
 
 

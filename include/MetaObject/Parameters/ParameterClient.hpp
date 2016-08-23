@@ -21,7 +21,10 @@ namespace mo
         std::vector<std::string> ListAvailableParameters(const std::string& name_filter = "");
     private:
         ParameterClient();
+        ~ParameterClient();
         ParameterClient(const ParameterClient& other) = delete;
         ParameterClient& operator=(const ParameterClient& other) = delete;
+        struct impl;
+        impl* _pimpl;
     };
 }

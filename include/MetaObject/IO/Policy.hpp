@@ -1,7 +1,7 @@
 #pragma once
 #include "Serializer.hpp"
 
-#include "cereal/archives/portable_binary.hpp"
+#include "cereal/archives/binary.hpp"
 #include "cereal/archives/xml.hpp"
 #include "cereal/archives/json.hpp"
 
@@ -18,7 +18,7 @@ namespace mo
             SerializerFactory::RegisterSerializationFunctionXML(T::GetTypeNameStatic(), std::bind(&SerializationPolicyImpl<T>::SerializeXml, std::placeholders::_1, std::placeholders::_2));
             SerializerFactory::RegisterDeSerializationFunctionXML(T::GetTypeNameStatic(), std::bind(&SerializationPolicyImpl<T>::DeSerializeXml, std::placeholders::_1, std::placeholders::_2));
         }
-        static void SerializeBinary(const IMetaObject* obj, cereal::PortableBinaryOutputArchive& ar)
+        static void SerializeBinary(const IMetaObject* obj, cereal::BinaryOutputArchive& ar)
         {
             const T* typed = static_cast<const T*>(obj);
             if(typed)
@@ -26,7 +26,7 @@ namespace mo
                 ar(*typed);
             }
         }
-        static void DeSerializeBinary(IMetaObject* obj, cereal::PortableBinaryInputArchive& ar)
+        static void DeSerializeBinary(IMetaObject* obj, cereal::BinaryInputArchive& ar)
         {
             T* typed = static_cast<T*>(obj);
             if (typed)

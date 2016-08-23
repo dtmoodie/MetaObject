@@ -69,14 +69,14 @@ BOOST_AUTO_TEST_CASE(serialize_manual_binary)
     rcc::shared_ptr<serializable_object> obj = serializable_object::Create();
     {
         std::ofstream ofs("test.bin");
-        cereal::PortableBinaryOutputArchive archive(ofs);
+        cereal::BinaryOutputArchive archive(ofs);
         obj->test = 10;
         obj->test2 = 100;
         archive(*(obj.Get()));
     }
     {
         std::ifstream ifs("test.bin");
-        cereal::PortableBinaryInputArchive inar(ifs);
+        cereal::BinaryInputArchive inar(ifs);
         rcc::shared_ptr<serializable_object> obj2 = serializable_object::Create();
         inar(*(obj2.Get()));
         BOOST_REQUIRE_EQUAL(obj->test, obj2->test);

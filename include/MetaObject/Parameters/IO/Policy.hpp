@@ -2,15 +2,15 @@
 #include "SerializationFunctionRegistry.hpp"
 
 #include <cereal/cereal.hpp>
-#include <cereal/archives/portable_binary.hpp>
+#include <cereal/archives/binary.hpp>
 #include <cereal/archives/xml.hpp>
 
 #include <functional>
 
 namespace cereal
 {
-    class PortableBinaryInputArchive;
-    class PortableBinaryOutputArchive;
+    class BinaryInputArchive;
+    class BinaryOutputArchive;
     class XMLOutputArchive;
     class XMLInputArchive;
 }
@@ -37,36 +37,42 @@ namespace mo
             SerializationFunctionRegistry::Instance()->SetXmlDeSerializationFunction(
                 TypeInfo(typeid(T)), std::bind(&ParameterSerializerPolicy<T>::DeSerializeXml, std::placeholders::_1, std::placeholders::_2));
         }
-        static bool SerializeBinary(IParameter* param, cereal::PortableBinaryOutputArchive& ar)
+        static bool SerializeBinary(IParameter* param, cereal::BinaryOutputArchive& ar)
         {
-            ITypedParameter<T>* typed = reinterpret_cast<ITypedParameter<T>*>(param);
+            ITypedParameter<T>* typed = dynamic_cast<ITypedParameter<T>*>(param);
             T* ptr = typed->GetDataPtr();
             if (ptr)
-                ar(cereal::make_nvp(param->GetName(), *ptr));
+                ar(cereal::make_nvp(param->GetName().c_str(), *ptr));
             return true;
         }
-        static bool DeSerializeBinary(IParameter* param, cereal::PortableBinaryInputArchive& ar)
+        static bool DeSerializeBinary(IParameter* param, cereal::BinaryInputArchive& ar)
         {
-            ITypedParameter<T>* typed = reinterpret_cast<ITypedParameter<T>*>(param);
+            ITypedParameter<T>* typed = dynamic_cast<ITypedParameter<T>*>(param);
             T* ptr = typed->GetDataPtr();
             if(ptr)
+            {
                 ar(cereal::make_nvp(param->GetName(), *ptr));
+            }
             return true;
         }
         static bool SerializeXml(IParameter* param, cereal::XMLOutputArchive& ar)
         {
-            ITypedParameter<T>* typed = reinterpret_cast<ITypedParameter<T>*>(param);
+            ITypedParameter<T>* typed = dynamic_cast<ITypedParameter<T>*>(param);
             T* ptr = typed->GetDataPtr();
             if (ptr)
+            {
                 ar(cereal::make_nvp(param->GetName(), *ptr));
+            }
             return true;
         }
         static bool DeSerializeXml(IParameter* param, cereal::XMLInputArchive& ar)
         {
-            ITypedParameter<T>* typed = reinterpret_cast<ITypedParameter<T>*>(param);
+            ITypedParameter<T>* typed = dynamic_cast<ITypedParameter<T>*>(param);
             T* ptr = typed->GetDataPtr();
             if (ptr)
+            {
                 ar(cereal::make_nvp(param->GetName(), *ptr));
+            }
             return true;
         }
     };

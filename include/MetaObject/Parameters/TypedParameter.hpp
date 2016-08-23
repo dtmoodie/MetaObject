@@ -46,7 +46,7 @@ namespace mo
         T data;
     private:
         static ParameterConstructor<TypedParameter<T>> _typed_parameter_constructor;
-        static MetaParameter<T, 300> _meta_parameter;
+        static MetaParameter<T, 100> _meta_parameter;
     };
 }
 #include "detail/TypedParameterImpl.hpp"

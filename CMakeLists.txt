@@ -55,6 +55,7 @@ find_package(cereal REQUIRED)
 if(cereal_FOUND)
   include_directories(${cereal_INCLUDE_DIRS})
   message("Found cereal at: ${cereal_INCLUDE_DIRS}")
+  add_definitions(-DHAVE_CEREAL)
 endif()
 
 

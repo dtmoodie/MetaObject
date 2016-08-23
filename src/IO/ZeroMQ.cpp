@@ -4,11 +4,12 @@ using namespace mo;
 #ifdef HAVE_ZEROMQ
 #include "zmq.hpp"
 #include "MetaObject/IO/Message.hpp"
+#include "MetaObject/IO/ZeroMQImpl.hpp"
 
 
 ZeroMQContext::ZeroMQContext()
 {
-
+    _pimpl = new ZeroMQContext::impl();
 }
 ZeroMQContext* ZeroMQContext::Instance()
 {

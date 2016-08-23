@@ -2,7 +2,7 @@
 #include <MetaObject/IMetaObject.hpp>
 #include "MetaObject/Logging/Log.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
-#include <cereal/archives/portable_binary.hpp>
+#include <cereal/archives/binary.hpp>
 #include <cereal/archives/xml.hpp>
 #include <cereal/types/string.hpp>
 #include <cereal/types/memory.hpp>
@@ -80,7 +80,7 @@ void SerializerFactory::Serialize(const rcc::shared_ptr<IMetaObject>& obj, std::
 {
     if(type == Binary_e)
     {
-        cereal::PortableBinaryOutputArchive ar(os);
+        cereal::BinaryOutputArchive ar(os);
         ar(cereal::make_nvp("ObjectType", std::string(obj->GetTypeName())));
         auto func_itr = _binary_serialization_functions.find(obj->GetTypeName());
         if (func_itr != _binary_serialization_functions.end())
@@ -105,7 +105,7 @@ void SerializerFactory::DeSerialize(IMetaObject* obj, std::istream& is, Serializ
     
     if(type == Binary_e)
     {
-        cereal::PortableBinaryInputArchive ar(is);
+        cereal::BinaryInputArchive ar(is);
         std::string ObjectType;
         ar(CEREAL_NVP(ObjectType));
         auto func_itr = _binary_deserialization_functions.find(obj->GetTypeName());
@@ -132,7 +132,7 @@ rcc::shared_ptr<IMetaObject> SerializerFactory::DeSerialize(std::istream& os, Se
     IMetaObject* obj = nullptr;
     if (type == Binary_e)
     {
-        cereal::PortableBinaryInputArchive ar(os);
+        cereal::BinaryInputArchive ar(os);
         std::string ObjectType;
         ar(CEREAL_NVP(ObjectType));
         if(ObjectType.size())

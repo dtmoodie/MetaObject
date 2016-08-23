@@ -4,6 +4,7 @@
 #include "MetaObject/MetaObjectPolicy.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
 
+
 // ---------------- SIGNAL_INFO ------------
 #define SIGNAL_INFO_START(N_) \
 template<int N> static void list_signal_info_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N> dummy) \

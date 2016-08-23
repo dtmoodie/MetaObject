@@ -4,11 +4,17 @@
 
 namespace mo
 {
+    class ParameterServer;
+    class ParameterClient;
     class MO_EXPORTS ZeroMQContext
     {
     public:
         static ZeroMQContext* Instance();
-
+    protected:
+        friend class ParameterServer;
+        friend class ParameterClient;
+        struct impl;
+        impl* _pimpl;
     private:
         ZeroMQContext();
         ZeroMQContext(const ZeroMQContext& ctx) = delete;

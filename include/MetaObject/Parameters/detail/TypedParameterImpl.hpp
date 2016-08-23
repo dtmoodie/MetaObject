@@ -103,5 +103,5 @@ namespace mo
 	}
 
 	template<typename T> ParameterConstructor<TypedParameter<T>> TypedParameter<T>::_typed_parameter_constructor;
-    template<typename T> MetaParameter<T, 300>  TypedParameter<T>::_meta_parameter;
+    template<typename T> MetaParameter<T, 100>  TypedParameter<T>::_meta_parameter;
 }

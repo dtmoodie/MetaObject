@@ -8,8 +8,8 @@
 
 namespace cereal
 {
-    class PortableBinaryInputArchive;
-    class PortableBinaryOutputArchive;
+    class BinaryInputArchive;
+    class BinaryOutputArchive;
     class XMLOutputArchive;
     class XMLInputArchive;
 }
@@ -23,8 +23,8 @@ namespace mo
         static void DeSerialize(IMetaObject* obj, std::istream& os, SerializationType type);
         static rcc::shared_ptr<IMetaObject> DeSerialize(std::istream& os, SerializationType type);
 
-        typedef std::function<void(const IMetaObject*, cereal::PortableBinaryOutputArchive&)> BinarySerialize_f;
-        typedef std::function<void(IMetaObject*, cereal::PortableBinaryInputArchive&)> BinaryDeSerialize_f;
+        typedef std::function<void(const IMetaObject*, cereal::BinaryOutputArchive&)> BinarySerialize_f;
+        typedef std::function<void(IMetaObject*, cereal::BinaryInputArchive&)> BinaryDeSerialize_f;
 
         typedef std::function<void(const IMetaObject*, cereal::XMLOutputArchive&)> XMLSerialize_f;
         typedef std::function<void(IMetaObject*, cereal::XMLInputArchive&)> XMLDeSerialize_f;
