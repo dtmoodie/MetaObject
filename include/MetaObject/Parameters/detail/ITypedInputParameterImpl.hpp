@@ -6,7 +6,9 @@ namespace mo
     template<class T> class ITypedInputParameter;
 
     template<class T> ITypedInputParameter<T>::ITypedInputParameter(const std::string& name, Context* ctx):
-            ITypedParameter(name, Input_e, -1, ctx), input(nullptr)
+            ITypedParameter(name, Input_e, -1, ctx), 
+            input(nullptr),
+            IParameter(name, Input_e)
     {
 		update_slot = std::bind(&ITypedInputParameter<T>::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2);
 		delete_slot = std::bind(&ITypedInputParameter<T>::onInputDelete, this, std::placeholders::_1);

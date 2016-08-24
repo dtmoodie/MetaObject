@@ -12,6 +12,7 @@
 #include "MetaObject/Parameters/IParameter.hpp"
 #include "MetaObject/Parameters/InputParameter.hpp"
 #include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
+#include "MetaObject/Parameters/InputParameter.hpp"
 
 #include "ISimpleSerializer.h"
 #include "IObjectState.hpp"
@@ -230,21 +231,10 @@ IParameter* IMetaObject::GetParameterOptional(const std::string& name) const
 
 InputParameter* IMetaObject::GetInput(const std::string& name) const
 {
-    auto itr = _pimpl->_implicit_parameters.find(name);
-    if(itr != _pimpl->_implicit_parameters.end())
+    auto itr = _pimpl->_input_parameters.find(name);
+    if(itr != _pimpl->_input_parameters.end())
     {
-        if(itr->second->CheckFlags(Input_e))
-        {
-            return dynamic_cast<InputParameter*>(itr->second.get());
-        }
-    }
-    auto itr2 = _pimpl->_parameters.find(name);
-    if(itr2 != _pimpl->_parameters.end())
-    {
-        if(itr2->second->CheckFlags(Input_e))
-        {
-            return dynamic_cast<InputParameter*>(itr2->second);
-        }
+        return itr->second;   
     }
     return nullptr;
 }
@@ -252,37 +242,17 @@ InputParameter* IMetaObject::GetInput(const std::string& name) const
 std::vector<InputParameter*> IMetaObject::GetInputs(const std::string& name_filter) const
 {
     std::vector<InputParameter*> output;
-    for(auto param : _pimpl->_parameters)
+    for(auto param : _pimpl->_input_parameters)
     {
-        if(param.second->CheckFlags(Input_e))
+        if(name_filter.size())
         {
-            if(name_filter.size())
-            {
-                if(param.second->GetName().find(name_filter) != std::string::npos)
-                    if(auto out = dynamic_cast<InputParameter*>(param.second))
-                        output.push_back(out);
-            }else
-            {
-                if(auto out = dynamic_cast<InputParameter*>(param.second))
-                    output.push_back(out);
-            }
-        }
-    }
-    for(auto param : _pimpl->_implicit_parameters)
-    {
-        if(param.second->CheckFlags(Input_e))
+            if(param.second->GetName().find(name_filter) != std::string::npos)
+                output.push_back(param.second);
+        }else
         {
-            if(name_filter.size())
-            {
-                if(param.second->GetName().find(name_filter) != std::string::npos)
-                    if(auto out = dynamic_cast<InputParameter*>(param.second.get()))
-                        output.push_back(out);
-            }else
-            {
-                if(auto out = dynamic_cast<InputParameter*>(param.second.get()))
-                    output.push_back(out);
-            }
+            output.push_back(param.second);
         }
+        
     }
     return output;
 }
@@ -490,6 +460,10 @@ IParameter* IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 {
     param->SetMtx(&_mtx);
     _pimpl->_implicit_parameters[param->GetName()] = param;
+    if(param->CheckFlags(Input_e))
+    {
+        _pimpl->_input_parameters[param->GetName()] = dynamic_cast<InputParameter*>(param.get());
+    }
     std::shared_ptr<TypedSlot<void(Context*, IParameter*)>> update_slot(
         new TypedSlot<void(Context*, IParameter*)>(
             [this](Context* ctx, IParameter* param)
@@ -507,6 +481,10 @@ IParameter* IMetaObject::AddParameter(IParameter* param)
 {
     param->SetMtx(&_mtx);
     _pimpl->_parameters[param->GetName()] = param;
+    if(param->CheckFlags(Input_e))
+    {
+        _pimpl->_input_parameters[param->GetName()] = dynamic_cast<InputParameter*>(param);
+    }
     std::shared_ptr < TypedSlot<void(Context*, IParameter*)>> update_slot(
         new TypedSlot<void(Context*, IParameter*)>(
             [this](Context* ctx, IParameter* param)
