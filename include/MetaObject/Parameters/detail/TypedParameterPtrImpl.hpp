@@ -23,7 +23,11 @@ namespace mo
     T* TypedParameterPtr<T>::GetDataPtr(long long ts, Context* ctx)
 	{
         if(ts != -1)
-		    LOGIF_NEQ(ts, IParameter::_timestamp, trace);
+        {
+            LOGIF_NEQ(ts, IParameter::_timestamp, trace);
+            if(ts != this->_timestamp)
+                return nullptr;
+        }
 		return ptr;
 	}
 	
