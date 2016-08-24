@@ -18,9 +18,12 @@ namespace mo
 		virtual bool Disconnect(std::weak_ptr<ISignalRelay> relay) = 0;
         virtual TypeInfo GetSignature() const = 0;
 		IMetaObject* GetParent() const;
+        const Context* GetContext() const;
+        void SetContext(Context* ctx);
 	protected:
 		friend class IMetaObject;
 		void SetParent(IMetaObject* parent);
 		IMetaObject* _parent = nullptr;
+        Context* _ctx = nullptr;
     };
 }

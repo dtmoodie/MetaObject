@@ -11,7 +11,7 @@ namespace mo
 	{
 		for (auto slot : _slots)
 		{
-			/*auto slot_ctx = slot->GetContext();
+			auto slot_ctx = slot->GetContext();
 			auto sig_ctx = sig->GetContext();
 			if (slot_ctx && sig_ctx)
 			{
@@ -19,22 +19,42 @@ namespace mo
 				{
 					if (slot_ctx->thread_id != sig_ctx->thread_id)
 					{
-						//ThreadSpecificQueue::Push([slot]()
+                        ThreadSpecificQueue::Push(
+                            std::bind([slot](T... args)
+                        {
+                            (*slot)(args...);
+                        }, args...), slot_ctx->thread_id, slot);
+                        continue;
 					}
 				}
-			}*/
+			}
 			(*slot)(args...);
 		}
 	}
+
     template<class...T> 
     void TypedSignalRelay<void(T...)>::operator()(Context* ctx, T&... args)
     {
         for (auto slot : _slots)
         {
+            auto slot_ctx = slot->GetContext();
+            if(slot_ctx)
+            {
+                if(slot_ctx->process_id == ctx->process_id && slot_ctx->thread_id != ctx->thread_id)
+                {
+                    ThreadSpecificQueue::Push(
+                        std::bind([slot](T... args)
+                        {
+                            (*slot)(args...);
+                        }, args...), slot_ctx->thread_id, slot);
+                    continue;
+                }
+            }
             (*slot)(args...);
         }
     }
-	template<class...T>
+	
+    template<class...T>
 	void TypedSignalRelay<void(T...)>::operator()(T&... args)
 	{
 		for (auto slot : _slots)
@@ -47,7 +67,12 @@ namespace mo
 				{
 					if (slot_ctx->thread_id != sig_ctx->thread_id)
 					{
-						//ThreadSpecificQueue::Push([slot]()
+                        ThreadSpecificQueue::Push(
+                            std::bind([slot](T... args)
+                            {
+                                (*slot)(args...);
+                            }, args...), slot_ctx->thread_id, slot);
+                        continue;
 					}
 				}
 			}

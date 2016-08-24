@@ -249,6 +249,11 @@ InputParameter* IMetaObject::GetInput(const std::string& name) const
     return nullptr;
 }
 
+Context* IMetaObject::GetContext() const
+{
+    return _ctx;
+}
+
 std::vector<InputParameter*> IMetaObject::GetInputs(const std::string& name_filter) const
 {
     std::vector<InputParameter*> output;

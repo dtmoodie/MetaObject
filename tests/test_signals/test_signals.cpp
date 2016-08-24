@@ -10,12 +10,14 @@
 #include "MetaObject/Parameters//ParameterMacros.hpp"
 #include "MetaObject/Parameters/TypedParameterPtr.hpp"
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
+
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
 
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE "signals"
+#include <boost/thread.hpp>
 #include <boost/test/unit_test.hpp>
 #include <iostream>
 
@@ -33,7 +35,36 @@ BOOST_AUTO_TEST_CASE(signals)
 
 		BOOST_CHECK_EQUAL(signal(4), 8);
 	}
-	BOOST_CHECK_THROW(signal(4), std::string);
-	
-	
+	BOOST_CHECK_THROW(signal(4), std::string);	
+}
+
+BOOST_AUTO_TEST_CASE(threaded_signal)
+{
+    mo::Context ctx;
+    mo::Context thread_ctx;
+
+    TypedSlot<void(int)> slot = std::bind(
+        [&thread_ctx](int value)->void
+        {
+            BOOST_REQUIRE_EQUAL(thread_ctx.thread_id, mo::GetThisThread());
+            BOOST_REQUIRE_EQUAL(5, value);
+        }, std::placeholders::_1);
+    slot.SetContext(&thread_ctx);
+
+    TypedSignal<void(int)> signal;
+    auto connection = slot.Connect(&signal);
+
+    boost::thread thread = boost::thread([&thread_ctx]()->void
+    {
+        thread_ctx.thread_id = mo::GetThisThread();
+        while(!boost::this_thread::interruption_requested())
+        {
+            ThreadSpecificQueue::Run(thread_ctx.thread_id);
+        }
+    });
+
+    boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+    signal(&ctx, 5);
+    thread.interrupt();
+    thread.join();
 }
