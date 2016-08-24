@@ -427,6 +427,28 @@ std::vector<IParameter*> IMetaObject::GetOutputs(const TypeInfo& type_filter, co
 bool IMetaObject::ConnectInput(const std::string& input_name, IParameter* output, ParameterTypeFlags type_)
 {
     auto input = GetInput(input_name);
+    if(input && output)
+        return ConnectInput(input, output, type_);
+
+    auto inputs = GetInputs();
+    auto print_inputs = [inputs]()->std::string
+    {
+        std::stringstream ss;
+        for(auto _input : inputs)
+        {
+            ss << dynamic_cast<IParameter*>(_input)->GetName() << ", ";
+        }
+        return ss.str();
+    };
+    LOG(debug) << "Unable to find input by name " << input_name << " in object " << this->GetTypeName() << " with inputs [" << print_inputs() << "]";
+    return false;
+}
+
+bool IMetaObject::ConnectInput(InputParameter* input, IParameter* output, ParameterTypeFlags type_)
+{
+    if(input == nullptr || output == nullptr)
+        return false;
+    
     if(input && input->AcceptsInput(output))
     {
         // Check contexts to see if a buffer needs to be setup
@@ -442,7 +464,7 @@ bool IMetaObject::ConnectInput(const std::string& input_name, IParameter* output
                     if(ret == false)
                     {
                         LOG(debug) << "Failed to connect output " << output->GetName() << "[" << Demangle::TypeToName(output->GetTypeInfo()) 
-                            << "] to input " << input_name << "[" << Demangle::TypeToName(dynamic_cast<IParameter*>(input)->GetTypeInfo()) << "]";
+                            << "] to input " << dynamic_cast<IParameter*>(input)->GetName() << "[" << Demangle::TypeToName(dynamic_cast<IParameter*>(input)->GetTypeInfo()) << "]";
                     }
                     return ret;
                 }else
@@ -456,24 +478,14 @@ bool IMetaObject::ConnectInput(const std::string& input_name, IParameter* output
             if(ret == false)
             {
                 LOG(debug) << "Failed to connect output " << output->GetName() << "[" << Demangle::TypeToName(output->GetTypeInfo()) 
-                    << "] to input " << input_name << "[" << Demangle::TypeToName(dynamic_cast<IParameter*>(input)->GetTypeInfo()) << "]";
+                    << "] to input " << dynamic_cast<IParameter*>(input)->GetName() << "[" << Demangle::TypeToName(dynamic_cast<IParameter*>(input)->GetTypeInfo()) << "]";
             }
             return ret;
         }
     }
-    auto inputs = GetInputs();
-    auto print_inputs = [inputs]()->std::string
-    {
-        std::stringstream ss;
-        for(auto _input : inputs)
-        {
-            ss << dynamic_cast<IParameter*>(_input)->GetName() << ", ";
-        }
-        return ss.str();
-    };
-    LOG(debug) << "Unable to find input by name " << input_name << " in object " << this->GetTypeName() << " with inputs [" << print_inputs() << "]";
     return false;
 }
+
 IParameter* IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 {
     param->SetMtx(&_mtx);

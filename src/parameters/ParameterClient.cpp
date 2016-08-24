@@ -35,6 +35,7 @@ bool ParameterClient::Connect(const std::string& parameter_server_address)
     auto inst = ZeroMQContext::Instance();
     if(inst)
     {
+#ifdef HAVE_ZEROMQ
         zmq::socket_t socket(inst->_pimpl->ctx, ZMQ_SUB);
         static const char topics[] = "TOPICS";
         static const char list[] = "LIST";
@@ -55,6 +56,7 @@ bool ParameterClient::Connect(const std::string& parameter_server_address)
             ar(type_map);
             ar(data);
         }
+#endif
     }
     return false;
 }

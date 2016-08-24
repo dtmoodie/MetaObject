@@ -153,6 +153,7 @@ namespace mo
         
         // Connects an input parameter to an output parameter
         bool ConnectInput(const std::string& input_name, IParameter* output, ParameterTypeFlags type = StreamBuffer_e);
+        bool ConnectInput(InputParameter* input, IParameter* output, ParameterTypeFlags type = StreamBuffer_e);
         
     protected:
 		friend class RelayManager;

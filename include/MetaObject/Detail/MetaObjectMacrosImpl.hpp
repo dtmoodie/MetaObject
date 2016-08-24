@@ -296,3 +296,5 @@ PARAMETER_END(N)
         return rcc::shared_ptr<TYPE>(obj); \
     } \
     REGISTERCLASS(TYPE, &TYPE##_info);
+
+#define MO_REGISTER_CLASS(TYPE) MO_REGISTER_OBJECT(TYPE)

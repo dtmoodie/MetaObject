@@ -17,6 +17,7 @@ using namespace mo;
 
 struct ParameterServer::impl
 {
+#ifdef HAVE_ZEROMQ
     impl(zmq::context_t& ctx):
         publisher(ctx, ZMQ_XPUB)
     {
@@ -96,19 +97,21 @@ struct ParameterServer::impl
             }
         }
     }
+    boost::thread receive_thread;
+    zmq::socket_t publisher;
 
     TypedSlot<void(Context*, IParameter*)> update_slot;
     TypedSlot<void(IParameter const*)> delete_slot;
-    std::string topic;
-    zmq::socket_t publisher;
-    
+
     struct subscription_info
     {
         int subscription_count = 0;
     };
     std::map<IParameter*, subscription_info> sub_info;
-    boost::thread receive_thread;
+    
     std::list<IParameter*> published_parameters;
+#endif
+    std::string topic;
 };
 
 ParameterServer::ParameterServer()
@@ -116,11 +119,16 @@ ParameterServer::ParameterServer()
     auto inst = ZeroMQContext::Instance();
     if(inst)
     {
+#ifdef HAVE_ZEROMQ
         _pimpl = new impl(inst->_pimpl->ctx);
+        _pimpl->update_slot = std::bind(&ParameterServer::onParameterUpdate, this, std::placeholders::_1, std::placeholders::_2);
+        _pimpl->delete_slot= std::bind(&ParameterServer::onParameterDelete, this, std::placeholders::_1);
+#else
+        _pimpl = nullptr;
+#endif
     }
     
-    _pimpl->update_slot = std::bind(&ParameterServer::onParameterUpdate, this, std::placeholders::_1, std::placeholders::_2);
-    _pimpl->delete_slot= std::bind(&ParameterServer::onParameterDelete, this, std::placeholders::_1);
+    
 }
 
 ParameterServer::~ParameterServer()
@@ -148,6 +156,7 @@ bool ParameterServer::Publish(IVariableManager* mgr)
 
 bool ParameterServer::Publish(IVariableManager* mgr, const std::string& parameter_name)
 {
+#ifdef HAVE_ZEROMQ
     auto param = mgr->GetParameter(parameter_name);
     if(param)
     {
@@ -156,6 +165,7 @@ bool ParameterServer::Publish(IVariableManager* mgr, const std::string& paramete
 
         return true;
     }
+#endif
     return false;
 }
 
