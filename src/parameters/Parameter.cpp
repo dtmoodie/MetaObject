@@ -163,9 +163,9 @@ void IParameter::OnUpdate(Context* ctx)
 	update_signal(ctx, this);
 }
 
-IParameter* IParameter::Commit(long long index_, Context* ctx)
+IParameter* IParameter::Commit(long long ts, Context* ctx)
 {
-    _timestamp= index_;
+    _timestamp = ts;
     modified = true;
 	update_signal(ctx, this);
     return this;

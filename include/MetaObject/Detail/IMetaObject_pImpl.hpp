@@ -53,5 +53,6 @@ namespace mo
 
         TypedSignal<void(IMetaObject*, IParameter*)> _sig_parameter_updated;
         TypedSignal<void(IMetaObject*, IParameter*)> _sig_parameter_added;
+        std::map<std::string, InputParameter*>       _input_parameters;
     };
 }

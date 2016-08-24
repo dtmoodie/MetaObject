@@ -21,7 +21,7 @@ https://github.com/dtmoodie/parameters
 
 namespace mo
 {
-    template<typename T> class MO_EXPORTS ITypedParameter : public IParameter
+    template<typename T> class MO_EXPORTS ITypedParameter : virtual public IParameter
     {
     public:
         typedef std::shared_ptr<ITypedParameter<T>> Ptr;

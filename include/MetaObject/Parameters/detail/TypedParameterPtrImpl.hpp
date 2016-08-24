@@ -24,9 +24,11 @@ namespace mo
 	{
         if(ts != -1)
         {
-            LOGIF_NEQ(ts, IParameter::_timestamp, trace);
             if(ts != this->_timestamp)
+            {
+                LOG(trace) << "Requested timestamp != current [" << ts << " != " << this->_timestamp << "] for parameter " << this->GetTreeName();
                 return nullptr;
+            }
         }
 		return ptr;
 	}
@@ -36,8 +38,12 @@ namespace mo
 	{
         std::lock_guard<std::recursive_mutex> lock(IParameter::mtx());
         if(ts != -1)
-		    LOGIF_NEQ(ts, IParameter::_timestamp, trace);
-        //ASSERT_NE(ptr, nullptr);
+        {
+            if(ts != this->_timestamp)
+            {
+                THROW(debug) << "Requested timestamp != current [" << ts << " != " << this->_timestamp << "] for parameter " << this->GetTreeName();
+            }
+        }
         if(ptr == nullptr)
             THROW(debug) << "Data pointer not set";
 		return *ptr;
@@ -48,7 +54,14 @@ namespace mo
 	{
 		std::lock_guard<std::recursive_mutex> lock(IParameter::mtx());
         if(ts != -1)
-		    LOGIF_NEQ(ts, IParameter::_timestamp, trace);
+        {
+            if(ts != this->_timestamp)
+            {
+                LOG(trace) << "Requested timestamp != current [" << ts << " != " << this->_timestamp << "] for parameter " << this->GetTreeName();
+                return false;
+            }
+        }
+		
 		if (ptr)
 		{
 			value = *ptr;
