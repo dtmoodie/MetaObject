@@ -46,7 +46,7 @@ namespace mo
                 {
                     if(_currently_updating || !IHandler::GetParamMtx())
                         return;
-                    std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                    boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
                     _handler1.OnUiUpdate(sender);
                     _handler2.OnUiUpdate(sender);
                     if(_listener)
@@ -100,7 +100,7 @@ namespace mo
                 {
                     if(IHandler::GetParamMtx())
                     {
-                        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
                         Handler<T1>::OnUiUpdate(sender);
                         Handler<T2>::OnUiUpdate(sender);
                     }
@@ -147,7 +147,7 @@ namespace mo
                 {
                     if (data && data->size())
                     {
-                        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
                         _currently_updating = true;
                         index->setMaximum(data->size());
                         if(index->value() < data->size())
@@ -166,7 +166,7 @@ namespace mo
                     {
                         if(vectorData->size() && idx < vectorData->size())
                         {
-                            std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                            boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
                             THandler<T>::SetData(&(*vectorData)[idx]);
                             THandler<T>::OnUiUpdate(sender);
                         }else

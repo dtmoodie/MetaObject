@@ -7,7 +7,7 @@
 #include <functional>
 #include <vector>
 
-namespace std
+namespace boost
 {
     class recursive_mutex;
 }
@@ -32,7 +32,7 @@ namespace mo
             class MO_EXPORTS IHandler
             {
             private:
-                std::recursive_mutex* paramMtx;
+                boost::recursive_mutex** paramMtx;
             protected:
                 UiUpdateListener* _listener;
                 SignalProxy* proxy;
@@ -50,8 +50,8 @@ namespace mo
                 
                 virtual std::function<void(void)>& GetOnUpdate();
                 virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent);
-                virtual void SetParamMtx(std::recursive_mutex* mtx);
-                virtual std::recursive_mutex* GetParamMtx();
+                virtual void SetParamMtx(boost::recursive_mutex** mtx);
+                virtual boost::recursive_mutex* GetParamMtx();
                 static bool UiUpdateRequired();
             };
         }

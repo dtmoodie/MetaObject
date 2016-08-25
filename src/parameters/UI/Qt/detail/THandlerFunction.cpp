@@ -1,6 +1,7 @@
 #ifdef HAVE_QT5
 #include "MetaObject/Parameters/UI/Qt/POD.hpp"
 #include "MetaObject/Parameters/Types.hpp"
+#include <boost/thread/recursive_mutex.hpp>
 #include "qpushbutton.h"
 using namespace mo;
 using namespace mo::UI;
@@ -20,7 +21,7 @@ void THandler<std::function<void(void)>, void>::OnUiUpdate(QObject* sender)
 {
     if (sender == btn && IHandler::GetParamMtx())
     {
-        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
         if (funcData)
         {
             (*funcData)();

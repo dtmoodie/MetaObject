@@ -21,7 +21,7 @@ https://github.com/dtmoodie/parameters
 #include "MetaObject/Signals/TypedSlot.hpp"
 #include "MetaObject/Signals/TypedSignalRelay.hpp"
 #include <algorithm>
-
+#include <boost/thread/mutex.hpp>
 using namespace mo;
 
 IParameter::IParameter(const std::string& name_, ParameterType flags_, long long ts, Context* ctx) :
@@ -171,19 +171,25 @@ IParameter* IParameter::Commit(long long ts, Context* ctx)
     return this;
 }
 
-std::recursive_mutex& IParameter::mtx()
+boost::recursive_mutex& IParameter::mtx()
 {
     if(_mtx == nullptr)
     {
-        _mtx = new std::recursive_mutex();
+        _mtx = new boost::recursive_mutex();
         _owns_mutex = true;
     }
     return *_mtx;
 }
-void IParameter::SetMtx(std::recursive_mutex* mtx_)
+
+void IParameter::SetMtx(boost::recursive_mutex* mtx_)
 {
+    if(_mtx && _owns_mutex)
+    {
+        delete _mtx;
+    }
     _mtx = mtx_;
 }
+
 void IParameter::Subscribe()
 {
 	--_subscribers;

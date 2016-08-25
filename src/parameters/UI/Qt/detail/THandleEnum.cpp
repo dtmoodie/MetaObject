@@ -1,7 +1,7 @@
 #ifdef HAVE_QT5
 #include "MetaObject/Parameters/UI/Qt/POD.hpp"
 #include "MetaObject/Parameters/Types.hpp"
-
+#include <boost/thread/recursive_mutex.hpp>
 using namespace mo;
 using namespace mo::UI;
 using namespace mo::UI::qt;
@@ -18,7 +18,7 @@ void THandler<EnumParameter, void>::UpdateUi( EnumParameter* data)
         return;
     if(data)
     {
-        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
         _updating = true;
         enumCombo->clear();
         for (int i = 0; i < data->enumerations.size(); ++i)
@@ -34,7 +34,7 @@ void THandler<EnumParameter, void>::OnUiUpdate(QObject* sender, int idx)
 {
     if(_updating || !IHandler::GetParamMtx())
         return;
-    std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+    boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
     if (idx != -1 && sender == enumCombo && enumData)
     {
         if(enumData->currentSelection == idx)

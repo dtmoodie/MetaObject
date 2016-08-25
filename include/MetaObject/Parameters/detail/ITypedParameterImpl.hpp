@@ -19,7 +19,7 @@ namespace mo
 		auto typedParameter = dynamic_cast<ITypedParameter<T>*>(other);
 		if (typedParameter)
 		{
-			std::lock_guard<std::recursive_mutex> lock(typedParameter->mtx());
+			boost::recursive_mutex::scoped_lock lock(typedParameter->mtx());
 			UpdateData(typedParameter->GetData(), other->GetTimestamp(), other->GetContext());
 			OnUpdate(other->GetContext());
 			return true;

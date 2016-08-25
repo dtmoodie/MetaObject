@@ -1,7 +1,9 @@
 #ifdef HAVE_QT5
 #include "MetaObject/Parameters/UI/Qt/POD.hpp"
-#include "qcheckbox.h"
 #include "MetaObject/Parameters/UI/Qt/SignalProxy.hpp"
+#include <boost/thread/recursive_mutex.hpp>
+#include "qcheckbox.h"
+
 using namespace mo;
 using namespace mo::UI;
 using namespace mo::UI::qt;
@@ -29,7 +31,7 @@ void THandler<bool,void>::OnUiUpdate(QObject* sender, int val)
         return;
     if (sender == chkBox && IHandler::GetParamMtx())
     {
-        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
         if (boolData)
         {
             *boolData = chkBox->isChecked();
@@ -45,7 +47,7 @@ void THandler<bool,void>::SetData(bool* data_)
 {    
     if(IHandler::GetParamMtx())
     {
-        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
         boolData = data_;
         if (chkBox)
             UpdateUi(data_);

@@ -36,7 +36,7 @@ namespace mo
     template<typename T> 
     T TypedParameterPtr<T>::GetData(long long ts, Context* ctx)
 	{
-        std::lock_guard<std::recursive_mutex> lock(IParameter::mtx());
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(ts != -1)
         {
             if(ts != this->_timestamp)
@@ -52,7 +52,7 @@ namespace mo
     template<typename T> 
     bool TypedParameterPtr<T>::GetData(T& value, long long ts, Context* ctx)
 	{
-		std::lock_guard<std::recursive_mutex> lock(IParameter::mtx());
+		boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(ts != -1)
         {
             if(ts != this->_timestamp)

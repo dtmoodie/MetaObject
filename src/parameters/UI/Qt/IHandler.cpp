@@ -28,21 +28,21 @@ void IHandler::SetUpdateListener(UiUpdateListener* listener)
 
 std::function<void(void)>& IHandler::GetOnUpdate()
 {
-
     return onUpdate;
 }
 std::vector<QWidget*> IHandler::GetUiWidgets(QWidget* parent)
 {
-
     return std::vector<QWidget*>();
 }
-void IHandler::SetParamMtx(std::recursive_mutex* mtx)
+void IHandler::SetParamMtx(boost::recursive_mutex** mtx)
 {
     paramMtx = mtx;
 }
-std::recursive_mutex* IHandler::GetParamMtx()
+boost::recursive_mutex* IHandler::GetParamMtx()
 {
-    return paramMtx;
+    if(paramMtx)
+        return *paramMtx;
+    return nullptr;
 }
 
 bool IHandler::UiUpdateRequired()

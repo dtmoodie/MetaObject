@@ -2,15 +2,10 @@
 #include <IObject.h>
 #include "MetaObject/Detail/Export.hpp"
 #include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
+#include <boost/thread/recursive_mutex.hpp>
 #include <memory>
-#include <mutex>
-namespace boost
-{
-    namespace signals2
-    {
-        class connection;
-    }
-}
+
+
 
 namespace mo
 {
@@ -174,6 +169,6 @@ namespace mo
         impl*			_pimpl;
 		Context*        _ctx;
 		RelayManager*  _sig_manager;
-        std::recursive_mutex _mtx;
+        boost::recursive_mutex _mtx;
     };
 }

@@ -467,6 +467,16 @@ IParameter* IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 {
     param->SetMtx(&_mtx);
     param->SetContext(_ctx);
+#ifdef _DEBUG
+    for(auto& param_ : _pimpl->_parameters)
+    {
+        if(param_.second == param.get())
+        {
+            LOG(debug) << "Trying to add a parameter a second time";
+            return param.get();
+        }
+    }
+#endif
     _pimpl->_implicit_parameters[param->GetName()] = param;
     if(param->CheckFlags(Input_e))
     {
@@ -481,6 +491,16 @@ IParameter* IMetaObject::AddParameter(IParameter* param)
 {
     param->SetMtx(&_mtx);
     param->SetContext(_ctx);
+#ifdef _DEBUG
+    for(auto& param_ : _pimpl->_parameters)
+    {
+        if(param_.second == param)
+        {
+            LOG(debug) << "Trying to add a parameter a second time";
+            return param;
+        }
+    }
+#endif
     _pimpl->_parameters[param->GetName()] = param;
     if(param->CheckFlags(Input_e))
     {

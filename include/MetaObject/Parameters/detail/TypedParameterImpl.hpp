@@ -4,7 +4,8 @@ namespace mo
 {
 	template<typename T> 
     TypedParameter<T>::TypedParameter(const std::string& name, const T& init, ParameterType type, long long ts, Context* ctx) :
-		ITypedParameter<T>(name, type, ts, ctx), data(init)
+		ITypedParameter<T>(name, type, ts, ctx), data(init),
+        IParameter(name, mo::Control_e, ts, ctx)
 	{
 		(void)&_typed_parameter_constructor;
         (void)&_meta_parameter;
@@ -27,7 +28,7 @@ namespace mo
 	template<typename T> 
     bool TypedParameter<T>::GetData(T& value, long long ts, Context* ctx)
 	{
-		std::lock_guard<std::recursive_mutex> lock(mtx());
+		boost::recursive_mutex::scoped_lock lock(mtx());
 		if (ts == -1)
         {
             value = data;
@@ -46,7 +47,7 @@ namespace mo
     template<typename T>
     T TypedParameter<T>::GetData(long long ts, Context* ctx)
     {
-        std::lock_guard<std::recursive_mutex> lock(mtx());
+        boost::recursive_mutex::scoped_lock lock(mtx());
         if(ts == -1)
         {
             return data;

@@ -1,6 +1,7 @@
 #ifdef HAVE_QT5
 #include "MetaObject/Parameters/UI/Qt/POD.hpp"
 #include "MetaObject/Parameters/Types.hpp"
+#include <boost/thread/recursive_mutex.hpp>
 #include "qfiledialog.h"
 #include "qpushbutton.h"
 using namespace mo;
@@ -18,7 +19,7 @@ void THandler<WriteDirectory, void>::UpdateUi( WriteDirectory* data)
 {
     if(data && IHandler::GetParamMtx())
     {
-        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
         _currently_updating = true;
         btn->setText(QString::fromStdString(data->string()));
         _currently_updating = false;
@@ -31,7 +32,7 @@ void THandler<WriteDirectory, void>::OnUiUpdate(QObject* sender)
         return;
     if (sender == btn && IHandler::GetParamMtx())
     {
-        std::lock_guard<std::recursive_mutex>lock(*IHandler::GetParamMtx());
+        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
         QString filename;
         
         filename = QFileDialog::getExistingDirectory(parent, "Select save directory");
@@ -81,7 +82,7 @@ void THandler<ReadDirectory, void>::UpdateUi( ReadDirectory* data)
 {
     if(data && IHandler::GetParamMtx())
     {
-        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
         _currently_updating = true;
         btn->setText(QString::fromStdString(data->string()));
         _currently_updating = false;
@@ -94,7 +95,7 @@ void THandler<ReadDirectory, void>::OnUiUpdate(QObject* sender)
         return;
     if (sender == btn && IHandler::GetParamMtx())
     {
-        std::lock_guard<std::recursive_mutex>lock(*IHandler::GetParamMtx());
+        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
         QString filename;
 
         filename = QFileDialog::getExistingDirectory(parent, "Select read directory");
@@ -146,7 +147,7 @@ void THandler<ReadFile, void>::UpdateUi( ReadFile* data)
 {
     if(data && IHandler::GetParamMtx())
     {
-        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
         _currently_updating = true;
         btn->setText(QString::fromStdString(data->string()));
         _currently_updating = false;
@@ -159,7 +160,7 @@ void THandler<ReadFile, void>::OnUiUpdate(QObject* sender)
         return;
     if (sender == btn && IHandler::GetParamMtx())
     {
-        std::lock_guard<std::recursive_mutex>lock(*IHandler::GetParamMtx());
+        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
         QString filename;
 
         filename = QFileDialog::getOpenFileName(parent, "Select file to open");
@@ -209,7 +210,7 @@ void THandler<WriteFile, void>::UpdateUi( WriteFile* data)
 {
     if(data && IHandler::GetParamMtx())
     {
-        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
         _currently_updating = true;
         btn->setText(QString::fromStdString(data->string()));
         _currently_updating = false;
@@ -222,7 +223,7 @@ void THandler<WriteFile, void>::OnUiUpdate(QObject* sender)
         return;
     if (sender == btn && IHandler::GetParamMtx())
     {
-        std::lock_guard<std::recursive_mutex>lock(*IHandler::GetParamMtx());
+        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
         QString filename;
 
         filename = QFileDialog::getSaveFileName(parent, "Select file to save");

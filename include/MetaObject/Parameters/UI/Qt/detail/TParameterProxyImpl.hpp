@@ -25,7 +25,8 @@ namespace mo
                 enum { value = sizeof(test<T>(0)) == sizeof(char) };
             };
 
-            template<typename T> void SetMinMax(typename std::enable_if<has_minmax<THandler<T>>::value, THandler<T>>::type& handler, ITypedParameter<T>* param)
+            template<typename T> 
+            void SetMinMax(typename std::enable_if<has_minmax<THandler<T>>::value, THandler<T>>::type& handler, ITypedParameter<T>* param)
             {
                 /*auto rangedParam = dynamic_cast<ITypedRangedParameter<T>*>(param);
                 if (rangedParam)
@@ -36,12 +37,14 @@ namespace mo
                 }*/
             }
 
-            template<typename T> void SetMinMax(typename std::enable_if<!has_minmax<THandler<T>>::value, THandler<T>>::type& handler, ITypedParameter<T>* param)
+            template<typename T> 
+            void SetMinMax(typename std::enable_if<!has_minmax<THandler<T>>::value, THandler<T>>::type& handler, ITypedParameter<T>* param)
             {
 
             }
             
-            template<typename T> ParameterProxy<T>::~ParameterProxy()
+            template<typename T> 
+            ParameterProxy<T>::~ParameterProxy()
             {
                 //InvalidCallbacks::invalidate((void*)&paramHandler);
             }
@@ -53,6 +56,7 @@ namespace mo
                 parameter->modified = true;
                 parameter->OnUpdate(nullptr);
             }
+            
             // Guaranteed to be called on the GUI thread thanks to the signal connection configuration
             template<typename T> 
             void ParameterProxy<T>::onParamUpdate(Context* ctx, IParameter* param)
@@ -66,6 +70,7 @@ namespace mo
                     }
                 }
             }
+            
             template<typename T> 
             void ParameterProxy<T>::onParamDelete(IParameter const* param)
             {
@@ -81,11 +86,13 @@ namespace mo
             {
                 SetParameter(param);
             }
+            
             template<typename T> 
             bool ParameterProxy<T>::CheckParameter(IParameter* param)
             {
                 return param == parameter;
             }
+            
             template<typename T> 
             QWidget* ParameterProxy<T>::GetParameterWidget(QWidget* parent)
             {
@@ -128,7 +135,8 @@ namespace mo
                 if (typedParam)
                 {
                     parameter = typedParam;
-                    paramHandler.SetParamMtx(&parameter->mtx());
+                    parameter->mtx();
+                    paramHandler.SetParamMtx(&parameter->_mtx);
                     paramHandler.SetData(parameter->GetDataPtr());
                     paramHandler.IHandler::GetOnUpdate() = std::bind(&ParameterProxy<T>::onUiUpdate, this);
                     //connection = parameter->update_signal.connect(std::bind(&ParameterProxy<T>::onParamUpdate, this, std::placeholders::_1), Signals::GUI, true, this);

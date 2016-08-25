@@ -54,7 +54,7 @@ namespace mo
                 {
                     if(_currently_updating || !IHandler::GetParamMtx())
                         return;
-                    std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                    boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
                     _x_handler.OnUiUpdate(sender);
                     _y_handler.OnUiUpdate(sender);
                     _width_handler.OnUiUpdate(sender);
@@ -91,7 +91,7 @@ namespace mo
 
                     return output;
                 }
-                virtual void SetParamMtx(std::recursive_mutex* mtx)
+                virtual void SetParamMtx(boost::recursive_mutex** mtx)
                 {
                     IHandler::SetParamMtx(mtx);
                     _x_handler.SetParamMtx(mtx);
@@ -233,7 +233,7 @@ namespace mo
                     if(data)
                     {
                         _currently_updating = true;
-                        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
                         for (int i = 0; i < ROW; ++i)
                         {
                             for (int j = 0; j < COL; ++j)
@@ -251,7 +251,7 @@ namespace mo
                         return;
                     if (sender == table && IHandler::GetParamMtx())
                     {
-                        std::lock_guard<std::recursive_mutex>lock(*IHandler::GetParamMtx());
+                        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
                         if (matData)
                         {
                             if (typeid(T) == typeid(float))
@@ -321,7 +321,7 @@ namespace mo
                 {
                     if(data)
                     {
-                        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
                         if (table)
                         {
                             _currently_updating = true;
@@ -342,7 +342,7 @@ namespace mo
                 {
                     if(_currently_updating || !IHandler::GetParamMtx())
                         return;
-                    std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                    boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
                     if (ptData == nullptr)
                         return;
                     if (typeid(T) == typeid(double))
@@ -422,7 +422,7 @@ namespace mo
                     if(data)
                     {
                         _updating = true;
-                        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
                         first = new QTableWidgetItem();
                         second = new QTableWidgetItem();
                         third = new QTableWidgetItem();
@@ -442,7 +442,7 @@ namespace mo
                 {
                     if(_updating || !IHandler::GetParamMtx())
                         return;
-                    std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                    boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
                     if (ptData == nullptr)
                         return;
                     if (typeid(T) == typeid(double))
@@ -470,7 +470,7 @@ namespace mo
                         ptData->z = (T)third->data(Qt::EditRole).toUInt();
                     }
                     if(_listener)
-                                _listener->OnUpdate(this);
+                        _listener->OnUpdate(this);
                 }
                 virtual void SetData(::cv::Point3_<T>* data_)
                 {

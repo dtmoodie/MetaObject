@@ -109,7 +109,7 @@ namespace mo
                 {
                     if(_currently_updating || !IHandler::GetParamMtx())
                         return;
-                    std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                    boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
                     if (sender == box && floatData)
                         *floatData = box->value();
                     if (onUpdate)
@@ -119,7 +119,7 @@ namespace mo
                 }
                 virtual void SetData(T* data_)
                 {
-                    std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                    boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
                     floatData = data_;
                     if (box)
                     {
@@ -174,7 +174,7 @@ namespace mo
                     if(data)
                     {
                         _currently_updating = true;
-                        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
                         box->setValue(*data);
                         _currently_updating = false;
                     }                    
@@ -183,7 +183,7 @@ namespace mo
                 {
                     if(_currently_updating || !IHandler::GetParamMtx())
                         return;
-                    std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+                    boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
                     if (sender == box && intData)
                     {
                         if(val == -1)

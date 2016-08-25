@@ -1,6 +1,7 @@
 #ifdef HAVE_QT5
 #include "MetaObject/Parameters/UI/Qt/POD.hpp"
 #include "MetaObject/Parameters/Types.hpp"
+#include <boost/thread/recursive_mutex.hpp>
 #include "qlineedit.h"
 
 using namespace mo;
@@ -17,7 +18,7 @@ void THandler<std::string, void>::UpdateUi( std::string* data)
 {
     if(data)
     {
-        std::lock_guard<std::recursive_mutex> lock(*IHandler::GetParamMtx());
+        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
         _currently_updating = true;
         lineEdit->setText(QString::fromStdString(*data));
         _currently_updating = false;
@@ -29,7 +30,7 @@ void THandler<std::string, void>::OnUiUpdate(QObject* sender)
         return;
     if (sender == lineEdit && strData)
     {    
-        std::lock_guard<std::recursive_mutex>lock(*IHandler::GetParamMtx());
+        boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
         *strData = lineEdit->text().toStdString();
         if (onUpdate)
             onUpdate();

@@ -16,6 +16,7 @@ namespace mo
             return typed;
         }
         THROW(debug) << "Parameter \"" << name << "\" not convertable to type " << TypeInfo(typeid(T)).name();
+        return nullptr;
     }
 
     template<class T> 

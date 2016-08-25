@@ -47,17 +47,17 @@ namespace mo
     {
         if(input)
         {
-            if(ctx == this->_ctx)
+            Commit(input->GetTimestamp(), ctx);
+            if((ctx && this->_ctx && ctx->thread_id == _ctx->thread_id) || (ctx == nullptr &&  _ctx == nullptr))
             {
-                SetTimestamp(input->GetTimestamp());
                 if(userVar)
                     *userVar = input->GetDataPtr();
             }
         }else if(shared_input)
         {
-            if(ctx == this->_ctx)
+            Commit(shared_input->GetTimestamp(), ctx);
+            if((ctx && this->_ctx && ctx->thread_id == _ctx->thread_id) || (ctx == nullptr &&  _ctx == nullptr))
             {
-                SetTimestamp(shared_input->GetTimestamp());
                 if(userVar)
                     *userVar = shared_input->GetDataPtr();
             }

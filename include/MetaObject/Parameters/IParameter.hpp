@@ -25,7 +25,7 @@ https://github.com/dtmoodie/MetaObject
 
 #include <string>
 #include <memory>
-namespace std
+namespace boost
 {
     class recursive_mutex;
 }
@@ -36,7 +36,13 @@ namespace mo
 	class ISignal;
     class ISignalRelay;
 	class TypeInfo;
-
+    namespace UI
+    {
+        namespace qt
+        {
+            template<class T> class ParameterProxy;
+        }
+    }
     template<class T> class TypedSignal;
 	template<class T> class TypedSlot;
 	template<class T> class TypedSignalRelay;
@@ -97,8 +103,8 @@ namespace mo
 		template<typename T> T    GetData(long long ts_ = -1, Context* ctx = nullptr);
 		template<typename T> bool GetData(T& value, long long ts = -1, Context* ctx = nullptr);
 
-        std::recursive_mutex& mtx();
-        void SetMtx(std::recursive_mutex* mtx);
+        boost::recursive_mutex& mtx();
+        void SetMtx(boost::recursive_mutex* mtx);
 
 		void SetFlags(ParameterType flags_);
 		void AppendFlags(ParameterType flags_);
@@ -109,10 +115,11 @@ namespace mo
 		TypedSignal<void(Context*, IParameter*)> update_signal;
 		TypedSignal<void(IParameter const*)>	 delete_signal;
 	protected:
+        template<class T> friend class UI::qt::ParameterProxy;
 		std::string          _name;
 		std::string          _tree_root;
 		long long            _timestamp;
-		std::recursive_mutex* _mtx = nullptr; 
+        boost::recursive_mutex* _mtx = nullptr; 
 		Context*             _ctx = nullptr; // Context of object that owns this parameter
 		int                  _subscribers = 0;
 		ParameterType        _flags;
