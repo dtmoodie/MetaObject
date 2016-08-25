@@ -49,6 +49,7 @@ BOOST_AUTO_TEST_CASE(threaded_signal)
             BOOST_REQUIRE_EQUAL(thread_ctx.thread_id, mo::GetThisThread());
             BOOST_REQUIRE_EQUAL(5, value);
         }, std::placeholders::_1);
+
     slot.SetContext(&thread_ctx);
 
     TypedSignal<void(int)> signal;

@@ -49,10 +49,11 @@ namespace mo
 
         std::map<std::string, std::shared_ptr<IParameter>>  _implicit_parameters; // Can be changed at runtime
 		std::list<ConnectionInfo> _connections;
-        std::map<std::string, std::shared_ptr<TypedSlot<void(Context*, IParameter*)>>> _parameter_update_slots;
+        
 
         TypedSignal<void(IMetaObject*, IParameter*)> _sig_parameter_updated;
         TypedSignal<void(IMetaObject*, IParameter*)> _sig_parameter_added;
         std::map<std::string, InputParameter*>       _input_parameters;
+        TypedSlot<void(Context* ctx, IParameter*)>   _slot_parameter_updated;
     };
 }

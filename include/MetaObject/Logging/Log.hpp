@@ -166,6 +166,7 @@ namespace mo
     void MO_EXPORTS collect_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, const std::function<void(const std::string&)>& write);
     std::string MO_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut);
     std::string MO_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, std::stringstream& ss);
+    
 
     struct MO_EXPORTS IExceptionWithCallStackBase
     {

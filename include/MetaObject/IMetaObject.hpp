@@ -168,7 +168,7 @@ namespace mo
         void AddSlot(ISlot* slot, const std::string& name);
         void SetParameterRoot(const std::string& root);
 		void AddConnection(std::shared_ptr<Connection>& connection, const std::string& signal_name, const std::string& slot_name, const TypeInfo& signature, IMetaObject* obj = nullptr);
-
+        virtual void onParameterUpdate(Context* ctx, IParameter* param);
         struct	impl;
 
         impl*			_pimpl;

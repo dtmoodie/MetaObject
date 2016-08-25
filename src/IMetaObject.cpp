@@ -65,7 +65,9 @@ IMetaObject::IMetaObject()
     _pimpl = new impl();
     _ctx = nullptr;
     _sig_manager = nullptr;
+    _pimpl->_slot_parameter_updated = std::bind(&IMetaObject::onParameterUpdate, this, std::placeholders::_1, std::placeholders::_2);
 }
+
 
 IMetaObject::~IMetaObject()
 {
@@ -464,20 +466,13 @@ bool IMetaObject::ConnectInput(InputParameter* input, IParameter* output, Parame
 IParameter* IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 {
     param->SetMtx(&_mtx);
+    param->SetContext(_ctx);
     _pimpl->_implicit_parameters[param->GetName()] = param;
     if(param->CheckFlags(Input_e))
     {
         _pimpl->_input_parameters[param->GetName()] = dynamic_cast<InputParameter*>(param.get());
     }
-    std::shared_ptr<TypedSlot<void(Context*, IParameter*)>> update_slot(
-        new TypedSlot<void(Context*, IParameter*)>(
-            [this](Context* ctx, IParameter* param)
-            {
-                this->_pimpl->_sig_parameter_updated(this, param);
-            }));
-
-    param->RegisterUpdateNotifier(update_slot.get());
-    _pimpl->_parameter_update_slots[param->GetName()] = update_slot;
+    param->RegisterUpdateNotifier(&(this->_pimpl->_slot_parameter_updated));
     _pimpl->_sig_parameter_added(this, param.get());
     return param.get();
 }
@@ -485,19 +480,13 @@ IParameter* IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 IParameter* IMetaObject::AddParameter(IParameter* param)
 {
     param->SetMtx(&_mtx);
+    param->SetContext(_ctx);
     _pimpl->_parameters[param->GetName()] = param;
     if(param->CheckFlags(Input_e))
     {
         _pimpl->_input_parameters[param->GetName()] = dynamic_cast<InputParameter*>(param);
     }
-    std::shared_ptr < TypedSlot<void(Context*, IParameter*)>> update_slot(
-        new TypedSlot<void(Context*, IParameter*)>(
-            [this](Context* ctx, IParameter* param)
-    {
-        this->_pimpl->_sig_parameter_updated(this, param);
-    }));
-    param->RegisterUpdateNotifier(update_slot.get());
-    _pimpl->_parameter_update_slots[param->GetName()] = update_slot;
+    param->RegisterUpdateNotifier(&(this->_pimpl->_slot_parameter_updated));
     _pimpl->_sig_parameter_added(this, param);
     return param;
 }
@@ -754,4 +743,8 @@ void IMetaObject::AddConnection(std::shared_ptr<Connection>& connection, const s
 	info.slot_name = slot_name;
 	info.signature = signature;
 	_pimpl->_connections.push_back(info);
+}
+void IMetaObject::onParameterUpdate(Context* ctx, IParameter* param)
+{
+    this->_pimpl->_sig_parameter_updated(this, param);
 }

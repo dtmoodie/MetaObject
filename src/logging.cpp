@@ -353,3 +353,4 @@ mo::ThrowOnDestroy_warning::~ThrowOnDestroy_warning()
         throw mo::ExceptionWithCallStack<std::string>(log_stream_.str(), ss.str());
     }
 }
+
