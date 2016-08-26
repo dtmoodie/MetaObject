@@ -9,7 +9,8 @@ namespace mo
 {
 	// Static object information available for each meta object
 	// Used for static introspection
-    template<class T, int N> struct MetaObjectInfo: public IMetaObjectInfo
+    template<class T, int N, typename Enable = void> 
+    struct MetaObjectInfo: virtual public IMetaObjectInfo
     {
         MetaObjectInfo()
         {

@@ -288,7 +288,7 @@ PARAMETER_END(N)
 
 
 #define MO_REGISTER_OBJECT(TYPE) \
-    static mo::MetaObjectInfo<TActual<TYPE>, __COUNTER__> TYPE##_info; \
+    static mo::MetaObjectInfo<TActual<TYPE>, __COUNTER__, void> TYPE##_info; \
     static mo::MetaObjectPolicy<TActual<TYPE>, __COUNTER__, void> TYPE##_policy; \
     rcc::shared_ptr<TYPE> TYPE::Create() \
     { \

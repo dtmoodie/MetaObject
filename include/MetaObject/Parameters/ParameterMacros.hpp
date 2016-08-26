@@ -12,7 +12,13 @@ PARAM_(type, name, init, __COUNTER__)
 #define INPUT(type, name, init) \
 type* name = init; \
 mo::TypedInputParameterPtr<type> name##_param; \
-INPUT_PARAM_(type, name, init, __COUNTER__)
+void init_parameters_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
+{ \
+    name##_param.SetUserDataPtr(&name); \
+    name##_param.SetName(#name); \
+    AddParameter(&name##_param); \
+    init_parameters_(firstInit, --dummy); \
+}
 
 
 #define PROPERTY(type, name, init) \
