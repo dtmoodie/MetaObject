@@ -18,6 +18,7 @@ using namespace mo;
 
 struct base: public IMetaObject
 {
+    
     MO_BEGIN(base)
         PARAM(int, base_param, 5);
         MO_SIGNAL(void, base_signal, int);
@@ -36,6 +37,15 @@ struct derived_parameter: public base
 
 struct derived_signals: public base
 {
+    static std::string GetDescriptionStatic()
+    {
+        return "test description";
+    }
+    static std::string GetTooltipStatic()
+    {
+        return "test tooltip";
+    }
+
     MO_BEGIN(derived_signals, base);
         MO_SIGNAL(void, derived_signal, int);
         MO_SLOT(void, derived_slot, int);
@@ -82,6 +92,12 @@ BOOST_AUTO_TEST_CASE(initialize)
 {
     mo::MetaObjectFactory::Instance();
     mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
+}
+
+BOOST_AUTO_TEST_CASE(object_print)
+{
+    auto info = mo::MetaObjectFactory::Instance()->GetObjectInfo("derived_signals");
+    info->Print();
 }
 
 BOOST_AUTO_TEST_CASE(parameter_static)

@@ -129,7 +129,7 @@ void InitParameters(bool firstInit) \
 void SerializeParameters(ISimpleSerializer* pSerializer) \
 { \
     _serialize_parameters(pSerializer, mo::_counter_<N_ - 1>()); \
-_serialize_parent_params(pSerializer); \
+    _serialize_parent_params(pSerializer); \
 } \
 template<class T> void serialize(T& ar) \
 { \
@@ -288,7 +288,7 @@ PARAMETER_END(N)
 
 
 #define MO_REGISTER_OBJECT(TYPE) \
-    static mo::MetaObjectInfo<TActual<TYPE>, __COUNTER__, void> TYPE##_info; \
+    static mo::MetaObjectInfo<TActual<TYPE>> TYPE##_info; \
     static mo::MetaObjectPolicy<TActual<TYPE>, __COUNTER__, void> TYPE##_policy; \
     rcc::shared_ptr<TYPE> TYPE::Create() \
     { \

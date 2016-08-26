@@ -21,6 +21,7 @@ namespace mo
         std::vector<IObjectConstructor*>   GetConstructors(int interface_id = -1) const;
         IObjectConstructor*                GetConstructor(const char* type_name) const;
         IObjectInfo*                       GetObjectInfo(const char* type_name) const;
+        std::vector<IObjectInfo*>          GetAllObjectInfo() const;
 
         bool                               LoadPlugin(const std::string& filename);
         std::vector<std::string>           ListLoadedPlugins() const;

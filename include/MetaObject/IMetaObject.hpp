@@ -17,6 +17,7 @@ namespace mo
     class Connection;
 	class TypeInfo;
     class IVariableManager;
+    class IMetaObjectInfo;
     
     class IParameter;
     class InputParameter;
@@ -52,6 +53,8 @@ namespace mo
     class MO_EXPORTS IMetaObject: public IObject
     {
     public:
+        typedef IMetaObject Interface;
+        typedef IMetaObjectInfo InterfaceInfo;
 		static int  Connect(IMetaObject* sender, const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name);
 		static bool Connect(IMetaObject* sender, const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name, const TypeInfo& signature);
         template<class T> 

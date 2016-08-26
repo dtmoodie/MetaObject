@@ -112,7 +112,17 @@ IObjectInfo* MetaObjectFactory::GetObjectInfo(const char* type_name) const
     }
     return nullptr;
 }
-
+std::vector<IObjectInfo*> MetaObjectFactory::GetAllObjectInfo() const
+{
+    std::vector<IObjectInfo*> output;
+    AUDynArray<IObjectConstructor*> constructors;
+    _pimpl->obj_system.GetObjectFactorySystem()->GetAll(constructors);
+    for(int i = 0; i < constructors.Size(); ++i)
+    {
+        output.push_back(constructors[i]->GetObjectInfo());
+    }
+    return output;
+}
 void MetaObjectFactory::SetupObjectConstructors(IPerModuleInterface* pPerModuleInterface)
 {
     GetObjectSystem()->SetupObjectConstructors(pPerModuleInterface);

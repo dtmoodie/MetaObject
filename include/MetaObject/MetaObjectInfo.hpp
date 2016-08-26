@@ -1,7 +1,9 @@
 #pragma once
 #include "IMetaObjectInfo.hpp"
+#include "MetaObject/Detail/HelperMacros.hpp"
 #include "MetaObject/Detail/Counter.hpp"
 #include "MetaObject/MetaObjectInfoDatabase.hpp"
+#include <type_traits>
 
 
 
@@ -9,8 +11,15 @@ namespace mo
 {
 	// Static object information available for each meta object
 	// Used for static introspection
-    template<class T, int N, typename Enable = void> 
-    struct MetaObjectInfo: virtual public IMetaObjectInfo
+
+    // Specialize this for each class which requires additional fields
+    template<class Type, class InterfaceInfo>
+    struct MetaObjectInfoImpl: public InterfaceInfo
+    {
+    };
+
+    template<class T> 
+    struct MetaObjectInfo: public MetaObjectInfoImpl<T, typename T::InterfaceInfo>
     {
         MetaObjectInfo()
         {
@@ -18,29 +27,23 @@ namespace mo
         }
         static std::vector<ParameterInfo*> ListParametersStatic()
         {
-            std::vector<ParameterInfo*> info;
-            T::list_parameter_info_(info, mo::_counter_<N>());
-            return info;
+            return T::GetParameterInfoStatic();
         }
         static std::vector<SignalInfo*>    ListSignalInfoStatic()
         {
-            std::vector<SignalInfo*> info; 
-            T::list_signal_info_(info, mo::_counter_<N>());
-            return info;
+            return T::GetSignalInfoStatic();
         }
         static std::vector<SlotInfo*>      ListSlotInfoStatic()
         {
-            std::vector<SlotInfo*> info;
-            T::list_slots_(info, mo::_counter_<N>());
-            return info;
+            return T::GetSlotInfoStatic();
         }
 		static std::string                 TooltipStatic()
         {
-            return "";
+            return _get_tooltip_helper<T>();
         }
         static std::string                 DescriptionStatic()
         {
-            return "";
+            return _get_description_helper<T>();
         }
         static TypeInfo                    GetTypeInfoStatic()
         {
@@ -77,6 +80,25 @@ namespace mo
         int                                GetInterfaceId() const
         {
             return T::s_interfaceID;
+        }
+    private:
+        DEFINE_HAS_STATIC_FUNCTION(HasTooltip, T::GetTooltipStatic, std::string(*)(void));
+        DEFINE_HAS_STATIC_FUNCTION(HasDescription, T::GetDescriptionStatic, std::string(*)(void));
+        template<class T> static std::string _get_tooltip_helper(typename std::enable_if<HasTooltip<T>::value, void>::type* = 0)
+        {
+            return T::GetTooltipStatic();
+        }
+        template<class T> static std::string _get_tooltip_helper(typename std::enable_if<!HasTooltip<T>::value, void>::type* = 0)
+        {
+            return "";
+        }
+        template<class T> static std::string _get_description_helper(typename std::enable_if<HasDescription<T>::value, void>::type* = 0)
+        {
+            return T::GetDescriptionStatic();
+        }
+        template<class T> static std::string _get_description_helper(typename std::enable_if<!HasDescription<T>::value, void>::type* = 0)
+        {
+            return "";
         }
     };
 }
