@@ -137,7 +137,7 @@ namespace mo
 	{
 		return _slots.size() !=  0;
 	}
-	template<class...T> SignalRelayFactory<void(T...)> TypedSignalRelay<void(T...)>::_factory;
+	
 	// ------------------------------------------------------------------
 	// Return value specialization
 	template<class R, class...T> 
@@ -226,5 +226,5 @@ namespace mo
 	{
 		return _slot != nullptr;
 	}
-	template<class R, class...T> SignalRelayFactory<R(T...)> TypedSignalRelay<R(T...)>::_factory;
+	
 }

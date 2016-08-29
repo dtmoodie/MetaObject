@@ -1,22 +1,16 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
-#include <MetaObject/Detail/TypeInfo.h>
-#include "MetaObject/Detail/Placeholders.h"
-#include "MetaObject/Thread/ThreadRegistry.hpp"
-#include "MetaObject/Thread/InterThread.hpp"
+#include "MetaObject/Detail/TypeInfo.h"
 #include "MetaObject/Signals/ISignal.hpp"
-#include "MetaObject/Signals/Connection.hpp"
-#include "MetaObject/IMetaObject.hpp"
-#include "MetaObject/Context.hpp"
-#include "MetaObject/Signals/TypedSignalRelay.hpp"
-
-
+#include <memory>
+#include <vector>
 namespace mo
 {
     class IMetaObject;
 	class Context;
+    class Connection;
+    template<class Sig> class TypedSignalRelay;
     template<class Sig> class TypedSignal{};
-
 	template<class...T> class MO_EXPORTS TypedSignal<void(T...)> : public ISignal
 	{
 	public:
@@ -33,8 +27,6 @@ namespace mo
 		bool Disconnect(std::weak_ptr<ISignalRelay> relay);
 	protected:
 		std::vector<std::shared_ptr<TypedSignalRelay<void(T...)>>> _typed_relays;
-	private:
-		static SignalRelayFactory<void(T...)> _relay_factory;
 	};
 
 	template<class R, class...T> class MO_EXPORTS TypedSignal<R(T...)> : public ISignal
@@ -53,8 +45,6 @@ namespace mo
 		bool Disconnect(std::weak_ptr<ISignalRelay> relay);
 	protected:
 		std::shared_ptr<TypedSignalRelay<R(T...)>> _typed_relay;
-	private:
-		static SignalRelayFactory<R(T...)> _relay_factory;
     };
 }
 #include "detail/TypedSignalImpl.hpp"

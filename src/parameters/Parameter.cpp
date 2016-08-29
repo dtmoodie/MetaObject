@@ -21,7 +21,8 @@ https://github.com/dtmoodie/parameters
 #include "MetaObject/Signals/TypedSlot.hpp"
 #include "MetaObject/Signals/TypedSignalRelay.hpp"
 #include <algorithm>
-#include <boost/thread/mutex.hpp>
+#include <boost/thread/recursive_mutex.hpp>
+
 using namespace mo;
 
 IParameter::IParameter(const std::string& name_, ParameterType flags_, long long ts, Context* ctx) :

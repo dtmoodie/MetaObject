@@ -1,11 +1,15 @@
 #pragma once
-#include <boost/preprocessor.hpp>
-#include "MetaObject/Logging/Log.hpp"
-#include "MetaObject/Signals/RelayManager.hpp"
+#include <boost/preprocessor/facilities/overload.hpp>
+#ifdef _MSC_VER
+#include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor/facilities/empty.hpp>
+#endif
+
 #include "MetaObject/Signals/SignalInfo.hpp"
-#include "MetaObject/Signals/detail/SignalManagerImpl.hpp"
 #include "MetaObject/Detail/HelperMacros.hpp"
 #include "MetaObject/Signals/TypedSignal.hpp"
+#include "MetaObject/Detail/Counter.hpp"
+#include <vector>
 
 #define SIGNAL_CALL_1(N, name, ret) \
 inline ret sig_##name() \
@@ -24,6 +28,7 @@ inline ret sig_##name(ARG1& arg1, ARG2& arg2) \
 { \
 	return COMBINE(_sig_##name##_,N)(arg1, arg2); \
 }
+
 
 #define SIGNAL_CALL_4(N, name, ret, ARG1, ARG2, ARG3) \
 inline ret sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3) \
@@ -82,6 +87,7 @@ static void list_signal_info_(std::vector<mo::SignalInfo*>& output, mo::_counter
 #endif
 
 #define MO_SIGNAL(RETURN, NAME, ...) MO_SIGNAL_(__LINE__, RETURN, NAME, __VA_ARGS__)
+
 #define MO_SIGNAL_(N, RETURN, NAME, ...) \
 mo::TypedSignal<RETURN(__VA_ARGS__)> COMBINE(_sig_##NAME##_,N); \
 SIGNAL_CALL(N, NAME, RETURN, __VA_ARGS__) \
@@ -101,6 +107,6 @@ std::vector<slot_info> list_signals_(mo::_counter_<N> dummy) \
         } \
     } \
     return signal_info; \
-}\
+}
 
-#define DESCRIBE_SIGNAL(NAME, DESCRIPTION)
+#define DESCRIBE_SIGNAL(NAME, DESCRIPTION) DESCRIBE_SIGNAL_(NAME, DESCRIPTION, __COUNTER__);

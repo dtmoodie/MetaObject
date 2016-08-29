@@ -1,13 +1,11 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
-#include <memory>
 #include <functional>
 
 namespace mo
 {
 	class TypeInfo;
 	class ISignalRelay;
-
 	class MO_EXPORTS RelayFactory
 	{
 	public:

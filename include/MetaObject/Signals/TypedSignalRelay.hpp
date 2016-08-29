@@ -1,6 +1,5 @@
 #pragma once
 #include "ISignalRelay.hpp"
-#include "RelayFactory.hpp"
 #include <set>
 namespace mo
 {
@@ -8,18 +7,7 @@ namespace mo
 	template<class Sig> class TypedSignal;
 	template<class Sig> class TypedSignalRelay{	};
 
-	template<class Sig> class SignalRelayFactory
-	{
-	public:
-		SignalRelayFactory()
-		{
-			RelayFactory::Instance()->RegisterCreator(
-				[]()->ISignalRelay*
-			{
-				return new TypedSignalRelay<Sig>();
-			}, TypeInfo(typeid(Sig)));
-		}
-	};
+
 
 	template<class...T> class TypedSignalRelay<void(T...)>: public ISignalRelay
 	{
@@ -43,8 +31,6 @@ namespace mo
 		bool Disconnect(ISignal* signal);
 		
 		std::set<TypedSlot<void(T...)>*> _slots;
-	private:
-		static SignalRelayFactory<void(T...)> _factory;
 	};
 	// Specialization for return value
 	template<class R, class...T> class TypedSignalRelay<R(T...)>: public ISignalRelay
@@ -70,8 +56,6 @@ namespace mo
 		bool Disconnect(ISignal* signal);
 		
 		TypedSlot<R(T...)>* _slot;
-	private:
-		static SignalRelayFactory<R(T...)> _factory;
 	};
 }
 #include "detail/TypedSignalRelayImpl.hpp"

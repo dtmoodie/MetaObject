@@ -27,7 +27,7 @@ namespace mo
 		TypeInfo GetSignature() const;
 	protected:
 		std::vector< std::shared_ptr< TypedSignalRelay<R(T...)> > > _relays;
-		static SignalRelayFactory<R(T...)> _relay_factory;
+		
     };
 }
 #include "detail/TypedSlotImpl.hpp"

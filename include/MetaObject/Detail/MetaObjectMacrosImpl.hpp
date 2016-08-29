@@ -1,9 +1,21 @@
 #pragma once
-#include "ObjectInterfacePerModule.h"
 #include "MetaObject/MetaObjectInfo.hpp"
 #include "MetaObject/MetaObjectPolicy.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
+#include "MetaObject/Detail/Counter.hpp"
+#include <shared_ptr.hpp>
+#include <type_traits>
+#include <vector>
+#include <string>
 
+
+struct ISimpleSerializer;
+namespace mo
+{
+    struct SignalInfo;
+    struct SlotInfo;
+    struct ParameterInfo;
+}
 
 // ---------------- SIGNAL_INFO ------------
 #define SIGNAL_INFO_START(N_) \
@@ -192,6 +204,10 @@ int _init_parent_signals(bool firstInit) \
 { \
     return PARENT_CLASS::InitSignals(firstInit); \
 } \
+int _parent_SetupSignals(mo::RelayManager* mgr) \
+{ \
+    return PARENT_CLASS::SetupSignals(mgr); \
+}
 
 
 #define _HANDLE_NO_PARENT \
@@ -220,7 +236,10 @@ int _init_parent_signals(bool firstInit) \
 { \
     return 0; \
 } \
-
+int _parent_SetupSignals(mo::RelayManager* mgr) \
+{ \
+    return 0; \
+}
 
 #define MO_BEGIN_1(CLASS_NAME, N_) \
 typedef CLASS_NAME THIS_CLASS;      \
@@ -246,36 +265,9 @@ PARAMETER_START(N_) \
 static rcc::shared_ptr<CLASS_NAME> Create();
 
 #define MO_END_(N) \
-template<typename T> int call_parent_setup(mo::RelayManager* manager, typename std::enable_if<mo::has_parent<T>::value, void>::type* = nullptr) \
-{ \
-	LOG(trace) << typeid(T::PARENT_CLASS).name(); \
-    return T::PARENT_CLASS::SetupSignals(manager); \
-} \
-template<typename T> int call_parent_setup(mo::RelayManager* manager, typename std::enable_if<!mo::has_parent<T>::value, void>::type* = nullptr) \
-{ \
-	return 0; \
-} \
-template<typename T> int call_parent_connect_by_name(const std::string& name, mo::RelayManager* manager, typename std::enable_if<mo::has_parent<T>::value, void>::type* = nullptr) \
-{ \
-	LOG(trace) << typeid(T::PARENT_CLASS).name(); \
-    return T::PARENT_CLASS::connect_by_name(name, manager); \
-} \
-template<typename T> int call_parent_connect_by_name(const std::string& name, mo::RelayManager* manager, typename std::enable_if<!mo::has_parent<T>::value, void>::type* = nullptr) \
-{ \
-	return 0; \
-} \
-template<typename T> bool call_parent_connect(const std::string& name, mo::ISignal* signal, typename std::enable_if<mo::has_parent<T>::value, void>::type* = nullptr) \
-{ \
-	LOG(trace) << typeid(T::PARENT_CLASS).name(); \
-    return T::PARENT_CLASS::connect(name, signal); \
-} \
-template<typename T> bool call_parent_connect(const std::string& name, mo::ISignal* signal, typename std::enable_if<!mo::has_parent<T>::value, void>::type* = nullptr) \
-{ \
-	return false; \
-} \
 virtual int SetupSignals(mo::RelayManager* manager) \
 { \
-    int parent_signal_count = call_parent_setup<THIS_CLASS>(manager, nullptr); \
+    int parent_signal_count = _parent_SetupSignals(manager); \
     _sig_manager = manager; \
     return parent_signal_count; \
 } \

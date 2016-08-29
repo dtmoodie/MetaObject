@@ -23,7 +23,7 @@ namespace mo
         private:
             void prune();
             long long _current_timestamp;
-            int _padding;
+            long long _padding;
         };
     }
 

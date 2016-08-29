@@ -10,14 +10,14 @@ namespace mo
 	template<class R, class...T>
 	TypedSlot<R(T...)>::TypedSlot()
 	{
-		(void*)&_relay_factory;
+		
 	}
 
 	template<class R, class...T>
 	TypedSlot<R(T...)>::TypedSlot(const std::function<R(T...)>& other) :
 		std::function<R(T...)>(other)
 	{
-		(void*)&_relay_factory;
+		
 	}
 
 	template<class R, class...T> 
@@ -105,5 +105,4 @@ namespace mo
 	{
 		return TypeInfo(typeid(R(T...)));
 	}
-	template<typename R, typename... T> SignalRelayFactory<R(T...)> TypedSlot<R(T...)>::_relay_factory;
 }

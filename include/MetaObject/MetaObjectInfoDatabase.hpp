@@ -4,7 +4,7 @@
 #include <string>
 namespace mo
 {
-    struct IMetaObjectInfo;
+    class IMetaObjectInfo;
     class MO_EXPORTS MetaObjectInfoDatabase
     {
     public:

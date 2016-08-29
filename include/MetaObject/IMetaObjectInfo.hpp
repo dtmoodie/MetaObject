@@ -9,8 +9,9 @@ namespace mo
     struct ParameterInfo;
 	struct SignalInfo;
 	struct SlotInfo;
-	struct MO_EXPORTS IMetaObjectInfo: IObjectInfo
+	class MO_EXPORTS IMetaObjectInfo: public IObjectInfo
 	{
+    public:
 		virtual std::vector<ParameterInfo*> ListParameters() const = 0;
 		virtual std::vector<SignalInfo*>    ListSignalInfo() const = 0;
 		virtual std::vector<SlotInfo*>      ListSlotInfo() const = 0;

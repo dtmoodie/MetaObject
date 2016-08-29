@@ -1,6 +1,14 @@
+#pragma once
+
+#include <boost/preprocessor/facilities/overload.hpp>
+#ifdef _MSC_VER
+#include <boost/preprocessor/cat.hpp>
+#include <boost/preprocessor/facilities/empty.hpp>
+#endif
 #include "MetaObject/Signals/TypedSlot.hpp"
-#include "MetaObject/Detail/HelperMacros.hpp"
+#include "MetaObject/Detail/Counter.hpp"
 #include "MetaObject/Signals/SlotInfo.hpp"
+
 // -------------------------------------------------------------------------------------------
 #define SLOT__(NAME, N, RETURN, ...)\
     virtual RETURN NAME(__VA_ARGS__); \
@@ -66,22 +74,10 @@ std::vector<slot_info> list_slots_(mo::_counter_<N> dummy) \
         } \
     } \
     return slot_info; \
-}\
+}
 
 #define DESCRIBE_SLOT(NAME, DESCRIPTION) DESCRIBE_SLOT_(NAME, DESCRIPTION, __COUNTER__)
 
-#define REGISTER_SLOT_(NAME, N) \
-int connect_(mo::signal_manager* manager, mo::_counter_<N> dummy) \
-{ \
-	LOG(trace) << "Automatically connecting slot named: \"" #NAME "\" to manager"; \
-    int count = connect_(#NAME, manager, mo::_counter_<N>()); \
-    return connect_(manager, mo::_counter_<N-1>()) + count; \
-}
-// -------------------------------------------------------------------------------------------
-// This macro signifies that this slot should automatically be connected to the appropriate signal from the signal_manager that is passed into setup_signals
-
-
-#define REGISTER_SLOT(NAME) REGISTER_SLOT_(NAME, __COUNTER__)
 
 #ifdef _MSC_VER
 #define MO_SLOT(RET, ...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__)(RET, __COUNTER__, __VA_ARGS__), BOOST_PP_EMPTY())
@@ -89,15 +85,3 @@ int connect_(mo::signal_manager* manager, mo::_counter_<N> dummy) \
 #define MO_SLOT(NAME, ...) BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__)
 #endif
 
-#ifdef _MSC_VER
-#define MO_SLOT_OVERLOAD(NAME, ...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(SLOT_OVERLOAD_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__), BOOST_PP_EMPTY())
-#else
-#define MO_SLOT_OVERLOAD(NAME, ...) BOOST_PP_OVERLOAD(SLOT_OVERLOAD_, __VA_ARGS__)(NAME, __COUNTER__, __VA_ARGS__)
-#endif
-
-#define CALL_REGISTER_SLOT(name) REGISTER_SLOT(name)
-#define REGISTER_SLOT_HELPER(NAME, ...) CALL_REGISTER_SLOT(NAME);
-
-#define AUTO_SLOT(RETURN, ...) \
-MO_SLOT(RETURN, __VA_ARGS__); \
-REGISTER_SLOT_HELPER(__VA_ARGS__)

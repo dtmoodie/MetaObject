@@ -3,6 +3,7 @@
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
 #include "MetaObject/Signals/detail/SlotMacros.hpp"
 #include "MetaObject/IMetaObject.hpp"
+#include "MetaObject/Signals/RelayManager.hpp"
 #include "MetaObject/Signals/TypedSignal.hpp"
 #include "MetaObject/Detail/Counter.hpp"
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
@@ -11,6 +12,7 @@
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "MetaObject/Parameters/UI/Qt/POD.hpp"
 #include "MetaObject/Parameters/UI/Qt/TParameterProxy.hpp"
+
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
 

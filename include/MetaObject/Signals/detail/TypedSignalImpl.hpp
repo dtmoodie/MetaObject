@@ -1,15 +1,17 @@
 #pragma once
+#include "MetaObject/Detail/Placeholders.h"
+#include "MetaObject/Signals/Connection.hpp"
 #include "MetaObject/Signals/TypedSlot.hpp"
 #include "MetaObject/Signals/TypedSignalRelay.hpp"
 #include "MetaObject/Logging/Log.hpp"
-#include "MetaObject/Signals/Connection.hpp"
+
 namespace mo
 {
     template<class Sig> class TypedSignal;
 	template<class R, class...T>
 	TypedSignal<R(T...)>::TypedSignal()
 	{
-		(void*)&_relay_factory;
+		
 	}
 
     template<class R, class...T> 
@@ -111,13 +113,13 @@ namespace mo
 		return false;
 	}
 
-	template<class R, class...T> SignalRelayFactory<R(T...)> TypedSignal<R(T...)>::_relay_factory;
+	
 	// ---------------------------------------------------------------------
 	// void specialization 
 	template<class...T> 
 	TypedSignal<void(T...)>::TypedSignal()
 	{
-		(void*)&_relay_factory;
+		
 	}
 
 	template<class...T>
@@ -224,6 +226,4 @@ namespace mo
 		}
 		return false;
 	}
-
-	template<class...T> SignalRelayFactory<void(T...)> TypedSignal<void(T...)>::_relay_factory;
 }

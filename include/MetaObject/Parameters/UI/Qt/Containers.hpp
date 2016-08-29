@@ -2,6 +2,7 @@
 #ifdef HAVE_QT5
 #include "POD.hpp"
 #include "IHandler.hpp"
+#include <boost/thread/recursive_mutex.hpp>
 namespace mo
 {
     namespace UI
