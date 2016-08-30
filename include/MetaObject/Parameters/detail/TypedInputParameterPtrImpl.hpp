@@ -10,6 +10,7 @@ namespace mo
         
     template<typename T>  bool TypedInputParameterPtr<T>::SetInput(std::shared_ptr<IParameter> param)
     {
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(ITypedInputParameter<T>::SetInput(param))
         {
             if(userVar)
@@ -25,6 +26,7 @@ namespace mo
     }
     template<typename T>  bool TypedInputParameterPtr<T>::SetInput(IParameter* param)
     {
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(ITypedInputParameter<T>::SetInput(param))
         {
             if(userVar)
@@ -40,6 +42,7 @@ namespace mo
     }
     template<typename T> void TypedInputParameterPtr<T>::SetUserDataPtr(T** user_var_)
     {
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         userVar = user_var_;
     }
 
@@ -66,6 +69,7 @@ namespace mo
     template<typename T>
     bool TypedInputParameterPtr<T>::GetInput(long long ts)
     {
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(userVar)
         {
             if(shared_input)
@@ -84,6 +88,7 @@ namespace mo
 
     template<typename T> void TypedInputParameterPtr<T>::onInputDelete(IParameter const* param)
     {
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         shared_input.reset();
         input = nullptr;
     }

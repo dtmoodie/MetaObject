@@ -138,8 +138,10 @@ void IMetaObject::SerializeParameters(ISimpleSerializer* pSerializer)
 {
 
 }
-void IMetaObject::SetContext(Context* ctx)
+void IMetaObject::SetContext(Context* ctx, bool overwrite)
 {
+    if(_ctx && overwrite == false)
+        return;
     _ctx = ctx;
     for(auto& param : _pimpl->_implicit_parameters)
     {
@@ -424,7 +426,10 @@ bool IMetaObject::ConnectInput(const std::string& input_name, IParameter* output
 bool IMetaObject::ConnectInput(InputParameter* input, IParameter* output, ParameterTypeFlags type_)
 {
     if(input == nullptr || output == nullptr)
+    {
+        LOG(debug) << "NULL input or output passed in";
         return false;
+    }
     
     if(input && input->AcceptsInput(output))
     {
@@ -448,6 +453,15 @@ bool IMetaObject::ConnectInput(InputParameter* input, IParameter* output, Parame
                 {
                     LOG(debug) << "No buffer of desired type found for type " << Demangle::TypeToName(output->GetTypeInfo());
                 }
+            }else
+            {
+                bool ret = input->SetInput(output);
+                if(ret == false)
+                {
+                    LOG(debug) << "Failed to connect output " << output->GetName() << "[" << Demangle::TypeToName(output->GetTypeInfo()) 
+                        << "] to input " << dynamic_cast<IParameter*>(input)->GetName() << "[" << Demangle::TypeToName(dynamic_cast<IParameter*>(input)->GetTypeInfo()) << "]";
+                }
+                return ret;
             }
         }else
         {
@@ -460,6 +474,7 @@ bool IMetaObject::ConnectInput(InputParameter* input, IParameter* output, Parame
             return ret;
         }
     }
+    LOG(debug) << "Input \"" << input->GetTreeName() << "\"  does not accept input of type: " << Demangle::TypeToName(output->GetTypeInfo());
     return false;
 }
 

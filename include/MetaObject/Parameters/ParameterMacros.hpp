@@ -14,6 +14,7 @@ type* name = init; \
 mo::TypedInputParameterPtr<type> name##_param; \
 void init_parameters_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
 { \
+    name##_param.SetMtx(&_mtx); \
     name##_param.SetUserDataPtr(&name); \
     name##_param.SetName(#name); \
     AddParameter(&name##_param); \

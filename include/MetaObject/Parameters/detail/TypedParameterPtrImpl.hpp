@@ -73,6 +73,7 @@ namespace mo
     template<typename T> 
     ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(T& data_, long long time_index, Context* ctx)
 	{
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(ptr)
         {
             *ptr = data_;
@@ -86,6 +87,7 @@ namespace mo
     template<typename T> 
     ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(const T& data_, long long time_index, Context* ctx)
 	{
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
 		if (ptr)
 		{
 			*ptr = data_;
@@ -99,6 +101,7 @@ namespace mo
     template<typename T> 
     ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(T* data_, long long time_index, Context* ctx)
 	{
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(ptr)
         {
             *ptr = *data_;
@@ -112,6 +115,7 @@ namespace mo
     template<typename T> 
     bool TypedParameterPtr<T>::Update(IParameter* other)
 	{
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
 		auto typed = dynamic_cast<ITypedParameter<T>*>(other);
 		if (typed)
 		{
@@ -133,6 +137,7 @@ namespace mo
     template<typename T>
     ITypedParameter<T>* TypedParameterPtr<T>::UpdatePtr(T* ptr)
     {
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         this->ptr = ptr;
         return this;
     }

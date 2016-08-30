@@ -188,6 +188,7 @@ void IParameter::SetMtx(boost::recursive_mutex* mtx_)
     {
         delete _mtx;
     }
+    _owns_mutex = false;
     _mtx = mtx_;
 }
 

@@ -35,12 +35,8 @@ IRuntimeObjectSystem* MetaObjectFactory::GetObjectSystem()
 
 MetaObjectFactory* MetaObjectFactory::Instance(SystemTable* table)
 {
-    static MetaObjectFactory* g_inst = nullptr;
-    if(g_inst == nullptr)
-    {
-        g_inst = new MetaObjectFactory(table);
-    }
-    return g_inst;
+    static MetaObjectFactory g_inst(table);
+    return &g_inst;
 }
 
 IMetaObject* MetaObjectFactory::Create(const char* type_name, int interface_id)

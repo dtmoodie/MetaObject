@@ -64,7 +64,7 @@ namespace mo
         virtual ~IMetaObject();
         
         // Setup
-        virtual void  SetContext(Context* ctx);
+        virtual void  SetContext(Context* ctx, bool overwrite = false);
         Context*      GetContext() const;
         virtual int   SetupSignals(RelayManager* mgr);
         virtual int   SetupVariableManager(IVariableManager* mgr);
