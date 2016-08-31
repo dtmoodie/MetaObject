@@ -13,7 +13,7 @@ void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
 { \
     if(firstInit) \
         name = init; \
-    name##_param.SetMtx(&_mtx); \
+    name##_param.SetMtx(_mtx); \
     name##_param.UpdatePtr(&name); \
     name##_param.SetContext(_ctx); \
     name##_param.SetName(#name); \
@@ -33,7 +33,7 @@ void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
 { \
     if(firstInit) \
         name = init; \
-    name##_param.SetMtx(&_mtx); \
+    name##_param.SetMtx(_mtx); \
     name##_param.UpdatePtr(&name); \
     name##_param.SetContext(_ctx); \
     name##_param.SetName(#name); \
@@ -76,7 +76,7 @@ void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
 { \
     if(firstInit) \
         name = init; \
-    name##_param.SetMtx(&_mtx); \
+    name##_param.SetMtx(_mtx); \
     name##_param.UpdatePtr(&name); \
     name##_param.SetContext(_ctx); \
     name##_param.SetName(#name); \
@@ -95,7 +95,7 @@ void _serialize_parameters(ISimpleSerializer* pSerializer, mo::_counter_<N> dumm
 #define INPUT_PARAM_(type, name, init, N) \
 void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
 { \
-    name##_param.SetMtx(&_mtx); \
+    name##_param.SetMtx(_mtx); \
     name##_param.SetUserDataPtr(&name); \
     name##_param.SetName(#name); \
     AddParameter(&name##_param); \

@@ -1,9 +1,11 @@
 #pragma once
+#ifndef __CUDACC__
 #include "MetaObject/MetaObjectInfo.hpp"
 #include "MetaObject/MetaObjectPolicy.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
 #include "MetaObject/Detail/Counter.hpp"
 #include <shared_ptr.hpp>
+#include "ObjectInterfacePerModule.h"
 #include <type_traits>
 #include <vector>
 #include <string>
@@ -290,3 +292,11 @@ PARAMETER_END(N)
     REGISTERCLASS(TYPE, &TYPE##_info);
 
 #define MO_REGISTER_CLASS(TYPE) MO_REGISTER_OBJECT(TYPE)
+
+#else
+#define MO_REGISTER_OBJECT(TYPE)
+#define MO_REGISTER_CLASS(TYPE)
+#define MO_BEGIN_1(CLASS, N)
+#define MO_BEGIN_2(CLASS, PARENT, N)
+#define MO_END_(N)
+#endif

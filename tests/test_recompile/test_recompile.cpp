@@ -1,67 +1,18 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
-#include "MetaObject/Signals/detail/SignalMacros.hpp"
-#include "MetaObject/Signals/detail/SlotMacros.hpp"
-#include "MetaObject/IMetaObject.hpp"
-#include "MetaObject/Signals/TypedSignal.hpp"
-#include "MetaObject/Detail/Counter.hpp"
-#include "MetaObject/Detail/MetaObjectMacros.hpp"
-#include "MetaObject/Parameters//ParameterMacros.hpp"
-#include "MetaObject/Parameters/TypedParameterPtr.hpp"
-#include "MetaObject/Parameters/TypedInputParameter.hpp"
+
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
 #include "shared_ptr.hpp"
+#include "obj.h"
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE "MetaObject"
 #include <boost/test/unit_test.hpp>
+#include <boost/filesystem.hpp>
 #include <iostream>
 
 using namespace mo;
-const size_t LOGSYSTEM_MAX_BUFFER = 4096;
-struct test_meta_object_signals: public IMetaObject
-{
-    ~test_meta_object_signals()
-    {
-        std::cout << "Deleting object\n";
-    }
-    MO_BEGIN(test_meta_object_signals);
-    MO_SIGNAL(void, test_void);
-    MO_SIGNAL(void, test_int, int);
-    MO_END;
-};
-
-struct test_meta_object_slots: public IMetaObject
-{
-    MO_BEGIN(test_meta_object_slots);
-    MO_SLOT(void, test_void);
-    MO_SLOT(void, test_int, int);
-    PROPERTY(int, call_count, 0);
-    MO_END;
-};
-
-struct test_meta_object_parameters: public IMetaObject
-{
-    MO_BEGIN(test_meta_object_parameters);
-    PARAM(int, test, 5);
-    MO_END;
-};
-
-void test_meta_object_slots::test_void()
-{
-    ++call_count;
-}
-
-void test_meta_object_slots::test_int(int value)
-{
-    call_count += value;
-}
-
-
-MO_REGISTER_OBJECT(test_meta_object_signals);
-MO_REGISTER_OBJECT(test_meta_object_slots);
-MO_REGISTER_OBJECT(test_meta_object_parameters);
 
 class build_callback: public ITestBuildNotifier
 {
@@ -92,50 +43,11 @@ class build_callback: public ITestBuildNotifier
 };
 
 
-class StdioLogSystem : public ICompilerLogger
-{
-public:    
-    virtual void LogError(const char * format, ...)
-    {
-        va_list args;
-        va_start(args, format);
-        LogInternal(format, args);
-    }
-    virtual void LogWarning(const char * format, ...)
-    {
-        va_list args;
-        va_start(args, format);
-        LogInternal(format, args);
-    }
-    virtual void LogInfo(const char * format, ...)
-    {
-        va_list args;
-        va_start(args, format);
-        LogInternal(format, args);
-    }
-
-protected:
-    void LogInternal(const char * format, va_list args)
-    {
-        vsnprintf(m_buff, LOGSYSTEM_MAX_BUFFER-1, format, args);
-        // Make sure there's a limit to the amount of rubbish we can output
-        m_buff[LOGSYSTEM_MAX_BUFFER-1] = '\0';
-
-        std::cout << m_buff;
-#ifdef _WIN32
-        OutputDebugStringA( m_buff );
-#endif
-    }
-
-    char m_buff[LOGSYSTEM_MAX_BUFFER];
-
-};
-
 build_callback* cb = nullptr;
 BOOST_AUTO_TEST_CASE(test_recompile)
 {
     cb = new build_callback;
-    //MetaObjectFactory::Instance()->GetObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
+    LOG(info) << "Current working directory " << boost::filesystem::current_path().string();
 	MetaObjectFactory::Instance()->RegisterTranslationUnit();
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
 }
@@ -268,6 +180,31 @@ BOOST_AUTO_TEST_CASE(test_parameter_persistence_recompile)
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
     BOOST_REQUIRE_EQUAL(obj->test, 10);
 }
+
+
+
+BOOST_AUTO_TEST_CASE(test_multiple_objects)
+{
+    auto obj1 = rcc::shared_ptr<test_meta_object_parameters>::Create();
+    auto obj2 = rcc::shared_ptr<test_meta_object_parameters>::Create();
+    obj1->test = 1;
+    obj2->test = 2;
+    BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
+    BOOST_REQUIRE_EQUAL(obj1->test, 1);
+    BOOST_REQUIRE_EQUAL(obj2->test, 2);
+}
+
+#ifdef HAVE_CUDA
+BOOST_AUTO_TEST_CASE(test_cuda_recompile)
+{
+    auto obj = rcc::shared_ptr<test_cuda_object>::Create();
+    obj->run_kernel();
+    BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
+    obj->run_kernel();
+}
+#endif
+
+
 
 BOOST_AUTO_TEST_CASE(test_object_cleanup)
 {

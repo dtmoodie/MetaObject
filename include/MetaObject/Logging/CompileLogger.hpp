@@ -11,6 +11,7 @@ namespace mo
         virtual void LogError(const char * format, ...);
         virtual void LogWarning(const char * format, ...);
         virtual void LogInfo(const char * format, ...);
+        virtual void LogDebug(const char * format, ...);
 
     protected:
         void LogInternal(int severity, const char * format, va_list args);

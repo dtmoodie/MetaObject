@@ -81,12 +81,10 @@ static void list_signal_info_(std::vector<mo::SignalInfo*>& output, mo::_counter
 
 
 #ifdef _MSC_VER
-#define SIGNAL_CALL(N, name, ...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(SIGNAL_CALL_, __VA_ARGS__)(N, name, __VA_ARGS__), BOOST_PP_EMPTY())
+  #define SIGNAL_CALL(N, name, ...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(SIGNAL_CALL_, __VA_ARGS__)(N, name, __VA_ARGS__), BOOST_PP_EMPTY())
 #else
-#define SIGNAL_CALL(N, name, ...) BOOST_PP_OVERLOAD(SIGNAL_CALL, __VA_ARGS__)(N, name, __VA_ARGS__)
+  #define SIGNAL_CALL(N, name, ...) BOOST_PP_OVERLOAD(SIGNAL_CALL, __VA_ARGS__)(N, name, __VA_ARGS__)
 #endif
-
-#define MO_SIGNAL(RETURN, NAME, ...) MO_SIGNAL_(__LINE__, RETURN, NAME, __VA_ARGS__)
 
 #define MO_SIGNAL_(N, RETURN, NAME, ...) \
 mo::TypedSignal<RETURN(__VA_ARGS__)> COMBINE(_sig_##NAME##_,N); \
@@ -109,4 +107,10 @@ std::vector<slot_info> list_signals_(mo::_counter_<N> dummy) \
     return signal_info; \
 }
 
-#define DESCRIBE_SIGNAL(NAME, DESCRIPTION) DESCRIBE_SIGNAL_(NAME, DESCRIPTION, __COUNTER__);
+#ifndef __CUDACC__
+  #define DESCRIBE_SIGNAL(NAME, DESCRIPTION) DESCRIBE_SIGNAL_(NAME, DESCRIPTION, __COUNTER__);
+  #define MO_SIGNAL(RETURN, NAME, ...) MO_SIGNAL_(__LINE__, RETURN, NAME, __VA_ARGS__)
+#else
+  #define DESCRIBE_SIGNAL(NAME, DESCRIPTION)
+  #define MO_SIGNAL(RETURN, NAME, ...)
+#endif

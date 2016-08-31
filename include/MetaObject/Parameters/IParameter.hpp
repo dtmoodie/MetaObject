@@ -147,10 +147,14 @@ namespace mo
 	{
 		if (auto typed = dynamic_cast<ITypedParameter<T>*>(this))
 			return typed->GetData(ts_, ctx);
-		throw "Bad cast. Requested " << typeid(T).name() << " actual " << GetTypeInfo().name();
+#ifndef __CUDACC__
+        throw "Bad cast. Requested " << typeid(T).name() << " actual " << GetTypeInfo().name();
+#else
+        throw "Bad cast";
+#endif
 	}
 
-	template<typename T> bool GetData(T& value, long long ts, Context* ctx)
+	template<typename T> bool IParameter::GetData(T& value, long long ts, Context* ctx)
 	{
 		if (auto typed = dynamic_cast<ITypedParameter<T>*>(this))
 			return typed->GetData(value, ts_, ctx);

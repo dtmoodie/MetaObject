@@ -79,7 +79,6 @@ template< InterfaceID Tiid, typename TSuper> struct TInterface : public TSuper
         {
         case Tiid:
             return this;
-            break;
         default:
             return TSuper::GetInterface(_iid);
         }

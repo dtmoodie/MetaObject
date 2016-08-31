@@ -17,12 +17,12 @@
     #pragma comment(lib, "Advapi32.lib")
     #ifdef _DEBUG
       RUNTIME_COMPILER_LINKLIBRARY("MetaObjectd.lib")
-      #pragma comment(lib, "RuntimeCompilerd.lib")
-      #pragma comment(lib, "RuntimeObjectSystemd.lib")
+      RUNTIME_COMPILER_LINKLIBRARY("RuntimeCompilerd.lib")
+      RUNTIME_COMPILER_LINKLIBRARY("RuntimeObjectSystemd.lib")
     #else
       RUNTIME_COMPILER_LINKLIBRARY("MetaObject.lib")
-      #pragma comment(lib, "RuntimeCompiler.lib")
-      #pragma comment(lib, "RuntimeObjectSystem.lib")
+      RUNTIME_COMPILER_LINKLIBRARY("RuntimeCompiler.lib")
+      RUNTIME_COMPILER_LINKLIBRARY("RuntimeObjectSystem.lib")
     #endif
   #else
     #ifdef _DEBUG

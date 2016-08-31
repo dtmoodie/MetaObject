@@ -1,3 +1,7 @@
+#pragma once
+#ifndef __CUDACC__
+#include <boost/thread/recursive_mutex.hpp>
+
 namespace mo
 {
     template<typename T> class TypedInputParameterPtr;
@@ -93,3 +97,4 @@ namespace mo
         input = nullptr;
     }
 }
+#endif

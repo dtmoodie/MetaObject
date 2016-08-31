@@ -1,6 +1,9 @@
 #pragma once
-#include <functional>
+#ifndef __CUDACC__
 #include "MetaObject/Logging/Log.hpp"
+#include <boost/thread/recursive_mutex.hpp>
+#include <functional>
+
 namespace mo
 {
     template<class T> class ITypedInputParameter;
@@ -114,7 +117,7 @@ namespace mo
             return shared_input.get();
         return input;
     }
-    template<class T> T* ITypedInputParameter<T>::GetDataPtr(long long ts = -1, Context* ctx = nullptr)
+    template<class T> T* ITypedInputParameter<T>::GetDataPtr(long long ts, Context* ctx)
     {
         if(input)
             return input->GetDataPtr(ts, ctx);
@@ -122,7 +125,7 @@ namespace mo
             return shared_input->GetDataPtr(ts, ctx);
         return nullptr;
     }
-    template<class T> bool ITypedInputParameter<T>::GetData(T& value, long long ts = -1, Context* ctx = nullptr)
+    template<class T> bool ITypedInputParameter<T>::GetData(T& value, long long ts, Context* ctx)
     {
         if(input)
             return input->GetData(value, ts, ctx);
@@ -130,7 +133,7 @@ namespace mo
             return shared_input->GetData(value, ts, ctx);
         return false;
     }
-    template<class T> T ITypedInputParameter<T>::GetData(long long ts = -1, Context* ctx = nullptr)
+    template<class T> T ITypedInputParameter<T>::GetData(long long ts, Context* ctx)
     {
         if(input)
             return input->GetData(ts, ctx);
@@ -160,3 +163,4 @@ namespace mo
         this->OnUpdate(ctx);
     }
 }
+#endif

@@ -1,9 +1,11 @@
 #pragma once
+#ifndef __CUDACC__
 #include "MetaObject/Logging/Log.hpp"
+#include <boost/thread/recursive_mutex.hpp>
 namespace mo
 {
 	template<typename T> class TypedParameterPtr;
-    template<typename T, int N, typename Enable = void> struct MetaParameter;
+    template<typename T, int N, typename Enable> struct MetaParameter;
     
 
 	template<typename T> TypedParameterPtr<T>::TypedParameterPtr(const std::string& name, T* ptr_, ParameterType type, bool ownsData_) :
@@ -144,3 +146,4 @@ namespace mo
     
     template<typename T> MetaParameter<T, 100, void> TypedParameterPtr<T>::_meta_parameter;
 }
+#endif

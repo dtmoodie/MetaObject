@@ -60,7 +60,7 @@ namespace mo
 		for (auto slot : _slots)
 		{
 			auto slot_ctx = slot->GetContext();
-			auto sig_ctx = sig->GetContext();
+			auto sig_ctx = this->sig->GetContext();
 			if (slot_ctx && sig_ctx)
 			{
 				if (slot_ctx->process_id == sig_ctx->process_id)

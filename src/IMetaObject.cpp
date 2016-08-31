@@ -17,6 +17,8 @@
 #include "ISimpleSerializer.h"
 #include "IObjectState.hpp"
 
+#include <boost/thread/recursive_mutex.hpp>
+
 using namespace mo;
 int IMetaObject::Connect(IMetaObject* sender, const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name)
 {
@@ -62,6 +64,7 @@ bool IMetaObject::Connect(IMetaObject* sender, const std::string& signal_name, I
 
 IMetaObject::IMetaObject()
 {
+    _mtx = new boost::recursive_mutex();
     _pimpl = new impl();
     _ctx = nullptr;
     _sig_manager = nullptr;
@@ -71,6 +74,7 @@ IMetaObject::IMetaObject()
 
 IMetaObject::~IMetaObject()
 {
+    delete _mtx;
     delete _pimpl;
 }
 
@@ -480,7 +484,7 @@ bool IMetaObject::ConnectInput(InputParameter* input, IParameter* output, Parame
 
 IParameter* IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 {
-    param->SetMtx(&_mtx);
+    param->SetMtx(_mtx);
     param->SetContext(_ctx);
 #ifdef _DEBUG
     for(auto& param_ : _pimpl->_parameters)
@@ -504,7 +508,7 @@ IParameter* IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 
 IParameter* IMetaObject::AddParameter(IParameter* param)
 {
-    param->SetMtx(&_mtx);
+    param->SetMtx(_mtx);
     param->SetContext(_ctx);
 #ifdef _DEBUG
     for(auto& param_ : _pimpl->_parameters)

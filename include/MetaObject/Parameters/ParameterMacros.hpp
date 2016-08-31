@@ -1,4 +1,5 @@
 #pragma once
+#ifndef __CUDACC__
 #include "MetaObject/Parameters/TypedParameterPtr.hpp"
 #include "detail/ParameterMacrosImpl.hpp"
 
@@ -14,7 +15,7 @@ type* name = init; \
 mo::TypedInputParameterPtr<type> name##_param; \
 void init_parameters_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
 { \
-    name##_param.SetMtx(&_mtx); \
+    name##_param.SetMtx(_mtx); \
     name##_param.SetUserDataPtr(&name); \
     name##_param.SetName(#name); \
     AddParameter(&name##_param); \
@@ -39,3 +40,10 @@ STATUS_(type, name, init, __COUNTER__)
 mo::TypedParameterPtr<type> name##_param; \
 OUTPUT_(type, name, init, __COUNTER__); \
 type name = init;
+
+#else
+#define PARAM(type, name, init)
+#define PROPERTY(type, name, init)
+#define INPUT(type, name, init)
+#define OUTPUT(type, name, init)
+#endif

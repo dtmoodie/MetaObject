@@ -22,13 +22,22 @@ void CompileLogger::LogInfo(const char * format, ...)
     va_start(args, format);
     LogInternal(1, format, args);
 }
-
+void CompileLogger::LogDebug(const char * format, ...)
+{
+    va_list args;
+    va_start(args, format);
+    LogInternal(0, format, args);
+}
 
 void CompileLogger::LogInternal(int severity, const char * format, va_list args)
 {
     vsnprintf(m_buff, LOGSYSTEM_MAX_BUFFER-1, format, args);
     // Make sure there's a limit to the amount of rubbish we can output
     m_buff[LOGSYSTEM_MAX_BUFFER-1] = '\0';
+    if(severity == 0)
+    {
+        BOOST_LOG_TRIVIAL(debug) << m_buff;
+    }
     if(severity == 1)
     {
         BOOST_LOG_TRIVIAL(info) << m_buff;
@@ -41,9 +50,6 @@ void CompileLogger::LogInternal(int severity, const char * format, va_list args)
     {
         BOOST_LOG_TRIVIAL(error) << m_buff;
     }
-#ifdef _WIN32
-    
-#endif
 }
 
 bool BuildCallback::TestBuildCallback(const char* file, TestBuildResult type)

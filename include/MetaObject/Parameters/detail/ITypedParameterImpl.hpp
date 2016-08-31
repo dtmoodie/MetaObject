@@ -1,5 +1,6 @@
 #pragma once
-
+#ifndef __CUDACC__
+#include <boost/thread/recursive_mutex.hpp>
 namespace mo
 {
 	template<typename T> class ITypedParameter;
@@ -28,3 +29,4 @@ namespace mo
 	}
     template<typename T> const TypeInfo ITypedParameter<T>::_type_info(typeid(T));
 }
+#endif

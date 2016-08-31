@@ -26,8 +26,7 @@ namespace mo
     {
     public:
         TypedInputParameterCopy(const std::string& name, T* userVar_,
-            ParameterType type = Control_e) :
-            MetaTypedParameter<T>(name, type, tooltip), userVar(userVar_) 
+            ParameterType type = Control_e)
         {
             input = nullptr;
         }
@@ -50,7 +49,7 @@ namespace mo
             if(input)
                 return input->GetData(ts, ctx);
             if(shared_input)
-                return
+                return shared_input->GetData(ts, ctx);
             return false;                
         }
         void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
