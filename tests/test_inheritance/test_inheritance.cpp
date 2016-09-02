@@ -4,8 +4,11 @@
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
 #include "MetaObject/Signals/detail/SlotMacros.hpp"
+
 #include "MetaObject/Parameters/ParameterMacros.hpp"
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
+#include "MetaObject/Parameters/ParameterInfo.hpp"
+
 #include "MetaObject/MetaObjectFactory.hpp"
 
 #define BOOST_TEST_DYN_LINK
@@ -30,7 +33,7 @@ struct base: public IMetaObject
 
 struct derived_parameter: public base
 {
-    MO_BEGIN(derived_parameter, base);
+    MO_DERIVE(derived_parameter, base);
         PARAM(int, derived_param, 10);
     MO_END;
 };
@@ -46,7 +49,7 @@ struct derived_signals: public base
         return "test tooltip";
     }
 
-    MO_BEGIN(derived_signals, base);
+    MO_DERIVE(derived_signals, base);
         MO_SIGNAL(void, derived_signal, int);
         MO_SLOT(void, derived_slot, int);
     MO_END;
@@ -80,7 +83,7 @@ struct base1: public TInterface<0, IMetaObject>
 
 struct derived1: public TInterface<1, base1>
 {
-    MO_BEGIN(derived1, base1);
+    MO_DERIVE(derived1, base1);
     MO_END;
 };
 
@@ -103,6 +106,16 @@ BOOST_AUTO_TEST_CASE(object_print)
 BOOST_AUTO_TEST_CASE(parameter_static)
 {
     auto param_info = derived_parameter::GetParameterInfoStatic();
+    if(param_info.size() == 1)
+    {
+        if(param_info[0]->name == "derived_param")
+        {
+            std::cout << "missing base parameter \"base_param\"\n";
+        }else
+        {
+            std::cout << "missing derived parameter \"derived_param\"\n";
+        }
+    }
     BOOST_REQUIRE_EQUAL(param_info.size(), 2);
 }
 

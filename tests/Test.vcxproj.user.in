@@ -4,15 +4,18 @@
  <LocalDebuggerEnvironment>PATH=@CMAKE_BINARY_DIR@\Debug;@PROJECT_BIN_DIRS_DEBUG@;%PATH%</LocalDebuggerEnvironment>	 	
  <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
  <WorkingDirectory>@CMAKE_BINARY_DIR@</WorkingDirectory>
+ <LocalDebuggerWorkingDirectory>@CMAKE_BINARY_DIR@</LocalDebuggerWorkingDirectory>
  </PropertyGroup>	 	
  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">	 	
  <LocalDebuggerEnvironment>PATH=@CMAKE_BINARY_DIR@\Release;@PROJECT_BIN_DIRS_RELEASE@;%PATH%</LocalDebuggerEnvironment>	 	
  <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
  <WorkingDirectory>@CMAKE_BINARY_DIR@</WorkingDirectory>
+ <LocalDebuggerWorkingDirectory>@CMAKE_BINARY_DIR@</LocalDebuggerWorkingDirectory>
  </PropertyGroup>	 	
  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='RelWithDebInfo|x64'">	 	
  <LocalDebuggerEnvironment>PATH=@CMAKE_BINARY_DIR@\RelWithDebInfo;@PROJECT_BIN_DIRS_RELWITHDEBINFO@;%PATH%</LocalDebuggerEnvironment>
  <WorkingDirectory>@CMAKE_BINARY_DIR@</WorkingDirectory>
  <DebuggerFlavor>WindowsLocalDebugger</DebuggerFlavor>
+ <LocalDebuggerWorkingDirectory>@CMAKE_BINARY_DIR@</LocalDebuggerWorkingDirectory>
  </PropertyGroup>	 	
 </Project>
