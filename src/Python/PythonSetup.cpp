@@ -1,3 +1,4 @@
+#ifdef HAVE_BOOST_PYTHON
 #include "MetaObject/Python/Python.hpp"
 
 #include <map>
@@ -18,3 +19,4 @@ void PythonClassRegistry::RegisterPythonSetupFunction(const char* name, std::fun
 {
     functions[name] = f;
 }
+#endif

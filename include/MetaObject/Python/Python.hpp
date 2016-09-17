@@ -1,4 +1,5 @@
 #pragma once
+#ifdef HAVE_BOOST_PYTHON
 #include "MetaObject/Detail/Export.hpp"
 #include "shared_ptr.hpp"
 #include <boost/python.hpp>
@@ -40,3 +41,4 @@ template<class T> struct MetaObjectPolicy<T, N, void>: public mo::MetaObjectPoli
 
 INSTANTIATE_PYTHON_POLICY_(__COUNTER__)
 }
+#endif

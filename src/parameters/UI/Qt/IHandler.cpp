@@ -1,3 +1,4 @@
+#ifdef HAVE_QT5
 #include "MetaObject/Parameters/UI/Qt/IHandler.hpp"
 #include "MetaObject/Parameters/UI/Qt/SignalProxy.hpp"
 
@@ -49,3 +50,4 @@ bool IHandler::UiUpdateRequired()
 {
     return false;
 }
+#endif

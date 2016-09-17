@@ -1,8 +1,7 @@
+
 #include "MetaObject/Parameters/UI/Qt/DefaultProxy.hpp"
 #include "MetaObject/Parameters/IParameter.hpp"
-#include <qgridlayout.h>
-#include <qlabel.h>
-#include <qstring.h>
+
 using namespace mo;
 using namespace mo::UI::qt;
 
@@ -25,9 +24,14 @@ bool DefaultProxy::CheckParameter(IParameter* param)
 {    
     return param == parameter;
 }
+#ifdef HAVE_QT5
+#include <qgridlayout.h>
+#include <qlabel.h>
+#include <qstring.h>
+#endif
 QWidget* DefaultProxy::GetParameterWidget(QWidget* parent)
-{
-    
+{    
+#ifdef HAVE_QT5
     QWidget* output = new QWidget(parent);
 
     QGridLayout* layout = new QGridLayout(output);
@@ -36,6 +40,8 @@ QWidget* DefaultProxy::GetParameterWidget(QWidget* parent)
     layout->addWidget(nameLbl, 0, 0);
     output->setLayout(layout);
     return output;
+#endif
+	return nullptr;
 }
 
 void DefaultProxy::onUiUpdate()

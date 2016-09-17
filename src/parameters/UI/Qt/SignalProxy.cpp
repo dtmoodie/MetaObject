@@ -1,3 +1,4 @@
+#ifdef HAVE_QT5
 #include "MetaObject/Parameters/UI/Qt/SignalProxy.hpp"
 #include "MetaObject/Parameters/UI/Qt/IHandler.hpp"
 
@@ -62,3 +63,4 @@ void SignalProxy::on_update(int row, int col)
         handler->OnUiUpdate(sender(), row, col);
     }
 }
+#endif
