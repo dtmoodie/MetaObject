@@ -22,6 +22,7 @@ namespace mo
 		std::shared_ptr<Connection> Connect(ISlot* slot);
 		std::shared_ptr<Connection> Connect(std::shared_ptr<ISignalRelay>& relay);
 		std::shared_ptr<Connection> Connect(std::shared_ptr<TypedSignalRelay<void(T...)>>& relay);
+
 		bool Disconnect();
 		bool Disconnect(ISlot* slot);
 		bool Disconnect(std::weak_ptr<ISignalRelay> relay);
@@ -40,6 +41,7 @@ namespace mo
 		std::shared_ptr<Connection> Connect(ISlot* slot);
 		std::shared_ptr<Connection> Connect(std::shared_ptr<ISignalRelay>& relay);
 		std::shared_ptr<Connection> Connect(std::shared_ptr<TypedSignalRelay<R(T...)>>& relay);
+
 		bool Disconnect();
 		bool Disconnect(ISlot* slot);
 		bool Disconnect(std::weak_ptr<ISignalRelay> relay);

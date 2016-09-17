@@ -4,18 +4,17 @@
 #define COMBINE1(X,Y) X##Y  // helper macro
 #define COMBINE(X,Y) COMBINE1(X,Y)
 
-#define DEFINE_HAS_STATIC_FUNCTION(traitsName, funcName, signature)               \
-    template <typename U>                                                   \
-    class traitsName                                                        \
-    {                                                                       \
-    private:                                                                \
-        template<typename T, T> struct helper;                              \
-        template<typename T>                                                \
-        static std::uint8_t check(helper<signature, &funcName>*);           \
-        template<typename T> static std::uint16_t check(...);               \
-    public:                                                                 \
-        static                                                              \
-        constexpr bool value = sizeof(check<U>(0)) == sizeof(std::uint8_t); \
+#define DEFINE_HAS_STATIC_FUNCTION(traitsName, funcName, signature)            \
+    template <typename U>                                                      \
+    class traitsName                                                           \
+    {                                                                          \
+    private:                                                                   \
+        template<typename T, T> struct helper;                                 \
+        template<typename T>                                                   \
+        static std::uint8_t check(helper<signature, &funcName>*);              \
+        template<typename T> static std::uint16_t check(...);                  \
+    public:                                                                    \
+        static const bool value = sizeof(check<U>(0)) == sizeof(std::uint8_t); \
     }
 
 #define DEFINE_MEMBER_DETECTOR(X)                                                   \

@@ -34,6 +34,14 @@ namespace mo
 		}
         void                               SetupObjectConstructors(IPerModuleInterface* pPerModuleInterface);
         IRuntimeObjectSystem*              GetObjectSystem();
+
+		// Recompilation stuffs
+		bool AbortCompilation();
+		bool CheckCompile();
+		bool IsCurrentlyCompiling();
+		bool IsCompileComplete();
+		bool SwapObjects();
+
     private:
         MetaObjectFactory(SystemTable* system_table);
         ~MetaObjectFactory();

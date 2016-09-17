@@ -5,6 +5,7 @@
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Logging/Log.hpp"
 #include <boost/filesystem.hpp>
+#include <boost/date_time.hpp>
 using namespace mo;
 
 struct MetaObjectFactory::impl
@@ -259,3 +260,34 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
 
 
 #endif
+
+bool MetaObjectFactory::AbortCompilation()
+{
+	return _pimpl->obj_system.AbortCompilation();
+}
+bool MetaObjectFactory::CheckCompile()
+{
+	static boost::posix_time::ptime prevTime = boost::posix_time::microsec_clock::universal_time();
+	boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
+	boost::posix_time::time_duration delta = currentTime - prevTime;
+	if (delta.total_milliseconds() < 10)
+		return false;
+	_pimpl->obj_system.GetFileChangeNotifier()->Update(float(delta.total_milliseconds()) / 1000.0);
+	return IsCurrentlyCompiling();
+}
+bool MetaObjectFactory::IsCurrentlyCompiling()
+{
+	return _pimpl->obj_system.GetIsCompiling();
+}
+bool MetaObjectFactory::IsCompileComplete()
+{
+	return _pimpl->obj_system.GetIsCompiledComplete();
+}
+bool MetaObjectFactory::SwapObjects()
+{
+	if (IsCompileComplete())
+	{
+		return _pimpl->obj_system.LoadCompiledModule();
+	}
+	return false;
+}

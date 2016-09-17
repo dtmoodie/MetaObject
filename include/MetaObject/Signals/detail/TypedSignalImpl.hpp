@@ -76,6 +76,7 @@ namespace mo
 		return std::shared_ptr<Connection>();
 	}
 
+
 	template<class R, class...T>
 	bool TypedSignal<R(T...)>::Disconnect()
 	{
@@ -185,6 +186,7 @@ namespace mo
 		}
 		return std::shared_ptr<Connection>();
 	}
+
 
 	template<class...T>
 	bool TypedSignal<void(T...)>::Disconnect()
