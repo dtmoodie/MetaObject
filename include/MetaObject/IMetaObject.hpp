@@ -162,6 +162,7 @@ namespace mo
         virtual IParameter* AddParameter(IParameter* param);
 
         template<class T> ITypedParameter<T>* UpdateParameter(const std::string& name, T& value, long long ts = -1, Context* ctx = nullptr);
+        template<class T> ITypedParameter<T>* UpdateParameter(const std::string& name, const T& value, long long ts = -1, Context* ctx = nullptr);
         template<class T> ITypedParameter<T>* UpdateParameterPtr(const std::string& name, T& ptr);
 
         void AddSignal(ISignal* signal, const std::string& name);

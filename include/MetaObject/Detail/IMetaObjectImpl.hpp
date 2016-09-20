@@ -49,6 +49,24 @@ namespace mo
             return new_param.get();
         }
     }
+    template<class T>
+    ITypedParameter<T>* IMetaObject::UpdateParameter(const std::string& name, const T& value, long long ts, Context* ctx)
+    {
+        if (ctx == nullptr)
+            ctx = _ctx;
+        auto param = GetParameterOptional<T>(name);
+        if (param)
+        {
+            param->UpdateData(value, ts, ctx);
+            return param;
+        }
+        else
+        {
+            std::shared_ptr<ITypedParameter<T>> new_param(new TypedParameter<T>(name, value));
+            AddParameter(new_param);
+            return new_param.get();
+        }
+    }
     template<class T> 
     ITypedParameter<T>* IMetaObject::UpdateParameterPtr(const std::string& name, T& ptr)
     {

@@ -1,6 +1,7 @@
 #pragma once
 #include <cstdint>
 
+#define STRINGIFY(TOKEN) #TOKEN
 #define COMBINE1(X,Y) X##Y  // helper macro
 #define COMBINE(X,Y) COMBINE1(X,Y)
 
@@ -37,10 +38,12 @@ template<typename T> class Detect_##X {                                         
 namespace mo
 {
     template<class T>
-    struct Void 
+    struct Void
     {
         typedef void type;
     };
+}
+
 
 #define DEFINE_TYPEDEF_DETECTOR(TYPEDEF_NAME)                                       \
     template<class T, class U = void>                                               \
@@ -49,9 +52,7 @@ namespace mo
         enum { value = 0 };                                                         \
     };                                                                              \
     template<class T>                                                               \
-    struct has_##TYPEDEF_NAME<T, typename Void<typename T::PARENT_CLASS>::type >    \
+    struct has_##TYPEDEF_NAME<T, typename mo::Void<typename T::PARENT_CLASS>::type >\
     {                                                                               \
         enum { value = 1 };                                                         \
     };
-
-}
