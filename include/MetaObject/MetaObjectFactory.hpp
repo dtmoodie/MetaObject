@@ -17,6 +17,7 @@ namespace mo
         static MetaObjectFactory*          Instance(SystemTable* system_table = nullptr);
 
         std::vector<std::string>           ListConstructableObjects(int interface_id = -1) const;
+        std::string                        PrintAllObjectInfo(int interface_id = -1) const;
 
         std::vector<IObjectConstructor*>   GetConstructors(int interface_id = -1) const;
         IObjectConstructor*                GetConstructor(const char* type_name) const;
@@ -24,6 +25,7 @@ namespace mo
         std::vector<IObjectInfo*>          GetAllObjectInfo() const;
 
         bool                               LoadPlugin(const std::string& filename);
+        int                                LoadPlugins(const std::string& path = "./");
         std::vector<std::string>           ListLoadedPlugins() const;
 
         // This function is inlined to guarantee it exists in the calling translation unit, which 

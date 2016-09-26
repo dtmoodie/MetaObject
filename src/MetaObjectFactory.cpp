@@ -78,6 +78,23 @@ std::vector<std::string> MetaObjectFactory::ListConstructableObjects(int interfa
     }
     return output;
 }
+
+std::string MetaObjectFactory::PrintAllObjectInfo(int interface_id) const
+{
+    std::stringstream ss;
+    AUDynArray<IObjectConstructor*> constructors;
+    _pimpl->obj_system.GetObjectFactorySystem()->GetAll(constructors);
+    for(int i = 0; i < constructors.Size(); ++i)
+    {
+        if(auto info = constructors[i]->GetObjectInfo())
+            if(interface_id == -1)
+                ss << info->Print();
+            else if(constructors[i]->GetInterfaceId() == interface_id)
+                ss << info->Print();
+    }
+    return ss.str();
+}
+
 IObjectConstructor* MetaObjectFactory::GetConstructor(const char* type_name) const
 {
     return _pimpl->obj_system.GetObjectFactorySystem()->GetConstructor(type_name);
@@ -130,7 +147,24 @@ std::vector<std::string> MetaObjectFactory::ListLoadedPlugins() const
 {
     return _pimpl->plugins;
 }
-
+int MetaObjectFactory::LoadPlugins(const std::string& path_)
+{
+    boost::filesystem::path path = boost::filesystem::current_path().append(path_);
+    int count = 0;
+    for(boost::filesystem::directory_iterator itr(path); itr != boost::filesystem::directory_iterator(); ++itr)
+    {
+#ifdef _MSC_VER
+        if(itr->path().extension().string() == ".dll")
+#else
+        if(itr->path().extension().string() == ".so")
+#endif
+        {
+            if(LoadPlugin(itr->path().string()))
+                ++count;
+        }
+    }
+    return count;
+}
 
 #ifdef _MSC_VER
 #include "Windows.h"

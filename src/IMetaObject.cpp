@@ -206,6 +206,11 @@ IParameter* IMetaObject::GetParameter(const std::string& name) const
     {
         return itr->second;
     }
+    auto itr2 = _pimpl->_implicit_parameters.find(name);
+    if(itr2 != _pimpl->_implicit_parameters.end())
+    {
+        return itr2->second.get();
+    }
     THROW(debug) << "Parameter with name \"" << name << "\" not found";
     return nullptr;
 }

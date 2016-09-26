@@ -8,7 +8,17 @@ using namespace mo;
 std::string IMetaObjectInfo::Print() const
 {
     std::stringstream ss;
-    ss << GetInterfaceId() << " ---- " << GetObjectName() << " -------\n";
+    ss << "\n\n";
+    std::string name = GetObjectName();
+
+    ss << GetInterfaceId(); // << " *** " << GetObjectName() << " ***\n";
+    ss << " ***** ";
+    ss << name << " ";
+    if(name.size() < 20)
+        for(int i = 0; i < 20 - name.size(); ++i)
+            ss << "*";
+    ss << "\n";
+
     auto tooltip = GetObjectTooltip();
     if(tooltip.size())
         ss << "  " << tooltip << "\n";
@@ -35,13 +45,12 @@ std::string IMetaObjectInfo::Print() const
                 ss << "    " << param->tooltip << "\n";
             if(param->description.size())
                 ss << "    " << param->description << "\n";
-            ss << "\n";
         }
     }
     auto signals = ListSignalInfo();
     if(signals.size())
     {
-        ss << "----------- Signals ---------------- \n";
+        ss << "\n----------- Signals ---------------- \n";
         for(auto& sig : signals)
         {
             ss << sig->name;
@@ -58,7 +67,7 @@ std::string IMetaObjectInfo::Print() const
     auto slots = ListSlotInfo();
     if(slots.size())
     {
-        ss << "----------- Slots ---------------- \n";
+        ss << "\n----------- Slots ---------------- \n";
         for(auto& slot : slots)
         {
             ss << slot->name;
