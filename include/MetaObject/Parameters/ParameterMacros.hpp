@@ -1,12 +1,19 @@
 #pragma once
 #ifndef __CUDACC__
 #include "MetaObject/Parameters/TypedParameterPtr.hpp"
+#include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "detail/ParameterMacrosImpl.hpp"
 
 #define PARAM(type, name, init) \
 mo::TypedParameterPtr<type> name##_param; \
 type name = init; \
 PARAM_(type, name, init, __COUNTER__)
+
+
+#define ENUM_PARAM(name, ...) \
+mo::TypedParameterPtr<mo::EnumParameter> name##_param; \
+mo::EnumParameter name; \
+
 
 #define RANGED_PARAM(type, name, init, min, max)
 

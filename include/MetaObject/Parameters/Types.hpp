@@ -51,6 +51,19 @@ namespace mo
             currentSelection = 0;
         }
 
+        void SetValue(std::initializer_list<char*> string, std::initializer_list<int> values)
+        {
+            auto iItr = values.begin();
+            auto nItr = string.begin();
+            enumerations.clear();
+            this->values.clear();
+            for( ; iItr != values.end() && nItr != string.begin(); ++iItr, ++nItr)
+            {
+                enumerations.push_back(*nItr);
+                this->values.push_back(*iItr);
+            }
+        }
+
         void addEnum(int value, const ::std::string& enumeration)
         {
             enumerations.push_back(enumeration);
