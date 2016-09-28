@@ -12,7 +12,7 @@ set(PROJECT_BIN_DIRS_RELEASE "")
 
 set(WITH_QT "TRUE" CACHE BOOL "Enable QT support")
 set(WITH_PYTHON "TRUE" CACHE BOOL "Enable Python bindings")
-
+include(cmake/OpenCVPCHSupport.cmake)
 
 if(WITH_PYTHON)
   find_package(PythonLibs QUIET)
@@ -128,8 +128,9 @@ SET(RCC_INCLUDE_DIRS "${RCC_INCLUDE_DIRS}" PARENT_SCOPE)
 GroupSources(include)
 GroupSources(src)
   
-add_library(MetaObject SHARED ${src} ${hdr})
+add_library(MetaObject SHARED ${src} ${hdr} src/precompiled.hpp)
 target_link_libraries(MetaObject RuntimeObjectSystem RuntimeCompiler ${link_libs})
+ocv_add_precompiled_header_to_target(MetaObject src/precompiled.hpp)
 
 # -------------------- instantiations --------------------------
 file(GLOB_RECURSE instantiations_src "instantiations/*.cpp")
