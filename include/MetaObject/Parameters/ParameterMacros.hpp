@@ -4,6 +4,34 @@
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "detail/ParameterMacrosImpl.hpp"
 
+
+#define STRINGIFY_1(X1) #X1
+#define STRINGIFY_2(X1, X2) #X1, #X2
+#define STRINGIFY_3(X1, X2, X3) #X1, #X2, #X3
+#define STRINGIFY_4(X1, X2, X3, X4) #X1, #X2, #X3, #X4
+#define STRINGIFY_5(X1, X2, X3, X4, X5) #X1, #X2, #X3, #X4, #X5
+#define STRINGIFY_6(X1, X2, X3, X4, X5, X6) #X1, #X2, #X3, #X4, #X5, #X6
+#define STRINGIFY_7(X1, X2, X3, X4, X5, X6, X7) #X1, #X2, #X3, #X4, #X5, #X6, #X7
+
+#define EXPAND_1(X1) X1
+#define EXPAND_2(X1, X2) X1, X2
+#define EXPAND_3(X1, X2, X3) X1, X2, X3
+#define EXPAND_4(X1, X2, X3, X4) X1, X2, X3, X4
+#define EXPAND_5(X1, X2, X3, X4, X5) X1, X2, X3, X4, X5
+#define EXPAND_6(X1, X2, X3, X4, X5, X6) X1, X2, X3, X4, X5, X6
+#define EXPAND_7(X1, X2, X3, X4, X5, X6, X7) X1, X2, X3, X4, X5, X6, X7
+
+#ifdef _MSC_VER
+#define STRINGIFY(...)  BOOST_PP_CAT(BOOST_PP_OVERLOAD(STRINGIFY_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY())
+#define EXPAND(...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(EXPAND_, __VA_ARGS__)(__VA_ARGS__),BOOST_PP_EMPTY())
+#else
+#define STRINGIFY(...)  BOOST_PP_OVERLOAD(STRINGIFY_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY()
+#define EXPAND(...) BOOST_PP_OVERLOAD(EXPAND_, __VA_ARGS__)(__VA_ARGS__),BOOST_PP_EMPTY()
+#endif
+
+#define ENUM(...) {STRINGIFY(__VA_ARGS__)}, {EXPAND(__VA_ARGS__)}
+
+
 #define PARAM(type, name, init) \
 mo::TypedParameterPtr<type> name##_param; \
 type name = init; \
@@ -13,6 +41,7 @@ PARAM_(type, name, init, __COUNTER__)
 #define ENUM_PARAM(name, ...) \
 mo::TypedParameterPtr<mo::EnumParameter> name##_param; \
 mo::EnumParameter name; \
+ENUM_PARAM_(__COUNTER__, name, __VA_ARGS__)
 
 
 #define RANGED_PARAM(type, name, init, min, max)

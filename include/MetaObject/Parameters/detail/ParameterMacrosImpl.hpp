@@ -40,7 +40,7 @@ void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
 { \
     if(firstInit) \
     { \
-        \
+        name.SetValue(ENUM(__VA_ARGS__)); \
     }\
     name##_param.SetMtx(_mtx); \
     name##_param.UpdatePtr(&name); \

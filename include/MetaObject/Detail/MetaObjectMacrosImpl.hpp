@@ -282,12 +282,12 @@ PARAMETER_END(N)
 
 
 #define MO_REGISTER_OBJECT(TYPE) \
-    static mo::MetaObjectInfo<TActual<TYPE>> TYPE##_info; \
-    static mo::MetaObjectPolicy<TActual<TYPE>, __COUNTER__, void> TYPE##_policy; \
-    rcc::shared_ptr<TYPE> TYPE::Create() \
+    static ::mo::MetaObjectInfo<TActual<TYPE>> TYPE##_info; \
+    static ::mo::MetaObjectPolicy<TActual<TYPE>, __COUNTER__, void> TYPE##_policy; \
+    ::rcc::shared_ptr<TYPE> TYPE::Create() \
     { \
-        auto obj = mo::MetaObjectFactory::Instance()->Create(#TYPE); \
-        return rcc::shared_ptr<TYPE>(obj); \
+        auto obj = ::mo::MetaObjectFactory::Instance()->Create(#TYPE); \
+        return ::rcc::shared_ptr<TYPE>(obj); \
     } \
     REGISTERCLASS(TYPE, &TYPE##_info);
 
