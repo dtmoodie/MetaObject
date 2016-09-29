@@ -4,7 +4,7 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE "HelperMacros"
 #include <boost/thread.hpp>
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include <iostream>
 #include <MetaObject/Detail/HelperMacros.hpp>
 

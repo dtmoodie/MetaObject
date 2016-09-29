@@ -7,7 +7,7 @@
 
 namespace mo
 {
-    template<class T, int N, typename Enable = void> struct MetaObjectPolicy;
+    template<class T, int N, typename Enable> struct MetaObjectPolicy;
 
     template<class T> struct SerializationPolicyImpl
     {

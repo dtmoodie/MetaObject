@@ -18,7 +18,7 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE "signals"
 #include <boost/thread.hpp>
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include <iostream>
 
 using namespace mo;
@@ -43,12 +43,12 @@ BOOST_AUTO_TEST_CASE(threaded_signal)
     mo::Context ctx;
     mo::Context thread_ctx;
 
-    TypedSlot<void(int)> slot = std::bind(
+    TypedSlot<void(int)> slot = TypedSlot<void(int)>(std::bind(
         [&thread_ctx](int value)->void
         {
             BOOST_REQUIRE_EQUAL(thread_ctx.thread_id, mo::GetThisThread());
             BOOST_REQUIRE_EQUAL(5, value);
-        }, std::placeholders::_1);
+        }, std::placeholders::_1));
 
     slot.SetContext(&thread_ctx);
 

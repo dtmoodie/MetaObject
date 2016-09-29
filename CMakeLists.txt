@@ -12,6 +12,9 @@ set(PROJECT_BIN_DIRS_RELEASE "")
 
 set(WITH_QT "TRUE" CACHE BOOL "Enable QT support")
 set(WITH_PYTHON "TRUE" CACHE BOOL "Enable Python bindings")
+set(WITH_OPENCV "TRUE" CACHE BOOL "Enable OpenCV types")
+set(WITH_CUDA "TRUE" CACHE BOOL "Enable CUDA recompilation")
+
 include(cmake/OpenCVPCHSupport.cmake)
 
 if(WITH_PYTHON)
@@ -33,8 +36,10 @@ if(WIN32)
     SET(CMAKE_CXX_FLAGS "/EHsc /FC /Zi /MP /Zm512 /bigobj /FS" CACHE STRING "")
     SET(CMAKE_CXX_FLAGS_RELEASE "/Zo /d2Zi+ /Oy-" CACHE STRING "")
 else(WIN32)
-    SET(CMAKE_CXX_FLAGS "--std=c++11" CACHE STRING "")
+    SET(CMAKE_CXX_FLAGS "-std=c++11" CACHE STRING "" FORCE)
     list(APPEND link_libs pthread)
+    add_definitions(-D_MWAITXINTRIN_H_INCLUDED)
+    add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0) # this is a fix for boost compiled against GCC 4.8 while MO is compiled against 5.4
 endif(WIN32)
 set(CMAKE_DEBUG_POSTFIX "d")
 link_directories("${CMAKE_CURRENT_BINARY_DIR}")
@@ -88,15 +93,18 @@ if(WITH_QT)
 	  message("Building without qt support")
 	endif()
 endif()
+
 # OpenCV
-find_package(OpenCV QUIET COMPONENTS core)
-if(OpenCV_FOUND)
-  message("Building with opencv support")
-  add_definitions(-DHAVE_OPENCV)
-  include_directories(${OpenCV_INCLUDE_DIRS})
-else()
-  message("Building without opencv support")
-endif()
+if(WITH_OPENCV)
+  find_package(OpenCV QUIET COMPONENTS core)
+  if(OpenCV_FOUND)
+    message("Building with opencv support")
+    add_definitions(-DHAVE_OPENCV)
+    include_directories(${OpenCV_INCLUDE_DIRS})
+  else()
+    message("Building without opencv support")
+  endif()
+endif(WITH_OPENCV)
 
 # ZeroMQ
 find_package(ZeroMQ QUIET)
@@ -106,16 +114,17 @@ if(${ZeroMQ_FOUND})
   include_directories("${CMAKE_CURRENT_LIST_DIR}/dependencies/cppzmq") # cpp bindings
   list(APPEND link_libs "optimized;${ZeroMQ_LIBRARY_RELEASE};debug;${ZeroMQ_LIBRARY_DEBUG}")
   add_definitions(-DHAVE_ZEROMQ)
-endif()
+endif(${ZeroMQ_FOUND})
 
 # CUDA
-FIND_PACKAGE(CUDA QUIET)
-IF(${CUDA_FOUND})
-  MESSAGE("Building cuda tests")
-  INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
-  ADD_DEFINITIONS(-DHAVE_CUDA)
-ENDIF()
-
+if(WITH_CUDA)
+  FIND_PACKAGE(CUDA QUIET)
+  IF(${CUDA_FOUND})
+    MESSAGE("Building cuda tests")
+    INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
+    ADD_DEFINITIONS(-DHAVE_CUDA)
+  ENDIF(${CUDA_FOUND})
+endif(WITH_CUDA)
 
 
 
@@ -135,6 +144,7 @@ GroupSources(include)
 GroupSources(src)
   
 add_library(MetaObject SHARED ${src} ${hdr} src/precompiled.hpp)
+message("Link libraries: ${link_libs}")
 target_link_libraries(MetaObject RuntimeObjectSystem RuntimeCompiler ${link_libs})
 ocv_add_precompiled_header_to_target(MetaObject src/precompiled.hpp)
 

@@ -23,7 +23,7 @@
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE "parameter"
-#include <boost/test/unit_test.hpp>
+#include <boost/test/included/unit_test.hpp>
 #include <boost/thread.hpp>
 #include <iostream>
 
@@ -91,11 +91,11 @@ BOOST_AUTO_TEST_CASE(serialize_by_policy_xml)
 	obj->test2 = 13;
     {
         std::ofstream ofs("test2.xml");
-        SerializerFactory::Serialize(obj, ofs, ISerializer::xml_e);
+        SerializerFactory::Serialize(obj, ofs, SerializerFactory::xml_e);
     }
     {
         std::ifstream ifs("test2.xml");
-        SerializerFactory::DeSerialize(obj.Get(), ifs, ISerializer::xml_e);
+        SerializerFactory::DeSerialize(obj.Get(), ifs, SerializerFactory::xml_e);
     }
 }
 
@@ -106,11 +106,11 @@ BOOST_AUTO_TEST_CASE(serialize_by_policy_binary)
 	obj->test2 = 13;
 	{
 		std::ofstream ofs("test2.bin", std::ios::binary);
-		SerializerFactory::Serialize(obj, ofs, ISerializer::Binary_e);
+        SerializerFactory::Serialize(obj, ofs, SerializerFactory::Binary_e);
 	}
 	{
 		std::ifstream ifs("test2.bin", std::ios::binary);
-		SerializerFactory::DeSerialize(obj.Get(), ifs, ISerializer::Binary_e);
+        SerializerFactory::DeSerialize(obj.Get(), ifs, SerializerFactory::Binary_e);
 		BOOST_REQUIRE_EQUAL(obj->test, 14);
 		BOOST_REQUIRE_EQUAL(obj->test2, 13);
 	}
@@ -119,7 +119,7 @@ BOOST_AUTO_TEST_CASE(serialize_by_policy_binary)
 BOOST_AUTO_TEST_CASE(deserialize_to_new_object_xml)
 {
     std::ifstream ifs("test2.xml");
-    auto obj = SerializerFactory::DeSerialize(ifs, ISerializer::xml_e);
+    auto obj = SerializerFactory::DeSerialize(ifs, SerializerFactory::xml_e);
     BOOST_REQUIRE(obj);
 	auto typed = obj.DynamicCast<serializable_object>();
 	BOOST_REQUIRE(typed);
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(deserialize_to_new_object_xml)
 BOOST_AUTO_TEST_CASE(deserialize_to_new_object_binary)
 {
 	std::ifstream ifs("test2.bin", std::ios::binary);
-	auto obj = SerializerFactory::DeSerialize(ifs, ISerializer::Binary_e);
+    auto obj = SerializerFactory::DeSerialize(ifs, SerializerFactory::Binary_e);
 	BOOST_REQUIRE(obj);
 	auto typed = obj.DynamicCast<serializable_object>();
 	BOOST_REQUIRE(typed);
@@ -149,13 +149,13 @@ BOOST_AUTO_TEST_CASE(serialize_multi_by_policy_binary)
 
 	{
 		std::ofstream ofs("test2.bin", std::ios::binary);
-		SerializerFactory::Serialize(obj1.Get(), ofs, ISerializer::Binary_e);
-		SerializerFactory::Serialize(obj2.Get(), ofs, ISerializer::Binary_e);
+        SerializerFactory::Serialize(obj1.Get(), ofs, SerializerFactory::Binary_e);
+        SerializerFactory::Serialize(obj2.Get(), ofs, SerializerFactory::Binary_e);
 	}
 	{
 		std::ifstream ifs("test2.bin", std::ios::binary);
-		auto new_obj1 = rcc::shared_ptr<serializable_object>(SerializerFactory::DeSerialize(ifs, ISerializer::Binary_e));
-		auto new_obj2 = rcc::shared_ptr<serializable_object>(SerializerFactory::DeSerialize(ifs, ISerializer::Binary_e));
+        auto new_obj1 = rcc::shared_ptr<serializable_object>(SerializerFactory::DeSerialize(ifs, SerializerFactory::Binary_e));
+        auto new_obj2 = rcc::shared_ptr<serializable_object>(SerializerFactory::DeSerialize(ifs, SerializerFactory::Binary_e));
 		BOOST_REQUIRE_EQUAL(new_obj1->test, 14);
 		BOOST_REQUIRE_EQUAL(new_obj1->test2, 13);
 		BOOST_REQUIRE_EQUAL(new_obj2->test, 15);

@@ -24,34 +24,34 @@ struct test_meta_object_signals: public IMetaObject
     {
         std::cout << "Deleting object\n";
     }
-    MO_BEGIN(test_meta_object_signals);
-    MO_SIGNAL(void, test_void);
-    MO_SIGNAL(void, test_int, int);
-    MO_END;
+    MO_BEGIN(test_meta_object_signals)
+    MO_SIGNAL(void, test_void)
+    MO_SIGNAL(void, test_int, int)
+    MO_END
 };
 
 struct test_meta_object_slots: public IMetaObject
 {
-    MO_BEGIN(test_meta_object_slots);
-    MO_SLOT(void, test_void);
-    MO_SLOT(void, test_int, int);
-    PROPERTY(int, call_count, 0);
-    MO_END;
+    MO_BEGIN(test_meta_object_slots)
+    MO_SLOT(void, test_void)
+    MO_SLOT(void, test_int, int)
+    PROPERTY(int, call_count, 0)
+    MO_END
 };
 
 struct test_meta_object_parameters: public IMetaObject
 {
-    MO_BEGIN(test_meta_object_parameters);
-    PARAM(int, test, 5);
-    MO_END;
+    MO_BEGIN(test_meta_object_parameters)
+    PARAM(int, test, 5)
+    MO_END
 };
 
 #ifdef HAVE_CUDA
 struct test_cuda_object: public IMetaObject
 {
-    MO_BEGIN(test_cuda_object);
-    PARAM(int, test, 0);
-    MO_END;
+    MO_BEGIN(test_cuda_object)
+    PARAM(int, test, 0)
+    MO_END
     void run_kernel();
 };
 #endif
