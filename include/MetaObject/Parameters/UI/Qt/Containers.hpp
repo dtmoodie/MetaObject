@@ -10,7 +10,7 @@ namespace mo
         namespace qt
         {
             struct UiUpdateListener;
-            template<class T, typename Enable = void> class THandler; 
+            template<class T, typename Enable> class THandler;
             // **********************************************************************************
             // *************************** std::pair ********************************************
             // **********************************************************************************
@@ -73,7 +73,7 @@ namespace mo
                     out2.insert(out2.end(), out1.begin(), out1.end());
                     return out2;
                 }
-                virtual void SetParamMtx(std::recursive_mutex* mtx)
+                virtual void SetParamMtx(boost::recursive_mutex* mtx)
                 {
                     IHandler::SetParamMtx(mtx);
                     _handler1.SetParamMtx(mtx);
@@ -102,15 +102,15 @@ namespace mo
                     if(IHandler::GetParamMtx())
                     {
                         boost::recursive_mutex::scoped_lock lock(*IHandler::GetParamMtx());
-                        Handler<T1>::OnUiUpdate(sender);
-                        Handler<T2>::OnUiUpdate(sender);
+                        THandler<T1>::OnUiUpdate(sender);
+                        THandler<T2>::OnUiUpdate(sender);
                     }
                 }
                 virtual void SetData(std::pair<T1, T2>* data_)
                 {
                     pairData = data_;
-                    Handler<T1>::SetData(&data_->first);
-                    Handler<T2>::SetData(&data_->second);
+                    THandler<T1>::SetData(&data_->first);
+                    THandler<T2>::SetData(&data_->second);
                 }
                 std::pair<T1, T2>* GetData()
                 {
@@ -119,8 +119,8 @@ namespace mo
                 virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
                 {
                     
-                    auto output = Handler<T1>::GetUiWidgets(parent);
-                    auto out2 = Handler<T2>::GetUiWidgets(parent);
+                    auto output = THandler<T1>::GetUiWidgets(parent);
+                    auto out2 = THandler<T2>::GetUiWidgets(parent);
                     output.insert(output.end(), out2.begin(), out2.end());
                     return output;
                 }

@@ -82,8 +82,8 @@ namespace mo
             return T::s_interfaceID;
         }
     private:
-        DEFINE_HAS_STATIC_FUNCTION(HasTooltip, T::GetTooltipStatic, std::string(*)(void));
-        DEFINE_HAS_STATIC_FUNCTION(HasDescription, T::GetDescriptionStatic, std::string(*)(void));
+        DEFINE_HAS_STATIC_FUNCTION(HasTooltip, V::GetTooltipStatic, std::string(*)(void));
+        DEFINE_HAS_STATIC_FUNCTION(HasDescription, V::GetDescriptionStatic, std::string(*)(void));
         template<class U> static std::string _get_tooltip_helper(typename std::enable_if<HasTooltip<U>::value, void>::type* = 0)
         {
             return U::GetTooltipStatic();

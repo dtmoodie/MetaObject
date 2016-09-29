@@ -93,7 +93,7 @@ namespace mo
             return this;
         }
         
-        template<class T> bool CircularBuffer<T>::Update(IParameter* other, Context* ctx = nullptr)
+        template<class T> bool CircularBuffer<T>::Update(IParameter* other, Context* ctx)
         {
             auto typedParameter = dynamic_cast<ITypedParameter<T>*>(other);
             if (typedParameter)
@@ -132,15 +132,15 @@ namespace mo
         template<class T> std::shared_ptr<IParameter>  CircularBuffer<T>::DeepCopy() const
         {
             auto buffer = new CircularBuffer<T>(IParameter::_name);
-            buffer->SetInput(input);
+            buffer->SetInput(this->input);
             return std::shared_ptr<IParameter>(buffer);
         }
 
         template<class T> void  CircularBuffer<T>::onInputUpdate(Context* ctx, IParameter* param)
         {
-            if(input)
+            if(this->input)
             {
-                UpdateData(input->GetDataPtr(), input->GetTimestamp(), ctx);
+                UpdateData(this->input->GetDataPtr(), this->input->GetTimestamp(), ctx);
             }
         }
         template<typename T> ParameterConstructor<CircularBuffer<T>> CircularBuffer<T>::_circular_buffer_parameter_constructor;

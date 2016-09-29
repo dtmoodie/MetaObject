@@ -1,4 +1,5 @@
 #pragma once
+#include <MetaObject/Parameters/IParameter.hpp>
 #include "qwidget.h"
 #include "qgridlayout.h"
 #include "qpushbutton.h"
@@ -64,7 +65,7 @@ namespace mo
                 auto dataPtr = parameter->Data();    
                 if (dataPtr)
                 {
-                    if (Handler<T>::UiUpdateRequired())
+                    if (THandler<T>::UiUpdateRequired())
                     {
                         paramHandler.UpdateUi(dataPtr);
                     }

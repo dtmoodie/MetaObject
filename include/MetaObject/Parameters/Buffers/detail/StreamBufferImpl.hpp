@@ -45,12 +45,12 @@ namespace mo
         {
             if(_current_timestamp != -1)
             {
-                auto itr = _data_buffer.begin();
-                while(itr != _data_buffer.end())
+                auto itr = this->_data_buffer.begin();
+                while(itr != this->_data_buffer.end())
                 {
                     if(itr->first < _current_timestamp - _padding)
                     {
-                        itr = _data_buffer.erase(itr);
+                        itr = this->_data_buffer.erase(itr);
                     }else
                     {
                         break;

@@ -14,7 +14,7 @@ namespace mo
     {
         namespace qt
         {
-            template<typename T, typename Enable = void> class THandler;
+            template<typename T, typename Enable> class THandler;
 
             // **********************************************************************************
             // *************************** cv::Rect *********************************************

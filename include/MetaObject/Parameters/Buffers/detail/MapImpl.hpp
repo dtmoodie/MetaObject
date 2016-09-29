@@ -7,7 +7,7 @@ namespace mo
         template<class T> Map<T>::Map(const std::string& name) :
             ITypedInputParameter<T>(name)
         {
-            SetFlags(Buffer_e);
+            this->SetFlags(Buffer_e);
         }
 
         template<class T> T* Map<T>::GetDataPtr(long long ts, Context* ctx)
@@ -96,7 +96,7 @@ namespace mo
                     boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
                     _data_buffer[typedParameter->GetTimeIndex()] = *ptr;
                     IParameter::modified = true;
-                    IParameter::OnUpdate(stream);
+                    IParameter::OnUpdate(ctx);
                 }
             }
             return false;
@@ -127,7 +127,7 @@ namespace mo
         }
         template<class T> void Map<T>::onInputUpdate(Context* ctx, IParameter* param)
         {
-            UpdateData(input->GetDataPtr(), input->GetTimestamp(), ctx);
+            UpdateData(this->input->GetDataPtr(), this->input->GetTimestamp(), ctx);
         }
     }
 }

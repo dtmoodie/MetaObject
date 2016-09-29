@@ -12,7 +12,7 @@ namespace mo
     template<typename T> class ITypedParameter;
     template<typename T> class ITypedRangedParameter;
     template<typename T> class THandler;
-    template<typename T, int N, typename Enable = void> struct MetaParameter;
+    template<typename T, int N, typename Enable> struct MetaParameter;
     namespace UI
     {
         namespace qt
