@@ -149,7 +149,7 @@ std::vector<std::string> MetaObjectFactory::ListLoadedPlugins() const
 }
 int MetaObjectFactory::LoadPlugins(const std::string& path_)
 {
-    boost::filesystem::path path = boost::filesystem::current_path().append(path_);
+    boost::filesystem::path path(boost::filesystem::current_path().string() + "/" + path_);
     int count = 0;
     for(boost::filesystem::directory_iterator itr(path); itr != boost::filesystem::directory_iterator(); ++itr)
     {

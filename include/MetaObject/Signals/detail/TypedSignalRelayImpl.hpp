@@ -1,4 +1,5 @@
 #pragma once
+#include <MetaObject/Context.hpp>
 #include "MetaObject/Thread/InterThread.hpp"
 #include "MetaObject/Logging/Log.hpp"
 #include "MetaObject/Signals/Connection.hpp"
@@ -161,7 +162,7 @@ namespace mo
     R TypedSignalRelay<R(T...)>::operator()(Context* ctx, T&... args)
     {
         if(_slot)
-            return (*slot)(args...);
+            return (*_slot)(args...);
         THROW(debug) << "Slot not connected";
         return R();
     }

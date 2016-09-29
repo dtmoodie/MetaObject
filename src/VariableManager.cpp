@@ -2,7 +2,7 @@
 #include "MetaObject/Parameters/IParameter.hpp"
 #include "MetaObject/Parameters/InputParameter.hpp"
 #include "MetaObject/Logging/Log.hpp"
-#include "MetaObject\Signals/TypedSlot.hpp"
+#include "MetaObject/Signals/TypedSlot.hpp"
 #include "MetaObject/Signals/TypedSignalRelay.hpp"
 #include <map>
 using namespace mo;

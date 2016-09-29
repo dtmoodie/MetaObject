@@ -7,7 +7,7 @@ namespace mo
     template<typename T> class TypedInputParameterPtr;
     template<typename T> TypedInputParameterPtr<T>::TypedInputParameterPtr(const std::string& name, T** userVar_, Context* ctx) :
             userVar(userVar_),
-            ITypedInputParameter(name, ctx),
+            ITypedInputParameter<T>(name, ctx),
             IParameter(name, Input_e, -1, ctx)
     {
     }
@@ -19,10 +19,10 @@ namespace mo
         {
             if(userVar)
             {
-                if(input)
-                    *userVar = input->GetDataPtr();
-                if(shared_input)
-                    *userVar = shared_input->GetDataPtr();
+                if(this->input)
+                    *userVar = this->input->GetDataPtr();
+                if(this->shared_input)
+                    *userVar = this->shared_input->GetDataPtr();
             }
             return true;
         }
@@ -35,10 +35,10 @@ namespace mo
         {
             if(userVar)
             {
-                if(input)
-                    *userVar = input->GetDataPtr();
-                if(shared_input)
-                    *userVar = shared_input->GetDataPtr();
+                if(this->input)
+                    *userVar = this->input->GetDataPtr();
+                if(this->shared_input)
+                    *userVar = this->shared_input->GetDataPtr();
             }
             return true;
         }
@@ -52,21 +52,21 @@ namespace mo
 
     template<typename T> void TypedInputParameterPtr<T>::onInputUpdate(Context* ctx, IParameter* param)
     {
-        if(input)
+        if(this->input)
         {
-            Commit(input->GetTimestamp(), ctx);
-            if((ctx && this->_ctx && ctx->thread_id == _ctx->thread_id) || (ctx == nullptr &&  _ctx == nullptr))
+            this->Commit(this->input->GetTimestamp(), ctx);
+            if((ctx && this->_ctx && ctx->thread_id == this->_ctx->thread_id) || (ctx == nullptr &&  this->_ctx == nullptr))
             {
                 if(userVar)
-                    *userVar = input->GetDataPtr();
+                    *userVar = this->input->GetDataPtr();
             }
-        }else if(shared_input)
+        }else if(this->shared_input)
         {
-            Commit(shared_input->GetTimestamp(), ctx);
-            if((ctx && this->_ctx && ctx->thread_id == _ctx->thread_id) || (ctx == nullptr &&  _ctx == nullptr))
+            this->Commit(this->shared_input->GetTimestamp(), ctx);
+            if((ctx && this->_ctx && ctx->thread_id == this->_ctx->thread_id) || (ctx == nullptr &&  this->_ctx == nullptr))
             {
                 if(userVar)
-                    *userVar = shared_input->GetDataPtr();
+                    *userVar = this->shared_input->GetDataPtr();
             }
         }
     }
@@ -76,14 +76,14 @@ namespace mo
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(userVar)
         {
-            if(shared_input)
+            if(this->shared_input)
             {
-                *userVar = shared_input->GetDataPtr(ts, this->_ctx);
+                *userVar = this->shared_input->GetDataPtr(ts, this->_ctx);
                 return *userVar != nullptr;
             }
-            if(input)
+            if(this->input)
             {
-                *userVar = input->GetDataPtr(ts, this->_ctx);
+                *userVar = this->input->GetDataPtr(ts, this->_ctx);
                 return *userVar != nullptr;
             }
         }
@@ -93,8 +93,8 @@ namespace mo
     template<typename T> void TypedInputParameterPtr<T>::onInputDelete(IParameter const* param)
     {
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-        shared_input.reset();
-        input = nullptr;
+        this->shared_input.reset();
+        this->input = nullptr;
     }
 }
 #endif

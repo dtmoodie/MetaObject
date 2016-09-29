@@ -1,6 +1,6 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
-
+#include <cstddef>
 namespace mo
 {
     size_t MO_EXPORTS GetThisThread();

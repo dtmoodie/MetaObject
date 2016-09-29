@@ -20,9 +20,12 @@ https://github.com/dtmoodie/MetaObject
 #include "MetaObject/Detail/Export.hpp"
 #include "MetaObject/Detail/Enums.hpp"
 #include "MetaObject/Signals/TypedSignal.hpp"
+#include <boost/version.hpp>
+#if BOOST_VERSION > 105400
 #include <boost/core/noncopyable.hpp>
-
-
+#else
+#include <boost/noncopyable.hpp>
+#endif
 #include <string>
 #include <memory>
 namespace boost
@@ -148,7 +151,7 @@ namespace mo
 		if (auto typed = dynamic_cast<ITypedParameter<T>*>(this))
 			return typed->GetData(ts_, ctx);
 #ifndef __CUDACC__
-        throw "Bad cast. Requested " << typeid(T).name() << " actual " << GetTypeInfo().name();
+        //throw "Bad cast. Requested " << typeid(T).name() << " actual " << GetTypeInfo().name();
 #else
         throw "Bad cast";
 #endif
@@ -157,7 +160,7 @@ namespace mo
 	template<typename T> bool IParameter::GetData(T& value, long long ts, Context* ctx)
 	{
 		if (auto typed = dynamic_cast<ITypedParameter<T>*>(this))
-			return typed->GetData(value, ts_, ctx);
+            return typed->GetData(value, ts, ctx);
 		return false;
 	}
 }

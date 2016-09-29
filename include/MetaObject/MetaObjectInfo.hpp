@@ -84,19 +84,19 @@ namespace mo
     private:
         DEFINE_HAS_STATIC_FUNCTION(HasTooltip, T::GetTooltipStatic, std::string(*)(void));
         DEFINE_HAS_STATIC_FUNCTION(HasDescription, T::GetDescriptionStatic, std::string(*)(void));
-        template<class T> static std::string _get_tooltip_helper(typename std::enable_if<HasTooltip<T>::value, void>::type* = 0)
+        template<class U> static std::string _get_tooltip_helper(typename std::enable_if<HasTooltip<U>::value, void>::type* = 0)
         {
-            return T::GetTooltipStatic();
+            return U::GetTooltipStatic();
         }
-        template<class T> static std::string _get_tooltip_helper(typename std::enable_if<!HasTooltip<T>::value, void>::type* = 0)
+        template<class U> static std::string _get_tooltip_helper(typename std::enable_if<!HasTooltip<U>::value, void>::type* = 0)
         {
             return "";
         }
-        template<class T> static std::string _get_description_helper(typename std::enable_if<HasDescription<T>::value, void>::type* = 0)
+        template<class U> static std::string _get_description_helper(typename std::enable_if<HasDescription<U>::value, void>::type* = 0)
         {
-            return T::GetDescriptionStatic();
+            return U::GetDescriptionStatic();
         }
-        template<class T> static std::string _get_description_helper(typename std::enable_if<!HasDescription<T>::value, void>::type* = 0)
+        template<class U> static std::string _get_description_helper(typename std::enable_if<!HasDescription<U>::value, void>::type* = 0)
         {
             return "";
         }

@@ -9,7 +9,7 @@ namespace mo
     template<class T> class ITypedInputParameter;
 
     template<class T> ITypedInputParameter<T>::ITypedInputParameter(const std::string& name, Context* ctx):
-            ITypedParameter(name, Input_e, -1, ctx), 
+            ITypedParameter<T>(name, Input_e, -1, ctx),
             input(nullptr),
             IParameter(name, Input_e)
     {

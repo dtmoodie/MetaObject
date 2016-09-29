@@ -8,7 +8,7 @@
 #include <qcombobox.h>
 #include <qspinbox.h>
 
-#include <mutex>
+#include <boost/thread/recursive_mutex.hpp>
 
 class QLineEdit;
 class QCheckBox;

@@ -22,13 +22,13 @@ https://github.com/dtmoodie/parameters
 
 namespace mo
 {
-    template<typename T> class TypedInputParameterCopy : public ITypedParameter<T>, public InputParameter
+    template<typename T> class TypedInputParameterCopy : public ITypedInputParameter<T>, public InputParameter
     {
     public:
         TypedInputParameterCopy(const std::string& name, T* userVar_,
             ParameterType type = Control_e)
         {
-            input = nullptr;
+            this->input = nullptr;
         }
         
         T* GetDataPtr(long long ts = -1, Context* ctx = nullptr)
@@ -46,10 +46,10 @@ namespace mo
         }
         T GetData(long long ts = -1, Context* ctx = nullptr)
         {
-            if(input)
-                return input->GetData(ts, ctx);
-            if(shared_input)
-                return shared_input->GetData(ts, ctx);
+            if(this->input)
+                return this->input->GetData(ts, ctx);
+            if(this->shared_input)
+                return this->shared_input->GetData(ts, ctx);
             return false;                
         }
         void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
@@ -59,26 +59,27 @@ namespace mo
         }
         void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
         {
-            if(usrVar)
+            if(userVar)
                 *userVar = data_;
         }
         void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
         {
-            if(usrVar)
+            if(userVar )
                 *userVar = *data_;
         }
     protected:
         T* userVar; // Pointer to the user space variable of type T
+
         void onInputUpdate(Context* ctx, IParameter* param)
         {
-            if(input && userVar)
-                input->GetData(*userVar, -1, GetContext());
-            Parameter::OnUpdate(ctx);
+            if(this->input && userVar)
+                this->input->GetData(*userVar, -1, GetContext());
+            IParameter::OnUpdate(ctx);
         }
         void onInputDelete(IParameter* param)
         {
-            input = nullptr;
-            Parameter::OnUpdate(nullptr);
+            this->input = nullptr;
+            IParameter::OnUpdate(nullptr);
         }
     };
 

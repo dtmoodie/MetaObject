@@ -28,7 +28,7 @@ namespace mo
 	template<typename T> 
     bool TypedParameter<T>::GetData(T& value, long long ts, Context* ctx)
 	{
-		boost::recursive_mutex::scoped_lock lock(mtx());
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
 		if (ts == -1)
         {
             value = data;
@@ -47,7 +47,7 @@ namespace mo
     template<typename T>
     T TypedParameter<T>::GetData(long long ts, Context* ctx)
     {
-        boost::recursive_mutex::scoped_lock lock(mtx());
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(ts == -1)
         {
             return data;
@@ -59,10 +59,10 @@ namespace mo
     }
 	
     template<typename T> 
-    ITypedParameter<T>* TypedParameter<T>::UpdateData(T& data_, long long ts = -1, Context* ctx = nullptr)
+    ITypedParameter<T>* TypedParameter<T>::UpdateData(T& data_, long long ts, Context* ctx)
 	{
 		data = data_;
-		Commit(ts, ctx);
+        IParameter::Commit(ts, ctx);
 		return this;
 	}
 
@@ -70,7 +70,7 @@ namespace mo
     ITypedParameter<T>* TypedParameter<T>::UpdateData(const T& data_, long long ts, Context* ctx)
 	{
 		data = data_;
-		Commit(ts, ctx);
+        IParameter::Commit(ts, ctx);
 		return this;
 	}
 	
@@ -78,14 +78,14 @@ namespace mo
     ITypedParameter<T>* TypedParameter<T>::UpdateData(T* data_, long long ts, Context* ctx)
 	{
 		data = *data_;
-		Commit(ts, ctx);
+        IParameter::Commit(ts, ctx);
 		return this;
 	}
 	
     template<typename T> 
     std::shared_ptr<IParameter> TypedParameter<T>::DeepCopy() const
 	{
-		return std::shared_ptr<IParameter>(new TypedParameter<T>(GetName(), data));
+        return std::shared_ptr<IParameter>(new TypedParameter<T>(IParameter::GetName(), data));
 	}
 
 	template<typename T>  
@@ -96,7 +96,7 @@ namespace mo
 		{
 			if (typed->GetData(data, -1, ctx))
 			{
-				Commit(other->GetTimestamp(), ctx);
+                IParameter::Commit(other->GetTimestamp(), ctx);
 				return true;
 			}
 		}

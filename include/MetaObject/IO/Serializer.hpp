@@ -1,9 +1,10 @@
 #pragma once
-
+#include <MetaObject/IMetaObject.hpp>
+#include "MetaObject/Detail/Export.hpp"
 #include "ISerializer.hpp"
 #include "MetaObject/Detail/TypeInfo.h"
 #include "shared_ptr.hpp"
-//#include <cereal/cereal.hpp>
+
 #include <functional>
 
 namespace cereal
@@ -16,9 +17,15 @@ namespace cereal
 
 namespace mo
 {
-    class MO_EXPORTS SerializerFactory: public ISerializer
+    class MO_EXPORTS SerializerFactory
     {
     public:
+        enum SerializationType
+        {
+            Binary_e = 0,
+            xml_e,
+            json_e
+        };
         static void Serialize(const rcc::shared_ptr<IMetaObject>& obj, std::ostream& os, SerializationType type);
         static void DeSerialize(IMetaObject* obj, std::istream& os, SerializationType type);
         static rcc::shared_ptr<IMetaObject> DeSerialize(std::istream& os, SerializationType type);

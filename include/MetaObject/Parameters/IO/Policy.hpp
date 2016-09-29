@@ -1,4 +1,5 @@
 #pragma once
+#include <MetaObject/Parameters/IParameter.hpp>
 #include "SerializationFunctionRegistry.hpp"
 
 #include <cereal/cereal.hpp>
@@ -17,7 +18,6 @@ namespace cereal
 
 namespace mo
 {
-    class IParameter;
     template<class T> class ITypedParameter;
     template<class T, int N, typename Enable = void> struct MetaParameter;
 

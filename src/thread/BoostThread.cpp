@@ -1,3 +1,4 @@
+#include <cstddef>
 #include "MetaObject/Thread/BoostThread.h"
 
 #include "boost/thread.hpp"

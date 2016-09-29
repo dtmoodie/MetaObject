@@ -1,4 +1,5 @@
 #pragma once
+#include <cstddef>
 #include "MetaObject/Detail/Export.hpp"
 
 namespace boost

@@ -73,11 +73,11 @@ namespace mo
         return nullptr;
     }
 
-    template<class Sig> 
+    /*template<class Sig>
     bool IMetaObject::ConnectCallback(const std::string& callback_name, const std::string& slot_name, IMetaObject* slot_owner, bool force_queue)
     {
         ConnectCallback(TypedInfo(typeid(Sig)), callback_name, slot_name, slot_owner, force_queue);
-    }
+    }*/
     template<class T> 
     ISlot* IMetaObject::GetSlot(const std::string& name) const
     {
