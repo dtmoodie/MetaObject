@@ -24,7 +24,7 @@
       RUNTIME_COMPILER_LINKLIBRARY("RuntimeCompiler.lib")
       RUNTIME_COMPILER_LINKLIBRARY("RuntimeObjectSystem.lib")
     #endif
-  #else
+  #else // Unix
     #ifdef _DEBUG
       RUNTIME_COMPILER_LINKLIBRARY("-lMetaObjectd")
       RUNTIME_COMPILER_LINKLIBRARY("-lRuntimeCompilerd")

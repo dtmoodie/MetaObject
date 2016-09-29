@@ -34,6 +34,11 @@ void CompileLogger::LogInternal(int severity, const char * format, va_list args)
     vsnprintf(m_buff, LOGSYSTEM_MAX_BUFFER-1, format, args);
     // Make sure there's a limit to the amount of rubbish we can output
     m_buff[LOGSYSTEM_MAX_BUFFER-1] = '\0';
+    for(int i = 0; i < LOGSYSTEM_MAX_BUFFER -1; ++i)
+    {
+        if(m_buff[i] == '\n')
+            m_buff[i] = ' ';
+    }
     if(severity == 0)
     {
         BOOST_LOG_TRIVIAL(debug) << m_buff;

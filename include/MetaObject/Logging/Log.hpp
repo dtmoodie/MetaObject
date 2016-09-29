@@ -4,6 +4,11 @@
 #include "MetaObject/Logging/LogHelperMacros.hpp"
 
 #include <boost/log/trivial.hpp>
+#ifndef WIN32
+#include "RuntimeLinkLibrary.h"
+RUNTIME_COMPILER_LINKLIBRARY("-lboost_log")
+RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
+#endif
 
 #include <sstream>
 // https://github.com/Microsoft/CNTK/blob/7c811de9e33d0184fdf340cd79f4f17faacf41cc/Source/Common/Include/ExceptionWithCallStack.h

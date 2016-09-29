@@ -58,11 +58,11 @@ namespace mo
         }
     }
 #define MO_UI_QT_PARAMTERPROXY_METAPARAMETER(N) \
-            template<class T> struct MetaParameter<T, N, typename std::enable_if<!UI::qt::ParameterProxy<T>::IS_DEFAULT, void>::type>: public MetaParameter<T, N-1> \
+            template<class T> struct MetaParameter<T, N, typename std::enable_if<!UI::qt::ParameterProxy<T>::IS_DEFAULT, void>::type>: public MetaParameter<T, N-1, void> \
             { \
                 static UI::qt::Constructor<T> _parameter_proxy_constructor; \
                 MetaParameter(const char* name): \
-                    MetaParameter<T, N-1>(name) \
+                    MetaParameter<T, N-1, void>(name) \
                 { \
                     (void)&_parameter_proxy_constructor; \
                 } \
