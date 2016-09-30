@@ -1,6 +1,6 @@
 #ifdef HAVE_ZEROMQ
 
-#define BOOST_TEST_DYN_LINK
+
 #define BOOST_TEST_MAIN
 
 #include "MetaObject/IMetaObject.hpp"
@@ -21,9 +21,12 @@
 #include "IObjectFactorySystem.h"
 
 
-#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE "parameter"
+#ifdef _MSC_VER
+#include <boost/test/unit_test.hpp>
+#else
+#define BOOST_TEST_MODULE __FILE__
 #include <boost/test/included/unit_test.hpp>
+#endif
 #include <iostream>
 #include "zmq.hpp"
 #include "zmq_utils.h"

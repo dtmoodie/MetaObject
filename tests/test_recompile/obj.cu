@@ -1,4 +1,5 @@
 #ifdef HAVE_CUDA
+
 #include "obj.h"
 #include <thrust/device_vector.h>
 #include <thrust/fill.h>

@@ -1,4 +1,3 @@
-#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
 #include "MetaObject/Parameters/MetaParameter.hpp"
 #include "MetaObject/IMetaObject.hpp"
@@ -21,9 +20,13 @@
 #include "cereal/archives/portable_binary.hpp"
 #include <fstream>
 
-#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE "parameter"
+#ifdef _MSC_VER
+#include <boost/test/unit_test.hpp>
+#else
+#define BOOST_TEST_MODULE __FILE__
 #include <boost/test/included/unit_test.hpp>
+#endif
+
 #include <boost/thread.hpp>
 #include <iostream>
 

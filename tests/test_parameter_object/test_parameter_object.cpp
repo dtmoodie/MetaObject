@@ -1,4 +1,3 @@
-#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
 #include "MetaObject/Parameters/MetaParameter.hpp"
 #include "MetaObject/Parameters/Buffers/CircularBuffer.hpp"
@@ -19,10 +18,13 @@
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
 
-
-#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE "parameter"
+#ifdef _MSC_VER
+#include <boost/test/unit_test.hpp>
+#else
+#define BOOST_TEST_MODULE "parameter_object"
 #include <boost/test/included/unit_test.hpp>
+#endif
+
 #include <boost/thread.hpp>
 #include <iostream>
 #include <fstream>

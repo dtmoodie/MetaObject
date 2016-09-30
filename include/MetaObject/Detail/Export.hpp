@@ -1,4 +1,5 @@
-#pragma once
+#ifndef META_OBJECT_EXPORT
+#define META_OBJECT_EXPORT
 
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
@@ -35,4 +36,6 @@
       RUNTIME_COMPILER_LINKLIBRARY("-lRuntimeObjectSystemd")
     #endif
   #endif
+#endif
+
 #endif
