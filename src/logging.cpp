@@ -301,7 +301,11 @@ std::ostringstream &mo::ThrowOnDestroy::stream()
 { 
     return log_stream_; 
 }
-mo::ThrowOnDestroy::~ThrowOnDestroy() 
+#if WIN32
+mo::ThrowOnDestroy::~ThrowOnDestroy()
+#else
+mo::ThrowOnDestroy::~ThrowOnDestroy() noexcept(false)
+#endif
 {
     std::stringstream ss;
     LOG(debug) << "Exception at" << mo::print_callstack(0, true, ss) << log_stream_.str();

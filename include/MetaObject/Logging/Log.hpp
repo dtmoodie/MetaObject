@@ -115,7 +115,11 @@ namespace mo
     public:
         ThrowOnDestroy(const char* function, const char* file, int line);
         std::ostringstream &stream();
+#if WIN32
         ~ThrowOnDestroy() throw();
+#else
+        ~ThrowOnDestroy() noexcept(false);
+#endif
 
     protected:
         std::ostringstream log_stream_;
@@ -125,7 +129,11 @@ namespace mo
     {
     public:
         ThrowOnDestroy_trace(const char* function, const char* file, int line);
+#if WIN32
         ~ThrowOnDestroy_trace() throw();
+#else
+        ~ThrowOnDestroy_trace() noexcept(false);
+#endif
     };
     
     class MO_EXPORTS ThrowOnDestroy_debug: public ThrowOnDestroy 
@@ -138,14 +146,22 @@ namespace mo
     {
     public:
         ThrowOnDestroy_info(const char* function, const char* file, int line);
+#if WIN32
         ~ThrowOnDestroy_info() throw();
+#else
+        ~ThrowOnDestroy_info() noexcept(false);
+#endif
     };
 
     class MO_EXPORTS ThrowOnDestroy_warning: public ThrowOnDestroy
     {
     public:
         ThrowOnDestroy_warning(const char* function, const char* file, int line);
+#if WIN32
         ~ThrowOnDestroy_warning() throw();
+#else
+        ~ThrowOnDestroy_warning() noexcept(false);
+#endif
     };
 
     class MO_EXPORTS EatMessage
