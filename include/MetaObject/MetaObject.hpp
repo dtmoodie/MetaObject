@@ -7,4 +7,5 @@
 #include "Parameters/TypedInputParameter.hpp"
 #include "Parameters/ParameterMacros.hpp"
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
+#include "MetaObject/Signals/detail/SlotMacros.hpp"
 #include "MetaObject/Logging/Log.hpp"

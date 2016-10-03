@@ -9,7 +9,8 @@ namespace mo
         Output_e = 2,
         State_e = 4,
         Control_e = 8,
-        Buffer_e = 16
+        Buffer_e = 16,
+        Optional_e = 32
     };
     enum ParameterTypeFlags
     {

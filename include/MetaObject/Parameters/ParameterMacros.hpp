@@ -48,6 +48,19 @@ void init_parameters_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
     init_parameters_(firstInit, --dummy); \
 }
 
+#define OPTIONAL_INPUT(type, name, init) \
+type* name = init; \
+mo::TypedInputParameterPtr<type> name##_param; \
+void init_parameters_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
+{ \
+    name##_param.SetMtx(_mtx); \
+    name##_param.SetUserDataPtr(&name); \
+    name##_param.SetName(#name); \
+    name##_param.AppendFlags(mo::Optional_e); \
+    AddParameter(&name##_param); \
+    init_parameters_(firstInit, --dummy); \
+}
+
 
 #define PROPERTY(type, name, init) \
 type name = init; \
