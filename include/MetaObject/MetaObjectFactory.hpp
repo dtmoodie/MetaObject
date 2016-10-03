@@ -1,6 +1,7 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
 #include "ObjectInterfacePerModule.h"
+#include <functional>
 struct SystemTable;
 struct IRuntimeObjectSystem;
 struct IObjectInfo;
@@ -43,6 +44,7 @@ namespace mo
 		bool IsCurrentlyCompiling();
 		bool IsCompileComplete();
 		bool SwapObjects();
+        void SetCompileCallback(std::function<void(const std::string, int)>& f);
 
     private:
         MetaObjectFactory(SystemTable* system_table);

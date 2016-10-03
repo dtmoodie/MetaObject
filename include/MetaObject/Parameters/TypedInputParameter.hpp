@@ -22,7 +22,7 @@ https://github.com/dtmoodie/parameters
 
 namespace mo
 {
-    template<typename T> class TypedInputParameterCopy : public ITypedInputParameter<T>, public InputParameter
+    template<typename T> class TypedInputParameterCopy : public ITypedInputParameter<T>
     {
     public:
         TypedInputParameterCopy(const std::string& name, T* userVar_,

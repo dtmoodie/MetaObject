@@ -8,6 +8,8 @@ namespace cereal
     class BinaryOutputArchive;
     class XMLOutputArchive;
     class XMLInputArchive;
+    class JSONOutputArchive;
+    class JSONInputArchive;
 }
 
 namespace mo
@@ -24,6 +26,10 @@ namespace mo
         typedef std::function<bool(IParameter*, cereal::BinaryInputArchive&)> DeSerializeBinary_f;
         typedef std::function<bool(IParameter*, cereal::XMLOutputArchive&)> SerializeXml_f;
         typedef std::function<bool(IParameter*, cereal::XMLInputArchive&)> DeSerializeXml_f;
+        typedef std::function<bool(IParameter*, cereal::JSONOutputArchive&)> SerializeJson_f;
+        typedef std::function<bool(IParameter*, cereal::JSONInputArchive&)> DeSerializeJson_f;
+        typedef std::function<bool(IParameter*, std::stringstream&)> SerializeText_f;
+        typedef std::function<bool(IParameter*, std::stringstream&)> DeSerializeText_f;
 
         SerializeBinary_f GetBinarySerializationFunction(const TypeInfo& type);
         DeSerializeBinary_f GetBinaryDeSerializationFunction(const TypeInfo& type);
@@ -31,13 +37,19 @@ namespace mo
         SerializeXml_f GetXmlSerializationFunction(const TypeInfo& type);
         DeSerializeXml_f GetXmlDeSerializationFunction(const TypeInfo& type);
 
-        void SetBinarySerializationFunction(const TypeInfo& type, SerializeBinary_f f);
-        void SetBinaryDeSerializationFunction(const TypeInfo& type, DeSerializeBinary_f f);
+        SerializeJson_f GetJsonSerializationFunction(const TypeInfo& type);
+        DeSerializeJson_f GetJsonDeSerializationFunction(const TypeInfo& type);
 
-        void SetXmlSerializationFunction(const TypeInfo& type, SerializeXml_f f);
-        void SetXmlDeSerializationFunction(const TypeInfo& type, DeSerializeXml_f f);
+        SerializeText_f GetTextSerializationFunction(const TypeInfo& type);
+        DeSerializeText_f GetTextDeSerializationFunction(const TypeInfo& type);
 
-
+        void SetBinarySerializationFunctions(const TypeInfo& type, SerializeBinary_f serialize, DeSerializeBinary_f deserialize);
+        
+        void SetXmlSerializationFunctions(const TypeInfo& type, SerializeXml_f serialize, DeSerializeXml_f deserialize);
+        
+        void SetJsonSerializationFunctions(const TypeInfo& type, SerializeJson_f serialize, DeSerializeJson_f deserialize);
+        
+        void SetTextSerializationFunctions(const TypeInfo& type, SerializeText_f serialize, DeSerializeText_f deserialize);
     private:
         SerializationFunctionRegistry();
         ~SerializationFunctionRegistry();

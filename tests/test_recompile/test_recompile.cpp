@@ -8,7 +8,11 @@
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE "MetaObject"
+#if WIN32
 #include <boost/test/unit_test.hpp>
+#else
+#include <boost/test/included/unit_test.hpp>
+#endif
 #include <boost/filesystem.hpp>
 #include <iostream>
 

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef META_OBJECT_EXPORT
+#define META_OBJECT_EXPORT
 
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
@@ -25,14 +26,16 @@
       RUNTIME_COMPILER_LINKLIBRARY("RuntimeObjectSystem.lib")
     #endif
   #else // Unix
-    #ifdef _DEBUG
-      RUNTIME_COMPILER_LINKLIBRARY("-lMetaObjectd")
-      RUNTIME_COMPILER_LINKLIBRARY("-lRuntimeCompilerd")
-      RUNTIME_COMPILER_LINKLIBRARY("-lRuntimeObjectSystemd")
-    #else
+    #ifdef NDEBUG
       RUNTIME_COMPILER_LINKLIBRARY("-lMetaObject")
       RUNTIME_COMPILER_LINKLIBRARY("-lRuntimeCompiler")
       RUNTIME_COMPILER_LINKLIBRARY("-lRuntimeObjectSystem")
+    #else
+      RUNTIME_COMPILER_LINKLIBRARY("-lMetaObjectd")
+      RUNTIME_COMPILER_LINKLIBRARY("-lRuntimeCompilerd")
+      RUNTIME_COMPILER_LINKLIBRARY("-lRuntimeObjectSystemd")
     #endif
   #endif
+#endif
+
 #endif

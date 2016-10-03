@@ -325,3 +325,7 @@ bool MetaObjectFactory::SwapObjects()
 	}
 	return false;
 }
+void MetaObjectFactory::SetCompileCallback(std::function<void(const std::string, int)>& f)
+{
+       
+}

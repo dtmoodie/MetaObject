@@ -1,4 +1,4 @@
-#include "MetaObject/Parameters/IO/Policy.hpp"
+#include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
 #include "MetaObject/Detail/TypeInfo.h"
 
 #include <map>
@@ -6,11 +6,10 @@
 using namespace mo;
 struct SerializationFunctionRegistry::impl
 {
-    std::map<TypeInfo, SerializeBinary_f > _binary_serialize_map;
-    std::map<TypeInfo, DeSerializeBinary_f > _binary_deserialize_map;
-
-    std::map<TypeInfo, SerializeXml_f > _xml_serialize_map;
-    std::map<TypeInfo, DeSerializeXml_f > _xml_deserialize_map;
+    std::map<TypeInfo, std::pair<SerializeBinary_f, DeSerializeBinary_f >> _binary_map;
+    std::map<TypeInfo, std::pair<SerializeXml_f, DeSerializeXml_f >> _xml_map;
+    std::map<TypeInfo, std::pair<SerializeJson_f, DeSerializeJson_f >> _json_map;
+    std::map<TypeInfo, std::pair<SerializeText_f, DeSerializeText_f >> _text_map;
 };
 
 SerializationFunctionRegistry::SerializationFunctionRegistry()
@@ -31,60 +30,100 @@ SerializationFunctionRegistry* SerializationFunctionRegistry::Instance()
 
 SerializationFunctionRegistry::SerializeBinary_f SerializationFunctionRegistry::GetBinarySerializationFunction(const TypeInfo& type)
 {
-    auto itr = _pimpl->_binary_serialize_map.find(type);
-    if(itr != _pimpl->_binary_serialize_map.end())
+    auto itr = _pimpl->_binary_map.find(type);
+    if(itr != _pimpl->_binary_map.end())
     {
-        return itr->second;
+        return itr->second.first;
     }
     return SerializeBinary_f();
 }
 
 SerializationFunctionRegistry::DeSerializeBinary_f SerializationFunctionRegistry::GetBinaryDeSerializationFunction(const TypeInfo& type)
 {
-    auto itr = _pimpl->_binary_deserialize_map.find(type);
-    if (itr != _pimpl->_binary_deserialize_map.end())
+    auto itr = _pimpl->_binary_map.find(type);
+    if (itr != _pimpl->_binary_map.end())
     {
-        return itr->second;
+        return itr->second.second;
     }
     return DeSerializeBinary_f ();
 }
 
 SerializationFunctionRegistry::SerializeXml_f SerializationFunctionRegistry::GetXmlSerializationFunction(const TypeInfo& type)
 {
-    auto itr = _pimpl->_xml_serialize_map.find(type);
-    if (itr != _pimpl->_xml_serialize_map.end())
+    auto itr = _pimpl->_xml_map.find(type);
+    if (itr != _pimpl->_xml_map.end())
     {
-        return itr->second;
+        return itr->second.first;
     }
     return SerializeXml_f();
 }
 
 SerializationFunctionRegistry::DeSerializeXml_f SerializationFunctionRegistry::GetXmlDeSerializationFunction(const TypeInfo& type)
 {
-    auto itr = _pimpl->_xml_deserialize_map.find(type);
-    if (itr != _pimpl->_xml_deserialize_map.end())
+    auto itr = _pimpl->_xml_map.find(type);
+    if (itr != _pimpl->_xml_map.end())
     {
-        return itr->second;
+        return itr->second.second;
     }
     return DeSerializeXml_f();
 }
 
-void SerializationFunctionRegistry::SetBinarySerializationFunction(const TypeInfo& type, SerializeBinary_f f)
+SerializationFunctionRegistry::SerializeJson_f SerializationFunctionRegistry::GetJsonSerializationFunction(const TypeInfo& type)
 {
-    _pimpl->_binary_serialize_map[type] = f;
+    auto itr = _pimpl->_json_map.find(type);
+    if (itr != _pimpl->_json_map.end())
+    {
+        return itr->second.first;
+    }
+    return SerializeJson_f();
+}
+SerializationFunctionRegistry::DeSerializeJson_f SerializationFunctionRegistry::GetJsonDeSerializationFunction(const TypeInfo& type)
+{
+    auto itr = _pimpl->_json_map.find(type);
+    if (itr != _pimpl->_json_map.end())
+    {
+        return itr->second.second;
+    }
+    return DeSerializeJson_f();
 }
 
-void SerializationFunctionRegistry::SetBinaryDeSerializationFunction(const TypeInfo& type, DeSerializeBinary_f f)
+SerializationFunctionRegistry::SerializeText_f SerializationFunctionRegistry::GetTextSerializationFunction(const TypeInfo& type)
 {
-    _pimpl->_binary_deserialize_map[type] = f;
+    auto itr = _pimpl->_text_map.find(type);
+    if (itr != _pimpl->_text_map.end())
+    {
+        return itr->second.first;
+    }
+    return SerializeText_f();
 }
 
-void SerializationFunctionRegistry::SetXmlSerializationFunction(const TypeInfo& type, SerializeXml_f f)
+SerializationFunctionRegistry::DeSerializeText_f SerializationFunctionRegistry::GetTextDeSerializationFunction(const TypeInfo& type)
 {
-    _pimpl->_xml_serialize_map[type] = f;
+    auto itr = _pimpl->_text_map.find(type);
+    if (itr != _pimpl->_text_map.end())
+    {
+        return itr->second.second;
+    }
+    return DeSerializeText_f();
 }
 
-void SerializationFunctionRegistry::SetXmlDeSerializationFunction(const TypeInfo& type, DeSerializeXml_f f)
+
+void SerializationFunctionRegistry::SetBinarySerializationFunctions(const TypeInfo& type, SerializeBinary_f s, DeSerializeBinary_f l)
 {
-    _pimpl->_xml_deserialize_map[type] = f;
+    _pimpl->_binary_map[type] = std::make_pair(s, l);
+}
+
+void SerializationFunctionRegistry::SetXmlSerializationFunctions(const TypeInfo& type, SerializeXml_f s, DeSerializeXml_f l)
+{
+    _pimpl->_xml_map[type] = std::make_pair(s, l);
+}
+
+void SerializationFunctionRegistry::SetJsonSerializationFunctions(const TypeInfo& type, SerializeJson_f serialize, DeSerializeJson_f deserialize)
+{
+    _pimpl->_json_map[type] = std::make_pair(serialize, deserialize);
+}
+
+void SerializationFunctionRegistry::SetTextSerializationFunctions(const TypeInfo& type, SerializeText_f serialize, DeSerializeText_f deserialize)
+{
+    _pimpl->_text_map[type] = std::make_pair(serialize, deserialize);
 }

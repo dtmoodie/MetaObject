@@ -60,23 +60,6 @@ namespace mo
 	{
 		for (auto slot : _slots)
 		{
-			auto slot_ctx = slot->GetContext();
-			auto sig_ctx = this->sig->GetContext();
-			if (slot_ctx && sig_ctx)
-			{
-				if (slot_ctx->process_id == sig_ctx->process_id)
-				{
-					if (slot_ctx->thread_id != sig_ctx->thread_id)
-					{
-                        ThreadSpecificQueue::Push(
-                            std::bind([slot](T... args)
-                            {
-                                (*slot)(args...);
-                            }, args...), slot_ctx->thread_id, slot);
-                        continue;
-					}
-				}
-			}
 			(*slot)(args...);
 		}
 	}

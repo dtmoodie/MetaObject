@@ -1,4 +1,4 @@
-#define BOOST_TEST_DYN_LINK
+
 #define BOOST_TEST_MAIN
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
 #include "MetaObject/Signals/detail/SlotMacros.hpp"
@@ -16,10 +16,13 @@
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
 
-
-#define BOOST_TEST_DYN_LINK
+#ifdef _MSC_VER
+#include <boost/test/unit_test.hpp>
+#else
 #define BOOST_TEST_MODULE "MetaObject"
 #include <boost/test/included/unit_test.hpp>
+#endif
+
 #include <iostream>
 
 using namespace mo;

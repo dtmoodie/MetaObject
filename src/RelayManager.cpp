@@ -144,6 +144,19 @@ int RelayManager::ConnectSlots(IMetaObject* obj)
 	return count;
 }
 
+std::vector<std::shared_ptr<ISignalRelay>> RelayManager::GetRelays(const std::string& name)
+{
+    std::vector<std::shared_ptr<ISignalRelay>> relays;
+    for(auto& types : _pimpl->relays)
+    {
+        auto itr = types.second.find(name);
+        if(itr != types.second.end())
+        {
+            relays.push_back(itr->second);
+        }
+    }
+    return relays;
+}
 std::shared_ptr<ISignalRelay>& RelayManager::GetRelay(const TypeInfo& type, const std::string& name)
 {
 	return _pimpl->relays[type][name];

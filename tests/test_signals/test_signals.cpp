@@ -1,4 +1,3 @@
-#define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
 
 #include "MetaObject/IMetaObject.hpp"
@@ -15,10 +14,13 @@
 #include "IObjectFactorySystem.h"
 
 
-#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE "signals"
-#include <boost/thread.hpp>
+#ifdef _MSC_VER
+#include <boost/test/unit_test.hpp>
+#else
+#define BOOST_TEST_MODULE __FILE__
 #include <boost/test/included/unit_test.hpp>
+#endif
+#include <boost/thread.hpp>
 #include <iostream>
 
 using namespace mo;

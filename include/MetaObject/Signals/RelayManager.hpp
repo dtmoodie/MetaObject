@@ -14,7 +14,7 @@ namespace mo
 	class Connection;
 	template<typename T> class TypedSignal;
 	template<typename T> class TypedSlot;
-	template<typename T> class TypedRelay;
+	template<typename T> class TypedSignalRelay;
     
     // Manages shared ownership of signals so that multiple senders and receivers can exist, also allows for encapsulation of groups of signals based on subsystem
     class MO_EXPORTS RelayManager
@@ -37,8 +37,16 @@ namespace mo
 		int  ConnectSlots(IMetaObject* obj, const std::string& name);
 		int  ConnectSlots(IMetaObject* obj, const TypeInfo& type);
 		int  ConnectSlots(IMetaObject* obj);
+
+        
+        std::vector<std::shared_ptr<ISignalRelay>> GetRelays(const std::string& name);
+        template<class Sig> std::shared_ptr<TypedSignalRelay<Sig>> GetRelay(const std::string& name)
+        {
+            return std::dynamic_pointer_cast<TypedSignalRelay<Sig>>(GetRelay(TypeInfo(typeid(Sig)), name));
+        }
     protected:
-		std::shared_ptr<ISignalRelay>& GetRelay(const TypeInfo& type, const std::string& name);
+        std::shared_ptr<ISignalRelay>& GetRelay(const TypeInfo& type, const std::string& name);
+        
         bool exists(const std::string& name, TypeInfo type);
     private:
         struct impl;
