@@ -73,7 +73,7 @@ namespace mo
         void onInputUpdate(Context* ctx, IParameter* param)
         {
             if(this->input && userVar)
-                this->input->GetData(*userVar, -1, GetContext());
+                this->input->GetData(*userVar, -1, this->GetContext());
             IParameter::OnUpdate(ctx);
         }
         void onInputDelete(IParameter* param)

@@ -23,6 +23,6 @@ bool throwing_function()
 
 BOOST_AUTO_TEST_CASE(signals)
 {
-    BOOST_REQUIRE_THROW(THROW(debug) << "test";, mo::ExceptionWithCallStack<std::string>);
+    BOOST_REQUIRE_THROW(THROW(debug) << "test", mo::ExceptionWithCallStack<std::string>);
     BOOST_REQUIRE_THROW(ASSERT_EQ(throwing_function(), true), mo::ExceptionWithCallStack<std::string>);
 }
