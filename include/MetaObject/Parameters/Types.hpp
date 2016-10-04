@@ -23,7 +23,7 @@ https://github.com/dtmoodie/parameters
 #include <boost/filesystem/path.hpp>
 
 
-#define ENUM(value) value, #value
+
 namespace mo
 {
     struct ReadFile : public boost::filesystem::path
