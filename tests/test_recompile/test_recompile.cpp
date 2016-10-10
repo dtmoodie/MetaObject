@@ -68,7 +68,8 @@ BOOST_AUTO_TEST_CASE(test_obj_swap)
     BOOST_REQUIRE(!typed_ptr.empty());
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
     BOOST_REQUIRE(!typed_ptr.empty());
-    auto signals = typed_ptr->GetSignalInfo();
+    std::vector<SignalInfo*> signals;
+    typed_ptr->GetSignalInfo(signals);
     BOOST_REQUIRE_EQUAL(signals.size(), 2);
 }
 

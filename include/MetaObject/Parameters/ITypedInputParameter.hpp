@@ -25,30 +25,16 @@ namespace mo
         T GetData(long long ts = -1, Context* ctx = nullptr);
 
 
-        ITypedParameter<T>* UpdateData(T& data_, long long ts, Context* ctx)
-        { 
-            if(ts != -1)
-                _timestamp = ts;
-            return this;
-        }
-        ITypedParameter<T>* UpdateData(const T& data_, long long ts, Context* ctx)
-        { 
-            if(ts != -1)
-                _timestamp = ts;
-            return this;
-        }
-        ITypedParameter<T>* UpdateData(T* data_, long long ts, Context* ctx)
-        { 
-            if(ts != -1)
-                _timestamp = ts;
-            return this;
-        }
+        ITypedParameter<T>* UpdateData(T& data_, long long ts, Context* ctx);
+        ITypedParameter<T>* UpdateData(const T& data_, long long ts, Context* ctx);
+        ITypedParameter<T>* UpdateData(T* data_, long long ts, Context* ctx);
 
     protected:
         virtual void onInputDelete(IParameter const* param);
         virtual void onInputUpdate(Context* ctx, IParameter* param);
         std::shared_ptr<ITypedParameter<T>> shared_input;
         ITypedParameter<T>* input;
+
     private:
 		TypedSlot<void(Context*, IParameter*)> update_slot;
 		TypedSlot<void(IParameter const*)> delete_slot;

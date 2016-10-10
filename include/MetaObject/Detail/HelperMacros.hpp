@@ -19,7 +19,7 @@
 #define STRINGIFY(...)  BOOST_PP_OVERLOAD(STRINGIFY_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY()
 #endif
 
-#define ENUM(...) {STRINGIFY(__VA_ARGS__)}, {__VA_ARGS__}
+#define ENUM_EXPAND(...) {STRINGIFY(__VA_ARGS__)}, {__VA_ARGS__}
 
 #define DEFINE_HAS_STATIC_FUNCTION(traitsName, funcName, signature)            \
     template <typename U>                                                      \

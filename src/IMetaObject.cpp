@@ -13,6 +13,7 @@
 #include "MetaObject/Parameters/InputParameter.hpp"
 #include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
 #include "MetaObject/Parameters/InputParameter.hpp"
+#include "MetaObject/Parameters/VariableManager.h"
 
 #include "ISimpleSerializer.h"
 #include "IObjectState.hpp"
@@ -125,7 +126,39 @@ int IMetaObject::SetupSignals(RelayManager* manager)
 
 int IMetaObject::SetupVariableManager(IVariableManager* manager)
 {
-    return 0;
+    if(_pimpl->_variable_manager != nullptr)
+    {
+        RemoveVariableManager(_pimpl->_variable_manager);
+    }
+    _pimpl->_variable_manager = manager;
+    int count = 0;
+    for(auto& param : _pimpl->_implicit_parameters)
+    {
+        manager->AddParameter(param.second.get());
+        ++count;
+    }
+    for(auto& param : _pimpl->_parameters)
+    {
+        manager->AddParameter(param.second);
+        ++count;
+    }
+    return count;
+}
+
+int IMetaObject::RemoveVariableManager(IVariableManager* mgr)
+{
+    int count = 0;
+    for (auto& param : _pimpl->_implicit_parameters)
+    {
+        mgr->RemoveParameter(param.second.get());
+        ++count;
+    }
+    for (auto& param : _pimpl->_parameters)
+    {
+        mgr->RemoveParameter(param.second);
+        ++count;
+    }
+    return count;
 }
 
 void IMetaObject::Serialize(ISimpleSerializer *pSerializer)
@@ -549,29 +582,52 @@ void IMetaObject::SetParameterRoot(const std::string& root)
 
 std::vector<ParameterInfo*> IMetaObject::GetParameterInfo(const std::string& name) const
 {
-    auto output = GetParameterInfo();
+    std::vector<ParameterInfo*> output;
+    GetParameterInfo(output);
 
     return output;
 }
+
+std::vector<ParameterInfo*> IMetaObject::GetParameterInfo() const
+{
+    std::vector<ParameterInfo*> output;
+    GetParameterInfo(output);
+
+    return output;
+}
+
 std::vector<SignalInfo*>    IMetaObject::GetSignalInfo(const std::string& name) const
 {
-    auto output = GetSignalInfo();
+    std::vector<SignalInfo*> info;
+    GetSignalInfo(info);
 
+    return info;
+}
+std::vector<SignalInfo*>    IMetaObject::GetSignalInfo() const
+{
+    std::vector<SignalInfo*> info;
+    GetSignalInfo(info);
+    return info;
+}
+std::vector<SlotInfo*> IMetaObject::GetSlotInfo() const
+{
+    std::vector<SlotInfo*> output;
+    GetSlotInfo(output);
     return output;
 }
 std::vector<SlotInfo*> IMetaObject::GetSlotInfo(const std::string& name) const
 {
-    auto tmp = GetSlotInfo();
+    std::vector<SlotInfo*> tmp;
+    GetSlotInfo(tmp);
     std::vector<SlotInfo*> output;
-    for(auto& itr : tmp)
+    for (auto& itr : tmp)
     {
-        if(itr->name == name)
+        if (itr->name.find(name) != std::string::npos)
             output.push_back(itr);
     }
-    
+
     return output;
 }
-
 
 std::vector<std::pair<ISlot*, std::string>>  IMetaObject::GetSlots() const
 {

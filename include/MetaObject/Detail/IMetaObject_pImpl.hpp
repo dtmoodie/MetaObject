@@ -39,6 +39,7 @@ namespace mo
     {
         impl()
         {
+            _variable_manager = nullptr;
             _signals["parameter_updated"][_sig_parameter_updated.GetSignature()] = &_sig_parameter_updated;
             _signals["parameter_added"][_sig_parameter_updated.GetSignature()] = &_sig_parameter_added;
         }
@@ -55,5 +56,6 @@ namespace mo
         TypedSignal<void(IMetaObject*, IParameter*)> _sig_parameter_added;
         std::map<std::string, InputParameter*>       _input_parameters;
         TypedSlot<void(Context* ctx, IParameter*)>   _slot_parameter_updated;
+        IVariableManager*                            _variable_manager;
     };
 }

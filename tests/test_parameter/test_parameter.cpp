@@ -11,6 +11,7 @@
 #include "MetaObject/Parameters//ParameterMacros.hpp"
 #include "MetaObject/Parameters/TypedParameterPtr.hpp"
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
+#include "MetaObject/Parameters/Types.hpp"
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
 
@@ -61,8 +62,13 @@ BOOST_AUTO_TEST_CASE(wrapped_parameter)
 	param.RegisterUpdateNotifier(&slot);
 	param.UpdateData(5);
 	BOOST_REQUIRE_EQUAL(update_handler_called, true);
+}
 
-	
+
+BOOST_AUTO_TEST_CASE(enum_params)
+{
+    mo::EnumParameter enum_param = {{"test", 5}};
+    
 }
 
 BOOST_AUTO_TEST_CASE(input_parameter)

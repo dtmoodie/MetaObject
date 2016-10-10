@@ -23,7 +23,6 @@ https://github.com/dtmoodie/parameters
 #include <boost/filesystem/path.hpp>
 
 
-#define ENUM(value) value, #value
 namespace mo
 {
     struct ReadFile : public boost::filesystem::path
@@ -46,10 +45,33 @@ namespace mo
     class EnumParameter
     {
     public:
+        EnumParameter(const EnumParameter&) = default;
+        EnumParameter(const std::initializer_list<std::pair<const char*, int>>& values)
+        {
+            enumerations.clear();
+            this->values.clear();
+            for (auto itr = values.begin(); itr != values.end(); ++itr)
+            {
+                enumerations.emplace_back(itr->first);
+                this->values.emplace_back(itr->second);
+            }
+        }
         EnumParameter()
         {
             currentSelection = 0;
         }
+        EnumParameter& operator=(const std::initializer_list<std::pair<const char*, int>>& values)
+        {
+            enumerations.clear();
+            this->values.clear();
+            for(auto itr = values.begin(); itr != values.end(); ++itr)
+            {
+                enumerations.emplace_back(itr->first);
+                this->values.emplace_back(itr->second);
+            }
+            return *this;
+        }
+
 
         void SetValue(std::initializer_list<char*> string, std::initializer_list<int> values)
         {

@@ -70,6 +70,7 @@ namespace mo
         Context*      GetContext() const;
         virtual int   SetupSignals(RelayManager* mgr);
         virtual int   SetupVariableManager(IVariableManager* mgr);
+        virtual int   RemoveVariableManager(IVariableManager* mgr);
         virtual void  BindSlots(bool firstInit) = 0;
         virtual void  Init(bool firstInit);
         virtual void  InitParameters(bool firstInit) = 0;
@@ -82,14 +83,17 @@ namespace mo
         // ------- Introspection
         // Get vector of info objects for each corresponding introspection class
         // optional name parameter can be used to get information for corresponding exact matches
-        virtual std::vector<ParameterInfo*> GetParameterInfo() const = 0;
-        virtual std::vector<ParameterInfo*> GetParameterInfo(const std::string& name) const;
+        virtual void                        GetParameterInfo(std::vector<ParameterInfo*>& info) const = 0;
+                std::vector<ParameterInfo*> GetParameterInfo(const std::string& name_filter) const;
+                std::vector<ParameterInfo*> GetParameterInfo() const;
 
-        virtual std::vector<SignalInfo*>    GetSignalInfo() const = 0;
-        virtual std::vector<SignalInfo*>    GetSignalInfo(const std::string& name) const;
+        virtual void                        GetSignalInfo(std::vector<SignalInfo*>& info) const = 0;
+                std::vector<SignalInfo*>    GetSignalInfo(const std::string& name_filter) const;
+                std::vector<SignalInfo*>    GetSignalInfo() const;
         
-        virtual std::vector<SlotInfo*>      GetSlotInfo() const = 0;
-        virtual std::vector<SlotInfo*>      GetSlotInfo(const std::string& name) const;
+        virtual void                        GetSlotInfo(std::vector<SlotInfo*>& info) const = 0;
+                std::vector<SlotInfo*>      GetSlotInfo(const std::string& name_filter) const;
+                std::vector<SlotInfo*>      GetSlotInfo() const;
 
         // -------- Signals / slots
         // If this class emits a signal by the given name, then the input sig will be added to the list of signals
@@ -176,5 +180,6 @@ namespace mo
 		Context*        _ctx;
 		RelayManager*  _sig_manager;
         boost::recursive_mutex* _mtx;
+
     };
 }
