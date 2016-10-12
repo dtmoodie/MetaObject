@@ -151,10 +151,24 @@ BOOST_AUTO_TEST_CASE(test_meta_object_dynamic_access)
 	auto constructor = MetaObjectFactory::Instance()->GetConstructor("test_meta_object_signals");
 	auto obj = constructor->Construct();
 	auto meta_obj = static_cast<IMetaObject*>(obj);
+    meta_obj->Init(true);
 	meta_obj->SetupSignals(&mgr);
-	meta_obj->Init(true);
+	
 	auto signals_ = meta_obj->GetSignals();
 	BOOST_REQUIRE_EQUAL(signals_.size(), 4);
+    int input_parameter = 0;
+    int call_value = 5;
+    test_meta_object_signals* typed = dynamic_cast<test_meta_object_signals*>(meta_obj);
+    std::shared_ptr<mo::ISlot> slot(new mo::TypedSlot<void(int)>(
+        std::bind([&input_parameter](int value)
+    {
+        input_parameter += value;
+    }, std::placeholders::_1)));
+    auto connection = mgr.Connect(slot.get(), "test_int");
+    typed->sig_test_int(call_value);
+    BOOST_REQUIRE_EQUAL(input_parameter, 5);
+    typed->sig_test_int(call_value);
+    BOOST_REQUIRE_EQUAL(input_parameter, 10);
 	delete obj;
 }
 

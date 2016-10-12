@@ -6,7 +6,7 @@
 #include "MetaObject/Signals/ISlot.hpp"
 #include "MetaObject/Signals/SignalInfo.hpp"
 #include "MetaObject/Signals/SlotInfo.hpp"
-
+#include "MetaObject/Signals/RelayManager.hpp"
 #include "MetaObject/Detail/IMetaObject_pImpl.hpp"
 
 #include "MetaObject/Parameters/IParameter.hpp"
@@ -121,7 +121,35 @@ void IMetaObject::Init(bool firstInit)
 
 int IMetaObject::SetupSignals(RelayManager* manager)
 {
-    return 0;
+    _sig_manager = manager;
+    int count = 0;
+    for(auto& slots : _pimpl->_slots)
+    {
+        for(auto& slot : slots.second)
+        {
+            ConnectionInfo info;
+            info.connection = manager->Connect(slot.second, slots.first, this);
+            info.slot_name = slots.first;
+            info.signature = slot.first;
+            _pimpl->_connections.push_back(info);
+            ++count;
+        }
+    }
+
+    for(auto& signals : _pimpl->_signals)
+    {
+        for(auto& signal : signals.second)
+        {
+            auto connection = manager->Connect(signal.second, signals.first, this);
+            ConnectionInfo info;
+            info.signal_name = signals.first;
+            info.signature = signal.first;
+            _pimpl->_connections.push_back(info);
+            ++count;
+        }
+    }
+
+    return count;
 }
 
 int IMetaObject::SetupVariableManager(IVariableManager* manager)

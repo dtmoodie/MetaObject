@@ -1,16 +1,16 @@
 #pragma once
 #include <cstdint>
-
+#include <boost/preprocessor.hpp>
 
 #define COMBINE1(X,Y) X##Y  // helper macro
 #define COMBINE(X,Y) COMBINE1(X,Y)
 
-#define STRINGIFY_1(X1) #X1
-#define STRINGIFY_2(X1, X2) #X1, #X2
-#define STRINGIFY_3(X1, X2, X3) #X1, #X2, #X3
-#define STRINGIFY_4(X1, X2, X3, X4) #X1, #X2, #X3, #X4
-#define STRINGIFY_5(X1, X2, X3, X4, X5) #X1, #X2, #X3, #X4, #X5
-#define STRINGIFY_6(X1, X2, X3, X4, X5, X6) #X1, #X2, #X3, #X4, #X5, #X6
+#define STRINGIFY_1(X1)                         #X1
+#define STRINGIFY_2(X1, X2)                     #X1, #X2
+#define STRINGIFY_3(X1, X2, X3)                 #X1, #X2, #X3
+#define STRINGIFY_4(X1, X2, X3, X4)             #X1, #X2, #X3, #X4
+#define STRINGIFY_5(X1, X2, X3, X4, X5)         #X1, #X2, #X3, #X4, #X5
+#define STRINGIFY_6(X1, X2, X3, X4, X5, X6)     #X1, #X2, #X3, #X4, #X5, #X6
 #define STRINGIFY_7(X1, X2, X3, X4, X5, X6, X7) #X1, #X2, #X3, #X4, #X5, #X6, #X7
 
 #ifdef _MSC_VER

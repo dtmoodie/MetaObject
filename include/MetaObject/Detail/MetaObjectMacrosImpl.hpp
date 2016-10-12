@@ -221,11 +221,8 @@ static void _list_parent_slots(std::vector<mo::SlotInfo*>& info) \
 int _init_parent_signals(bool firstInit) \
 { \
     return PARENT1::InitSignals(firstInit); \
-} \
-int _parent_SetupSignals(mo::RelayManager* mgr) \
-{ \
-    return PARENT1::SetupSignals(mgr); \
 }
+
 
 #define _HANDLE_PARENT_2(PARENT1, PARENT2) \
 void _init_parent_params(bool firstInit) \
@@ -267,10 +264,7 @@ int _init_parent_signals(bool firstInit) \
 { \
     return PARENT1::InitSignals(firstInit) + PARENT2::InitSignals(firstInit);; \
 } \
-int _parent_SetupSignals(mo::RelayManager* mgr) \
-{ \
-    return PARENT1::SetupSignals(mgr) + PARENT2::SetupSignals(mgr); \
-}
+
 
 #ifdef _MSC_VER
 #define _HANDLE_PARENT(...)  BOOST_PP_CAT(BOOST_PP_OVERLOAD(_HANDLE_PARENT_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY())
@@ -287,8 +281,8 @@ void _bind_parent_slots(bool firstInit) { } \
 static void _list_parent_parameter_info(std::vector<mo::ParameterInfo*>& info) { } \
 static void _list_parent_signals(std::vector<mo::SignalInfo*>& info) { } \
 static void _list_parent_slots(std::vector<mo::SlotInfo*>& info) { } \
-int _init_parent_signals(bool firstInit) {     return 0; } \
-int _parent_SetupSignals(mo::RelayManager* mgr) {     return 0; }
+int _init_parent_signals(bool firstInit) {     return 0; }
+
 
 #define MO_BEGIN_1(CLASS_NAME, N_) \
 typedef CLASS_NAME THIS_CLASS;      \
@@ -313,12 +307,6 @@ PARAMETER_START(N_) \
 static rcc::shared_ptr<CLASS_NAME> Create();
 
 #define MO_END_(N) \
-virtual int SetupSignals(mo::RelayManager* manager) \
-{ \
-    int parent_signal_count = _parent_SetupSignals(manager); \
-    _sig_manager = manager; \
-    return parent_signal_count; \
-} \
 SIGNAL_INFO_END(N) \
 SLOT_INFO_END(N) \
 PARAMETER_INFO_END(N) \
