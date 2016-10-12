@@ -7,8 +7,6 @@ namespace mo
 	template<class Sig> class TypedSignal;
 	template<class Sig> class TypedSignalRelay{	};
 
-
-
 	template<class...T> class TypedSignalRelay<void(T...)>: public ISignalRelay
 	{
 	public:

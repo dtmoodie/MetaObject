@@ -49,7 +49,7 @@ namespace mo
 
         virtual bool Update(IParameter* other);
     private:
-        static const TypeInfo _type_info; // = TypeInfo(typeid(T));
+        static const TypeInfo _type_info;
     };
 }
 #include "detail/ITypedParameterImpl.hpp"

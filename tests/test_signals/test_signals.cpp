@@ -2,6 +2,7 @@
 
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Signals/TypedSignal.hpp"
+#include "MetaObject/Signals/RelayManager.hpp"
 #include "MetaObject/Detail/Counter.hpp"
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
@@ -70,4 +71,12 @@ BOOST_AUTO_TEST_CASE(threaded_signal)
     signal(&ctx, 5);
     thread.interrupt();
     thread.join();
+}
+
+BOOST_AUTO_TEST_CASE(relay_manager)
+{
+    mo::Context ctx;
+    mo::RelayManager manager;
+
+    
 }

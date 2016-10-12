@@ -4,6 +4,7 @@
 #include "MetaObject/MetaObjectPolicy.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
 #include "MetaObject/Detail/Counter.hpp"
+#include <boost/preprocessor.hpp>
 #include <shared_ptr.hpp>
 #include "ObjectInterfacePerModule.h"
 #include <type_traits>
@@ -30,16 +31,22 @@ static void list_signal_info_(std::vector<mo::SignalInfo*>& info, mo::_counter_<
 } 
 
 #define SIGNAL_INFO_END(N) \
+static void GetSignalInfoStatic(std::vector<mo::SignalInfo*> & info) \
+{ \
+    list_signal_info_(info, mo::_counter_<N-1>()); \
+    _list_parent_signals(info); \
+    std::sort(info.begin(), info.end()); \
+    info.erase(std::unique(info.begin(), info.end()), info.end()); \
+} \
 static std::vector<mo::SignalInfo*> GetSignalInfoStatic() \
 { \
     std::vector<mo::SignalInfo*> info; \
-    list_signal_info_(info, mo::_counter_<N-1>()); \
-    _list_parent_signals(info); \
+    GetSignalInfoStatic(info); \
     return info; \
 } \
-std::vector<mo::SignalInfo*> GetSignalInfo() const \
+void GetSignalInfo(std::vector<mo::SignalInfo*> & info) const \
 { \
-    return GetSignalInfoStatic(); \
+    GetSignalInfoStatic(info); \
 }
 
 // ---------------- SIGNALS ------------
@@ -72,16 +79,22 @@ static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N_> dumm
 }
 
 #define SLOT_INFO_END(N) \
+static void GetSlotInfoStatic(std::vector<mo::SlotInfo*> & info) \
+{ \
+    list_slots_(info, mo::_counter_<N-1>()); \
+    _list_parent_slots(info); \
+    std::sort(info.begin(), info.end()); \
+    info.erase(std::unique(info.begin(), info.end()), info.end()); \
+} \
 static std::vector<mo::SlotInfo*> GetSlotInfoStatic() \
 { \
     std::vector<mo::SlotInfo*> info; \
-    list_slots_(info, mo::_counter_<N-1>()); \
-    _list_parent_slots(info); \
+    GetSlotInfoStatic(info); \
     return info; \
 } \
-std::vector<mo::SlotInfo*> GetSlotInfo() const \
+void GetSlotInfo(std::vector<mo::SlotInfo*>& info) const \
 { \
-    return GetSlotInfoStatic(); \
+    GetSlotInfoStatic(info); \
 }
 
 
@@ -98,16 +111,22 @@ static void list_parameter_info_(std::vector<mo::ParameterInfo*>& info, mo::_cou
 
 
 #define PARAMETER_INFO_END(N) \
+static void GetParameterInfoStatic(std::vector<mo::ParameterInfo*>& info) \
+{ \
+    list_parameter_info_(info, mo::_counter_<N-1>()); \
+    _list_parent_parameter_info(info); \
+    std::sort(info.begin(), info.end()); \
+    info.erase(std::unique(info.begin(), info.end()), info.end()); \
+} \
 static std::vector<mo::ParameterInfo*> GetParameterInfoStatic() \
 { \
     std::vector<mo::ParameterInfo*> info; \
-    list_parameter_info_(info, mo::_counter_<N-1>()); \
-    _list_parent_parameter_info(info); \
+    GetParameterInfoStatic(info); \
     return info; \
 } \
-std::vector<mo::ParameterInfo*> GetParameterInfo() const \
+void GetParameterInfo(std::vector<mo::ParameterInfo*>& info) const \
 { \
-    return GetParameterInfoStatic(); \
+    GetParameterInfoStatic(info); \
 }
 
 // ---------------- PARAMETERS ------------
@@ -170,78 +189,100 @@ void BindSlots(bool firstInit) \
     bind_slots_(firstInit, mo::_counter_<N_-1>()); \
 }
 
-#define _HANDLE_PARENT(PARENT_CLASS) \
+#define _HANDLE_PARENT_1(PARENT1) \
 void _init_parent_params(bool firstInit) \
 { \
-    PARENT_CLASS::InitParameters(firstInit); \
+    PARENT1::InitParameters(firstInit); \
 } \
 void _serialize_parent_params(ISimpleSerializer* pSerializer) \
 { \
-    PARENT_CLASS::SerializeParameters(pSerializer); \
+    PARENT1::SerializeParameters(pSerializer); \
 } \
 template<class T> void _serialize_parent(T& ar) \
 { \
-    PARENT_CLASS::serialize(ar); \
+    PARENT1::serialize(ar); \
 } \
 void _bind_parent_slots(bool firstInit) \
 { \
-    PARENT_CLASS::BindSlots(firstInit); \
+    PARENT1::BindSlots(firstInit); \
 } \
 static void _list_parent_parameter_info(std::vector<mo::ParameterInfo*>& info) \
 { \
-    auto result = PARENT_CLASS::GetParameterInfoStatic(); \
-    info.insert(info.end(),result.begin(), result.end()); \
+    PARENT1::GetParameterInfoStatic(info); \
 } \
 static void _list_parent_signals(std::vector<mo::SignalInfo*>& info) \
 { \
-    auto result = PARENT_CLASS::GetSignalInfoStatic(); \
-    info.insert(info.end(), result.begin(), result.end()); \
+    PARENT1::GetSignalInfoStatic(info); \
 } \
 static void _list_parent_slots(std::vector<mo::SlotInfo*>& info) \
 { \
-    auto result = PARENT_CLASS::GetSlotInfoStatic(); \
-    info.insert(info.end(), result.begin(), result.end()); \
+    PARENT1::GetSlotInfoStatic(info); \
 } \
 int _init_parent_signals(bool firstInit) \
 { \
-    return PARENT_CLASS::InitSignals(firstInit); \
-} \
-int _parent_SetupSignals(mo::RelayManager* mgr) \
-{ \
-    return PARENT_CLASS::SetupSignals(mgr); \
+    return PARENT1::InitSignals(firstInit); \
 }
+
+
+#define _HANDLE_PARENT_2(PARENT1, PARENT2) \
+void _init_parent_params(bool firstInit) \
+{ \
+    PARENT1::InitParameters(firstInit); \
+    PARENT2::InitParameters(firstInit); \
+} \
+void _serialize_parent_params(ISimpleSerializer* pSerializer) \
+{ \
+    PARENT1::SerializeParameters(pSerializer); \
+    PARENT2::SerializeParameters(pSerializer); \
+} \
+template<class T> void _serialize_parent(T& ar) \
+{ \
+    PARENT1::serialize(ar); \
+    PARENT2::serialize(ar); \
+} \
+void _bind_parent_slots(bool firstInit) \
+{ \
+    PARENT1::BindSlots(firstInit); \
+    PARENT2::BindSlots(firstInit); \
+} \
+static void _list_parent_parameter_info(std::vector<mo::ParameterInfo*>& info) \
+{ \
+    PARENT1::GetParameterInfoStatic(info); \
+    PARENT2::GetParameterInfoStatic(info); \
+} \
+static void _list_parent_signals(std::vector<mo::SignalInfo*>& info) \
+{ \
+    PARENT1::GetSignalInfoStatic(info); \
+    PARENT2::GetSignalInfoStatic(info); \
+} \
+static void _list_parent_slots(std::vector<mo::SlotInfo*>& info) \
+{ \
+    PARENT1::GetSlotInfoStatic(info); \
+    PARENT2::GetSlotInfoStatic(info); \
+} \
+int _init_parent_signals(bool firstInit) \
+{ \
+    return PARENT1::InitSignals(firstInit) + PARENT2::InitSignals(firstInit);; \
+} \
+
+
+#ifdef _MSC_VER
+#define _HANDLE_PARENT(...)  BOOST_PP_CAT(BOOST_PP_OVERLOAD(_HANDLE_PARENT_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY())
+#else
+#define _HANDLE_PARENT(...)  BOOST_PP_OVERLOAD(_HANDLE_PARENT_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY()
+#endif
 
 
 #define _HANDLE_NO_PARENT \
-void _init_parent_params(bool firstInit) \
-{ \
-} \
-void _serialize_parent_params(ISimpleSerializer* pSerializer) \
-{ \
-} \
-template<class T> void _serialize_parent(T& ar) \
-{ \
-} \
-void _bind_parent_slots(bool firstInit) \
-{ \
-} \
-static void _list_parent_parameter_info(std::vector<mo::ParameterInfo*>& info) \
-{ \
-} \
-static void _list_parent_signals(std::vector<mo::SignalInfo*>& info) \
-{ \
-} \
-static void _list_parent_slots(std::vector<mo::SlotInfo*>& info) \
-{ \
-} \
-int _init_parent_signals(bool firstInit) \
-{ \
-    return 0; \
-} \
-int _parent_SetupSignals(mo::RelayManager* mgr) \
-{ \
-    return 0; \
-}
+void _init_parent_params(bool firstInit){ } \
+void _serialize_parent_params(ISimpleSerializer* pSerializer) { } \
+template<class T> void _serialize_parent(T& ar) { } \
+void _bind_parent_slots(bool firstInit) { } \
+static void _list_parent_parameter_info(std::vector<mo::ParameterInfo*>& info) { } \
+static void _list_parent_signals(std::vector<mo::SignalInfo*>& info) { } \
+static void _list_parent_slots(std::vector<mo::SlotInfo*>& info) { } \
+int _init_parent_signals(bool firstInit) {     return 0; }
+
 
 #define MO_BEGIN_1(CLASS_NAME, N_) \
 typedef CLASS_NAME THIS_CLASS;      \
@@ -254,10 +295,9 @@ SLOT_START(N_) \
 PARAMETER_START(N_) \
 static rcc::shared_ptr<CLASS_NAME> Create();
 
-#define MO_BEGIN_2(CLASS_NAME, PARENT, N_) \
+#define MO_DERIVE_(N_, CLASS_NAME, ...) \
 typedef CLASS_NAME THIS_CLASS; \
-typedef PARENT PARENT_CLASS;  \
-_HANDLE_PARENT(PARENT); \
+_HANDLE_PARENT(__VA_ARGS__); \
 SIGNAL_INFO_START(N_) \
 SIGNALS_START(N_) \
 SLOT_INFO_START(N_) \
@@ -267,12 +307,6 @@ PARAMETER_START(N_) \
 static rcc::shared_ptr<CLASS_NAME> Create();
 
 #define MO_END_(N) \
-virtual int SetupSignals(mo::RelayManager* manager) \
-{ \
-    int parent_signal_count = _parent_SetupSignals(manager); \
-    _sig_manager = manager; \
-    return parent_signal_count; \
-} \
 SIGNAL_INFO_END(N) \
 SLOT_INFO_END(N) \
 PARAMETER_INFO_END(N) \

@@ -1,16 +1,16 @@
 #pragma once
 #include <cstdint>
-
+#include <boost/preprocessor.hpp>
 
 #define COMBINE1(X,Y) X##Y  // helper macro
 #define COMBINE(X,Y) COMBINE1(X,Y)
 
-#define STRINGIFY_1(X1) #X1
-#define STRINGIFY_2(X1, X2) #X1, #X2
-#define STRINGIFY_3(X1, X2, X3) #X1, #X2, #X3
-#define STRINGIFY_4(X1, X2, X3, X4) #X1, #X2, #X3, #X4
-#define STRINGIFY_5(X1, X2, X3, X4, X5) #X1, #X2, #X3, #X4, #X5
-#define STRINGIFY_6(X1, X2, X3, X4, X5, X6) #X1, #X2, #X3, #X4, #X5, #X6
+#define STRINGIFY_1(X1)                         #X1
+#define STRINGIFY_2(X1, X2)                     #X1, #X2
+#define STRINGIFY_3(X1, X2, X3)                 #X1, #X2, #X3
+#define STRINGIFY_4(X1, X2, X3, X4)             #X1, #X2, #X3, #X4
+#define STRINGIFY_5(X1, X2, X3, X4, X5)         #X1, #X2, #X3, #X4, #X5
+#define STRINGIFY_6(X1, X2, X3, X4, X5, X6)     #X1, #X2, #X3, #X4, #X5, #X6
 #define STRINGIFY_7(X1, X2, X3, X4, X5, X6, X7) #X1, #X2, #X3, #X4, #X5, #X6, #X7
 
 #ifdef _MSC_VER
@@ -19,7 +19,7 @@
 #define STRINGIFY(...)  BOOST_PP_OVERLOAD(STRINGIFY_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY()
 #endif
 
-#define ENUM(...) {STRINGIFY(__VA_ARGS__)}, {__VA_ARGS__}
+#define ENUM_EXPAND(...) {STRINGIFY(__VA_ARGS__)}, {__VA_ARGS__}
 
 #define DEFINE_HAS_STATIC_FUNCTION(traitsName, funcName, signature)            \
     template <typename U>                                                      \

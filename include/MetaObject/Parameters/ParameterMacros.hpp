@@ -5,9 +5,6 @@
 #include "detail/ParameterMacrosImpl.hpp"
 #include "MetaObject/Detail/HelperMacros.hpp"
 
-
-
-
 #define PARAM(type, name, init) \
 mo::TypedParameterPtr<type> name##_param; \
 type name = init; \
@@ -35,15 +32,13 @@ void init_parameters_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
 }
 
 #define OPTIONAL_INPUT(type, name, init) \
-type* name = init; \
-mo::TypedInputParameterPtr<type> name##_param; \
+INPUT(type, name, init); \
+APPEND_FLAGS(name, mo::Optional_e);
+
+#define APPEND_FLAGS(name, flags) \
 void init_parameters_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
 { \
-    name##_param.SetMtx(_mtx); \
-    name##_param.SetUserDataPtr(&name); \
-    name##_param.SetName(#name); \
-    name##_param.AppendFlags(mo::Optional_e); \
-    AddParameter(&name##_param); \
+    name##_param.AppendFlags(flags); \
     init_parameters_(firstInit, --dummy); \
 }
 

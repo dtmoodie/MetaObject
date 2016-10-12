@@ -25,7 +25,7 @@ std::string IMetaObjectInfo::Print() const
     auto help = GetObjectHelp();
     if(help.size())
         ss << "    " << help << "\n";
-    auto params = ListParameters();
+    auto params = GetParameterInfo();
     if(params.size())
     {
         ss << "----------- Parameters ------------- \n";
@@ -47,7 +47,7 @@ std::string IMetaObjectInfo::Print() const
                 ss << "    " << param->description << "\n";
         }
     }
-    auto signals = ListSignalInfo();
+    auto signals = GetSignalInfo();
     if(signals.size())
     {
         ss << "\n----------- Signals ---------------- \n";
@@ -64,7 +64,7 @@ std::string IMetaObjectInfo::Print() const
         }
     }
     
-    auto slots = ListSlotInfo();
+    auto slots = GetSlotInfo();
     if(slots.size())
     {
         ss << "\n----------- Slots ---------------- \n";

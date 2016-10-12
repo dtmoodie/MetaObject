@@ -1,4 +1,5 @@
 #pragma once
+#include <MetaObject/Detail/HelperMacros.hpp>
 #include "MetaObject/Parameters/ParameterInfo.hpp"
 
 #include "ISimpleSerializer.h"
@@ -40,7 +41,7 @@ void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
 { \
     if(firstInit) \
     { \
-        name.SetValue(ENUM(__VA_ARGS__)); \
+        name.SetValue(ENUM_EXPAND(__VA_ARGS__)); \
     }\
     name##_param.SetMtx(_mtx); \
     name##_param.UpdatePtr(&name); \
@@ -115,6 +116,12 @@ void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
     AddParameter(&name##_param); \
     init_parameters_(firstInit, --dummy); \
 } \
+static void list_parameter_info_(std::vector<mo::ParameterInfo*>& info, mo::_counter_<N> dummy) \
+{ \
+    static mo::ParameterInfo s_info(mo::TypeInfo(typeid(type)), #name, "", "", mo::ParameterType::State_e); \
+    info.push_back(&s_info); \
+    list_parameter_info_(info, --dummy); \
+} \
 SERIALIZE_(name, N)
 
 #define SERIALIZE_(name, N) \
@@ -131,5 +138,10 @@ void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
     name##_param.SetName(#name); \
     AddParameter(&name##_param); \
     init_parameters_(firstInit, --dummy); \
+} \
+static void list_parameter_info_(std::vector<mo::ParameterInfo*>& info, mo::_counter_<N> dummy) \
+{ \
+    static mo::ParameterInfo s_info(mo::TypeInfo(typeid(type)), #name, "", "", mo::ParameterType::Input_e); \
+    info.push_back(&s_info); \
+    list_parameter_info_(info, --dummy); \
 }
-

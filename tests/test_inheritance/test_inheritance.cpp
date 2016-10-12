@@ -33,14 +33,14 @@ struct base: public IMetaObject
     int base_count = 0;
 };
 
-struct derived_parameter: public base
+struct derived_parameter: virtual public base
 {
     MO_DERIVE(derived_parameter, base);
         PARAM(int, derived_param, 10);
     MO_END;
 };
 
-struct derived_signals: public base
+struct derived_signals: virtual public base
 {
     static std::string GetDescriptionStatic()
     {
@@ -58,6 +58,12 @@ struct derived_signals: public base
 
     void override_slot(int value);
     int derived_count = 0;
+};
+struct multi_derive: virtual public derived_parameter, virtual public derived_signals
+{
+    MO_DERIVE(multi_derive, derived_parameter, derived_signals)
+
+    MO_END;
 };
 
 void base::base_slot(int value)
@@ -92,6 +98,7 @@ struct derived1: public TInterface<1, base1>
 MO_REGISTER_OBJECT(derived_signals);
 MO_REGISTER_OBJECT(derived_parameter);
 MO_REGISTER_OBJECT(derived1);
+MO_REGISTER_OBJECT(multi_derive);
 
 BOOST_AUTO_TEST_CASE(initialize)
 {
@@ -181,4 +188,16 @@ BOOST_AUTO_TEST_CASE(interface_id_check)
     auto constructor = mo::MetaObjectFactory::Instance()->GetConstructor("derived1");
     BOOST_REQUIRE(constructor);
     BOOST_REQUIRE_EQUAL(constructor->GetInterfaceId(), 1);
+}
+
+BOOST_AUTO_TEST_CASE(diamond)
+{
+    //auto obj = rcc::shared_ptr<multi_derive>::Create();
+    auto constructor = mo::MetaObjectFactory::Instance()->GetConstructor("multi_derive");
+    BOOST_REQUIRE(constructor);
+    auto info = constructor->GetObjectInfo();
+    std::cout << info->Print();
+    //auto meta_info = dynamic_cast<MetaObjectInfo*>(info);
+    //BOOST_REQUIRE(meta_info);
+
 }
