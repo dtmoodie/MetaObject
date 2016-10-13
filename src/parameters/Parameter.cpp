@@ -81,7 +81,10 @@ const std::string& IParameter::GetTreeRoot() const
 
 const std::string IParameter::GetTreeName() const
 {
-    return _tree_root + ":" + _name;
+    if(_tree_root.size())
+        return _tree_root + ":" + _name;
+    else
+        return _name;
 }
 
 long long IParameter::GetTimestamp() const

@@ -66,7 +66,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 #define LOGIF_EQ(lhs, rhs, severity) if(lhs == rhs)  LOG(severity) << "if(" << #lhs << " == " << #rhs << ")" << "[" << lhs << " == " << rhs << "]";
 #define LOGIF_NEQ(lhs, rhs, severity) if(lhs != rhs) LOG(severity) << "if(" << #lhs << " != " << #rhs << ")" << "[" << lhs << " != " << rhs << "]";
 
-#define ASSERT_OP(op, lhs, rhs) if(!(lhs op rhs)) mo::ThrowOnDestroy(__FUNCTION__, __FILE__, __LINE__).stream() << "[" << #lhs << " " << #op << " " << #rhs << "] - Failed [" << lhs << " " <<  #op << " " << rhs
+#define ASSERT_OP(op, lhs, rhs) if(!(lhs op rhs)) mo::ThrowOnDestroy(__FUNCTION__, __FILE__, __LINE__).stream() << "[" << #lhs << " " << #op << " " << #rhs << "] - Failed (" << lhs << " " <<  #op << " " << rhs << ")"
 
 #define ASSERT_EQ(lhs, rhs)  ASSERT_OP(==, lhs, rhs)
 #define ASSERT_NE(lhs, rhs)  ASSERT_OP(!=, lhs, rhs)
@@ -75,10 +75,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 #define ASSERT_GE(lhs, rhs)  ASSERT_OP(>=, lhs, rhs)
 #define ASSERT_GT(lhs, rhs)  ASSERT_OP(> , lhs, rhs)
 
-
-#define CHECK_OP(op, lhs, rhs, severity) if(lhs op rhs)  LOG(severity) << #lhs << " " << #op << " " << #rhs << " [ " << lhs << " " << #op << " " << rhs << "]"
-
-
+#define CHECK_OP(op, lhs, rhs, severity) if(lhs op rhs)  LOG(severity) << "[" << #lhs << " " << #op << " " << #rhs << "] - Failed (" << lhs << " " <<  #op << " " << rhs << ")"
 
 #define CHECK_EQ(lhs, rhs, severity) CHECK_OP(==, lhs, rhs, severity)
 #define CHECK_NE(lhs, rhs, severity) CHECK_OP(!=, lhs, rhs, severity)
@@ -175,7 +172,7 @@ namespace mo
         void operator=(const EatMessage&);
     };
 
-    class MO_EXPORTS LogMessageVoidify 
+    class MO_EXPORTS LogMessageVoidify
     {
     public:
         LogMessageVoidify() { }

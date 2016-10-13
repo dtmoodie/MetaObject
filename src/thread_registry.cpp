@@ -50,7 +50,7 @@ size_t ThreadRegistry::GetThread(int type)
     // TODO some kind of load balancing for multiple threads of a specific type
     auto current_thread = GetThisThread();
     auto itr = _pimpl->_thread_map.find(type);
-    if (type != 0 && itr != _pimpl->_thread_map.end())
+    if (itr != _pimpl->_thread_map.end())
     {
         if (itr->second.size())
         {
