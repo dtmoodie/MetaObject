@@ -84,6 +84,7 @@ void IMetaObject::Init(bool firstInit)
     InitParameters(firstInit);
 	InitSignals(firstInit);
     BindSlots(firstInit);
+    InitCustom(firstInit);
     if(firstInit == false)
     {
         // Rebuild connections
@@ -117,6 +118,10 @@ void IMetaObject::Init(bool firstInit)
             }
         }
     }
+}
+void  IMetaObject::InitCustom(bool firstInit)
+{
+
 }
 
 int IMetaObject::SetupSignals(RelayManager* manager)

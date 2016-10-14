@@ -73,6 +73,7 @@ namespace mo
         virtual int   RemoveVariableManager(IVariableManager* mgr);
         virtual void  BindSlots(bool firstInit) = 0;
         virtual void  Init(bool firstInit);
+        virtual void  InitCustom(bool firstInit);
         virtual void  InitParameters(bool firstInit) = 0;
 		virtual int   InitSignals(bool firstInit) = 0;
 		
