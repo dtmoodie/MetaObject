@@ -6,13 +6,15 @@
 #include "MetaObject/Signals/TypedSignal.hpp"
 #include "MetaObject/Detail/Counter.hpp"
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
-#include "MetaObject/Parameters//ParameterMacros.hpp"
+#include "MetaObject/Parameters/ParameterMacros.hpp"
+
 #include "MetaObject/Parameters/TypedParameterPtr.hpp"
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 
 #include "RuntimeInclude.h"
 #include "RuntimeSourceDependency.h"
 RUNTIME_MODIFIABLE_INCLUDE 
+
 #ifdef HAVE_CUDA
 RUNTIME_COMPILER_SOURCEDEPENDENCY_EXT(".cu")
 #endif
@@ -44,6 +46,20 @@ struct test_meta_object_parameters: public IMetaObject
     MO_BEGIN(test_meta_object_parameters)
     PARAM(int, test, 5)
     MO_END
+};
+
+struct test_meta_object_output: public IMetaObject
+{
+	MO_BEGIN(test_meta_object_output)
+		OUTPUT(int, test_output, 0);
+	MO_END;
+};
+
+struct test_meta_object_input: public IMetaObject
+{
+	MO_BEGIN(test_meta_object_input)
+		INPUT(int, test_input, nullptr)
+	MO_END;
 };
 
 #ifdef HAVE_CUDA

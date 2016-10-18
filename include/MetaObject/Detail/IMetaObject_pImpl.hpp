@@ -35,6 +35,17 @@ namespace mo
 		rcc::weak_ptr<IMetaObject> obj;
 		std::shared_ptr<Connection> connection;
 	};
+	struct MO_EXPORTS ParameterConnectionInfo
+	{
+		ParameterConnectionInfo(const rcc::weak_ptr<IMetaObject>& obj, const std::string& output, const std::string& input, ParameterTypeFlags type) :
+			output_object(obj), output_parameter(output), input_parameter(input), connection_type(type)
+		{
+		}
+		rcc::weak_ptr<IMetaObject> output_object;
+		std::string output_parameter;
+		std::string input_parameter;
+		ParameterTypeFlags connection_type;
+	};
     struct MO_EXPORTS IMetaObject::impl
     {
         impl()
@@ -50,7 +61,7 @@ namespace mo
 
         std::map<std::string, std::shared_ptr<IParameter>>  _implicit_parameters; // Can be changed at runtime
 		std::list<ConnectionInfo> _connections;
-        
+        std::list<ParameterConnectionInfo> _parameter_connections;
 
         TypedSignal<void(IMetaObject*, IParameter*)> _sig_parameter_updated;
         TypedSignal<void(IMetaObject*, IParameter*)> _sig_parameter_added;

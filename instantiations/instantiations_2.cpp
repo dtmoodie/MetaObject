@@ -7,9 +7,9 @@
 #include "MetaObject/Parameters/Buffers/map.hpp"
 
 INSTANTIATE_META_PARAMETER(std::vector<int>);
-INSTANTIATE_META_PARAMETER(std::vector<ushort>);
-INSTANTIATE_META_PARAMETER(std::vector<uint>);
+INSTANTIATE_META_PARAMETER(std::vector<unsigned short>);
+INSTANTIATE_META_PARAMETER(std::vector<unsigned int>);
 INSTANTIATE_META_PARAMETER(std::vector<char>);
-INSTANTIATE_META_PARAMETER(std::vector<uchar>);
+INSTANTIATE_META_PARAMETER(std::vector<unsigned char>);
 INSTANTIATE_META_PARAMETER(std::vector<float>);
 INSTANTIATE_META_PARAMETER(std::vector<double>);

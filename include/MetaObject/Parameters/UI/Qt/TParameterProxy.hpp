@@ -1,4 +1,5 @@
 #pragma once
+#ifdef HAVE_QT5
 #include "MetaObject/Detail/TypeInfo.h"
 #include "MetaObject/Parameters/UI/WidgetFactory.hpp"
 #include "IParameterProxy.hpp"
@@ -72,3 +73,4 @@ namespace mo
     MO_UI_QT_PARAMTERPROXY_METAPARAMETER(__COUNTER__)
 }
 #include "detail/TParameterProxyImpl.hpp"
+#endif // HAVE_QT5

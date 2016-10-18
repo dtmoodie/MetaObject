@@ -1,4 +1,5 @@
 #pragma once
+#ifdef HAVE_QT5
 #include <MetaObject/Parameters/IParameter.hpp>
 #include "qwidget.h"
 #include "qgridlayout.h"
@@ -149,3 +150,4 @@ namespace mo
         }
     }
 }
+#endif // HAVE_QT5

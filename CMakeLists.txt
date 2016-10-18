@@ -158,6 +158,7 @@ set_target_properties(RuntimeCompiler PROPERTIES FOLDER Dependencies)
 set_target_properties(RuntimeObjectSystem PROPERTIES FOLDER Dependencies)
 SET(RCC_INCLUDE_DIRS "${RCC_INCLUDE_DIRS}" PARENT_SCOPE)
 
+add_subdirectory("dependencies/Remotery")
 GroupSources(include)
 GroupSources(src)
   

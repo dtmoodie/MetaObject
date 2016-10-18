@@ -85,8 +85,35 @@ void IMetaObject::Init(bool firstInit)
 	InitSignals(firstInit);
     BindSlots(firstInit);
     InitCustom(firstInit);
+	
     if(firstInit == false)
     {
+		auto connections_copy = _pimpl->_parameter_connections;
+		_pimpl->_parameter_connections.clear();
+		for (auto& parameter_connection : connections_copy)
+		{
+			rcc::shared_ptr<IMetaObject> obj(parameter_connection.output_object);
+			if (obj)
+			{
+				auto output = obj->GetOutput(parameter_connection.output_parameter);
+				if (output == nullptr)
+				{
+					obj->InitParameters(firstInit);
+					output = obj->GetOutput(parameter_connection.output_parameter);
+					if (output == nullptr)
+						continue;
+				}
+				auto input = this->GetInput(parameter_connection.input_parameter);
+				if (input)
+				{
+					this->ConnectInput(input, obj.Get(), output, parameter_connection.connection_type);
+				}
+				else
+				{
+					LOG(debug) << "Unable to find input parameter " << parameter_connection.input_parameter << " in object " << this->GetTypeName();
+				}
+			}
+		}
         // Rebuild connections
         for(auto& connection : _pimpl->_connections)
         {
@@ -203,6 +230,7 @@ void IMetaObject::Serialize(ISimpleSerializer *pSerializer)
 void IMetaObject::SerializeConnections(ISimpleSerializer* pSerializer)
 {
     SERIALIZE(_pimpl->_connections);
+	SERIALIZE(_pimpl->_parameter_connections);
 }
 void IMetaObject::SerializeParameters(ISimpleSerializer* pSerializer)
 {
@@ -478,11 +506,11 @@ std::vector<IParameter*> IMetaObject::GetOutputs(const TypeInfo& type_filter, co
     }
     return output;
 }
-bool IMetaObject::ConnectInput(const std::string& input_name, IParameter* output, ParameterTypeFlags type_)
+bool IMetaObject::ConnectInput(const std::string& input_name, IMetaObject* output_object, IParameter* output, ParameterTypeFlags type_)
 {
     auto input = GetInput(input_name);
     if(input && output)
-        return ConnectInput(input, output, type_);
+        return ConnectInput(input, output_object, output, type_);
 
     auto inputs = GetInputs();
     auto print_inputs = [inputs]()->std::string
@@ -498,7 +526,7 @@ bool IMetaObject::ConnectInput(const std::string& input_name, IParameter* output
     return false;
 }
 
-bool IMetaObject::ConnectInput(InputParameter* input, IParameter* output, ParameterTypeFlags type_)
+bool IMetaObject::ConnectInput(InputParameter* input, IMetaObject* output_object, IParameter* output, ParameterTypeFlags type_)
 {
     if(input == nullptr || output == nullptr)
     {
@@ -517,42 +545,59 @@ bool IMetaObject::ConnectInput(InputParameter* input, IParameter* output, Parame
                 auto buffer = Buffer::BufferFactory::CreateProxy(output, type_);
                 if(buffer)
                 {
-                    bool ret = input->SetInput(buffer);
-                    if(ret == false)
+                    if(input->SetInput(buffer))
+					{
+						_pimpl->_parameter_connections.emplace_back(output_object, output->GetName(), input->GetName(), type_);
+						return true;
+					}
+                    else
                     {
                         LOG(debug) << "Failed to connect output " << output->GetName() << "[" << Demangle::TypeToName(output->GetTypeInfo()) 
                             << "] to input " << dynamic_cast<IParameter*>(input)->GetName() << "[" << Demangle::TypeToName(dynamic_cast<IParameter*>(input)->GetTypeInfo()) << "]";
+						return false;
                     }
-                    return ret;
+                    
                 }else
                 {
                     LOG(debug) << "No buffer of desired type found for type " << Demangle::TypeToName(output->GetTypeInfo());
                 }
             }else
             {
-                bool ret = input->SetInput(output);
-                if(ret == false)
+                if(input->SetInput(output))
+				{
+					_pimpl->_parameter_connections.emplace_back(output_object, output->GetName(), input->GetName(), type_);
+					return true;
+				}
+                else
                 {
                     LOG(debug) << "Failed to connect output " << output->GetName() << "[" << Demangle::TypeToName(output->GetTypeInfo()) 
                         << "] to input " << dynamic_cast<IParameter*>(input)->GetName() << "[" << Demangle::TypeToName(dynamic_cast<IParameter*>(input)->GetTypeInfo()) << "]";
+					return false;
                 }
-                return ret;
             }
         }else
         {
-            bool ret = input->SetInput(output);
-            if(ret == false)
+            if(input->SetInput(output))
+			{
+				_pimpl->_parameter_connections.emplace_back(output_object, output->GetName(), input->GetName(), type_);
+				return true;
+			}else
             {
                 LOG(debug) << "Failed to connect output " << output->GetName() << "[" << Demangle::TypeToName(output->GetTypeInfo()) 
                     << "] to input " << dynamic_cast<IParameter*>(input)->GetName() << "[" << Demangle::TypeToName(dynamic_cast<IParameter*>(input)->GetTypeInfo()) << "]";
+				return false;
             }
-            return ret;
         }
     }
     LOG(debug) << "Input \"" << input->GetTreeName() << "\"  does not accept input of type: " << Demangle::TypeToName(output->GetTypeInfo());
     return false;
 }
 
+bool IMetaObject::ConnectInput(IMetaObject* out_obj, IParameter* out_param, 
+	                             IMetaObject* in_obj, InputParameter* in_param, ParameterTypeFlags type)
+{
+	return in_obj->ConnectInput(in_param, out_obj, out_param, type);
+}								 
 IParameter* IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 {
     param->SetMtx(_mtx);

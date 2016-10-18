@@ -157,9 +157,10 @@ namespace mo
         template<class T> ITypedParameter<T>* GetParameterOptional(const std::string& name) const;
         
         // Connects an input parameter to an output parameter
-        bool ConnectInput(const std::string& input_name, IParameter* output, ParameterTypeFlags type = StreamBuffer_e);
-        bool ConnectInput(InputParameter* input, IParameter* output, ParameterTypeFlags type = StreamBuffer_e);
-        
+        bool ConnectInput(const std::string& input_name, IMetaObject* output_object, IParameter* output_param, ParameterTypeFlags type = StreamBuffer_e);
+        bool ConnectInput(InputParameter* input, IMetaObject* output_object, IParameter* output_param, ParameterTypeFlags type = StreamBuffer_e);
+        static bool ConnectInput(IMetaObject* output_object, IParameter* output_parameter, 
+	                             IMetaObject* input_object, InputParameter* input_param, ParameterTypeFlags type = StreamBuffer_e);
     protected:
 		friend class RelayManager;
 		

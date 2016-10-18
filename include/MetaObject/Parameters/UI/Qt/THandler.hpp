@@ -1,9 +1,11 @@
 #pragma once
+#ifdef HAVE_QT5
 #include "IHandler.hpp"
 #include "MetaObject/Logging/Log.hpp"
 #include "MetaObject/Parameters/Demangle.hpp"
+#include "MetaObject/Parameters/UI/Qt/IHandler.hpp"
 class QWidget;
-
+class QObject;
 namespace mo
 {
     namespace UI
@@ -47,3 +49,4 @@ namespace mo
         }
     }
 }
+#endif // HAVE_QT5
