@@ -1,9 +1,14 @@
 #include "MetaObject/Logging/Profiling.hpp"
 #include <string>
 #include <sstream>
+#define RMT_USE_CUDA
 #include "dependencies/Remotery/lib/Remotery.h"
+
 #ifdef HAVE_CUDA
 #include "cuda.h"
+#ifdef HAVE_OPENCV
+#include <opencv2/core/cuda_stream_accessor.hpp>
+#endif
 #endif
 #if WIN32
 #include "Windows.h"
@@ -16,77 +21,113 @@ using namespace mo;
 typedef int(*push_f)(const char*);
 typedef int(*pop_f)();
 
+typedef void(*rmt_push_cpu_f)(const char*, unsigned int*);
+typedef void(*rmt_pop_cpu_f)();
+typedef void(*rmt_push_cuda_f)(const char*, unsigned int*, void*);
+typedef void(*rmt_pop_cuda_f)(void*);
+
 
 push_f nvtx_push = NULL;
 pop_f nvtx_pop = NULL;
-Remotery* rmt = nullptr;
 
-void EagleLib::InitProfiling(bool use_nvtx, bool use_remotery)
+Remotery* rmt = nullptr;
+rmt_push_cpu_f rmt_push_cpu = nullptr;
+rmt_pop_cpu_f rmt_pop_cpu = nullptr;
+rmt_push_cuda_f rmt_push_gpu = nullptr;
+rmt_pop_cuda_f rmt_pop_gpu = nullptr;
+
+
+void mo::InitProfiling()
 {
 #if WIN32
-	if (use_nvtx)
+	
+	HMODULE nvtx_handle = LoadLibrary("nvToolsExt64_1.dll");
+	if (nvtx_handle)
 	{
-		HMODULE handle = LoadLibrary("nvToolsExt64_1.lib");
-		if (handle)
-		{
-			nvtx_push = (push_f)GetProcAddress(handle, "nvtxRangePushA");
-			nvtx_pop = (pop_f)GetProcAddress(handle, "nvtxRangePop");
-		}
+		nvtx_push = (push_f)GetProcAddress(nvtx_handle, "nvtxRangePushA");
+		nvtx_pop = (pop_f)GetProcAddress(nvtx_handle, "nvtxRangePop");
 	}
+	
 #else
 
 
 #endif
-	if (use_remotery)
-	{
-		rmt_CreateGlobalInstance(&rmt);
-#ifdef HAVE_CUDA
-		rmtCUDABind bind;
-		bind.context = m_Context;
-		bind.CtxSetCurrent = &cuCtxSetCurrent;
-		bind.CtxGetCurrent = &cuCtxGetCurrent;
-		bind.EventCreate = &cuEventCreate;
-		bind.EventDestroy = &cuEventDestroy;
-		bind.EventRecord = &cuEventRecord;
-		bind.EventQuery = &cuEventQuery;
-		bind.EventElapsedTime = &cuEventElapsedTime;
-		rmt_BindCUDA(&bind);
+#ifdef _DEBUG
+    HMODULE handle = LoadLibrary("remoteryd.dll");
+#else
+    HMODULE handle = LoadLibrary("remotery.dll");
 #endif
+    if(handle)
+    {
+        typedef void(*rmt_init)(Remotery**);
+            
+        rmt_init init = (rmt_init)GetProcAddress(handle, "_rmt_CreateGlobalInstance");
+        if(init)
+        {
+            init(&rmt);
+#ifdef HAVE_CUDA
+            typedef void(*rmt_cuda_init)(const rmtCUDABind*);
+            rmt_cuda_init cuda_init = (rmt_cuda_init)(GetProcAddress(handle, "_rmt_BindCUDA"));
+            if(cuda_init)
+            {
+                CUcontext ctx;
+                cuCtxGetCurrent(&ctx);
+                rmtCUDABind bind;
+                bind.context = ctx;
+                bind.CtxSetCurrent = &cuCtxSetCurrent;
+                bind.CtxGetCurrent = &cuCtxGetCurrent;
+                bind.EventCreate = &cuEventCreate;
+                bind.EventDestroy = &cuEventDestroy;
+                bind.EventRecord = &cuEventRecord;
+                bind.EventQuery = &cuEventQuery;
+                bind.EventElapsedTime = &cuEventElapsedTime;
+                cuda_init(&bind);
+            }
+            rmt_push_cpu = (rmt_push_cpu_f)GetProcAddress(handle, "_rmt_BeginCPUSample");
+            rmt_pop_cpu = (rmt_pop_cpu_f)GetProcAddress(handle, "_rmt_EndCPUSample");
+            rmt_push_gpu = (rmt_push_cuda_f)GetProcAddress(handle, "_rmt_BeginCUDASample");
+            rmt_pop_gpu = (rmt_pop_cuda_f)GetProcAddress(handle, "_rmt_EndCUDASample");
+#endif
+        }
+        
 	}
 }
 
 
 
-scoped_profile::scoped_profile(const char* name, unsigned int* rmt_hash, unsigned int* rmt_cuda)
+scoped_profile::scoped_profile(const char* name, unsigned int* rmt_hash, unsigned int* rmt_cuda, cv::cuda::Stream* stream)
 {
     if(nvtx_push)
         (*nvtx_push)(name);
-	if (rmt)
+	if (rmt && rmt_push_cpu)
 	{
 		if(rmt_hash)
-			_rmt_BeginCPUSample(name, rmt_hash);
+            rmt_push_cpu(name, rmt_hash);
 		else
-			_rmt_BeginCPUSample(name, nullptr);
+            rmt_push_cpu(name, nullptr);
 	}
 }
 
-scoped_profile::scoped_profile(const char* name, const char* func, unsigned int* rmt_hash, unsigned int* rmt_cuda)
+scoped_profile::scoped_profile(const char* name, const char* func, unsigned int* rmt_hash, unsigned int* rmt_cuda, cv::cuda::Stream* stream)
 {
 	std::stringstream ss;
 	ss << name;
 	ss << "[";
 	ss << func;
 	ss << "]";
+    const char* str = ss.str().c_str();
     if(nvtx_push)
     {
-        (*nvtx_push)(ss.str().c_str());
+        (*nvtx_push)(str);
     }
-	if (rmt)
+	if (rmt && rmt_push_cpu)
 	{
-		if (rmt_hash)
-			_rmt_BeginCPUSample(ss.str().c_str(), rmt_hash);
-		else
-			_rmt_BeginCPUSample(ss.str().c_str(), nullptr);
+        rmt_push_cpu(str, rmt_hash);
+        if(stream && rmt_push_gpu)
+        {
+            rmt_push_gpu(str, rmt_cuda, cv::cuda::StreamAccessor::getStream(*stream));
+            this->stream = stream;
+        }
 	}
 }
 
@@ -96,8 +137,12 @@ scoped_profile::~scoped_profile()
     {
         (*nvtx_pop)();
     }
-	if (rmt)
+	if (rmt && rmt_pop_cpu)
 	{
-		rmt_EndCPUSample();
+        rmt_pop_cpu();
 	}
+    if(stream && rmt_pop_gpu)
+    {
+        rmt_pop_gpu(cv::cuda::StreamAccessor::getStream(*stream));
+    }
 }

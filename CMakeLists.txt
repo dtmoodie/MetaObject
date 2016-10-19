@@ -163,7 +163,7 @@ GroupSources(include)
 GroupSources(src)
   
 add_library(MetaObject SHARED ${src} ${hdr} src/precompiled.hpp)
-target_link_libraries(MetaObject RuntimeObjectSystem RuntimeCompiler ${link_libs})
+target_link_libraries(MetaObject RuntimeObjectSystem RuntimeCompiler ${link_libs} ${OpenCV_LIBS} ${CUDA_CUDART_LIBRARY} ${CUDA_CUDA_LIBRARY})
 ocv_add_precompiled_header_to_target(MetaObject src/precompiled.hpp)
 
 # -------------------- instantiations --------------------------
