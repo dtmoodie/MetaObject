@@ -7,8 +7,12 @@ using namespace mo::Buffer;
 
 static std::map<TypeInfo, std::map<ParameterTypeFlags, BufferFactory::create_buffer_f>>& registry()
 {
-    static std::map<TypeInfo, std::map<ParameterTypeFlags, BufferFactory::create_buffer_f>> g_inst;
-    return g_inst;
+    static std::map<TypeInfo, std::map<ParameterTypeFlags, BufferFactory::create_buffer_f>>* g_inst = nullptr;
+    if(g_inst == nullptr)
+    {
+        g_inst = new std::map<TypeInfo, std::map<ParameterTypeFlags, BufferFactory::create_buffer_f>>();
+    }
+    return *g_inst;
 }
  
 
