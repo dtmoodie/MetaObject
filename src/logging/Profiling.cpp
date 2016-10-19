@@ -25,7 +25,7 @@ typedef void(*rmt_push_cpu_f)(const char*, unsigned int*);
 typedef void(*rmt_pop_cpu_f)();
 typedef void(*rmt_push_cuda_f)(const char*, unsigned int*, void*);
 typedef void(*rmt_pop_cuda_f)(void*);
-
+typedef void(*rmt_set_thread_name_f)(const char*);
 
 push_f nvtx_push = NULL;
 pop_f nvtx_pop = NULL;
@@ -35,8 +35,15 @@ rmt_push_cpu_f rmt_push_cpu = nullptr;
 rmt_pop_cpu_f rmt_pop_cpu = nullptr;
 rmt_push_cuda_f rmt_push_gpu = nullptr;
 rmt_pop_cuda_f rmt_pop_gpu = nullptr;
+rmt_set_thread_name_f rmt_set_thread = nullptr;
 
-
+void mo::SetThreadName(const char* name)
+{
+    if(rmt_set_thread)
+    {
+        rmt_set_thread(name);
+    }
+}
 void mo::InitProfiling()
 {
 #if WIN32
@@ -59,8 +66,7 @@ void mo::InitProfiling()
 #endif
     if(handle)
     {
-        typedef void(*rmt_init)(Remotery**);
-            
+        typedef void(*rmt_init)(Remotery**);    
         rmt_init init = (rmt_init)GetProcAddress(handle, "_rmt_CreateGlobalInstance");
         if(init)
         {
@@ -87,9 +93,9 @@ void mo::InitProfiling()
             rmt_pop_cpu = (rmt_pop_cpu_f)GetProcAddress(handle, "_rmt_EndCPUSample");
             rmt_push_gpu = (rmt_push_cuda_f)GetProcAddress(handle, "_rmt_BeginCUDASample");
             rmt_pop_gpu = (rmt_pop_cuda_f)GetProcAddress(handle, "_rmt_EndCUDASample");
+            rmt_set_thread = (rmt_set_thread_name_f)GetProcAddress(handle, "_rmt_SetCurrentThreadName");
 #endif
-        }
-        
+        }    
 	}
 }
 

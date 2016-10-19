@@ -11,6 +11,7 @@ namespace cv
 
 namespace mo
 {
+    MO_EXPORTS void SetThreadName(const char* name);
 	class IMetaObject;
     MO_EXPORTS void InitProfiling();
     struct MO_EXPORTS scoped_profile
