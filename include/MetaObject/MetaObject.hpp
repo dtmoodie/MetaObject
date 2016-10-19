@@ -9,3 +9,4 @@
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
 #include "MetaObject/Signals/detail/SlotMacros.hpp"
 #include "MetaObject/Logging/Log.hpp"
+#include "MetaObject/Parameters/Types.hpp"
