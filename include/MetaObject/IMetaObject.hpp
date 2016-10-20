@@ -182,6 +182,5 @@ namespace mo
 		Context*        _ctx;
 		RelayManager*  _sig_manager;
         boost::recursive_mutex* _mtx;
-
     };
 }

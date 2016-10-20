@@ -93,9 +93,9 @@ namespace mo
         }
         int getValue()
         {
-            if (currentSelection >= values.size())
+            if (values.empty() || currentSelection >= values.size())
             {
-                throw std::range_error("currentSelection >= values.size()");
+                throw std::range_error("values.empty() || currentSelection >= values.size()");
             }
             return values[currentSelection];
         }

@@ -57,6 +57,15 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 
 #define DISCARD_MESSAGE true ? (void)0 : mo::LogMessageVoidify() & mo::eat_message().stream()
 
+#define LOG_EVERY_N(severity, n) \
+    static int LOG_OCCURRENCES = 0, LOG_OCCURRENCES_MOD_N = 0; \
+    ++LOG_OCCURRENCES; \
+    if (++LOG_OCCURRENCES_MOD_N > n) LOG_OCCURRENCES_MOD_N -= n; \
+    if (LOG_OCCURRENCES_MOD_N == 1) \
+        LOG(severity)
+
+#define LOG_FIRST_N(severity, n) static int LOG_OCCURRENCES = 0; if(LOG_OCCURRENCES <= n) ++LOG_OCCURRENCES; if(LOG_OCCURRENCES <= n) LOG(severity)
+
 #define LOG(severity) BOOST_LOG_TRIVIAL(severity) << "[" << __FUNCTION__ << "] "
 #define DOIF(condition, expression, severity) if(condition) { LOG(severity) << #condition << " is true, thus performing " << #expression; expression;} else { LOG(severity) << #condition << " failed";}
 
@@ -108,6 +117,9 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 
 namespace mo
 {
+    MO_EXPORTS void InitLogging();
+
+
     class MO_EXPORTS ThrowOnDestroy {
     public:
         ThrowOnDestroy(const char* function, const char* file, int line);
