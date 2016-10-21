@@ -1,4 +1,5 @@
 #include "MetaObject/Logging/Profiling.hpp"
+#include "MetaObject/Logging/Log.hpp"
 #include <string>
 #include <sstream>
 #define RMT_USE_CUDA
@@ -51,9 +52,13 @@ void mo::InitProfiling()
 	HMODULE nvtx_handle = LoadLibrary("nvToolsExt64_1.dll");
 	if (nvtx_handle)
 	{
+        LOG(info) << "Loaded nvtx module";
 		nvtx_push = (push_f)GetProcAddress(nvtx_handle, "nvtxRangePushA");
 		nvtx_pop = (pop_f)GetProcAddress(nvtx_handle, "nvtxRangePop");
-	}
+	}else
+    {
+        LOG(info) << "No nvtx library loaded";
+    }
 	
 #else
 
@@ -66,6 +71,7 @@ void mo::InitProfiling()
 #endif
     if(handle)
     {
+        LOG(info) << "Loaded remotery library for profiling";
         typedef void(*rmt_init)(Remotery**);    
         rmt_init init = (rmt_init)GetProcAddress(handle, "_rmt_CreateGlobalInstance");
         if(init)
@@ -96,7 +102,10 @@ void mo::InitProfiling()
             rmt_set_thread = (rmt_set_thread_name_f)GetProcAddress(handle, "_rmt_SetCurrentThreadName");
 #endif
         }    
-	}
+	}else
+    {
+        LOG(info) << "No remotery library found";
+    }
 }
 
 
