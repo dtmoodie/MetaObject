@@ -65,7 +65,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
         LOG(severity)
 
 #define LOG_FIRST_N(severity, n) static int LOG_OCCURRENCES = 0; if(LOG_OCCURRENCES <= n) ++LOG_OCCURRENCES; if(LOG_OCCURRENCES <= n) LOG(severity)
-
+#define MO_LOG(severity) BOOST_LOG_TRIVIAL(severity) << "[" << this->GetTypeName() << "::" __FUNCTION__ "] "
 #define LOG(severity) BOOST_LOG_TRIVIAL(severity) << "[" << __FUNCTION__ << "] "
 #define DOIF(condition, expression, severity) if(condition) { LOG(severity) << #condition << " is true, thus performing " << #expression; expression;} else { LOG(severity) << #condition << " failed";}
 
