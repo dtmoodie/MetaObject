@@ -9,4 +9,4 @@
 	url = https://github.com/zeromq/cppzmq
 [submodule "dependencies/Remotery"]
 	path = dependencies/Remotery
-	url = https://github.com/Celtoys/Remotery
+	url = https://github.com/dtmoodie/Remotery
