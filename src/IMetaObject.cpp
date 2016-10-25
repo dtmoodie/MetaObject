@@ -8,7 +8,7 @@
 #include "MetaObject/Signals/SlotInfo.hpp"
 #include "MetaObject/Signals/RelayManager.hpp"
 #include "MetaObject/Detail/IMetaObject_pImpl.hpp"
-
+#include "MetaObject/Detail/IMetaObjectImpl.hpp"
 #include "MetaObject/Parameters/IParameter.hpp"
 #include "MetaObject/Parameters/InputParameter.hpp"
 #include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
@@ -85,7 +85,22 @@ void IMetaObject::Init(bool firstInit)
 	InitSignals(firstInit);
     BindSlots(firstInit);
     InitCustom(firstInit);
-	
+    auto params = GetParameters();
+    for(auto param : params)
+    {
+        auto update_slot = this->GetSlot<void(mo::Context*, mo::IParameter*)>("on_" + param->GetName() + "_modified");
+        if(update_slot)
+        {
+            param->RegisterUpdateNotifier(update_slot);
+        }
+        auto delete_slot = this->GetSlot<void(mo::IParameter const*)>("on_" + param->GetName() + "_deleted");
+        if(delete_slot)
+        {
+            param->RegisterDeleteNotifier(delete_slot);
+        }
+    }
+
+
     if(firstInit == false)
     {
 		auto connections_copy = _pimpl->_parameter_connections;
@@ -322,6 +337,18 @@ std::vector<IParameter*> IMetaObject::GetParameters(const std::string& filter) c
             output.push_back(itr.second);
         }
     }
+    for(auto& itr : _pimpl->_implicit_parameters)
+    {
+        if (filter.size())
+        {
+            if (itr.first.find(filter) != std::string::npos)
+                output.push_back(itr.second.get());
+        }
+        else
+        {
+            output.push_back(itr.second.get());
+        }
+    }
     return output;
 }
 
@@ -545,6 +572,7 @@ bool IMetaObject::ConnectInput(InputParameter* input, IMetaObject* output_object
                 auto buffer = Buffer::BufferFactory::CreateProxy(output, type_);
                 if(buffer)
                 {
+                    buffer->SetName(output->GetTreeName() + " buffer for " + input->GetTreeName());
                     if(input->SetInput(buffer))
 					{
 						_pimpl->_parameter_connections.emplace_back(output_object, output->GetName(), input->GetName(), type_);

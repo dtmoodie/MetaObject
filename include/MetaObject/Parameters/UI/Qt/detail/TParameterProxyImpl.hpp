@@ -119,7 +119,7 @@ namespace mo
                         layout->addWidget(*itr, 0, count);
                     }
                     // Correct the tab order of the widgets
-                    for(int i = widgets.size() - 1; i > 0; --i)
+                    for(size_t i = widgets.size() - 1; i > 0; --i)
                     {
                         QWidget::setTabOrder(widgets[i], widgets[i - 1]);
                     }

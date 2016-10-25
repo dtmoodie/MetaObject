@@ -24,8 +24,10 @@ SerializationFunctionRegistry::~SerializationFunctionRegistry()
 
 SerializationFunctionRegistry* SerializationFunctionRegistry::Instance()
 {
-    static SerializationFunctionRegistry g_inst;
-    return &g_inst;
+    static SerializationFunctionRegistry* g_inst = nullptr;
+    if(g_inst == nullptr)
+        g_inst = new SerializationFunctionRegistry();
+    return g_inst;
 }
 
 SerializationFunctionRegistry::SerializeBinary_f SerializationFunctionRegistry::GetBinarySerializationFunction(const TypeInfo& type)

@@ -17,6 +17,29 @@ namespace mo
     class IParameter;
     class TypeInfo;
     class Context;
+    
+    class MO_EXPORTS IBinarySerializer
+    {
+    public:
+        virtual ~IBinarySerializer() {}
+        virtual void SetInput(IParameter* input) = 0;
+    };
+    
+    class MO_EXPORTS IXmlSerializer
+    {
+    
+    };
+    
+    class MO_EXPORTS IJsonSerializer
+    {
+    
+    };
+    
+    class MO_EXPORTS ITextSerializer
+    {
+    
+    };
+    
     class MO_EXPORTS SerializationFunctionRegistry
     {
     public:
@@ -31,17 +54,17 @@ namespace mo
         typedef std::function<bool(IParameter*, std::stringstream&)> SerializeText_f;
         typedef std::function<bool(IParameter*, std::stringstream&)> DeSerializeText_f;
 
-        SerializeBinary_f GetBinarySerializationFunction(const TypeInfo& type);
+        SerializeBinary_f   GetBinarySerializationFunction(const TypeInfo& type);
         DeSerializeBinary_f GetBinaryDeSerializationFunction(const TypeInfo& type);
 
-        SerializeXml_f GetXmlSerializationFunction(const TypeInfo& type);
-        DeSerializeXml_f GetXmlDeSerializationFunction(const TypeInfo& type);
+        SerializeXml_f      GetXmlSerializationFunction(const TypeInfo& type);
+        DeSerializeXml_f    GetXmlDeSerializationFunction(const TypeInfo& type);
 
-        SerializeJson_f GetJsonSerializationFunction(const TypeInfo& type);
-        DeSerializeJson_f GetJsonDeSerializationFunction(const TypeInfo& type);
+        SerializeJson_f     GetJsonSerializationFunction(const TypeInfo& type);
+        DeSerializeJson_f   GetJsonDeSerializationFunction(const TypeInfo& type);
 
-        SerializeText_f GetTextSerializationFunction(const TypeInfo& type);
-        DeSerializeText_f GetTextDeSerializationFunction(const TypeInfo& type);
+        SerializeText_f     GetTextSerializationFunction(const TypeInfo& type);
+        DeSerializeText_f   GetTextDeSerializationFunction(const TypeInfo& type);
 
         void SetBinarySerializationFunctions(const TypeInfo& type, SerializeBinary_f serialize, DeSerializeBinary_f deserialize);
         

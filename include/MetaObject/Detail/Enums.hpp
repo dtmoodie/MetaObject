@@ -18,6 +18,7 @@ namespace mo
         cbuffer_e ,
         cmap_e,
         map_e,
-        StreamBuffer_e
+        StreamBuffer_e,
+        BlockingStreamBuffer_e
     };
 }

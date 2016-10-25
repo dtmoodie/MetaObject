@@ -43,7 +43,7 @@ struct impl
         }
         std::lock_guard<std::mutex> lock(std::get<2>(*queue));
         if(std::get<0>(*queue).size() > 100)
-            LOG(warning) << "Queue overflow " << std::get<0>(*queue).size() << " for thread " << id;
+            LOG(warning) << "Event loop processing queue overflow " << std::get<0>(*queue).size() << " for thread " << id;
         std::get<0>(*queue).push(std::pair<std::function<void(void)>, void*>(f, obj));
         if (std::get<1>(*queue))
             std::get<1>(*queue)();

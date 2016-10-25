@@ -29,7 +29,8 @@ namespace mo
 					}
 				}
 			}
-			(*slot)(args...);
+            if(slot)
+			    (*slot)(args...);
 		}
 	}
 

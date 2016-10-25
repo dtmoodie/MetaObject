@@ -166,6 +166,56 @@ BOOST_AUTO_TEST_CASE(serialize_multi_by_policy_binary)
 	}
 }
 
+#include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
+#include <MetaObject/Parameters/IO/TextPolicy.hpp>
+#include <MetaObject/Parameters/Types.hpp>
+INSTANTIATE_META_PARAMETER(mo::ReadFile);
+INSTANTIATE_META_PARAMETER(std::vector<int>);
+BOOST_AUTO_TEST_CASE(deserialize_text_path)
+{
+    mo::ReadFile data;
+    mo::TypedParameterPtr<mo::ReadFile> param;
+    param.UpdatePtr(&data);
+    auto deserialization_function = mo::SerializationFunctionRegistry::Instance()->GetTextDeSerializationFunction(param.GetTypeInfo());
+    BOOST_REQUIRE(deserialization_function);
+    std::stringstream ss;
+    ss << "/asdf/asdf/asdf/test.txt";
+    deserialization_function(&param, ss);
+    BOOST_REQUIRE(data == "/asdf/asdf/asdf/test.txt");
+}
+
+BOOST_AUTO_TEST_CASE(serialize_text_vector)
+{
+    std::vector<int> data = {0, 1, 2, 3, 4, 5, 6, 7};
+    mo::TypedParameterPtr<std::vector<int>> param;
+    param.UpdatePtr(&data);
+    auto serialization_function = mo::SerializationFunctionRegistry::Instance()->GetTextSerializationFunction(param.GetTypeInfo());
+    BOOST_REQUIRE(serialization_function);
+    std::stringstream ss;
+    serialization_function(&param,ss);
+    std::string str = ss.str();
+    BOOST_REQUIRE(str == "8[0, 1, 2, 3, 4, 5, 6, 7]");
+}
+
+
+BOOST_AUTO_TEST_CASE(deserialize_text_vector)
+{
+    std::vector<int> data;
+    mo::TypedParameterPtr<std::vector<int>> param;
+    param.UpdatePtr(&data);
+    auto deserialization_function = mo::SerializationFunctionRegistry::Instance()->GetTextDeSerializationFunction(param.GetTypeInfo());
+    BOOST_REQUIRE(deserialization_function);
+    std::stringstream ss;
+    ss << "[0, 1, 2, 3, 4, 5, 6, 7]";
+    deserialization_function(&param, ss);
+    BOOST_REQUIRE(data.size() == 8);
+    for(int expected_value = 0; expected_value < 8; ++expected_value)
+    {
+        BOOST_REQUIRE_EQUAL(data[expected_value], expected_value);
+    }
+}
+
+
 BOOST_AUTO_TEST_CASE(cleanup)
 {
     delete cb;

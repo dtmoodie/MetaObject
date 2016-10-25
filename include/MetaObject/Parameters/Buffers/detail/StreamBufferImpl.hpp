@@ -1,5 +1,5 @@
 #pragma once
-
+#include <MetaObject/Logging/Log.hpp>
 namespace mo
 {
     namespace Buffer
@@ -43,6 +43,7 @@ namespace mo
         }
         template<class T> void StreamBuffer<T>::prune()
         {
+            boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             if(_current_timestamp != -1)
             {
                 auto itr = this->_data_buffer.begin();
@@ -62,21 +63,88 @@ namespace mo
         {
             return std::shared_ptr<IParameter>(new StreamBuffer<T>());
         }
-    }
-#define MO_METAPARAMETER_INSTANCE_STREAM_BUFFER_(N) \
-    template<class T> struct MetaParameter<T, N>: public MetaParameter<T, N-1> \
-    { \
-        static ParameterConstructor<Buffer::StreamBuffer<T>> _stream_buffer_parameter_constructor; \
-        static BufferConstructor<Buffer::StreamBuffer<T>> _stream_buffer_constructor;  \
-        MetaParameter<T, N>(const char* name): \
-            MetaParameter<T, N-1>(name) \
-        { \
-            (void)&_stream_buffer_parameter_constructor; \
-            (void)&_stream_buffer_constructor; \
-        } \
-    }; \
-    template<class T> ParameterConstructor<Buffer::StreamBuffer<T>> MetaParameter<T, N>::_stream_buffer_parameter_constructor; \
-    template<class T> BufferConstructor<Buffer::StreamBuffer<T>> MetaParameter<T, N>::_stream_buffer_constructor;
 
-    MO_METAPARAMETER_INSTANCE_STREAM_BUFFER_(__COUNTER__)
+        // ------------------------------------------------------------
+        template<class T> BlockingStreamBuffer<T>::BlockingStreamBuffer(const std::string& name) :
+            StreamBuffer(name),
+            _size(100)
+        {
+
+        }
+        template<class T> void BlockingStreamBuffer<T>::SetSize(long long size)
+        {
+            _size = size;
+        }
+        
+        template<class T>
+        ITypedParameter<T>* BlockingStreamBuffer<T>::UpdateData(T& data_, long long ts, Context* ctx)
+        {
+            boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+            while (_data_buffer.size() >= _size)
+            {
+                LOG(trace) << "Pushing to " << this->GetTreeName() << " waiting on read";
+                _cv.wait(lock);
+            }
+            _data_buffer[ts] = data_;
+            IParameter::modified = true;
+            this->_timestamp = ts;
+            IParameter::OnUpdate(ctx);
+            return this;
+        }
+        template<class T>
+        ITypedParameter<T>* BlockingStreamBuffer<T>::UpdateData(const T& data_, long long ts, Context* ctx)
+        {
+            //boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+            boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
+            while (_data_buffer.size() >= _size)
+            {
+                LOG(trace) << "Pushing to " << this->GetTreeName() << " waiting on read";
+                _cv.wait(lock);
+            }
+            _data_buffer[ts] = data_;
+            IParameter::modified = true;
+            this->_timestamp = ts;
+            IParameter::OnUpdate(ctx);
+            return this;
+        }
+        template<class T>
+        ITypedParameter<T>* BlockingStreamBuffer<T>::UpdateData(T* data_, long long ts, Context* ctx)
+        {
+            //boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+            boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
+            while(_data_buffer.size() >= _size)
+            {
+                LOG(trace) << "Pushing to " << this->GetTreeName() << " waiting on read";
+                _cv.wait(lock);
+            }
+            _data_buffer[ts] = *data_;
+            IParameter::modified = true;
+            this->_timestamp = ts;
+            IParameter::OnUpdate(ctx);
+            return this;
+        }
+        template<class T>
+        void BlockingStreamBuffer<T>::prune()
+        {
+            //boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+            boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
+            if (_current_timestamp != -1)
+            {
+                auto itr = this->_data_buffer.begin();
+                while (itr != this->_data_buffer.end())
+                {
+                    if (itr->first < _current_timestamp - _padding)
+                    {
+                        itr = this->_data_buffer.erase(itr);
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
+            }
+            lock.unlock();
+            _cv.notify_all();
+        }
+    }
 }
