@@ -162,7 +162,7 @@ set(MO_PROFILING_MODE "BUILTIN" CACHE STRING "Set MetaObject profiling mode")
 set_property(CACHE MO_PROFILING_MODE PROPERTY STRINGS BUILTIN DYNAMIC NONE)
 if(${MO_PROFILING_MODE} STREQUAL "BUILTIN")
   add_definitions(-DRMT_BUILTIN)
-  list(APPEND link_libs remotery)
+  list(APPEND link_libs Remotery)
 endif()
 if(${MO_PROFILING_MODE} STREQUAL "NONE")
   add_definitions(-DPROFILING_NONE)
@@ -172,12 +172,12 @@ add_definitions(-DRMT_USE_CUDA)
 
 
 add_subdirectory("dependencies/Remotery")
-set_target_properties(remotery PROPERTIES FOLDER Dependencies)
+set_target_properties(Remotery PROPERTIES FOLDER Dependencies)
 GroupSources(include)
 GroupSources(src)
 #include_directories(dependencies/Remotery/lib)
 add_library(MetaObject SHARED ${src} ${hdr} src/precompiled.hpp)
-target_link_libraries(MetaObject RuntimeObjectSystem RuntimeCompiler ${link_libs} ${OpenCV_LIBS} ${CUDA_CUDART_LIBRARY} ${CUDA_CUDA_LIBRARY})
+target_link_libraries(MetaObject RuntimeObjectSystem RuntimeCompiler ${link_libs} ${OpenCV_LIBS} ${CUDA_CUDART_LIBRARY})
 ocv_add_precompiled_header_to_target(MetaObject src/precompiled.hpp)
 
 # -------------------- instantiations --------------------------

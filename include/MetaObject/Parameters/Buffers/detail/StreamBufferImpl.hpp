@@ -66,7 +66,7 @@ namespace mo
 
         // ------------------------------------------------------------
         template<class T> BlockingStreamBuffer<T>::BlockingStreamBuffer(const std::string& name) :
-            StreamBuffer(name),
+            StreamBuffer<T>(name),
             _size(100)
         {
 
@@ -80,12 +80,12 @@ namespace mo
         ITypedParameter<T>* BlockingStreamBuffer<T>::UpdateData(T& data_, long long ts, Context* ctx)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            while (_data_buffer.size() >= _size)
+            while (this->_data_buffer.size() >= _size)
             {
                 LOG(trace) << "Pushing to " << this->GetTreeName() << " waiting on read";
                 _cv.wait(lock);
             }
-            _data_buffer[ts] = data_;
+            this->_data_buffer[ts] = data_;
             IParameter::modified = true;
             this->_timestamp = ts;
             IParameter::OnUpdate(ctx);
@@ -96,12 +96,12 @@ namespace mo
         {
             //boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
-            while (_data_buffer.size() >= _size)
+            while (this->_data_buffer.size() >= _size)
             {
                 LOG(trace) << "Pushing to " << this->GetTreeName() << " waiting on read";
                 _cv.wait(lock);
             }
-            _data_buffer[ts] = data_;
+            this->_data_buffer[ts] = data_;
             IParameter::modified = true;
             this->_timestamp = ts;
             IParameter::OnUpdate(ctx);
@@ -112,12 +112,12 @@ namespace mo
         {
             //boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
-            while(_data_buffer.size() >= _size)
+            while(this->_data_buffer.size() >= _size)
             {
                 LOG(trace) << "Pushing to " << this->GetTreeName() << " waiting on read";
                 _cv.wait(lock);
             }
-            _data_buffer[ts] = *data_;
+            this->_data_buffer[ts] = *data_;
             IParameter::modified = true;
             this->_timestamp = ts;
             IParameter::OnUpdate(ctx);
@@ -128,12 +128,12 @@ namespace mo
         {
             //boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
-            if (_current_timestamp != -1)
+            if (this->_current_timestamp != -1)
             {
                 auto itr = this->_data_buffer.begin();
                 while (itr != this->_data_buffer.end())
                 {
-                    if (itr->first < _current_timestamp - _padding)
+                    if (itr->first < this->_current_timestamp - this->_padding)
                     {
                         itr = this->_data_buffer.erase(itr);
                     }
