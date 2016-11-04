@@ -6,9 +6,7 @@ include("${CMAKE_CURRENT_LIST_DIR}/cmake/CMakeMacros.cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 set(link_libs "")
-set(PROJECT_BIN_DIRS_DEBUG "")
-set(PROJECT_BIN_DIRS_RELWITHDEBINFO "")
-set(PROJECT_BIN_DIRS_RELEASE "")
+
 
 set(WITH_QT "TRUE" CACHE BOOL "Enable QT support")
 set(WITH_PYTHON "TRUE" CACHE BOOL "Enable Python bindings")
@@ -64,12 +62,12 @@ find_package(Boost REQUIRED COMPONENTS ${Boost_required_components})
   link_directories(${Boost_LIBRARY_DIR_DEBUG})
   link_directories(${Boost_LIBRARY_DIR})
   list(APPEND link_libs ${Boost_LIBRARIES})
-  list(APPEND PROJECT_BIN_DIRS_DEBUG ${Boost_LIBRARY_DIR})
-  list(APPEND PROJECT_BIN_DIRS_RELEASE ${Boost_LIBRARY_DIR})
-  list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO ${Boost_LIBRARY_DIR})
-  list(APPEND PROJECT_BIN_DIRS_DEBUG ${Boost_LIBRARY_DIR_DEBUG})
-  list(APPEND PROJECT_BIN_DIRS_RELEASE ${Boost_LIBRARY_DIR_RELEASE})
-  list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO ${Boost_LIBRARY_DIR_RELEASE})
+  list(APPEND PROJECT_BIN_DIRS_DEBUG_ ${Boost_LIBRARY_DIR})
+  list(APPEND PROJECT_BIN_DIRS_RELEASE_ ${Boost_LIBRARY_DIR})
+  list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO_ ${Boost_LIBRARY_DIR})
+  list(APPEND PROJECT_BIN_DIRS_DEBUG_ ${Boost_LIBRARY_DIR_DEBUG})
+  list(APPEND PROJECT_BIN_DIRS_RELEASE_ ${Boost_LIBRARY_DIR_RELEASE})
+  list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO_ ${Boost_LIBRARY_DIR_RELEASE})
   
 
 # ---------------------- cereal ---------------------------------  
@@ -95,13 +93,26 @@ if(WITH_QT)
 		list(APPEND link_libs Qt5::Core Qt5::Widgets Qt5::Gui)
 		get_target_property(qt5_core_bin_ Qt5::Core IMPORTED_LOCATION_DEBUG)
 		get_filename_component(qt5_bin_dir_ "${qt5_core_bin_}" DIRECTORY)
-		list(APPEND PROJECT_BIN_DIRS_DEBUG ${qt5_bin_dir_})
-	    list(APPEND PROJECT_BIN_DIRS_RELEASE ${qt5_bin_dir_})
-	    list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO ${qt5_bin_dir_})
+		list(APPEND PROJECT_BIN_DIRS_DEBUG_ ${qt5_bin_dir_})
+	    list(APPEND PROJECT_BIN_DIRS_RELEASE_ ${qt5_bin_dir_})
+	    list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO_ ${qt5_bin_dir_})
 	else()
 	  message("Building without qt support")
 	endif()
 endif()
+
+# WT
+find_package(WT QUIET)
+if(Wt_FOUND)
+  add_definitions(-DHAVE_WT)
+  include_directories(${WT_INCLUDE_DIRS})
+  list(APPEND link_libs ${Wt_HTTP_LIBRARY} ${Wt_LIBRARY} ${Wt_DEBUG_LIBRARY} ${Wt_HTTP_DEBUG_LIBRARY})
+  find_path(Wt_BIN_DIR NAMES wt.dll wtd.dll PATHS ENV ${Wt_DIR}/bin)
+  set(WT_BIN_DIR ${Wt_BIN_DIR} CACHE PATH "" FORCE)
+  set(WT_BIN_DIR_DBG ${Wt_BIN_DIR} CACHE PATH "" FORCE)
+  set(WT_BIN_DIR_OPT ${Wt_BIN_DIR} CACHE PATH "" FORCE)
+  SET(BIN_DIRS "${BIN_DIRS};WT" CACHE STRING "" FORCE)
+endif(Wt_FOUND)
 
 # OpenCV
 if(WITH_OPENCV)
@@ -131,9 +142,9 @@ if(WITH_CUDA)
   IF(${CUDA_FOUND})
     INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
     ADD_DEFINITIONS(-DHAVE_CUDA)
-	list(APPEND PROJECT_BIN_DIRS_DEBUG ${CUDA_BIN_DIR})
-	list(APPEND PROJECT_BIN_DIRS_RELEASE ${CUDA_BIN_DIR})
-	list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO ${CUDA_BIN_DIR})
+	list(APPEND PROJECT_BIN_DIRS_DEBUG_ ${CUDA_BIN_DIR})
+	list(APPEND PROJECT_BIN_DIRS_RELEASE_ ${CUDA_BIN_DIR})
+	list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO_ ${CUDA_BIN_DIR})
     if(GNUC)
         LIST(APPEND CUDA_NVCC_FLAGS "--std=c++11")
     endif(GNUC)
@@ -177,7 +188,15 @@ GroupSources(include)
 GroupSources(src)
 #include_directories(dependencies/Remotery/lib)
 add_library(MetaObject SHARED ${src} ${hdr} src/precompiled.hpp)
-target_link_libraries(MetaObject RuntimeObjectSystem RuntimeCompiler ${link_libs} ${OpenCV_LIBS} ${CUDA_CUDART_LIBRARY})
+target_link_libraries(MetaObject 
+  RuntimeObjectSystem 
+  RuntimeCompiler 
+  ${link_libs} 
+  ${OpenCV_LIBS} 
+  ${CUDA_CUDART_LIBRARY}
+  ${CUDA_CUDA_LIBRARY}
+)
+
 ocv_add_precompiled_header_to_target(MetaObject src/precompiled.hpp)
 
 # -------------------- instantiations --------------------------

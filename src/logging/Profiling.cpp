@@ -96,13 +96,13 @@ void InitRemotery()
                 cuCtxGetCurrent(&ctx);
                 rmtCUDABind bind;
                 bind.context = ctx;
-                bind.CtxSetCurrent = &cuCtxSetCurrent;
-                bind.CtxGetCurrent = &cuCtxGetCurrent;
-                bind.EventCreate = &cuEventCreate;
-                bind.EventDestroy = &cuEventDestroy;
-                bind.EventRecord = &cuEventRecord;
-                bind.EventQuery = &cuEventQuery;
-                bind.EventElapsedTime = &cuEventElapsedTime;
+                bind.CtxSetCurrent = (void*)&cuCtxSetCurrent;
+                bind.CtxGetCurrent = (void*)&cuCtxGetCurrent;
+                bind.EventCreate = (void*)&cuEventCreate;
+                bind.EventDestroy = (void*)&cuEventDestroy;
+                bind.EventRecord = (void*)&cuEventRecord;
+                bind.EventQuery = (void*)&cuEventQuery;
+                bind.EventElapsedTime = (void*)&cuEventElapsedTime;
                 cuda_init(&bind);
             }
             rmt_push_cpu = (rmt_push_cpu_f)GetProcAddress(handle, "_rmt_BeginCPUSample");
@@ -119,13 +119,11 @@ void InitRemotery()
     }
 }
 #endif
-#ifndef _MSC_VER
-#define LoadLibrary(name) dlopen(name, RTLD_NOW)
-#define GetProcAddress dlsym
-#endif
+
 void InitNvtx()
 {
-    void* nvtx_handle = LoadLibrary("nvToolsExt64_1.dll");
+#ifdef _MSC_VER
+    HMODULE nvtx_handle = LoadLibrary("nvToolsExt64_1.dll");
     if (nvtx_handle)
     {
         LOG(info) << "Loaded nvtx module";
@@ -136,6 +134,19 @@ void InitNvtx()
     {
         LOG(info) << "No nvtx library loaded";
     }
+#else
+    void* nvtx_handle = dlopen("nvToolsExt64_1.dll", RTLD_NOW);
+    if (nvtx_handle)
+    {
+        LOG(info) << "Loaded nvtx module";
+        nvtx_push = (push_f)dlsym(nvtx_handle, "nvtxRangePushA");
+        nvtx_pop = (pop_f)dlsym(nvtx_handle, "nvtxRangePop");
+    }
+    else
+    {
+        LOG(info) << "No nvtx library loaded";
+    }
+#endif
 }
 
 
