@@ -15,5 +15,6 @@ namespace mo
         static void RunOnce(size_t id = GetThisThread());
         // Register a notifier function to signal new data input onto a queue
         static void RegisterNotifier(const std::function<void(void)>& f, size_t id = GetThisThread());
+		static size_t Size(size_t id = GetThisThread());
     };
 } // namespace Signals

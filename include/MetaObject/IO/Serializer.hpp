@@ -13,6 +13,8 @@ namespace cereal
     class BinaryOutputArchive;
     class XMLOutputArchive;
     class XMLInputArchive;
+	class JSONOutputArchive;
+	class JSONInputArchive;
 }
 
 namespace mo
@@ -36,15 +38,21 @@ namespace mo
         typedef std::function<void(const IMetaObject*, cereal::XMLOutputArchive&)> XMLSerialize_f;
         typedef std::function<void(IMetaObject*, cereal::XMLInputArchive&)> XMLDeSerialize_f;
 
+		typedef std::function<void(const IMetaObject*, cereal::JSONOutputArchive&)> JSONSerialize_f;
+		typedef std::function<void(IMetaObject*, cereal::JSONInputArchive&)> JSONDeSerialize_f;
+
         static void RegisterSerializationFunctionBinary(const char* obj_type, BinarySerialize_f f);
         static void RegisterDeSerializationFunctionBinary(const char* obj_type, BinaryDeSerialize_f f);
         static void RegisterSerializationFunctionXML(const char* obj_type, XMLSerialize_f f);
         static void RegisterDeSerializationFunctionXML(const char* obj_type, XMLDeSerialize_f f);
+		static void RegisterSerializationFunctionJSON(const char* obj_type, JSONSerialize_f f);
+		static void RegisterDeSerializationFunctionJSON(const char* obj_type, JSONDeSerialize_f f);
 
-		static BinarySerialize_f  GetSerializationFunctionBinary(const char* obj_type);
+		static BinarySerialize_f    GetSerializationFunctionBinary(const char* obj_type);
 		static BinaryDeSerialize_f  GetDeSerializationFunctionBinary(const char* obj_type);
 		static XMLSerialize_f       GetSerializationFunctionXML(const char* obj_type);
 		static XMLDeSerialize_f     GetDeSerializationFunctionXML(const char* obj_type);
-
+		static JSONSerialize_f       GetSerializationFunctionJSON(const char* obj_type);
+		static JSONDeSerialize_f     GetDeSerializationFunctionJSON(const char* obj_type);
     };
 }

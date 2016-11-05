@@ -15,6 +15,9 @@ std::map<std::string, SerializerFactory::BinaryDeSerialize_f> _binary_deserializ
 std::map<std::string, SerializerFactory::XMLSerialize_f> _xml_serialization_functions;
 std::map<std::string, SerializerFactory::XMLDeSerialize_f> _xml_deserialization_functions;
 
+std::map<std::string, SerializerFactory::JSONSerialize_f> _json_serialization_functions;
+std::map<std::string, SerializerFactory::JSONDeSerialize_f> _json_deserialization_functions;
+
 void SerializerFactory::RegisterSerializationFunctionBinary(const char* obj_type, BinarySerialize_f f)
 {
     _binary_serialization_functions[obj_type] = f;
@@ -35,6 +38,14 @@ void SerializerFactory::RegisterDeSerializationFunctionXML(const char* obj_type,
     _xml_deserialization_functions[obj_type] = f;
 }
 
+void SerializerFactory::RegisterSerializationFunctionJSON(const char* obj_type, JSONSerialize_f f)
+{
+	_json_serialization_functions[obj_type] = f;
+}
+void SerializerFactory::RegisterDeSerializationFunctionJSON(const char* obj_type, JSONDeSerialize_f f)
+{
+	_json_deserialization_functions[obj_type] = f;
+}
 SerializerFactory::BinarySerialize_f SerializerFactory::GetSerializationFunctionBinary(const char* obj_type)
 {
 	auto itr = _binary_serialization_functions.find(obj_type);
@@ -75,6 +86,25 @@ SerializerFactory::XMLDeSerialize_f SerializerFactory::GetDeSerializationFunctio
 	return SerializerFactory::XMLDeSerialize_f();
 }
 
+SerializerFactory::JSONSerialize_f SerializerFactory::GetSerializationFunctionJSON(const char* obj_type)
+{
+	auto itr = _json_serialization_functions.find(obj_type);
+	if (itr != _json_serialization_functions.end())
+	{
+		return itr->second;
+	}
+	return SerializerFactory::JSONSerialize_f();
+}
+
+SerializerFactory::JSONDeSerialize_f SerializerFactory::GetDeSerializationFunctionJSON(const char* obj_type)
+{
+	auto itr = _json_deserialization_functions.find(obj_type);
+	if (itr != _json_deserialization_functions.end())
+	{
+		return itr->second;
+	}
+	return SerializerFactory::JSONDeSerialize_f();
+}
 
 void SerializerFactory::Serialize(const rcc::shared_ptr<IMetaObject>& obj, std::ostream& os, SerializationType type)
 {

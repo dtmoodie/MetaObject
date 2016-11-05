@@ -96,6 +96,11 @@ struct impl
             }
         }
     }
+	size_t size(size_t id)
+	{
+		std::lock_guard<std::mutex> lock(mtx);
+		return std::get<0>(thread_queues[id]).size();
+	}
 };
 void ThreadSpecificQueue::Push(const std::function<void(void)>& f, size_t id, void* obj)
 {
@@ -127,4 +132,8 @@ void ThreadSpecificQueue::RemoveFromQueue(void* obj)
 #ifdef _DEBUG
     impl::inst()->_deleted_objects.insert(obj);
 #endif
+}
+size_t ThreadSpecificQueue::Size(size_t id)
+{
+	return impl::inst()->size(id);
 }
