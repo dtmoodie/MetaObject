@@ -1,5 +1,6 @@
 #pragma once
 #include <MetaObject/Parameters/IParameter.hpp>
+#include <MetaObject/Parameters/MetaParameter.hpp>
 #include "SerializationFunctionRegistry.hpp"
 #include <boost/lexical_cast.hpp>
 

@@ -13,52 +13,61 @@
 #include <cereal/types/string.hpp>
 using namespace mo;
 
-template<> bool IO::Text::DeSerialize<EnumParameter>(ITypedParameter<EnumParameter>* param, std::stringstream& ss)
+namespace mo
 {
-    EnumParameter* ptr = param->GetDataPtr();
-    if(ptr)
+    namespace IO
     {
-        ptr->values.clear();
-        ptr->enumerations.clear();
-        std::string size;
-        std::getline(ss, size, '[');
-        if (size.size())
+        namespace Text
         {
-            size_t size_ = boost::lexical_cast<size_t>(size);
-            ptr->values.reserve(size_);
-            ptr->enumerations.reserve(size_);
-        }
-        std::string enumeration;
-        int value;
-        char ch;
-        while( ss >> enumeration >> ch >> value)
-        {
-            ptr->addEnum(value, enumeration);
-            ss >> ch;
-        }
-        return true;
-    }
-    return false;
-}
+            template<> bool DeSerialize<EnumParameter>(ITypedParameter<EnumParameter>* param, std::stringstream& ss)
+            {
+                EnumParameter* ptr = param->GetDataPtr();
+                if(ptr)
+                {
+                    ptr->values.clear();
+                    ptr->enumerations.clear();
+                    std::string size;
+                    std::getline(ss, size, '[');
+                    if (size.size())
+                    {
+                        size_t size_ = boost::lexical_cast<size_t>(size);
+                        ptr->values.reserve(size_);
+                        ptr->enumerations.reserve(size_);
+                    }
+                    std::string enumeration;
+                    int value;
+                    char ch;
+                    while( ss >> enumeration >> ch >> value)
+                    {
+                        ptr->addEnum(value, enumeration);
+                        ss >> ch;
+                    }
+                    return true;
+                }
+                return false;
+            }
 
-template<> bool IO::Text::Serialize<EnumParameter>(ITypedParameter<EnumParameter>* param, std::stringstream& ss)
-{
-    EnumParameter* ptr = param->GetDataPtr();
-    if (ptr)
-    {
-        ss << ptr->enumerations.size();
-        ss << "[";
-        for(int i = 0; i < ptr->enumerations.size(); ++i)
-        {
-            if(i != 0)
-                ss << ", ";
-            ss << ptr->enumerations[i] << ":" << ptr->values[i];
-        }
-        ss << "]";
-        return true;
-    }
-    return false;
-}
+            template<> bool Serialize<EnumParameter>(ITypedParameter<EnumParameter>* param, std::stringstream& ss)
+            {
+                EnumParameter* ptr = param->GetDataPtr();
+                if (ptr)
+                {
+                    ss << ptr->enumerations.size();
+                    ss << "[";
+                    for(int i = 0; i < ptr->enumerations.size(); ++i)
+                    {
+                        if(i != 0)
+                            ss << ", ";
+                        ss << ptr->enumerations[i] << ":" << ptr->values[i];
+                    }
+                    ss << "]";
+                    return true;
+                }
+                return false;
+            }
+        } // namespace Text
+    } // namespace IO
+} // namespace mo
 namespace cereal
 {
     template<class Archive> void serialize(Archive& ar,  mo::ReadFile& m)

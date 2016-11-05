@@ -40,6 +40,7 @@ namespace mo
 
         
         std::vector<std::shared_ptr<ISignalRelay>> GetRelays(const std::string& name);
+        std::vector<std::pair<std::shared_ptr<ISignalRelay>, std::string>> GetAllRelays();
         template<class Sig> std::shared_ptr<TypedSignalRelay<Sig>> GetRelay(const std::string& name)
         {
             return std::dynamic_pointer_cast<TypedSignalRelay<Sig>>(GetRelay(TypeInfo(typeid(Sig)), name));

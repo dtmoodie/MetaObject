@@ -1,4 +1,7 @@
 #define BOOST_TEST_MAIN
+#include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
+#include <MetaObject/Parameters/IO/TextPolicy.hpp>
+#include <MetaObject/Parameters/Types.hpp>
 #include "MetaObject/Parameters/MetaParameter.hpp"
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Signals/TypedSignal.hpp"
@@ -166,9 +169,7 @@ BOOST_AUTO_TEST_CASE(serialize_multi_by_policy_binary)
 	}
 }
 
-#include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
-#include <MetaObject/Parameters/IO/TextPolicy.hpp>
-#include <MetaObject/Parameters/Types.hpp>
+
 INSTANTIATE_META_PARAMETER(mo::ReadFile);
 INSTANTIATE_META_PARAMETER(std::vector<int>);
 BOOST_AUTO_TEST_CASE(deserialize_text_path)

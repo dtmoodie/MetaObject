@@ -14,7 +14,7 @@ namespace mo
         {
 			BufferConstructor()
             {
-				BufferFactory::Instance()->RegisterFunction(TypeInfo(typeid(typename T::ValueType)),
+                BufferFactory::RegisterFunction(TypeInfo(typeid(typename T::ValueType)),
 					std::bind(&BufferConstructor<T>::create_buffer, std::placeholders::_1),
 					T::BufferType);
             }

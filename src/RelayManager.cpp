@@ -125,8 +125,8 @@ int RelayManager::ConnectSlots(IMetaObject* obj, const std::string& name)
 int RelayManager::ConnectSlots(IMetaObject* obj, const TypeInfo& type)
 {
 	int count = 0;
-	auto slots = obj->GetSlots(type);
-	for (auto& slot : slots)
+    auto all_slots = obj->GetSlots(type);
+    for (auto& slot : all_slots)
 	{
 		count += Connect(slot.first, slot.second, obj) ? 1 : 0;
 	}
@@ -136,8 +136,8 @@ int RelayManager::ConnectSlots(IMetaObject* obj, const TypeInfo& type)
 int RelayManager::ConnectSlots(IMetaObject* obj)
 {
 	int count = 0;
-	auto slots = obj->GetSlots();
-	for (auto& slot : slots)
+    auto all_slots = obj->GetSlots();
+    for (auto& slot : all_slots )
 	{
 		count += Connect(slot.first, slot.second, obj) ? 1 : 0;
 	}
@@ -149,14 +149,36 @@ std::vector<std::shared_ptr<ISignalRelay>> RelayManager::GetRelays(const std::st
     std::vector<std::shared_ptr<ISignalRelay>> relays;
     for(auto& types : _pimpl->relays)
     {
-        auto itr = types.second.find(name);
-        if(itr != types.second.end())
+        if(name.size())
         {
-            relays.push_back(itr->second);
+            auto itr = types.second.find(name);
+            if(itr != types.second.end())
+            {
+                relays.push_back(itr->second);
+            }
+        }else
+        {
+            for(auto& relay : types.second)
+            {
+                relays.push_back(relay.second);
+            }
         }
     }
     return relays;
 }
+std::vector<std::pair<std::shared_ptr<ISignalRelay>, std::string>> RelayManager::GetAllRelays()
+{
+    std::vector<std::pair<std::shared_ptr<ISignalRelay>, std::string>> output;
+    for(auto& types : _pimpl->relays)
+    {
+        for(auto& relay : types.second)
+        {
+            output.emplace_back(relay.second, relay.first);
+        }
+    }
+    return output;
+}
+
 std::shared_ptr<ISignalRelay>& RelayManager::GetRelay(const TypeInfo& type, const std::string& name)
 {
 	return _pimpl->relays[type][name];

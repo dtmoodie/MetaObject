@@ -43,6 +43,19 @@ struct WebContext::impl
         server->stop();
     }
 };
+#else
+
+struct WebContext::impl
+{
+    void Run()
+    {
+
+    }
+    void Kill()
+    {
+
+    }
+};
 #endif
 
 WebContext* WebContext::Instance()

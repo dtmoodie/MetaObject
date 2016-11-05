@@ -17,7 +17,7 @@ BOOST_AUTO_TEST_CASE(logging_init)
 //    mo::InitLogging();
 }
 
-
+#if BOOST_VERSION > 105800
 BOOST_AUTO_TEST_CASE(single_threaded_logging, *boost::unit_test::timeout(100))
 {
     for(int i = 0; i < 1000; ++i)
@@ -112,3 +112,4 @@ BOOST_AUTO_TEST_CASE(ten_threaded_logging_first_10, *boost::unit_test::timeout(1
         thread->join();
     }
 }
+#endif

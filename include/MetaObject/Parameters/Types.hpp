@@ -72,8 +72,7 @@ namespace mo
             return *this;
         }
 
-
-        void SetValue(std::initializer_list<char*> string, std::initializer_list<int> values)
+        void SetValue(const std::initializer_list<const char*>& string, const std::initializer_list<int>& values)
         {
             auto iItr = values.begin();
             auto nItr = string.begin();

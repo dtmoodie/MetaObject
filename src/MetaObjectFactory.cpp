@@ -4,6 +4,8 @@
 #include "MetaObject/Logging/CompileLogger.hpp"
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Logging/Log.hpp"
+#include "MetaObject/Signals/TypedSignal.hpp"
+#include "MetaObject/Signals/TypedSlot.hpp"
 #include <boost/filesystem.hpp>
 #include <boost/date_time.hpp>
 using namespace mo;
@@ -17,6 +19,7 @@ struct MetaObjectFactory::impl
     RuntimeObjectSystem obj_system;
     CompileLogger logger;
     std::vector<std::string> plugins;
+    TypedSignal<void(void)> on_constructor_added;
 };
 
 MetaObjectFactory::MetaObjectFactory(SystemTable* table)
@@ -87,10 +90,19 @@ std::string MetaObjectFactory::PrintAllObjectInfo(int interface_id) const
     for(int i = 0; i < constructors.Size(); ++i)
     {
         if(auto info = constructors[i]->GetObjectInfo())
+        {
             if(interface_id == -1)
+            {
                 ss << info->Print();
-            else if(constructors[i]->GetInterfaceId() == interface_id)
-                ss << info->Print();
+            }
+            else
+            {
+                if(constructors[i]->GetInterfaceId() == interface_id)
+                {
+                    ss << info->Print();
+                }
+            }
+        }
     }
     return ss.str();
 }
@@ -328,4 +340,8 @@ bool MetaObjectFactory::SwapObjects()
 void MetaObjectFactory::SetCompileCallback(std::function<void(const std::string, int)>& f)
 {
        
+}
+std::shared_ptr<Connection> MetaObjectFactory::ConnectConstructorAdded(TypedSlot<void(void)>* slot)
+{
+    return _pimpl->on_constructor_added.Connect(slot);
 }
