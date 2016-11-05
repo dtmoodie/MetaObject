@@ -5,7 +5,6 @@
 
 #ifdef HAVE_CUDA
 #include "cuda.h"
-#define RMT_USE_CUDA
   #ifdef HAVE_OPENCV
     #include <opencv2/core/cuda_stream_accessor.hpp>
   #endif
@@ -57,13 +56,13 @@ void InitRemotery()
     cuCtxGetCurrent(&ctx);
     rmtCUDABind bind;
     bind.context = ctx;
-    bind.CtxSetCurrent = &cuCtxSetCurrent;
-    bind.CtxGetCurrent = &cuCtxGetCurrent;
-    bind.EventCreate = &cuEventCreate;
-    bind.EventDestroy = &cuEventDestroy;
-    bind.EventRecord = &cuEventRecord;
-    bind.EventQuery = &cuEventQuery;
-    bind.EventElapsedTime = &cuEventElapsedTime;
+    bind.CtxSetCurrent = (void*)&cuCtxSetCurrent;
+    bind.CtxGetCurrent = (void*)&cuCtxGetCurrent;
+    bind.EventCreate = (void*)&cuEventCreate;
+    bind.EventDestroy = (void*)&cuEventDestroy;
+    bind.EventRecord = (void*)&cuEventRecord;
+    bind.EventQuery = (void*)&cuEventQuery;
+    bind.EventElapsedTime = (void*)&cuEventElapsedTime;
     rmt_BindCUDA(&bind);
     rmt_push_cpu = &_rmt_BeginCPUSample;
     rmt_pop_cpu = &_rmt_EndCPUSample;
@@ -97,13 +96,13 @@ void InitRemotery()
                 cuCtxGetCurrent(&ctx);
                 rmtCUDABind bind;
                 bind.context = ctx;
-                bind.CtxSetCurrent = &cuCtxSetCurrent;
-                bind.CtxGetCurrent = &cuCtxGetCurrent;
-                bind.EventCreate = &cuEventCreate;
-                bind.EventDestroy = &cuEventDestroy;
-                bind.EventRecord = &cuEventRecord;
-                bind.EventQuery = &cuEventQuery;
-                bind.EventElapsedTime = &cuEventElapsedTime;
+                bind.CtxSetCurrent = (void*)&cuCtxSetCurrent;
+                bind.CtxGetCurrent = (void*)&cuCtxGetCurrent;
+                bind.EventCreate = (void*)&cuEventCreate;
+                bind.EventDestroy = (void*)&cuEventDestroy;
+                bind.EventRecord = (void*)&cuEventRecord;
+                bind.EventQuery = (void*)&cuEventQuery;
+                bind.EventElapsedTime = (void*)&cuEventElapsedTime;
                 cuda_init(&bind);
             }
             rmt_push_cpu = (rmt_push_cpu_f)GetProcAddress(handle, "_rmt_BeginCPUSample");
@@ -123,6 +122,7 @@ void InitRemotery()
 
 void InitNvtx()
 {
+#ifdef _MSC_VER
     HMODULE nvtx_handle = LoadLibrary("nvToolsExt64_1.dll");
     if (nvtx_handle)
     {
@@ -134,6 +134,19 @@ void InitNvtx()
     {
         LOG(info) << "No nvtx library loaded";
     }
+#else
+    void* nvtx_handle = dlopen("nvToolsExt64_1.dll", RTLD_NOW);
+    if (nvtx_handle)
+    {
+        LOG(info) << "Loaded nvtx module";
+        nvtx_push = (push_f)dlsym(nvtx_handle, "nvtxRangePushA");
+        nvtx_pop = (pop_f)dlsym(nvtx_handle, "nvtxRangePop");
+    }
+    else
+    {
+        LOG(info) << "No nvtx library loaded";
+    }
+#endif
 }
 
 
@@ -145,7 +158,11 @@ void mo::InitProfiling()
 #endif
 }
 
+scoped_profile::scoped_profile(std::string name, unsigned int* obj_hash, unsigned int* cuda_hash, cv::cuda::Stream* stream):
+    scoped_profile(name.c_str(), obj_hash, cuda_hash, stream)
+{
 
+}
 
 scoped_profile::scoped_profile(const char* name, unsigned int* rmt_hash, unsigned int* rmt_cuda, cv::cuda::Stream* stream)
 {
