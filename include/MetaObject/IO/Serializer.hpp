@@ -55,4 +55,10 @@ namespace mo
 		static JSONSerialize_f       GetSerializationFunctionJSON(const char* obj_type);
 		static JSONDeSerialize_f     GetDeSerializationFunctionJSON(const char* obj_type);
     };
+    MO_EXPORTS bool Serialize(cereal::BinaryOutputArchive& ar, const IMetaObject* obj);
+    MO_EXPORTS bool DeSerialize(cereal::BinaryInputArchive& ar, IMetaObject* obj);
+    MO_EXPORTS bool Serialize(cereal::XMLOutputArchive& ar, const IMetaObject* obj);
+    MO_EXPORTS bool DeSerialize(cereal::XMLInputArchive& ar, IMetaObject* obj);
+    MO_EXPORTS bool Serialize(cereal::JSONOutputArchive& ar, const IMetaObject* obj);
+    MO_EXPORTS bool DeSerialize(cereal::JSONInputArchive& ar, IMetaObject* obj);
 }

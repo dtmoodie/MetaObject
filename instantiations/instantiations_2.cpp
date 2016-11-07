@@ -5,7 +5,7 @@
 #include "MetaObject/Parameters/Buffers/CircularBuffer.hpp"
 #include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
 #include "MetaObject/Parameters/Buffers/map.hpp"
-
+#include <cereal/types/string.hpp>
 INSTANTIATE_META_PARAMETER(std::vector<int>);
 INSTANTIATE_META_PARAMETER(std::vector<unsigned short>);
 INSTANTIATE_META_PARAMETER(std::vector<unsigned int>);
@@ -13,3 +13,4 @@ INSTANTIATE_META_PARAMETER(std::vector<char>);
 INSTANTIATE_META_PARAMETER(std::vector<unsigned char>);
 INSTANTIATE_META_PARAMETER(std::vector<float>);
 INSTANTIATE_META_PARAMETER(std::vector<double>);
+INSTANTIATE_META_PARAMETER(std::vector<std::string>);

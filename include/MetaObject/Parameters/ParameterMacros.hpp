@@ -47,6 +47,12 @@ void init_parameters_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
 type name = init; \
 SERIALIZE_(name, __COUNTER__)
 
+#define PERSISTENT(type, name) \
+type name; \
+LOAD_SAVE_(name, __COUNTER__)
+
+#define INIT(name, init) INIT_(name, init, __COUNTER__)
+
 #define STATUS(type, name, init)\
 mo::TypedParameterPtr<type> name##_param; \
 type name = init; \

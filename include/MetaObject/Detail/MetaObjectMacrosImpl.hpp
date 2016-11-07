@@ -145,13 +145,20 @@ template<int N> void _serialize_parameters(ISimpleSerializer* pSerializer, mo::_
 void _serialize_parameters(ISimpleSerializer* pSerializer, mo::_counter_<N_> dummy) \
 { \
 } \
-template<class T, int N> void _serialize_parameters(T& ar, mo::_counter_<N> dummy) \
+template<class T, int N> void _load_parameters(T& ar, mo::_counter_<N> dummy) \
 { \
-    _serialize_parameters<T>(ar, --dummy); \
+    _load_parameters<T>(ar, --dummy); \
 } \
-template<class T> void _serialize_parameters(T& ar, mo::_counter_<N_> dummy) \
+template<class T, int N> void _save_parameters(T& ar, mo::_counter_<N> dummy) const \
+{ \
+    _save_parameters<T>(ar, --dummy); \
+} \
+template<class T> void _load_parameters(T& ar, mo::_counter_<N_> dummy) \
 { \
 } \
+template<class T> void _save_parameters(T& ar, mo::_counter_<N_> dummy) const \
+{ \
+}
 
 #define PARAMETER_END(N_) \
 void InitParameters(bool firstInit) \
@@ -164,12 +171,16 @@ void SerializeParameters(ISimpleSerializer* pSerializer) \
     _serialize_parameters(pSerializer, mo::_counter_<N_ - 1>()); \
     _serialize_parent_params(pSerializer); \
 } \
-template<class T> void serialize(T& ar) \
+template<class T> void load(T& ar) \
 { \
-    _serialize_parameters<T>(ar, mo::_counter_<N_ -1>()); \
-    _serialize_parent<T>(ar); \
+    _load_parameters<T>(ar, mo::_counter_<N_ -1>()); \
+    _load_parent<T>(ar); \
 } \
-
+template<class T> void save(T& ar) const \
+{ \
+    _save_parameters<T>(ar, mo::_counter_<N_ -1>()); \
+    _save_parent<T>(ar); \
+}
 
 
 // -------------- SLOTS -------------
@@ -198,9 +209,13 @@ void _serialize_parent_params(ISimpleSerializer* pSerializer) \
 { \
     PARENT1::SerializeParameters(pSerializer); \
 } \
-template<class T> void _serialize_parent(T& ar) \
+template<class T> void _load_parent(T& ar) \
 { \
-    PARENT1::serialize(ar); \
+    PARENT1::load(ar); \
+} \
+template<class T> void _save_parent(T& ar) const \
+{ \
+   PARENT1::save(ar); \
 } \
 void _bind_parent_slots(bool firstInit) \
 { \
@@ -235,10 +250,15 @@ void _serialize_parent_params(ISimpleSerializer* pSerializer) \
     PARENT1::SerializeParameters(pSerializer); \
     PARENT2::SerializeParameters(pSerializer); \
 } \
-template<class T> void _serialize_parent(T& ar) \
+template<class T> void _load_parent(T& ar) \
 { \
-    PARENT1::serialize(ar); \
-    PARENT2::serialize(ar); \
+    PARENT1::load(ar); \
+    PARENT2::load(ar); \
+} \
+template<class T> void _save_parent(T& ar) const \
+{ \
+   PARENT1::save(ar); \
+   PARENT2::save(ar); \
 } \
 void _bind_parent_slots(bool firstInit) \
 { \
@@ -276,7 +296,8 @@ int _init_parent_signals(bool firstInit) \
 #define _HANDLE_NO_PARENT \
 void _init_parent_params(bool firstInit){ } \
 void _serialize_parent_params(ISimpleSerializer* pSerializer) { } \
-template<class T> void _serialize_parent(T& ar) { } \
+template<class T> void _load_parent(T& ar) { } \
+template<class T> void _save_parent(T& ar) const { } \
 void _bind_parent_slots(bool firstInit) { } \
 static void _list_parent_parameter_info(std::vector<mo::ParameterInfo*>& info) { } \
 static void _list_parent_signals(std::vector<mo::SignalInfo*>& info) { } \

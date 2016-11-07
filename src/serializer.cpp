@@ -2,12 +2,19 @@
 #include <MetaObject/IMetaObject.hpp>
 #include "MetaObject/Logging/Log.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
+#include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
+#include "MetaObject/Parameters/IParameter.hpp"
+#include "MetaObject/Parameters/InputParameter.hpp"
+
 #include <cereal/archives/binary.hpp>
 #include <cereal/archives/xml.hpp>
+#include <cereal/archives/json.hpp>
 #include <cereal/types/string.hpp>
 #include <cereal/types/memory.hpp>
 #include <cereal/types/polymorphic.hpp>
+
 #include <map>
+
 using namespace mo;
 std::map<std::string, SerializerFactory::BinarySerialize_f> _binary_serialization_functions;
 std::map<std::string, SerializerFactory::BinaryDeSerialize_f> _binary_deserialization_functions;
@@ -191,4 +198,172 @@ rcc::shared_ptr<IMetaObject> SerializerFactory::DeSerialize(std::istream& os, Se
         }
     }
     return obj;
+}
+
+bool mo::Serialize(cereal::BinaryOutputArchive& ar, const IMetaObject* obj)
+{
+    if(auto func = SerializerFactory::GetSerializationFunctionBinary(obj->GetTypeName()))
+    {
+        func(obj, ar);
+    }else
+    {
+        LOG(debug) << "No object specific serialization function found for " << obj->GetTypeName();
+        auto params = obj->GetParameters();
+        std::string type = obj->GetTypeName();
+        ar(cereal::make_nvp("TypeName", type));
+        for (auto& param : params)
+        {
+            auto func1 = SerializationFunctionRegistry::Instance()->GetBinarySerializationFunction(param->GetTypeInfo());
+            if (func1)
+            {
+                if (!func1(param, ar))
+                {
+                    LOG(debug) << "Unable to serialize " << param->GetTreeName();
+                }
+            }
+            else
+            {
+                LOG(debug) << "No serialization function found for " << param->GetTypeInfo().name();
+            }
+        }
+    }
+    return true;
+}
+
+bool mo::DeSerialize(cereal::BinaryInputArchive& ar, IMetaObject* obj)
+{
+    return false;
+}
+
+bool mo::Serialize(cereal::XMLOutputArchive& ar, const IMetaObject* obj)
+{
+    if (auto func = SerializerFactory::GetSerializationFunctionXML(obj->GetTypeName()))
+    {
+        func(obj, ar);
+        return true;
+    }
+    else
+    {
+        LOG(debug) << "No object specific serialization function found for " << obj->GetTypeName();
+        auto params = obj->GetParameters();
+        std::string type = obj->GetTypeName();
+        ar(cereal::make_nvp("TypeName", type));
+        for (auto& param : params)
+        {
+            auto func1 = SerializationFunctionRegistry::Instance()->GetXmlSerializationFunction(param->GetTypeInfo());
+            if (func1)
+            {
+                if (!func1(param, ar))
+                {
+                    LOG(debug) << "Unable to serialize " << param->GetTreeName();
+                }
+            }
+            else
+            {
+                LOG(debug) << "No serialization function found for " << param->GetTypeInfo().name();
+            }
+        }
+        return true;
+    }
+}
+
+bool mo::DeSerialize(cereal::XMLInputArchive& ar, IMetaObject* obj)
+{
+    return false;
+}
+
+bool mo::Serialize(cereal::JSONOutputArchive& ar, const IMetaObject* obj)
+{
+    if (auto func = SerializerFactory::GetSerializationFunctionJSON(obj->GetTypeName()))
+    {
+        func(obj, ar);
+        return true;
+    }
+    else
+    {
+        LOG(debug) << "No object specific serialization function found for " << obj->GetTypeName();
+        auto params = obj->GetParameters();
+        std::string type = obj->GetTypeName();
+        ar(cereal::make_nvp("TypeName", type));
+        for (auto& param : params)
+        {
+            if(param->CheckFlags(mo::Input_e))
+            {
+                InputParameter* input = dynamic_cast<InputParameter*>(param);
+                if(input)
+                {
+                    auto input_source_param = input->GetInputParam();
+                    if(input_source_param)
+                    {
+                        std::string input_source = input_source_param->GetTreeName();
+                        std::string param_name = param->GetName();
+                        ar(cereal::make_nvp(param_name, input_source));
+                    }
+                }
+            }
+            if(param->CheckFlags(mo::Output_e))
+                continue;
+            auto func1 = SerializationFunctionRegistry::Instance()->GetJsonSerializationFunction(param->GetTypeInfo());
+            if (func1)
+            {
+                if (!func1(param, ar))
+                {
+                    LOG(debug) << "Unable to serialize " << param->GetTreeName();
+                }
+            }
+            else
+            {
+                LOG(debug) << "No serialization function found for " << param->GetTypeInfo().name();
+            }
+        }
+        return true;
+    }
+}
+
+bool mo::DeSerialize(cereal::JSONInputArchive& ar, IMetaObject* obj)
+{
+    if(obj == nullptr)
+        return false;
+    if (auto func = SerializerFactory::GetDeSerializationFunctionJSON(obj->GetTypeName()))
+    {
+        func(obj, ar);
+        return true;
+    }
+    else
+    {
+        LOG(debug) << "No object specific serialization function found for " << obj->GetTypeName();
+        auto params = obj->GetParameters();
+        for (auto& param : params)
+        {
+            if (param->CheckFlags(mo::Input_e))
+            {
+                /*InputParameter* input = dynamic_cast<InputParameter*>(param);
+                if (input)
+                {
+                    auto input_source_param = input->GetInputParam();
+                    if (input_source_param)
+                    {
+                        std::string input_source = input_source_param->GetTreeName();
+                        std::string param_name = param->GetName();
+                        ar(cereal::make_nvp(param_name, input_source));
+                    }
+                }*/
+            }
+            if (param->CheckFlags(mo::Output_e))
+                continue;
+            auto func1 = SerializationFunctionRegistry::Instance()->GetJsonDeSerializationFunction(param->GetTypeInfo());
+            if (func1)
+            {
+                if (!func1(param, ar))
+                {
+                    LOG(debug) << "Unable to serialize " << param->GetTreeName();
+                }
+            }
+            else
+            {
+                LOG(debug) << "No serialization function found for " << param->GetTypeInfo().name();
+            }
+        }
+        return true;
+    }
 }
