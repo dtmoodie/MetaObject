@@ -7,7 +7,7 @@
 
 #define PARAM_(type, name, init, N) \
 LOAD_SAVE_(name, N) \
-INIT_(name, N) \
+INIT_(name, init, N) \
 static void list_parameter_info_(std::vector<mo::ParameterInfo*>& info, mo::_counter_<N> dummy) \
 { \
     static mo::ParameterInfo s_info(mo::TypeInfo(typeid(type)), #name); \
