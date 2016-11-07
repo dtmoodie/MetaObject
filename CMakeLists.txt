@@ -105,9 +105,16 @@ endif()
 find_package(WT QUIET)
 if(Wt_FOUND)
   add_definitions(-DHAVE_WT)
-  include_directories(${WT_INCLUDE_DIRS})
-  list(APPEND link_libs ${Wt_HTTP_LIBRARY} ${Wt_LIBRARY} ${Wt_DEBUG_LIBRARY} ${Wt_HTTP_DEBUG_LIBRARY})
+  include_directories(${Wt_INCLUDE_DIR})
+  list(APPEND link_libs 
+    ${Wt_HTTP_LIBRARY} 
+	${Wt_LIBRARY} 
+	${Wt_DEBUG_LIBRARY} 
+	${Wt_HTTP_DEBUG_LIBRARY}
+	)
+
   find_path(Wt_BIN_DIR NAMES wt.dll wtd.dll PATHS ENV ${Wt_DIR}/bin)
+  
   set(WT_BIN_DIR ${Wt_BIN_DIR} CACHE PATH "" FORCE)
   set(WT_BIN_DIR_DBG ${Wt_BIN_DIR} CACHE PATH "" FORCE)
   set(WT_BIN_DIR_OPT ${Wt_BIN_DIR} CACHE PATH "" FORCE)
