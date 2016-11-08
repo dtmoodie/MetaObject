@@ -45,11 +45,17 @@ void init_parameters_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
 
 #define PROPERTY(type, name, init) \
 type name = init; \
+mo::TypedParameterPtr<type> name##_param; \
 SERIALIZE_(name, __COUNTER__)
+
+#define PERSISTENT_(type, name, N) \
+mo::TypedParameterPtr<type> name##_param; \
+INIT_(name, N) \
+LOAD_SAVE_(name, N)
 
 #define PERSISTENT(type, name) \
 type name; \
-LOAD_SAVE_(name, __COUNTER__)
+PERSISTENT_(type, name, __COUNTER__)
 
 #define INIT(name, init) INIT_(name, init, __COUNTER__)
 
