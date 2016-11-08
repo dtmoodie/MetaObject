@@ -22,7 +22,7 @@ if(WITH_PYTHON)
   find_package(PythonLibs QUIET)
   find_package(PythonInterp QUIET)
   if(PythonLibs_FOUND AND PythonInterp_FOUND)
-    find_package(Boost COMPONENTS python${PYTHON_VERSION_MAJOR})
+    find_package(Boost COMPONENTS python)
     if(Boost_FOUND)
 	    list(APPEND link_libs "${PYTHON_LIBRAY}")
             get_filename_component(python_lib_dir "${PYTHON_DEBUG_LIBRARY}" DIRECTORY)
@@ -75,8 +75,6 @@ set(cereal_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include
 find_package(cereal REQUIRED)
 if(cereal_FOUND)
   include_directories(${cereal_INCLUDE_DIRS})
-  message("Found cereal at: ${cereal_INCLUDE_DIRS}")
-  add_definitions(-DHAVE_CEREAL)
 endif()
 
 
@@ -85,7 +83,6 @@ endif()
 if(WITH_QT)
 	find_package(Qt5 QUIET COMPONENTS Core Widgets Gui)
 	if(Qt5_FOUND)
-		message("Building with qt support")
 		add_definitions(-DHAVE_QT5)
 		QT5_WRAP_CPP(MOC "${CMAKE_CURRENT_LIST_DIR}/include/MetaObject/Parameters/UI/Qt/SignalProxy.hpp")
 		list(APPEND src ${MOC})
@@ -96,8 +93,6 @@ if(WITH_QT)
 		list(APPEND PROJECT_BIN_DIRS_DEBUG_ ${qt5_bin_dir_})
 	    list(APPEND PROJECT_BIN_DIRS_RELEASE_ ${qt5_bin_dir_})
 	    list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO_ ${qt5_bin_dir_})
-	else()
-	  message("Building without qt support")
 	endif()
 endif()
 
@@ -108,13 +103,12 @@ if(Wt_FOUND)
   include_directories(${Wt_INCLUDE_DIR})
   list(APPEND link_libs 
     ${Wt_HTTP_LIBRARY} 
-	${Wt_LIBRARY} 
-	${Wt_DEBUG_LIBRARY} 
-	${Wt_HTTP_DEBUG_LIBRARY}
-	)
+    ${Wt_LIBRARY} 
+    ${Wt_DEBUG_LIBRARY} 
+    ${Wt_HTTP_DEBUG_LIBRARY}
+  )
 
   find_path(Wt_BIN_DIR NAMES wt.dll wtd.dll PATHS ENV ${Wt_DIR}/bin)
-  
   set(WT_BIN_DIR ${Wt_BIN_DIR} CACHE PATH "" FORCE)
   set(WT_BIN_DIR_DBG ${Wt_BIN_DIR} CACHE PATH "" FORCE)
   set(WT_BIN_DIR_OPT ${Wt_BIN_DIR} CACHE PATH "" FORCE)
@@ -125,18 +119,14 @@ endif(Wt_FOUND)
 if(WITH_OPENCV)
   find_package(OpenCV QUIET COMPONENTS core)
   if(OpenCV_FOUND)
-    message("Building with opencv support: ${OpenCV_LIBS}")
     add_definitions(-DHAVE_OPENCV)
     include_directories(${OpenCV_INCLUDE_DIRS})
-  else()
-    message("Building without opencv support")
   endif()
 endif(WITH_OPENCV)
 
 # ZeroMQ
 find_package(ZeroMQ QUIET)
 if(${ZeroMQ_FOUND})
-  message("Building with ZeroMQ")
   include_directories(${ZeroMQ_INCLUDE_DIR})
   include_directories("${CMAKE_CURRENT_LIST_DIR}/dependencies/cppzmq") # cpp bindings
   list(APPEND link_libs "optimized;${ZeroMQ_LIBRARY_RELEASE};debug;${ZeroMQ_LIBRARY_DEBUG}")
@@ -153,7 +143,6 @@ if(WITH_CUDA)
 	list(APPEND PROJECT_BIN_DIRS_RELEASE_ ${CUDA_BIN_DIR})
 	list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO_ ${CUDA_BIN_DIR})
     if(GNUC)
-        #LIST(APPEND CUDA_NVCC_FLAGS "--std=c++11")
         set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --std=c++11")
     endif(GNUC)
   ENDIF(${CUDA_FOUND})
@@ -167,9 +156,9 @@ set(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${CMAKE_CURRENT_LIST_DIR}/in
 set(RCC_LIBRARY_DIRS_DEBUG "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/Debug")
 set(RCC_LIBRARY_DIRS_RELWITHDEBINFO "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/RelWithDebInfo")
 if(MSVC)
-set(RCC_COMPILE_FLAGS "/DBOOST_ALL_DYN_LINK")
+  set(RCC_COMPILE_FLAGS "/DBOOST_ALL_DYN_LINK")
 else()
-set(RCC_COMPILE_FLAGS "-DBOOST_ALL_DYN_LINK")
+  set(RCC_COMPILE_FLAGS "-DBOOST_ALL_DYN_LINK")
 endif()
 ADD_SUBDIRECTORY("dependencies/rcc")
 include_directories(${RCC_INCLUDE_DIRS})
@@ -188,7 +177,6 @@ if(${MO_PROFILING_MODE} STREQUAL "NONE")
 endif()
 
 add_definitions(-DRMT_USE_CUDA)
-
 
 add_subdirectory("dependencies/Remotery")
 set_target_properties(Remotery PROPERTIES FOLDER Dependencies)
