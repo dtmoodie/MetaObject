@@ -48,6 +48,32 @@ std::shared_ptr<Connection> RelayManager::Connect(ISignal* signal, const std::st
 	return signal->Connect(relay);
 }
 
+void RelayManager::ConnectSignal(IMetaObject* obj, const std::string& signal_name)
+{
+    auto signals = obj->GetSignals(signal_name);
+    for(auto signal : signals)
+    {
+        auto connection = Connect(signal, signal_name, obj);
+        if(connection)
+        {
+            obj->AddConnection(connection, signal_name, signal_name, signal->GetSignature(), nullptr);
+        }
+    }
+}
+
+void RelayManager::ConnectSlot(IMetaObject* obj, const std::string& slot_name)
+{
+    auto slots = obj->GetSlots(slot_name);
+    for (auto slot : slots)
+    {
+        auto connection = Connect(slot, slot_name, obj);
+        if (connection)
+        {
+            obj->AddConnection(connection, slot_name, slot_name, slot->GetSignature(), nullptr);
+        }
+    }
+}
+
 bool RelayManager::ConnectSignal(IMetaObject* obj, const std::string& name, const TypeInfo& type)
 {
 	auto signal = obj->GetSignal(name, type);

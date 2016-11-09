@@ -79,9 +79,9 @@ namespace mo
         ConnectCallback(TypedInfo(typeid(Sig)), callback_name, slot_name, slot_owner, force_queue);
     }*/
     template<class T> 
-    ISlot* IMetaObject::GetSlot(const std::string& name) const
+    TypedSlot<T>* IMetaObject::GetSlot(const std::string& name) const
     {
-        return this->GetSlot(name, TypeInfo(typeid(T)));
+        return dynamic_cast<TypedSlot<T>*>(this->GetSlot(name, TypeInfo(typeid(T))));
     }
     template<class T> 
     std::vector<IParameter*> IMetaObject::GetOutputs(const std::string& name_filter) const

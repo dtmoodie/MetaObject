@@ -27,6 +27,8 @@ namespace mo
 		
 		std::shared_ptr<Connection> Connect(ISlot* slot, const std::string& name, IMetaObject* obj = nullptr);
 		std::shared_ptr<Connection> Connect(ISignal* signal, const std::string& name, IMetaObject* obj = nullptr);
+        void ConnectSignal(IMetaObject* obj, const std::string& signal_name);
+        void ConnectSlot(IMetaObject* obj, const std::string& slot_name);
 
 		bool ConnectSignal(IMetaObject* obj, const std::string& name, const TypeInfo& type);
 		int  ConnectSignals(IMetaObject* obj, const std::string& name);
