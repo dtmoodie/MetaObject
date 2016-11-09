@@ -7,7 +7,7 @@
 
 #define PARAM_(type, name, init, N) \
 LOAD_SAVE_(name, N) \
-INIT_(name, init, N) \
+INIT_SET_(name, init, N) \
 static void list_parameter_info_(std::vector<mo::ParameterInfo*>& info, mo::_counter_<N> dummy) \
 { \
     static mo::ParameterInfo s_info(mo::TypeInfo(typeid(type)), #name); \
@@ -16,11 +16,30 @@ static void list_parameter_info_(std::vector<mo::ParameterInfo*>& info, mo::_cou
 } \
 SERIALIZE_(name, N)
 
-#define INIT_(name, init, N) \
+#define INIT_SET_(name, init, N) \
 void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
 { \
-    if (firstInit) \
+    if(firstInit) \
         name = init; \
+    name##_param.SetMtx(_mtx); \
+    name##_param.UpdatePtr(&name); \
+    name##_param.SetContext(_ctx); \
+    name##_param.SetName(#name); \
+    AddParameter(&name##_param); \
+    init_parameters_(firstInit, --dummy); \
+}
+
+#define SET_(name, init, N) \
+void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
+{ \
+    if(firstInit) \
+        name = init; \
+    init_parameters_(firstInit, --dummy); \
+}
+
+#define INIT_(name,  N) \
+void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
+{ \
     name##_param.SetMtx(_mtx); \
     name##_param.UpdatePtr(&name); \
     name##_param.SetContext(_ctx); \

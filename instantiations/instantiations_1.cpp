@@ -11,6 +11,7 @@
 #include "instantiate.hpp"
 
 
+INSTANTIATE_META_PARAMETER(bool);
 INSTANTIATE_META_PARAMETER(int);
 INSTANTIATE_META_PARAMETER(unsigned short);
 INSTANTIATE_META_PARAMETER(unsigned int);
