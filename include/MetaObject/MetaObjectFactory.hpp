@@ -17,6 +17,7 @@ namespace mo
     public:
         IMetaObject*                       Create(const char* type_name, int interface_id = -1);
         template<class T> T*               Create(const char* type_name);
+        IMetaObject*                       Get(ObjectId id, const char* type_name);
         
         static MetaObjectFactory*          Instance(SystemTable* system_table = nullptr);
 

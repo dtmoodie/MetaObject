@@ -19,6 +19,9 @@ namespace mo
     {
         namespace Text
         {
+            namespace imp
+            {
+            
             template<> bool DeSerialize<EnumParameter>(ITypedParameter<EnumParameter>* param, std::stringstream& ss)
             {
                 EnumParameter* ptr = param->GetDataPtr();
@@ -65,15 +68,28 @@ namespace mo
                 }
                 return false;
             }
+            }
         } // namespace Text
     } // namespace IO
 } // namespace mo
 namespace cereal
 {
-    template<class Archive> void serialize(Archive& ar,  mo::ReadFile& m)
+    template<class Archive> void load(Archive& ar, mo::ReadFile& m)
     {
-        ar(m);
+        std::string path;
+        ar(path);
+        m = path;
     }
+    template<class Archive> void save(Archive& ar, mo::ReadFile const & m)
+    {
+        std::string path = m.string();
+        ar(path);
+    }
+    /*template<class Archive> void serialize(Archive& ar,  mo::ReadFile& m)
+    {
+        std::string path = m.string();
+        ar(path);
+    }*/
     template<class Archive> void serialize(Archive& ar, mo::WriteFile& m)
     {
         ar(m);

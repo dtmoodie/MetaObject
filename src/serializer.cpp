@@ -284,6 +284,9 @@ bool mo::Serialize(cereal::JSONOutputArchive& ar, const IMetaObject* obj)
         LOG(debug) << "No object specific serialization function found for " << obj->GetTypeName();
         auto params = obj->GetParameters();
         std::string type = obj->GetTypeName();
+        ObjectId id = obj->GetObjectId();
+        ar(cereal::make_nvp("TypeId", id.m_ConstructorId));
+        ar(cereal::make_nvp("InstanceId", id.m_PerTypeId));
         ar(cereal::make_nvp("TypeName", type));
         for (auto& param : params)
         {
@@ -367,3 +370,24 @@ bool mo::DeSerialize(cereal::JSONInputArchive& ar, IMetaObject* obj)
         return true;
     }
 }
+static std::list<ObjectId> serialized_objects;
+void mo::StartSerialization()
+{
+    serialized_objects.clear();
+}
+
+void mo::SetHasBeenSerialized(ObjectId id)
+{
+    serialized_objects.push_back(id);
+}
+
+bool mo::CheckHasBeenSerialized(ObjectId id)
+{
+    return std::find(serialized_objects.begin(), serialized_objects.end(), id) != serialized_objects.end();
+}
+
+void mo::EndSerialization()
+{
+    serialized_objects.clear();
+}
+

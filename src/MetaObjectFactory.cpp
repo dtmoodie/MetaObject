@@ -65,6 +65,42 @@ IMetaObject* MetaObjectFactory::Create(const char* type_name, int interface_id)
     }
     return nullptr;
 }
+IMetaObject* MetaObjectFactory::Get(ObjectId id, const char* type_name)
+{
+    AUDynArray<IObjectConstructor*> constructors;
+    _pimpl->obj_system.GetObjectFactorySystem()->GetAll(constructors);
+    if(id.m_ConstructorId < constructors.Size() && id.m_ConstructorId >= 0)
+    {
+        if(strcmp(constructors[id.m_ConstructorId]->GetName(), type_name) == 0)
+        {
+            IObject* obj = constructors[id.m_ConstructorId]->GetConstructedObject(id.m_PerTypeId);
+            if (obj)
+            {
+                return dynamic_cast<IMetaObject*>(obj);
+            }
+            else
+            {
+                LOG(debug) << "No object exits for " << type_name << " with instance id of " << id.m_PerTypeId;
+            }
+        }else
+        {
+            LOG(debug) << "Requested type \"" << type_name << "\" does not match constructor type \"" << constructors[id.m_ConstructorId]->GetName() << "\" for given ID";
+            for(int i = 0; i < constructors.Size(); ++i)
+            {
+                if(strcmp(constructors[i]->GetName(), type_name) == 0)
+                {
+                    IObject* obj = constructors[i]->GetConstructedObject(id.m_PerTypeId);
+                    if(obj)
+                    {
+                        return dynamic_cast<IMetaObject*>(obj);
+                    }
+                }
+            }
+            LOG(warning) << "Requested type \"" << type_name << "\" not found";
+        }
+    }
+    return nullptr;
+}
 
 std::vector<std::string> MetaObjectFactory::ListConstructableObjects(int interface_id) const
 {

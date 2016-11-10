@@ -10,75 +10,106 @@ namespace IO
 { 
 namespace Text 
 {
-    template<typename T> bool Serialize(ITypedParameter<T>* param, std::stringstream& ss)
+    namespace imp
     {
-        T* ptr = param->GetDataPtr();
-        if(ptr)
+        template<typename T>
+        auto Serialize_imp(std::ostream& os, T const& obj, int) ->decltype(os << obj, void())
         {
-            ss << *ptr;
-            return true;
+            os << obj;
         }
-        return false;
-    }
 
-    template<typename T> bool DeSerialize(ITypedParameter<T>* param, std::stringstream& ss)
-    {
-        T* ptr = param->GetDataPtr();
-        if(ptr)
+        template<typename T>
+        void Serialize_imp(std::ostream& os, T const& obj, long)
         {
-            ss >> *ptr;
-            return true;
+
         }
-        return false;
-    }
-    template<typename T> bool Serialize(ITypedParameter<std::vector<T>>* param, std::stringstream& ss)
-    {
-        std::vector<T>* ptr = param->GetDataPtr();
-        if(ptr)
+
+        template<typename T>
+        auto DeSerialize_imp(std::istream& is, T& obj, int) ->decltype(is >> obj, void())
         {
-            ss << ptr->size();
-            ss << "[";
-            for(size_t i = 0; i < ptr->size(); ++i)
-            {
-                if(i != 0)
-                    ss << ", ";
-                ss << (*ptr)[i];
-            }
-            ss << "]";
-            return true;
+            is >> obj;
         }
-        return false;
-    }
-    template<typename T> bool DeSerialize(ITypedParameter<std::vector<T>>* param, std::stringstream& ss)
-    {
-        std::vector<T>* ptr = param->GetDataPtr();
-        if (ptr)
+        template<typename T>
+        void DeSerialize_imp(std::istream& is, T& obj, long)
         {
-            ptr->clear();
-            std::string size;
-            std::getline(ss, size, '[');
-            if(size.size())
-            {
-                ptr->reserve(boost::lexical_cast<size_t>(size));
-            }
-            T value;
-            char ch; // For flushing the ','
-            while(ss >> value)
-            {
-                ss >> ch;
-                ptr->push_back(value);
-            }
-            return true;
+
         }
-        return false;
+
+        template<typename T>
+        bool Serialize(ITypedParameter<T>* param, std::stringstream& ss)
+        {
+            T* ptr = param->GetDataPtr();
+            if (ptr)
+            {
+                Serialize_imp(ss, *ptr, 0);
+                //ss << *ptr;
+                return true;
+            }
+            return false;
+        }
+
+        template<typename T>
+        bool DeSerialize(ITypedParameter<T>* param, std::stringstream& ss)
+        {
+            T* ptr = param->GetDataPtr();
+            if (ptr)
+            {
+                //ss >> *ptr;
+                DeSerialize_imp(ss, *ptr, 0);
+                return true;
+            }
+            return false;
+        }
+        template<typename T> bool Serialize(ITypedParameter<std::vector<T>>* param, std::stringstream& ss)
+        {
+            std::vector<T>* ptr = param->GetDataPtr();
+            if (ptr)
+            {
+                ss << ptr->size();
+                ss << "[";
+                for (size_t i = 0; i < ptr->size(); ++i)
+                {
+                    if (i != 0)
+                        ss << ", ";
+                    ss << (*ptr)[i];
+                }
+                ss << "]";
+                return true;
+            }
+            return false;
+        }
+        template<typename T> bool DeSerialize(ITypedParameter<std::vector<T>>* param, std::stringstream& ss)
+        {
+            std::vector<T>* ptr = param->GetDataPtr();
+            if (ptr)
+            {
+                ptr->clear();
+                std::string size;
+                std::getline(ss, size, '[');
+                if (size.size())
+                {
+                    ptr->reserve(boost::lexical_cast<size_t>(size));
+                }
+                T value;
+                char ch; // For flushing the ','
+                while (ss >> value)
+                {
+                    ss >> ch;
+                    ptr->push_back(value);
+                }
+                return true;
+            }
+            return false;
+        }
     }
+    
 
     template<typename T> bool WrapSerialize(IParameter* param, std::stringstream& ss)
     {
         ITypedParameter<T>* typed = dynamic_cast<ITypedParameter<T>*>(param);
         if (typed)
         {
-            if(Serialize(typed, ss))
+            if(imp::Serialize(typed, ss))
             {
                 return true;
             }
@@ -91,7 +122,7 @@ namespace Text
         ITypedParameter<T>* typed = dynamic_cast<ITypedParameter<T>*>(param);
         if (typed)
         {
-            if(DeSerialize(typed, ss))
+            if(imp::DeSerialize(typed, ss))
             {
                 typed->Commit();
                 return true;
