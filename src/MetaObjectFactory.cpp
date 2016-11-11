@@ -354,7 +354,7 @@ bool MetaObjectFactory::CheckCompile()
 	boost::posix_time::time_duration delta = currentTime - prevTime;
 	if (delta.total_milliseconds() < 10)
 		return false;
-	_pimpl->obj_system.GetFileChangeNotifier()->Update(float(delta.total_milliseconds()) / 1000.0);
+	_pimpl->obj_system.GetFileChangeNotifier()->Update(float(delta.total_milliseconds()) / 1000.0f);
 	return IsCurrentlyCompiling();
 }
 bool MetaObjectFactory::IsCurrentlyCompiling()

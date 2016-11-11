@@ -14,6 +14,7 @@
 
 #if _WIN32
 #pragma warning(disable: 4251)
+#pragma warning(disable: 4275)
 #endif
 
 #ifndef MetaObject_EXPORTS

@@ -1,6 +1,7 @@
 #pragma once
 #include <MetaObject/Parameters/IParameter.hpp>
 #include "SerializationFunctionRegistry.hpp"
+#include <MetaObject/Parameters/ITypedParameter.hpp>
 
 #include <cereal/cereal.hpp>
 #include <cereal/archives/binary.hpp>
