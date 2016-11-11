@@ -14,7 +14,7 @@
 #include <cereal/types/polymorphic.hpp>
 
 #include <map>
-
+#include <list>
 using namespace mo;
 std::map<std::string, SerializerFactory::BinarySerialize_f> _binary_serialization_functions;
 std::map<std::string, SerializerFactory::BinaryDeSerialize_f> _binary_deserialization_functions;
