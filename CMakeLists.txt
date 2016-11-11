@@ -97,7 +97,7 @@ if(WITH_QT)
 endif()
 
 # WT
-find_package(WT QUIET)
+find_package(Wt QUIET)
 if(Wt_FOUND)
   add_definitions(-DHAVE_WT)
   include_directories(${Wt_INCLUDE_DIR})
