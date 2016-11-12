@@ -2,6 +2,7 @@
 #include "MetaObject/Detail/Export.hpp"
 #include "MetaObject/Detail/TypeInfo.h"
 #include "MetaObject/Signals/ISignal.hpp"
+#include <mutex>
 #include <memory>
 #include <vector>
 namespace mo
@@ -27,6 +28,7 @@ namespace mo
 		bool Disconnect(ISlot* slot);
 		bool Disconnect(std::weak_ptr<ISignalRelay> relay);
 	protected:
+        std::mutex mtx;
 		std::vector<std::shared_ptr<TypedSignalRelay<void(T...)>>> _typed_relays;
 	};
 
@@ -46,6 +48,7 @@ namespace mo
 		bool Disconnect(ISlot* slot);
 		bool Disconnect(std::weak_ptr<ISignalRelay> relay);
 	protected:
+        std::mutex mtx;
 		std::shared_ptr<TypedSignalRelay<R(T...)>> _typed_relay;
     };
 }

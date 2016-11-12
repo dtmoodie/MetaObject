@@ -85,14 +85,18 @@ IMetaObject* MetaObjectFactory::Get(ObjectId id, const char* type_name)
         }else
         {
             LOG(debug) << "Requested type \"" << type_name << "\" does not match constructor type \"" << constructors[id.m_ConstructorId]->GetName() << "\" for given ID";
+            std::string str_type_name(type_name);
             for(int i = 0; i < constructors.Size(); ++i)
             {
-                if(strcmp(constructors[i]->GetName(), type_name) == 0)
+                if(std::string(constructors[i]->GetName()) == str_type_name)
                 {
                     IObject* obj = constructors[i]->GetConstructedObject(id.m_PerTypeId);
                     if(obj)
                     {
                         return dynamic_cast<IMetaObject*>(obj);
+                    }else 
+                    {
+                        return nullptr; // Object just doesn't exist yet.
                     }
                 }
             }

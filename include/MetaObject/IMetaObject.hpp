@@ -150,8 +150,8 @@ namespace mo
 
         IParameter*              GetParameter(const std::string& name) const;
         IParameter*              GetParameterOptional(const std::string& name) const;
-        std::vector<IParameter*> GetParameters(const std::string& filter = "") const;
-        std::vector<IParameter*> GetParameters(const TypeInfo& filter) const;
+        virtual std::vector<IParameter*> GetParameters(const std::string& filter = "") const;
+        virtual std::vector<IParameter*> GetParameters(const TypeInfo& filter) const;
 
         template<class T> T                   GetParameterValue(const std::string& name, long long ts = -1, Context* ctx = nullptr) const;
         template<class T> ITypedParameter<T>* GetParameter(const std::string& name) const;
