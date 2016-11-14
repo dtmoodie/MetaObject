@@ -12,6 +12,11 @@
 #  define MO_EXPORTS
 #endif
 
+#if _WIN32
+#pragma warning(disable: 4251)
+#pragma warning(disable: 4275)
+#endif
+
 #ifndef MetaObject_EXPORTS
 #include "RuntimeLinkLibrary.h"
   #ifdef WIN32

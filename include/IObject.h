@@ -50,6 +50,8 @@ enum InterfaceIDEnum
     IID_IOBJECT,
     IID_NodeObject,
     IID_Plotter,
+    IID_QtPlotter,
+    IID_vtkPlotter,
     IID_SignalHandler,
     IID_RenderEngine,
     IID_RenderScene,

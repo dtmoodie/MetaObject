@@ -2,6 +2,7 @@
 #include "MetaObject/Detail/Export.hpp"
 #include "ObjectInterfacePerModule.h"
 #include <functional>
+#include <memory>
 struct SystemTable;
 struct IRuntimeObjectSystem;
 struct IObjectInfo;
@@ -9,11 +10,14 @@ struct IObjectConstructor;
 namespace mo
 {
     class IMetaObject;
+    template<class Sig> class TypedSlot;
+    class Connection;
     class MO_EXPORTS MetaObjectFactory
     {
     public:
         IMetaObject*                       Create(const char* type_name, int interface_id = -1);
         template<class T> T*               Create(const char* type_name);
+        IMetaObject*                       Get(ObjectId id, const char* type_name);
         
         static MetaObjectFactory*          Instance(SystemTable* system_table = nullptr);
 
@@ -45,6 +49,7 @@ namespace mo
 		bool IsCompileComplete();
 		bool SwapObjects();
         void SetCompileCallback(std::function<void(const std::string, int)>& f);
+        std::shared_ptr<Connection> ConnectConstructorAdded(TypedSlot<void(void)>* slot);
 
     private:
         MetaObjectFactory(SystemTable* system_table);

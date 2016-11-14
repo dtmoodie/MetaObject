@@ -13,7 +13,7 @@ namespace mo
 	public:
 		virtual ~ISignalRelay() {}
 		virtual TypeInfo GetSignature() const = 0;
-		virtual bool HasSlots() const = 0;
+        virtual bool HasSlots() const = 0;
 	protected:
 		friend class ISlot;
 		friend class ISignal;

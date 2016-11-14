@@ -11,68 +11,80 @@
 #include "MetaObject/Parameters/Types.hpp"
 #include <cereal/types/vector.hpp>
 #include <cereal/types/string.hpp>
-using namespace mo;
+
+
 namespace mo
 {
-namespace IO
-{
-namespace Text
-{
-    template<> bool DeSerialize<EnumParameter>(ITypedParameter<EnumParameter>* param, std::stringstream& ss)
+    namespace IO
     {
-        EnumParameter* ptr = param->GetDataPtr();
-        if(ptr)
+        namespace Text
         {
-            ptr->values.clear();
-            ptr->enumerations.clear();
-            std::string size;
-            std::getline(ss, size, '[');
-            if (size.size())
+            namespace imp
             {
-                size_t size_ = boost::lexical_cast<size_t>(size);
-                ptr->values.reserve(size_);
-                ptr->enumerations.reserve(size_);
-            }
-            std::string enumeration;
-            int value;
-            char ch;
-            while( ss >> enumeration >> ch >> value)
+            
+            template<> bool DeSerialize<EnumParameter>(ITypedParameter<EnumParameter>* param, std::stringstream& ss)
             {
-                ptr->addEnum(value, enumeration);
-                ss >> ch;
+                EnumParameter* ptr = param->GetDataPtr();
+                if(ptr)
+                {
+                    ptr->values.clear();
+                    ptr->enumerations.clear();
+                    std::string size;
+                    std::getline(ss, size, '[');
+                    if (size.size())
+                    {
+                        size_t size_ = boost::lexical_cast<size_t>(size);
+                        ptr->values.reserve(size_);
+                        ptr->enumerations.reserve(size_);
+                    }
+                    std::string enumeration;
+                    int value;
+                    char ch;
+                    while( ss >> enumeration >> ch >> value)
+                    {
+                        ptr->addEnum(value, enumeration);
+                        ss >> ch;
+                    }
+                    return true;
+                }
+                return false;
             }
-            return true;
-        }
-        return false;
-    }
 
-    template<> bool Serialize<EnumParameter>(ITypedParameter<EnumParameter>* param, std::stringstream& ss)
-    {
-        EnumParameter* ptr = param->GetDataPtr();
-        if (ptr)
-        {
-            ss << ptr->enumerations.size();
-            ss << "[";
-            for(int i = 0; i < ptr->enumerations.size(); ++i)
+            template<> bool Serialize<EnumParameter>(ITypedParameter<EnumParameter>* param, std::stringstream& ss)
             {
-                if(i != 0)
-                    ss << ", ";
-                ss << ptr->enumerations[i] << ":" << ptr->values[i];
+                EnumParameter* ptr = param->GetDataPtr();
+                if (ptr)
+                {
+                    ss << ptr->enumerations.size();
+                    ss << "[";
+                    for(int i = 0; i < ptr->enumerations.size(); ++i)
+                    {
+                        if(i != 0)
+                            ss << ", ";
+                        ss << ptr->enumerations[i] << ":" << ptr->values[i];
+                    }
+                    ss << "]";
+                    return true;
+                }
+                return false;
             }
-            ss << "]";
-            return true;
-        }
-        return false;
-    }
-}
-}
-}
+            }
+        } // namespace Text
+    } // namespace IO
+} // namespace mo
 
 namespace cereal
 {
-    template<class Archive> void serialize(Archive& ar,  mo::ReadFile& m)
+    template<class Archive> void load(Archive& ar, mo::ReadFile& m)
     {
-        ar(m);
+        std::string path;
+        ar(path);
+        m = path;
+    }
+    template<class Archive> void save(Archive& ar, mo::ReadFile const & m)
+    {
+        std::string path = m.string();
+        ar(path);
     }
     template<class Archive> void serialize(Archive& ar, mo::WriteFile& m)
     {
@@ -96,10 +108,11 @@ namespace cereal
     }
 }
 
-INSTANTIATE_META_PARAMETER(mo::ReadFile);
-INSTANTIATE_META_PARAMETER(mo::WriteFile);
-INSTANTIATE_META_PARAMETER(mo::ReadDirectory);
-INSTANTIATE_META_PARAMETER(mo::WriteDirectory);
-INSTANTIATE_META_PARAMETER(mo::EnumParameter);
+using namespace mo;
+INSTANTIATE_META_PARAMETER(ReadFile);
+INSTANTIATE_META_PARAMETER(WriteFile);
+INSTANTIATE_META_PARAMETER(ReadDirectory);
+INSTANTIATE_META_PARAMETER(WriteDirectory);
+INSTANTIATE_META_PARAMETER(EnumParameter);
 
 

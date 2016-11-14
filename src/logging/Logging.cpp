@@ -45,7 +45,7 @@
 
 void mo::InitLogging()
 {
-    BOOST_LOG_TRIVIAL(info) << "File logging to " << boost::filesystem::absolute(boost::filesystem::path("")).append("/logs");
+    BOOST_LOG_TRIVIAL(info) << "File logging to " << boost::filesystem::absolute(boost::filesystem::path("")).string() << "/logs";
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
     boost::log::add_common_attributes();
     if (!boost::filesystem::exists("./logs") || !boost::filesystem::is_directory("./logs"))

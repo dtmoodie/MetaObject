@@ -1,4 +1,7 @@
 #define BOOST_TEST_MAIN
+#include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
+#include <MetaObject/Parameters/IO/TextPolicy.hpp>
+#include <MetaObject/Parameters/Types.hpp>
 #include "MetaObject/Parameters/MetaParameter.hpp"
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Signals/TypedSignal.hpp"
@@ -12,6 +15,7 @@
 #include "MetaObject/Logging/CompileLogger.hpp"
 #include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
 #include "MetaObject/IO/Policy.hpp"
+#include "MetaObject/IO/memory.hpp"
 #include "shared_ptr.hpp"
 #include "RuntimeObjectSystem.h"
 #include "shared_ptr.hpp"
@@ -19,7 +23,10 @@
 #include "cereal/archives/xml.hpp"
 #include "cereal/archives/portable_binary.hpp"
 #include <fstream>
-
+#include "instantiate.hpp"
+#ifdef HAVE_OPENCV
+#include <opencv2/core.hpp>
+#endif
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>
 #else
@@ -48,6 +55,7 @@ MO_REGISTER_OBJECT(serializable_object);
 BOOST_AUTO_TEST_CASE(serialize_manual_xml)
 {
     cb = new BuildCallback();
+    mo::instantiations::initialize();
     MetaObjectFactory::Instance()->GetObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
     rcc::shared_ptr<serializable_object> obj = serializable_object::Create();
     {
@@ -166,9 +174,7 @@ BOOST_AUTO_TEST_CASE(serialize_multi_by_policy_binary)
 	}
 }
 
-#include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
-#include <MetaObject/Parameters/IO/TextPolicy.hpp>
-#include <MetaObject/Parameters/Types.hpp>
+
 INSTANTIATE_META_PARAMETER(mo::ReadFile);
 INSTANTIATE_META_PARAMETER(std::vector<int>);
 BOOST_AUTO_TEST_CASE(deserialize_text_path)
@@ -212,6 +218,31 @@ BOOST_AUTO_TEST_CASE(deserialize_text_vector)
     for(int expected_value = 0; expected_value < 8; ++expected_value)
     {
         BOOST_REQUIRE_EQUAL(data[expected_value], expected_value);
+    }
+}
+
+BOOST_AUTO_TEST_CASE(serialize_unique_instance)
+{
+    {
+        auto inst1 = serializable_object::Create();
+        auto inst2 = inst1;
+        mo::StartSerialization();
+        std::ofstream ofs("test_unique_instance.json");
+        cereal::JSONOutputArchive ar(ofs);
+        ar(CEREAL_NVP(inst1));
+        ar(CEREAL_NVP(inst2));
+        mo::EndSerialization();
+    }
+    {
+        mo::StartSerialization();
+        std::ifstream ifs("test_unique_instance.json");
+        cereal::JSONInputArchive ar(ifs);
+        rcc::shared_ptr<serializable_object> inst1;
+        rcc::shared_ptr<serializable_object> inst2;
+        ar(CEREAL_NVP(inst1));
+        ar(CEREAL_NVP(inst2));
+        mo::EndSerialization();
+        BOOST_REQUIRE_EQUAL(inst1, inst2);
     }
 }
 

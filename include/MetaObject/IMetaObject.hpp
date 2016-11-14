@@ -16,6 +16,7 @@ namespace mo
     class ISignal;
     class ICallback;
     class ISlot;
+    template<class T> class TypedSlot;
     class Connection;
 	class TypeInfo;
     class IVariableManager;
@@ -123,7 +124,7 @@ namespace mo
         virtual std::vector<ISlot*>                            GetSlots(const std::string& name) const;
         virtual std::vector<std::pair<ISlot*, std::string>>    GetSlots(const TypeInfo& signature) const;
         virtual ISlot*                                         GetSlot(const std::string& name, const TypeInfo& signature) const;
-        template<class T> ISlot*                               GetSlot(const std::string& name) const;
+        template<class T> TypedSlot<T>*                        GetSlot(const std::string& name) const;
     
         virtual int  DisconnectByName(const std::string& name);
         virtual bool Disconnect(ISignal* sig);
@@ -149,8 +150,8 @@ namespace mo
 
         IParameter*              GetParameter(const std::string& name) const;
         IParameter*              GetParameterOptional(const std::string& name) const;
-        std::vector<IParameter*> GetParameters(const std::string& filter = "") const;
-        std::vector<IParameter*> GetParameters(const TypeInfo& filter) const;
+        virtual std::vector<IParameter*> GetParameters(const std::string& filter = "") const;
+        virtual std::vector<IParameter*> GetParameters(const TypeInfo& filter) const;
 
         template<class T> T                   GetParameterValue(const std::string& name, long long ts = -1, Context* ctx = nullptr) const;
         template<class T> ITypedParameter<T>* GetParameter(const std::string& name) const;

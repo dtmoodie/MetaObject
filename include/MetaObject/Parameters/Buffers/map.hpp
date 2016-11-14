@@ -20,6 +20,7 @@ https://github.com/dtmoodie/parameters
 
 #include "MetaObject/Parameters/ITypedInputParameter.hpp"
 #include "MetaObject/Parameters/ParameterConstructor.hpp"
+#include "MetaObject/Parameters/MetaParameter.hpp"
 #include "BufferConstructor.hpp"
 #include "IBuffer.hpp"
 #include <map>
@@ -58,7 +59,7 @@ namespace mo
     }
 
 #define MO_METAPARAMETER_INSTANCE_MAP_(N) \
-    template<class T> struct MetaParameter<T, N>: public MetaParameter<T, N-1> \
+    template<class T> struct MetaParameter<T, N, void>: public MetaParameter<T, N-1, void> \
     { \
         static ParameterConstructor<Buffer::Map<T>> _map_parameter_constructor; \
         static BufferConstructor<Buffer::Map<T>> _map_constructor;  \
@@ -69,8 +70,8 @@ namespace mo
             (void)&_map_constructor; \
         } \
     }; \
-    template<class T> ParameterConstructor<Buffer::Map<T>> MetaParameter<T, N>::_map_parameter_constructor; \
-    template<class T> BufferConstructor<Buffer::Map<T>> MetaParameter<T, N>::_map_constructor;
+    template<class T> ParameterConstructor<Buffer::Map<T>> MetaParameter<T, N, void>::_map_parameter_constructor; \
+    template<class T> BufferConstructor<Buffer::Map<T>> MetaParameter<T, N, void>::_map_constructor;
 
     MO_METAPARAMETER_INSTANCE_MAP_(__COUNTER__)
 }

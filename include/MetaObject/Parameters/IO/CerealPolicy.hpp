@@ -1,6 +1,7 @@
 #pragma once
 #include <MetaObject/Parameters/IParameter.hpp>
 #include "SerializationFunctionRegistry.hpp"
+#include <MetaObject/Parameters/ITypedParameter.hpp>
 
 #include <cereal/cereal.hpp>
 #include <cereal/archives/binary.hpp>
@@ -22,58 +23,20 @@ namespace mo
             {
                 SerializationFunctionRegistry::Instance()->SetBinarySerializationFunctions(
                     TypeInfo(typeid(T)), 
-                    std::bind(&Policy<T>::SerializeBinary, std::placeholders::_1, std::placeholders::_2),
-                    std::bind(&Policy<T>::DeSerializeBinary, std::placeholders::_1, std::placeholders::_2));
+                    std::bind(&Policy<T>::Serialize<cereal::BinaryOutputArchive>, std::placeholders::_1, std::placeholders::_2),
+                    std::bind(&Policy<T>::DeSerialize<cereal::BinaryInputArchive>, std::placeholders::_1, std::placeholders::_2));
 
                 SerializationFunctionRegistry::Instance()->SetXmlSerializationFunctions(
                     TypeInfo(typeid(T)), 
-                    std::bind(&Policy<T>::SerializeXml, std::placeholders::_1, std::placeholders::_2),
-                    std::bind(&Policy<T>::DeSerializeXml, std::placeholders::_1, std::placeholders::_2));
+                    std::bind(&Policy<T>::Serialize<cereal::XMLOutputArchive>, std::placeholders::_1, std::placeholders::_2),
+                    std::bind(&Policy<T>::DeSerialize<cereal::XMLInputArchive>, std::placeholders::_1, std::placeholders::_2));
 
                 SerializationFunctionRegistry::Instance()->SetJsonSerializationFunctions(
                     TypeInfo(typeid(T)),
                     std::bind(&Policy<T>::Serialize<cereal::JSONOutputArchive>, std::placeholders::_1, std::placeholders::_2),
                     std::bind(&Policy<T>::DeSerialize<cereal::JSONInputArchive>, std::placeholders::_1, std::placeholders::_2));
+            }
 
-            }
-            static bool SerializeBinary(IParameter* param, cereal::BinaryOutputArchive& ar)
-            {
-                ITypedParameter<T>* typed = dynamic_cast<ITypedParameter<T>*>(param);
-                T* ptr = typed->GetDataPtr();
-                if (ptr)
-                    ar(cereal::make_nvp(param->GetName().c_str(), *ptr));
-                return true;
-            }
-            static bool DeSerializeBinary(IParameter* param, cereal::BinaryInputArchive& ar)
-            {
-                ITypedParameter<T>* typed = dynamic_cast<ITypedParameter<T>*>(param);
-                T* ptr = typed->GetDataPtr();
-                if(ptr)
-                {
-                    ar(cereal::make_nvp(param->GetName(), *ptr));
-                }
-                return true;
-            }
-            static bool SerializeXml(IParameter* param, cereal::XMLOutputArchive& ar)
-            {
-                ITypedParameter<T>* typed = dynamic_cast<ITypedParameter<T>*>(param);
-                T* ptr = typed->GetDataPtr();
-                if (ptr)
-                {
-                    ar(cereal::make_nvp(param->GetName(), *ptr));
-                }
-                return true;
-            }
-            static bool DeSerializeXml(IParameter* param, cereal::XMLInputArchive& ar)
-            {
-                ITypedParameter<T>* typed = dynamic_cast<ITypedParameter<T>*>(param);
-                T* ptr = typed->GetDataPtr();
-                if (ptr)
-                {
-                    ar(cereal::make_nvp(param->GetName(), *ptr));
-                }
-                return true;
-            }
             template<class AR>
             static bool Serialize(IParameter* param, AR& ar)
             {
@@ -95,7 +58,15 @@ namespace mo
                 T* ptr = typed->GetDataPtr();
                 if (ptr == nullptr)
                     return false;
-                ar(cereal::make_nvp(param->GetName(), *ptr));
+                try
+                {
+                    ar(cereal::make_nvp(param->GetName(), *ptr));
+                }catch(cereal::Exception& e)
+                {
+                    LOG(debug) << e.what();
+                    return false;
+                }
+                typed->Commit();
                 return true;
             }
 
@@ -103,11 +74,18 @@ namespace mo
     } // namespace Cereal
     } // namespace IO
 #define PARAMETER_CEREAL_SERIALIZATION_POLICY_INST_(N) \
-  template<class T> struct MetaParameter<T, N, void>: public MetaParameter<T, N - 1, void>, public IO::Cereal::Policy<T> \
+    template<class T> struct MetaParameter<T, N, void>: public MetaParameter<T, N - 1, void> \
     { \
+        static IO::Cereal::Policy<T> _cereal_policy;  \
         MetaParameter(const char* name): \
-            MetaParameter<T, N-1, void>(name){} \
-    };
+            MetaParameter<T, N-1, void>(name) \
+        { \
+            (void)&_cereal_policy; \
+        } \
+    }; \
+    template<class T> IO::Cereal::Policy<T> MetaParameter<T, N, void>::_cereal_policy;
 
     PARAMETER_CEREAL_SERIALIZATION_POLICY_INST_(__COUNTER__)
 }
+
+

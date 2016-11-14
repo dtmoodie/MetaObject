@@ -3,7 +3,7 @@
 #include "MetaObject/Parameters/Demangle.hpp"
 namespace mo
 {
-    template<class T, int N, typename Enable = void> struct MetaParameter: public MetaParameter<T, N-1>
+    template<class T, int N, typename Enable = void> struct MetaParameter: public MetaParameter<T, N-1, void>
     {
         MetaParameter(const char* name = nullptr):
             MetaParameter<T, N-1>(name){}

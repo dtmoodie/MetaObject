@@ -99,11 +99,13 @@ Context* IParameter::GetContext() const
 
 std::shared_ptr<Connection> IParameter::RegisterUpdateNotifier(update_f* f)
 {
+    boost::recursive_mutex::scoped_lock(mtx());
 	return f->Connect(&update_signal);
 }
 
 std::shared_ptr<Connection> IParameter::RegisterUpdateNotifier(ISlot* f)
 {
+    boost::recursive_mutex::scoped_lock(mtx());
 	auto typed = dynamic_cast<update_f*>(f);
 	if (typed)
 	{
@@ -114,6 +116,7 @@ std::shared_ptr<Connection> IParameter::RegisterUpdateNotifier(ISlot* f)
 
 std::shared_ptr<Connection> IParameter::RegisterUpdateNotifier(std::shared_ptr<ISignalRelay> relay)
 {
+    boost::recursive_mutex::scoped_lock(mtx());
 	auto typed = std::dynamic_pointer_cast<TypedSignalRelay<void(Context*, IParameter*)>>(relay);
 	if (typed)
 	{
@@ -123,16 +126,19 @@ std::shared_ptr<Connection> IParameter::RegisterUpdateNotifier(std::shared_ptr<I
 }
 std::shared_ptr<Connection> IParameter::RegisterUpdateNotifier(std::shared_ptr<TypedSignalRelay<void(Context*, IParameter*)>>& relay)
 {
+    boost::recursive_mutex::scoped_lock(mtx());
 	return update_signal.Connect(relay);
 }
 
 std::shared_ptr<Connection> IParameter::RegisterDeleteNotifier(delete_f* f)
 {
+    boost::recursive_mutex::scoped_lock(mtx());
 	return f->Connect(&delete_signal);
 }
 
 std::shared_ptr<Connection> IParameter::RegisterDeleteNotifier(ISlot* f)
 {
+    boost::recursive_mutex::scoped_lock(mtx());
 	auto typed = dynamic_cast<delete_f*>(f);
 	if (typed)
 	{
@@ -143,6 +149,7 @@ std::shared_ptr<Connection> IParameter::RegisterDeleteNotifier(ISlot* f)
 
 std::shared_ptr<Connection> IParameter::RegisterDeleteNotifier(std::shared_ptr<ISignalRelay> relay)
 {
+    boost::recursive_mutex::scoped_lock(mtx());
 	auto typed = std::dynamic_pointer_cast<TypedSignalRelay<void(IParameter*)>>(relay);
 	if (typed)
 	{
@@ -152,6 +159,7 @@ std::shared_ptr<Connection> IParameter::RegisterDeleteNotifier(std::shared_ptr<I
 }
 std::shared_ptr<Connection> IParameter::RegisterDeleteNotifier(std::shared_ptr<TypedSignalRelay<void(IParameter const*)>>& relay)
 {
+    boost::recursive_mutex::scoped_lock(mtx());
 	return delete_signal.Connect(relay);
 }
 
@@ -163,12 +171,14 @@ bool IParameter::Update(IParameter* other)
 
 void IParameter::OnUpdate(Context* ctx)
 {
+    boost::recursive_mutex::scoped_lock(mtx());
     modified = true;
 	update_signal(ctx, this);
 }
 
 IParameter* IParameter::Commit(long long ts, Context* ctx)
 {
+    boost::recursive_mutex::scoped_lock(mtx());
     _timestamp = ts;
     modified = true;
 	update_signal(ctx, this);
@@ -197,13 +207,15 @@ void IParameter::SetMtx(boost::recursive_mutex* mtx_)
 
 void IParameter::Subscribe()
 {
-	--_subscribers;
-	_subscribers = std::max(0, _subscribers);
+    boost::recursive_mutex::scoped_lock(mtx());
+    ++_subscribers;
 }
 
 void IParameter::Unsubscribe()
 {
-	++_subscribers;
+    boost::recursive_mutex::scoped_lock(mtx());
+    --_subscribers;
+    _subscribers = std::max(0, _subscribers);
 }
 
 bool IParameter::HasSubscriptions() const
