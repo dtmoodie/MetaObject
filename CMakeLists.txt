@@ -40,7 +40,6 @@ else(WIN32)
     SET(CMAKE_CXX_FLAGS "-std=c++11" CACHE STRING "" FORCE)
     list(APPEND link_libs pthread)
     add_definitions(-D_MWAITXINTRIN_H_INCLUDED)
-    #add_definitions(-D_GLIBCXX_USE_CXX11_ABI=0) # this is a fix for boost compiled against GCC 4.8 while MO is compiled against 5.4
     set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
 endif(WIN32)
 set(CMAKE_DEBUG_POSTFIX "d")

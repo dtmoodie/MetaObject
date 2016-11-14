@@ -11,7 +11,7 @@
 #include "MetaObject/Parameters/Types.hpp"
 #include <cereal/types/vector.hpp>
 #include <cereal/types/string.hpp>
-using namespace mo;
+
 
 namespace mo
 {
@@ -72,6 +72,7 @@ namespace mo
         } // namespace Text
     } // namespace IO
 } // namespace mo
+
 namespace cereal
 {
     template<class Archive> void load(Archive& ar, mo::ReadFile& m)
@@ -85,11 +86,6 @@ namespace cereal
         std::string path = m.string();
         ar(path);
     }
-    /*template<class Archive> void serialize(Archive& ar,  mo::ReadFile& m)
-    {
-        std::string path = m.string();
-        ar(path);
-    }*/
     template<class Archive> void serialize(Archive& ar, mo::WriteFile& m)
     {
         ar(m);
@@ -112,10 +108,11 @@ namespace cereal
     }
 }
 
-INSTANTIATE_META_PARAMETER(mo::ReadFile);
-INSTANTIATE_META_PARAMETER(mo::WriteFile);
-INSTANTIATE_META_PARAMETER(mo::ReadDirectory);
-INSTANTIATE_META_PARAMETER(mo::WriteDirectory);
-INSTANTIATE_META_PARAMETER(mo::EnumParameter);
+using namespace mo;
+INSTANTIATE_META_PARAMETER(ReadFile);
+INSTANTIATE_META_PARAMETER(WriteFile);
+INSTANTIATE_META_PARAMETER(ReadDirectory);
+INSTANTIATE_META_PARAMETER(WriteDirectory);
+INSTANTIATE_META_PARAMETER(EnumParameter);
 
 
