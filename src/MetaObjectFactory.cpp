@@ -6,6 +6,7 @@
 #include "MetaObject/Logging/Log.hpp"
 #include "MetaObject/Signals/TypedSignal.hpp"
 #include "MetaObject/Signals/TypedSlot.hpp"
+
 #include <boost/filesystem.hpp>
 #include <boost/date_time.hpp>
 using namespace mo;
@@ -334,12 +335,20 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
         LOG(debug)  << "module == nullptr" << std::endl;
         return false;
     }
-    SetupObjectConstructors(module());
-    typedef void(*includeFunctor)();
-    includeFunctor functor = (includeFunctor)dlsym(handle, "SetupIncludes");
-    if (functor)
-        functor();
-
+    IPerModuleInterface* interface = module();
+    interface->SetModuleFileName(fullPluginPath.c_str());
+    boost::filesystem::path path(fullPluginPath);
+    std::string base = path.stem().replace_extension("").string();
+    base = base.substr(3, base.size() - 4);
+    boost::filesystem::path config_path = path.parent_path();
+    config_path += "/" + base + "_config.txt";
+    int id = _pimpl->obj_system.ParseConfigFile(config_path.string().c_str());
+    SetupObjectConstructors(interface);
+    if(id >= 0)
+    {
+        interface->SetProjectIdForAllConstructors(id);
+    }
+    _pimpl->plugins.push_back(fullPluginPath + " - success");
     return true;
 }
 
