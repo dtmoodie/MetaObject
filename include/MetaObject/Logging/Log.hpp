@@ -115,6 +115,13 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 
 #define THROW(severity) mo::ThrowOnDestroy_##severity(__FUNCTION__, __FILE__, __LINE__).stream()
 
+#if (defined(__GXX_EXPERIMENTAL_CXX0X__) || \
+        __cplusplus >= 201103L || defined(_MSC_VER))
+#define MO_THROW_SPECIFIER noexcept(false)
+#else
+#define MO_THROW_SPECIFIER
+#endif
+
 namespace mo
 {
     MO_EXPORTS void InitLogging();
@@ -124,11 +131,7 @@ namespace mo
     public:
         ThrowOnDestroy(const char* function, const char* file, int line);
         std::ostringstream &stream();
-#if WIN32
-        ~ThrowOnDestroy() throw();
-#else
-        ~ThrowOnDestroy() noexcept(false);
-#endif
+        ~ThrowOnDestroy() MO_THROW_SPECIFIER;
 
     protected:
         std::ostringstream log_stream_;
@@ -138,11 +141,7 @@ namespace mo
     {
     public:
         ThrowOnDestroy_trace(const char* function, const char* file, int line);
-#if WIN32
-        ~ThrowOnDestroy_trace() throw();
-#else
-        ~ThrowOnDestroy_trace() noexcept(false);
-#endif
+        ~ThrowOnDestroy_trace() MO_THROW_SPECIFIER;
     };
     
     class MO_EXPORTS ThrowOnDestroy_debug: public ThrowOnDestroy 
@@ -155,22 +154,14 @@ namespace mo
     {
     public:
         ThrowOnDestroy_info(const char* function, const char* file, int line);
-#if WIN32
-        ~ThrowOnDestroy_info() throw();
-#else
-        ~ThrowOnDestroy_info() noexcept(false);
-#endif
+        ~ThrowOnDestroy_info() MO_THROW_SPECIFIER;
     };
 
     class MO_EXPORTS ThrowOnDestroy_warning: public ThrowOnDestroy
     {
     public:
         ThrowOnDestroy_warning(const char* function, const char* file, int line);
-#if WIN32
-        ~ThrowOnDestroy_warning() throw();
-#else
-        ~ThrowOnDestroy_warning() noexcept(false);
-#endif
+        ~ThrowOnDestroy_warning() MO_THROW_SPECIFIER;
     };
 
     class MO_EXPORTS EatMessage
@@ -201,7 +192,7 @@ namespace mo
     struct MO_EXPORTS IExceptionWithCallStackBase
     {
         virtual const char * CallStack() const = 0;
-        virtual ~IExceptionWithCallStackBase() throw();
+        virtual ~IExceptionWithCallStackBase();
     };
 
     // Exception wrapper to include native call stack string

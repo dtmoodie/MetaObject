@@ -390,11 +390,8 @@ std::ostringstream &mo::ThrowOnDestroy::stream()
 { 
     return log_stream_; 
 }
-#if WIN32
-mo::ThrowOnDestroy::~ThrowOnDestroy()
-#else
-mo::ThrowOnDestroy::~ThrowOnDestroy() noexcept(false)
-#endif
+
+mo::ThrowOnDestroy::~ThrowOnDestroy() MO_THROW_SPECIFIER
 {
     std::stringstream ss;
     LOG(debug) << "Exception at" << mo::print_callstack(0, true, ss) << log_stream_.str();
@@ -406,7 +403,7 @@ mo::ThrowOnDestroy::~ThrowOnDestroy() noexcept(false)
     
 }
 mo::ThrowOnDestroy_trace::ThrowOnDestroy_trace(const char* function, const char* file, int line): ThrowOnDestroy(function, file, line) {}
-mo::ThrowOnDestroy_trace::~ThrowOnDestroy_trace()
+mo::ThrowOnDestroy_trace::~ThrowOnDestroy_trace() MO_THROW_SPECIFIER
 {
     std::stringstream ss;
     LOG(trace) << "Exception at" << mo::print_callstack(0, true, ss) << log_stream_.str();
@@ -425,7 +422,7 @@ mo::ThrowOnDestroy_info::ThrowOnDestroy_info(const char* function, const char* f
 {
 }
 
-mo::ThrowOnDestroy_info::~ThrowOnDestroy_info()
+mo::ThrowOnDestroy_info::~ThrowOnDestroy_info() MO_THROW_SPECIFIER
 {
     std::stringstream ss;
     LOG(info) << "Exception at" << mo::print_callstack(0, true, ss) << log_stream_.str();
@@ -436,7 +433,7 @@ mo::ThrowOnDestroy_info::~ThrowOnDestroy_info()
     }
 }
 mo::ThrowOnDestroy_warning::ThrowOnDestroy_warning(const char* function, const char* file, int line): ThrowOnDestroy(function, file, line) {}
-mo::ThrowOnDestroy_warning::~ThrowOnDestroy_warning()
+mo::ThrowOnDestroy_warning::~ThrowOnDestroy_warning() MO_THROW_SPECIFIER
 {
     std::stringstream ss;
     LOG(warning) << "Exception at" << mo::print_callstack(0, true, ss) << log_stream_.str();
