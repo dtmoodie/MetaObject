@@ -131,14 +131,11 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 #define DBG_CHECK_GT(lhs, rhs, severity) DISCARD_MESSAGE
 #endif
 
-#ifdef _MSC_VER
-#define MO_THROW_SPECIFIER throw()
-#else
-#if __cplusplus > 201100L
+#if (defined(__GXX_EXPERIMENTAL_CXX0X__) ||\
+        __cplusplus >= 201103L || defined(_MSC_VER))
 #define MO_THROW_SPECIFIER noexcept(false)
 #else
-#define MO_THROW_SPECIFIER throw(...)
-#endif
+#define MO_THROW_SPECIFIER
 #endif
 
 #define LOG_FIRST_N(severity, n) static int LOG_OCCURRENCES = 0; if(LOG_OCCURRENCES <= n) ++LOG_OCCURRENCES; if(LOG_OCCURRENCES <= n) LOG(severity)
@@ -164,7 +161,7 @@ namespace mo
     {
     public:
         ThrowOnDestroy_trace(const char* function, const char* file, int line);
-        ~ThrowOnDestroy_trace() noexcept(false);
+        ~ThrowOnDestroy_trace() MO_THROW_SPECIFIER;
     };
     
     class MO_EXPORTS ThrowOnDestroy_debug: public ThrowOnDestroy 

@@ -255,53 +255,26 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
         auto err = GetLastError();
         LOG(debug) << "Failed to load " << plugin_name << " due to: [" << err << "] " << GetLastErrorAsString();
         _pimpl->plugins.push_back(fullPluginPath + " - failed");
+        
         return false;
     }
-    typedef int(*BuildLevelFunctor)();
-    BuildLevelFunctor buildLevel = (BuildLevelFunctor)GetProcAddress(handle, "GetBuildType");
-    if (buildLevel)
-    {
-        /*if (buildLevel() != BUILD_TYPE)
-        {
-            LOG(debug) << "Library debug level does not match";
-            _pimpl->plugins.push_back(fullPluginPath + " - failed");
-            return false;
-        }*/
-    }
-    else
-    {
-        LOG(debug) << "Build level not defined in library, attempting to load anyways";
-    }
-
-    typedef void(*includeFunctor)();
-    includeFunctor functor = (includeFunctor)GetProcAddress(handle, "SetupIncludes");
-    if (functor)
-        functor();
-    else
-        LOG(debug) << "Setup Includes not found in plugin " << plugin_name;
-
+    
     typedef IPerModuleInterface* (*moduleFunctor)();
     moduleFunctor module = (moduleFunctor)GetProcAddress(handle, "GetPerModuleInterface");
     if (module)
     {
         auto moduleInterface = module();
+        moduleInterface->SetModuleFileName(fullPluginPath.c_str());
+        boost::filesystem::path path(fullPluginPath);
+        std::string base = path.stem().replace_extension("").string();
+#ifdef _DEBUG
+        base = base.substr(0, base.size() - 1);
+#endif
+        boost::filesystem::path config_path = path.parent_path();
+        config_path += "/" + base + "_config.txt";
+        int id = _pimpl->obj_system.ParseConfigFile(config_path.string().c_str());
+        moduleInterface->SetProjectIdForAllConstructors(id);
         SetupObjectConstructors(moduleInterface);
-    }
-
-    else
-    {
-        LOG(debug) << "GetPerModuleInterface not found in plugin " << plugin_name;
-        module = (moduleFunctor)GetProcAddress(handle, "GetModule");
-        if (module)
-        {
-            auto moduleInterface = module();
-            SetupObjectConstructors(moduleInterface);
-        }
-        else
-        {
-            LOG(debug) << "GetModule not found in plugin " << plugin_name;
-            FreeLibrary(handle);
-        }
     }
     _pimpl->plugins.push_back(plugin_name + " - success");
     return true;
