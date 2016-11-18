@@ -352,6 +352,23 @@ std::vector<IParameter*> IMetaObject::GetParameters(const std::string& filter) c
     return output;
 }
 
+std::vector<IParameter*> IMetaObject::GetParameters(const TypeInfo& filter) const
+{
+    std::vector<IParameter*> output;
+    for (auto& itr : _pimpl->_parameters)
+    {
+        if(itr.second->GetTypeInfo() == filter)
+            output.push_back(itr.second);
+        
+    }
+    for (auto& itr : _pimpl->_implicit_parameters)
+    {
+        if(itr.second->GetTypeInfo() == filter)
+            output.push_back(itr.second.get());
+    }
+    return output;
+}
+
 IParameter* IMetaObject::GetParameterOptional(const std::string& name) const
 {
     auto itr = _pimpl->_parameters.find(name);

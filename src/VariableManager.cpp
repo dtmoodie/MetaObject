@@ -84,7 +84,7 @@ IParameter* VariableManager::GetOutputParameter(std::string name)
     std::vector<IParameter*> potentials;
     for(auto& itr : pimpl->_parameters)
     {
-        if(auto pos = itr.first.find(name) != std::string::npos)
+        if(itr.first.find(name) != std::string::npos)
         {
             potentials.push_back(itr.second);
         }

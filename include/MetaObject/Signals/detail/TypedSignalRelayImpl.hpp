@@ -10,6 +10,7 @@ namespace mo
 	template<class...T> 
 	void TypedSignalRelay<void(T...)>::operator()(TypedSignal<void(T...)>* sig, T&... args)
 	{
+        std::lock_guard<std::mutex> lock(mtx);
 		for (auto slot : _slots)
 		{
 			auto slot_ctx = slot->GetContext();
@@ -37,6 +38,7 @@ namespace mo
     template<class...T> 
     void TypedSignalRelay<void(T...)>::operator()(Context* ctx, T&... args)
     {
+        std::lock_guard<std::mutex> lock(mtx);
         for (auto slot : _slots)
         {
             auto slot_ctx = slot->GetContext();
@@ -59,6 +61,7 @@ namespace mo
     template<class...T>
 	void TypedSignalRelay<void(T...)>::operator()(T&... args)
 	{
+        std::lock_guard<std::mutex> lock(mtx);
 		for (auto slot : _slots)
 		{
 			(*slot)(args...);
@@ -96,6 +99,7 @@ namespace mo
 	template<class...T>
 	bool TypedSignalRelay<void(T...)>::Connect(TypedSlot<void(T...)>* slot)
 	{
+        std::lock_guard<std::mutex> lock(mtx);
 		_slots.insert(slot);
 		return true;
 	}
@@ -103,7 +107,7 @@ namespace mo
 	template<class...T> 
 	bool TypedSignalRelay<void(T...)>::Disconnect(ISlot* slot)
 	{
-
+        std::lock_guard<std::mutex> lock(mtx);
 		return _slots.erase(static_cast<TypedSlot<void(T...)>*>(slot)) > 0;
 	}
 
@@ -134,6 +138,7 @@ namespace mo
 	template<class R, class...T> 
 	R TypedSignalRelay<R(T...)>::operator()(TypedSignal<R(T...)>* sig, T&... args)
 	{
+        std::lock_guard<std::mutex> lock(mtx);
 		if (_slot)
 		{
 			return (*_slot)(args...);
@@ -145,6 +150,7 @@ namespace mo
     template<class R, class...T>
     R TypedSignalRelay<R(T...)>::operator()(Context* ctx, T&... args)
     {
+        std::lock_guard<std::mutex> lock(mtx);
         if(_slot)
             return (*_slot)(args...);
         THROW(debug) << "Slot not connected";
@@ -165,6 +171,7 @@ namespace mo
 	template<class R, class...T>
 	bool TypedSignalRelay<R(T...)>::Connect(TypedSlot<R(T...)>* slot)
 	{
+        std::lock_guard<std::mutex> lock(mtx);
 		if (_slot == slot)
 			return false;
 		_slot = slot;
@@ -186,6 +193,7 @@ namespace mo
 	template<class R, class...T> 
 	bool TypedSignalRelay<R(T...)>::Disconnect(ISlot* slot)
 	{
+        std::lock_guard<std::mutex> lock(mtx);
 		if (_slot == slot)
 		{
 			_slot = nullptr;

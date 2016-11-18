@@ -17,6 +17,7 @@ namespace mo
     template<class R, class...T> 
 	R TypedSignal<R(T...)>::operator()(T... args)
     {
+        std::lock_guard<std::mutex> lock(mtx);
 		if (_typed_relay)
 		{
 			return (*_typed_relay)(this, args...);
@@ -28,6 +29,7 @@ namespace mo
     template<class R, class...T>
     R TypedSignal<R(T...)>::operator()(Context* ctx, T... args)
     {
+        std::lock_guard<std::mutex> lock(mtx);
         if (_typed_relay)
         {
             return (*_typed_relay)(ctx, args...);
@@ -68,6 +70,7 @@ namespace mo
 		{
 			relay.reset(new TypedSignalRelay<R(T...)>());
 		}
+        std::lock_guard<std::mutex> lock(mtx);
 		if (relay != _typed_relay)
 		{
 			_typed_relay = relay;
@@ -80,6 +83,7 @@ namespace mo
 	template<class R, class...T>
 	bool TypedSignal<R(T...)>::Disconnect()
 	{
+        std::lock_guard<std::mutex> lock(mtx);
 		if (_typed_relay)
 		{
 			_typed_relay.reset();
@@ -91,6 +95,7 @@ namespace mo
 	template<class R, class...T>
 	bool TypedSignal<R(T...)>::Disconnect(ISlot* slot)
 	{
+        std::lock_guard<std::mutex> lock(mtx);
 		if (_typed_relay)
 		{
 			if (_typed_relay->_slot == slot)
@@ -105,6 +110,7 @@ namespace mo
 	template<class R, class...T>
 	bool TypedSignal<R(T...)>::Disconnect(std::weak_ptr<ISignalRelay> relay_)
 	{
+        std::lock_guard<std::mutex> lock(mtx);
 		auto relay = relay_.lock();
 		if (_typed_relay == relay)
 		{
@@ -126,6 +132,7 @@ namespace mo
 	template<class...T>
 	void TypedSignal<void(T...)>::operator()(T... args)
 	{
+        std::lock_guard<std::mutex> lock(mtx);
 		for (auto& relay : _typed_relays)
 		{
 			if (relay)
@@ -137,6 +144,7 @@ namespace mo
     template<class...T>
     void TypedSignal<void(T...)>::operator()(Context* ctx, T... args)
     {
+        std::lock_guard<std::mutex> lock(mtx);
         for (auto& relay : _typed_relays)
         {
             if (relay)
@@ -178,6 +186,7 @@ namespace mo
 		{
 			relay.reset(new TypedSignalRelay<void(T...)>());
 		}
+        std::lock_guard<std::mutex> lock(mtx);
 		auto itr = std::find(_typed_relays.begin(), _typed_relays.end(), relay);
 		if (itr == _typed_relays.end())
 		{
@@ -191,6 +200,7 @@ namespace mo
 	template<class...T>
 	bool TypedSignal<void(T...)>::Disconnect()
 	{
+        std::lock_guard<std::mutex> lock(mtx);
 		if (_typed_relays.size())
 		{
 			_typed_relays.clear();
@@ -202,6 +212,7 @@ namespace mo
 	template<class...T>
 	bool TypedSignal<void(T...)>::Disconnect(ISlot* slot_)
 	{
+        std::lock_guard<std::mutex> lock(mtx);
 		for (auto relay = _typed_relays.begin(); relay != _typed_relays.end(); ++relay)
 		{
 			for (auto& slot : (*relay)->_slots)
@@ -219,6 +230,7 @@ namespace mo
 	template<class...T>
 	bool TypedSignal<void(T...)>::Disconnect(std::weak_ptr<ISignalRelay> relay_)
 	{
+        std::lock_guard<std::mutex> lock(mtx);
 		auto relay = relay_.lock();
 		auto itr = std::find(_typed_relays.begin(), _typed_relays.end(), relay);
 		if (itr != _typed_relays.end())

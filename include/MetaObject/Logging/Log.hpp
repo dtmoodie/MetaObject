@@ -54,6 +54,28 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 #ifdef LOG_FIRST_N
 #undef LOG_FIRST_N
 #endif
+#ifdef CHECK_OP
+#undef CHECK_OP
+#endif
+#ifdef CHECK_GT
+#undef CHECK_GT
+#endif
+#ifdef CHECK_GE
+#undef CHECK_GE
+#endif
+#ifdef CHECK_LT
+#undef CHECK_LT
+#endif
+#ifdef CHECK_LE
+#undef CHECK_LE
+#endif
+#ifdef CHECK_NE
+#undef CHECK_NE
+#endif
+#ifdef DISCARD_MESSAGE
+#undef DISCARD_MESSAGE
+#endif
+
 
 #define DISCARD_MESSAGE true ? (void)0 : mo::LogMessageVoidify() & mo::eat_message().stream()
 
@@ -109,7 +131,12 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 #define DBG_CHECK_GT(lhs, rhs, severity) DISCARD_MESSAGE
 #endif
 
-
+#if (defined(__GXX_EXPERIMENTAL_CXX0X__) ||\
+        __cplusplus >= 201103L || defined(_MSC_VER))
+#define MO_THROW_SPECIFIER noexcept(false)
+#else
+#define MO_THROW_SPECIFIER
+#endif
 
 #define LOG_FIRST_N(severity, n) static int LOG_OCCURRENCES = 0; if(LOG_OCCURRENCES <= n) ++LOG_OCCURRENCES; if(LOG_OCCURRENCES <= n) LOG(severity)
 

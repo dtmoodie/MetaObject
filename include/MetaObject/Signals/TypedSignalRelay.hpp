@@ -1,6 +1,7 @@
 #pragma once
 #include "ISignalRelay.hpp"
 #include <set>
+#include <mutex>
 namespace mo
 {
 	template<class Sig> class TypedSlot;
@@ -29,6 +30,7 @@ namespace mo
 		bool Disconnect(ISignal* signal);
 		
 		std::set<TypedSlot<void(T...)>*> _slots;
+        std::mutex mtx;
 	};
 	// Specialization for return value
 	template<class R, class...T> class TypedSignalRelay<R(T...)>: public ISignalRelay
@@ -54,6 +56,7 @@ namespace mo
 		bool Disconnect(ISignal* signal);
 		
 		TypedSlot<R(T...)>* _slot;
+        std::mutex mtx;
 	};
 }
 #include "detail/TypedSignalRelayImpl.hpp"

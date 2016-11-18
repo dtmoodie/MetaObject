@@ -27,8 +27,8 @@ typedef void(*rmt_push_cuda_f)(const char*, unsigned int*, void*);
 typedef void(*rmt_pop_cuda_f)(void*);
 typedef void(*rmt_set_thread_name_f)(const char*);
 #ifndef PROFILING_NONE
-push_f nvtx_push = NULL;
-pop_f nvtx_pop = NULL;
+push_f nvtx_push = nullptr;
+pop_f nvtx_pop = nullptr;
 
 Remotery* rmt = nullptr;
 
@@ -51,6 +51,8 @@ void mo::SetThreadName(const char* name)
 #ifdef RMT_BUILTIN
 void InitRemotery()
 {
+    if(rmt)
+        return;
     rmt_CreateGlobalInstance(&rmt);
     CUcontext ctx;
     cuCtxGetCurrent(&ctx);
@@ -74,6 +76,8 @@ void InitRemotery()
 #else
 void InitRemotery()
 {
+    if(rmt_push_cpu && rmt_pop_cpu)
+        return;
 #ifdef _DEBUG
     HMODULE handle = LoadLibrary("remoteryd.dll");
 #else
@@ -122,6 +126,8 @@ void InitRemotery()
 
 void InitNvtx()
 {
+    if (nvtx_push && nvtx_pop)
+        return;
 #ifdef _MSC_VER
     HMODULE nvtx_handle = LoadLibrary("nvToolsExt64_1.dll");
     if (nvtx_handle)
@@ -157,6 +163,27 @@ void mo::InitProfiling()
     InitRemotery();
 #endif
 }
+void mo::PushCpu(const char* name, unsigned int* rmt_hash)
+{
+    if (nvtx_push)
+        (*nvtx_push)(name);
+    if (rmt && rmt_push_cpu)
+    {
+        rmt_push_cpu(name, rmt_hash);
+    }
+}
+
+void mo::PopCpu()
+{
+    if (nvtx_pop)
+    {
+        (*nvtx_pop)();
+    }
+    if (rmt && rmt_pop_cpu)
+    {
+        rmt_pop_cpu();
+    }
+}
 
 scoped_profile::scoped_profile(std::string name, unsigned int* obj_hash, unsigned int* cuda_hash, cv::cuda::Stream* stream):
     scoped_profile(name.c_str(), obj_hash, cuda_hash, stream)
@@ -171,10 +198,7 @@ scoped_profile::scoped_profile(const char* name, unsigned int* rmt_hash, unsigne
         (*nvtx_push)(name);
 	if (rmt && rmt_push_cpu)
 	{
-		if(rmt_hash)
-            rmt_push_cpu(name, rmt_hash);
-		else
-            rmt_push_cpu(name, nullptr);
+        rmt_push_cpu(name, rmt_hash);
 	}
 #endif
 }
