@@ -293,15 +293,7 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
     const char *dlsym_error = dlerror();
     if (dlsym_error) {
         LOG(debug)  << dlsym_error << '\n';
-        module = (moduleFunctor)dlsym(handle, "GetModule");
-        dlsym_error = dlerror();
-        if (dlsym_error)
-        {
-            LOG(debug) << dlsym_error << '\n';
-            return false;
-        }
-        LOG(debug) << "Found symbol 'GetModule'" << std::endl;
-
+        return false;
     }
     if (module == nullptr)
     {
