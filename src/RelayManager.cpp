@@ -133,8 +133,6 @@ int RelayManager::ConnectSignals(IMetaObject* obj)
 		count += Connect(signal.first, signal.second, obj) ? 1 : 0;
 	}
 	return count;
-
-
 }
 
 int RelayManager::ConnectSlots(IMetaObject* obj, const std::string& name)
@@ -172,6 +170,7 @@ int RelayManager::ConnectSlots(IMetaObject* obj)
 
 std::vector<std::shared_ptr<ISignalRelay>> RelayManager::GetRelays(const std::string& name)
 {
+    std::lock_guard<std::mutex> lock(mtx);
     std::vector<std::shared_ptr<ISignalRelay>> relays;
     for(auto& types : _pimpl->relays)
     {
@@ -194,6 +193,7 @@ std::vector<std::shared_ptr<ISignalRelay>> RelayManager::GetRelays(const std::st
 }
 std::vector<std::pair<std::shared_ptr<ISignalRelay>, std::string>> RelayManager::GetAllRelays()
 {
+    std::lock_guard<std::mutex> lock(mtx);
     std::vector<std::pair<std::shared_ptr<ISignalRelay>, std::string>> output;
     for(auto& types : _pimpl->relays)
     {
@@ -207,6 +207,7 @@ std::vector<std::pair<std::shared_ptr<ISignalRelay>, std::string>> RelayManager:
 
 std::shared_ptr<ISignalRelay>& RelayManager::GetRelay(const TypeInfo& type, const std::string& name)
 {
+    std::lock_guard<std::mutex> lock(mtx);
 	return _pimpl->relays[type][name];
 }
 
