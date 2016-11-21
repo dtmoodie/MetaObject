@@ -238,6 +238,7 @@ int IMetaObject::RemoveVariableManager(IVariableManager* mgr)
 
 void IMetaObject::Serialize(ISimpleSerializer *pSerializer)
 {
+    IObject::Serialize(pSerializer);
     SerializeConnections(pSerializer);
     SerializeParameters(pSerializer);
 }
@@ -246,6 +247,8 @@ void IMetaObject::SerializeConnections(ISimpleSerializer* pSerializer)
 {
     SERIALIZE(_pimpl->_connections);
 	SERIALIZE(_pimpl->_parameter_connections);
+    SERIALIZE(_ctx);
+    SERIALIZE(_sig_manager);
 }
 void IMetaObject::SerializeParameters(ISimpleSerializer* pSerializer)
 {
