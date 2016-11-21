@@ -98,21 +98,14 @@ namespace cereal
     {
         ar(m);
     }
-    template<class Archive> void save(Archive& ar, mo::EnumParameter const& m)
-    {
-        ar(m.enumerations, m.values);
-    }
-    template<class Archive> void load(Archive& ar, mo::EnumParameter& m)
-    {
-        ar(m.enumerations, m.values);
-    }
 }
-
 using namespace mo;
+template<class AR> void EnumParameter::serialize(AR& ar)
+{
+    ar(CEREAL_NVP(enumerations), CEREAL_NVP(values), CEREAL_NVP(currentSelection));
+}
 INSTANTIATE_META_PARAMETER(ReadFile);
 INSTANTIATE_META_PARAMETER(WriteFile);
 INSTANTIATE_META_PARAMETER(ReadDirectory);
 INSTANTIATE_META_PARAMETER(WriteDirectory);
 INSTANTIATE_META_PARAMETER(EnumParameter);
-
-
