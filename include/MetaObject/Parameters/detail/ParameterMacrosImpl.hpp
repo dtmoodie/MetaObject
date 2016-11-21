@@ -157,6 +157,7 @@ SERIALIZE_(name, N)
 void _serialize_parameters(ISimpleSerializer* pSerializer, mo::_counter_<N> dummy) \
 { \
     SERIALIZE(name); \
+    _serialize_parameters(pSerializer, --dummy); \
 } 
 
 #define INPUT_PARAM_(type, name, init, N) \
