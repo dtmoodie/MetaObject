@@ -86,17 +86,38 @@ namespace cereal
         std::string path = m.string();
         ar(path);
     }
-    template<class Archive> void serialize(Archive& ar, mo::WriteFile& m)
+    template<class Archive> void load(Archive& ar, mo::WriteFile& m)
     {
-        ar(m);
+        std::string path;
+        ar(path);
+        m = path;
     }
-    template<class Archive> void serialize(Archive& ar, mo::ReadDirectory& m)
+    template<class Archive> void save(Archive& ar, mo::WriteFile const& m)
     {
-        ar(m);
+        std::string path = m.string();
+        ar(path);
     }
-    template<class Archive> void serialize(Archive& ar, mo::WriteDirectory& m)
+    template<class Archive> void load(Archive& ar, mo::ReadDirectory& m)
     {
-        ar(m);
+        std::string path;
+        ar(path);
+        m = mo::ReadDirectory(path);
+    }
+    template<class Archive> void save(Archive& ar, mo::ReadDirectory const& m)
+    {
+        std::string path = m.string();
+        ar(path);
+    }
+    template<class Archive> void load(Archive& ar, mo::WriteDirectory& m)
+    {
+        std::string path;
+        ar(path);
+        m = path;
+    }
+    template<class Archive> void save(Archive& ar, mo::WriteDirectory const& m)
+    {
+        std::string path = m.string();
+        ar(path);
     }
 }
 using namespace mo;
