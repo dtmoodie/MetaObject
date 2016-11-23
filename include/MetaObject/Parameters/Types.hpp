@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/parameters
 */
 #pragma once
-
+#include <MetaObject/Detail/Export.hpp>
 #include <vector>
 #include <string>
 #include <boost/filesystem/path.hpp>
@@ -25,87 +25,37 @@ https://github.com/dtmoodie/parameters
 
 namespace mo
 {
-    struct ReadFile : public boost::filesystem::path
+    struct MO_EXPORTS ReadFile : public boost::filesystem::path
     {
-        ReadFile(const std::string& str = "") : boost::filesystem::path(str){}
+        ReadFile(const std::string& str = "");
     };
-    struct WriteFile : public boost::filesystem::path
+    struct MO_EXPORTS WriteFile : public boost::filesystem::path
     {
-        WriteFile(const std::string& file = "") : boost::filesystem::path(file){}
+        WriteFile(const std::string& file = "");
     };
-    struct ReadDirectory : public boost::filesystem::path
+    struct MO_EXPORTS ReadDirectory : public boost::filesystem::path
     {
-        ReadDirectory(const boost::filesystem::path& path = "") : boost::filesystem::path(path){}
+        ReadDirectory(const boost::filesystem::path& path = "");
     };
-    struct WriteDirectory : public boost::filesystem::path
+    struct MO_EXPORTS WriteDirectory : public boost::filesystem::path
     {
-        WriteDirectory(const std::string& str = "") : boost::filesystem::path(str){}
+        WriteDirectory(const std::string& str = "");
     };
 
-    class EnumParameter
+    class MO_EXPORTS EnumParameter
     {
     public:
         EnumParameter(const EnumParameter&) = default;
-        EnumParameter(const std::initializer_list<std::pair<const char*, int>>& values)
-        {
-            enumerations.clear();
-            this->values.clear();
-            for (auto itr = values.begin(); itr != values.end(); ++itr)
-            {
-                enumerations.emplace_back(itr->first);
-                this->values.emplace_back(itr->second);
-            }
-        }
-        EnumParameter()
-        {
-            currentSelection = 0;
-        }
-        EnumParameter& operator=(const std::initializer_list<std::pair<const char*, int>>& values)
-        {
-            enumerations.clear();
-            this->values.clear();
-            for(auto itr = values.begin(); itr != values.end(); ++itr)
-            {
-                enumerations.emplace_back(itr->first);
-                this->values.emplace_back(itr->second);
-            }
-            return *this;
-        }
+        EnumParameter(const std::initializer_list<std::pair<const char*, int>>& values);
+        EnumParameter();
+        
 
-        void SetValue(const std::initializer_list<const char*>& string, const std::initializer_list<int>& values)
-        {
-            auto iItr = values.begin();
-            auto nItr = string.begin();
-            enumerations.clear();
-            this->values.clear();
-            for( ; iItr != values.end() && nItr != string.begin(); ++iItr, ++nItr)
-            {
-                enumerations.push_back(*nItr);
-                this->values.push_back(*iItr);
-            }
-        }
+        void SetValue(const std::initializer_list<const char*>& string, const std::initializer_list<int>& values);
 
-        void addEnum(int value, const ::std::string& enumeration)
-        {
-            enumerations.push_back(enumeration);
-            values.push_back(value);
-        }
-        int getValue()
-        {
-            if (values.empty() || currentSelection >= values.size())
-            {
-                throw std::range_error("values.empty() || currentSelection >= values.size()");
-            }
-            return values[currentSelection];
-        }
-        std::string getEnum()
-        {
-            if (currentSelection >= values.size())
-            {
-                throw std::range_error("currentSelection >= values.size()");
-            }
-            return enumerations[currentSelection];
-        }
+        void addEnum(int value, const ::std::string& enumeration);
+        int getValue();
+        std::string getEnum();
+        template<typename T> void serialize(T& ar);
 
         std::vector<std::string> enumerations;
         std::vector<int>         values;

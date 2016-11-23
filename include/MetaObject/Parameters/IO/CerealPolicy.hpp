@@ -63,7 +63,7 @@ namespace mo
                     ar(cereal::make_nvp(param->GetName(), *ptr));
                 }catch(cereal::Exception& e)
                 {
-                    LOG(debug) << e.what();
+                    std::cout << e.what() << std::endl;
                     return false;
                 }
                 typed->Commit();

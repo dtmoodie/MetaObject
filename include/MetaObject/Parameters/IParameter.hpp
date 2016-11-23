@@ -39,6 +39,7 @@ namespace mo
 	class ISignal;
     class ISignalRelay;
 	class TypeInfo;
+    class IParameter;
     namespace UI
     {
         namespace qt
@@ -49,7 +50,10 @@ namespace mo
     template<class T> class TypedSignal;
 	template<class T> class TypedSlot;
 	template<class T> class TypedSignalRelay;
-
+    typedef TypedSlot<void(Context*, IParameter*)> ParameterUpdateSlot;
+    typedef TypedSlot<void(IParameter const*)> ParameterDeleteSlot;
+    typedef std::shared_ptr<ParameterUpdateSlot> ParameterUpdateSlotPtr;
+    typedef std::shared_ptr<ParameterDeleteSlot> ParameterDeleteSlotPtr;
 
     class MO_EXPORTS IParameter: boost::noncopyable
     {
