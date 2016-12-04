@@ -311,11 +311,12 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
     boost::filesystem::path config_path = path.parent_path();
     config_path += "/" + base + "_config.txt";
     int id = _pimpl->obj_system.ParseConfigFile(config_path.string().c_str());
-    SetupObjectConstructors(interface);
+
     if(id >= 0)
     {
         interface->SetProjectIdForAllConstructors(id);
     }
+    SetupObjectConstructors(interface);
     _pimpl->plugins.push_back(fullPluginPath + " - success");
     return true;
 }
