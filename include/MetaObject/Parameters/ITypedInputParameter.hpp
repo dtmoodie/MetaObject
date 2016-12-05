@@ -2,10 +2,12 @@
 
 #include "InputParameter.hpp"
 #include "ITypedParameter.hpp"
-
+#ifdef _MSC_VER
+#pragma warning( disable : 4250)
+#endif
 namespace mo
 {
-    template<class T> class ITypedInputParameter: public ITypedParameter<T>, public InputParameter
+    template<class T> class ITypedInputParameter: virtual public ITypedParameter<T>, virtual public InputParameter
     {
     public:
         ITypedInputParameter(const std::string& name = "",  Context* ctx = nullptr);

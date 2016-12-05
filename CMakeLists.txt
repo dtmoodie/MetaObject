@@ -25,7 +25,7 @@ if(WITH_PYTHON)
     find_package(Boost COMPONENTS python)
     if(Boost_FOUND)
 	    list(APPEND link_libs "${PYTHON_LIBRAY}")
-            get_filename_component(python_lib_dir "${PYTHON_DEBUG_LIBRARY}" DIRECTORY)
+            get_filename_component(python_lib_dir "${PYTHON_LIBRARY}" DIRECTORY)
             link_directories(${python_lib_dir})
 	    include_directories(${PYTHON_INCLUDE_DIR})
 	    add_definitions(-DHAVE_BOOST_PYTHON)
@@ -80,6 +80,50 @@ set(PROJECT_BIN_DIRS_RELWITHDEBINFO "")
 set(PROJECT_BIN_DIRS_RELEASE "")
 set(PROJECT_BIN_DIRS_DEBUG "")
 
+# CUDA
+if(WITH_CUDA)
+  FIND_PACKAGE(CUDA QUIET)
+  IF(${CUDA_FOUND})
+    INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
+    ADD_DEFINITIONS(-DHAVE_CUDA)
+	list(APPEND PROJECT_BIN_DIRS_DEBUG_ ${CUDA_BIN_DIR})
+	list(APPEND PROJECT_BIN_DIRS_RELEASE_ ${CUDA_BIN_DIR})
+	list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO_ ${CUDA_BIN_DIR})
+    if(GNUC)
+        set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --std=c++11")
+    endif(GNUC)
+  ENDIF(${CUDA_FOUND})
+endif(WITH_CUDA)
+
+# ---------------------- rcc ---------------------------------  
+SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+set(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${CMAKE_CURRENT_LIST_DIR}/include;${cereal_INCLUDE_DIRS}")
+set(RCC_LIBRARY_DIRS_DEBUG "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/Debug")
+set(RCC_LIBRARY_DIRS_RELWITHDEBINFO "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/RelWithDebInfo")
+if(MSVC)
+  set(RCC_COMPILE_FLAGS "/DBOOST_ALL_DYN_LINK")
+else()
+  set(RCC_COMPILE_FLAGS "-DBOOST_ALL_DYN_LINK")
+endif()
+ADD_SUBDIRECTORY("dependencies/rcc")
+include_directories(${RCC_INCLUDE_DIRS})
+set_target_properties(RuntimeCompiler PROPERTIES FOLDER Dependencies)
+set_target_properties(RuntimeObjectSystem PROPERTIES FOLDER Dependencies)
+SET(RCC_INCLUDE_DIRS "${RCC_INCLUDE_DIRS}" PARENT_SCOPE)
+set(RCC_PERMODULE_INTERFACE_SOURCE ${RCC_PERMODULE_INTERFACE_SOURCE} PARENT_SCOPE)
+
+set(MO_PROFILING_MODE "BUILTIN" CACHE STRING "Set MetaObject profiling mode")
+set_property(CACHE MO_PROFILING_MODE PROPERTY STRINGS BUILTIN DYNAMIC NONE)
+if(${MO_PROFILING_MODE} STREQUAL "BUILTIN")
+  add_definitions(-DRMT_BUILTIN)
+  list(APPEND link_libs Remotery)
+endif()
+if(${MO_PROFILING_MODE} STREQUAL "NONE")
+  add_definitions(-DPROFILING_NONE)
+endif()
+
+add_definitions(-DRMT_USE_CUDA)
+
 # ---------------------- Optional dependencies ------------------
 # Qt5
 if(WITH_QT)
@@ -99,6 +143,7 @@ if(WITH_QT)
 		set(Qt5_BIN_DIR ${qt5_bin_dir_} CACHE PATH "" FORCE)
 		set(Qt5_BIN_DIR_DBG ${qt5_bin_dir_} CACHE PATH "" FORCE)
 		set(BIN_DIRS "${BIN_DIRS};Qt5" CACHE STRING "" FORCE)
+    rcc_find_path(Qt5_PLUGIN_PATH qwindows.dll PATHS ${Qt5_BIN_DIR}/../plugins/platforms)
 	endif()
 endif()
 
@@ -146,57 +191,12 @@ if(${ZeroMQ_FOUND})
   add_definitions(-DHAVE_ZEROMQ)
 endif(${ZeroMQ_FOUND})
 
-# CUDA
-if(WITH_CUDA)
-  FIND_PACKAGE(CUDA QUIET)
-  IF(${CUDA_FOUND})
-    INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
-    ADD_DEFINITIONS(-DHAVE_CUDA)
-	list(APPEND PROJECT_BIN_DIRS_DEBUG_ ${CUDA_BIN_DIR})
-	list(APPEND PROJECT_BIN_DIRS_RELEASE_ ${CUDA_BIN_DIR})
-	list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO_ ${CUDA_BIN_DIR})
-    if(GNUC)
-        set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --std=c++11")
-    endif(GNUC)
-  ENDIF(${CUDA_FOUND})
-endif(WITH_CUDA)
 
-
-
-# ---------------------- rcc ---------------------------------  
-SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-set(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${CMAKE_CURRENT_LIST_DIR}/include;${cereal_INCLUDE_DIRS}")
-set(RCC_LIBRARY_DIRS_DEBUG "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/Debug")
-set(RCC_LIBRARY_DIRS_RELWITHDEBINFO "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/RelWithDebInfo")
-if(MSVC)
-  set(RCC_COMPILE_FLAGS "/DBOOST_ALL_DYN_LINK")
-else()
-  set(RCC_COMPILE_FLAGS "-DBOOST_ALL_DYN_LINK")
-endif()
-ADD_SUBDIRECTORY("dependencies/rcc")
-include_directories(${RCC_INCLUDE_DIRS})
-set_target_properties(RuntimeCompiler PROPERTIES FOLDER Dependencies)
-set_target_properties(RuntimeObjectSystem PROPERTIES FOLDER Dependencies)
-SET(RCC_INCLUDE_DIRS "${RCC_INCLUDE_DIRS}" PARENT_SCOPE)
-set(RCC_PERMODULE_INTERFACE_SOURCE ${RCC_PERMODULE_INTERFACE_SOURCE} PARENT_SCOPE)
-
-set(MO_PROFILING_MODE "BUILTIN" CACHE STRING "Set MetaObject profiling mode")
-set_property(CACHE MO_PROFILING_MODE PROPERTY STRINGS BUILTIN DYNAMIC NONE)
-if(${MO_PROFILING_MODE} STREQUAL "BUILTIN")
-  add_definitions(-DRMT_BUILTIN)
-  list(APPEND link_libs Remotery)
-endif()
-if(${MO_PROFILING_MODE} STREQUAL "NONE")
-  add_definitions(-DPROFILING_NONE)
-endif()
-
-add_definitions(-DRMT_USE_CUDA)
 
 add_subdirectory("dependencies/Remotery")
 set_target_properties(Remotery PROPERTIES FOLDER Dependencies)
 GroupSources(include)
 GroupSources(src)
-#include_directories(dependencies/Remotery/lib)
 add_library(MetaObject SHARED ${src} ${hdr} src/precompiled.hpp)
 target_link_libraries(MetaObject 
   RuntimeObjectSystem 
@@ -206,7 +206,6 @@ target_link_libraries(MetaObject
   ${CUDA_CUDART_LIBRARY}
   ${CUDA_CUDA_LIBRARY}
 )
-
 ocv_add_precompiled_header_to_target(MetaObject src/precompiled.hpp)
 
 # -------------------- instantiations --------------------------

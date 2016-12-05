@@ -287,20 +287,28 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
 
 bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
 {
-    void* handle = dlopen(fullPluginPath.c_str(), RTLD_LAZY);
+    LOG(info) << "Loading " << fullPluginPath;
+    void* handle = dlopen(fullPluginPath.c_str(), RTLD_NOW);
     // Fallback on old module
-
+    if(handle == nullptr)
+    {
+        const char *dlsym_error = dlerror();
+        if (dlsym_error) {
+            LOG(warning)  << dlsym_error << '\n';
+            return false;
+        }
+    }
     typedef IPerModuleInterface* (*moduleFunctor)();
 
     moduleFunctor module = (moduleFunctor)dlsym(handle, "GetPerModuleInterface");
     const char *dlsym_error = dlerror();
     if (dlsym_error) {
-        LOG(debug)  << dlsym_error << '\n';
+        LOG(warning)  << dlsym_error << '\n';
         return false;
     }
     if (module == nullptr)
     {
-        LOG(debug)  << "module == nullptr" << std::endl;
+        LOG(warning)  << "module == nullptr" << std::endl;
         return false;
     }
     IPerModuleInterface* interface = module();
@@ -320,8 +328,6 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
     _pimpl->plugins.push_back(fullPluginPath + " - success");
     return true;
 }
-
-
 
 #endif
 

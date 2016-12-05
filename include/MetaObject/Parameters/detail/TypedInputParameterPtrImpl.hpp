@@ -8,7 +8,8 @@ namespace mo
     template<typename T> TypedInputParameterPtr<T>::TypedInputParameterPtr(const std::string& name, T** userVar_, Context* ctx) :
             userVar(userVar_),
             ITypedInputParameter<T>(name, ctx),
-            IParameter(name, Input_e, -1, ctx)
+            IParameter(name, Input_e, -1, ctx),
+            ITypedParameter<T>(name, Input_e, -1, ctx)
     {
     }
         

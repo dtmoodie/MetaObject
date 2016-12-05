@@ -5,7 +5,8 @@ namespace mo
     namespace Buffer
     {
         template<class T> CircularBuffer<T>::CircularBuffer(const std::string& name, const T& init, long long ts, ParameterType type ):
-            ITypedInputParameter<T>(name)
+            ITypedInputParameter<T>(name),
+            ITypedParameter<T>(name, mo::Buffer_e)
         {
             (void)&_circular_buffer_constructor;
             (void)&_circular_buffer_parameter_constructor;

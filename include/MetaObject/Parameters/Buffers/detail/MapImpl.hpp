@@ -5,7 +5,8 @@ namespace mo
     namespace Buffer
     {
         template<class T> Map<T>::Map(const std::string& name) :
-            ITypedInputParameter<T>(name)
+            ITypedInputParameter<T>(name),
+            ITypedParameter<T>(name, mo::Buffer_e)
         {
             this->SetFlags(Buffer_e);
         }
