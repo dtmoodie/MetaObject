@@ -24,12 +24,12 @@ using namespace mo;
 int IMetaObject::Connect(IMetaObject* sender, const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name)
 {
 	int count = 0;
-	auto signals = sender->GetSignals(signal_name);
-	auto slots = receiver->GetSlots(slot_name);
+    auto my_signals = sender->GetSignals(signal_name);
+    auto my_slots = receiver->GetSlots(slot_name);
 	
-	for (auto signal : signals)
+    for (auto signal : my_signals)
 	{
-		for (auto slot : slots)
+        for (auto slot : my_slots)
 		{
 			if (signal->GetSignature() == slot->GetSignature())
 			{
@@ -100,7 +100,6 @@ void IMetaObject::Init(bool firstInit)
         }
     }
 
-
     if(firstInit == false)
     {
 		auto connections_copy = _pimpl->_parameter_connections;
@@ -113,15 +112,29 @@ void IMetaObject::Init(bool firstInit)
 				auto output = obj->GetOutput(parameter_connection.output_parameter);
 				if (output == nullptr)
 				{
+                    LOG(debug) << "Unable to find " << parameter_connection.output_parameter << " in " << obj->GetTypeName() << " reinitializing";
 					obj->InitParameters(firstInit);
 					output = obj->GetOutput(parameter_connection.output_parameter);
 					if (output == nullptr)
+                    {
+                        LOG(info) << "Unable to find " << parameter_connection.output_parameter << " in "
+                                  << obj->GetTypeName() << " unable to reconnect " << parameter_connection.input_parameter
+                                  << " from object " << this->GetTypeName();
 						continue;
+                    }
 				}
 				auto input = this->GetInput(parameter_connection.input_parameter);
 				if (input)
 				{
-					this->ConnectInput(input, obj.Get(), output, parameter_connection.connection_type);
+                    if(this->ConnectInput(input, obj.Get(), output, parameter_connection.connection_type))
+                    {
+                       LOG(debug) << "Reconnected " << GetTypeName() << ":" << parameter_connection.input_parameter
+                                  << " to " << obj->GetTypeName() << ":" << parameter_connection.output_parameter;
+                    }else
+                    {
+                        LOG(info) << "Reconnect FAILED " << GetTypeName() << ":" << parameter_connection.input_parameter
+                                   << " to " << obj->GetTypeName() << ":" << parameter_connection.output_parameter;
+                    }
 				}
 				else
 				{
@@ -170,27 +183,28 @@ int IMetaObject::SetupSignals(RelayManager* manager)
 {
     _sig_manager = manager;
     int count = 0;
-    for(auto& slots : _pimpl->_slots)
+    for(auto& my_slots : _pimpl->_slots)
     {
-        for(auto& slot : slots.second)
+        for(auto& slot : my_slots.second)
         {
             ConnectionInfo info;
-            info.connection = manager->Connect(slot.second, slots.first, this);
-            info.slot_name = slots.first;
+            info.connection = manager->Connect(slot.second, my_slots.first, this);
+            info.slot_name = my_slots.first;
             info.signature = slot.first;
             _pimpl->_connections.push_back(info);
             ++count;
         }
     }
 
-    for(auto& signals : _pimpl->_signals)
+    for(auto& my_signals : _pimpl->_signals)
     {
-        for(auto& signal : signals.second)
+        for(auto& signal : my_signals.second)
         {
-            auto connection = manager->Connect(signal.second, signals.first, this);
+            auto connection = manager->Connect(signal.second, my_signals.first, this);
             ConnectionInfo info;
-            info.signal_name = signals.first;
+            info.signal_name = my_signals.first;
             info.signature = signal.first;
+            info.connection = connection;
             _pimpl->_connections.push_back(info);
             ++count;
         }
@@ -271,9 +285,9 @@ void IMetaObject::SetContext(Context* ctx, bool overwrite)
 
 int IMetaObject::DisconnectByName(const std::string& name)
 {
-    auto signals = this->GetSignals(name);
+    auto my_signals = this->GetSignals(name);
     int count = 0;
-    for(auto& sig : signals)
+    for(auto& sig : my_signals)
     {
 		count += sig->Disconnect() ? 1 : 0;
     }
@@ -287,9 +301,9 @@ bool IMetaObject::Disconnect(ISignal* sig)
 
 int IMetaObject::Disconnect(IMetaObject* obj)
 {
-    auto signals = obj->GetSignals();
+    auto obj_signals = obj->GetSignals();
     int count = 0;
-    for(auto signal : signals)
+    for(auto signal : obj_signals)
     {
         count += Disconnect(signal.first) ? 1 : 0;
     }
@@ -757,15 +771,15 @@ std::vector<SlotInfo*> IMetaObject::GetSlotInfo(const std::string& name) const
 
 std::vector<std::pair<ISlot*, std::string>>  IMetaObject::GetSlots() const
 {
-	std::vector<std::pair<ISlot*, std::string>>  slots;
+    std::vector<std::pair<ISlot*, std::string>>  my_slots;
     for(auto itr1 : _pimpl->_slots)
     {
         for(auto itr2: itr1.second)
         {
-            slots.push_back(std::make_pair(itr2.second, itr1.first));
+            my_slots.push_back(std::make_pair(itr2.second, itr1.first));
         }
     }
-    return slots;
+    return my_slots;
 }
 
 std::vector<ISlot*> IMetaObject::GetSlots(const std::string& name) const
@@ -848,11 +862,11 @@ int IMetaObject::ConnectByName(const std::string& name, RelayManager* mgr)
 int  IMetaObject::ConnectByName(const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name)
 {
 	int count = 0;
-	auto signals = GetSignals(signal_name);
-	auto slots = receiver->GetSlots(slot_name);
-	for (auto signal : signals)
+    auto my_signals = GetSignals(signal_name);
+    auto my_slots = receiver->GetSlots(slot_name);
+    for (auto signal : my_signals)
 	{
-		for (auto slot : slots)
+        for (auto slot : my_slots)
 		{
 			if (signal->GetSignature() == slot->GetSignature())
 			{
@@ -887,9 +901,9 @@ bool IMetaObject::ConnectByName(const std::string& signal_name, IMetaObject* rec
 
 int IMetaObject::ConnectAll(RelayManager* mgr)
 {
-    auto signals = GetSignalInfo();
+    auto my_signals = GetSignalInfo();
     int count = 0;
-    for(auto& signal : signals)
+    for(auto& signal : my_signals)
     {
         count += ConnectByName(signal->name, mgr);
     }
@@ -911,41 +925,41 @@ void IMetaObject::AddSignal(ISignal* sig, const std::string& name)
 
 std::vector<std::pair<ISignal*, std::string>> IMetaObject::GetSignals() const
 {
-    std::vector<std::pair<ISignal*, std::string>> signals;
+    std::vector<std::pair<ISignal*, std::string>> my_signals;
     for(auto& name_itr : _pimpl->_signals)
     {
         for(auto& sig_itr : name_itr.second)
         {
-            signals.push_back(std::make_pair(sig_itr.second, name_itr.first));
+            my_signals.push_back(std::make_pair(sig_itr.second, name_itr.first));
         }
     }
-    return signals;
+    return my_signals;
 }
 std::vector<ISignal*> IMetaObject::GetSignals(const std::string& name) const
 {
-    std::vector<ISignal*> signals;
+    std::vector<ISignal*> my_signals;
     auto itr = _pimpl->_signals.find(name);
     if(itr != _pimpl->_signals.end())
     {
         for(auto& sig_itr : itr->second)
         {
-            signals.push_back(sig_itr.second);
+            my_signals.push_back(sig_itr.second);
         }
     }
-    return signals;
+    return my_signals;
 }
 std::vector<std::pair<ISignal*, std::string>> IMetaObject::GetSignals(const TypeInfo& type) const
 {
-    std::vector<std::pair<ISignal*, std::string>> signals;
+    std::vector<std::pair<ISignal*, std::string>> my_signals;
     for(auto& name_itr : _pimpl->_signals)
     {
         auto type_itr = name_itr.second.find(type);
         if(type_itr != name_itr.second.end())
         {
-            signals.push_back(std::make_pair(type_itr->second, name_itr.first));
+            my_signals.push_back(std::make_pair(type_itr->second, name_itr.first));
         }
     }
-    return signals;
+    return my_signals;
 }
 ISignal* IMetaObject::GetSignal(const std::string& name, const TypeInfo& type) const
 {
