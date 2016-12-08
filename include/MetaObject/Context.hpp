@@ -11,6 +11,7 @@ namespace cv
 
 namespace mo
 {
+    class Allocator;
     class MO_EXPORTS Context
     {
     public:
@@ -19,5 +20,6 @@ namespace mo
         size_t thread_id = 0;
         std::string host_name;
         cv::cuda::Stream* stream = nullptr;
+        Allocator* allocator;
     };
 }
