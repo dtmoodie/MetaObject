@@ -1,12 +1,11 @@
 #pragma once
 #include "Allocator.hpp"
-#include <boost/thread/tss.hpp>
+#include "MetaObject/Logging/Log.hpp"
 #include <opencv2/cudev/common.hpp>
 #include <opencv2/core/cuda.hpp>
-#include <cuda_runtime.h>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/tss.hpp>
-
+#include <cuda_runtime.h>
 namespace mo
 {
 
@@ -68,6 +67,13 @@ void ContinuousPolicy::SizeNeeded(int rows, int cols, int elemSize, size_t& size
 
 /// ==========================================================
 /// PoolPolicy
+template<typename PaddingPolicy>
+PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::PoolPolicy(size_t initialBlockSize):
+    _initial_block_size(initialBlockSize)
+{
+    blocks.push_back(std::shared_ptr<GpuMemoryBlock>(new GpuMemoryBlock(_initial_block_size)));
+}
+
 template<typename PaddingPolicy>
 bool PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
 {
@@ -168,6 +174,8 @@ void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(unsigned char* ptr)
                         __FUNCTION__, __FILE__, __LINE__);
 }
 
+
+
 /// ==========================================================
 /// StackPolicy
 template<typename PaddingPolicy>
@@ -178,9 +186,9 @@ bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
     PaddingPolicy::SizeNeeded(rows, cols, elemSize, sizeNeeded, stride);
     for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr)
     {
-        if(std::get<2>(*itr) == sizeNeeded)
+        if(itr->size == sizeNeeded)
         {
-            mat->data = std::get<0>(*itr);
+            mat->data = itr->ptr;
             mat->step = stride;
             mat->refcount = (int*)cv::fastMalloc(sizeof(int));
             deallocateList.erase(itr);
@@ -258,12 +266,12 @@ void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::clear()
     auto time = clock();
     for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr)
     {
-        if((time - std::get<1>(*itr)) > deallocateDelay)
+        if((time - itr->free_time) > deallocateDelay)
         {
-            memoryUsage -= std::get<2>(*itr);
-            LOG(trace) << "[GPU] Deallocating block of size " << std::get<2>(*itr) /(1024*1024)
-                       << "MB. Which was stale for " << time - std::get<1>(*itr) << " ms";
-            CV_CUDEV_SAFE_CALL(cudaFree(std::get<0>(*itr)));
+            memoryUsage -= itr->size;
+            LOG(trace) << "[GPU] Deallocating block of size " << itr->size /(1024*1024)
+                       << "MB. Which was stale for " << time - itr->free_time << " ms";
+            CV_CUDEV_SAFE_CALL(cudaFree(itr->ptr));
             itr = deallocateList.erase(itr);
         }
     }
@@ -323,32 +331,54 @@ void NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(unsigned char* ptr)
 /// ==========================================================
 /// LockPolicy
 template<class Allocator>
-bool LockPolicy<Allocator>::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
+bool LockPolicyImpl<Allocator, cv::cuda::GpuMat>::allocate(
+        cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
 {
     boost::mutex::scoped_lock lock(mtx);
     return Allocator::allocate(mat, rows, cols, elemSize);
 }
 
 template<class Allocator>
-void LockPolicy<Allocator>::free(cv::cuda::GpuMat* mat)
+void LockPolicyImpl<Allocator, cv::cuda::GpuMat>::free(cv::cuda::GpuMat* mat)
 {
     boost::mutex::scoped_lock lock(mtx);
     return Allocator::free(mat);
 }
 
 template<class Allocator>
-unsigned char* LockPolicy<Allocator>::allocate(size_t num_bytes)
+unsigned char* LockPolicyImpl<Allocator, cv::cuda::GpuMat>::allocate(size_t num_bytes)
 {
     boost::mutex::scoped_lock lock(mtx);
     return Allocator::allocate(num_bytes);
 }
 
 template<class Allocator>
-void LockPolicy<Allocator>::free(unsigned char* ptr)
+void LockPolicyImpl<Allocator, cv::cuda::GpuMat>::free(unsigned char* ptr)
 {
     boost::mutex::scoped_lock lock(mtx);
     return Allocator::free(ptr);
 }
+
+template<class Allocator>
+cv::UMatData* LockPolicyImpl<Allocator, cv::Mat>::allocate(int dims, const int* sizes, int type,
+    void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
+{
+    return Allocator::allocate(dims, sizes, type, data, step, flags, usageFlags);
+}
+
+template<class Allocator>
+bool LockPolicyImpl<Allocator, cv::Mat>::allocate(cv::UMatData* data, int accessflags,
+                                                  cv::UMatUsageFlags usageFlags) const
+{
+    return Allocator::allocate(data, accessflags, usageFlags);
+}
+
+template<class Allocator>
+void LockPolicyImpl<Allocator, cv::Mat>::deallocate(cv::UMatData* data) const
+{
+    return Allocator::deallocate(data);
+}
+
 
 /// ==========================================================
 /// ScopedDebugPolicy
@@ -417,8 +447,121 @@ void ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::free(unsigned char* ptr)
         scopedAllocationSize[itr->second] -= this->current_allocations[ptr];
     }
 }
+
+template<class SmallAllocator, class LargeAllocator>
+CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::CombinedPolicyImpl(size_t threshold_)
+    : threshold(threshold_)
+{
+
+}
+
+template<class SmallAllocator, class LargeAllocator>
+bool CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::allocate(
+        cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
+{
+    if(rows*cols*elemSize < threshold)
+    {
+        return SmallAllocator::allocate(mat, rows, cols, elemSize);
+    }else
+    {
+        return LargeAllocator::allocate(mat, rows, cols, elemSize);
+    }
+}
+
+template<class SmallAllocator, class LargeAllocator>
+void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::free(cv::cuda::GpuMat* mat)
+{
+    if(mat->rows * mat->cols * mat->elemSize() < threshold)
+    {
+        SmallAllocator::free(mat);
+    }else
+    {
+        LargeAllocator::free(mat);
+    }
+}
+
+template<class SmallAllocator, class LargeAllocator>
+unsigned char* CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::allocate(size_t num_bytes)
+{
+    return SmallAllocator::allocate(num_bytes);
+}
+
+template<class SmallAllocator, class LargeAllocator>
+void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::free(unsigned char* ptr)
+{
+    SmallAllocator::free(ptr);
+}
+
+template<class SmallAllocator, class LargeAllocator>
+CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::CombinedPolicyImpl(size_t threshold_):
+    threshold(threshold_)
+{
+
+}
+template<class SmallAllocator, class LargeAllocator>
+cv::UMatData* CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::allocate(
+                            int dims, const int* sizes, int type,
+                            void* data, size_t* step, int flags,
+                            cv::UMatUsageFlags usageFlags) const
+{
+    size_t total = CV_ELEM_SIZE(type);
+    for (int i = dims - 1; i >= 0; i--)
+    {
+        if (step)
+        {
+            if (data && step[i] != CV_AUTOSTEP)
+            {
+                CV_Assert(total <= step[i]);
+                total = step[i];
+            }
+            else
+            {
+                step[i] = total;
+            }
+        }
+
+        total *= sizes[i];
+    }
+    if(total < threshold)
+    {
+        return SmallAllocator::allocate(dims, sizes, type, data, step, flags, usageFlags);
+    }else
+    {
+        return LargeAllocator::allocate(dims, sizes, type, data, step, flags, usageFlags);
+    }
+}
+
+template<class SmallAllocator, class LargeAllocator>
+bool CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::allocate(
+                    cv::UMatData* data, int accessflags,
+                    cv::UMatUsageFlags usageFlags) const
+{
+    return (data != NULL);
+}
+
+template<class SmallAllocator, class LargeAllocator>
+void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::deallocate(cv::UMatData* data) const
+{
+    if(data->size < threshold)
+    {
+        SmallAllocator::deallocate(data);
+    }else
+    {
+        LargeAllocator::deallocate(data);
+    }
+}
+template<class SmallAllocator, class LargeAllocator>
+CombinedPolicy<SmallAllocator, LargeAllocator>::CombinedPolicy(size_t threshold)
+    :CombinedPolicyImpl<SmallAllocator, LargeAllocator, typename LargeAllocator::MatType>(threshold)
+{
+
+}
+
 template<class CPUAllocator, class GPUAllocator>
-class ConcreteAllocator: virtual public T, mo::Allocator
+class ConcreteAllocator
+        : virtual public GPUAllocator
+        , virtual public CPUAllocator
+        , virtual public mo::Allocator
 {
 public:
     // GpuMat allocate

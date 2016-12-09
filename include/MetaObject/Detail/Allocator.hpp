@@ -3,7 +3,6 @@
 #include "Export.hpp"
 #include "MemoryBlock.h"
 #include <opencv2/core/cuda.hpp>
-#include <opencv2/core/cuda/utility.hpp>
 #include <boost/thread/mutex.hpp>
 #include <list>
 namespace mo
@@ -79,10 +78,12 @@ class MO_EXPORTS PoolPolicy
 
 /// ========================================================================================
 template<typename PaddingPolicy>
-class MO_EXPORTS PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>: public virtual AllocationPolicy
+class MO_EXPORTS PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>
+        : public virtual AllocationPolicy
+        , public virtual PaddingPolicy
 {
 public:
-    PoolPolicy(size_t initialBlockSize);
+    PoolPolicy(size_t initialBlockSize = 1e7);
 
     inline bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
     inline void free(cv::cuda::GpuMat* mat);
@@ -99,18 +100,10 @@ template<>
 class MO_EXPORTS PoolPolicy<cv::Mat, ContinuousPolicy>
 {
 public:
-    PoolPolicy(size_t initialBlockSize);
-
-    inline bool allocate(cv::Mat* mat, int rows, int cols, size_t elemSize);
-    inline void free(cv::Mat* mat);
-
-    inline unsigned char* allocate(size_t num_bytes);
-    inline void free(unsigned char* ptr);
-
-private:
-    size_t _initial_block_size;
-    std::list<std::shared_ptr<CpuMemoryBlock>> blocks;
-
+    cv::UMatData* allocate(int dims, const int* sizes, int type,
+        void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
+    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void deallocate(cv::UMatData* data) const;
 };
 
 /*!
@@ -127,8 +120,10 @@ template<typename T, typename PaddingPolicy> class MO_EXPORTS StackPolicy{};
 template<typename PaddingPolicy>
 class MO_EXPORTS StackPolicy<cv::cuda::GpuMat, PaddingPolicy>
         : public virtual AllocationPolicy
+        , public virtual PaddingPolicy
 {
 public:
+    typedef cv::cuda::GpuMat MatType;
     bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
     void free(cv::cuda::GpuMat* mat);
 
@@ -146,6 +141,19 @@ protected:
     };
     std::list<FreeMemory> deallocateList;
     size_t deallocateDelay; // ms
+};
+
+template<>
+class MO_EXPORTS StackPolicy<cv::Mat, ContinuousPolicy>
+        : public virtual AllocationPolicy
+        , public virtual ContinuousPolicy
+{
+public:
+    typedef cv::Mat MatType;
+    cv::UMatData* allocate(int dims, const int* sizes, int type,
+        void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
+    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void deallocate(cv::UMatData* data) const;
 };
 
 /*!
@@ -174,6 +182,7 @@ template<class Allocator>
 class LockPolicyImpl<Allocator, cv::cuda::GpuMat>: public Allocator
 {
 public:
+    typedef cv::cuda::GpuMat MatType;
     inline bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
     inline void free(cv::cuda::GpuMat* mat);
 
@@ -187,28 +196,104 @@ template<class Allocator>
 class LockPolicyImpl<Allocator, cv::Mat>: public Allocator
 {
 public:
-    inline cv::UMatData* allocate(int dims, const int* sizes, int type,
+    typedef cv::Mat MatType;
+    cv::UMatData* allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    inline bool allocate(cv::UMatData* data, int accessflags,
-                          cv::UMatUsageFlags usageFlags) const;
-    inline void deallocate(cv::UMatData* data) const;
+    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void deallocate(cv::UMatData* data) const;
 private:
     boost::mutex mtx;
 };
+
+class MO_EXPORTS CpuMemoryPool
+{
+public:
+    virtual ~CpuMemoryPool() {}
+    static CpuMemoryPool* GlobalInstance();
+    static CpuMemoryPool* ThreadInstance();
+    virtual bool allocate(void** ptr, size_t total, size_t elemSize) = 0;
+    virtual bool deallocate(void* ptr, size_t total) = 0;
+};
+
+class MO_EXPORTS CpuMemoryStack
+{
+public:
+    virtual ~CpuMemoryStack() {}
+    static CpuMemoryStack* GlobalInstance();
+    static CpuMemoryStack* ThreadInstance();
+    virtual bool allocate(void** ptr, size_t total, size_t elemSize) = 0;
+    virtual bool deallocate(void* ptr, size_t total) = 0;
+};
+
 
 /*!
  * \brief The LockPolicy class locks calls to the given allocator
  */
 template<class Allocator>
-class MO_EXPORTS LockPolicy: public LockPolicyImpl<Allocator, typename Allocator::MatType>
+class MO_EXPORTS LockPolicy
+        : public LockPolicyImpl<Allocator, typename Allocator::MatType>
 {
+
+};
+
+template<class SmallAllocator, class LargeAllocator, class MatType>
+class MO_EXPORTS CombinedPolicyImpl
+        : virtual public SmallAllocator
+        , virtual public LargeAllocator
+{
+
+};
+
+template<class SmallAllocator, class LargeAllocator>
+class MO_EXPORTS CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>
+        : virtual public SmallAllocator
+        , virtual public LargeAllocator
+{
+public:
+    CombinedPolicyImpl(size_t threshold);
+    inline bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
+    inline void free(cv::cuda::GpuMat* mat);
+
+    inline unsigned char* allocate(size_t num_bytes);
+    inline void free(unsigned char* ptr);
+private:
+    size_t threshold;
+};
+
+template<class SmallAllocator, class LargeAllocator>
+class MO_EXPORTS CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>
+        : virtual public SmallAllocator
+        , virtual public LargeAllocator
+{
+public:
+    CombinedPolicyImpl(size_t threshold);
+    inline cv::UMatData* allocate(int dims, const int* sizes, int type,
+                                  void* data, size_t* step, int flags,
+                                  cv::UMatUsageFlags usageFlags) const;
+    inline bool allocate(cv::UMatData* data, int accessflags,
+                         cv::UMatUsageFlags usageFlags) const;
+    inline void deallocate(cv::UMatData* data) const;
+private:
+    size_t threshold;
+};
+
+template<class SmallAllocator, class LargeAllocator>
+class MO_EXPORTS CombinedPolicy
+        : public CombinedPolicyImpl<SmallAllocator, LargeAllocator, typename LargeAllocator::MatType>
+{
+public:
+    typedef typename LargeAllocator::MatType MatType;
+    CombinedPolicy(size_t threshold = 1e6);
 };
 
 /*!
  * \brief The ScopeDebugPolicy class
  */
+template<class Allocator, class MatType>
+class MO_EXPORTS ScopeDebugPolicy: public virtual Allocator{};
+
 template<class Allocator>
-class MO_EXPORTS ScopeDebugPolicy: public virtual Allocator
+class MO_EXPORTS ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>: public virtual Allocator
 {
 public:
     inline bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
@@ -223,8 +308,7 @@ private:
 
 class MO_EXPORTS Allocator:
         virtual public cv::cuda::GpuMat::Allocator,
-        virtual public cv::MatAllocator,
-        virtual public cv::cuda::device::ThrustAllocator
+        virtual public cv::MatAllocator
 {
 public:
     static Allocator* GetThreadSafeAllocator();
