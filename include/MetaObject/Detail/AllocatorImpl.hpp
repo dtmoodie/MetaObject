@@ -509,6 +509,7 @@ CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::CombinedPolicyImpl(
 {
 
 }
+
 template<class SmallAllocator, class LargeAllocator>
 cv::UMatData* CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::allocate(
                             int dims, const int* sizes, int type,

@@ -3,8 +3,12 @@
 #include "Export.hpp"
 #include "MemoryBlock.h"
 #include <opencv2/core/cuda.hpp>
+#include <opencv2/core/cuda/common.hpp>
+#include <opencv2/core/cuda/utility.hpp>
 #include <boost/thread/mutex.hpp>
 #include <list>
+#include <cuda.h>
+
 namespace mo
 {
 MO_EXPORTS inline unsigned char* alignMemory(unsigned char* ptr, int elemSize);
@@ -356,5 +360,103 @@ public:
     virtual void Release() {}
 };
 
+template<class T> class PinnedStlAllocator
+{
+public:
+    typedef T value_type;
+    typedef T* pointer;
+    typedef const T* const_pointer;
+    typedef T& reference;
+    typedef const T& const_reference;
+    typedef std::size_t size_type;
+    typedef std::ptrdiff_t difference_type;
+    template< class U > struct rebind { typedef allocator<U> other; };
+    pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
+    {
+        return allocate(n);
+    }
 
+    pointer allocate(size_type n)
+    {
+        pointer output = nullptr;
+        cudaSafeCall(cudaMallocHost(&output, n*sizeof(pointer)));
+        return output;
+    }
+
+    void deallocate(pointer ptr, size_type n)
+    {
+        cudaSafeCall(cudaFreeHost(ptr));
+    }
+};
+
+
+template<class T> bool operator==(const PinnedStlAllocatorGlobal<T>& lhs, const PinnedStlAllocatorGlobal<T>& rhs)
+{
+    return &lhs == &rhs;
 }
+template<class T> bool operator!=(const PinnedStlAllocatorGlobal<T>& lhs, const PinnedStlAllocatorGlobal<T>& rhs)
+{
+    return &lhs != &rhs;
+}
+
+// Share pinned pool with CpuPoolPolicy
+template<class T> class PinnedStlAllocatorPoolThread
+{
+public:
+    typedef T value_type;
+    typedef T* pointer;
+    typedef const T* const_pointer;
+    typedef T& reference;
+    typedef const T& const_reference;
+    typedef std::size_t size_type;
+    typedef std::ptrdiff_t difference_type;
+    template< class U > struct rebind { typedef allocator<U> other; };
+    pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
+    {
+        return allocate(n);
+    }
+
+    pointer allocate(size_type n)
+    {
+        pointer ptr = nullptr;
+        CpuMemoryPool::ThreadInstance()->allocate(&ptr, n*sizeof(T), sizeof(T));
+        return ptr;
+    }
+
+    void deallocate(pointer ptr, size_type n)
+    {
+        CpuMemoryPool::ThreadInstance()->deallocate(ptr, n*sizeof(T));
+    }
+};
+
+template<class T> class PinnedStlAllocatorPoolGlobal
+{
+public:
+    typedef T value_type;
+    typedef T* pointer;
+    typedef const T* const_pointer;
+    typedef T& reference;
+    typedef const T& const_reference;
+    typedef std::size_t size_type;
+    typedef std::ptrdiff_t difference_type;
+    template< class U > struct rebind { typedef allocator<U> other; };
+
+    pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
+    {
+        return allocate(n);
+    }
+
+    pointer allocate(size_type n)
+    {
+        pointer ptr = nullptr;
+        CpuMemoryPool::GlobalInstance()->allocate(&ptr, n*sizeof(T), sizeof(T));
+        return ptr;
+    }
+
+    void deallocate(pointer ptr, size_type n)
+    {
+        CpuMemoryPool::GlobalInstance()->deallocate(ptr, n*sizeof(T));
+    }
+};
+
+} // namespace mo
