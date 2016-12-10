@@ -3,8 +3,12 @@
 #include "Export.hpp"
 #include "MemoryBlock.h"
 #include <opencv2/core/cuda.hpp>
+#include <opencv2/core/cuda/common.hpp>
+#include <opencv2/core/cuda/utility.hpp>
 #include <boost/thread/mutex.hpp>
 #include <list>
+#include <cuda.h>
+
 namespace mo
 {
 MO_EXPORTS inline unsigned char* alignMemory(unsigned char* ptr, int elemSize);
@@ -58,6 +62,7 @@ public:
      * \return current estimated memory usage
      */
     inline size_t GetMemoryUsage() const;
+    virtual void Release() {}
 protected:
     size_t memoryUsage;
     /*!
@@ -93,7 +98,7 @@ public:
 
     inline unsigned char* allocate(size_t num_bytes);
     inline void free(unsigned char* ptr);
-
+    virtual void Release();
 private:
     size_t _initial_block_size;
     std::list<std::shared_ptr<GpuMemoryBlock>> blocks;
@@ -103,27 +108,28 @@ private:
 class MO_EXPORTS CpuPoolPolicy: virtual public cv::MatAllocator
 {
 public:
-    inline cv::UMatData* allocate(int dims, const int* sizes, int type,
+    cv::UMatData* allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    inline bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
-    inline void deallocate(cv::UMatData* data) const;
+    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void deallocate(cv::UMatData* data) const;
+    void Release() {}
 };
 
 class MO_EXPORTS mt_CpuPoolPolicy : virtual public CpuPoolPolicy
 {
 public:
-    inline cv::UMatData* allocate(int dims, const int* sizes, int type,
+    cv::UMatData* allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    inline bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
-    inline void deallocate(cv::UMatData* data) const;
+    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void deallocate(cv::UMatData* data) const;
 };
 class MO_EXPORTS PinnedAllocator : virtual public cv::MatAllocator
 {
 public:
-    inline cv::UMatData* allocate(int dims, const int* sizes, int type,
+    cv::UMatData* allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    inline bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
-    inline void deallocate(cv::UMatData* data) const;
+    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void deallocate(cv::UMatData* data) const;
 };
 
 
@@ -145,11 +151,13 @@ class MO_EXPORTS StackPolicy<cv::cuda::GpuMat, PaddingPolicy>
 {
 public:
     typedef cv::cuda::GpuMat MatType;
+    StackPolicy();
     bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
     void free(cv::cuda::GpuMat* mat);
 
     unsigned char* allocate(size_t num_bytes);
     void free(unsigned char* ptr);
+    virtual void Release();
 protected:
     void clear();
     struct FreeMemory
@@ -172,20 +180,21 @@ class MO_EXPORTS CpuStackPolicy
 {
 public:
     typedef cv::Mat MatType;
-    inline cv::UMatData* allocate(int dims, const int* sizes, int type,
+    cv::UMatData* allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    inline bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
-    inline void deallocate(cv::UMatData* data) const;
+    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void deallocate(cv::UMatData* data) const;
+    void Release(){}
 };
 
 class MO_EXPORTS mt_CpuStackPolicy: virtual public CpuStackPolicy
 {
 public:
     typedef cv::Mat MatType;
-    inline cv::UMatData* allocate(int dims, const int* sizes, int type,
+    cv::UMatData* allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    inline bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
-    inline void deallocate(cv::UMatData* data) const;
+    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void deallocate(cv::UMatData* data) const;
 };
 
 
@@ -289,6 +298,7 @@ public:
 
     inline unsigned char* allocate(size_t num_bytes);
     inline void free(unsigned char* ptr);
+    void Release();
 private:
     size_t threshold;
 };
@@ -306,6 +316,7 @@ public:
     inline bool allocate(cv::UMatData* data, int accessflags,
                          cv::UMatUsageFlags usageFlags) const;
     inline void deallocate(cv::UMatData* data) const;
+    void Release();
 private:
     size_t threshold;
 };
@@ -346,8 +357,106 @@ class MO_EXPORTS Allocator:
 public:
     static Allocator* GetThreadSafeAllocator();
     static Allocator* GetThreadSpecificAllocator();
+    virtual void Release() {}
+};
 
+template<class T> class PinnedStlAllocator
+{
+public:
+    typedef T value_type;
+    typedef T* pointer;
+    typedef const T* const_pointer;
+    typedef T& reference;
+    typedef const T& const_reference;
+    typedef std::size_t size_type;
+    typedef std::ptrdiff_t difference_type;
+    template< class U > struct rebind { typedef allocator<U> other; };
+    pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
+    {
+        return allocate(n);
+    }
+
+    pointer allocate(size_type n)
+    {
+        pointer output = nullptr;
+        cudaSafeCall(cudaMallocHost(&output, n*sizeof(pointer)));
+        return output;
+    }
+
+    void deallocate(pointer ptr, size_type n)
+    {
+        cudaSafeCall(cudaFreeHost(ptr));
+    }
 };
 
 
+template<class T> bool operator==(const PinnedStlAllocatorGlobal<T>& lhs, const PinnedStlAllocatorGlobal<T>& rhs)
+{
+    return &lhs == &rhs;
 }
+template<class T> bool operator!=(const PinnedStlAllocatorGlobal<T>& lhs, const PinnedStlAllocatorGlobal<T>& rhs)
+{
+    return &lhs != &rhs;
+}
+
+// Share pinned pool with CpuPoolPolicy
+template<class T> class PinnedStlAllocatorPoolThread
+{
+public:
+    typedef T value_type;
+    typedef T* pointer;
+    typedef const T* const_pointer;
+    typedef T& reference;
+    typedef const T& const_reference;
+    typedef std::size_t size_type;
+    typedef std::ptrdiff_t difference_type;
+    template< class U > struct rebind { typedef allocator<U> other; };
+    pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
+    {
+        return allocate(n);
+    }
+
+    pointer allocate(size_type n)
+    {
+        pointer ptr = nullptr;
+        CpuMemoryPool::ThreadInstance()->allocate(&ptr, n*sizeof(T), sizeof(T));
+        return ptr;
+    }
+
+    void deallocate(pointer ptr, size_type n)
+    {
+        CpuMemoryPool::ThreadInstance()->deallocate(ptr, n*sizeof(T));
+    }
+};
+
+template<class T> class PinnedStlAllocatorPoolGlobal
+{
+public:
+    typedef T value_type;
+    typedef T* pointer;
+    typedef const T* const_pointer;
+    typedef T& reference;
+    typedef const T& const_reference;
+    typedef std::size_t size_type;
+    typedef std::ptrdiff_t difference_type;
+    template< class U > struct rebind { typedef allocator<U> other; };
+
+    pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
+    {
+        return allocate(n);
+    }
+
+    pointer allocate(size_type n)
+    {
+        pointer ptr = nullptr;
+        CpuMemoryPool::GlobalInstance()->allocate(&ptr, n*sizeof(T), sizeof(T));
+        return ptr;
+    }
+
+    void deallocate(pointer ptr, size_type n)
+    {
+        CpuMemoryPool::GlobalInstance()->deallocate(ptr, n*sizeof(T));
+    }
+};
+
+} // namespace mo

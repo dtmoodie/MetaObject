@@ -3,36 +3,7 @@
 using namespace mo;
 boost::thread_specific_ptr<Allocator> thread_specific_allocator;
 
-typedef PoolPolicy<cv::cuda::GpuMat, ContinuousPolicy>   d_TensorPoolAllocator_t;
-typedef LockPolicy<d_TensorPoolAllocator_t>              d_mt_TensorPoolAllocator_t;
 
-typedef StackPolicy<cv::cuda::GpuMat, ContinuousPolicy>  d_TensorAllocator_t;
-typedef StackPolicy<cv::cuda::GpuMat, PitchedPolicy>     d_TextureAllocator_t;
-
-typedef LockPolicy<d_TensorAllocator_t>                  d_mt_TensorAllocator_t;
-typedef LockPolicy<d_TextureAllocator_t>                 d_mt_TextureAllocator_t;
-
-typedef CpuPoolPolicy h_PoolAllocator_t;
-typedef CpuStackPolicy h_StackAllocator_t;
-
-typedef mt_CpuPoolPolicy                    h_mt_PoolAllocator_t;
-typedef mt_CpuStackPolicy                   h_mt_StackAllocator_t;
-
-typedef CombinedPolicy<d_TensorPoolAllocator_t, d_TextureAllocator_t> d_UniversalAllocator_t;
-typedef LockPolicy<d_UniversalAllocator_t> d_mt_UniversalAllocator_t;
-
-typedef CombinedPolicy<h_PoolAllocator_t, h_StackAllocator_t> h_UniversalAllocator_t;
-typedef LockPolicy<h_UniversalAllocator_t> h_mt_UniversalAllocator_t;
-
-
-typedef ConcreteAllocator<h_mt_PoolAllocator_t, d_mt_TensorPoolAllocator_t> mt_TensorAllocator_t;
-typedef ConcreteAllocator<h_PoolAllocator_t, d_TensorAllocator_t>           TensorAllocator_t;
-
-typedef ConcreteAllocator<h_mt_StackAllocator_t, d_mt_TextureAllocator_t>   mt_TextureAllocator_t;
-typedef ConcreteAllocator<h_StackAllocator_t, d_TextureAllocator_t>         TextureAllocator_t;
-
-typedef ConcreteAllocator<h_UniversalAllocator_t, d_UniversalAllocator_t>    UniversalAllocator_t;
-typedef ConcreteAllocator<h_mt_UniversalAllocator_t, d_mt_UniversalAllocator_t>    mt_UniversalAllocator_t;
 
 boost::thread_specific_ptr<std::string> current_scope;
 void mo::SetScopeName(const std::string& name)
@@ -62,6 +33,7 @@ public:
     {
         blocks.emplace_back(new mo::CpuMemoryBlock(_initial_block_size));
     }
+
     bool allocate(void** ptr, size_t total, size_t elemSize)
     {
         int index = 0;
@@ -275,7 +247,8 @@ Allocator* Allocator::GetThreadSpecificAllocator()
     return thread_specific_allocator.get();
 }
 
-
+// ================================================================
+// CpuStackPolicy
 cv::UMatData* CpuStackPolicy::allocate(int dims, const int* sizes, int type,
     void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
 {
@@ -344,76 +317,8 @@ void CpuStackPolicy::deallocate(cv::UMatData* u) const
     }
 }
 
-
 // ================================================================
-// PoolPolicy
-cv::UMatData* CpuPoolPolicy::allocate(int dims, const int* sizes, int type,
-    void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
-{
-    size_t total = CV_ELEM_SIZE(type);
-    for (int i = dims - 1; i >= 0; i--)
-    {
-        if (step)
-        {
-            if (data && step[i] != CV_AUTOSTEP)
-            {
-                CV_Assert(total <= step[i]);
-                total = step[i];
-            }
-            else
-            {
-                step[i] = total;
-            }
-        }
-
-        total *= sizes[i];
-    }
-
-    cv::UMatData* u = new cv::UMatData(this);
-    u->size = total;
-
-    if (data)
-    {
-        u->data = u->origdata = static_cast<uchar*>(data);
-        u->flags |= cv::UMatData::USER_ALLOCATED;
-    }
-    else
-    {
-        void* ptr = 0;
-        CpuMemoryPool::ThreadInstance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
-
-        u->data = u->origdata = static_cast<uchar*>(ptr);
-    }
-
-    return u;
-}
-
-bool CpuPoolPolicy::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const
-{
-    return false;
-}
-
-void CpuPoolPolicy::deallocate(cv::UMatData* u) const
-{
-    if (!u)
-        return;
-
-    CV_Assert(u->urefcount >= 0);
-    CV_Assert(u->refcount >= 0);
-
-    if (u->refcount == 0)
-    {
-        if (!(u->flags & cv::UMatData::USER_ALLOCATED))
-        {
-            //cudaFreeHost(u->origdata);
-            CpuMemoryPool::ThreadInstance()->deallocate(u->origdata, u->size);
-            u->origdata = 0;
-        }
-
-        delete u;
-    }
-}
-
+// mt_CpuStackPolicy
 
 cv::UMatData* mt_CpuStackPolicy::allocate(int dims, const int* sizes, int type,
     void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
@@ -483,9 +388,77 @@ void mt_CpuStackPolicy::deallocate(cv::UMatData* u) const
     }
 }
 
+// ================================================================
+// CpuPoolPolicy
+cv::UMatData* CpuPoolPolicy::allocate(int dims, const int* sizes, int type,
+    void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
+{
+    size_t total = CV_ELEM_SIZE(type);
+    for (int i = dims - 1; i >= 0; i--)
+    {
+        if (step)
+        {
+            if (data && step[i] != CV_AUTOSTEP)
+            {
+                CV_Assert(total <= step[i]);
+                total = step[i];
+            }
+            else
+            {
+                step[i] = total;
+            }
+        }
+
+        total *= sizes[i];
+    }
+
+    cv::UMatData* u = new cv::UMatData(this);
+    u->size = total;
+
+    if (data)
+    {
+        u->data = u->origdata = static_cast<uchar*>(data);
+        u->flags |= cv::UMatData::USER_ALLOCATED;
+    }
+    else
+    {
+        void* ptr = 0;
+        CpuMemoryPool::ThreadInstance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
+
+        u->data = u->origdata = static_cast<uchar*>(ptr);
+    }
+
+    return u;
+}
+
+bool CpuPoolPolicy::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const
+{
+    return false;
+}
+
+void CpuPoolPolicy::deallocate(cv::UMatData* u) const
+{
+    if (!u)
+        return;
+
+    CV_Assert(u->urefcount >= 0);
+    CV_Assert(u->refcount >= 0);
+
+    if (u->refcount == 0)
+    {
+        if (!(u->flags & cv::UMatData::USER_ALLOCATED))
+        {
+            //cudaFreeHost(u->origdata);
+            CpuMemoryPool::ThreadInstance()->deallocate(u->origdata, u->size);
+            u->origdata = 0;
+        }
+
+        delete u;
+    }
+}
 
 // ================================================================
-// PoolPolicy
+// mt_CpuPoolPolicy
 cv::UMatData* mt_CpuPoolPolicy::allocate(int dims, const int* sizes, int type,
     void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
 {
