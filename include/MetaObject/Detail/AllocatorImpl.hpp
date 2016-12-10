@@ -382,24 +382,7 @@ void LockPolicyImpl<Allocator, cv::Mat>::deallocate(cv::UMatData* data) const
 
 /// ==========================================================
 /// ScopedDebugPolicy
-boost::thread_specific_ptr<std::string> current_scope;
-void SetScopeName(const std::string& name)
-{
-    if(current_scope.get() == nullptr)
-    {
-        current_scope.reset(new std::string());
-    }
-    *current_scope = name;
-}
 
-const std::string& GetScopeName()
-{
-    if(current_scope.get() == nullptr)
-    {
-        current_scope.reset(new std::string());
-    }
-    return *current_scope;
-}
 
 template<class Allocator>
 bool ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::allocate(

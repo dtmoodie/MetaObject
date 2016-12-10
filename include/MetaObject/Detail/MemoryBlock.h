@@ -4,9 +4,6 @@
 
 namespace mo
 {
-    MO_EXPORTS int alignmentOffset(unsigned char* ptr, int elemSize);
-    MO_EXPORTS unsigned char*  alignMemory(unsigned char* ptr, int elemSize);
-
     class MO_EXPORTS GPUMemory
     {
     protected:

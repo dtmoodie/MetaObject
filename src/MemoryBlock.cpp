@@ -1,35 +1,14 @@
 #include "MetaObject/Detail/MemoryBlock.h"
+#include "MetaObject/Detail/AllocatorImpl.hpp"
 #include <algorithm>
 #include <vector>
 #include <utility>
 #include <opencv2/cudev/common.hpp>
 #include <cuda_runtime.h>
+
 using namespace mo;
 
-unsigned char* mo::alignMemory(unsigned char* ptr, int elemSize)
-{
-    int i;
-    for (i = 0; i < elemSize; ++i)
-    {
-        if (reinterpret_cast<size_t>(ptr + i) % elemSize == 0)
-        {
-            break;
-        }
-    }
-    return ptr + i;  // Forces memory to be aligned to an element's byte boundary
-}
-int mo::alignmentOffset(unsigned char* ptr, int elemSize)
-{
-    int i;
-    for (i = 0; i < elemSize; ++i)
-    {
-        if (reinterpret_cast<size_t>(ptr + i) % elemSize == 0)
-        {
-            break;
-        }
-    }
-    return i;
-}
+
 
 void GPUMemory::_allocate(unsigned char** ptr, size_t size)
 {

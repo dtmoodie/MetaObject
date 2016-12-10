@@ -9,6 +9,9 @@ namespace mo
 {
 MO_EXPORTS inline unsigned char* alignMemory(unsigned char* ptr, int elemSize);
 MO_EXPORTS inline int alignmentOffset(unsigned char* ptr, int elemSize);
+MO_EXPORTS void SetScopeName(const std::string& name);
+MO_EXPORTS const std::string& GetScopeName();
+
 /// ========================================================
 /// Memory layout policies
 /// ========================================================
@@ -96,15 +99,33 @@ private:
     std::list<std::shared_ptr<GpuMemoryBlock>> blocks;
 };
 
-template<>
-class MO_EXPORTS PoolPolicy<cv::Mat, ContinuousPolicy>
+
+class MO_EXPORTS CpuPoolPolicy: virtual public cv::MatAllocator
 {
 public:
-    cv::UMatData* allocate(int dims, const int* sizes, int type,
+    inline cv::UMatData* allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
-    void deallocate(cv::UMatData* data) const;
+    inline bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    inline void deallocate(cv::UMatData* data) const;
 };
+
+class MO_EXPORTS mt_CpuPoolPolicy : virtual public CpuPoolPolicy
+{
+public:
+    inline cv::UMatData* allocate(int dims, const int* sizes, int type,
+        void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
+    inline bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    inline void deallocate(cv::UMatData* data) const;
+};
+class MO_EXPORTS PinnedAllocator : virtual public cv::MatAllocator
+{
+public:
+    inline cv::UMatData* allocate(int dims, const int* sizes, int type,
+        void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
+    inline bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    inline void deallocate(cv::UMatData* data) const;
+};
+
 
 /*!
  *  \brief The StackPolicy class checks for a free memory stack of the exact
@@ -143,18 +164,30 @@ protected:
     size_t deallocateDelay; // ms
 };
 
-template<>
-class MO_EXPORTS StackPolicy<cv::Mat, ContinuousPolicy>
-        : public virtual AllocationPolicy
-        , public virtual ContinuousPolicy
+
+class MO_EXPORTS CpuStackPolicy
+    : public virtual AllocationPolicy
+    , public virtual ContinuousPolicy
+    , public virtual cv::MatAllocator
 {
 public:
     typedef cv::Mat MatType;
-    cv::UMatData* allocate(int dims, const int* sizes, int type,
+    inline cv::UMatData* allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
-    void deallocate(cv::UMatData* data) const;
+    inline bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    inline void deallocate(cv::UMatData* data) const;
 };
+
+class MO_EXPORTS mt_CpuStackPolicy: virtual public CpuStackPolicy
+{
+public:
+    typedef cv::Mat MatType;
+    inline cv::UMatData* allocate(int dims, const int* sizes, int type,
+        void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
+    inline bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    inline void deallocate(cv::UMatData* data) const;
+};
+
 
 /*!
  *  \brief The NonCachingPolicy allocates and deallocates the same as
@@ -283,7 +316,7 @@ class MO_EXPORTS CombinedPolicy
 {
 public:
     typedef typename LargeAllocator::MatType MatType;
-    CombinedPolicy(size_t threshold = 1e6);
+    CombinedPolicy(size_t threshold = 1e7);
 };
 
 /*!
