@@ -58,6 +58,7 @@ public:
      * \return current estimated memory usage
      */
     inline size_t GetMemoryUsage() const;
+    virtual void Release() {}
 protected:
     size_t memoryUsage;
     /*!
@@ -93,7 +94,7 @@ public:
 
     inline unsigned char* allocate(size_t num_bytes);
     inline void free(unsigned char* ptr);
-
+    virtual void Release();
 private:
     size_t _initial_block_size;
     std::list<std::shared_ptr<GpuMemoryBlock>> blocks;
@@ -103,27 +104,28 @@ private:
 class MO_EXPORTS CpuPoolPolicy: virtual public cv::MatAllocator
 {
 public:
-    inline cv::UMatData* allocate(int dims, const int* sizes, int type,
+    cv::UMatData* allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    inline bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
-    inline void deallocate(cv::UMatData* data) const;
+    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void deallocate(cv::UMatData* data) const;
+    void Release() {}
 };
 
 class MO_EXPORTS mt_CpuPoolPolicy : virtual public CpuPoolPolicy
 {
 public:
-    inline cv::UMatData* allocate(int dims, const int* sizes, int type,
+    cv::UMatData* allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    inline bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
-    inline void deallocate(cv::UMatData* data) const;
+    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void deallocate(cv::UMatData* data) const;
 };
 class MO_EXPORTS PinnedAllocator : virtual public cv::MatAllocator
 {
 public:
-    inline cv::UMatData* allocate(int dims, const int* sizes, int type,
+    cv::UMatData* allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    inline bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
-    inline void deallocate(cv::UMatData* data) const;
+    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void deallocate(cv::UMatData* data) const;
 };
 
 
@@ -145,11 +147,13 @@ class MO_EXPORTS StackPolicy<cv::cuda::GpuMat, PaddingPolicy>
 {
 public:
     typedef cv::cuda::GpuMat MatType;
+    StackPolicy();
     bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
     void free(cv::cuda::GpuMat* mat);
 
     unsigned char* allocate(size_t num_bytes);
     void free(unsigned char* ptr);
+    virtual void Release();
 protected:
     void clear();
     struct FreeMemory
@@ -172,20 +176,21 @@ class MO_EXPORTS CpuStackPolicy
 {
 public:
     typedef cv::Mat MatType;
-    inline cv::UMatData* allocate(int dims, const int* sizes, int type,
+    cv::UMatData* allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    inline bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
-    inline void deallocate(cv::UMatData* data) const;
+    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void deallocate(cv::UMatData* data) const;
+    void Release(){}
 };
 
 class MO_EXPORTS mt_CpuStackPolicy: virtual public CpuStackPolicy
 {
 public:
     typedef cv::Mat MatType;
-    inline cv::UMatData* allocate(int dims, const int* sizes, int type,
+    cv::UMatData* allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    inline bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
-    inline void deallocate(cv::UMatData* data) const;
+    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void deallocate(cv::UMatData* data) const;
 };
 
 
@@ -289,6 +294,7 @@ public:
 
     inline unsigned char* allocate(size_t num_bytes);
     inline void free(unsigned char* ptr);
+    void Release();
 private:
     size_t threshold;
 };
@@ -306,6 +312,7 @@ public:
     inline bool allocate(cv::UMatData* data, int accessflags,
                          cv::UMatUsageFlags usageFlags) const;
     inline void deallocate(cv::UMatData* data) const;
+    void Release();
 private:
     size_t threshold;
 };
@@ -346,7 +353,7 @@ class MO_EXPORTS Allocator:
 public:
     static Allocator* GetThreadSafeAllocator();
     static Allocator* GetThreadSpecificAllocator();
-
+    virtual void Release() {}
 };
 
 

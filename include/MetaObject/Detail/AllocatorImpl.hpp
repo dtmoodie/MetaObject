@@ -174,10 +174,21 @@ void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(unsigned char* ptr)
                         __FUNCTION__, __FILE__, __LINE__);
 }
 
+template<typename PaddingPolicy>
+void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::Release()
+{
+    blocks.clear();
+}
 
 
 /// ==========================================================
 /// StackPolicy
+template<typename PaddingPolicy>
+StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::StackPolicy()
+{
+    deallocateDelay = 1000;
+}
+
 template<typename PaddingPolicy>
 bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
         cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
@@ -275,6 +286,16 @@ void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::clear()
             itr = deallocateList.erase(itr);
         }
     }
+}
+
+template<typename PaddingPolicy>
+void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::Release()
+{
+    for(auto& itr : deallocateList)
+    {
+        CV_CUDEV_SAFE_CALL(cudaFree(itr.ptr));
+    }
+    deallocateList.clear();
 }
 
 /// ==========================================================
@@ -476,6 +497,13 @@ void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::free(
 }
 
 template<class SmallAllocator, class LargeAllocator>
+void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::Release()
+{
+    SmallAllocator::Release();
+    LargeAllocator::Release();
+}
+
+template<class SmallAllocator, class LargeAllocator>
 CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::CombinedPolicyImpl(size_t threshold_):
     threshold(threshold_)
 {
@@ -533,6 +561,14 @@ void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::deallocate(cv:
         LargeAllocator::deallocate(data);
     }
 }
+
+template<class SmallAllocator, class LargeAllocator>
+void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::Release()
+{
+    SmallAllocator::Release();
+    LargeAllocator::Release();
+}
+
 template<class SmallAllocator, class LargeAllocator>
 CombinedPolicy<SmallAllocator, LargeAllocator>::CombinedPolicy(size_t threshold)
     :CombinedPolicyImpl<SmallAllocator, LargeAllocator, typename LargeAllocator::MatType>(threshold)
@@ -576,13 +612,52 @@ public:
         return CPUAllocator::allocate(dims, sizes, type, data,
                                       step, flags, usageFlags);
     }
+
     bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const
     {
         return CPUAllocator::allocate(data, accessflags, usageFlags);
     }
+
     void deallocate(cv::UMatData* data) const
     {
         CPUAllocator::deallocate(data);
     }
+
+    void Release()
+    {
+        CPUAllocator::Release();
+        GPUAllocator::Release();
+    }
 };
+
+typedef PoolPolicy<cv::cuda::GpuMat, ContinuousPolicy>   d_TensorPoolAllocator_t;
+typedef LockPolicy<d_TensorPoolAllocator_t>              d_mt_TensorPoolAllocator_t;
+
+typedef StackPolicy<cv::cuda::GpuMat, ContinuousPolicy>  d_TensorAllocator_t;
+typedef StackPolicy<cv::cuda::GpuMat, PitchedPolicy>     d_TextureAllocator_t;
+
+typedef LockPolicy<d_TensorAllocator_t>                  d_mt_TensorAllocator_t;
+typedef LockPolicy<d_TextureAllocator_t>                 d_mt_TextureAllocator_t;
+
+typedef CpuPoolPolicy h_PoolAllocator_t;
+typedef CpuStackPolicy h_StackAllocator_t;
+
+typedef mt_CpuPoolPolicy                    h_mt_PoolAllocator_t;
+typedef mt_CpuStackPolicy                   h_mt_StackAllocator_t;
+
+typedef CombinedPolicy<d_TensorPoolAllocator_t, d_TextureAllocator_t> d_UniversalAllocator_t;
+typedef LockPolicy<d_UniversalAllocator_t> d_mt_UniversalAllocator_t;
+
+typedef CombinedPolicy<h_PoolAllocator_t, h_StackAllocator_t> h_UniversalAllocator_t;
+typedef LockPolicy<h_UniversalAllocator_t> h_mt_UniversalAllocator_t;
+
+
+typedef ConcreteAllocator<h_mt_PoolAllocator_t, d_mt_TensorPoolAllocator_t> mt_TensorAllocator_t;
+typedef ConcreteAllocator<h_PoolAllocator_t, d_TensorAllocator_t>           TensorAllocator_t;
+
+typedef ConcreteAllocator<h_mt_StackAllocator_t, d_mt_TextureAllocator_t>   mt_TextureAllocator_t;
+typedef ConcreteAllocator<h_StackAllocator_t, d_TextureAllocator_t>         TextureAllocator_t;
+
+typedef ConcreteAllocator<h_UniversalAllocator_t, d_UniversalAllocator_t>    UniversalAllocator_t;
+typedef ConcreteAllocator<h_mt_UniversalAllocator_t, d_mt_UniversalAllocator_t>    mt_UniversalAllocator_t;
 }
