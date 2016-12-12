@@ -226,7 +226,24 @@ BOOST_AUTO_TEST_CASE(test_cpu_combined_allocation)
 BOOST_AUTO_TEST_CASE(test_gpu_random_allocation_pattern)
 {
     cv::cuda::Stream stream;
+
+
+    cv::cuda::GpuMat X_(1, 1000, CV_32F);
+    cv::cuda::GpuMat Y_(1, 1000, CV_32F);
     auto start = boost::posix_time::microsec_clock::local_time();
+    for (int i = 0; i < 1000; ++i)
+    {
+        int cols = std::min(1000, 1 + rand());
+        cv::cuda::GpuMat X = X_.colRange(0, cols);
+        cv::cuda::GpuMat Y = Y_.colRange(0, cols);
+        cv::cuda::multiply(X, cv::Scalar(100), Y, 1, -1, stream);
+        cv::cuda::subtract(Y, cv::Scalar(100), Y, cv::noArray(), -1, stream);
+    }
+    auto end = boost::posix_time::microsec_clock::local_time();
+    double zero_allocator = boost::posix_time::time_duration(end - start).total_milliseconds();
+
+    // Default allocator
+    start = boost::posix_time::microsec_clock::local_time();
     for(int i = 0; i < 1000; ++i)
     {
         cv::cuda::GpuMat X(1, std::min(1000, 1 + rand()), CV_32F);
@@ -234,7 +251,7 @@ BOOST_AUTO_TEST_CASE(test_gpu_random_allocation_pattern)
         cv::cuda::multiply(X, cv::Scalar(100), Y, 1, -1, stream);
         cv::cuda::subtract(Y, cv::Scalar(100), Y, cv::noArray(), -1, stream);
     }
-    auto end = boost::posix_time::microsec_clock::local_time();
+    end = boost::posix_time::microsec_clock::local_time();
     double default_allocator = boost::posix_time::time_duration(end - start).total_milliseconds();
 
     start = boost::posix_time::microsec_clock::local_time();
@@ -255,7 +272,8 @@ BOOST_AUTO_TEST_CASE(test_gpu_random_allocation_pattern)
     std::cout << "\n ======================= GPU ============================================ \n";
     std::cout
         << "------------ Thread specifc ---------------\n"
-        << " Default Allocator: " << default_allocator<< "\n"
+        << " Zero Allocation:   " << zero_allocator << "\n"
+        << " Default Allocator: " << default_allocator << "\n"
         << " Pool Allocator:    " << pool_allocator << "\n";
 
     poolAllocator.Release();
@@ -268,7 +286,24 @@ BOOST_AUTO_TEST_CASE(test_gpu_static_allocation_pattern)
 {
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
     cv::cuda::Stream stream;
+
+    // Manual buffer control
     auto start = boost::posix_time::microsec_clock::local_time();
+    {
+        cv::cuda::GpuMat X(2000, 2000, CV_32F);
+        cv::cuda::GpuMat Y(2000, 2000, CV_32F);
+        for (int i = 0; i < 1000; ++i)
+        {
+            cv::cuda::multiply(X, cv::Scalar(100), Y, 1, -1, stream);
+            cv::cuda::subtract(Y, cv::Scalar(100), Y, cv::noArray(), -1, stream);
+        }
+    }
+    
+    auto end = boost::posix_time::microsec_clock::local_time();
+    double zero_allocation = boost::posix_time::time_duration(end - start).total_milliseconds();
+    
+    // Default allocator
+    start = boost::posix_time::microsec_clock::local_time();
     for(int i = 0; i < 1000; ++i)
     {
         cv::cuda::GpuMat X(2000, 2000, CV_32F);
@@ -276,13 +311,15 @@ BOOST_AUTO_TEST_CASE(test_gpu_static_allocation_pattern)
         cv::cuda::multiply(X, cv::Scalar(100), Y, 1, -1, stream);
         cv::cuda::subtract(Y, cv::Scalar(100), Y, cv::noArray(), -1, stream);
     }
-    auto end = boost::posix_time::microsec_clock::local_time();
+    end = boost::posix_time::microsec_clock::local_time();
     double default_allocator = boost::posix_time::time_duration(end - start).total_milliseconds();
 
-    start = boost::posix_time::microsec_clock::local_time();
+
+    // Custom allocator
     ConcreteAllocator<h_PoolAllocator_t, d_TextureAllocator_t> poolAllocator;
     auto defaultAllocator = cv::cuda::GpuMat::defaultAllocator();
     cv::cuda::GpuMat::setDefaultAllocator(&poolAllocator);
+    start = boost::posix_time::microsec_clock::local_time();
     for(int i = 0; i < 1000; ++i)
     {
         cv::cuda::GpuMat X(2000, 2000, CV_32F);
@@ -297,7 +334,8 @@ BOOST_AUTO_TEST_CASE(test_gpu_static_allocation_pattern)
     std::cout << "\n ======================= GPU ============================================ \n";
     std::cout
         << "------------ Thread specifc ---------------\n"
-        << " Default Allocator: " << default_allocator<< "\n"
+        << " Zero Allocation:   " << zero_allocation << "\n"
+        << " Default Allocator: " << default_allocator << "\n"
         << " Pool Allocator:    " << pool_allocator << "\n";
 
     poolAllocator.Release();

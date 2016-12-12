@@ -4,7 +4,7 @@
 #include "MemoryBlock.h"
 #include <opencv2/core/cuda.hpp>
 #include <opencv2/core/cuda/common.hpp>
-#include <opencv2/core/cuda/utility.hpp>
+
 #include <boost/thread/mutex.hpp>
 #include <list>
 #include <cuda.h>
@@ -370,7 +370,7 @@ public:
     typedef const T& const_reference;
     typedef std::size_t size_type;
     typedef std::ptrdiff_t difference_type;
-    template< class U > struct rebind { typedef allocator<U> other; };
+    template< class U > struct rebind { typedef PinnedStlAllocator<U> other; };
     pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
     {
         return allocate(n);
@@ -390,11 +390,11 @@ public:
 };
 
 
-template<class T> bool operator==(const PinnedStlAllocatorGlobal<T>& lhs, const PinnedStlAllocatorGlobal<T>& rhs)
+template<class T> bool operator==(const PinnedStlAllocator<T>& lhs, const PinnedStlAllocator<T>& rhs)
 {
     return &lhs == &rhs;
 }
-template<class T> bool operator!=(const PinnedStlAllocatorGlobal<T>& lhs, const PinnedStlAllocatorGlobal<T>& rhs)
+template<class T> bool operator!=(const PinnedStlAllocator<T>& lhs, const PinnedStlAllocator<T>& rhs)
 {
     return &lhs != &rhs;
 }
@@ -410,7 +410,7 @@ public:
     typedef const T& const_reference;
     typedef std::size_t size_type;
     typedef std::ptrdiff_t difference_type;
-    template< class U > struct rebind { typedef allocator<U> other; };
+    template< class U > struct rebind { typedef PinnedStlAllocatorPoolThread<U> other; };
     pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
     {
         return allocate(n);
@@ -439,7 +439,7 @@ public:
     typedef const T& const_reference;
     typedef std::size_t size_type;
     typedef std::ptrdiff_t difference_type;
-    template< class U > struct rebind { typedef allocator<U> other; };
+    template< class U > struct rebind { typedef PinnedStlAllocatorPoolGlobal<U> other; };
 
     pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
     {
