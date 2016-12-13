@@ -161,7 +161,7 @@ unsigned char* PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t size
 }
 
 template<typename PaddingPolicy>
-void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(unsigned char* ptr)
+void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char* ptr, size_t num_bytes)
 {
     for (auto itr : blocks)
     {
@@ -243,9 +243,9 @@ unsigned char* StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t siz
     unsigned char* ptr = nullptr;
     for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr)
     {
-        if (std::get<2>(*itr) == sizeNeeded)
+        if (itr->size == sizeNeeded)
         {
-            ptr = std::get<0>(*itr);
+            ptr = itr->ptr;
             deallocateList.erase(itr);
             memoryUsage += sizeNeeded;
             current_allocations[ptr] = sizeNeeded;
@@ -259,7 +259,7 @@ unsigned char* StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t siz
 }
 
 template<typename PaddingPolicy>
-void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(unsigned char* ptr)
+void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char* ptr, size_t num_bytes)
 {
     auto itr = current_allocations.find(ptr);
     if(itr != current_allocations.end())
@@ -344,7 +344,7 @@ unsigned char* NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_
 }
 
 template<typename PaddingPolicy>
-void NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(unsigned char* ptr)
+void NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char* ptr, size_t num_bytes)
 {
     CV_CUDEV_SAFE_CALL(cudaFree(ptr));
 }
@@ -374,10 +374,10 @@ unsigned char* LockPolicyImpl<Allocator, cv::cuda::GpuMat>::allocate(size_t num_
 }
 
 template<class Allocator>
-void LockPolicyImpl<Allocator, cv::cuda::GpuMat>::free(unsigned char* ptr)
+void LockPolicyImpl<Allocator, cv::cuda::GpuMat>::deallocate(unsigned char* ptr, size_t num_bytes)
 {
     boost::mutex::scoped_lock lock(mtx);
-    return Allocator::free(ptr);
+    return Allocator::deallocate(ptr, num_bytes);
 }
 
 template<class Allocator>
@@ -399,7 +399,19 @@ void LockPolicyImpl<Allocator, cv::Mat>::deallocate(cv::UMatData* data) const
 {
     return Allocator::deallocate(data);
 }
+template<class Allocator>
+unsigned char* LockPolicyImpl<Allocator, cv::Mat>::allocate(size_t num_bytes)
+{
+    boost::mutex::scoped_lock lock(mtx);
+    return Allocator::allocate(num_bytes);
+}
 
+template<class Allocator>
+void LockPolicyImpl<Allocator, cv::Mat>::deallocate(unsigned char* ptr, size_t num_bytes)
+{
+    boost::mutex::scoped_lock lock(mtx);
+    Allocator::deallocate(ptr, num_bytes);
+}
 
 /// ==========================================================
 /// ScopedDebugPolicy
@@ -442,7 +454,7 @@ unsigned char* ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::allocate(size_t nu
 }
 
 template<class Allocator>
-void ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::free(unsigned char* ptr)
+void ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::deallocate(unsigned char* ptr, size_t num_bytes)
 {
     Allocator::free(ptr);
     auto itr = scopeOwnership.find(ptr);
@@ -491,9 +503,9 @@ unsigned char* CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuM
 }
 
 template<class SmallAllocator, class LargeAllocator>
-void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::free(unsigned char* ptr)
+void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::deallocate(unsigned char* ptr, size_t num_bytes)
 {
-    SmallAllocator::free(ptr);
+    SmallAllocator::deallocate(ptr, num_bytes);
 }
 
 template<class SmallAllocator, class LargeAllocator>
@@ -564,6 +576,30 @@ void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::deallocate(cv:
 }
 
 template<class SmallAllocator, class LargeAllocator>
+unsigned char* CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::allocate(size_t num_bytes)
+{
+    if(num_bytes < threshold)
+    {
+        return SmallAllocator::allocate(num_bytes);
+    }else
+    {
+        return LargeAllocator::allocate(num_bytes);
+    }
+}
+
+template<class SmallAllocator, class LargeAllocator>
+void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::deallocate(unsigned char* ptr, size_t num_bytes)
+{
+    if(num_bytes < threshold)
+    {
+        return SmallAllocator::deallocate(ptr, num_bytes);
+    }else
+    {
+        return LargeAllocator::deallocate(ptr, num_bytes);
+    }
+}
+
+template<class SmallAllocator, class LargeAllocator>
 void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::Release()
 {
     SmallAllocator::Release();
@@ -596,14 +632,24 @@ public:
     }
 
     // Thrust allocate
-    unsigned char* allocate(size_t num_bytes)
+    unsigned char* allocateGpu(size_t num_bytes)
     {
         return GPUAllocator::allocate(num_bytes);
     }
 
-    void free(unsigned char* ptr)
+    void deallocateGpu(unsigned char* ptr, size_t num_bytes)
     {
-        return GPUAllocator::free(ptr);
+        return GPUAllocator::deallocate(ptr, num_bytes);
+    }
+
+    unsigned char* allocateCpu(size_t num_bytes)
+    {
+        return CPUAllocator::allocate(num_bytes);
+    }
+
+    void deallocateCpu(unsigned char* ptr, size_t num_bytes)
+    {
+        return CPUAllocator::deallocate(ptr, num_bytes);
     }
 
     // CPU allocate

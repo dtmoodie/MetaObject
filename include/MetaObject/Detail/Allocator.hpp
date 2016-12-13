@@ -4,7 +4,6 @@
 #include "MemoryBlock.h"
 #include <opencv2/core/cuda.hpp>
 #include <opencv2/core/cuda/common.hpp>
-
 #include <boost/thread/mutex.hpp>
 #include <list>
 #include <cuda.h>
@@ -15,6 +14,30 @@ MO_EXPORTS inline unsigned char* alignMemory(unsigned char* ptr, int elemSize);
 MO_EXPORTS inline int alignmentOffset(unsigned char* ptr, int elemSize);
 MO_EXPORTS void SetScopeName(const std::string& name);
 MO_EXPORTS const std::string& GetScopeName();
+MO_EXPORTS void InstallThrustPoolingAllocator();
+
+class MO_EXPORTS CpuAllocatorThreadAdapter: public cv::MatAllocator
+{
+public:
+    static void SetThreadAllocator(cv::MatAllocator* allocator);
+    static void SetGlobalAllocator(cv::MatAllocator* allocator);
+    cv::UMatData* allocate(int dims, const int* sizes, int type,
+        void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
+    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void deallocate(cv::UMatData* data) const;
+};
+
+class MO_EXPORTS GpuAllocatorThreadAdapter: public cv::cuda::GpuMat::Allocator
+{
+public:
+    static void SetThreadAllocator(cv::cuda::GpuMat::Allocator* allocator);
+    static void SetGlobalAllocator(cv::cuda::GpuMat::Allocator* allocator);
+
+    virtual bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
+    virtual void free(cv::cuda::GpuMat* mat);
+};
+
+
 
 /// ========================================================
 /// Memory layout policies
@@ -97,7 +120,7 @@ public:
     inline void free(cv::cuda::GpuMat* mat);
 
     inline unsigned char* allocate(size_t num_bytes);
-    inline void free(unsigned char* ptr);
+    inline void deallocate(unsigned char* ptr, size_t num_bytes);
     virtual void Release();
 private:
     size_t _initial_block_size;
@@ -112,6 +135,8 @@ public:
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
     bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
     void deallocate(cv::UMatData* data) const;
+    uchar* allocate(size_t num_bytes);
+    void deallocate(uchar* ptr, size_t num_bytes);
     void Release() {}
 };
 
@@ -122,6 +147,8 @@ public:
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
     bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
     void deallocate(cv::UMatData* data) const;
+    uchar* allocate(size_t num_bytes);
+    void deallocate(uchar* ptr, size_t num_bytes);
 };
 class MO_EXPORTS PinnedAllocator : virtual public cv::MatAllocator
 {
@@ -156,7 +183,7 @@ public:
     void free(cv::cuda::GpuMat* mat);
 
     unsigned char* allocate(size_t num_bytes);
-    void free(unsigned char* ptr);
+    void deallocate(unsigned char* ptr, size_t num_bytes);
     virtual void Release();
 protected:
     void clear();
@@ -183,7 +210,9 @@ public:
     cv::UMatData* allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
     bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    uchar* allocate(size_t total);
     void deallocate(cv::UMatData* data) const;
+    void deallocate(uchar* ptr, size_t total);
     void Release(){}
 };
 
@@ -194,6 +223,8 @@ public:
     cv::UMatData* allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
     bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    uchar* allocate(size_t total);
+    void deallocate(uchar* ptr, size_t total);
     void deallocate(cv::UMatData* data) const;
 };
 
@@ -214,7 +245,7 @@ public:
     bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
     void free(cv::cuda::GpuMat* mat);
     unsigned char* allocate(size_t num_bytes);
-    void free(unsigned char* ptr);
+    void deallocate(unsigned char* ptr, size_t num_bytes);
 };
 
 template<class Allocator, class MatType>
@@ -229,7 +260,7 @@ public:
     inline void free(cv::cuda::GpuMat* mat);
 
     inline unsigned char* allocate(size_t num_bytes);
-    inline void free(unsigned char* ptr);
+    inline void deallocate(unsigned char* ptr, size_t num_bytes);
 private:
     boost::mutex mtx;
 };
@@ -243,6 +274,8 @@ public:
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
     bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
     void deallocate(cv::UMatData* data) const;
+    inline unsigned char* allocate(size_t num_bytes);
+    inline void deallocate(unsigned char* ptr, size_t num_bytes);
 private:
     boost::mutex mtx;
 };
@@ -254,6 +287,7 @@ public:
     static CpuMemoryPool* GlobalInstance();
     static CpuMemoryPool* ThreadInstance();
     virtual bool allocate(void** ptr, size_t total, size_t elemSize) = 0;
+    virtual uchar* allocate(size_t total) = 0;
     virtual bool deallocate(void* ptr, size_t total) = 0;
 };
 
@@ -264,6 +298,7 @@ public:
     static CpuMemoryStack* GlobalInstance();
     static CpuMemoryStack* ThreadInstance();
     virtual bool allocate(void** ptr, size_t total, size_t elemSize) = 0;
+    virtual uchar* allocate(size_t total) = 0;
     virtual bool deallocate(void* ptr, size_t total) = 0;
 };
 
@@ -297,7 +332,7 @@ public:
     inline void free(cv::cuda::GpuMat* mat);
 
     inline unsigned char* allocate(size_t num_bytes);
-    inline void free(unsigned char* ptr);
+    inline void deallocate(unsigned char* ptr, size_t num_bytes);
     void Release();
 private:
     size_t threshold;
@@ -316,6 +351,8 @@ public:
     inline bool allocate(cv::UMatData* data, int accessflags,
                          cv::UMatUsageFlags usageFlags) const;
     inline void deallocate(cv::UMatData* data) const;
+    inline unsigned char* allocate(size_t num_bytes);
+    inline void deallocate(unsigned char* ptr, size_t num_bytes);
     void Release();
 private:
     size_t threshold;
@@ -344,7 +381,7 @@ public:
     inline void free(cv::cuda::GpuMat* mat);
 
     inline unsigned char* allocate(size_t num_bytes);
-    inline void free(unsigned char* ptr);
+    inline void deallocate(unsigned char* ptr, size_t numBytes);
 private:
     std::map<unsigned char*, std::string> scopeOwnership;
     std::map<std::string, size_t> scopedAllocationSize;
@@ -357,6 +394,11 @@ class MO_EXPORTS Allocator:
 public:
     static Allocator* GetThreadSafeAllocator();
     static Allocator* GetThreadSpecificAllocator();
+    // Used for stl allocators
+    virtual unsigned char* allocateGpu(size_t num_bytes) = 0;
+    virtual void deallocateGpu(uchar* ptr, size_t numBytes) = 0;
+    virtual unsigned char* allocateCpu(size_t num_bytes) = 0;
+    virtual void deallocateCpu(uchar* ptr, size_t numBytes) = 0;
     virtual void Release() {}
 };
 
@@ -371,7 +413,7 @@ public:
     typedef std::size_t size_type;
     typedef std::ptrdiff_t difference_type;
     template< class U > struct rebind { typedef PinnedStlAllocator<U> other; };
-    pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
+    pointer allocate(size_type n, std::allocator<void>::const_pointer hint)
     {
         return allocate(n);
     }
@@ -411,7 +453,7 @@ public:
     typedef std::size_t size_type;
     typedef std::ptrdiff_t difference_type;
     template< class U > struct rebind { typedef PinnedStlAllocatorPoolThread<U> other; };
-    pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
+    pointer allocate(size_type n, std::allocator<void>::const_pointer hint)
     {
         return allocate(n);
     }
@@ -419,7 +461,7 @@ public:
     pointer allocate(size_type n)
     {
         pointer ptr = nullptr;
-        CpuMemoryPool::ThreadInstance()->allocate(&ptr, n*sizeof(T), sizeof(T));
+        CpuMemoryPool::ThreadInstance()->allocate((void**)&ptr, n*sizeof(T), sizeof(T));
         return ptr;
     }
 
@@ -441,7 +483,7 @@ public:
     typedef std::ptrdiff_t difference_type;
     template< class U > struct rebind { typedef PinnedStlAllocatorPoolGlobal<U> other; };
 
-    pointer allocate(size_type n, std::allocator<void>::const_pointer hint = 0)
+    pointer allocate(size_type n, std::allocator<void>::const_pointer hint)
     {
         return allocate(n);
     }

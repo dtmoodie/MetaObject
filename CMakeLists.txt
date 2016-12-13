@@ -45,6 +45,7 @@ endif(WIN32)
 set(CMAKE_DEBUG_POSTFIX "d")
 link_directories("${CMAKE_CURRENT_BINARY_DIR}")
 file(GLOB_RECURSE src "src/*.cpp")
+file(GLOB_RECURSE knl "src/*.cu")
 file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp")
 include_directories("${CMAKE_CURRENT_LIST_DIR}/include")
 
@@ -197,7 +198,7 @@ add_subdirectory("dependencies/Remotery")
 set_target_properties(Remotery PROPERTIES FOLDER Dependencies)
 GroupSources(include)
 GroupSources(src)
-add_library(MetaObject SHARED ${src} ${hdr} src/precompiled.hpp)
+cuda_add_library(MetaObject SHARED ${src} ${hdr} ${knl} src/precompiled.hpp)
 target_link_libraries(MetaObject 
   RuntimeObjectSystem 
   RuntimeCompiler 

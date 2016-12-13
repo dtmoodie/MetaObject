@@ -3,9 +3,116 @@
 using namespace mo;
 boost::thread_specific_ptr<Allocator> thread_specific_allocator;
 
-
-
 boost::thread_specific_ptr<std::string> current_scope;
+
+
+thread_local cv::MatAllocator* t_cpuAllocator = nullptr;
+thread_local cv::cuda::GpuMat::Allocator* t_gpuAllocator = nullptr;
+
+cv::MatAllocator* g_cpuAllocator = nullptr;
+cv::cuda::GpuMat::Allocator* g_gpuAllocator = nullptr;
+
+cv::UMatData* CpuAllocatorThreadAdapter::allocate(int dims, const int* sizes, int type,
+                       void* data, size_t* step, int flags,
+                       cv::UMatUsageFlags usageFlags) const
+{
+    if(t_cpuAllocator)
+    {
+        return t_cpuAllocator->allocate(dims, sizes, type, data, step, flags, usageFlags);
+    }
+    else
+    {
+        if(g_cpuAllocator == nullptr)
+        {
+            g_cpuAllocator = cv::Mat::getStdAllocator();
+        }
+        return g_cpuAllocator->allocate(dims, sizes, type, data, step, flags, usageFlags);
+    }
+}
+
+bool CpuAllocatorThreadAdapter::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const
+{
+    if(t_cpuAllocator)
+    {
+        return t_cpuAllocator->allocate(data, accessflags, usageFlags);
+    }
+    else
+    {
+        if(g_cpuAllocator == nullptr)
+        {
+            g_cpuAllocator = cv::Mat::getStdAllocator();
+        }
+        return g_cpuAllocator->allocate(data, accessflags, usageFlags);
+    }
+}
+
+void CpuAllocatorThreadAdapter::deallocate(cv::UMatData* data) const
+{
+    if(t_cpuAllocator)
+    {
+        return t_cpuAllocator->deallocate(data);
+    }
+    else
+    {
+        if(g_cpuAllocator == nullptr)
+        {
+            g_cpuAllocator = cv::Mat::getStdAllocator();
+        }
+        return g_cpuAllocator->deallocate(data);
+    }
+}
+
+void CpuAllocatorThreadAdapter::SetThreadAllocator(cv::MatAllocator* allocator)
+{
+    t_cpuAllocator = allocator;
+}
+
+void CpuAllocatorThreadAdapter::SetGlobalAllocator(cv::MatAllocator* allocator)
+{
+    g_cpuAllocator = allocator;
+}
+
+bool GpuAllocatorThreadAdapter::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
+{
+    if(t_gpuAllocator)
+    {
+        return t_gpuAllocator->allocate(mat, rows, cols, elemSize);
+    }else
+    {
+        if(g_gpuAllocator == nullptr)
+        {
+            g_gpuAllocator = cv::cuda::GpuMat::defaultAllocator();
+        }
+        return g_gpuAllocator->allocate(mat, rows, cols, elemSize);
+    }
+}
+
+
+void GpuAllocatorThreadAdapter::free(cv::cuda::GpuMat* mat)
+{
+    if(t_gpuAllocator)
+    {
+        return t_gpuAllocator->free(mat);
+    }else
+    {
+        if(g_gpuAllocator == nullptr)
+        {
+            g_gpuAllocator = cv::cuda::GpuMat::defaultAllocator();
+        }
+        return g_gpuAllocator->free(mat);
+    }
+}
+
+void GpuAllocatorThreadAdapter::SetThreadAllocator(cv::cuda::GpuMat::Allocator* allocator)
+{
+    t_gpuAllocator = allocator;
+}
+
+void GpuAllocatorThreadAdapter::SetGlobalAllocator(cv::cuda::GpuMat::Allocator* allocator)
+{
+    g_gpuAllocator = allocator;
+}
+
 void mo::SetScopeName(const std::string& name)
 {
     if (current_scope.get() == nullptr)
@@ -64,7 +171,34 @@ public:
         }
         return false;
     }
-
+    uchar* allocate(size_t num_bytes)
+    {
+        int index = 0;
+        unsigned char* _ptr;
+        for (auto& block : blocks)
+        {
+            _ptr = block->allocate(num_bytes, sizeof(uchar));
+            if (_ptr)
+            {
+                LOG(trace) << "Allocating " << num_bytes << " bytes from pre-allocated memory block number "
+                           << index << " at address: " << (void*)_ptr;
+                return _ptr;
+            }
+            ++index;
+        }
+        LOG(trace) << "Creating new block of page locked memory for allocation.";
+        blocks.push_back(
+            std::shared_ptr<mo::CpuMemoryBlock>(
+                new mo::CpuMemoryBlock(std::max(_initial_block_size / 2, num_bytes))));
+        _ptr = (*blocks.rbegin())->allocate(num_bytes, sizeof(uchar));
+        if (_ptr)
+        {
+            LOG(debug) << "Allocating " << num_bytes
+                       << " bytes from newly created memory block at address: " << (void*)_ptr;
+            return _ptr;
+        }
+        return nullptr;
+    }
     bool deallocate(void* ptr, size_t total)
     {
         for (auto itr : blocks)
@@ -95,6 +229,12 @@ public:
         boost::mutex::scoped_lock lock(mtx);
         return CpuMemoryPoolImpl::allocate(ptr, total, elemSize);
     }
+    uchar* allocate(size_t total)
+    {
+        boost::mutex::scoped_lock lock(mtx);
+        return CpuMemoryPoolImpl::allocate(total);
+    }
+
     bool deallocate(void* ptr, size_t total)
     {
         boost::mutex::scoped_lock lock(mtx);
@@ -154,6 +294,27 @@ public:
         CV_CUDEV_SAFE_CALL(cudaMallocHost(ptr, total));
         return true;
     }
+    uchar* allocate(size_t total)
+    {
+        for (auto itr = deallocate_stack.begin(); itr != deallocate_stack.end(); ++itr)
+        {
+            if(std::get<2>(*itr) == total)
+            {
+
+                deallocate_stack.erase(itr);
+                LOG(trace) << "[CPU] Reusing memory block of size "
+                           << total / (1024 * 1024) << " MB. Total usage: "
+                           << total_usage /(1024*1024) << " MB";
+                return std::get<0>(*itr);
+            }
+        }
+        LOG(trace) << "[CPU] Allocating block of size "
+                   << total / (1024 * 1024) << " MB. Total usage: "
+                   << total_usage / (1024 * 1024) << " MB";
+        uchar* ptr = nullptr;
+        CV_CUDEV_SAFE_CALL(cudaMallocHost(&ptr, total));
+        return ptr;
+    }
 
     bool deallocate(void* ptr, size_t total)
     {
@@ -199,6 +360,12 @@ public:
         boost::mutex::scoped_lock lock(mtx);
         return CpuMemoryStackImpl::allocate(ptr, total, elemSize);
     }
+    uchar* allocate(size_t total)
+    {
+        boost::mutex::scoped_lock lock(mtx);
+        return CpuMemoryStackImpl::allocate(total);
+    }
+
     bool deallocate(void* ptr, size_t total)
     {
         boost::mutex::scoped_lock lock(mtx);
@@ -290,10 +457,18 @@ cv::UMatData* CpuStackPolicy::allocate(int dims, const int* sizes, int type,
 
     return u;
 }
+uchar* CpuStackPolicy::allocate(size_t total)
+{
+    return CpuMemoryStack::ThreadInstance()->allocate(total);
+}
 
 bool CpuStackPolicy::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const
 {
     return false;
+}
+void CpuStackPolicy::deallocate(uchar* ptr, size_t total)
+{
+    CpuMemoryStack::ThreadInstance()->deallocate(ptr, total);
 }
 
 void CpuStackPolicy::deallocate(cv::UMatData* u) const
@@ -455,6 +630,15 @@ void CpuPoolPolicy::deallocate(cv::UMatData* u) const
 
         delete u;
     }
+}
+uchar* CpuPoolPolicy::allocate(size_t num_bytes)
+{
+    return CpuMemoryPool::ThreadInstance()->allocate(num_bytes);
+}
+
+void CpuPoolPolicy::deallocate(uchar* ptr, size_t num_bytes)
+{
+
 }
 
 // ================================================================

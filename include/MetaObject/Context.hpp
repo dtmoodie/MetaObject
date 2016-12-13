@@ -21,5 +21,7 @@ namespace mo
         std::string host_name;
         cv::cuda::Stream* stream = nullptr;
         Allocator* allocator;
+        static Context* GetDefaultThreadContext();
+        static void SetDefaultThreadContext(Context*  ctx);
     };
 }
