@@ -344,11 +344,77 @@ BOOST_AUTO_TEST_CASE(test_gpu_static_allocation_pattern)
 }
 
 
+BOOST_AUTO_TEST_CASE(stl_allocator_pool)
+{
+    std::vector<float> zero_allocation;
+    zero_allocation.resize(2000);
+    auto start = boost::posix_time::microsec_clock::local_time();
+    for(int i = 0; i < 10000; ++i)
+    {
+        int size = std::min(2000, rand() + 1);
+        cv::Mat view(1, size,CV_32F, zero_allocation.data());
+        view *= 100;
+        view += 10;
+    }
+    auto end = boost::posix_time::microsec_clock::local_time();
+    double zero_allocation_time = boost::posix_time::time_duration(end - start).total_milliseconds();
 
 
+    start = boost::posix_time::microsec_clock::local_time();
+    for(int i = 0; i < 10000; ++i)
+    {
+        std::vector<float> vec;
+        int size = std::min(2000, rand() + 1);
+        vec.resize(size );
+        cv::Mat view(1, size,CV_32F, zero_allocation.data());
+        view *= 100;
+        view += 10;
+    }
+    end = boost::posix_time::microsec_clock::local_time();
+    double default_allocation = boost::posix_time::time_duration(end - start).total_milliseconds();
 
+    start = boost::posix_time::microsec_clock::local_time();
+    for(int i = 0; i < 10000; ++i)
+    {
+        std::vector<float, PinnedStlAllocator<float>> vec;
+        int size = std::min(2000, rand() + 1);
+        vec.resize(size );
+        cv::Mat view(1, size, CV_32F, zero_allocation.data());
+        view *= 100;
+        view += 10;
+    }
+    end = boost::posix_time::microsec_clock::local_time();
+    double pinned_allocation = boost::posix_time::time_duration(end - start).total_milliseconds();
 
+    start = boost::posix_time::microsec_clock::local_time();
+    for(int i = 0; i < 10000; ++i)
+    {
+        std::vector<float, PinnedStlAllocatorPoolThread<float>> vec;
+        int size = std::min(2000, rand() + 1);
+        vec.resize(size );
+        cv::Mat view(1, size,CV_32F, zero_allocation.data());
+        view *= 100;
+        view += 10;
+    }
+    end = boost::posix_time::microsec_clock::local_time();
+    double pooled_allocation = boost::posix_time::time_duration(end - start).total_milliseconds();
 
+    std::cout << "\n ======================= STL ============================================ \n";
+    std::cout << "Zero Allocation:    " << zero_allocation_time << "\n"
+              << "Default Allocation: " << default_allocation << "\n"
+              << "Pinned Allocation:  " << pinned_allocation  << "\n"
+              << "Pooled Allocation:  " << pooled_allocation << "\n";
+}
+
+BOOST_AUTO_TEST_CASE(pinned_transfer_rate)
+{
+
+}
+
+BOOST_AUTO_TEST_CASE(async_transfer_rate)
+{
+
+}
 
 
 
