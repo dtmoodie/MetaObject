@@ -170,8 +170,6 @@ void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char* ptr,
             return;
         }
     }
-    throw cv::Exception(0, "[GPU] Unable to find memory to deallocate",
-                        __FUNCTION__, __FILE__, __LINE__);
 }
 
 template<typename PaddingPolicy>
@@ -228,7 +226,6 @@ bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
 template<typename PaddingPolicy>
 void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(cv::cuda::GpuMat* mat)
 {
-
     this->memoryUsage -= mat->rows*mat->step;
     LOG(trace) << "[GPU] Releasing mat of size (" << mat->rows << ","
                << mat->cols << ") " << (mat->dataend - mat->datastart)/(1024*1024) << " MB to the memory pool";
@@ -410,7 +407,7 @@ template<class Allocator>
 void LockPolicyImpl<Allocator, cv::Mat>::deallocate(unsigned char* ptr, size_t num_bytes)
 {
     boost::mutex::scoped_lock lock(mtx);
-    Allocator::deallocate(ptr, num_bytes);
+    return Allocator::deallocate(ptr, num_bytes);
 }
 
 /// ==========================================================
@@ -439,6 +436,7 @@ void ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::free(cv::cuda::GpuMat* mat)
     {
         scopedAllocationSize[itr->second] -= mat->rows * mat->step;
     }
+
 }
 
 template<class Allocator>
@@ -490,6 +488,7 @@ void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::free(
     if(mat->rows * mat->cols * mat->elemSize() < threshold)
     {
         SmallAllocator::free(mat);
+
     }else
     {
         LargeAllocator::free(mat);
@@ -505,7 +504,7 @@ unsigned char* CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuM
 template<class SmallAllocator, class LargeAllocator>
 void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::deallocate(unsigned char* ptr, size_t num_bytes)
 {
-    SmallAllocator::deallocate(ptr, num_bytes);
+    return SmallAllocator::deallocate(ptr, num_bytes);
 }
 
 template<class SmallAllocator, class LargeAllocator>
@@ -649,7 +648,7 @@ public:
 
     void deallocateCpu(unsigned char* ptr, size_t num_bytes)
     {
-        return CPUAllocator::deallocate(ptr, num_bytes);
+        CPUAllocator::deallocate(ptr, num_bytes);
     }
 
     // CPU allocate
@@ -677,10 +676,10 @@ public:
     }
 };
 
-typedef PoolPolicy<cv::cuda::GpuMat, ContinuousPolicy>   d_TensorPoolAllocator_t;
+typedef PoolPolicy<cv::cuda::GpuMat, PitchedPolicy>   d_TensorPoolAllocator_t;
 typedef LockPolicy<d_TensorPoolAllocator_t>              d_mt_TensorPoolAllocator_t;
 
-typedef StackPolicy<cv::cuda::GpuMat, ContinuousPolicy>  d_TensorAllocator_t;
+typedef StackPolicy<cv::cuda::GpuMat, PitchedPolicy>  d_TensorAllocator_t;
 typedef StackPolicy<cv::cuda::GpuMat, PitchedPolicy>     d_TextureAllocator_t;
 
 typedef LockPolicy<d_TensorAllocator_t>                  d_mt_TensorAllocator_t;

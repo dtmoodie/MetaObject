@@ -15,7 +15,7 @@ MO_EXPORTS inline int alignmentOffset(unsigned char* ptr, int elemSize);
 MO_EXPORTS void SetScopeName(const std::string& name);
 MO_EXPORTS const std::string& GetScopeName();
 MO_EXPORTS void InstallThrustPoolingAllocator();
-
+class Allocator;
 class MO_EXPORTS CpuAllocatorThreadAdapter: public cv::MatAllocator
 {
 public:
@@ -37,7 +37,26 @@ public:
     virtual void free(cv::cuda::GpuMat* mat);
 };
 
+class MO_EXPORTS Allocator
+        : virtual public cv::cuda::GpuMat::Allocator
+        , virtual public cv::MatAllocator
+{
+public:
+    static Allocator* GetThreadSafeAllocator();
+    static Allocator* GetThreadSpecificAllocator();
 
+    // Used for stl allocators
+    virtual unsigned char* allocateGpu(size_t num_bytes) = 0;
+    virtual void deallocateGpu(uchar* ptr, size_t numBytes) = 0;
+
+    virtual unsigned char* allocateCpu(size_t num_bytes) = 0;
+    virtual void deallocateCpu(uchar* ptr, size_t numBytes) = 0;
+    virtual void Release() {}
+    void SetName(const std::string& name){this->name = name;}
+    const std::string GetName(){return name;}
+private:
+    std::string name;
+};
 
 /// ========================================================
 /// Memory layout policies
@@ -224,7 +243,7 @@ public:
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
     bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
     uchar* allocate(size_t total);
-    void deallocate(uchar* ptr, size_t total);
+    bool deallocate(uchar* ptr, size_t total);
     void deallocate(cv::UMatData* data) const;
 };
 
@@ -364,7 +383,7 @@ class MO_EXPORTS CombinedPolicy
 {
 public:
     typedef typename LargeAllocator::MatType MatType;
-    CombinedPolicy(size_t threshold = 1e7);
+    CombinedPolicy(size_t threshold = 1*1024*512);
 };
 
 /*!
@@ -387,20 +406,7 @@ private:
     std::map<std::string, size_t> scopedAllocationSize;
 };
 
-class MO_EXPORTS Allocator:
-        virtual public cv::cuda::GpuMat::Allocator,
-        virtual public cv::MatAllocator
-{
-public:
-    static Allocator* GetThreadSafeAllocator();
-    static Allocator* GetThreadSpecificAllocator();
-    // Used for stl allocators
-    virtual unsigned char* allocateGpu(size_t num_bytes) = 0;
-    virtual void deallocateGpu(uchar* ptr, size_t numBytes) = 0;
-    virtual unsigned char* allocateCpu(size_t num_bytes) = 0;
-    virtual void deallocateCpu(uchar* ptr, size_t numBytes) = 0;
-    virtual void Release() {}
-};
+
 
 template<class T> class PinnedStlAllocator
 {

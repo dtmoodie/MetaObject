@@ -2,15 +2,13 @@
 
 using namespace mo;
 boost::thread_specific_ptr<Allocator> thread_specific_allocator;
-
 boost::thread_specific_ptr<std::string> current_scope;
 
-
 thread_local cv::MatAllocator* t_cpuAllocator = nullptr;
-thread_local cv::cuda::GpuMat::Allocator* t_gpuAllocator = nullptr;
+             cv::MatAllocator* g_cpuAllocator = nullptr;
 
-cv::MatAllocator* g_cpuAllocator = nullptr;
-cv::cuda::GpuMat::Allocator* g_gpuAllocator = nullptr;
+thread_local cv::cuda::GpuMat::Allocator* t_gpuAllocator = nullptr;
+             cv::cuda::GpuMat::Allocator* g_gpuAllocator = nullptr;
 
 cv::UMatData* CpuAllocatorThreadAdapter::allocate(int dims, const int* sizes, int type,
                        void* data, size_t* step, int flags,
@@ -24,7 +22,7 @@ cv::UMatData* CpuAllocatorThreadAdapter::allocate(int dims, const int* sizes, in
     {
         if(g_cpuAllocator == nullptr)
         {
-            g_cpuAllocator = cv::Mat::getStdAllocator();
+            g_cpuAllocator = mo::Allocator::GetThreadSafeAllocator();
         }
         return g_cpuAllocator->allocate(dims, sizes, type, data, step, flags, usageFlags);
     }
@@ -40,7 +38,7 @@ bool CpuAllocatorThreadAdapter::allocate(cv::UMatData* data, int accessflags, cv
     {
         if(g_cpuAllocator == nullptr)
         {
-            g_cpuAllocator = cv::Mat::getStdAllocator();
+            g_cpuAllocator = mo::Allocator::GetThreadSafeAllocator();
         }
         return g_cpuAllocator->allocate(data, accessflags, usageFlags);
     }
@@ -50,15 +48,15 @@ void CpuAllocatorThreadAdapter::deallocate(cv::UMatData* data) const
 {
     if(t_cpuAllocator)
     {
-        return t_cpuAllocator->deallocate(data);
+        t_cpuAllocator->deallocate(data);
     }
     else
     {
         if(g_cpuAllocator == nullptr)
         {
-            g_cpuAllocator = cv::Mat::getStdAllocator();
+            g_cpuAllocator = mo::Allocator::GetThreadSafeAllocator();
         }
-        return g_cpuAllocator->deallocate(data);
+        g_cpuAllocator->deallocate(data);
     }
 }
 
@@ -81,7 +79,7 @@ bool GpuAllocatorThreadAdapter::allocate(cv::cuda::GpuMat* mat, int rows, int co
     {
         if(g_gpuAllocator == nullptr)
         {
-            g_gpuAllocator = cv::cuda::GpuMat::defaultAllocator();
+            g_gpuAllocator = mo::Allocator::GetThreadSafeAllocator();
         }
         return g_gpuAllocator->allocate(mat, rows, cols, elemSize);
     }
@@ -92,14 +90,14 @@ void GpuAllocatorThreadAdapter::free(cv::cuda::GpuMat* mat)
 {
     if(t_gpuAllocator)
     {
-        return t_gpuAllocator->free(mat);
+        t_gpuAllocator->free(mat);
     }else
     {
         if(g_gpuAllocator == nullptr)
         {
-            g_gpuAllocator = cv::cuda::GpuMat::defaultAllocator();
+            g_gpuAllocator = mo::Allocator::GetThreadSafeAllocator();
         }
-        return g_gpuAllocator->free(mat);
+        g_gpuAllocator->free(mat);
     }
 }
 
@@ -409,7 +407,7 @@ Allocator* Allocator::GetThreadSpecificAllocator()
 {
     if(thread_specific_allocator.get() == nullptr)
     {
-        thread_specific_allocator.reset(new UniversalAllocator_t());
+        thread_specific_allocator.reset(new mt_UniversalAllocator_t());
     }
     return thread_specific_allocator.get();
 }

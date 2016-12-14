@@ -65,7 +65,7 @@ unsigned char* MemoryBlock<XPU>::allocate(size_t size_, size_t elemSize_)
             prevEnd = itr.second;
         }
     }
-    if (static_cast<size_t>(end - prevEnd) > size_)
+    if (static_cast<size_t>(end - prevEnd) >= size_)
     {
         auto alignment = alignmentOffset(prevEnd, elemSize_);
         if (static_cast<size_t>(end - prevEnd + alignment) >= size_)

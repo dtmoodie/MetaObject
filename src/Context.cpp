@@ -1,6 +1,8 @@
 #include "MetaObject/Context.hpp"
 #include "MetaObject/Thread/ThreadRegistry.hpp"
 #include "MetaObject/Detail/Allocator.hpp"
+
+#include "boost/lexical_cast.hpp"
 #include <boost/thread/tss.hpp>
 
 using namespace mo;
@@ -29,4 +31,7 @@ Context::Context()
 {
     thread_id = GetThisThread();
     allocator = Allocator::GetThreadSpecificAllocator();
+    cv::Mat::setDefaultAllocator(allocator, true);
+    cv::cuda::GpuMat::setDefaultAllocator(allocator, true);
+    allocator->SetName("Thread " + boost::lexical_cast<std::string>(thread_id) + " allocator");
 }

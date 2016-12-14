@@ -141,7 +141,7 @@ void InitNvtx()
         LOG(info) << "No nvtx library loaded";
     }
 #else
-    void* nvtx_handle = dlopen("nvToolsExt64_1.dll", RTLD_NOW);
+    void* nvtx_handle = dlopen("libnvToolsExt.so", RTLD_NOW);
     if (nvtx_handle)
     {
         LOG(info) << "Loaded nvtx module";
