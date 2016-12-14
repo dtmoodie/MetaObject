@@ -1,6 +1,8 @@
 #define BOOST_TEST_MAIN
 #include "MetaObject/Detail/Allocator.hpp"
 #include "MetaObject/Detail/AllocatorImpl.hpp"
+#include "MetaObject/Logging/Profiling.hpp"
+
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>
 #include <boost/log/expressions.hpp>
@@ -25,6 +27,8 @@ BOOST_AUTO_TEST_CASE(initialize_thread)
 {
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::warning);
     BOOST_REQUIRE(mo::Allocator::GetThreadSpecificAllocator());
+    mo::InitLogging();
+    mo::InitProfiling();
 }
 
 BOOST_AUTO_TEST_CASE(initialize_global)
@@ -406,29 +410,38 @@ BOOST_AUTO_TEST_CASE(stl_allocator_pool)
               << "Pooled Allocation:  " << pooled_allocation << "\n";
 }
 
-BOOST_AUTO_TEST_CASE(async_transfer_rate)
+BOOST_AUTO_TEST_CASE(async_transfer_rate_random)
 {
     boost::posix_time::ptime start, end;
     double zero_allocation_time, default_time, pinned_time, pooled_time, stack_time;
-
+    const int num_iterations = 500;
+    std::vector<int> sizes;
+    sizes.resize(num_iterations);
+    std::cout << "\n ======================= H2D -> D2H ============================================ \n";
+    for(int i = 0; i < num_iterations; ++i)
     {
+        int size = std::min(1000, rand() + 1);
+        sizes[i] = size;
+    }
+    {
+        
         std::vector<cv::Mat> h_data;
         std::vector<cv::cuda::GpuMat> d_data;
         std::vector<cv::Mat> result;
-        h_data.reserve(1000);
-        d_data.reserve(1000);
-        result.reserve(1000);
+        h_data.resize(num_iterations);
+        d_data.resize(num_iterations);
+        result.resize(num_iterations);
         // Pre allocate
-        for(int i = 0; i < 1000; ++i)
+        for(int i = 0; i < num_iterations; ++i)
         {
-            int size = std::min(1000, rand()+1);
-            h_data.emplace_back(10, size, CV_32F);
-            d_data.emplace_back(10, size, CV_32F);
-            result.emplace_back(10, size, CV_32F);
+            h_data[i] = cv::Mat(10, sizes[i], CV_32F);
+            cv::cuda::createContinuous(10, sizes[i], CV_32F, d_data[i]);
+            result[i] = cv::Mat(10, sizes[i], CV_32F);
         }
         cv::cuda::Stream stream;
         start = boost::posix_time::microsec_clock::local_time();
-        for(int i = 0; i < 1000; ++i)
+        mo::scoped_profile profile("zero allocation");
+        for(int i = 0; i < num_iterations; ++i)
         {
             d_data[i].upload(h_data[i], stream);
             cv::cuda::multiply(d_data[i], cv::Scalar(100), d_data[i], 1, -1, stream);
@@ -437,15 +450,17 @@ BOOST_AUTO_TEST_CASE(async_transfer_rate)
         }
         end = boost::posix_time::microsec_clock::local_time();
         zero_allocation_time = boost::posix_time::time_duration(end - start).total_milliseconds();
+        std::cout << "Zero Allocation:    " << zero_allocation_time << "\n";
     }
 
     {
+        
         cv::cuda::Stream stream;
         start = boost::posix_time::microsec_clock::local_time();
-        for(int i = 0; i < 1000; ++i)
+        mo::scoped_profile profile("default allocation");
+        for(int i = 0; i < sizes.size(); ++i)
         {
-            int size = std::min(1000, rand()+1);
-            cv::Mat h_data(10, size, CV_32F);
+            cv::Mat h_data(10, sizes[i], CV_32F);
             cv::cuda::GpuMat d_data;
             d_data.upload(h_data, stream);
             cv::cuda::multiply(d_data, cv::Scalar(100), d_data, 1, -1, stream);
@@ -455,6 +470,7 @@ BOOST_AUTO_TEST_CASE(async_transfer_rate)
         }
         end = boost::posix_time::microsec_clock::local_time();
         default_time = boost::posix_time::time_duration(end - start).total_milliseconds();
+        std::cout << "Default Allocation: " << default_time << "\n";
     }
 
     {
@@ -464,11 +480,12 @@ BOOST_AUTO_TEST_CASE(async_transfer_rate)
         cv::Mat::setDefaultAllocator(&allocator);
         cv::cuda::Stream stream;
         start = boost::posix_time::microsec_clock::local_time();
-        for(int i = 0; i < 1000; ++i)
+        mo::scoped_profile profile("pool allocation");
+        for(int i = 0; i < sizes.size(); ++i)
         {
-            int size = std::min(1000, rand()+1);
-            cv::Mat h_data(10, size, CV_32F);
+            cv::Mat h_data(10, sizes[i], CV_32F);
             cv::cuda::GpuMat d_data;
+            cv::cuda::createContinuous(10, sizes[i], CV_32F, d_data);
             d_data.upload(h_data, stream);
             cv::cuda::multiply(d_data, cv::Scalar(100), d_data, 1, -1, stream);
             cv::cuda::add(d_data, cv::Scalar(100), d_data, cv::noArray(), -1, stream);
@@ -477,11 +494,12 @@ BOOST_AUTO_TEST_CASE(async_transfer_rate)
         }
         end = boost::posix_time::microsec_clock::local_time();
         pooled_time = boost::posix_time::time_duration(end - start).total_milliseconds();
+        std::cout << "Pooled Allocation:  " << pooled_time << "\n";
     }
-    std::cout << "\n ======================= H2D -> D2H ============================================ \n";
-    std::cout << "Zero Allocation:    " << zero_allocation_time << "\n"
-              << "Default Allocation: " << default_time << "\n"
-              << "Pooled Allocation:  " << pooled_time << "\n";
+    
+    
+              
+              
 }
 
 

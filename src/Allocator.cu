@@ -1,3 +1,4 @@
+/*
 #include "MetaObject/Detail/Allocator.hpp"
 #include "MetaObject/Detail/AllocatorImpl.hpp"
 #include <opencv2/core/cuda/utility.hpp>
@@ -12,3 +13,4 @@ void mo::InstallThrustPoolingAllocator()
 {
 
 }
+*/
