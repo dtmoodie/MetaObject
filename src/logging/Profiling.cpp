@@ -1,8 +1,10 @@
 #include "MetaObject/Logging/Profiling.hpp"
 #include "MetaObject/Logging/Log.hpp"
+#include "MetaObject/Thread/ThreadRegistry.hpp"
 #include <string>
 #include <sstream>
-
+#include "nvToolsExt.h"
+#include "nvToolsExtCuda.h"
 #ifdef HAVE_CUDA
 #include "cuda.h"
   #ifdef HAVE_OPENCV
@@ -20,15 +22,20 @@ using namespace mo;
 
 typedef int(*push_f)(const char*);
 typedef int(*pop_f)();
+typedef void(*nvtx_name_thread_f)(uint32_t, const char*);
+typedef void(*nvtx_name_stream_f)(CUstream , const char*);
 
 typedef void(*rmt_push_cpu_f)(const char*, unsigned int*);
 typedef void(*rmt_pop_cpu_f)();
 typedef void(*rmt_push_cuda_f)(const char*, unsigned int*, void*);
 typedef void(*rmt_pop_cuda_f)(void*);
 typedef void(*rmt_set_thread_name_f)(const char*);
+
 #ifndef PROFILING_NONE
 push_f nvtx_push = nullptr;
 pop_f nvtx_pop = nullptr;
+nvtx_name_thread_f nvtx_name_thread = nullptr;
+nvtx_name_stream_f nvtx_name_stream = nullptr;
 
 Remotery* rmt = nullptr;
 
@@ -43,6 +50,10 @@ void mo::SetThreadName(const char* name)
     if(rmt_set_thread)
     {
         rmt_set_thread(name);
+    }
+    if(nvtx_name_thread)
+    {
+        nvtx_name_thread(mo::GetThisThread(), name);
     }
 }
 
@@ -147,6 +158,8 @@ void InitNvtx()
         LOG(info) << "Loaded nvtx module";
         nvtx_push = (push_f)dlsym(nvtx_handle, "nvtxRangePushA");
         nvtx_pop = (pop_f)dlsym(nvtx_handle, "nvtxRangePop");
+        nvtx_name_thread = (nvtx_name_thread_f)dlsym(nvtx_handle, "nvtxNameOsThreadA");
+        nvtx_name_stream = (nvtx_name_stream_f)dlsym(nvtx_handle, "nvtxNameCuStreamA");
     }
     else
     {
@@ -182,6 +195,13 @@ void mo::PopCpu()
     if (rmt && rmt_pop_cpu)
     {
         rmt_pop_cpu();
+    }
+}
+void mo::SetStreamName(const char* name, cv::cuda::Stream& stream)
+{
+    if(nvtx_name_stream)
+    {
+        nvtx_name_stream(cv::cuda::StreamAccessor::getStream(stream), name);
     }
 }
 

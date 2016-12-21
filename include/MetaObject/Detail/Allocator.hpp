@@ -299,6 +299,42 @@ private:
     boost::mutex mtx;
 };
 
+template<class Allocator, class MatType>
+class RefCountPolicyImpl
+{
+};
+
+template<class Allocator>
+class RefCountPolicyImpl<Allocator, cv::Mat>: public Allocator
+{
+public:
+    typedef cv::Mat MatType;
+    ~RefCountPolicyImpl();
+    cv::UMatData* allocate(int dims, const int* sizes, int type,
+        void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
+    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void deallocate(cv::UMatData* data) const;
+    inline unsigned char* allocate(size_t num_bytes);
+    inline void deallocate(unsigned char* ptr, size_t num_bytes);
+private:
+    int ref_count = 0;
+};
+
+template<class Allocator>
+class RefCountPolicyImpl<Allocator, cv::cuda::GpuMat>: public Allocator
+{
+public:
+    typedef cv::cuda::GpuMat MatType;
+    ~RefCountPolicyImpl();
+    inline bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
+    inline void free(cv::cuda::GpuMat* mat);
+
+    inline unsigned char* allocate(size_t num_bytes);
+    inline void deallocate(unsigned char* ptr, size_t num_bytes);
+private:
+    int ref_count = 0;
+};
+
 class MO_EXPORTS CpuMemoryPool
 {
 public:
@@ -328,6 +364,17 @@ public:
 template<class Allocator>
 class MO_EXPORTS LockPolicy
         : public LockPolicyImpl<Allocator, typename Allocator::MatType>
+{
+};
+
+/*!
+ *  \brief The ref count policy keeps a count of the number of mats that have been
+ *         allocated and deallocated so that you can debug when deleting an allocator
+ *         prior to releasing all allocated mats
+ */
+template<class Allocator>
+class MO_EXPORTS RefCountPolicy
+        : public RefCountPolicyImpl<Allocator, typename Allocator::MatType>
 {
 
 };

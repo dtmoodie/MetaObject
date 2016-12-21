@@ -9,6 +9,7 @@
 #include "MetaObject/Parameters/IO/CerealPolicy.hpp"
 #include "MetaObject/Parameters/IO/TextPolicy.hpp"
 #include <boost/lexical_cast.hpp>
+#include "cereal/types/vector.hpp"
 
 namespace cereal
 {
@@ -83,4 +84,5 @@ INSTANTIATE_META_PARAMETER(cv::Point);
 INSTANTIATE_META_PARAMETER(cv::Rect);
 INSTANTIATE_META_PARAMETER(cv::Rect2d);
 INSTANTIATE_META_PARAMETER(cv::Rect2f);
+INSTANTIATE_META_PARAMETER(std::vector<cv::Rect>);
 #endif

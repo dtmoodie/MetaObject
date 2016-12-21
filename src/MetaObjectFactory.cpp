@@ -315,7 +315,7 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
     interface->SetModuleFileName(fullPluginPath.c_str());
     boost::filesystem::path path(fullPluginPath);
     std::string base = path.stem().replace_extension("").string();
-    base = base.substr(3, base.size() - 4);
+    base = base.substr(3, base.size() - 3);
     boost::filesystem::path config_path = path.parent_path();
     config_path += "/" + base + "_config.txt";
     int id = _pimpl->obj_system.ParseConfigFile(config_path.string().c_str());

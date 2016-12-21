@@ -184,7 +184,11 @@ void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::Release()
 template<typename PaddingPolicy>
 StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::StackPolicy()
 {
+#ifdef _MSC_VER
     deallocateDelay = 1000;
+#else
+    deallocateDelay = 1000*1000;
+#endif
 }
 
 template<typename PaddingPolicy>
@@ -409,6 +413,95 @@ void LockPolicyImpl<Allocator, cv::Mat>::deallocate(unsigned char* ptr, size_t n
     boost::mutex::scoped_lock lock(mtx);
     return Allocator::deallocate(ptr, num_bytes);
 }
+/// ==========================================================
+/// RefCountPolicy
+template<class Allocator>
+RefCountPolicyImpl<Allocator, cv::Mat>::~RefCountPolicyImpl()
+{
+    CV_Assert(ref_count == 0);
+}
+template<class Allocator>
+cv::UMatData* RefCountPolicyImpl<Allocator, cv::Mat>::allocate(int dims, const int* sizes, int type,
+    void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
+{
+    auto ret = Allocator::allocate(dims, sizes, type, data, step, flags, usageFlags);
+    if(ret)
+    {
+        //++ref_count;
+        return ret;
+    }
+    return nullptr;
+}
+template<class Allocator>
+bool RefCountPolicyImpl<Allocator, cv::Mat>::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const
+{
+    if(Allocator::allocate(data, accessflags, usageFlags))
+    {
+        //++ref_count;
+        return true;
+    }
+    return false;
+}
+template<class Allocator>
+void RefCountPolicyImpl<Allocator, cv::Mat>::deallocate(cv::UMatData* data) const
+{
+    Allocator::deallocate(data);
+    //--ref_count;
+}
+
+template<class Allocator>
+unsigned char* RefCountPolicyImpl<Allocator, cv::Mat>::allocate(size_t num_bytes)
+{
+    ++ref_count;
+    return Allocator::allocate(num_bytes);
+}
+
+template<class Allocator>
+void RefCountPolicyImpl<Allocator, cv::Mat>::deallocate(unsigned char* ptr, size_t num_bytes)
+{
+    --ref_count;
+    Allocator::deallocate(ptr, num_bytes);
+}
+/// =========================================================
+/// GpuMat implementation
+template<class Allocator>
+RefCountPolicyImpl<Allocator, cv::cuda::GpuMat>::~RefCountPolicyImpl()
+{
+    CV_Assert(ref_count == 0);
+}
+template<class Allocator>
+bool RefCountPolicyImpl<Allocator,cv::cuda::GpuMat>::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
+{
+    if(Allocator::allocate(mat, rows, cols, elemSize))
+    {
+        ++ref_count;
+        return true;
+    }
+    return false;
+}
+template<class Allocator>
+void RefCountPolicyImpl<Allocator,cv::cuda::GpuMat>::free(cv::cuda::GpuMat* mat)
+{
+    Allocator::free(mat);
+    --ref_count;
+}
+template<class Allocator>
+unsigned char* RefCountPolicyImpl<Allocator,cv::cuda::GpuMat>::allocate(size_t num_bytes)
+{
+    if(auto ptr = Allocator::allocate(num_bytes))
+    {
+        ++ref_count;
+        return ptr;
+    }
+    return nullptr;
+}
+template<class Allocator>
+void RefCountPolicyImpl<Allocator,cv::cuda::GpuMat>::deallocate(unsigned char* ptr, size_t num_bytes)
+{
+    Allocator::deallocate(ptr, num_bytes);
+    --ref_count;
+}
+
 
 /// ==========================================================
 /// ScopedDebugPolicy
@@ -690,10 +783,13 @@ typedef CpuStackPolicy h_StackAllocator_t;
 
 typedef mt_CpuPoolPolicy                    h_mt_PoolAllocator_t;
 typedef mt_CpuStackPolicy                   h_mt_StackAllocator_t;
-
+#ifdef NDEBUG
 typedef CombinedPolicy<d_TensorPoolAllocator_t, d_TextureAllocator_t> d_UniversalAllocator_t;
 typedef LockPolicy<d_UniversalAllocator_t> d_mt_UniversalAllocator_t;
-
+#else
+typedef RefCountPolicy<CombinedPolicy<d_TensorPoolAllocator_t, d_TextureAllocator_t>> d_UniversalAllocator_t;
+typedef RefCountPolicy<LockPolicy<d_UniversalAllocator_t>> d_mt_UniversalAllocator_t;
+#endif
 typedef CombinedPolicy<h_PoolAllocator_t, h_StackAllocator_t> h_UniversalAllocator_t;
 typedef LockPolicy<h_UniversalAllocator_t> h_mt_UniversalAllocator_t;
 

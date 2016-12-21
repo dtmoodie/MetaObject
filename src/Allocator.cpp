@@ -378,7 +378,11 @@ CpuMemoryStack* CpuMemoryStack::GlobalInstance()
     static CpuMemoryStack* g_inst = nullptr;
     if(g_inst == nullptr)
     {
+#ifdef _MSC_VER
         g_inst = new mt_CpuMemoryStackImpl(1000);
+#else
+        g_inst = new mt_CpuMemoryStackImpl(1000*1000);
+#endif
     }
     return g_inst;
 }
@@ -388,7 +392,11 @@ CpuMemoryStack* CpuMemoryStack::ThreadInstance()
     static boost::thread_specific_ptr<CpuMemoryStack> g_inst;
     if(g_inst.get() == nullptr)
     {
+#ifdef _MSC_VER
         g_inst.reset(new CpuMemoryStackImpl(1000));
+#else
+        g_inst.reset(new CpuMemoryStackImpl(1000*1000));
+#endif
     }
     return g_inst.get();
 }

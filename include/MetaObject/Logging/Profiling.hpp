@@ -16,6 +16,7 @@ namespace mo
     MO_EXPORTS void InitProfiling();
     MO_EXPORTS void PushCpu(const char* name, unsigned int* rmt_hash = nullptr);
     MO_EXPORTS void PopCpu();
+    MO_EXPORTS void SetStreamName(const char* name, cv::cuda::Stream& stream);
     struct MO_EXPORTS scoped_profile
     {
         scoped_profile(std::string name, unsigned int* obj_hash = nullptr, unsigned int* cuda_hash = nullptr, cv::cuda::Stream* stream = nullptr);

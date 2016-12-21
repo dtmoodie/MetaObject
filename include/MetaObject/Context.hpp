@@ -1,13 +1,8 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
+#include <opencv2/core/cuda.hpp>
 #include <string>
-namespace cv
-{
-    namespace cuda
-    {
-        class Stream;
-    }
-}
+
 
 namespace mo
 {
@@ -15,13 +10,18 @@ namespace mo
     class MO_EXPORTS Context
     {
     public:
-        Context();
+        static Context* GetDefaultThreadContext();
+        static void SetDefaultThreadContext(Context*  ctx);
+        Context(const std::string& name = "");
+        cv::cuda::Stream&      GetStream();
+        void                  SetStream(cv::cuda::Stream stream);
+
         size_t process_id = 0;
         size_t thread_id = 0;
         std::string host_name;
-        cv::cuda::Stream* stream = nullptr;
         Allocator* allocator;
-        static Context* GetDefaultThreadContext();
-        static void SetDefaultThreadContext(Context*  ctx);
+    private:
+        cv::cuda::Stream stream;
+        std::string name;
     };
 }
