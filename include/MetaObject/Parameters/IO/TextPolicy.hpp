@@ -145,11 +145,16 @@ namespace Text
 } // IO
 
 #define PARAMETER_TEXT_SERIALIZATION_POLICY_INST_(N) \
-  template<class T> struct MetaParameter<T, N, void>: public MetaParameter<T, N - 1, void>, public IO::Text::Policy<T> \
+  template<class T> struct MetaParameter<T, N, void>: public MetaParameter<T, N - 1, void> \
     { \
+        static IO::Text::Policy<T> _text_policy;  \
         MetaParameter(const char* name): \
-            MetaParameter<T, N-1, void>(name){} \
-    };
+            MetaParameter<T, N-1, void>(name) \
+        { \
+            (void)&_text_policy; \
+        } \
+    }; \
+    template<class T> IO::Text::Policy<T> MetaParameter<T, N, void>::_text_policy;
 
 PARAMETER_TEXT_SERIALIZATION_POLICY_INST_(__COUNTER__)
 } // mo
