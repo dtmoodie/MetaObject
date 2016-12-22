@@ -415,6 +415,9 @@ void LockPolicyImpl<Allocator, cv::Mat>::deallocate(unsigned char* ptr, size_t n
 }
 /// ==========================================================
 /// RefCountPolicy
+
+
+
 template<class Allocator>
 RefCountPolicyImpl<Allocator, cv::Mat>::~RefCountPolicyImpl()
 {
@@ -464,6 +467,7 @@ void RefCountPolicyImpl<Allocator, cv::Mat>::deallocate(unsigned char* ptr, size
 }
 /// =========================================================
 /// GpuMat implementation
+
 template<class Allocator>
 RefCountPolicyImpl<Allocator, cv::cuda::GpuMat>::~RefCountPolicyImpl()
 {

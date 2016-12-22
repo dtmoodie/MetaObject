@@ -264,6 +264,7 @@ CpuMemoryPool* CpuMemoryPool::ThreadInstance()
 class CpuMemoryStackImpl: public CpuMemoryStack
 {
 public:
+    typedef cv::Mat MatType;
     CpuMemoryStackImpl(size_t delay):
         deallocation_delay(delay) {}
 
@@ -381,7 +382,7 @@ CpuMemoryStack* CpuMemoryStack::GlobalInstance()
 #ifdef _MSC_VER
         g_inst = new mt_CpuMemoryStackImpl(1000);
 #else
-        g_inst = new mt_CpuMemoryStackImpl(1000*1000);
+        g_inst = new RefCountPolicy<mt_CpuMemoryStackImpl>(1000*1000);
 #endif
     }
     return g_inst;
@@ -395,7 +396,7 @@ CpuMemoryStack* CpuMemoryStack::ThreadInstance()
 #ifdef _MSC_VER
         g_inst.reset(new CpuMemoryStackImpl(1000));
 #else
-        g_inst.reset(new CpuMemoryStackImpl(1000*1000));
+        g_inst.reset(new RefCountPolicy<CpuMemoryStackImpl>(1000*1000));
 #endif
     }
     return g_inst.get();

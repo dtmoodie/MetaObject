@@ -309,6 +309,10 @@ class RefCountPolicyImpl<Allocator, cv::Mat>: public Allocator
 {
 public:
     typedef cv::Mat MatType;
+
+    template<class... T>RefCountPolicyImpl(T... args):
+        Allocator(args...){}
+
     ~RefCountPolicyImpl();
     cv::UMatData* allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
@@ -325,6 +329,9 @@ class RefCountPolicyImpl<Allocator, cv::cuda::GpuMat>: public Allocator
 {
 public:
     typedef cv::cuda::GpuMat MatType;
+
+    template<class... T>RefCountPolicyImpl(T... args):
+        Allocator(args...){}
     ~RefCountPolicyImpl();
     inline bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
     inline void free(cv::cuda::GpuMat* mat);
@@ -376,7 +383,11 @@ template<class Allocator>
 class MO_EXPORTS RefCountPolicy
         : public RefCountPolicyImpl<Allocator, typename Allocator::MatType>
 {
-
+public:
+    template<class... T> RefCountPolicy(T... args):
+        RefCountPolicyImpl<Allocator, typename Allocator::MatType>(args...)
+    {
+    }
 };
 
 template<class SmallAllocator, class LargeAllocator, class MatType>
