@@ -315,7 +315,11 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
     interface->SetModuleFileName(fullPluginPath.c_str());
     boost::filesystem::path path(fullPluginPath);
     std::string base = path.stem().replace_extension("").string();
+#ifdef NDEBUG
     base = base.substr(3, base.size() - 3);
+#else
+    base = base.substr(3, base.size() - 4); // strip off the d tag on the library file
+#endif
     boost::filesystem::path config_path = path.parent_path();
     config_path += "/" + base + "_config.txt";
     int id = _pimpl->obj_system.ParseConfigFile(config_path.string().c_str());
