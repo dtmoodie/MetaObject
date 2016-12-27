@@ -51,6 +51,7 @@ struct test_meta_object_slots: public IMetaObject
 {
     MO_BEGIN(test_meta_object_slots);
         MO_SLOT(void, test_void);
+        MO_SLOT(void, test_void, int);
     MO_END;
 	int slot_called = 0;
 };
@@ -58,6 +59,10 @@ void test_meta_object_slots::test_void()
 {
     std::cout << "test_void called\n";
 	++slot_called;
+}
+void test_meta_object_slots::test_void(int)
+{
+    
 }
 
 struct test_meta_object_callback: public IMetaObject
@@ -199,6 +204,8 @@ BOOST_AUTO_TEST_CASE(test_meta_object_internal_slot)
 	auto constructor = MetaObjectFactory::Instance()->GetConstructor("test_meta_object_slots");
 	auto obj = constructor->Construct();
 	auto meta_obj = static_cast<test_meta_object_slots*>(obj);
+    auto slot = meta_obj->GetSlot_test_void<void()>();
+    auto overload = meta_obj->GetSlot_test_void<void(int)>();
 	meta_obj->Init(true);
 	meta_obj->SetupSignals(&mgr);
 	TypedSignal<void(void)> signal;
