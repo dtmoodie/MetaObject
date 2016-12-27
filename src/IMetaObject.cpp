@@ -91,12 +91,14 @@ void IMetaObject::Init(bool firstInit)
         auto update_slot = this->GetSlot<void(mo::Context*, mo::IParameter*)>("on_" + param->GetName() + "_modified");
         if(update_slot)
         {
-            param->RegisterUpdateNotifier(update_slot);
+            auto connection = param->RegisterUpdateNotifier(update_slot);
+            this->AddConnection(connection, param->GetName() + "_modified", "on_" + param->GetName() + "_modified", update_slot->GetSignature(), this);
         }
         auto delete_slot = this->GetSlot<void(mo::IParameter const*)>("on_" + param->GetName() + "_deleted");
         if(delete_slot)
         {
-            param->RegisterDeleteNotifier(delete_slot);
+            auto connection = param->RegisterDeleteNotifier(delete_slot);
+            this->AddConnection(connection, param->GetName() + "_deleted", "on_" + param->GetName() + "_modified", update_slot->GetSignature(), this);
         }
     }
 
@@ -703,8 +705,9 @@ IParameter* IMetaObject::AddParameter(IParameter* param)
     {
         _pimpl->_input_parameters[param->GetName()] = dynamic_cast<InputParameter*>(param);
     }
-    param->RegisterUpdateNotifier(&(this->_pimpl->_slot_parameter_updated));
+    auto connection = param->RegisterUpdateNotifier(&(this->_pimpl->_slot_parameter_updated));
     _pimpl->_sig_parameter_added(this, param);
+    this->AddConnection(connection, "parameter_update", "parameter_updated", this->_pimpl->_slot_parameter_updated.GetSignature(), this);
     return param;
 }
 
