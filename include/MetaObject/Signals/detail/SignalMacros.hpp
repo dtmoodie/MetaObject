@@ -72,6 +72,10 @@ int init_signals_(bool firstInit, mo::_counter_<C> dummy) \
     AddSignal(&COMBINE(_sig_##NAME##_, N), #NAME); \
     return init_signals_(firstInit, --dummy) + 1; \
 } \
+template<class Sig> mo::TypedSignal<RETURN(__VA_ARGS__)>* GetSignal_##NAME(typename std::enable_if<std::is_same<Sig, RETURN(__VA_ARGS__)>::value>::type* = 0) \
+{ \
+    return &COMBINE(_sig_##NAME##_, N); \
+} \
 static void list_signal_info_(std::vector<mo::SignalInfo*>& output, mo::_counter_<C> dummy) \
 { \
     static mo::SignalInfo info{mo::TypeInfo(typeid(RETURN(__VA_ARGS__))), std::string(#NAME)}; \

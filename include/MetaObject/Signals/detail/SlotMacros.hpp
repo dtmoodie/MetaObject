@@ -24,7 +24,12 @@
         list_slots_(info, mo::_counter_<N-1>()); \
         static mo::SlotInfo s_info{mo::TypeInfo(typeid(RETURN(__VA_ARGS__))), #NAME}; \
         info.push_back(&s_info); \
+    } \
+    template<class Sig> mo::TypedSlot<RETURN(__VA_ARGS__)>* GetSlot_##NAME(typename std::enable_if<std::is_same<Sig, RETURN(__VA_ARGS__)>::value>::type* = 0) \
+    { \
+        return &COMBINE(_slot_##NAME##_,N); \
     }
+
 
 #define SLOT_1(RETURN, N, NAME) \
     virtual RETURN NAME(); \
@@ -40,6 +45,10 @@
         list_slots_(info, mo::_counter_<N-1>()); \
         static mo::SlotInfo s_info{mo::TypeInfo(typeid(RETURN(void))), #NAME}; \
         info.push_back(&s_info); \
+    } \
+    template<class Sig> mo::TypedSlot<RETURN()>* GetSlot_##NAME(typename std::enable_if<std::is_same<Sig, RETURN()>::value>::type* = 0) \
+    { \
+        return &COMBINE(_slot_##NAME##_,N); \
     }
 
 #define SLOT_2(RETURN, N, NAME, ...) SLOT__(NAME, N, RETURN, __VA_ARGS__)
