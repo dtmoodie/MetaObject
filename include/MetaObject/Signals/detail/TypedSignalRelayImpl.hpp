@@ -34,7 +34,15 @@ namespace mo
 			    (*slot)(args...);
 		}
 	}
-
+    template<class...T>
+    void TypedSignalRelay<void(T...)>::operator()(T&... args)
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        for (auto slot : _slots)
+        {
+            (*slot)(args...);
+        }
+    }
     template<class...T> 
     void TypedSignalRelay<void(T...)>::operator()(Context* ctx, T&... args)
     {
@@ -58,16 +66,6 @@ namespace mo
         }
     }
 	
-    template<class...T>
-	void TypedSignalRelay<void(T...)>::operator()(T&... args)
-	{
-        std::lock_guard<std::mutex> lock(mtx);
-		for (auto slot : _slots)
-		{
-			(*slot)(args...);
-		}
-	}
-
 	template<class...T> 
 	bool TypedSignalRelay<void(T...)>::Connect(ISignal* signal)
 	{
@@ -156,7 +154,15 @@ namespace mo
         THROW(debug) << "Slot not connected";
         return R();
     }
-
+    template<class R, class... T>
+    R TypedSignalRelay<R(T...)>::operator()(T&... args)
+    {
+        std::lock_guard<std::mutex> lock(mtx);
+        if (_slot)
+            return (*_slot)(args...);
+        THROW(debug) << "Slot not connected";
+        return R();
+    }
 	template<class R, class...T> 
 	bool TypedSignalRelay<R(T...)>::Connect(ISlot* slot)
 	{

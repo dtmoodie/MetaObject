@@ -2,6 +2,7 @@
 #include "MetaObject/Thread/ThreadRegistry.hpp"
 #include "MetaObject/Detail/Allocator.hpp"
 #include "MetaObject/Logging/Profiling.hpp"
+#include "MetaObject/Detail/HelperMacros.hpp"
 #include "boost/lexical_cast.hpp"
 #include <boost/thread/tss.hpp>
 
@@ -27,12 +28,13 @@ void Context::SetDefaultThreadContext(Context*  ctx)
     thread_set_context = ctx;
 }
 
+
 Context::Context(const std::string& name)
 {
     thread_id = GetThisThread();
     allocator = Allocator::GetThreadSpecificAllocator();
-    cv::Mat::setDefaultAllocator(allocator, true);
-    cv::cuda::GpuMat::setDefaultAllocator(allocator, true);
+    SetGpuAllocatorHelper<cv::cuda::GpuMat>(allocator);
+    SetCpuAllocatorHelper<cv::Mat>(allocator);
     if(name.size())
     {
         allocator->SetName(name);
@@ -44,6 +46,12 @@ Context::Context(const std::string& name)
     }
     this->name = name;
 }
+
+Context::~Context()
+{
+    
+}
+
 cv::cuda::Stream &Context::GetStream()
 {
     return stream;

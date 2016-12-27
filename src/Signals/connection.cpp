@@ -17,7 +17,10 @@ SlotConnection::SlotConnection(ISlot* slot, std::shared_ptr<ISignalRelay> relay)
 {
 
 }
-
+SlotConnection::~SlotConnection()
+{
+    //Disconnect();
+}
 bool SlotConnection::Disconnect()
 {
 	if (_slot)
@@ -35,7 +38,7 @@ ClassConnection::ClassConnection(ISlot* slot, std::shared_ptr<ISignalRelay> rela
 
 ClassConnection::~ClassConnection()
 {
-	
+    Disconnect();	
 }
 
 bool ClassConnection::Disconnect()

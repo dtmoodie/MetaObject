@@ -19,6 +19,12 @@ namespace mo
 	{
 		
 	}
+    
+    template<class R, class...T>
+    TypedSlot<R(T...)>::TypedSlot(std::function<R(T...)>&& other):
+        std::function<R(T...)>(other)
+    {
+    }
 
 	template<class R, class...T> 
 	TypedSlot<R(T...)>::~TypedSlot()
@@ -64,7 +70,13 @@ namespace mo
 		_relays.push_back(relay);
 		return std::shared_ptr<Connection>(new SlotConnection(this, relay));
 	}
-
+    template<class R, class...T>
+    std::shared_ptr<Connection> TypedSlot<R(T...)>::Connect(std::shared_ptr<TypedSignalRelay<R(T...)>>& relay)
+    {
+        relay->Connect(this);
+        _relays.push_back(relay);
+        return std::shared_ptr<Connection>(new SlotConnection(this, std::dynamic_pointer_cast<ISignalRelay>(relay)));
+    }
 	template<class R, class...T> 
 	std::shared_ptr<Connection> TypedSlot<R(T...)>::Connect(std::shared_ptr<ISignalRelay>& relay)
 	{

@@ -20,6 +20,7 @@ namespace mo
 	{
 	public:
 		SlotConnection(ISlot* slot, std::shared_ptr<ISignalRelay> relay);
+        virtual ~SlotConnection();
 		virtual bool Disconnect();
 	protected:
 		ISlot* _slot;
