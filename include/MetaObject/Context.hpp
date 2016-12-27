@@ -13,6 +13,7 @@ namespace mo
         static Context* GetDefaultThreadContext();
         static void SetDefaultThreadContext(Context*  ctx);
         Context(const std::string& name = "");
+        ~Context();
         cv::cuda::Stream&      GetStream();
         void                  SetStream(cv::cuda::Stream stream);
 

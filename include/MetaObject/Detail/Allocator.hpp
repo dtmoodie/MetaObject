@@ -1,5 +1,5 @@
 #pragma once
-
+#include "HelperMacros.hpp"
 #include "Export.hpp"
 #include "MemoryBlock.h"
 #include <opencv2/core/cuda.hpp>
@@ -15,6 +15,32 @@ MO_EXPORTS inline int alignmentOffset(unsigned char* ptr, int elemSize);
 MO_EXPORTS void SetScopeName(const std::string& name);
 MO_EXPORTS const std::string& GetScopeName();
 MO_EXPORTS void InstallThrustPoolingAllocator();
+DEFINE_HAS_STATIC_FUNCTION(HasGpuDefaultAllocator, V::setDefaultThreadAllocator, cv::cuda::GpuMat::Allocator*);
+DEFINE_HAS_STATIC_FUNCTION(HasCpuDefaultAllocator, V::setDefaultThreadAllocator, cv::MatAllocator*);
+
+template<class U>
+void SetGpuAllocatorHelper(cv::cuda::GpuMat::Allocator* allocator, typename std::enable_if<HasGpuDefaultAllocator<U>::value, void>::type* = 0)
+{
+    cv::cuda::GpuMat::setDefaultThreadAllocator(allocator);
+}
+template<class U>
+void SetGpuAllocatorHelper(cv::cuda::GpuMat::Allocator* allocator, typename std::enable_if<!HasGpuDefaultAllocator<U>::value, void>::type* = 0)
+{
+
+}
+
+template<class U>
+void SetCpuAllocatorHelper(cv::MatAllocator* allocator, typename std::enable_if<HasCpuDefaultAllocator<U>::value, void>::type* = 0)
+{
+    cv::Mat::setDefaultThreadAllocator(allocator);
+}
+template<class U>
+void SetCpuAllocatorHelper(cv::MatAllocator* allocator, typename std::enable_if<!HasCpuDefaultAllocator<U>::value, void>::type* = 0)
+{
+
+}
+
+
 class Allocator;
 class MO_EXPORTS CpuAllocatorThreadAdapter: public cv::MatAllocator
 {

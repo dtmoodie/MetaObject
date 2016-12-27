@@ -471,7 +471,7 @@ void RefCountPolicyImpl<Allocator, cv::Mat>::deallocate(unsigned char* ptr, size
 template<class Allocator>
 RefCountPolicyImpl<Allocator, cv::cuda::GpuMat>::~RefCountPolicyImpl()
 {
-    CV_Assert(ref_count == 0);
+    CV_Assert(ref_count == 0 && "Warning, trying to delete allocator while cv::cuda::GpuMat's still reference it");
 }
 template<class Allocator>
 bool RefCountPolicyImpl<Allocator,cv::cuda::GpuMat>::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
