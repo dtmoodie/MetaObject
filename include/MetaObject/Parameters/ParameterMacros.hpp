@@ -44,7 +44,13 @@ void init_parameters_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
 
 
 #define PROPERTY(type, name, init) \
-type name = init; \
+type name; \
+void init_parameters_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
+{ \
+    if(firstInit) \
+        name = init; \
+    init_parameters_(firstInit, --dummy); \
+} \
 mo::TypedParameterPtr<type> name##_param; \
 SERIALIZE_(name, __COUNTER__)
 
