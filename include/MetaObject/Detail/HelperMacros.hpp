@@ -28,7 +28,7 @@
     private:                                                                   \
         template<typename V, V> struct helper;                                 \
         template<typename V>                                                   \
-        static std::uint8_t check(helper<signature, &funcName>*);              \
+        static std::uint8_t check(helper<signature, &V::funcName>*);              \
         template<typename V> static std::uint16_t check(...);                  \
     public:                                                                    \
         static const bool value = sizeof(check<U>(0)) == sizeof(std::uint8_t); \

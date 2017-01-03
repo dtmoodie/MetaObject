@@ -35,7 +35,7 @@ struct object_with_different_signature
 
 template<class T> struct call_foo
 {
-    DEFINE_HAS_STATIC_FUNCTION(HasFoo, V::foo, int(*)(void));
+    DEFINE_HAS_STATIC_FUNCTION(HasFoo, foo, int(*)(void));
     template<class U> 
     static int helper(typename std::enable_if<HasFoo<U>::value, void>::type* = 0)
     {

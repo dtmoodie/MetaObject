@@ -21,7 +21,7 @@ DEFINE_HAS_STATIC_FUNCTION(HasCpuDefaultAllocator, V::setDefaultThreadAllocator,
 template<class U>
 void SetGpuAllocatorHelper(cv::cuda::GpuMat::Allocator* allocator, typename std::enable_if<HasGpuDefaultAllocator<U>::value, void>::type* = 0)
 {
-    cv::cuda::GpuMat::setDefaultThreadAllocator(allocator);
+    //cv::cuda::GpuMat::setDefaultThreadAllocator(allocator);
 }
 template<class U>
 void SetGpuAllocatorHelper(cv::cuda::GpuMat::Allocator* allocator, typename std::enable_if<!HasGpuDefaultAllocator<U>::value, void>::type* = 0)
@@ -32,7 +32,7 @@ void SetGpuAllocatorHelper(cv::cuda::GpuMat::Allocator* allocator, typename std:
 template<class U>
 void SetCpuAllocatorHelper(cv::MatAllocator* allocator, typename std::enable_if<HasCpuDefaultAllocator<U>::value, void>::type* = 0)
 {
-    cv::Mat::setDefaultThreadAllocator(allocator);
+    //cv::Mat::setDefaultThreadAllocator(allocator);
 }
 template<class U>
 void SetCpuAllocatorHelper(cv::MatAllocator* allocator, typename std::enable_if<!HasCpuDefaultAllocator<U>::value, void>::type* = 0)
