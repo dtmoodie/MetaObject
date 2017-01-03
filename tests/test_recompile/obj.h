@@ -51,15 +51,15 @@ struct test_meta_object_parameters: public IMetaObject
 struct test_meta_object_output: public IMetaObject
 {
 	MO_BEGIN(test_meta_object_output)
-		OUTPUT(int, test_output, 0);
-	MO_END;
+        OUTPUT(int, test_output, 0)
+    MO_END
 };
 
 struct test_meta_object_input: public IMetaObject
 {
 	MO_BEGIN(test_meta_object_input)
 		INPUT(int, test_input, nullptr)
-	MO_END;
+    MO_END
 };
 
 #ifdef HAVE_CUDA
