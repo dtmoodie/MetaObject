@@ -58,16 +58,23 @@ namespace mo
                 T* ptr = typed->GetDataPtr();
                 if (ptr == nullptr)
                     return false;
-                try
+                auto nvp = cereal::make_optional_nvp(param->GetName(), *ptr, *ptr);
+                ar(nvp);
+                if(nvp.success)
+                {
+                    typed->Commit();
+                    return true;
+                }
+                return false;
+                /*try
                 {
                     ar(cereal::make_nvp(param->GetName(), *ptr));
                 }catch(cereal::Exception& e)
                 {
                     std::cout << e.what() << std::endl;
                     return false;
-                }
-                typed->Commit();
-                return true;
+                }*/
+
             }
 
         };
