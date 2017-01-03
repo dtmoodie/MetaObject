@@ -142,6 +142,12 @@ bool ThreadHandle::IsOnThread() const
 {
     return _thread->IsOnThread();
 }
+bool ThreadHandle::GetIsRunning() const
+{
+    if(_thread == nullptr)
+        return false;
+    return _thread->_run && !_thread->_paused;
+}
 void ThreadHandle::SetThreadName(const std::string& name)
 {
     if(_thread)

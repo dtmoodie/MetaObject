@@ -96,6 +96,7 @@ void Thread::Main()
                 _event_queue.back()();
                 _event_queue.pop();
             }
+            mo::ThreadSpecificQueue::RunOnce();
         }
         if(_run)
         {
@@ -112,7 +113,20 @@ void Thread::Main()
             while(!_run)
             {
                 boost::mutex::scoped_lock lock(_mtx);
-                _cv.wait_for(lock, boost::chrono::milliseconds(100));
+                _cv.wait_for(lock, boost::chrono::milliseconds(10));
+                {
+                    while (_work_queue.size())
+                    {
+                        _work_queue.back()();
+                        _work_queue.pop();
+                    }
+                    while(_event_queue.size())
+                    {
+                        _event_queue.back()();
+                        _event_queue.pop();
+                    }
+                    mo::ThreadSpecificQueue::RunOnce();
+                }
             }
         }
     }

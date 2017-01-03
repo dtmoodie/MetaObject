@@ -31,6 +31,7 @@ namespace mo
         void PushWork(const std::function<void(void)>& f);
         void Start();
         void Stop();
+        bool GetIsRunning() const;
         void SetExitCallback(const std::function<void(void)>& f);
         void SetStartCallback(const std::function<void(void)>& f);
         void SetThreadName(const std::string& name);
