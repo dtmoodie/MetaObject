@@ -14,7 +14,7 @@ cache:
   apt: true
 
 before_script:
-  - sudo -E ./scripts/travis/install-deps.sh
+  - sudo apt-get install libboost-log-dev libboost-test-dev
 
 script:
   - mkdir -p build && cd build && cmake .. -DCPU_ONLY_TEST=ON
