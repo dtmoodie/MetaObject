@@ -25,8 +25,8 @@ if(WITH_PYTHON)
     find_package(Boost COMPONENTS python)
     if(Boost_FOUND)
 	    list(APPEND link_libs "${PYTHON_LIBRAY}")
-            get_filename_component(python_lib_dir "${PYTHON_LIBRARY}" DIRECTORY)
-            link_directories(${python_lib_dir})
+		get_filename_component(_python_lib_dir "${PYTHON_DEBUG_LIBRARY}" DIRECTORY)
+		link_directories(${_python_lib_dir})
 	    include_directories(${PYTHON_INCLUDE_DIR})
 	    add_definitions(-DHAVE_BOOST_PYTHON)
     endif()
@@ -199,11 +199,11 @@ set_target_properties(Remotery PROPERTIES FOLDER Dependencies)
 GroupSources(include)
 GroupSources(src)
 cuda_add_library(MetaObject SHARED ${src} ${hdr} ${knl} src/precompiled.hpp)
-target_link_libraries(MetaObject 
-  RuntimeObjectSystem 
-  RuntimeCompiler 
-  ${link_libs} 
-  ${OpenCV_LIBS} 
+target_link_libraries(MetaObject
+  RuntimeObjectSystem
+  RuntimeCompiler
+  ${link_libs}
+  ${OpenCV_LIBS}
   ${CUDA_CUDART_LIBRARY}
   ${CUDA_CUDA_LIBRARY}
 )
