@@ -59,29 +59,35 @@ namespace mo
                 if (ptr == nullptr)
                     return false;
                 auto nvp = cereal::make_optional_nvp(param->GetName(), *ptr, *ptr);
-                ar(nvp);
+                try
+                {
+                    ar(nvp);
+                }catch(...)
+                {
+                    return false;
+                }
+
                 if(nvp.success)
                 {
                     typed->Commit();
                     return true;
                 }
                 return false;
-                /*try
-                {
-                    ar(cereal::make_nvp(param->GetName(), *ptr));
-                }catch(cereal::Exception& e)
-                {
-                    std::cout << e.what() << std::endl;
-                    return false;
-                }*/
-
             }
 
         };
     } // namespace Cereal
     } // namespace IO
+/*template<class T> using DetectSerializer = typename std::enable_if<
+    cereal::traits::detail::count_input_serializers<T, cereal::JSONInputArchive>::value != 0 &&
+    cereal::traits::detail::count_input_serializers<T, cereal::XMLInputArchive>::value != 0 &&
+    cereal::traits::detail::count_input_serializers<T, cereal::BinaryInputArchive>::value != 0
+        >::type;*/
+    template<class T> using DetectSerializer = void;
+
 #define PARAMETER_CEREAL_SERIALIZATION_POLICY_INST_(N) \
-    template<class T> struct MetaParameter<T, N, void>: public MetaParameter<T, N - 1, void> \
+    template<class T> struct MetaParameter<T, N, \
+        DetectSerializer<T>>: public MetaParameter<T, N - 1, void> \
     { \
         static IO::Cereal::Policy<T> _cereal_policy;  \
         MetaParameter(const char* name): \
@@ -90,7 +96,7 @@ namespace mo
             (void)&_cereal_policy; \
         } \
     }; \
-    template<class T> IO::Cereal::Policy<T> MetaParameter<T, N, void>::_cereal_policy;
+    template<class T> IO::Cereal::Policy<T> MetaParameter<T, N, DetectSerializer<T>>::_cereal_policy;
 
     PARAMETER_CEREAL_SERIALIZATION_POLICY_INST_(__COUNTER__)
 }

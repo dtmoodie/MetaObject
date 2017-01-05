@@ -45,13 +45,15 @@ std::string IMetaObjectInfo::Print() const
                 ss << "    " << param->tooltip << "\n";
             if(param->description.size())
                 ss << "    " << param->description << "\n";
+            if(param->initial_value.size())
+                ss << "    " << param->initial_value << "\n";
         }
     }
-    auto signals = GetSignalInfo();
-    if(signals.size())
+    auto sigs = GetSignalInfo();
+    if(sigs.size())
     {
         ss << "\n----------- Signals ---------------- \n";
-        for(auto& sig : signals)
+        for(auto& sig : sigs)
         {
             ss << sig->name;
             for(int i = 0; i < 20 - sig->name.size(); ++i)
@@ -64,11 +66,11 @@ std::string IMetaObjectInfo::Print() const
         }
     }
     
-    auto slots = GetSlotInfo();
-    if(slots.size())
+    auto my_slots = GetSlotInfo();
+    if(my_slots .size())
     {
         ss << "\n----------- Slots ---------------- \n";
-        for(auto& slot : slots)
+        for(auto& slot : my_slots)
         {
             ss << slot->name;
             for(int i = 0; i < 20 - slot->name.size(); ++i)

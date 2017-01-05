@@ -66,6 +66,15 @@ namespace mo
         SerializeText_f     GetTextSerializationFunction(const TypeInfo& type);
         DeSerializeText_f   GetTextDeSerializationFunction(const TypeInfo& type);
 
+        SerializeBinary_f GetSaveFunction(const TypeInfo& type, cereal::BinaryOutputArchive& ar);
+        DeSerializeBinary_f GetLoadFunction(const TypeInfo& type, cereal::BinaryInputArchive& ar);
+
+        SerializeXml_f GetSaveFunction(const TypeInfo& type, cereal::XMLOutputArchive& ar);
+        DeSerializeXml_f GetLoadFunction(const TypeInfo& type, cereal::XMLInputArchive& ar);
+
+        SerializeJson_f GetSaveFunction(const TypeInfo& type, cereal::JSONOutputArchive& ar);
+        DeSerializeJson_f GetLoadFunction(const TypeInfo& type, cereal::JSONInputArchive& ar);
+
         void SetBinarySerializationFunctions(const TypeInfo& type, SerializeBinary_f serialize, DeSerializeBinary_f deserialize);
         
         void SetXmlSerializationFunctions(const TypeInfo& type, SerializeXml_f serialize, DeSerializeXml_f deserialize);

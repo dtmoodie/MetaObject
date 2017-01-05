@@ -40,7 +40,11 @@ int IMetaObject::Connect(IMetaObject* sender, const std::string& signal_name, IM
 					++count;
 				}
 				break;
-			}
+            }else
+            {
+                LOG(debug) << "Signature mismatch, Slot (" << slot_name << " -  " <<  slot->GetSignature().name()
+                           << ") != Signal (" << signal_name << " - " << signal->GetSignature().name() << ")";
+            }
 		}
 	}
 	

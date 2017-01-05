@@ -100,13 +100,19 @@ void Thread::Main()
         }
         if(_run)
         {
-            if (_inner_loop->HasSlots())
+            try
             {
-                int delay = (*_inner_loop)();
-                if (delay)
+                if (_inner_loop->HasSlots())
                 {
-                    boost::this_thread::sleep_for(boost::chrono::milliseconds(delay));
+                    int delay = (*_inner_loop)();
+                    if (delay)
+                    {
+                        boost::this_thread::sleep_for(boost::chrono::milliseconds(delay));
+                    }
                 }
+            }catch(...)
+            {
+                boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
             }
         }else
         {

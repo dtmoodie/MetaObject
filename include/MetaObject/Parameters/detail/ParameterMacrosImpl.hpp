@@ -10,7 +10,8 @@ LOAD_SAVE_(name, N) \
 INIT_SET_(name, init, N) \
 static void list_parameter_info_(std::vector<mo::ParameterInfo*>& info, mo::_counter_<N> dummy) \
 { \
-    static mo::ParameterInfo s_info(mo::TypeInfo(typeid(type)), #name); \
+    static mo::ParameterInfo s_info(mo::TypeInfo(typeid(type)), \
+                              #name, "", "", mo::Control_e, #init); \
     info.push_back(&s_info); \
     list_parameter_info_(info, --dummy); \
 } \

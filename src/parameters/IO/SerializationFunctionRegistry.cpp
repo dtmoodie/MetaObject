@@ -129,3 +129,39 @@ void SerializationFunctionRegistry::SetTextSerializationFunctions(const TypeInfo
 {
     _pimpl->_text_map[type] = std::make_pair(serialize, deserialize);
 }
+
+SerializationFunctionRegistry::SerializeBinary_f SerializationFunctionRegistry::GetSaveFunction(const TypeInfo& type, cereal::BinaryOutputArchive& ar)
+{
+    (void)ar;
+    return GetBinarySerializationFunction(type);
+}
+
+SerializationFunctionRegistry::DeSerializeBinary_f SerializationFunctionRegistry::GetLoadFunction(const TypeInfo& type, cereal::BinaryInputArchive& ar)
+{
+    (void)ar;
+    return GetBinaryDeSerializationFunction(type);
+}
+
+SerializationFunctionRegistry::SerializeXml_f SerializationFunctionRegistry::GetSaveFunction(const TypeInfo& type, cereal::XMLOutputArchive& ar)
+{
+    (void)ar;
+    return GetXmlSerializationFunction(type);
+}
+
+SerializationFunctionRegistry::DeSerializeXml_f SerializationFunctionRegistry::GetLoadFunction(const TypeInfo& type, cereal::XMLInputArchive& ar)
+{
+    (void)ar;
+    return GetXmlDeSerializationFunction(type);
+}
+
+SerializationFunctionRegistry::SerializeJson_f SerializationFunctionRegistry::GetSaveFunction(const TypeInfo& type, cereal::JSONOutputArchive &ar)
+{
+    (void)ar;
+    return GetJsonSerializationFunction(type);
+}
+
+SerializationFunctionRegistry::DeSerializeJson_f SerializationFunctionRegistry::GetLoadFunction(const TypeInfo& type, cereal::JSONInputArchive &ar)
+{
+    (void)ar;
+    return GetJsonDeSerializationFunction(type);
+}
