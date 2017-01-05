@@ -69,7 +69,7 @@ enum InterfaceIDEnum
     IID_ENDInterfaceID
 };
 
-static constexpr uint32_t crc_table[256] =
+static constexpr unsigned int crc_table[256] =
 {
     0x00000000L, 0x77073096L, 0xEE0E612CL, 0x990951BAL,
     0x076DC419L, 0x706AF48FL, 0xE963A535L, 0x9E6495A3L,
@@ -137,21 +137,25 @@ static constexpr uint32_t crc_table[256] =
     0xB40BBE37L, 0xC30C8EA1L, 0x5A05DF1BL, 0x2D02EF8DL
 };
 
-template<size_t idx>
-constexpr uint32_t crc32(const char * str)
-{
-    return (crc32<idx-1>(str) >> 8) ^ crc_table[(crc32<idx-1>(str) ^ str[idx]) & 0x000000FF];
-}
+template<int size, int idx = 0, class dummy = void>
+struct MM {
+    static constexpr unsigned int crc32(const char * str, unsigned int prev_crc = 0xFFFFFFFF)
+    {
+        return MM<size, idx + 1>::crc32(str, (prev_crc >> 8) ^ crc_table[(prev_crc ^ str[idx]) & 0xFF]);
+    }
+};
 
 // This is the stop-recursion function
-template<>
-constexpr uint32_t crc32<size_t(-1)>(const char * str)
-{
-    return 0xFFFFFFFF;
-}
+template<int size, class dummy>
+struct MM<size, size, dummy> {
+    static constexpr unsigned int crc32(const char * str, unsigned int prev_crc = 0xFFFFFFFF)
+    {
+        return prev_crc ^ 0xFFFFFFFF;
+    }
+};
 
-// This doesn't take into account the nul char
-#define COMPILE_TIME_CRC32_STR(x) (crc32<sizeof(x) - 2>(x) ^ 0xFFFFFFFF)
+// This don't take into account the nul char
+#define COMPILE_TIME_CRC32_STR(x) (MM<sizeof(x)-1>::crc32(x))
 
 typedef unsigned int InterfaceID;
 
