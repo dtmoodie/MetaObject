@@ -83,7 +83,7 @@ namespace mo
         {
             return T::GetTypeNameStatic();
         }
-        int                                GetInterfaceId() const
+        unsigned int                       GetInterfaceId() const
         {
             return T::s_interfaceID;
         }

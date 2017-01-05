@@ -1,7 +1,9 @@
 #include "MetaObject/IMetaObjectInfo.hpp"
 #include "MetaObject/Parameters/ParameterInfo.hpp"
+#include "MetaObject/Parameters/Demangle.hpp"
 #include "MetaObject/Signals/SignalInfo.hpp"
 #include "MetaObject/Signals/SlotInfo.hpp"
+
 #include <sstream>
 using namespace mo;
 
@@ -29,10 +31,14 @@ std::string IMetaObjectInfo::Print() const
     if(params.size())
     {
         ss << "----------- Parameters ------------- \n";
+        int longest_name = 0;
+        for(auto& slot : params)
+            longest_name = std::max<int>(longest_name, slot->name.size());
+        longest_name += 1;
         for(auto& param : params)
         {
             ss <<  param->name;
-            for(int i = 0; i < 20 - param->name.size(); ++i)
+            for(int i = 0; i < longest_name - param->name.size(); ++i)
                 ss << " ";
             if(param->type_flags & Control_e)
                 ss << "C";
@@ -40,7 +46,8 @@ std::string IMetaObjectInfo::Print() const
                 ss << "I";
             if(param->type_flags & Output_e)
                 ss << "O";
-            ss << " [" << param->data_type.name() << "]\n";
+
+            ss << " [" << mo::Demangle::TypeToName(param->data_type) << "]\n";
             if(param->tooltip.size())
                 ss << "    " << param->tooltip << "\n";
             if(param->description.size())
@@ -53,10 +60,14 @@ std::string IMetaObjectInfo::Print() const
     if(sigs.size())
     {
         ss << "\n----------- Signals ---------------- \n";
+        int longest_name = 0;
+        for(auto& slot : sigs)
+            longest_name = std::max<int>(longest_name, slot->name.size());
+        longest_name += 1;
         for(auto& sig : sigs)
         {
             ss << sig->name;
-            for(int i = 0; i < 20 - sig->name.size(); ++i)
+            for(int i = 0; i < longest_name - sig->name.size(); ++i)
                 ss << " ";
             ss << " [" << sig->signature.name() << "]\n";
             if(sig->tooltip.size())
@@ -70,10 +81,14 @@ std::string IMetaObjectInfo::Print() const
     if(my_slots .size())
     {
         ss << "\n----------- Slots ---------------- \n";
+        int longest_name = 0;
+        for(auto& slot : my_slots)
+            longest_name = std::max<int>(longest_name, slot->name.size());
+        longest_name += 1;
         for(auto& slot : my_slots)
         {
             ss << slot->name;
-            for(int i = 0; i < 20 - slot->name.size(); ++i)
+            for(int i = 0; i < longest_name - (int)slot->name.size(); ++i)
                 ss << " ";
             ss << " [" << slot->signature.name() << "]\n";
             if(slot->tooltip.size())

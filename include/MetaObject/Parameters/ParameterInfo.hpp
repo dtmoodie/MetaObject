@@ -17,7 +17,7 @@ namespace mo
             tooltip(tooltip_), description(description_),
             type_flags(type_flags_), initial_value(init)
         { }
-
+        std::string Print();
 		mo::TypeInfo data_type;
 		std::string name;
 		std::string tooltip;
