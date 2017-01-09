@@ -47,6 +47,7 @@ namespace Parameters
             {
                 _size = size;
             }
+            virtual ParameterTypeFlags GetBufferType() const{ return cmap_e;}
         };
         template<typename T> FactoryRegisterer<ConstMap<T>, T, ConstMap_c> ConstMap<T>::_constructor;
     }

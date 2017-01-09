@@ -52,6 +52,7 @@ namespace mo
             void SetSize(long long size);
             long long GetSize();
             void GetTimestampRange(long long& start, long long& end);
+            virtual ParameterTypeFlags GetBufferType() const{ return map_e;}
         protected:
             std::map<long long, T> _data_buffer;
             virtual void onInputUpdate(Context* ctx, IParameter* param);

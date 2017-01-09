@@ -58,6 +58,7 @@ namespace mo
             virtual void GetTimestampRange(long long& start, long long& end);
             
             void onInputUpdate(Context* ctx, IParameter* param);
+            virtual ParameterTypeFlags GetBufferType() const{ return cbuffer_e;}
         };
     }
     

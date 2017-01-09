@@ -1,5 +1,6 @@
 #pragma once
-
+#include "Export.hpp"
+#include <string>
 namespace mo
 {
     enum ParameterType
@@ -12,6 +13,8 @@ namespace mo
         Buffer_e = 16,
         Optional_e = 32
     };
+    MO_EXPORTS std::string ParameteTypeToString(ParameterType type);
+    MO_EXPORTS ParameterType StringToParameteType(const std::string& str);
     enum ParameterTypeFlags
     {
         TypedParameter_e = 0,
@@ -19,6 +22,11 @@ namespace mo
         cmap_e,
         map_e,
         StreamBuffer_e,
-        BlockingStreamBuffer_e
+        BlockingStreamBuffer_e,
+        ForceBufferedConnection_e = 1024,
+        ForceDirectConnection_e = 2048
     };
+    MO_EXPORTS std::string ParameterTypeFlagsToString(ParameterTypeFlags flags);
+    MO_EXPORTS ParameterTypeFlags StringToParameterTypeFlags(const std::string& str);
+
 }

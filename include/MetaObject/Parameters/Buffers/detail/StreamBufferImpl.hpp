@@ -96,7 +96,6 @@ namespace mo
         template<class T>
         ITypedParameter<T>* BlockingStreamBuffer<T>::UpdateData(const T& data_, long long ts, Context* ctx)
         {
-            //boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
             while (this->_data_buffer.size() >= _size)
             {
@@ -112,23 +111,23 @@ namespace mo
         template<class T>
         ITypedParameter<T>* BlockingStreamBuffer<T>::UpdateData(T* data_, long long ts, Context* ctx)
         {
-            //boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
-            while(this->_data_buffer.size() >= _size)
             {
-                LOG(trace) << "Pushing to " << this->GetTreeName() << " waiting on read";
-                _cv.wait(lock);
+                boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
+                while(this->_data_buffer.size() >= _size)
+                {
+                    LOG(trace) << "Pushing to " << this->GetTreeName() << " waiting on read";
+                    _cv.wait(lock);
+                }
+                this->_data_buffer[ts] = *data_;
+                IParameter::modified = true;
+                this->_timestamp = ts;
             }
-            this->_data_buffer[ts] = *data_;
-            IParameter::modified = true;
-            this->_timestamp = ts;
             IParameter::OnUpdate(ctx);
             return this;
         }
         template<class T>
         void BlockingStreamBuffer<T>::prune()
         {
-            //boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
             if (this->_current_timestamp != -1)
             {

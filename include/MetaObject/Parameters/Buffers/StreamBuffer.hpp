@@ -21,6 +21,7 @@ namespace mo
             T    GetData(long long ts = -1, Context* ctx = nullptr);
             void SetSize(long long size);
             std::shared_ptr<IParameter> DeepCopy() const;
+            virtual ParameterTypeFlags GetBufferType() const{ return StreamBuffer_e;}
         protected:
             virtual void prune();
             long long _current_timestamp;
@@ -39,6 +40,7 @@ namespace mo
             ITypedParameter<T>* UpdateData(T& data_, long long ts = -1, Context* ctx = nullptr);
             ITypedParameter<T>* UpdateData(const T& data_, long long ts = -1, Context* ctx = nullptr);
             ITypedParameter<T>* UpdateData(T* data_, long long ts = -1, Context* ctx = nullptr);
+            virtual ParameterTypeFlags GetBufferType() const{ return BlockingStreamBuffer_e;}
         protected:
             virtual void prune();
             long long _size;
