@@ -28,6 +28,10 @@ void Thread::Start()
 void Thread::Stop()
 {
     _run = false;
+    while(!_paused)
+    {
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    }
 }
 void Thread::SetExitCallback(const std::function<void(void)>& f)
 {
@@ -55,15 +59,14 @@ Thread::Thread()
     _pool = nullptr;
     _ctx = nullptr;
     _inner_loop.reset(new mo::TypedSignalRelay<int(void)>());
-    Stop();
     _thread = boost::thread(&Thread::Main, this);
+    _paused = false;
 }
 Thread::Thread(ThreadPool* pool)
 {
     _inner_loop.reset(new mo::TypedSignalRelay<int(void)>());
     _pool = pool;
     _ctx = nullptr;
-    Stop();
     _thread = boost::thread(&Thread::Main, this);
 }
 
@@ -118,6 +121,7 @@ void Thread::Main()
         {
             while(!_run)
             {
+                _paused = true;
                 boost::mutex::scoped_lock lock(_mtx);
                 _cv.wait_for(lock, boost::chrono::milliseconds(10));
                 {
@@ -134,6 +138,9 @@ void Thread::Main()
                     mo::ThreadSpecificQueue::RunOnce();
                 }
             }
+            if(_on_start)
+                _on_start();
+            _paused = false;
         }
     }
 

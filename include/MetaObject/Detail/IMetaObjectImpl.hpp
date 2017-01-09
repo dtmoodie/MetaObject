@@ -106,7 +106,7 @@ namespace mo
         return nullptr;
     }
     template<class T> 
-    ITypedParameter<T>* IMetaObject::GetOutput(const std::string& name)
+    ITypedParameter<T>* IMetaObject::GetOutput(const std::string& name) const
     {
         auto ptr = GetOutput(name);
         if(ptr)

@@ -171,16 +171,21 @@ bool IParameter::Update(IParameter* other)
 
 void IParameter::OnUpdate(Context* ctx)
 {
-    boost::recursive_mutex::scoped_lock lock(mtx());
-    modified = true;
+    {
+        boost::recursive_mutex::scoped_lock lock(mtx());
+        modified = true;
+    }
+
 	update_signal(ctx, this);
 }
 
 IParameter* IParameter::Commit(long long ts, Context* ctx)
 {
-    boost::recursive_mutex::scoped_lock lock(mtx());
-    _timestamp = ts;
-    modified = true;
+    {
+        boost::recursive_mutex::scoped_lock lock(mtx());
+        _timestamp = ts;
+        modified = true;
+    }
 	update_signal(ctx, this);
     return this;
 }

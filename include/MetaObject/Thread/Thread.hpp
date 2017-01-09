@@ -54,6 +54,6 @@ namespace mo
         bool                      _run;
         std::queue<std::function<void(void)>> _work_queue;
         std::queue<std::function<void(void)>> _event_queue;
-        bool _paused;
+        volatile bool _paused;
     };
 }

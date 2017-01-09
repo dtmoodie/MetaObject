@@ -133,23 +133,23 @@ namespace mo
         // Parameters
         virtual std::vector<IParameter*> GetDisplayParameters() const;
         
-        std::vector<InputParameter*>                   GetInputs(const std::string& name_filter = "") const;
-        std::vector<InputParameter*>                   GetInputs(const TypeInfo& type_filter, const std::string& name_filter = "") const;
+        virtual std::vector<InputParameter*>           GetInputs(const std::string& name_filter = "") const;
+        virtual std::vector<InputParameter*>           GetInputs(const TypeInfo& type_filter, const std::string& name_filter = "") const;
         template<class T> std::vector<InputParameter*> GetInputs(const std::string& name_filter = "") const;
 
-        InputParameter*                                GetInput(const std::string& name) const;
+        virtual InputParameter*                        GetInput(const std::string& name) const;
         template<class T> ITypedInputParameter<T>*     GetInput(const std::string& name);
 
-        std::vector<IParameter*>                       GetOutputs(const std::string& name_filter = "") const;
-        std::vector<IParameter*>                       GetOutputs(const TypeInfo& type_filter, const std::string& name_filter = "") const;
+        virtual std::vector<IParameter*>               GetOutputs(const std::string& name_filter = "") const;
+        virtual std::vector<IParameter*>               GetOutputs(const TypeInfo& type_filter, const std::string& name_filter = "") const;
         template<class T> std::vector<IParameter*>     GetOutputs(const std::string& name_filter = "") const;
 
-        IParameter*                                    GetOutput(const std::string& name) const;
-        template<class T> ITypedParameter<T>*          GetOutput(const std::string& name);
+        virtual IParameter*                            GetOutput(const std::string& name) const;
+        template<class T> ITypedParameter<T>*          GetOutput(const std::string& name) const;
 
 
-        IParameter*              GetParameter(const std::string& name) const;
-        IParameter*              GetParameterOptional(const std::string& name) const;
+        virtual IParameter*      GetParameter(const std::string& name) const;
+        virtual IParameter*      GetParameterOptional(const std::string& name) const;
         virtual std::vector<IParameter*> GetParameters(const std::string& filter = "") const;
         virtual std::vector<IParameter*> GetParameters(const TypeInfo& filter) const;
 
