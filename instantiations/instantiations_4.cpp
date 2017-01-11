@@ -8,6 +8,7 @@
 #include "MetaObject/Parameters/Buffers/map.hpp"
 #include "MetaObject/Parameters/IO/CerealPolicy.hpp"
 #include "MetaObject/Parameters/IO/cvSpecializations.hpp"
+#include "MetaObject/Parameters/IO/TextPolicy.hpp"
 #include <boost/lexical_cast.hpp>
 
 
