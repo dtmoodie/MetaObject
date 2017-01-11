@@ -7,7 +7,6 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 set(link_libs "")
 
-
 set(WITH_QT "TRUE" CACHE BOOL "Enable QT support")
 set(WITH_PYTHON "TRUE" CACHE BOOL "Enable Python bindings")
 set(WITH_OPENCV "TRUE" CACHE BOOL "Enable OpenCV types")
@@ -24,24 +23,30 @@ if(WITH_PYTHON)
   if(PythonLibs_FOUND AND PythonInterp_FOUND)
     find_package(Boost COMPONENTS python)
     if(Boost_FOUND)
-	    list(APPEND link_libs "${PYTHON_LIBRAY}")
-		get_filename_component(_python_lib_dir "${PYTHON_DEBUG_LIBRARY}" DIRECTORY)
-		link_directories(${_python_lib_dir})
-	    include_directories(${PYTHON_INCLUDE_DIR})
-	    add_definitions(-DHAVE_BOOST_PYTHON)
+      list(APPEND link_libs "${PYTHON_LIBRAY}")
+      get_filename_component(_python_lib_dir "${PYTHON_DEBUG_LIBRARY}" DIRECTORY)
+      link_directories(${_python_lib_dir})
+      include_directories(${PYTHON_INCLUDE_DIR})
+      add_definitions(-DHAVE_BOOST_PYTHON)
     endif()
   endif()
 endif()
 
 if(WIN32)
-    SET(CMAKE_CXX_FLAGS "/EHsc /FC /Zi /MP /Zm512 /bigobj /FS" CACHE STRING "")
-    SET(CMAKE_CXX_FLAGS_RELEASE "/Zo /d2Zi+ /Oy-" CACHE STRING "")
+  SET(CMAKE_CXX_FLAGS "/EHsc /FC /Zi /MP /Zm512 /bigobj /FS" CACHE STRING "")
+  SET(CMAKE_CXX_FLAGS_RELEASE "/Zo /d2Zi+ /Oy-" CACHE STRING "")
 else(WIN32)
-    SET(CMAKE_CXX_FLAGS "-std=c++11" CACHE STRING "" FORCE)
-    list(APPEND link_libs pthread)
-    add_definitions(-D_MWAITXINTRIN_H_INCLUDED)
-    set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
+  SET(CMAKE_CXX_FLAGS "-std=c++11" CACHE STRING "" FORCE)
+  list(APPEND link_libs pthread)
+  add_definitions(-D_MWAITXINTRIN_H_INCLUDED)
+  set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
 endif(WIN32)
+if(CMAKE_SYSTEM_PROCESSOR MATCHES "^(aarch64.*|AARCH64.*)")
+  set(AARCH64 1)
+  list(APPEND link_libs atomic)
+else()
+  set(AARCH64 0)
+endif()
 set(CMAKE_DEBUG_POSTFIX "d")
 link_directories("${CMAKE_CURRENT_BINARY_DIR}")
 file(GLOB_RECURSE src "src/*.cpp")
@@ -69,9 +74,9 @@ find_package(Boost REQUIRED COMPONENTS ${Boost_required_components})
   list(APPEND PROJECT_BIN_DIRS_RELEASE_ ${Boost_LIBRARY_DIR_RELEASE})
   list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO_ ${Boost_LIBRARY_DIR_RELEASE})
   set(BIN_DIRS "${BIN_DIRS};Boost" CACHE STRING "" FORCE)
-  
 
-# ---------------------- cereal ---------------------------------  
+
+# ---------------------- cereal ---------------------------------
 set(cereal_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include" CACHE PATH "")
 find_package(cereal REQUIRED)
 if(cereal_FOUND)
@@ -87,11 +92,11 @@ if(WITH_CUDA)
   IF(${CUDA_FOUND})
     INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
     ADD_DEFINITIONS(-DHAVE_CUDA)
-	list(APPEND PROJECT_BIN_DIRS_DEBUG_ ${CUDA_BIN_DIR})
-	list(APPEND PROJECT_BIN_DIRS_RELEASE_ ${CUDA_BIN_DIR})
-	list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO_ ${CUDA_BIN_DIR})
+    list(APPEND PROJECT_BIN_DIRS_DEBUG_ ${CUDA_BIN_DIR})
+    list(APPEND PROJECT_BIN_DIRS_RELEASE_ ${CUDA_BIN_DIR})
+    list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO_ ${CUDA_BIN_DIR})
     if(GNUC)
-        set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --std=c++11")
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --std=c++11")
     endif(GNUC)
   ENDIF(${CUDA_FOUND})
 endif(WITH_CUDA)
@@ -128,24 +133,24 @@ add_definitions(-DRMT_USE_CUDA)
 # ---------------------- Optional dependencies ------------------
 # Qt5
 if(WITH_QT)
-	find_package(Qt5 QUIET COMPONENTS Core Widgets Gui)
-	if(Qt5_FOUND)
-		add_definitions(-DHAVE_QT5)
-		QT5_WRAP_CPP(MOC "${CMAKE_CURRENT_LIST_DIR}/include/MetaObject/Parameters/UI/Qt/SignalProxy.hpp")
-		list(APPEND src ${MOC})
-		INCLUDE_DIRECTORIES(${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS})
-		list(APPEND link_libs Qt5::Core Qt5::Widgets Qt5::Gui)
-		get_target_property(qt5_core_bin_ Qt5::Core IMPORTED_LOCATION_DEBUG)
-		get_filename_component(qt5_bin_dir_ "${qt5_core_bin_}" DIRECTORY)
-		list(APPEND PROJECT_BIN_DIRS_DEBUG ${qt5_bin_dir_})
-	    list(APPEND PROJECT_BIN_DIRS_RELEASE ${qt5_bin_dir_})
-	    list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO ${qt5_bin_dir_})
-		set(Qt5_BIN_DIR_OPT ${qt5_bin_dir_} CACHE PATH "" FORCE)
-		set(Qt5_BIN_DIR ${qt5_bin_dir_} CACHE PATH "" FORCE)
-		set(Qt5_BIN_DIR_DBG ${qt5_bin_dir_} CACHE PATH "" FORCE)
-		set(BIN_DIRS "${BIN_DIRS};Qt5" CACHE STRING "" FORCE)
+  find_package(Qt5 QUIET COMPONENTS Core Widgets Gui)
+  if(Qt5_FOUND)
+    add_definitions(-DHAVE_QT5)
+    QT5_WRAP_CPP(MOC "${CMAKE_CURRENT_LIST_DIR}/include/MetaObject/Parameters/UI/Qt/SignalProxy.hpp")
+    list(APPEND src ${MOC})
+    INCLUDE_DIRECTORIES(${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS})
+    list(APPEND link_libs Qt5::Core Qt5::Widgets Qt5::Gui)
+    get_target_property(qt5_core_bin_ Qt5::Core IMPORTED_LOCATION_DEBUG)
+    get_filename_component(qt5_bin_dir_ "${qt5_core_bin_}" DIRECTORY)
+    list(APPEND PROJECT_BIN_DIRS_DEBUG ${qt5_bin_dir_})
+    list(APPEND PROJECT_BIN_DIRS_RELEASE ${qt5_bin_dir_})
+    list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO ${qt5_bin_dir_})
+    set(Qt5_BIN_DIR_OPT ${qt5_bin_dir_} CACHE PATH "" FORCE)
+    set(Qt5_BIN_DIR ${qt5_bin_dir_} CACHE PATH "" FORCE)
+    set(Qt5_BIN_DIR_DBG ${qt5_bin_dir_} CACHE PATH "" FORCE)
+    set(BIN_DIRS "${BIN_DIRS};Qt5" CACHE STRING "" FORCE)
     rcc_find_path(Qt5_PLUGIN_PATH qwindows.dll PATHS ${Qt5_BIN_DIR}/../plugins/platforms)
-	endif()
+  endif()
 endif()
 
 # WT
@@ -153,19 +158,19 @@ find_package(Wt QUIET)
 if(Wt_FOUND)
   add_definitions(-DHAVE_WT)
   include_directories(${Wt_INCLUDE_DIR})
-  list(APPEND link_libs 
-    ${Wt_HTTP_LIBRARY} 
-    ${Wt_LIBRARY} 
-    ${Wt_DEBUG_LIBRARY} 
+  list(APPEND link_libs
+    ${Wt_HTTP_LIBRARY}
+    ${Wt_LIBRARY}
+    ${Wt_DEBUG_LIBRARY}
     ${Wt_HTTP_DEBUG_LIBRARY}
   )
 
-  find_path(Wt_BIN_DIR 
-            NAMES wt.dll wtd.dll 
-			PATHS ${Wt_DIR} "${Wt_INCLUDE_DIR}/../" 
-			ENV ${Wt_DIR}
-            PATH PATH_SUFFIXES bin)
-			
+  find_path(Wt_BIN_DIR
+    NAMES wt.dll wtd.dll
+    PATHS ${Wt_DIR} "${Wt_INCLUDE_DIR}/../"
+    ENV ${Wt_DIR}
+   PATH PATH_SUFFIXES bin)
+
   if(Wt_BIN_DIR)
     set(Wt_BIN_DIR_DBG ${Wt_BIN_DIR} CACHE PATH "" FORCE)
     set(Wt_BIN_DIR_OPT ${Wt_BIN_DIR} CACHE PATH "" FORCE)
@@ -270,7 +275,7 @@ ELSE(Boost_LIBRARY_DIR_RELEASE AND EXISTS "${Boost_LIBRARY_DIR_RELEASE}" AND IS_
   ELSE(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
     IF(Boost_LIBRARY_DIR)
       LIST(APPEND PROJECT_BIN_DIRS_RELEASE ${Boost_LIBRARY_DIR})
-	  LIST(APPEND PROJECT_BIN_DIRS_DEBUG ${Boost_LIBRARY_DIR})
+      LIST(APPEND PROJECT_BIN_DIRS_DEBUG ${Boost_LIBRARY_DIR})
     ELSE()
       MESSAGE("Could not find boost binary dir in Boost_LIBRARY_DIR_DEBUG or BOOST_LIBRARYDIR")
     ENDIF()
@@ -289,22 +294,21 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
     LIST(LENGTH test_knl num_knl)
     IF(${num_knl} GREATER 0)
       cuda_add_executable(${test} ${test_srcs} ${test_knl})
-	else()
+    else()
       add_executable(${test} ${test_srcs})
     endif()
     TARGET_LINK_LIBRARIES(${test} MetaObject ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY} ${link_libs} instantiations)
-	if(OpenCV_FOUND)
-	  TARGET_LINK_LIBRARIES(${test} ${OpenCV_LIBS})
-	endif()
+    if(OpenCV_FOUND)
+      TARGET_LINK_LIBRARIES(${test} ${OpenCV_LIBS})
+    endif()
     ADD_DEPENDENCIES(${test} MetaObject)
     set_target_properties(${test} PROPERTIES FOLDER Tests/MetaObject)
     add_test(${test} ${test})
     if(MSVC)
       CONFIGURE_FILE("tests/Test.vcxproj.user.in" ${CMAKE_BINARY_DIR}/${test}.vcxproj.user @ONLY)
-	  CONFIGURE_FILE("tests/Test.vcxproj.user.in" ${CMAKE_CURRENT_BINARY_DIR}/${test}.vcxproj.user @ONLY)
+      CONFIGURE_FILE("tests/Test.vcxproj.user.in" ${CMAKE_CURRENT_BINARY_DIR}/${test}.vcxproj.user @ONLY)
     endif()
   endforeach()
-  
 endif()
 
 # ----------------------- examples ---------------------------
