@@ -30,11 +30,12 @@ namespace cereal
     typename std::enable_if<std::is_base_of<mo::IMetaObject, T>::value>::type
     save(AR& ar, rcc::shared_ptr<T> const& obj)
     {
-        auto parameters = obj->GetParameters();
-        std::string type = obj->GetTypeName();
-        ar(CEREAL_NVP(type));
-        ar(CEREAL_NVP(parameters));
-        //auto inputs = node->GetInputs();
-        //ar(CEREAL_NVP(inputs));
+        if(obj)
+        {
+            auto parameters = obj->GetParameters();
+            std::string type = obj->GetTypeName();
+            ar(CEREAL_NVP(type));
+            ar(CEREAL_NVP(parameters));
+        }
     }
 }
