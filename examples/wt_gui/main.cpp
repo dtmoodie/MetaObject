@@ -1,4 +1,6 @@
 #include <MetaObject/MetaObject.hpp>
+#include <MetaObject/Parameters/Demangle.hpp>
+
 #include <Wt/WApplication>
 #include <Wt/WBreak>
 #include <Wt/WContainerWidget>
@@ -7,6 +9,9 @@
 #include <Wt/WText>
 
 #include <boost/thread.hpp>
+
+#include <functional>
+
 using namespace Wt;
 
 namespace mo
@@ -52,7 +57,7 @@ namespace mo
             }
         
             template<class T, class enable = void>
-            class TParameterProxy: public Wt::WWidget
+            class TParameterProxy: public Wt::WContainerWidget
             {
                 typedef void IsDefault;
             };
@@ -83,16 +88,38 @@ namespace mo
             };
 
             template<>
-            class TParameterProxy<std::string, void>
+            class TParameterProxy<std::string, void>: public Wt::WContainerWidget
             {
             public:
-                TParameterProxy(ITypedParameter<std::string>* param_)
+                TParameterProxy(ITypedParameter<std::string>* param_, Wt::WApplication* app,
+                                WContainerWidget *parent = 0):
+                    Wt::WContainerWidget(parent),
+                    _param(param_),
+                    _app(app),
+                    _onUpdateSlot(std::bind(&TParameterProxy<std::string, void>::onUpdate, this, std::placeholders::_1, std::placeholders::_2))
                 {
-                    
+                    std::stringstream ss;
+                    ss << param_->GetTreeName() << "[" << mo::Demangle::TypeToName(param_->GetTypeInfo())
+                       << "]";
+                    this->addWidget(new Wt::WText(ss.str(), this));
+                    _line_edit = new Wt::WLineEdit(this);
+                    _line_edit->setText(param_->GetData());
+                    _onUpdateConnection = param_->RegisterUpdateNotifier(&_onUpdateSlot);
                 }
 
             private:
-                ITypedParameter<std::string>* param;
+                ITypedParameter<std::string>* _param;
+                Wt::WLineEdit* _line_edit;
+                void onUpdate( mo::Context* ctx, mo::IParameter* param)
+                {
+                    auto lock = _app->getUpdateLock();
+                    _line_edit->setText(_param->GetData());
+                    _app->triggerUpdate();
+                }
+
+                mo::TypedSlot<void(mo::Context*, mo::IParameter*)> _onUpdateSlot;
+                std::shared_ptr<mo::Connection>  _onUpdateConnection;
+                Wt::WApplication* _app;
             };
 
             
@@ -151,10 +178,15 @@ MainApplication::MainApplication(const WEnvironment& env, mo::ITypedParameter<st
     : WApplication(env)
 {
     setTitle("Hello world");                               // application title
+    enableUpdates();
 
     root()->addWidget(new WText("Your name, please ? "));  // show some text
     nameEdit_ = new WLineEdit(root());                     // allow text input
     nameEdit_->setFocus();                                 // give focus
+
+    //auto proxy = mo::UI::wt::WidgetFactory::Instance()->CreateWidget(param);
+    auto proxy = new mo::UI::wt::TParameterProxy<std::string>(param, this);
+    root()->addWidget(proxy);
 
     WPushButton *button
         = new WPushButton("Greet me.", root());              // create a button
@@ -164,8 +196,8 @@ MainApplication::MainApplication(const WEnvironment& env, mo::ITypedParameter<st
     
     greeting_ = new WText(root());                         
     button->clicked().connect(this, &MainApplication::greet);
-    nameEdit_->enterPressed().connect
-    (boost::bind(&MainApplication::greet, this));
+    nameEdit_->enterPressed().connect(
+                boost::bind(&MainApplication::greet, this));
 }
 
 void MainApplication::greet()
