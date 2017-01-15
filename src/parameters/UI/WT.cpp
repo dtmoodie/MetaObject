@@ -1,9 +1,9 @@
 #include "MetaObject/Parameters/UI/WT.hpp"
 
 using namespace mo;
-using namespace mo::IO;
-using namespace mo::IO::web;
-#ifdef HAVE_WT
+using namespace mo::UI;
+using namespace Wt;
+
 #include <boost/thread.hpp>
 #include <Wt/WApplication>
 #include <Wt/WServer>
@@ -13,67 +13,19 @@ using namespace mo::IO::web;
 #include <Wt/WPushButton>
 #include <Wt/WText>
 
-class MetaObjectApplication: public Wt::WApplication
-{
-public:
-    MetaObjectApplication(const Wt::WEnvironment& env):
-        Wt::WApplication(env)
-    {
-    
-    }
-};
 
-Wt::WApplication *createApplication(const Wt::WEnvironment& env)
+mo::UI::wt::MainApplication::MainApplication(const WEnvironment& env)
+    : WApplication(env)
 {
-    Wt::WApplication *app = new MetaObjectApplication(env);
-    return app;
+    setTitle("EagleEye Web");                               // application title
+    enableUpdates();
 }
-
-
-struct WebContext::impl
+void mo::UI::wt::MainApplication::requestUpdate()
 {
-    Wt::WServer* server;
-    void Run()
+    _dirty = true;
+    auto current_time = boost::posix_time::microsec_clock::universal_time();
+    if ((current_time - _last_update_time).total_milliseconds() > 15)
     {
-        server = Wt::WServer::instance();
-        server->start();
+        this->triggerUpdate();
     }
-    void Kill()
-    {
-        server->stop();
-    }
-};
-#else
-
-struct WebContext::impl
-{
-    void Run()
-    {
-
-    }
-    void Kill()
-    {
-
-    }
-};
-#endif
-
-WebContext* WebContext::Instance()
-{
-    static WebContext* g_ctx = nullptr;
-    if(g_ctx == nullptr)
-        g_ctx = new WebContext();
-    return g_ctx;
-}
-WebContext::WebContext()
-{
-    _pimpl = new impl();
-}
-void WebContext::Start()
-{
-    _pimpl->Run();
-}
-void WebContext::Stop()
-{
-    _pimpl->Kill();
 }

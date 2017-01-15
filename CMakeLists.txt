@@ -88,7 +88,8 @@ set(PROJECT_BIN_DIRS_DEBUG "")
 
 # CUDA
 if(WITH_CUDA)
-  FIND_PACKAGE(CUDA QUIET)
+  FIND_PACKAGE(CUDA REQUIRED)
+  include("cmake/Cuda.cmake")
   IF(${CUDA_FOUND})
     INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
     ADD_DEFINITIONS(-DHAVE_CUDA)
@@ -159,10 +160,10 @@ if(Wt_FOUND)
   add_definitions(-DHAVE_WT)
   include_directories(${Wt_INCLUDE_DIR})
   list(APPEND link_libs
-    ${Wt_HTTP_LIBRARY}
-    ${Wt_LIBRARY}
-    ${Wt_DEBUG_LIBRARY}
-    ${Wt_HTTP_DEBUG_LIBRARY}
+    debug;${Wt_HTTP_DEBUG_LIBRARY}
+    debug;${Wt_DEBUG_LIBRARY}
+    optimized;${Wt_LIBRARY}
+    optimized;${Wt_HTTP_LIBRARY} 
   )
 
   find_path(Wt_BIN_DIR

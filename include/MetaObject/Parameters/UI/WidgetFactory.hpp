@@ -50,5 +50,24 @@ namespace mo
                 impl* _pimpl;
             };
         } /* namespace qt */
+        namespace wt
+        {
+            class IParameterProxy;
+            class MO_EXPORTS WidgetFactory
+            {
+            public:
+                typedef std::function<IParameterProxy*(mo::IParameter*)> WidgetConstructor_f;
+
+                static WidgetFactory* Instance();
+                IParameterProxy* CreateWidget(mo::IParameter* param);
+                void RegisterConstructor(const mo::TypeInfo& type, const WidgetConstructor_f& constructor);
+            private:
+                WidgetFactory();
+                struct impl;
+                impl* _pimpl;
+            };
+
+        } /* namespace wt */
+
     } /* namespace UI */
 } /* namespace Perameters */
