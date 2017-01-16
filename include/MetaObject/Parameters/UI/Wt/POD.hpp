@@ -2,6 +2,7 @@
 
 #include "IParameterProxy.hpp"
 #include <MetaObject/Parameters/ITypedParameter.hpp>
+#include <Wt/WSpinBox>
 namespace mo
 {
     namespace UI
@@ -12,6 +13,7 @@ namespace mo
             class TParameterProxy<T, typename std::enable_if<std::is_integral<T>::value>::type> : public IParameterProxy
             {
             public:
+                static const int IS_DEFAULT = false;
                 TParameterProxy(ITypedParameter<T>* param_, MainApplication* app_,
                     WContainerWidget *parent = 0) :
                     IParameterProxy(param_, app_, parent),

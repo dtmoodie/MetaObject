@@ -16,3 +16,7 @@ IParameterProxy::IParameterProxy(IParameter* param_, MainApplication* app_,
     text->setToolTip(Demangle::TypeToName(param_->GetTypeInfo()));
     this->addWidget(text);
 }
+IParameterProxy::~IParameterProxy()
+{
+
+}

@@ -7,6 +7,16 @@
 #include "MetaObject/Parameters/Buffers/map.hpp"
 #include "MetaObject/Parameters/IO/CerealPolicy.hpp"
 #include "MetaObject/Parameters/IO/TextPolicy.hpp"
+#ifdef emit
+#undef emit
+#endif
+#ifdef HAVE_WT
+#define WT_NO_SLOT_MACROS
+#include "MetaObject/Parameters/UI/Wt/POD.hpp"
+#include "MetaObject/Parameters/UI/Wt/String.hpp"
+#include "MetaObject/Parameters/UI/Wt/IParameterProxy.hpp"
+
+#endif
 #include <cereal/types/string.hpp>
 #include "instantiate.hpp"
 

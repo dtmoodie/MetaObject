@@ -14,6 +14,7 @@ namespace mo
             class MO_EXPORTS TParameterProxy<std::string, void> : public IParameterProxy
             {
             public:
+                static const int IS_DEFAULT = false;
                 TParameterProxy(ITypedParameter<std::string>* param_, MainApplication* app_,
                     WContainerWidget *parent_ = 0);
 

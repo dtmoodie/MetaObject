@@ -52,14 +52,15 @@ namespace mo
         } /* namespace qt */
         namespace wt
         {
+            class MainApplication;
             class IParameterProxy;
             class MO_EXPORTS WidgetFactory
             {
             public:
-                typedef std::function<IParameterProxy*(mo::IParameter*)> WidgetConstructor_f;
+                typedef std::function<IParameterProxy*(mo::IParameter*, MainApplication*)> WidgetConstructor_f;
 
                 static WidgetFactory* Instance();
-                IParameterProxy* CreateWidget(mo::IParameter* param);
+                IParameterProxy* CreateWidget(mo::IParameter* param, MainApplication* app);
                 void RegisterConstructor(const mo::TypeInfo& type, const WidgetConstructor_f& constructor);
             private:
                 WidgetFactory();

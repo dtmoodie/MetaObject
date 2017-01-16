@@ -62,6 +62,7 @@ std::string print_types(std::map<TypeInfo, WidgetFactory::HandlerConstructor_f>&
     }
     return ss.str();
 }
+
 std::shared_ptr<IParameterProxy> WidgetFactory::CreateProxy(IParameter* param)
 {
     std::string typeName = param->GetTypeInfo().name();
@@ -88,6 +89,7 @@ wt::WidgetFactory::WidgetFactory()
 {
     _pimpl = new impl();
 }
+
 wt::WidgetFactory* wt::WidgetFactory::Instance()
 {
     static WidgetFactory* g_inst = nullptr;
@@ -95,7 +97,8 @@ wt::WidgetFactory* wt::WidgetFactory::Instance()
         g_inst = new WidgetFactory();
     return g_inst;
 }
-wt::IParameterProxy* wt::WidgetFactory::CreateWidget(mo::IParameter* param)
+
+wt::IParameterProxy* wt::WidgetFactory::CreateWidget(mo::IParameter* param, MainApplication* app)
 {
     if (param->CheckFlags(mo::Input_e))
         return nullptr;
@@ -104,10 +107,11 @@ wt::IParameterProxy* wt::WidgetFactory::CreateWidget(mo::IParameter* param)
     auto itr = _pimpl->_constructors.find(param->GetTypeInfo());
     if (itr != _pimpl->_constructors.end())
     {
-        return itr->second(param);
+        return itr->second(param, app);
     }
     return nullptr;
 }
+
 void wt::WidgetFactory::RegisterConstructor(const mo::TypeInfo& type, const WidgetConstructor_f& constructor)
 {
     if (_pimpl->_constructors.find(type) == _pimpl->_constructors.end())

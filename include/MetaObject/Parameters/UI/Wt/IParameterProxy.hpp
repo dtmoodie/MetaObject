@@ -4,23 +4,25 @@
 #include <MetaObject/Parameters/UI/WT.hpp>
 #include <MetaObject/Signals/TypedSlot.hpp>
 #include <MetaObject/Parameters/Demangle.hpp>
+#include <MetaObject/Parameters/IParameter.hpp>
 
 #include <Wt/WContainerWidget>
 #include <Wt/WText>
 
 namespace mo
 {
-    IParameter;
+    class IParameter;
     namespace UI
     {
         namespace wt
         {
+            class MainApplication;
             class MO_EXPORTS IParameterProxy : public Wt::WContainerWidget
             {
-            public:
-                static IParameterProxy* Create();
+            public:                
                 IParameterProxy(IParameter* param_, MainApplication* app_,
                     WContainerWidget *parent_ = 0);
+                virtual ~IParameterProxy();
                 virtual void SetTooltip(const std::string& tip) = 0;
             protected:
                 virtual void onUpdate(mo::Context* ctx, mo::IParameter* param) = 0;
@@ -28,11 +30,12 @@ namespace mo
                 std::shared_ptr<mo::Connection>  _onUpdateConnection;
                 MainApplication* _app;
             };
+
             template<class T, class enable = void>
             class TParameterProxy : public IParameterProxy
             {
             public:
-                typedef void IsDefault;
+                static const bool IS_DEFAULT = true;
                 TParameterProxy(ITypedParameter<T>* null)
                 {
                     (void)null;
@@ -61,16 +64,17 @@ namespace mo
             public:
                 Constructor()
                 {
-                    WidgetFactory::Instance()->RegisterConstructor(TypeInfo(typeid(T)), std::bind(Constructor<T>::Create, std::placeholders::_1));
+                    WidgetFactory::Instance()->RegisterConstructor(TypeInfo(typeid(T)),
+                                std::bind(Constructor<T>::Create, std::placeholders::_1, std::placeholders::_2));
                 }
-                static IParameterProxy* Create(IParameter* param)
+                static IParameterProxy* Create(IParameter* param, MainApplication* app)
                 {
                     if (param->GetTypeInfo() == TypeInfo(typeid(T)))
                     {
                         auto typed = dynamic_cast<ITypedParameter<T>*>(param);
                         if (typed)
                         {
-                             return new TParameterProxy<T, void>(typed);
+                             return new TParameterProxy<T, void>(typed, app);
                         }
                     }
                     return nullptr;
@@ -80,7 +84,7 @@ namespace mo
     }
 #define MO_UI_WT_PARAMTERPROXY_METAPARAMETER(N) \
     template<class T> \
-    struct MetaParameter<T, N, typename std::enable_if<!UI::wt::is_default<mo::UI::wt::TParameterProxy<T>>::value>::type> : public MetaParameter<T, N - 1, void> \
+    struct MetaParameter<T, N, typename std::enable_if<!mo::UI::wt::TParameterProxy<T>::IS_DEFAULT>::type> : public MetaParameter<T, N - 1, void> \
     { \
         static UI::wt::Constructor<T> _parameter_proxy_constructor; \
         MetaParameter(const char* name): \
@@ -89,7 +93,7 @@ namespace mo
             (void)&_parameter_proxy_constructor; \
         } \
     }; \
-    template<class T> UI::wt::Constructor<T> MetaParameter<T,N, typename std::enable_if<!UI::wt::is_default<mo::UI::wt::TParameterProxy<T>>::value>::type>::_parameter_proxy_constructor;
+    template<class T> UI::wt::Constructor<T> MetaParameter<T,N, typename std::enable_if<!mo::UI::wt::TParameterProxy<T>::IS_DEFAULT>::type>::_parameter_proxy_constructor;
 
     MO_UI_WT_PARAMTERPROXY_METAPARAMETER(__COUNTER__)
 }
