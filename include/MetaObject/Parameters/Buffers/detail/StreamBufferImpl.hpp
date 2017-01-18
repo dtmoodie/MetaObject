@@ -1,5 +1,6 @@
 #pragma once
 #include <MetaObject/Logging/Log.hpp>
+#include <boost/chrono.hpp>
 namespace mo
 {
     namespace Buffer
@@ -116,7 +117,8 @@ namespace mo
                 while(this->_data_buffer.size() >= _size)
                 {
                     LOG(trace) << "Pushing to " << this->GetTreeName() << " waiting on read";
-                    _cv.wait(lock);
+                    _cv.wait_for(lock, boost::chrono::microseconds(100));
+                    IParameter::OnUpdate(ctx);
                 }
                 this->_data_buffer[ts] = *data_;
                 IParameter::modified = true;

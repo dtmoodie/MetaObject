@@ -1,3 +1,4 @@
+#ifdef HAVE_WT
 #include <MetaObject/Parameters/UI/Wt/String.hpp>
 using namespace mo::UI::wt;
 using namespace mo;
@@ -26,3 +27,4 @@ void TParameterProxy<std::string, void>::onUpdate(mo::Context* ctx, mo::IParamet
     _line_edit->setText(_param->GetData());
     _app->requestUpdate();
 }
+#endif

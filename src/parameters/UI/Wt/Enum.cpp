@@ -1,3 +1,4 @@
+#ifdef HAVE_WT
 #include <MetaObject/Parameters/UI/Wt/Enum.hpp>
 using namespace mo::UI::wt;
 using namespace mo;
@@ -50,3 +51,4 @@ void TParameterProxy<EnumParameter, void>::onUiChanged()
         }
     }
 }
+#endif

@@ -1,3 +1,4 @@
+#ifdef HAVE_WT
 #include <MetaObject/Parameters/UI/Wt/IParameterProxy.hpp>
 #include <MetaObject/Parameters/IParameter.hpp>
 
@@ -20,3 +21,5 @@ IParameterProxy::~IParameterProxy()
 {
 
 }
+
+#endif
