@@ -1,3 +1,4 @@
+#ifdef HAVE_WT
 #include "MetaObject/Parameters/UI/WT.hpp"
 
 using namespace mo;
@@ -29,3 +30,4 @@ void mo::UI::wt::MainApplication::requestUpdate()
         this->triggerUpdate();
     }
 }
+#endif

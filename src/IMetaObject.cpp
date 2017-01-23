@@ -285,6 +285,8 @@ void IMetaObject::SetContext(Context* ctx, bool overwrite)
 {
     if(_ctx && overwrite == false)
         return;
+    if(ctx == nullptr)
+        LOG(info) << "Setting context to nullptr";
     _ctx = ctx;
     for(auto& param : _pimpl->_implicit_parameters)
     {

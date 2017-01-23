@@ -89,15 +89,23 @@ namespace mo
     template<typename T> 
     ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(const T& data_, long long time_index, Context* ctx)
 	{
-        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-		if (ptr)
-		{
-			*ptr = data_;
-			IParameter::_timestamp = time_index;
-			IParameter::modified = true;
-			IParameter::OnUpdate(ctx);
-		}
-        return this;
+        bool updated = false;
+        {
+            boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+            if (ptr)
+            {
+                *ptr = data_;
+                IParameter::_timestamp = time_index;
+                IParameter::modified = true;
+                updated = true;
+            }
+        }
+        if(updated)
+        {
+            IParameter::OnUpdate(ctx);
+            return this;
+        }
+        return nullptr;
 	}
 	
     template<typename T> 

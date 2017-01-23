@@ -1,3 +1,4 @@
+#ifdef HAVE_WT
 #include <MetaObject/Parameters/UI/Wt/String.hpp>
 using namespace mo::UI::wt;
 using namespace mo;
@@ -32,6 +33,7 @@ void TDataProxy<std::string, void>::CreateUi(IParameterProxy* proxy, std::string
 
 void TDataProxy<std::string, void>::UpdateUi(const std::string& data)
 {
+
     _line_edit->setText(data);
 }
 
@@ -39,3 +41,6 @@ void TDataProxy<std::string, void>::onUiUpdate(std::string& data)
 {
     data = _line_edit->text().toUTF8();
 }
+
+#endif
+
