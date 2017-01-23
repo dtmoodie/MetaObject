@@ -15,7 +15,8 @@ namespace mo
             // *****************************************************************************
             //                                Unspecialized handler
             // *****************************************************************************
-            template<typename T, typename Enable = void> class THandler : public IHandler
+            template<typename T, typename Enable = void>
+            class THandler : public IHandler
             {
                 T* currentData;
                 

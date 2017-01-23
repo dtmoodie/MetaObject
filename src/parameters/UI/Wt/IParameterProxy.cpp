@@ -8,7 +8,7 @@ IParameterProxy::IParameterProxy(IParameter* param_, MainApplication* app_,
     WContainerWidget *parent_) :
     Wt::WContainerWidget(parent_),
     _app(app_),
-    _onUpdateSlot(std::bind(&IParameterProxy::onUpdate, this,
+    _onUpdateSlot(std::bind(&IParameterProxy::onParameterUpdate, this,
         std::placeholders::_1, std::placeholders::_2))
 {
     _onUpdateConnection = param_->RegisterUpdateNotifier(&_onUpdateSlot);

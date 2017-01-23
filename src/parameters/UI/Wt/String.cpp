@@ -4,25 +4,38 @@ using namespace mo;
 
 
 
-TParameterProxy<std::string, void>::TParameterProxy(ITypedParameter<std::string>* param_, MainApplication* app_,
-    WContainerWidget *parent_) :
-    IParameterProxy(param_, app_, parent_),
-    _param(param_)
+TDataProxy<std::string, void>::TDataProxy(IParameterProxy& proxy):
+    _proxy(proxy)
 {
-    _line_edit = new Wt::WLineEdit(this);
-    _line_edit->setText(param_->GetData());
+
 }
 
-void TParameterProxy<std::string, void>::SetTooltip(const std::string& tip)
+void TDataProxy<std::string, void>::SetTooltip(const std::string& tp)
 {
-    auto lock = _app->getUpdateLock();
-    _line_edit->setToolTip(tip);
-    _app->requestUpdate();
+
 }
 
-void TParameterProxy<std::string, void>::onUpdate(mo::Context* ctx, mo::IParameter* param)
+void TDataProxy<std::string, void>::CreateUi(IParameterProxy* proxy, std::string* data)
 {
-    auto lock = _app->getUpdateLock();
-    _line_edit->setText(_param->GetData());
-    _app->requestUpdate();
+    if(_line_edit)
+    {
+        delete _line_edit;
+        _line_edit = nullptr;
+    }
+    _line_edit = new Wt::WLineEdit(proxy);
+    if(data)
+    {
+        _line_edit->setText(*data);
+    }
+    _line_edit->enterPressed().connect(proxy, &IParameterProxy::onUiUpdate);
+}
+
+void TDataProxy<std::string, void>::UpdateUi(const std::string& data)
+{
+    _line_edit->setText(data);
+}
+
+void TDataProxy<std::string, void>::onUiUpdate(std::string& data)
+{
+    data = _line_edit->text().toUTF8();
 }

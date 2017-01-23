@@ -5,39 +5,59 @@
 #include <Wt/WSpinBox>
 namespace mo
 {
-    namespace UI
+namespace UI
+{
+namespace wt
+{
+    template<class T>
+    class TDataProxy<T, typename std::enable_if<std::is_integral<T>::value && !std::is_same<T, bool>::value>::type>
     {
-        namespace wt
+    public:
+        static const bool IS_DEFAULT = false;
+        TDataProxy(IParameterProxy& proxy):
+            _spin_box(nullptr),
+            _proxy(proxy)
         {
-            template<class T>
-            class TParameterProxy<T, typename std::enable_if<std::is_integral<T>::value>::type> : public IParameterProxy
+
+        }
+        void CreateUi(IParameterProxy* proxy, T* data)
+        {
+            _spin_box = new Wt::WSpinBox(proxy);
+            if(data)
             {
-            public:
-                static const int IS_DEFAULT = false;
-                TParameterProxy(ITypedParameter<T>* param_, MainApplication* app_,
-                    WContainerWidget *parent = 0) :
-                    IParameterProxy(param_, app_, parent),
-                    _param(param_)
-                {
-                    _spin_box = new Wt::WSpinBox(this);
-                    _spin_box->setValue(param_->GetData());
-                }
-            protected:
-                void SetTooltip(const std::string& tip)
-                {
-                    auto lock = _app->getUpdateLock();
-                    _spin_box->setToolTip(tip);
-                    _app->requestUpdate();
-                }
-                void onUpdate(mo::Context* ctx, mo::IParameter* param)
-                {
-                    auto lock = _app->getUpdateLock();
-                    _spin_box->setValue(_param->GetData());
-                    _app->requestUpdate();
-                }
-                mo::ITypedParameter<T>* _param;
-                Wt::WSpinBox* _spin_box;
-            };
-        } // namespace wt
-    } // namespace UI
+                _spin_box->setValue(*data);
+                _spin_box->changed().connect(proxy, &IParameterProxy::onUiUpdate);
+            }
+
+        }
+        void UpdateUi(const T& data)
+        {
+            _spin_box->setValue(data);
+        }
+        void onUiUpdate(T& data)
+        {
+            data = _spin_box->value();
+        }
+        void SetTooltip(const std::string& tooltip){}
+    protected:
+        IParameterProxy& _proxy;
+        Wt::WSpinBox* _spin_box;
+    };
+
+    template<>
+    class MO_EXPORTS TDataProxy<bool, void>
+    {
+    public:
+        static const bool IS_DEFAULT = false;
+        TDataProxy(IParameterProxy &proxy);
+        void CreateUi(IParameterProxy* proxy, bool* data);
+        void UpdateUi(const bool& data);
+        void onUiUpdate(bool& data);
+        void SetTooltip(const std::string& tooltip);
+    protected:
+        Wt::WCheckBox* _check_box;
+        IParameterProxy& _proxy;
+    };
+} // namespace wt
+} // namespace UI
 } // namespace mo

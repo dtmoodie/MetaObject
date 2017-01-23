@@ -6,24 +6,25 @@
 
 namespace mo
 {
-    namespace UI
+namespace UI
+{
+namespace wt
+{
+    template<>
+    class MO_EXPORTS TDataProxy<std::string, void>
     {
-        namespace wt
-        {
-            template<>
-            class MO_EXPORTS TParameterProxy<std::string, void> : public IParameterProxy
-            {
-            public:
-                static const int IS_DEFAULT = false;
-                TParameterProxy(ITypedParameter<std::string>* param_, MainApplication* app_,
-                    WContainerWidget *parent_ = 0);
+    public:
+        static const int IS_DEFAULT = false;
+        TDataProxy(IParameterProxy& proxy);
+        void CreateUi(IParameterProxy* proxy, std::string* data);
+        void UpdateUi(const std::string& data);
+        void onUiUpdate(std::string& data);
+        void SetTooltip(const std::string& tp);
+    protected:
+        Wt::WLineEdit* _line_edit = nullptr;
+        IParameterProxy& _proxy;
+    };
 
-            protected:
-                void SetTooltip(const std::string& tip);
-                void onUpdate(mo::Context* ctx, mo::IParameter* param);
-                ITypedParameter<std::string>* _param;
-                Wt::WLineEdit* _line_edit;
-            };
-        } // namespace wt
-    } // namespace UI
+} // namespace wt
+} // namespace UI
 } // namespace mo

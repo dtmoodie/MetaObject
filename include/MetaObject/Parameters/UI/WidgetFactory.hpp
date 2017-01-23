@@ -21,54 +21,61 @@ https://github.com/dtmoodie/parameters
 #include <memory>
 #include <functional>
 class QWidget;
+namespace Wt
+{
+    class WContainerWidget;
+}
 namespace mo
 {
-    class TypeInfo;
-    class IParameter;
-    namespace UI
+class TypeInfo;
+class IParameter;
+namespace UI
+{
+namespace qt
+{
+    class IHandler;
+    class IParameterProxy;
+    // *****************************************************************************
+    //                                WidgetFactory
+    // *****************************************************************************
+
+    class MO_EXPORTS WidgetFactory
     {
-        namespace qt
-        {
-            class IHandler;
-            class IParameterProxy;
-            // *****************************************************************************
-            //                                WidgetFactory
-            // *****************************************************************************
-            
-            class MO_EXPORTS WidgetFactory
-            {
-            public:
-                typedef std::function<std::shared_ptr<IParameterProxy>(IParameter*)> HandlerConstructor_f;
+    public:
+        typedef std::function<std::shared_ptr<IParameterProxy>(IParameter*)> HandlerConstructor_f;
 
-                static WidgetFactory* Instance();
+        static WidgetFactory* Instance();
 
-                void RegisterConstructor(const TypeInfo& type, HandlerConstructor_f f);
-                std::shared_ptr<IParameterProxy> CreateProxy(IParameter* param);
-            private:
-                WidgetFactory();
-                struct impl;
-                impl* _pimpl;
-            };
-        } /* namespace qt */
-        namespace wt
-        {
-            class MainApplication;
-            class IParameterProxy;
-            class MO_EXPORTS WidgetFactory
-            {
-            public:
-                typedef std::function<IParameterProxy*(mo::IParameter*, MainApplication*)> WidgetConstructor_f;
+        void RegisterConstructor(const TypeInfo& type, HandlerConstructor_f f);
+        std::shared_ptr<IParameterProxy> CreateProxy(IParameter* param);
+    private:
+        WidgetFactory();
+        struct impl;
+        impl* _pimpl;
+    };
+} /* namespace qt */
+namespace wt
+{
+class MainApplication;
+class IParameterProxy;
+class MO_EXPORTS WidgetFactory
+{
+public:
+    typedef std::function<IParameterProxy*(mo::IParameter*, MainApplication*,
+                                           Wt::WContainerWidget*)> WidgetConstructor_f;
 
-                static WidgetFactory* Instance();
-                IParameterProxy* CreateWidget(mo::IParameter* param, MainApplication* app);
-                void RegisterConstructor(const mo::TypeInfo& type, const WidgetConstructor_f& constructor);
-            private:
-                WidgetFactory();
-                struct impl;
-                impl* _pimpl;
-            };
+    static WidgetFactory* Instance();
+    IParameterProxy* CreateWidget(mo::IParameter* param, MainApplication* app,
+                                  Wt::WContainerWidget* container = nullptr);
+    void RegisterConstructor(const mo::TypeInfo& type,
+                             const WidgetConstructor_f& constructor);
+private:
+    WidgetFactory();
+    struct impl;
+    impl* _pimpl;
+};
 
-        } /* namespace wt */
+} /* namespace wt */
 
-    } /* namespace UI */
+} /* namespace UI */
 } /* namespace Perameters */

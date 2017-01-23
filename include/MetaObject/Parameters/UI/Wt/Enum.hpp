@@ -22,7 +22,7 @@ namespace wt
             WContainerWidget* parent_ = 0);
     protected:
         void SetTooltip(const std::string& tip);
-        void onUpdate(mo::Context* ctx, mo::IParameter* param);
+        void onParameterUpdate(mo::Context* ctx, mo::IParameter* param);
         void onUiChanged();
 
         ITypedParameter<EnumParameter>* _param;

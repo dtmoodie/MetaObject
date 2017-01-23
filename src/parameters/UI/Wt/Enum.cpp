@@ -25,7 +25,7 @@ void TParameterProxy<EnumParameter, void>::SetTooltip(const std::string& tip)
     _app->requestUpdate();
 }
 
-void TParameterProxy<EnumParameter, void>::onUpdate(mo::Context* ctx, mo::IParameter* param)
+void TParameterProxy<EnumParameter, void>::onParameterUpdate(mo::Context* ctx, mo::IParameter* param)
 {
     auto lock = _app->getUpdateLock();
     _combo_box->clear();

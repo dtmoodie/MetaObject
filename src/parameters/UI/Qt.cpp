@@ -98,7 +98,8 @@ wt::WidgetFactory* wt::WidgetFactory::Instance()
     return g_inst;
 }
 
-wt::IParameterProxy* wt::WidgetFactory::CreateWidget(mo::IParameter* param, MainApplication* app)
+wt::IParameterProxy* wt::WidgetFactory::CreateWidget(mo::IParameter* param, MainApplication* app,
+                                                     Wt::WContainerWidget* container)
 {
     if (param->CheckFlags(mo::Input_e))
         return nullptr;
@@ -107,12 +108,13 @@ wt::IParameterProxy* wt::WidgetFactory::CreateWidget(mo::IParameter* param, Main
     auto itr = _pimpl->_constructors.find(param->GetTypeInfo());
     if (itr != _pimpl->_constructors.end())
     {
-        return itr->second(param, app);
+        return itr->second(param, app, container);
     }
     return nullptr;
 }
 
-void wt::WidgetFactory::RegisterConstructor(const mo::TypeInfo& type, const WidgetConstructor_f& constructor)
+void wt::WidgetFactory::RegisterConstructor(const mo::TypeInfo& type,
+                                            const WidgetConstructor_f& constructor)
 {
     if (_pimpl->_constructors.find(type) == _pimpl->_constructors.end())
     {
