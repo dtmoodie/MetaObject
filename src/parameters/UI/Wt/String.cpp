@@ -3,10 +3,7 @@
 using namespace mo::UI::wt;
 using namespace mo;
 
-
-
-TDataProxy<std::string, void>::TDataProxy(IParameterProxy& proxy):
-    _proxy(proxy)
+TDataProxy<std::string, void>::TDataProxy()
 {
 
 }
@@ -16,7 +13,7 @@ void TDataProxy<std::string, void>::SetTooltip(const std::string& tp)
 
 }
 
-void TDataProxy<std::string, void>::CreateUi(IParameterProxy* proxy, std::string* data)
+void TDataProxy<std::string, void>::CreateUi(IParameterProxy* proxy, std::string* data, bool read_only)
 {
     if(_line_edit)
     {
@@ -24,6 +21,7 @@ void TDataProxy<std::string, void>::CreateUi(IParameterProxy* proxy, std::string
         _line_edit = nullptr;
     }
     _line_edit = new Wt::WLineEdit(proxy);
+    _line_edit->setReadOnly(read_only);
     if(data)
     {
         _line_edit->setText(*data);
@@ -33,7 +31,6 @@ void TDataProxy<std::string, void>::CreateUi(IParameterProxy* proxy, std::string
 
 void TDataProxy<std::string, void>::UpdateUi(const std::string& data)
 {
-
     _line_edit->setText(data);
 }
 

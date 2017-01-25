@@ -3,17 +3,17 @@
 
 using namespace mo::UI::wt;
 
-TDataProxy<bool, void>::TDataProxy(IParameterProxy &proxy):
-    _check_box(nullptr),
-    _proxy(proxy)
+TDataProxy<bool, void>::TDataProxy():
+    _check_box(nullptr)
 {
 
 }
 
-void TDataProxy<bool, void>::CreateUi(IParameterProxy* proxy, bool* data)
+void TDataProxy<bool, void>::CreateUi(IParameterProxy* proxy, bool* data, bool read_only)
 {
     _check_box = new Wt::WCheckBox(proxy);
     _check_box->changed().connect(proxy, &IParameterProxy::onUiUpdate);
+    _check_box->setReadOnly(read_only);
     if(data)
     {
         _check_box->setChecked(*data);
