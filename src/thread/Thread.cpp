@@ -9,14 +9,14 @@ using namespace mo;
 
 void Thread::PushEventQueue(const std::function<void(void)>& f)
 {
-    boost::mutex::scoped_lock lock(_mtx);
+    boost::recursive_mutex::scoped_lock lock(_mtx);
     _event_queue.push(f);
     _cv.notify_all();
 }
 // Work can be stolen and can exist on any thread
 void Thread::PushWork(const std::function<void(void)>& f)
 {
-    boost::mutex::scoped_lock lock(_mtx);
+    boost::recursive_mutex::scoped_lock lock(_mtx);
     _work_queue.push(f);
     _cv.notify_all();
 }
@@ -49,8 +49,13 @@ ThreadPool* Thread::GetPool() const
 {
     return _pool;
 }
-Context* Thread::GetContext() const
+Context* Thread::GetContext()
 {
+    boost::recursive_mutex::scoped_lock lock(_mtx);
+    if(!_ctx)
+    {
+        _cv.wait_for(lock, boost::chrono::seconds(5));
+    }
     return _ctx;
 }
 
@@ -80,7 +85,13 @@ Thread::~Thread()
 void Thread::Main()
 {
     mo::Context ctx;
-    _ctx = &ctx;
+    {
+        boost::recursive_mutex::scoped_lock lock(_mtx);
+        _ctx = &ctx;
+        lock.unlock();
+        _cv.notify_all();
+    }
+
     mo::Context::SetDefaultThreadContext(_ctx);
     if(_on_start)
         _on_start();
@@ -88,7 +99,7 @@ void Thread::Main()
     while(!boost::this_thread::interruption_requested())
     {
         {
-            boost::mutex::scoped_lock lock(_mtx);
+            boost::recursive_mutex::scoped_lock lock(_mtx);
             while (_work_queue.size())
             {
                 _work_queue.back()();
@@ -122,7 +133,7 @@ void Thread::Main()
             while(!_run)
             {
                 _paused = true;
-                boost::mutex::scoped_lock lock(_mtx);
+                boost::recursive_mutex::scoped_lock lock(_mtx);
                 _cv.wait_for(lock, boost::chrono::milliseconds(10));
                 {
                     while (_work_queue.size())

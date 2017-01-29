@@ -30,7 +30,7 @@ namespace mo
         //void SetInnerLoop(const std::function<int(void)>& f);
         std::shared_ptr<Connection> SetInnerLoop(TypedSlot<int(void)>* slot);
         ThreadPool* GetPool() const;
-        Context* GetContext() const;
+        Context* GetContext();
     protected:
         friend class ThreadPool;
         friend class ThreadHandle;
@@ -49,8 +49,8 @@ namespace mo
         std::function<void(void)> _on_exit;
         Context*                  _ctx;
         ThreadPool*               _pool;
-        boost::condition_variable _cv;
-        boost::mutex              _mtx;
+        boost::condition_variable_any _cv;
+        boost::recursive_mutex              _mtx;
         bool                      _run;
         std::queue<std::function<void(void)>> _work_queue;
         std::queue<std::function<void(void)>> _event_queue;

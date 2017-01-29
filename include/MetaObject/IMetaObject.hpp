@@ -68,7 +68,7 @@ namespace mo
         
         // Setup
         virtual void  SetContext(Context* ctx, bool overwrite = false);
-        Context*      GetContext() const;
+        virtual Context* GetContext() const;
         virtual int   SetupSignals(RelayManager* mgr);
         virtual int   SetupVariableManager(IVariableManager* mgr);
         virtual int   RemoveVariableManager(IVariableManager* mgr);

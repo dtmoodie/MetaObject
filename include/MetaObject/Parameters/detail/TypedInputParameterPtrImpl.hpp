@@ -5,6 +5,7 @@
 namespace mo
 {
     template<typename T> class TypedInputParameterPtr;
+
     template<typename T> TypedInputParameterPtr<T>::TypedInputParameterPtr(const std::string& name, T** userVar_, Context* ctx) :
             userVar(userVar_),
             ITypedInputParameter<T>(name, ctx),
@@ -13,7 +14,8 @@ namespace mo
     {
     }
         
-    template<typename T>  bool TypedInputParameterPtr<T>::SetInput(std::shared_ptr<IParameter> param)
+    template<typename T>
+    bool TypedInputParameterPtr<T>::SetInput(std::shared_ptr<IParameter> param)
     {
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(ITypedInputParameter<T>::SetInput(param))
@@ -29,7 +31,9 @@ namespace mo
         }
         return false;
     }
-    template<typename T>  bool TypedInputParameterPtr<T>::SetInput(IParameter* param)
+
+    template<typename T>
+    bool TypedInputParameterPtr<T>::SetInput(IParameter* param)
     {
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(ITypedInputParameter<T>::SetInput(param))
@@ -45,13 +49,16 @@ namespace mo
         }
         return false;
     }
-    template<typename T> void TypedInputParameterPtr<T>::SetUserDataPtr(T** user_var_)
+
+    template<typename T>
+    void TypedInputParameterPtr<T>::SetUserDataPtr(T** user_var_)
     {
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         userVar = user_var_;
     }
 
-    template<typename T> void TypedInputParameterPtr<T>::onInputUpdate(Context* ctx, IParameter* param)
+    template<typename T>
+    void TypedInputParameterPtr<T>::onInputUpdate(Context* ctx, IParameter* param)
     {
         if(this->input)
         {
@@ -71,6 +78,7 @@ namespace mo
             }
         }
     }
+
     template<typename T>
     bool TypedInputParameterPtr<T>::GetInput(long long ts)
     {
@@ -91,7 +99,8 @@ namespace mo
         return false;
     }
 
-    template<typename T> void TypedInputParameterPtr<T>::onInputDelete(IParameter const* param)
+    template<typename T>
+    void TypedInputParameterPtr<T>::onInputDelete(IParameter const* param)
     {
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         this->shared_input.reset();
