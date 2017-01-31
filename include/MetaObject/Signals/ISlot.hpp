@@ -16,10 +16,12 @@ namespace mo
         virtual std::shared_ptr<Connection> Connect(ISignal* sig) = 0;
         virtual std::shared_ptr<Connection> Connect(std::shared_ptr<ISignalRelay>& relay) = 0;
 		virtual bool Disconnect(std::weak_ptr<ISignalRelay> relay) = 0;
+        virtual void Clear() = 0;
         virtual TypeInfo GetSignature() const = 0;
 		IMetaObject* GetParent() const;
         const Context* GetContext() const;
         void SetContext(Context* ctx);
+
 	protected:
 		friend class IMetaObject;
 		void SetParent(IMetaObject* parent);

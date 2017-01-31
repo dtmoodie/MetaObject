@@ -15,13 +15,14 @@ namespace wt
     {
     public:
         static const int IS_DEFAULT = false;
-        TDataProxy();
-        void CreateUi(IParameterProxy* proxy, std::string* data, bool read_only);
+        TDataProxy(IParameterProxy& proxy);
+        void CreateUi(IParameterProxy* proxy, std::string* data);
         void UpdateUi(const std::string& data);
         void onUiUpdate(std::string& data);
         void SetTooltip(const std::string& tp);
     protected:
         Wt::WLineEdit* _line_edit = nullptr;
+        IParameterProxy& _proxy;
     };
 
 } // namespace wt

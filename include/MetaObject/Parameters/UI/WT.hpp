@@ -1,4 +1,5 @@
 #pragma once
+
 #include <MetaObject/Detail/Export.hpp>
 #include <MetaObject/Detail/TypeInfo.h>
 #include <Wt/WApplication>

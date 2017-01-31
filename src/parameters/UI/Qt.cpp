@@ -80,3 +80,45 @@ std::shared_ptr<IParameterProxy> WidgetFactory::CreateProxy(IParameter* param)
     return itr->second(param);
 }
 
+struct wt::WidgetFactory::impl
+{
+    std::map<mo::TypeInfo, WidgetConstructor_f> _constructors;
+};
+
+wt::WidgetFactory::WidgetFactory()
+{
+    _pimpl = new impl();
+}
+
+wt::WidgetFactory* wt::WidgetFactory::Instance()
+{
+    static WidgetFactory* g_inst = nullptr;
+    if (g_inst == nullptr)
+        g_inst = new WidgetFactory();
+    return g_inst;
+}
+
+wt::IParameterProxy* wt::WidgetFactory::CreateWidget(mo::IParameter* param, MainApplication* app,
+                                                     Wt::WContainerWidget* container)
+{
+    if (param->CheckFlags(mo::Input_e))
+        return nullptr;
+    if (param->CheckFlags(mo::Output_e))
+        return nullptr;
+    auto itr = _pimpl->_constructors.find(param->GetTypeInfo());
+    if (itr != _pimpl->_constructors.end())
+    {
+        return itr->second(param, app, container);
+    }
+    return nullptr;
+}
+
+void wt::WidgetFactory::RegisterConstructor(const mo::TypeInfo& type,
+                                            const WidgetConstructor_f& constructor)
+{
+    if (_pimpl->_constructors.find(type) == _pimpl->_constructors.end())
+    {
+        _pimpl->_constructors[type] = constructor;
+    }
+}
+

@@ -149,7 +149,13 @@ void IMetaObject::Init(bool firstInit)
                                << parameter_connection.input_parameter
                                << " in object " << this->GetTypeName();
 				}
-			}
+            }else
+            {
+                LOG(debug) << "Output object no longer exists for input ["
+                           << parameter_connection.input_parameter
+                           << "] expected output name ["
+                           << parameter_connection.output_parameter << "]";
+            }
 		}
         // Rebuild connections
         for(auto& connection : _pimpl->_connections)

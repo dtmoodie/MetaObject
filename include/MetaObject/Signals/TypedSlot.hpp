@@ -26,6 +26,7 @@ namespace mo
 		std::shared_ptr<Connection> Connect(std::shared_ptr<ISignalRelay>& relay);
         std::shared_ptr<Connection> Connect(std::shared_ptr<TypedSignalRelay<R(T...)>>& relay);
 		virtual bool Disconnect(std::weak_ptr<ISignalRelay> relay);
+        void Clear();
 		TypeInfo GetSignature() const;
 	protected:
 		std::vector< std::shared_ptr< TypedSignalRelay<R(T...)> > > _relays;

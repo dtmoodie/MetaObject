@@ -29,10 +29,7 @@ namespace mo
 	template<class R, class...T> 
 	TypedSlot<R(T...)>::~TypedSlot()
 	{
-		for (auto& relay : _relays)
-		{
-			relay->Disconnect(this);
-		}
+        Clear();
 	}
 
 	template<class R, class...T>
@@ -111,6 +108,14 @@ namespace mo
 		}
 		return false;
 	}
+    template<class R, class... T>
+    void TypedSlot<R(T...)>::Clear()
+    {
+        for (auto& relay : _relays)
+        {
+            relay->Disconnect(this);
+        }
+    }
 
 	template<class R, class...T> 
 	TypeInfo TypedSlot<R(T...)>::GetSignature() const

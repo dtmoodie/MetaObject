@@ -17,21 +17,7 @@ IParameterProxy::IParameterProxy(IParameter* param_, MainApplication* app_,
     text->setToolTip(Demangle::TypeToName(param_->GetTypeInfo()));
     this->addWidget(text);
 }
-
 IParameterProxy::~IParameterProxy()
-{
-
-}
-
-IPlotProxy::IPlotProxy(IParameter *param_, MainApplication *app_, WContainerWidget *parent_):
-    Wt::WContainerWidget(parent_),
-    _app(app_),
-    _onUpdateSlot(std::bind(&IPlotProxy::onParameterUpdate, this,
-        std::placeholders::_1, std::placeholders::_2))
-{
-    _onUpdateConnection = param_->RegisterUpdateNotifier(&_onUpdateSlot);
-}
-IPlotProxy::~IPlotProxy()
 {
 
 }

@@ -51,6 +51,8 @@ namespace mo
         {
             if(input) input->Unsubscribe();
             if(shared_input) shared_input->Unsubscribe();
+            update_slot.Clear();
+            delete_slot.Clear();
             if(casted_param->GetTimestamp() != -1)
             {
                 UpdateData(casted_param->GetDataPtr(), casted_param->GetTimestamp(), casted_param->GetContext());
@@ -78,6 +80,8 @@ namespace mo
             {
                 input->Unsubscribe();
             }
+            update_slot.Clear();
+            delete_slot.Clear();
             input = nullptr;
             shared_input.reset();
             this->OnUpdate(nullptr);
