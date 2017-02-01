@@ -58,17 +58,33 @@ namespace wt
 {
 class MainApplication;
 class IParameterProxy;
+class IPlotProxy;
 class MO_EXPORTS WidgetFactory
 {
 public:
+    enum WidgetType
+    {
+        Control,
+        Display
+    };
+
     typedef std::function<IParameterProxy*(mo::IParameter*, MainApplication*,
                                            Wt::WContainerWidget*)> WidgetConstructor_f;
+    typedef std::function<IPlotProxy*(mo::IParameter*, MainApplication*,
+                                           Wt::WContainerWidget*)> PlotConstructor_f;
 
     static WidgetFactory* Instance();
     IParameterProxy* CreateWidget(mo::IParameter* param, MainApplication* app,
                                   Wt::WContainerWidget* container = nullptr);
+    bool CanPlot(mo::IParameter* param);
+    IPlotProxy* CreatePlot(mo::IParameter* param, MainApplication* app,
+                                  Wt::WContainerWidget* container = nullptr);
+
     void RegisterConstructor(const mo::TypeInfo& type,
                              const WidgetConstructor_f& constructor);
+
+    void RegisterConstructor(const mo::TypeInfo& type,
+                             const PlotConstructor_f& constructor);
 private:
     WidgetFactory();
     struct impl;
