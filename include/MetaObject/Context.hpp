@@ -1,5 +1,7 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
+#include "MetaObject/Thread/ThreadRegistry.hpp"
+#include "MetaObject/Detail/Allocator.hpp"
 #include <opencv2/core/cuda.hpp>
 #include <string>
 
@@ -12,8 +14,18 @@ namespace mo
     public:
         static Context* GetDefaultThreadContext();
         static void SetDefaultThreadContext(Context*  ctx);
-        Context(const std::string& name = "");
+        inline Context(const std::string& name = "")
+        {
+            thread_id = GetThisThread();
+            allocator = Allocator::GetThreadSpecificAllocator();
+            GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(allocator);
+            CpuThreadAllocatorSetter<cv::Mat>::Set(allocator);
+            if(name.size())
+                SetName(name);
+        }
+
         ~Context();
+        void SetName(const std::string& name);
         cv::cuda::Stream&      GetStream();
         void                  SetStream(cv::cuda::Stream stream);
 
