@@ -28,6 +28,7 @@ void Thread::Start()
 void Thread::Stop()
 {
     _run = false;
+    _thread.interrupt();
     while(!_paused)
     {
         boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
@@ -64,19 +65,24 @@ Thread::Thread()
     _pool = nullptr;
     _ctx = nullptr;
     _inner_loop.reset(new mo::TypedSignalRelay<int(void)>());
+    _quit = false;
     _thread = boost::thread(&Thread::Main, this);
     _paused = false;
+
 }
 Thread::Thread(ThreadPool* pool)
 {
     _inner_loop.reset(new mo::TypedSignalRelay<int(void)>());
     _pool = pool;
     _ctx = nullptr;
+    _quit = false;
     _thread = boost::thread(&Thread::Main, this);
+
 }
 
 Thread::~Thread()
 {
+    _quit = true;
     _run = false;
     _thread.interrupt();
     _thread.join();
@@ -124,6 +130,12 @@ void Thread::Main()
                         boost::this_thread::sleep_for(boost::chrono::milliseconds(delay));
                     }
                 }
+            }catch(boost::thread_interrupted& e)
+            {
+                if(_quit)
+                {
+                    throw e;
+                }
             }catch(...)
             {
                 boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
@@ -132,21 +144,31 @@ void Thread::Main()
         {
             while(!_run)
             {
-                _paused = true;
-                boost::recursive_mutex::scoped_lock lock(_mtx);
-                _cv.wait_for(lock, boost::chrono::milliseconds(10));
+
+                try
                 {
-                    while (_work_queue.size())
+                    _paused = true;
+                    boost::recursive_mutex::scoped_lock lock(_mtx);
+                    _cv.wait_for(lock, boost::chrono::milliseconds(10));
                     {
-                        _work_queue.back()();
-                        _work_queue.pop();
+                        while (_work_queue.size())
+                        {
+                            _work_queue.back()();
+                            _work_queue.pop();
+                        }
+                        while(_event_queue.size())
+                        {
+                            _event_queue.back()();
+                            _event_queue.pop();
+                        }
+                        mo::ThreadSpecificQueue::RunOnce();
                     }
-                    while(_event_queue.size())
+                }catch(boost::thread_interrupted& e)
+                {
+                    if(_quit)
                     {
-                        _event_queue.back()();
-                        _event_queue.pop();
+                        throw e;
                     }
-                    mo::ThreadSpecificQueue::RunOnce();
                 }
             }
             if(_on_start)
@@ -154,7 +176,7 @@ void Thread::Main()
             _paused = false;
         }
     }
-
+    LOG(debug) << "Thread exiting";
     if(_on_exit)
         _on_exit();
 }
