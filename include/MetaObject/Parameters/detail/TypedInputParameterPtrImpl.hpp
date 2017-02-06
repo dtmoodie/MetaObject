@@ -6,7 +6,7 @@ namespace mo
 {
     template<typename T> class TypedInputParameterPtr;
 
-    template<typename T> TypedInputParameterPtr<T>::TypedInputParameterPtr(const std::string& name, T** userVar_, Context* ctx) :
+    template<typename T> TypedInputParameterPtr<T>::TypedInputParameterPtr(const std::string& name, const T** userVar_, Context* ctx) :
             userVar(userVar_),
             ITypedInputParameter<T>(name, ctx),
             IParameter(name, Input_e, -1, ctx),
@@ -51,7 +51,7 @@ namespace mo
     }
 
     template<typename T>
-    void TypedInputParameterPtr<T>::SetUserDataPtr(T** user_var_)
+    void TypedInputParameterPtr<T>::SetUserDataPtr(const T** user_var_)
     {
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         userVar = user_var_;

@@ -90,13 +90,13 @@ namespace mo
     template<typename T> class TypedInputParameterPtr : public ITypedInputParameter<T>
     {
     public:
-        TypedInputParameterPtr(const std::string& name = "", T** userVar_ = nullptr, Context* ctx = nullptr);
+        TypedInputParameterPtr(const std::string& name = "", const T** userVar_ = nullptr, Context* ctx = nullptr);
         bool SetInput(std::shared_ptr<IParameter> input);
         bool SetInput(IParameter* input);
-        void SetUserDataPtr(T** user_var_);
+        void SetUserDataPtr(const T** user_var_);
         bool GetInput(long long ts = -1);
     protected:
-        T** userVar; // Pointer to the user space pointer variable of type T
+        const T** userVar; // Pointer to the user space pointer variable of type T
         void updateUserVar();
         virtual void onInputUpdate(Context* ctx, IParameter* param);
         virtual void onInputDelete(IParameter const* param);

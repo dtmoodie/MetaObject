@@ -27,14 +27,8 @@ void Context::SetDefaultThreadContext(Context*  ctx)
 {
     thread_set_context = ctx;
 }
-
-
-Context::Context(const std::string& name)
+void Context::SetName(const std::string& name)
 {
-    thread_id = GetThisThread();
-    allocator = Allocator::GetThreadSpecificAllocator();
-    SetGpuAllocatorHelper<cv::cuda::GpuMat>(allocator);
-    SetCpuAllocatorHelper<cv::Mat>(allocator);
     if(name.size())
     {
         allocator->SetName(name);
@@ -46,6 +40,24 @@ Context::Context(const std::string& name)
     }
     this->name = name;
 }
+
+/*Context::Context(const std::string& name)
+{
+    thread_id = GetThisThread();
+    allocator = Allocator::GetThreadSpecificAllocator();
+    GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(allocator);
+    CpuThreadAllocatorSetter<cv::Mat>::Set(allocator);
+    if(name.size())
+    {
+        allocator->SetName(name);
+        mo::SetThreadName(name.c_str());
+
+    }else
+    {
+        allocator->SetName("Thread " + boost::lexical_cast<std::string>(thread_id) + " allocator");
+    }
+    this->name = name;
+}*/
 
 Context::~Context()
 {

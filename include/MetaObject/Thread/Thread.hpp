@@ -52,6 +52,7 @@ namespace mo
         boost::condition_variable_any _cv;
         boost::recursive_mutex              _mtx;
         bool                      _run;
+        bool                      _quit;
         std::queue<std::function<void(void)>> _work_queue;
         std::queue<std::function<void(void)>> _event_queue;
         volatile bool _paused;

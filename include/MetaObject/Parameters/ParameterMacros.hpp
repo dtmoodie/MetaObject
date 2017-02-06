@@ -20,7 +20,7 @@ ENUM_PARAM_(__COUNTER__, name, __VA_ARGS__)
 #define RANGED_PARAM(type, name, init, min, max)
 
 #define INPUT(type, name, init) \
-type* name = init; \
+const type* name = init; \
 mo::TypedInputParameterPtr<type> name##_param; \
 void init_parameters_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
 { \

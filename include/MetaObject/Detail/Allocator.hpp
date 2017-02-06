@@ -15,30 +15,52 @@ MO_EXPORTS inline int alignmentOffset(unsigned char* ptr, int elemSize);
 MO_EXPORTS void SetScopeName(const std::string& name);
 MO_EXPORTS const std::string& GetScopeName();
 MO_EXPORTS void InstallThrustPoolingAllocator();
-DEFINE_HAS_STATIC_FUNCTION(HasGpuDefaultAllocator, V::setDefaultThreadAllocator, cv::cuda::GpuMat::Allocator*);
-DEFINE_HAS_STATIC_FUNCTION(HasCpuDefaultAllocator, V::setDefaultThreadAllocator, cv::MatAllocator*);
 
-template<class U>
-void SetGpuAllocatorHelper(cv::cuda::GpuMat::Allocator* allocator, typename std::enable_if<HasGpuDefaultAllocator<U>::value, void>::type* = 0)
-{
-    //cv::cuda::GpuMat::setDefaultThreadAllocator(allocator);
-}
-template<class U>
-void SetGpuAllocatorHelper(cv::cuda::GpuMat::Allocator* allocator, typename std::enable_if<!HasGpuDefaultAllocator<U>::value, void>::type* = 0)
-{
 
-}
 
-template<class U>
-void SetCpuAllocatorHelper(cv::MatAllocator* allocator, typename std::enable_if<HasCpuDefaultAllocator<U>::value, void>::type* = 0)
+template<class T>
+class GpuThreadAllocatorSetter
 {
-    //cv::Mat::setDefaultThreadAllocator(allocator);
-}
-template<class U>
-void SetCpuAllocatorHelper(cv::MatAllocator* allocator, typename std::enable_if<!HasCpuDefaultAllocator<U>::value, void>::type* = 0)
-{
+    DEFINE_HAS_STATIC_FUNCTION(HasGpuDefaultAllocator, setDefaultThreadAllocator, cv::cuda::GpuMat::Allocator*);
+public:
+    static bool Set(cv::cuda::GpuMat::Allocator* allocator)
+    {
+        return helper<T>(allocator);
+    }
+private:
+    template<class U> static bool helper(typename std::enable_if<!HasGpuDefaultAllocator<U>::value, cv::cuda::GpuMat::Allocator>::type* allocator)
+    {
+        return false;
+    }
+    template<class U> static bool helper(typename std::enable_if<HasGpuDefaultAllocator<U>::value, cv::cuda::GpuMat::Allocator>::type* allocator)
+    {
+        U::setDefaultThreadAllocator(allocator);
+        return true;
+    }
+};
 
-}
+template<class T>
+class CpuThreadAllocatorSetter
+{
+    DEFINE_HAS_STATIC_FUNCTION(HasCpuDefaultAllocator, setDefaultThreadAllocator, cv::MatAllocator*);
+public:
+    static bool Set(cv::MatAllocator* allocator)
+    {
+        return helper<T>(allocator);
+    }
+private:
+    template<class U> static bool helper(typename std::enable_if<!HasCpuDefaultAllocator<U>::value, cv::MatAllocator>::type* allocator)
+    {
+        return false;
+    }
+    template<class U> static bool helper(typename std::enable_if<HasCpuDefaultAllocator<U>::value, cv::MatAllocator>::type* allocator)
+    {
+        U::setDefaultThreadAllocator(allocator);
+        return true;
+    }
+};
+
+
 
 
 class Allocator;
