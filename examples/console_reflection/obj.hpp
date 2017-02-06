@@ -39,8 +39,17 @@ namespace mo
 class ExampleInterface: public TInterface<ctcrc32("ExampleInterface"), mo::IMetaObject>
 {
 public:
+    /*!
+     * \brief InterfaceInfo typedef allows for the MetaObjectInfo templated class in MetaObject/MetaObjectInfo.hpp
+     *        to detect the correct object info interface to inherit from
+     */
+    typedef ExampleInterfaceInfo InterfaceInfo;
+
+    // These macros are needed to initialize some reflection code
+
     MO_BEGIN(ExampleInterface)
     MO_END
-    typedef ExampleInterfaceInfo InterfaceInfo;
+
+    // The one virtual function to be called from this interface.
     virtual void foo() = 0;
 };
