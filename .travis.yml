@@ -17,5 +17,5 @@ before_script:
   - sudo -E ./scripts/travis/install-deps.sh
 
 script:
-  - mkdir -p build && cd build && cmake ..
+  - mkdir -p build && cd build && cmake .. -DCUDA_CUDA_LIBRARY=/usr/local/nvidia/lib64/libcuda.so
   - make all
