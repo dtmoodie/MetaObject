@@ -1,3 +1,4 @@
+#ifdef HAVE_WT
 #include "MetaObject/Parameters/UI/Wt/POD.hpp"
 #include <Wt/WCheckBox>
 
@@ -34,3 +35,4 @@ void TDataProxy<bool, void>::SetTooltip(const std::string& tooltip)
 {
 
 }
+#endif
