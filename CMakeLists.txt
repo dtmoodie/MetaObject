@@ -223,7 +223,7 @@ if(RCC_VERBOSE_CONFIG)
                  "  CXX flags Debug: ${CMAKE_CXX_FLAGS_DEBUG}\n"
                  "  CUDA flags: ${CUDA_NVCC_FLAGS}\n"
                  "  CUDA flags Release: ${CUDA_NVCC_FLAGS_RELEASE}\n"
-                 "  CUDA flags Debug: ${CUDA_NVCC_FLAGS_DEBUG}\n"
+                 "  CUDA flags Debug: ${CUDA_NVCC_FLAGS_DEBUG}\n")
 endif()
 
 
