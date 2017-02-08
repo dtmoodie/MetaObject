@@ -216,6 +216,17 @@ target_link_libraries(MetaObject
 )
 ocv_add_precompiled_header_to_target(MetaObject src/precompiled.hpp)
 
+if(RCC_VERBOSE_CONFIG)
+  message(STATUS "MetaObject compile flags\n"
+                 "  CXX flags: ${CMAKE_CXX_FLAGS}\n"
+                 "  CXX flags Release: ${CMAKE_CXX_FLAGS_RELEASE}\n"
+                 "  CXX flags Debug: ${CMAKE_CXX_FLAGS_DEBUG}\n"
+                 "  CUDA flags: ${CUDA_NVCC_FLAGS}\n"
+                 "  CUDA flags Release: ${CUDA_NVCC_FLAGS_RELEASE}\n"
+                 "  CUDA flags Debug: ${CUDA_NVCC_FLAGS_DEBUG}\n"
+endif()
+
+
 # -------------------- instantiations --------------------------
 file(GLOB_RECURSE instantiations_src "instantiations/*.cpp")
 include_directories("instantiations")
