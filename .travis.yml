@@ -14,10 +14,8 @@ cache:
   apt: true
 
 before_script:
-  - sudo apt-get install libboost-log-dev libboost-test-dev
+  - sudo -E ./scripts/travis/install-deps.sh
 
 script:
-  - mkdir -p build && cd build && cmake .. -DCPU_ONLY_TEST=ON
+  - mkdir -p build && cd build && cmake .. -DCUDA_CUDA_LIBRARY=/usr/local/nvidia/lib64/libcuda.so -DRCC_VERBOSE_CONFIG=ON
   - make all
-  - ./test_synced_memory
-  - ./test_tensor

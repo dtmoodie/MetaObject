@@ -1,12 +1,10 @@
 #include "MetaObject/Parameters/UI/WidgetFactory.hpp"
 #include "MetaObject/Parameters/IParameter.hpp"
-#ifdef HAVE_WT
-#include "MetaObject/Parameters/UI/WT.hpp"
-
 using namespace mo;
 using namespace mo::UI;
-using namespace Wt;
 
+#ifdef HAVE_WT
+#include "MetaObject/Parameters/UI/WT.hpp"
 #include <boost/thread.hpp>
 #include <Wt/WApplication>
 #include <Wt/WServer>

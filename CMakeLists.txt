@@ -96,9 +96,9 @@ if(WITH_CUDA)
     list(APPEND PROJECT_BIN_DIRS_DEBUG_ ${CUDA_BIN_DIR})
     list(APPEND PROJECT_BIN_DIRS_RELEASE_ ${CUDA_BIN_DIR})
     list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO_ ${CUDA_BIN_DIR})
-    if(GNUC)
-      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS} --std=c++11")
-    endif(GNUC)
+    if(NOT WIN32)
+      set(CUDA_NVCC_FLAGS "${CUDA_NVCC_FLAGS};--std=c++11")
+    endif(NOT WIN32)
   ENDIF(${CUDA_FOUND})
 endif(WITH_CUDA)
 
@@ -215,6 +215,17 @@ target_link_libraries(MetaObject
   ${CUDA_CUDA_LIBRARY}
 )
 ocv_add_precompiled_header_to_target(MetaObject src/precompiled.hpp)
+
+if(RCC_VERBOSE_CONFIG)
+  message(STATUS "MetaObject compile flags\n"
+                 "  CXX flags: ${CMAKE_CXX_FLAGS}\n"
+                 "  CXX flags Release: ${CMAKE_CXX_FLAGS_RELEASE}\n"
+                 "  CXX flags Debug: ${CMAKE_CXX_FLAGS_DEBUG}\n"
+                 "  CUDA flags: ${CUDA_NVCC_FLAGS}\n"
+                 "  CUDA flags Release: ${CUDA_NVCC_FLAGS_RELEASE}\n"
+                 "  CUDA flags Debug: ${CUDA_NVCC_FLAGS_DEBUG}\n")
+endif()
+
 
 # -------------------- instantiations --------------------------
 file(GLOB_RECURSE instantiations_src "instantiations/*.cpp")
