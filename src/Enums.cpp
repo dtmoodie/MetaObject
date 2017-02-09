@@ -45,6 +45,7 @@ std::string mo::ParameterTypeFlagsToString(ParameterTypeFlags flags)
     case map_e: return "map";
     case StreamBuffer_e: return "StreamBuffer";
     case BlockingStreamBuffer_e: return "BlockingStreamBuffer";
+    case NNStreamBuffer_e: return "NNStreamBuffer";
     }
     return "";
 }
@@ -63,5 +64,7 @@ ParameterTypeFlags mo::StringToParameterTypeFlags(const std::string& str)
         return StreamBuffer_e;
     else if(str == "BlockingStreamBuffer")
         return BlockingStreamBuffer_e;
+    else if(str == "NNStreamBuffer")
+        return NNStreamBuffer_e;
     THROW(debug) << "Invalid string " << str;
 }
