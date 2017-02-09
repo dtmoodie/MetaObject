@@ -158,7 +158,7 @@ namespace mo
     R TypedSignalRelay<R(T...)>::operator()(T&... args)
     {
         std::lock_guard<std::mutex> lock(mtx);
-        if (_slot)
+        if (_slot && *_slot)
             return (*_slot)(args...);
         THROW(debug) << "Slot not connected";
         return R();
@@ -223,7 +223,7 @@ namespace mo
 	template<class R, class...T> 
 	bool TypedSignalRelay<R(T...)>::HasSlots() const
 	{
-		return _slot != nullptr;
+        return _slot != nullptr && *_slot;
 	}
 	
 }
