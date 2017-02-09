@@ -176,6 +176,7 @@ void Thread::Main()
             _paused = false;
         }
     }
+    _paused = true;
     LOG(debug) << "Thread exiting";
     if(_on_exit)
         _on_exit();
