@@ -97,6 +97,7 @@ namespace mo
                 UpdateData(casted_param->GetDataPtr(), casted_param->GetTimestamp(), casted_param->GetContext());
             }
             input = casted_param;
+            input->Subscribe();
 			casted_param->RegisterUpdateNotifier(&update_slot);
 			casted_param->RegisterDeleteNotifier(&delete_slot);
             this->OnUpdate(casted_param->GetContext());
