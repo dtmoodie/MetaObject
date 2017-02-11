@@ -62,26 +62,32 @@ namespace mo
         }
         template<class T> ITypedParameter<T>* Map<T>::UpdateData(T& data_, long long ts, Context* ctx)
         {
-            boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            _data_buffer[ts] = data_;
-            IParameter::modified = true;
+            {
+                boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+                _data_buffer[ts] = data_;
+                IParameter::modified = true;
+            }
             IParameter::OnUpdate(ctx);
             return this;
         }
         template<class T> ITypedParameter<T>* Map<T>::UpdateData(const T& data_, long long ts, Context* ctx)
         {
-            boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            _data_buffer[ts] = data_;
-            IParameter::modified = true;
+            {
+                boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+                _data_buffer[ts] = data_;
+                IParameter::modified = true;
+            }
             IParameter::OnUpdate(ctx);
             return this;
         }
         template<class T> ITypedParameter<T>* Map<T>::UpdateData(T* data_, long long ts, Context* ctx)
         {
-            boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            _data_buffer[ts] = *data_;
-            IParameter::modified = true;
-            this->_timestamp = ts;
+            {
+                boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+                _data_buffer[ts] = *data_;
+                IParameter::modified = true;
+                this->_timestamp = ts;
+            }
             IParameter::OnUpdate(ctx);
             return this;
         }
@@ -94,9 +100,11 @@ namespace mo
                 auto ptr = typedParameter->Data();
                 if (ptr)
                 {
-                    boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-                    _data_buffer[typedParameter->GetTimeIndex()] = *ptr;
-                    IParameter::modified = true;
+                    {
+                        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+                        _data_buffer[typedParameter->GetTimeIndex()] = *ptr;
+                        IParameter::modified = true;
+                    }
                     IParameter::OnUpdate(ctx);
                 }
             }

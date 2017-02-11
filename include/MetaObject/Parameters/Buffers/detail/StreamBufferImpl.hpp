@@ -118,7 +118,9 @@ namespace mo
                 {
                     LOG(trace) << "Pushing to " << this->GetTreeName() << " waiting on read";
                     _cv.wait_for(lock, boost::chrono::microseconds(100));
+                    lock.unlock();
                     IParameter::OnUpdate(ctx);
+                    lock.lock();
                 }
                 this->_data_buffer[ts] = *data_;
                 IParameter::modified = true;

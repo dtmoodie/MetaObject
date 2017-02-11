@@ -36,6 +36,41 @@ namespace Text
         }
 
         template<typename T>
+        auto Serialize_imp(std::ostream& os, std::vector<T> const& obj, int)->decltype(os << std::declval<T>(), void())
+        {
+            os << "[";
+            for(int i = 0; i < obj.size(); ++i)
+            {
+                if(i != 0)
+                    os << ", ";
+                os << obj[i];
+            }
+            os << "]";
+        }
+
+        template<typename T>
+        auto DeSerialize_imp(std::istream& is, std::vector<T>& obj, int) ->decltype(is >> std::declval<T>(), void())
+        {
+            std::string str;
+            is >> str;
+            auto pos = str.find('=');
+            if(pos != std::string::npos)
+            {
+                size_t index = boost::lexical_cast<size_t>(str.substr(0, pos));
+                T value = boost::lexical_cast<T>(str.substr(pos + 1));
+                if(index < obj.size())
+                {
+
+                }else
+                {
+                    obj.resize(index + 1);
+                    obj[index] = value;
+                }
+            }
+        }
+
+
+        template<typename T>
         bool Serialize(ITypedParameter<T>* param, std::stringstream& ss)
         {
             T* ptr = param->GetDataPtr();
@@ -83,19 +118,36 @@ namespace Text
             std::vector<T>* ptr = param->GetDataPtr();
             if (ptr)
             {
-                ptr->clear();
-                std::string size;
-                std::getline(ss, size, '[');
-                if (size.size())
+                auto pos = ss.str().find('=');
+                if(pos != std::string::npos)
                 {
-                    ptr->reserve(boost::lexical_cast<size_t>(size));
-                }
-                T value;
-                char ch; // For flushing the ','
-                while (ss >> value)
+                    std::string str;
+                    std::getline(ss, str, '=');
+                    size_t index = boost::lexical_cast<size_t>(str);
+                    std::getline(ss, str);
+                    T value = boost::lexical_cast<T>(str);
+                    if(index >= ptr->size())
+                    {
+                        ptr->resize(index + 1);
+                    }
+                    (*ptr)[index] = value;
+                    return true;
+                }else
                 {
-                    ss >> ch;
-                    ptr->push_back(value);
+                    ptr->clear();
+                    std::string size;
+                    std::getline(ss, size, '[');
+                    if (size.size())
+                    {
+                        ptr->reserve(boost::lexical_cast<size_t>(size));
+                    }
+                    T value;
+                    char ch; // For flushing the ','
+                    while (ss >> value)
+                    {
+                        ss >> ch;
+                        ptr->push_back(value);
+                    }
                 }
                 return true;
             }

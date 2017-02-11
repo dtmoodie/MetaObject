@@ -5,6 +5,7 @@
 #include "MetaObject/Parameters/Buffers/CircularBuffer.hpp"
 #include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
 #include "MetaObject/Parameters/Buffers/map.hpp"
+#include "MetaObject/Parameters/IO/TextPolicy.hpp"
 #include <cereal/types/string.hpp>
 #include <cereal/types/vector.hpp>
 #include "MetaObject/Parameters/IO/CerealPolicy.hpp"

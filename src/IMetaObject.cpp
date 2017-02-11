@@ -638,6 +638,12 @@ bool IMetaObject::ConnectInput(InputParameter* input,
         {
             type_ = ParameterTypeFlags(type_ & ~ForceBufferedConnection_e);
             auto buffer = Buffer::BufferFactory::CreateProxy(output, type_);
+            if(!buffer)
+            {
+                LOG(warning) << "Unable to create " << ParameterTypeFlagsToString(type_)
+                             << " for datatype " << Demangle::TypeToName(output->GetTypeInfo());
+                return false;
+            }
             buffer->SetName(output->GetTreeName() + " buffer for " + input->GetTreeName());
             if(input->SetInput(buffer))
             {
@@ -885,6 +891,10 @@ ISlot* IMetaObject::GetSlot(const std::string& name, const TypeInfo& signature) 
             return itr2->second;
         }
     }
+    if(name == "parameter_updated")
+    {
+        return &(_pimpl->_slot_parameter_updated);
+    }
     return nullptr;
 }
 
@@ -1046,6 +1056,14 @@ ISignal* IMetaObject::GetSignal(const std::string& name, const TypeInfo& type) c
 			return type_itr->second;
 		}
 	}
+    if(name == "parameter_updated")
+    {
+        return &(_pimpl->_sig_parameter_updated);
+    }
+    if(name == "parameter_added")
+    {
+        return &(_pimpl->_sig_parameter_added);
+    }
 	return nullptr;
 }
 

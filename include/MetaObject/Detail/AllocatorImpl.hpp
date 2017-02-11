@@ -787,13 +787,13 @@ typedef CpuStackPolicy h_StackAllocator_t;
 
 typedef mt_CpuPoolPolicy                    h_mt_PoolAllocator_t;
 typedef mt_CpuStackPolicy                   h_mt_StackAllocator_t;
-#ifdef NDEBUG
-typedef CombinedPolicy<d_TensorPoolAllocator_t, d_TextureAllocator_t> d_UniversalAllocator_t;
-typedef LockPolicy<d_UniversalAllocator_t> d_mt_UniversalAllocator_t;
-#else
+//#ifdef NDEBUG
+//typedef CombinedPolicy<d_TensorPoolAllocator_t, d_TextureAllocator_t> d_UniversalAllocator_t;
+//typedef LockPolicy<d_UniversalAllocator_t> d_mt_UniversalAllocator_t;
+//#else
 typedef RefCountPolicy<CombinedPolicy<d_TensorPoolAllocator_t, d_TextureAllocator_t>> d_UniversalAllocator_t;
 typedef RefCountPolicy<LockPolicy<d_UniversalAllocator_t>> d_mt_UniversalAllocator_t;
-#endif
+//#endif
 typedef CombinedPolicy<h_PoolAllocator_t, h_StackAllocator_t> h_UniversalAllocator_t;
 typedef LockPolicy<h_UniversalAllocator_t> h_mt_UniversalAllocator_t;
 

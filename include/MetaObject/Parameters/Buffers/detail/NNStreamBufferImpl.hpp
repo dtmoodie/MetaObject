@@ -28,16 +28,24 @@ T* NNStreamBuffer<T>::GetDataPtr(long long ts, Context* ctx)
         {
             if(upper->first - ts < lower->first - ts)
             {
+                this->_current_timestamp = upper->first;
+                this->prune();
                 return &upper->second;
             }else
             {
+                this->_current_timestamp = lower->first;
+                this->prune();
                 return &lower->second;
             }
         }else if(lower != this->_data_buffer.end())
         {
+            this->_current_timestamp = lower->first;
+            this->prune();
             return &lower->second;
         }else if(upper != this->_data_buffer.end())
         {
+            this->_current_timestamp = upper->first;
+            this->prune();
             return &upper->second;
         }else return nullptr;
     }
@@ -61,18 +69,26 @@ bool NNStreamBuffer<T>::GetData(T& value, long long ts, Context* ctx)
             if(upper->first - ts < lower->first - ts)
             {
                 value = upper->second;
+                this->_current_timestamp = upper->first;
+                this->prune();
                 return true;
             }else
             {
                 value = lower->second;
+                this->_current_timestamp = lower->first;
+                this->prune();
                 return true;
             }
         }else if(lower != this->_data_buffer.end())
         {
+            this->_current_timestamp = lower->first;
+            this->prune();
             value = lower->second;
             return true;
         }else if(upper != this->_data_buffer.end())
         {
+            this->_current_timestamp = upper->first;
+            this->prune();
             value = upper->second;
         }else return false;
     }
@@ -94,16 +110,24 @@ T NNStreamBuffer<T>::GetData(long long ts, Context* ctx)
         {
             if(upper->first - ts < lower->first - ts)
             {
+                this->_current_timestamp = upper->first;
+                this->prune();
                 return upper->second;
             }else
             {
+                this->_current_timestamp = lower->first;
+                this->prune();
                 return  lower->second;
             }
         }else if(lower != this->_data_buffer.end())
         {
+            this->_current_timestamp = lower->first;
+            this->prune();
             return lower->second;
         }else if(upper != this->_data_buffer.end())
         {
+            this->_current_timestamp = upper->first;
+            this->prune();
             return upper->second;
         }else THROW(warning) << "Unable to find data near timestamp "  << ts;
     }

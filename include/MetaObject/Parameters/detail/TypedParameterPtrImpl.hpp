@@ -26,10 +26,13 @@ namespace mo
 	{
         if(ts != -1)
         {
-            if(ts != this->_timestamp)
+            if(ts != this->_timestamp && this->_timestamp != -1)
             {
                 LOG(trace) << "Requested timestamp != current [" << ts << " != " << this->_timestamp << "] for parameter " << this->GetTreeName();
                 return nullptr;
+            }else if(this->_timestamp == -1)
+            {
+                return ptr;
             }
         }
 		return ptr;

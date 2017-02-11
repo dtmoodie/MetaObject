@@ -179,8 +179,10 @@ template<typename PaddingPolicy>
 class MO_EXPORTS PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>
         : public virtual AllocationPolicy
         , public virtual PaddingPolicy
+        , public cv::cuda::GpuMat::Allocator
 {
 public:
+    typedef cv::cuda::GpuMat MatType;
     PoolPolicy(size_t initialBlockSize = 1e7);
 
     inline bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);

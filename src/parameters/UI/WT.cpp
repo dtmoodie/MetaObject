@@ -13,7 +13,7 @@ using namespace mo::UI;
 #include <Wt/WLineEdit>
 #include <Wt/WPushButton>
 #include <Wt/WText>
-
+using namespace Wt;
 
 mo::UI::wt::MainApplication::MainApplication(const WEnvironment& env)
     : WApplication(env)
