@@ -7,22 +7,22 @@ namespace mo
     {
         template<class T> StreamBuffer<T>::StreamBuffer(const std::string& name):
             ITypedParameter<T>(name, Buffer_e),
-            _current_timestamp(-1), _padding(5)
+            _current_timestamp(-1* mo::second), _padding(500 * mo::milli * mo::second)
         {
         
         }
 
-        template<class T> T*   StreamBuffer<T>::GetDataPtr(long long ts, Context* ctx)
+        template<class T> T*   StreamBuffer<T>::GetDataPtr(mo::time_t ts, Context* ctx)
         {
             T* result = Map<T>::GetDataPtr(ts, ctx);
-            if(result && ts != -1)
+            if(result && ts < 0 * mo::second )
             {
                 _current_timestamp = ts;
                 prune();
             }
             return result;
         }
-        template<class T> bool StreamBuffer<T>::GetData(T& value, long long ts, Context* ctx)
+        template<class T> bool StreamBuffer<T>::GetData(T& value, mo::time_t ts, Context* ctx)
         {
             if(Map<T>::GetData(value, ts, ctx))
             {
@@ -32,7 +32,7 @@ namespace mo
             }
             return false;
         }
-        template<class T> T StreamBuffer<T>::GetData(long long ts, Context* ctx)
+        template<class T> T StreamBuffer<T>::GetData(mo::time_t ts, Context* ctx)
         {
             T result = Map<T>::GetData(ts, ctx);
             _current_timestamp = ts;
@@ -41,12 +41,12 @@ namespace mo
         }
         template<class T> void StreamBuffer<T>::SetSize(long long size)
         {
-            _padding = size;
+            _padding = mo::time_t(size * mo::milli * mo::second);
         }
         template<class T> void StreamBuffer<T>::prune()
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            if(_current_timestamp != -1)
+            if(_current_timestamp >= 0 * mo::second)
             {
                 auto itr = this->_data_buffer.begin();
                 while(itr != this->_data_buffer.end())
@@ -80,7 +80,7 @@ namespace mo
         }
         
         template<class T>
-        ITypedParameter<T>* BlockingStreamBuffer<T>::UpdateData(T& data_, long long ts, Context* ctx)
+        ITypedParameter<T>* BlockingStreamBuffer<T>::UpdateData(T& data_, mo::time_t ts, Context* ctx)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             while (this->_data_buffer.size() >= _size)
@@ -95,7 +95,7 @@ namespace mo
             return this;
         }
         template<class T>
-        ITypedParameter<T>* BlockingStreamBuffer<T>::UpdateData(const T& data_, long long ts, Context* ctx)
+        ITypedParameter<T>* BlockingStreamBuffer<T>::UpdateData(const T& data_, mo::time_t ts, Context* ctx)
         {
             boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
             while (this->_data_buffer.size() >= _size)
@@ -110,7 +110,7 @@ namespace mo
             return this;
         }
         template<class T>
-        ITypedParameter<T>* BlockingStreamBuffer<T>::UpdateData(T* data_, long long ts, Context* ctx)
+        ITypedParameter<T>* BlockingStreamBuffer<T>::UpdateData(T* data_, mo::time_t ts, Context* ctx)
         {
             {
                 boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
@@ -133,7 +133,7 @@ namespace mo
         void BlockingStreamBuffer<T>::prune()
         {
             boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
-            if (this->_current_timestamp != -1)
+            if (this->_current_timestamp >= 0 * mo::second)
             {
                 auto itr = this->_data_buffer.begin();
                 while (itr != this->_data_buffer.end())

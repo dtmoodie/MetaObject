@@ -29,15 +29,15 @@ namespace mo
         typedef T ValueType;
         static const ParameterTypeFlags Type = TypedParameter_e;
 
-        TypedParameter(const std::string& name = "", const T& init = T(), ParameterType type = Control_e, long long ts = -1, Context* ctx = nullptr);
+        TypedParameter(const std::string& name = "", const T& init = T(), ParameterType type = Control_e, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
         
-		T    GetData(long long ts= -1, Context* ctx = nullptr);
-        T*   GetDataPtr(long long ts= -1, Context* ctx = nullptr);
-        bool GetData(T& value, long long ts= -1, Context* ctx = nullptr);
+        T    GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+        T*   GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+        bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
 
-        ITypedParameter<T>* UpdateData(T& data_,       long long ts = -1, Context* ctx = nullptr);
-        ITypedParameter<T>* UpdateData(const T& data_, long long ts = -1, Context* ctx = nullptr);
-        ITypedParameter<T>* UpdateData(T* data_,       long long ts = -1, Context* ctx = nullptr);
+        ITypedParameter<T>* UpdateData(T& data_,       mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+        ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+        ITypedParameter<T>* UpdateData(T* data_,       mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
 
         virtual std::shared_ptr<IParameter> DeepCopy() const;
         bool Update(IParameter* other, Context* ctx);

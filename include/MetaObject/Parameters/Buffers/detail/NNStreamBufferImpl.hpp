@@ -14,10 +14,10 @@ NNStreamBuffer<T>::NNStreamBuffer(const std::string& name):
 }
 
 template<class T>
-T* NNStreamBuffer<T>::GetDataPtr(long long ts, Context* ctx)
+T* NNStreamBuffer<T>::GetDataPtr(mo::time_t ts, Context* ctx)
 {
     boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-    if (ts == -1 && this->_data_buffer.size())
+    if (ts < 0 * mo::second && this->_data_buffer.size())
     {
         return &(this->_data_buffer.rbegin()->second);
     }else
@@ -53,10 +53,10 @@ T* NNStreamBuffer<T>::GetDataPtr(long long ts, Context* ctx)
 }
 
 template<class T>
-bool NNStreamBuffer<T>::GetData(T& value, long long ts, Context* ctx)
+bool NNStreamBuffer<T>::GetData(T& value, mo::time_t ts, Context* ctx)
 {
     boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-    if (ts == -1 && this->_data_buffer.size())
+    if (ts < 0 * mo::second && this->_data_buffer.size())
     {
         value = this->_data_buffer.rbegin()->second;
         return true;
@@ -96,10 +96,10 @@ bool NNStreamBuffer<T>::GetData(T& value, long long ts, Context* ctx)
 }
 
 template<class T>
-T NNStreamBuffer<T>::GetData(long long ts, Context* ctx)
+T NNStreamBuffer<T>::GetData(mo::time_t ts, Context* ctx)
 {
     boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-    if (ts == -1 && this->_data_buffer.size())
+    if (ts < 0 * mo::second && this->_data_buffer.size())
     {
         return this->_data_buffer.rbegin()->second;
     }else

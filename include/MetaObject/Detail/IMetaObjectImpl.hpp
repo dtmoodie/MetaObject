@@ -20,7 +20,7 @@ namespace mo
     }
 
     template<class T> 
-    T IMetaObject::GetParameterValue(const std::string& name, long long ts, Context* ctx) const
+    T IMetaObject::GetParameterValue(const std::string& name, mo::time_t ts, Context* ctx) const
     {
         return GetParameter<T>(name)->GetData(ts, ctx);
     }
@@ -33,7 +33,7 @@ namespace mo
     }
 
     template<class T> 
-    ITypedParameter<T>* IMetaObject::UpdateParameter(const std::string& name, T& value, long long ts, Context* ctx)
+    ITypedParameter<T>* IMetaObject::UpdateParameter(const std::string& name, T& value, mo::time_t  ts, Context* ctx)
     {
         if(ctx == nullptr)
             ctx = _ctx;
@@ -50,7 +50,7 @@ namespace mo
         }
     }
     template<class T>
-    ITypedParameter<T>* IMetaObject::UpdateParameter(const std::string& name, const T& value, long long ts, Context* ctx)
+    ITypedParameter<T>* IMetaObject::UpdateParameter(const std::string& name, const T& value, mo::time_t ts, Context* ctx)
     {
         if (ctx == nullptr)
             ctx = _ctx;

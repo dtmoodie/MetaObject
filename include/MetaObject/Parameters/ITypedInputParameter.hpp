@@ -20,16 +20,16 @@ namespace mo
         virtual bool AcceptsType(TypeInfo type) const;
         IParameter* GetInputParam();
         
-        bool GetInput(long long ts);
+        bool GetInput(mo::time_t ts);
 
-        T* GetDataPtr(long long ts = -1, Context* ctx = nullptr);
-        bool GetData(T& value, long long time_step = -1, Context* ctx = nullptr);
-        T GetData(long long ts = -1, Context* ctx = nullptr);
+        T* GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+        bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+        T GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
 
 
-        ITypedParameter<T>* UpdateData(T& data_, long long ts, Context* ctx);
-        ITypedParameter<T>* UpdateData(const T& data_, long long ts, Context* ctx);
-        ITypedParameter<T>* UpdateData(T* data_, long long ts, Context* ctx);
+        ITypedParameter<T>* UpdateData(T& data_, mo::time_t ts, Context* ctx);
+        ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts, Context* ctx);
+        ITypedParameter<T>* UpdateData(T* data_, mo::time_t ts, Context* ctx);
 
     protected:
         virtual void onInputDelete(IParameter const* param);

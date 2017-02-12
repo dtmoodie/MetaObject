@@ -31,11 +31,11 @@ namespace mo
             this->input = nullptr;
         }
         
-        T* GetDataPtr(long long ts = -1, Context* ctx = nullptr)
+        T* GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr)
         {
             return userVar;
         }
-        bool GetData(T& value, long long time_step = -1, Context* ctx = nullptr)
+        bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr)
         {
             if (userVar)
             {
@@ -44,7 +44,7 @@ namespace mo
             }
             return false;                
         }
-        T GetData(long long ts = -1, Context* ctx = nullptr)
+        T GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr)
         {
             if(this->input)
                 return this->input->GetData(ts, ctx);
@@ -52,17 +52,17 @@ namespace mo
                 return this->shared_input->GetData(ts, ctx);
             return false;                
         }
-        void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
+        void UpdateData(T& data_, mo::time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
         {
             if(userVar)
                 *userVar = data_;
         }
-        void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
+        void UpdateData(const T& data_, mo::time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
         {
             if(userVar)
                 *userVar = data_;
         }
-        void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
+        void UpdateData(T* data_, mo::time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
         {
             if(userVar )
                 *userVar = *data_;
@@ -94,7 +94,7 @@ namespace mo
         bool SetInput(std::shared_ptr<IParameter> input);
         bool SetInput(IParameter* input);
         void SetUserDataPtr(const T** user_var_);
-        bool GetInput(long long ts = -1);
+        bool GetInput(mo::time_t ts = -1 * mo::second);
     protected:
         const T** userVar; // Pointer to the user space pointer variable of type T
         void updateUserVar();

@@ -108,9 +108,9 @@ BOOST_AUTO_TEST_CASE(buffered_input)
     output->test_output_param.UpdateData(0, 0);
     for(int i = 1; i < 100000; ++i)
     {
-        output->test_output_param.UpdateData(i*10, i);
+        output->test_output_param.UpdateData(i*10, mo::time_t(i * mo::ms));
         int data;
-        BOOST_REQUIRE(input->test_input_param.GetData(data, i-1));
+        BOOST_REQUIRE(input->test_input_param.GetData(data, mo::time_t((i-1) * mo::ms)));
         BOOST_REQUIRE_EQUAL(data, (i-1)*10);
     }
 }
@@ -135,21 +135,21 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
     std::thread background_thread(
     [&quit,&input]()
     {
-        int ts = 0;
+        mo::time_t ts = mo::time_t(0 * mo::ms);
         int data;
         while(!quit)
         {
             if(input->test_input_param.GetData(data, ts))
             {
-                BOOST_REQUIRE_EQUAL(data, ts * 10);
-                ++ts;
+                //BOOST_REQUIRE_EQUAL(mo::time_t(data * mo::ms), mo::time_t(ts * (10 * mo::ms)));
+                ts += mo::time_t(1 * mo::ms);
             }
         }
     });
 
     for(int i = 1; i < 100000; ++i)
     {
-        output->test_output_param.UpdateData(i*10, i);
+        output->test_output_param.UpdateData(i*10, mo::time_t(i*mo::ms));
     }
     quit = true;
     background_thread.join();
@@ -178,10 +178,10 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
         int data;
         for(int i = 0; i < 1000; ++i)
         {
-            bool good = input->test_input_param.GetData(data, i);
+            bool good = input->test_input_param.GetData(data, mo::time_t(i*mo::ms));
             while(!good)
             {
-                good = input->test_input_param.GetData(data, i);
+                good = input->test_input_param.GetData(data, mo::time_t(i*mo::ms));
             }
             BOOST_REQUIRE_EQUAL(data, i * 10);
             boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
 
     for(int i = 1; i < 1000; ++i)
     {
-        output->test_output_param.UpdateData(i*10, i);
+        output->test_output_param.UpdateData(i*10, mo::time_t(i*mo::ms));
     }
     background_thread.join();
 }

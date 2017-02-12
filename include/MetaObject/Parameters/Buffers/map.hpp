@@ -38,23 +38,23 @@ namespace mo
 
             Map(const std::string& name = "");
 
-            T*   GetDataPtr(long long ts = -1, Context* ctx = nullptr);
-            bool GetData(T& value, long long ts = -1, Context* ctx = nullptr);
-            T    GetData(long long ts = -1, Context* ctx = nullptr);
+            T*   GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            T    GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
             
-            ITypedParameter<T>* UpdateData(T& data_, long long ts = -1, Context* ctx = nullptr);
-            ITypedParameter<T>* UpdateData(const T& data_, long long ts = -1, Context* ctx = nullptr);
-            ITypedParameter<T>* UpdateData(T* data_, long long ts = -1, Context* ctx = nullptr);
+            ITypedParameter<T>* UpdateData(T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            ITypedParameter<T>* UpdateData(T* data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
 
             bool Update(IParameter* other, Context* ctx = nullptr);
             std::shared_ptr<IParameter> DeepCopy() const;
 
             void SetSize(long long size);
             long long GetSize();
-            void GetTimestampRange(long long& start, long long& end);
+            void GetTimestampRange(mo::time_t& start, mo::time_t& end);
             virtual ParameterTypeFlags GetBufferType() const{ return map_e;}
         protected:
-            std::map<long long, T> _data_buffer;
+            std::map<mo::time_t, T> _data_buffer;
             virtual void onInputUpdate(Context* ctx, IParameter* param);
         };
     }

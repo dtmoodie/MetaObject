@@ -27,23 +27,23 @@ namespace mo
         typedef std::shared_ptr<ITypedParameter<T>> Ptr;
         typedef T ValueType;
         
-        ITypedParameter(const std::string& name, ParameterType flags = Control_e, long long ts = -1, Context* ctx = nullptr);
+        ITypedParameter(const std::string& name, ParameterType flags = Control_e, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
 
         // The call is thread safe but the returned pointer may be modified by a different thread
         // ts is the timestamp for which you are requesting data, -1 indicates newest
         // ctx is the context of the data request, such as the thread of the object requesting the data
-        virtual T*   GetDataPtr(long long ts = -1, Context* ctx = nullptr) = 0;
+        virtual T*   GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr) = 0;
 		
         // Copies data into value
         // Time index is the index for which you are requesting data
         // ctx is the context of the data request, such as the thread of the object requesting the data
-		virtual T    GetData(long long ts = -1, Context* ctx = nullptr) = 0;
-        virtual bool GetData(T& value, long long ts = -1, Context* ctx = nullptr) = 0;
+		virtual T    GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr) = 0;
+        virtual bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr) = 0;
         
         // Update data, will call update_signal and set changed to true
-        virtual ITypedParameter<T>* UpdateData(T& data_,       long long ts = -1, Context* ctx = nullptr) = 0;
-        virtual ITypedParameter<T>* UpdateData(const T& data_, long long ts = -1, Context* ctx = nullptr) = 0;
-        virtual ITypedParameter<T>* UpdateData(T* data_,       long long ts = -1, Context* ctx = nullptr) = 0;
+        virtual ITypedParameter<T>* UpdateData(T& data_,       mo::time_t ts = -1 * mo::second, Context* ctx = nullptr) = 0;
+        virtual ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr) = 0;
+        virtual ITypedParameter<T>* UpdateData(T* data_,       mo::time_t ts = -1 * mo::second, Context* ctx = nullptr) = 0;
 
         virtual const TypeInfo& GetTypeInfo() const;
 

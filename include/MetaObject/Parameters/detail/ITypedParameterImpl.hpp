@@ -5,7 +5,7 @@ namespace mo
 {
 	template<typename T> class ITypedParameter;
 
-	template<typename T> ITypedParameter<T>::ITypedParameter(const std::string& name, ParameterType flags, long long ts, Context* ctx) :
+	template<typename T> ITypedParameter<T>::ITypedParameter(const std::string& name, ParameterType flags, mo::time_t ts, Context* ctx) :
 		IParameter(name, flags, ts, ctx)
 	{
 	}

@@ -72,21 +72,21 @@ namespace mo
                     }
                 }
             }
-            virtual T* Data(long long timestamp)
+            virtual T* Data(mo::time_t timestamp)
             {
                 return _buffer->Data(timestamp);
             }
-            virtual bool GetData(T& value, long long time_index = -1)
+            virtual bool GetData(T& value, mo::time_t ts = -1 * mo::second)
             {
                 return _buffer->GetData(value, time_index);
             }
-            virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
+            virtual void UpdateData(T& data_, mo::time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
             {
             }
-            virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
+            virtual void UpdateData(const T& data_, mo::time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
             {    
             }
-            virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
+            virtual void UpdateData(T* data_, mo::time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
             {
             }
 
@@ -94,15 +94,15 @@ namespace mo
             {
                 return Parameter::Ptr(new Proxy(_input_parameter, _buffer->DeepCopy()));
             }
-            virtual void SetSize(long long size)
+            virtual void SetSize(mo::time_t size)
             {
                 dynamic_cast<IBuffer*>(_buffer.get())->SetSize(size);
             }
-            virtual long long GetSize()
+            virtual mo::time_t GetSize()
             {
                 return dynamic_cast<IBuffer*>(_buffer.get())->GetSize();
             }
-            virtual void GetTimestampRange(long long& start, long long& end)
+            virtual void GetTimestampRange(mo::time_t& start, mo::time_t& end)
             {
                 dynamic_cast<IBuffer*>(_buffer.get())->GetTimestampRange(start, end);
             }

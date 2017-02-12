@@ -21,6 +21,10 @@ https://github.com/dtmoodie/MetaObject
 #include "MetaObject/Detail/Enums.hpp"
 #include "MetaObject/Signals/TypedSignal.hpp"
 #include <boost/version.hpp>
+#include <boost/units/systems/si.hpp>
+#include <boost/units/systems/si/prefixes.hpp>
+#include <boost/units/systems/si/time.hpp>
+#include <boost/units/io.hpp>
 #if BOOST_VERSION > 105400
 #include <boost/core/noncopyable.hpp>
 #else
@@ -32,6 +36,7 @@ namespace boost
 {
     class recursive_mutex;
 }
+
 namespace mo
 {
     class Context;
@@ -40,6 +45,15 @@ namespace mo
     class ISignalRelay;
 	class TypeInfo;
     class IParameter;
+    typedef boost::units::quantity<boost::units::si::time> time_t;
+    static const auto milli = boost::units::si::milli;
+    static const auto nano = boost::units::si::nano;
+    static const auto second = boost::units::si::second;
+    static const auto millisecond = milli * second;
+    static const auto nanosecond = nano * second;
+    static const auto ms = millisecond;
+    static const auto ns = nanosecond;
+
     namespace UI
     {
         namespace qt
@@ -62,19 +76,24 @@ namespace mo
         typedef TypedSlot<void(Context*, IParameter*)> update_f;
         typedef TypedSlot<void(IParameter const*)> delete_f;
 
-		IParameter(const std::string& name_ = "", ParameterType flags_ = Control_e, long long ts = -1, Context* ctx = nullptr);
+        IParameter(const std::string& name_ = "", ParameterType flags_ = Control_e, mo::time_t = -1 * mo::second, Context* ctx = nullptr);
 
         virtual ~IParameter();
 
         IParameter*         SetName(const std::string& name_);
 		IParameter*         SetTreeRoot(const std::string& tree_root_);
         IParameter*         SetContext(Context* ctx);
-        virtual IParameter* SetTimestamp(long long ts_ = -1);
+        template<class T>
+        IParameter* SetTimestamp(T&& ts)
+        {
+            _timestamp = time_t(ts);
+            return this;
+        }
 
         const std::string& GetName()      const;
         const std::string  GetTreeName()  const;
         const std::string& GetTreeRoot()  const;
-        long long          GetTimestamp() const;
+        time_t             GetTimestamp() const;
         Context*           GetContext()   const;
 
 		void Subscribe();
@@ -101,14 +120,14 @@ namespace mo
 
         // Sets changed to true and emits update signal
         void OnUpdate(Context* ctx = nullptr);
-        IParameter* Commit(long long timestamp_= -1, Context* ctx = nullptr);
+        IParameter* Commit(mo::time_t timestamp_= -1 * mo::second, Context* ctx = nullptr);
         
         template<class Archive> void serialize(Archive& ar);
         
 		
-		template<typename T> T*   GetDataPtr(long long ts_ = -1, Context* ctx = nullptr);
-		template<typename T> T    GetData(long long ts_ = -1, Context* ctx = nullptr);
-		template<typename T> bool GetData(T& value, long long ts = -1, Context* ctx = nullptr);
+        template<typename T> T*   GetDataPtr(mo::time_t timestamp_= -1 * mo::second, Context* ctx = nullptr);
+        template<typename T> T    GetData(mo::time_t timestamp_= -1 * mo::second, Context* ctx = nullptr);
+        template<typename T> bool GetData(T& value, mo::time_t timestamp_= -1 * mo::second, Context* ctx = nullptr);
 
         boost::recursive_mutex& mtx();
         void SetMtx(boost::recursive_mutex* mtx);
@@ -117,20 +136,19 @@ namespace mo
 		void AppendFlags(ParameterType flags_);
 		bool CheckFlags(ParameterType flag);
 
-
         bool modified;
 		TypedSignal<void(Context*, IParameter*)> update_signal;
 		TypedSignal<void(IParameter const*)>	 delete_signal;
 	protected:
         template<class T> friend class UI::qt::ParameterProxy;
-		std::string          _name;
-		std::string          _tree_root;
-		long long            _timestamp;
+        std::string             _name;
+        std::string             _tree_root;
+        time_t                  _timestamp;
         boost::recursive_mutex* _mtx = nullptr; 
-		Context*             _ctx = nullptr; // Context of object that owns this parameter
-		int                  _subscribers = 0;
-		ParameterType        _flags;
-        bool                 _owns_mutex = false;
+        Context*                _ctx = nullptr; // Context of object that owns this parameter
+        int                     _subscribers = 0;
+        ParameterType           _flags;
+        bool                    _owns_mutex = false;
     };
 
     template<typename Archive> void IParameter::serialize(Archive& ar)
@@ -143,17 +161,17 @@ namespace mo
 
     template<typename T> class ITypedParameter;
     
-	template<typename T> T* IParameter::GetDataPtr(long long ts_, Context* ctx)
+    template<typename T> T* IParameter::GetDataPtr(mo::time_t ts_, Context* ctx_)
     {
 		if (auto typed = dynamic_cast<ITypedParameter<T>*>(this))
-			return typed->GetDataPtr(ts_, ctx);
+            return typed->GetDataPtr(ts_, ctx_);
 		return nullptr;
     }
 
-	template<typename T> T IParameter::GetData(long long ts_, Context* ctx)
+    template<typename T> T IParameter::GetData(mo::time_t ts_, Context* ctx_)
 	{
 		if (auto typed = dynamic_cast<ITypedParameter<T>*>(this))
-			return typed->GetData(ts_, ctx);
+            return typed->GetData(ts_, ctx_);
 #ifndef __CUDACC__
         //throw "Bad cast. Requested " << typeid(T).name() << " actual " << GetTypeInfo().name();
 #else
@@ -161,10 +179,10 @@ namespace mo
 #endif
 	}
 
-	template<typename T> bool IParameter::GetData(T& value, long long ts, Context* ctx)
+    template<typename T> bool IParameter::GetData(T& value, mo::time_t ts_, Context* ctx_)
 	{
 		if (auto typed = dynamic_cast<ITypedParameter<T>*>(this))
-            return typed->GetData(value, ts, ctx);
+            return typed->GetData(value, ts_, ctx_);
 		return false;
 	}
 }

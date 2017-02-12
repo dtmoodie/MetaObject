@@ -23,9 +23,13 @@ https://github.com/dtmoodie/parameters
 #include <algorithm>
 #include <boost/thread/recursive_mutex.hpp>
 
+
+
+
+
 using namespace mo;
 
-IParameter::IParameter(const std::string& name_, ParameterType flags_, long long ts, Context* ctx) :
+IParameter::IParameter(const std::string& name_, ParameterType flags_, mo::time_t ts, Context* ctx) :
     _name(name_), 
     _flags(flags_), 
     modified(false), 
@@ -57,11 +61,11 @@ IParameter* IParameter::SetTreeRoot(const std::string& treeRoot_)
     return this;
 }
 
-IParameter* IParameter::SetTimestamp(long long ts)
+/*IParameter* IParameter::SetTimestamp(mo::time_t ts)
 {
     _timestamp = ts;
     return this;
-}
+}*/
 
 IParameter* IParameter::SetContext(Context* ctx)
 {
@@ -87,7 +91,7 @@ const std::string IParameter::GetTreeName() const
         return _name;
 }
 
-long long IParameter::GetTimestamp() const
+mo::time_t IParameter::GetTimestamp() const
 {
     return _timestamp;
 }
@@ -179,7 +183,7 @@ void IParameter::OnUpdate(Context* ctx)
 	update_signal(ctx, this);
 }
 
-IParameter* IParameter::Commit(long long ts, Context* ctx)
+IParameter* IParameter::Commit(mo::time_t ts, Context* ctx)
 {
     {
         boost::recursive_mutex::scoped_lock lock(mtx());

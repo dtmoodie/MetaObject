@@ -4,7 +4,7 @@ namespace mo
 {
     namespace Buffer
     {
-        template<class T> CircularBuffer<T>::CircularBuffer(const std::string& name, const T& init, long long ts, ParameterType type ):
+        template<class T> CircularBuffer<T>::CircularBuffer(const std::string& name, const T& init, mo::time_t ts, ParameterType type ):
             ITypedInputParameter<T>(name),
             ITypedParameter<T>(name, mo::Buffer_e)
         {
@@ -15,9 +15,9 @@ namespace mo
         }
 
 
-        template<class T> T* CircularBuffer<T>::GetDataPtr(long long ts, Context* ctx)
+        template<class T> T* CircularBuffer<T>::GetDataPtr(mo::time_t ts, Context* ctx)
         {
-            if (ts == -1 && _data_buffer.size())
+            if (ts < 0 * mo::second && _data_buffer.size())
                 return &_data_buffer.back().second;
 
             for (auto& itr : _data_buffer)
@@ -30,10 +30,10 @@ namespace mo
             return nullptr;
         }
          
-        template<class T> bool CircularBuffer<T>::GetData(T& value, long long ts, Context* ctx)
+        template<class T> bool CircularBuffer<T>::GetData(T& value, mo::time_t ts, Context* ctx)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            if (ts == -1 && _data_buffer.size())
+            if (ts < 0 * mo::second  && _data_buffer.size())
             {
                 value = _data_buffer.back().second;
                 return true;
@@ -49,9 +49,9 @@ namespace mo
             return false;
         }
 
-        template<class T> T CircularBuffer<T>::GetData(long long ts, Context* ctx)
+        template<class T> T CircularBuffer<T>::GetData(mo::time_t ts, Context* ctx)
         {
-            if (ts == -1 && _data_buffer.size())
+            if (ts < 0 * mo::second && _data_buffer.size())
             {
                 return _data_buffer.back().second;
             }
@@ -67,28 +67,28 @@ namespace mo
         }
             
 
-        template<class T> ITypedParameter<T>* CircularBuffer<T>::UpdateData(T& data_, long long ts, Context* ctx)
+        template<class T> ITypedParameter<T>* CircularBuffer<T>::UpdateData(T& data_, mo::time_t ts, Context* ctx)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            _data_buffer.push_back(std::pair<long long, T>(ts, data_));
+            _data_buffer.push_back(std::pair<mo::time_t, T>(ts, data_));
             IParameter::modified = true;
             IParameter::OnUpdate(ctx);
             return this;
         }
             
-        template<class T> ITypedParameter<T>* CircularBuffer<T>::UpdateData(const T& data_, long long ts, Context* ctx)
+        template<class T> ITypedParameter<T>* CircularBuffer<T>::UpdateData(const T& data_, mo::time_t ts, Context* ctx)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            _data_buffer.push_back(std::pair<long long, T>(ts, data_));
+            _data_buffer.push_back(std::pair<mo::time_t, T>(ts, data_));
             IParameter::modified = true;
             IParameter::OnUpdate(ctx);
             return this;
         }
 
-        template<class T> ITypedParameter<T>* CircularBuffer<T>::UpdateData(T* data_, long long ts, Context* ctx)
+        template<class T> ITypedParameter<T>* CircularBuffer<T>::UpdateData(T* data_, mo::time_t ts, Context* ctx)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            _data_buffer.push_back(std::pair<long long, T>(ts, *data_));
+            _data_buffer.push_back(std::pair<mo::time_t, T>(ts, *data_));
             IParameter::modified = true;
             IParameter::OnUpdate(ctx);
             return this;
@@ -103,7 +103,7 @@ namespace mo
                 if (typedParameter->GetData(data))
                 {
                     boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-                    _data_buffer.push_back(std::pair<long long, T>(typedParameter->GetTimestamp(), data));
+                    _data_buffer.push_back(std::pair<mo::time_t, T>(typedParameter->GetTimestamp(), data));
                     IParameter::modified = true;
                     IParameter::OnUpdate(ctx);
                 }
@@ -116,12 +116,12 @@ namespace mo
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             _data_buffer.set_capacity(size);
         }
-        template<class T> long long  CircularBuffer<T>::GetSize() 
+        template<class T> long long CircularBuffer<T>::GetSize()
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             return _data_buffer.capacity();
         }
-        template<class T> void  CircularBuffer<T>::GetTimestampRange(long long& start, long long& end) 
+        template<class T> void  CircularBuffer<T>::GetTimestampRange(mo::time_t& start, mo::time_t& end) 
         {
             if (_data_buffer.size())
             {

@@ -3,7 +3,7 @@
 namespace mo
 {
 	template<typename T> 
-    TypedParameter<T>::TypedParameter(const std::string& name, const T& init, ParameterType type, long long ts, Context* ctx) :
+    TypedParameter<T>::TypedParameter(const std::string& name, const T& init, ParameterType type, mo::time_t ts, Context* ctx) :
 		ITypedParameter<T>(name, type, ts, ctx), data(init),
         IParameter(name, mo::Control_e, ts, ctx)
 	{
@@ -12,9 +12,9 @@ namespace mo
 	}
 
 	template<typename T> 
-    T* TypedParameter<T>::GetDataPtr(long long ts, Context* ctx)
+    T* TypedParameter<T>::GetDataPtr(mo::time_t ts, Context* ctx)
 	{
-		if (ts != -1)
+        if (ts > 0 * mo::second)
         {
             if(ts != this->_timestamp)
             {
@@ -26,10 +26,10 @@ namespace mo
 	}
 
 	template<typename T> 
-    bool TypedParameter<T>::GetData(T& value, long long ts, Context* ctx)
+    bool TypedParameter<T>::GetData(T& value, mo::time_t ts, Context* ctx)
 	{
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-		if (ts == -1)
+        if (ts < 0 * mo::second)
         {
             value = data;
             return true;
@@ -45,10 +45,10 @@ namespace mo
 	}
 
     template<typename T>
-    T TypedParameter<T>::GetData(long long ts, Context* ctx)
+    T TypedParameter<T>::GetData(mo::time_t ts, Context* ctx)
     {
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-        if(ts == -1)
+        if(ts < 0 * mo::second)
         {
             return data;
         }else
@@ -59,7 +59,7 @@ namespace mo
     }
 	
     template<typename T> 
-    ITypedParameter<T>* TypedParameter<T>::UpdateData(T& data_, long long ts, Context* ctx)
+    ITypedParameter<T>* TypedParameter<T>::UpdateData(T& data_, mo::time_t ts, Context* ctx)
 	{
 		data = data_;
         IParameter::Commit(ts, ctx);
@@ -67,7 +67,7 @@ namespace mo
 	}
 
 	template<typename T> 
-    ITypedParameter<T>* TypedParameter<T>::UpdateData(const T& data_, long long ts, Context* ctx)
+    ITypedParameter<T>* TypedParameter<T>::UpdateData(const T& data_, mo::time_t ts, Context* ctx)
 	{
 		data = data_;
         IParameter::Commit(ts, ctx);
@@ -75,7 +75,7 @@ namespace mo
 	}
 	
     template<typename T> 
-    ITypedParameter<T>* TypedParameter<T>::UpdateData(T* data_, long long ts, Context* ctx)
+    ITypedParameter<T>* TypedParameter<T>::UpdateData(T* data_, mo::time_t ts, Context* ctx)
 	{
 		data = *data_;
         IParameter::Commit(ts, ctx);

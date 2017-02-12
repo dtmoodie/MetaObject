@@ -24,6 +24,7 @@ namespace mo
         StreamBuffer_e,
         BlockingStreamBuffer_e,
         NNStreamBuffer_e,
+        Queue_e,
         ForceBufferedConnection_e = 1024,
         ForceDirectConnection_e = 2048
     };

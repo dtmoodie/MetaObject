@@ -9,8 +9,8 @@ namespace mo
     template<typename T> TypedInputParameterPtr<T>::TypedInputParameterPtr(const std::string& name, const T** userVar_, Context* ctx) :
             userVar(userVar_),
             ITypedInputParameter<T>(name, ctx),
-            IParameter(name, Input_e, -1, ctx),
-            ITypedParameter<T>(name, Input_e, -1, ctx)
+            IParameter(name, Input_e, -1 * mo::second, ctx),
+            ITypedParameter<T>(name, Input_e, mo::time_t(-1 * mo::second), ctx)
     {
     }
         
@@ -80,7 +80,7 @@ namespace mo
     }
 
     template<typename T>
-    bool TypedInputParameterPtr<T>::GetInput(long long ts)
+    bool TypedInputParameterPtr<T>::GetInput(mo::time_t ts)
     {
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(userVar)

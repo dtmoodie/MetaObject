@@ -27,6 +27,7 @@ void Context::SetDefaultThreadContext(Context*  ctx)
 {
     thread_set_context = ctx;
 }
+
 void Context::SetName(const std::string& name)
 {
     if(name.size())

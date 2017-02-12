@@ -11,7 +11,7 @@ namespace mo
 
     template<class T> 
     ITypedInputParameter<T>::ITypedInputParameter(const std::string& name, Context* ctx):
-            ITypedParameter<T>(name, Input_e, -1, ctx),
+            ITypedParameter<T>(name, Input_e, -1* mo::second, ctx),
             input(nullptr),
             IParameter(name, Input_e)
     {
@@ -53,7 +53,7 @@ namespace mo
             if(shared_input) shared_input->Unsubscribe();
             update_slot.Clear();
             delete_slot.Clear();
-            if(casted_param->GetTimestamp() != -1)
+            if(casted_param->GetTimestamp() >= 0 * mo::second)
             {
                 UpdateData(casted_param->GetDataPtr(), casted_param->GetTimestamp(), casted_param->GetContext());
             }
@@ -92,7 +92,7 @@ namespace mo
         {
             if(input) input->Unsubscribe();
             if(shared_input) shared_input->Unsubscribe();
-            if(casted_param->GetTimestamp() != -1)
+            if(casted_param->GetTimestamp() >= 0 * mo::second)
             {
                 UpdateData(casted_param->GetDataPtr(), casted_param->GetTimestamp(), casted_param->GetContext());
             }
@@ -135,7 +135,7 @@ namespace mo
     }
     
     template<class T> 
-    T* ITypedInputParameter<T>::GetDataPtr(long long ts, Context* ctx)
+    T* ITypedInputParameter<T>::GetDataPtr(mo::time_t ts, Context* ctx)
     {
         if(input)
             return input->GetDataPtr(ts, ctx);
@@ -145,7 +145,7 @@ namespace mo
     }
 
     template<class T> 
-    bool ITypedInputParameter<T>::GetData(T& value, long long ts, Context* ctx)
+    bool ITypedInputParameter<T>::GetData(T& value, mo::time_t ts, Context* ctx)
     {
         if(input)
             return input->GetData(value, ts, ctx);
@@ -155,7 +155,7 @@ namespace mo
     }
     
     template<class T> 
-    T ITypedInputParameter<T>::GetData(long long ts, Context* ctx)
+    T ITypedInputParameter<T>::GetData(mo::time_t ts, Context* ctx)
     {
         if(input)
             return input->GetData(ts, ctx);
@@ -166,7 +166,7 @@ namespace mo
     }
 
     template<class T>
-    bool ITypedInputParameter<T>::GetInput(long long ts)
+    bool ITypedInputParameter<T>::GetInput(mo::time_t ts)
     {
         return true;
     }
@@ -189,25 +189,25 @@ namespace mo
     }
 
     template<class T>
-    ITypedParameter<T>* ITypedInputParameter<T>::UpdateData(T& data_, long long ts, Context* ctx)
+    ITypedParameter<T>* ITypedInputParameter<T>::UpdateData(T& data_, mo::time_t ts, Context* ctx)
     {
-        if (ts != -1)
+        if (ts >= 0 * mo::second)
             _timestamp = ts;
         return this;
     }
 
     template<class T>
-    ITypedParameter<T>* ITypedInputParameter<T>::UpdateData(const T& data_, long long ts, Context* ctx)
+    ITypedParameter<T>* ITypedInputParameter<T>::UpdateData(const T& data_, mo::time_t ts, Context* ctx)
     {
-        if (ts != -1)
+        if (ts >= 0 * mo::second)
             _timestamp = ts;
         return this;
     }
 
     template<class T>
-    ITypedParameter<T>* ITypedInputParameter<T>::UpdateData(T* data_, long long ts, Context* ctx)
+    ITypedParameter<T>* ITypedInputParameter<T>::UpdateData(T* data_, mo::time_t ts, Context* ctx)
     {
-        if (ts != -1)
+        if (ts >= 0 * mo::second)
             _timestamp = ts;
         return this;
     }

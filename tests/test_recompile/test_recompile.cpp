@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(test_reconnect_signals)
     signals->sig_test_int(value);
     BOOST_REQUIRE_EQUAL(slots->call_count, value);
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
-    
+
     signals->sig_test_int(value);
     BOOST_REQUIRE_EQUAL(slots->call_count, 10);
 }
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(test_input_output_parameter)
 	BOOST_REQUIRE(output_param);
 	auto input_param = input->GetInput("test_input");
 	BOOST_REQUIRE(input_param);
-	
+
 	BOOST_REQUIRE(IMetaObject::ConnectInput(output.Get(), output_param, input.Get(), input_param));
 	output->test_output = 5;
 	BOOST_REQUIRE(input->test_input);

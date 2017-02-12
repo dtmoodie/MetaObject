@@ -37,7 +37,7 @@ namespace mo
 
         // This loads the value at the requested timestamp into the input
         // parameter such that it can be read
-        virtual bool GetInput(long long ts = -1) = 0;
+        virtual bool GetInput(mo::time_t ts = -1 * mo::second) = 0;
 
         // This gets a pointer to the variable that feeds into this input
         virtual IParameter* GetInputParam() = 0;

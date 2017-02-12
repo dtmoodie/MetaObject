@@ -22,15 +22,15 @@ namespace mo
 	}
 
     template<typename T> 
-    T* TypedParameterPtr<T>::GetDataPtr(long long ts, Context* ctx)
+    T* TypedParameterPtr<T>::GetDataPtr(mo::time_t ts, Context* ctx)
 	{
-        if(ts != -1)
+        if(ts >= 0 * mo::second)
         {
-            if(ts != this->_timestamp && this->_timestamp != -1)
+            if(ts != this->_timestamp && this->_timestamp >= 0 * mo::second)
             {
                 LOG(trace) << "Requested timestamp != current [" << ts << " != " << this->_timestamp << "] for parameter " << this->GetTreeName();
                 return nullptr;
-            }else if(this->_timestamp == -1)
+            }else if(this->_timestamp < 0 * mo::second)
             {
                 return ptr;
             }
@@ -39,10 +39,10 @@ namespace mo
 	}
 	
     template<typename T> 
-    T TypedParameterPtr<T>::GetData(long long ts, Context* ctx)
+    T TypedParameterPtr<T>::GetData(mo::time_t ts, Context* ctx)
 	{
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-        if(ts != -1)
+        if(ts >= 0 * mo::second)
         {
             if(ts != this->_timestamp)
             {
@@ -55,10 +55,10 @@ namespace mo
 	}
 	
     template<typename T> 
-    bool TypedParameterPtr<T>::GetData(T& value, long long ts, Context* ctx)
+    bool TypedParameterPtr<T>::GetData(T& value, mo::time_t ts, Context* ctx)
 	{
 		boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-        if(ts != -1)
+        if(ts >= 0 * mo::second)
         {
             if(ts != this->_timestamp)
             {
@@ -76,7 +76,7 @@ namespace mo
 	}
 	
     template<typename T> 
-    ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(T& data_, long long time_index, Context* ctx)
+    ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(T& data_, mo::time_t time_index, Context* ctx)
 	{
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(ptr)
@@ -90,7 +90,7 @@ namespace mo
 	}
 	
     template<typename T> 
-    ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(const T& data_, long long time_index, Context* ctx)
+    ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(const T& data_, mo::time_t time_index, Context* ctx)
 	{
         bool updated = false;
         {
@@ -112,7 +112,7 @@ namespace mo
 	}
 	
     template<typename T> 
-    ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(T* data_, long long time_index, Context* ctx)
+    ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(T* data_, mo::time_t time_index, Context* ctx)
 	{
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(ptr)

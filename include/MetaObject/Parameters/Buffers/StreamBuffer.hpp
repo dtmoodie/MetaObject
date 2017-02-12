@@ -16,16 +16,17 @@ namespace mo
 
             StreamBuffer(const std::string& name = "");
 
-            T*   GetDataPtr(long long ts = -1, Context* ctx = nullptr);
-            bool GetData(T& value, long long ts = -1, Context* ctx = nullptr);
-            T    GetData(long long ts = -1, Context* ctx = nullptr);
+            T*   GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            T    GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            // Set the number of milliseconds worth of padding to maintain
             void SetSize(long long size);
             std::shared_ptr<IParameter> DeepCopy() const;
             virtual ParameterTypeFlags GetBufferType() const{ return StreamBuffer_e;}
         protected:
             virtual void prune();
-            long long _current_timestamp;
-            long long _padding;
+            mo::time_t _current_timestamp;
+            mo::time_t _padding;
         };
         template<class T> class MO_EXPORTS BlockingStreamBuffer : public StreamBuffer<T>
         {
@@ -37,9 +38,9 @@ namespace mo
 
             void SetSize(long long size);
 
-            ITypedParameter<T>* UpdateData(T& data_, long long ts = -1, Context* ctx = nullptr);
-            ITypedParameter<T>* UpdateData(const T& data_, long long ts = -1, Context* ctx = nullptr);
-            ITypedParameter<T>* UpdateData(T* data_, long long ts = -1, Context* ctx = nullptr);
+            ITypedParameter<T>* UpdateData(T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            ITypedParameter<T>* UpdateData(T* data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
             virtual ParameterTypeFlags GetBufferType() const{ return BlockingStreamBuffer_e;}
         protected:
             virtual void prune();

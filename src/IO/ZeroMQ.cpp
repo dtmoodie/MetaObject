@@ -34,7 +34,7 @@ ParameterPublisher::~ParameterPublisher()
     delete _pimpl;
 }
 
-bool ParameterPublisher::GetInput(long long ts)
+bool ParameterPublisher::GetInput(mo::time_t ts)
 {
     return false;
 }
@@ -97,7 +97,7 @@ ParameterPublisher::~ParameterPublisher()
     delete _pimpl;
 }
 
-bool ParameterPublisher::GetInput(long long ts)
+bool ParameterPublisher::GetInput(mo::time_t ts)
 {
     return false;
 }

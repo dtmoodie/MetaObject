@@ -33,29 +33,29 @@ namespace mo
         {
             static ParameterConstructor<CircularBuffer<T>> _circular_buffer_parameter_constructor;
             static BufferConstructor<CircularBuffer<T>> _circular_buffer_constructor;
-            boost::circular_buffer<std::pair<long long, T>> _data_buffer;
+            boost::circular_buffer<std::pair<mo::time_t, T>> _data_buffer;
         public:
             typedef T ValueType;
             static const ParameterTypeFlags Type = cbuffer_e;
 
             CircularBuffer(const std::string& name = "",
-                const T& init = T(), long long ts = -1,
+                const T& init = T(), mo::time_t ts = -1 * mo::second,
                 ParameterType type = Buffer_e);
 
-            T*   GetDataPtr(long long ts = -1, Context* ctx = nullptr);
-            bool GetData(T& value, long long ts = -1, Context* ctx = nullptr);
-            T    GetData(long long ts = -1, Context* ctx = nullptr);
+            T*   GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            T    GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
 
-            ITypedParameter<T>* UpdateData(T& data_, long long ts = -1, Context* ctx = nullptr);
-            ITypedParameter<T>* UpdateData(const T& data_, long long ts = -1, Context* ctx= nullptr);
-            ITypedParameter<T>* UpdateData(T* data_, long long ts = -1, Context* ctx = nullptr);
+            ITypedParameter<T>* UpdateData(T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts = -1 * mo::second, Context* ctx= nullptr);
+            ITypedParameter<T>* UpdateData(T* data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
     
             bool Update(IParameter* other, Context* ctx = nullptr);
             std::shared_ptr<IParameter> DeepCopy() const;
 
             virtual void SetSize(long long size);
             virtual long long GetSize();
-            virtual void GetTimestampRange(long long& start, long long& end);
+            virtual void GetTimestampRange(mo::time_t& start, mo::time_t& end);
             
             void onInputUpdate(Context* ctx, IParameter* param);
             virtual ParameterTypeFlags GetBufferType() const{ return cbuffer_e;}

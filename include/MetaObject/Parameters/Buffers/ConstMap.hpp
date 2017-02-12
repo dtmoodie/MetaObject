@@ -13,7 +13,7 @@ namespace Parameters
         public:
             typedef T ValueType;
             ConstMap(const std::string& name = "",
-                const T& init = T(), long long time_index = -1,
+                const T& init = T(), mo::time_t ts = -1 * mo::second,
                 ParameterType& type = kControl,
                 const std::string& tooltip = "") :
                 Map<T>(name, init, time_index, type, tooltip)
@@ -21,17 +21,17 @@ namespace Parameters
                 (void)&_constructor;
                 _size = 10;
             }
-            virtual void UpdateData(T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
+            virtual void UpdateData(T& data_, mo::time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
             {
                 Map<T>::UpdateData(data_, time_index, stream);
                 clean();
             }
-            virtual void UpdateData(const T& data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
+            virtual void UpdateData(const T& data_, mo::time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
             {
                 Map<T>::UpdateData(data_, time_index, stream);
                 clean();
             }
-            virtual void UpdateData(T* data_, long long time_index = -1, cv::cuda::Stream* stream = nullptr)
+            virtual void UpdateData(T* data_, mo::time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
             {
                 Map<T>::UpdateData(data_, time_index, stream);
                 clean();

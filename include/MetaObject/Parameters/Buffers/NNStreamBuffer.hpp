@@ -14,9 +14,9 @@ namespace mo
 
             NNStreamBuffer(const std::string& name = "");
 
-            T*   GetDataPtr(long long ts = -1, Context* ctx = nullptr);
-            bool GetData(T& value, long long ts = -1, Context* ctx = nullptr);
-            T    GetData(long long ts = -1, Context* ctx = nullptr);
+            T*   GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            T    GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
             virtual ParameterTypeFlags GetBufferType() const{ return NNStreamBuffer_e;}
         protected:
         };
