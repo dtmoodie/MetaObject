@@ -209,7 +209,7 @@ add_subdirectory("dependencies/Remotery")
 set_target_properties(Remotery PROPERTIES FOLDER Dependencies)
 GroupSources(include)
 GroupSources(src)
-cuda_add_library(MetaObject SHARED ${src} ${hdr} ${knl} src/precompiled.hpp)
+cuda_add_library(MetaObject SHARED ${src} ${hdr} ${knl} src/MetaObject/precompiled.hpp)
 target_link_libraries(MetaObject
   RuntimeObjectSystem
   RuntimeCompiler

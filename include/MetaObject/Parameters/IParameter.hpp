@@ -45,6 +45,7 @@ namespace mo
     class ISignalRelay;
 	class TypeInfo;
     class IParameter;
+    class ICoordinateSystem;
     typedef boost::units::quantity<boost::units::si::time> time_t;
     static const auto milli = boost::units::si::milli;
     static const auto nano = boost::units::si::nano;
@@ -68,6 +69,7 @@ namespace mo
     typedef TypedSlot<void(IParameter const*)> ParameterDeleteSlot;
     typedef std::shared_ptr<ParameterUpdateSlot> ParameterUpdateSlotPtr;
     typedef std::shared_ptr<ParameterDeleteSlot> ParameterDeleteSlotPtr;
+    
 
     class MO_EXPORTS IParameter: boost::noncopyable
     {
@@ -76,7 +78,11 @@ namespace mo
         typedef TypedSlot<void(Context*, IParameter*)> update_f;
         typedef TypedSlot<void(IParameter const*)> delete_f;
 
-        IParameter(const std::string& name_ = "", ParameterType flags_ = Control_e, mo::time_t = -1 * mo::second, Context* ctx = nullptr);
+        IParameter(const std::string& name_ = "", 
+                   ParameterType flags_ = Control_e, 
+                   mo::time_t = -1 * mo::second, 
+                   Context* ctx = nullptr, 
+                   size_t frame_num_ = std::numeric_limits<size_t>::max());
 
         virtual ~IParameter();
 
@@ -89,6 +95,12 @@ namespace mo
             _timestamp = time_t(ts);
             return this;
         }
+        IParameter* SetFrameNumber(size_t fn);
+        size_t GetFrameNumber() const;
+
+        void SetCoordinateSystem(ICoordinateSystem* system);
+        ICoordinateSystem* GetCoordinateSystem() const;
+
 
         const std::string& GetName()      const;
         const std::string  GetTreeName()  const;
@@ -124,7 +136,6 @@ namespace mo
         
         template<class Archive> void serialize(Archive& ar);
         
-		
         template<typename T> T*   GetDataPtr(mo::time_t timestamp_= -1 * mo::second, Context* ctx = nullptr);
         template<typename T> T    GetData(mo::time_t timestamp_= -1 * mo::second, Context* ctx = nullptr);
         template<typename T> bool GetData(T& value, mo::time_t timestamp_= -1 * mo::second, Context* ctx = nullptr);
@@ -144,11 +155,13 @@ namespace mo
         std::string             _name;
         std::string             _tree_root;
         time_t                  _timestamp;
-        boost::recursive_mutex* _mtx = nullptr; 
-        Context*                _ctx = nullptr; // Context of object that owns this parameter
+        size_t                  _sequence_number;
+        boost::recursive_mutex* _mtx; 
+        Context*                _ctx; // Context of object that owns this parameter
         int                     _subscribers = 0;
         ParameterType           _flags;
-        bool                    _owns_mutex = false;
+        bool                    _owns_mutex;
+        ICoordinateSystem*      _cs;
     };
 
     template<typename Archive> void IParameter::serialize(Archive& ar)

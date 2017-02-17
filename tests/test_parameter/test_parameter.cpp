@@ -42,6 +42,40 @@ struct parametered_object: public IMetaObject
     }
 };
 
+struct ParameterUpdateToken
+{
+    ParameterUpdateToken(mo::IParameter& param):
+        _param(param)
+    {
+    }
+    ~ParameterUpdateToken()
+    {
+        if(_timestamp_changed)
+            
+    }
+    ParameterUpdateToken& operator()(mo::Context* ctx)
+    {
+        _ctx = ctx;
+        return *this;
+    }
+    ParameterUpdateToken& operator()(long long fn)
+    {
+        _frame_number = fn;
+        return *this;
+    }
+    ParameterUpdateToken& operator()(mo::time_t time)
+    {
+        _timestamp = time;
+        _timestamp_changed = true;
+        return *this;
+    }
+    long long _frame_number = -1;
+    mo::time_t _timestamp;
+    mo::Context* _ctx = nullptr;
+    bool _timestamp_changed;
+    mo::IParameter& _param;
+};
+
 MO_REGISTER_OBJECT(parametered_object)
 
 BOOST_AUTO_TEST_CASE(wrapped_parameter)
