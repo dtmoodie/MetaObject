@@ -41,20 +41,22 @@ namespace mo
         void Main();
 
         Thread& operator=(const Thread&) = delete;
-        Thread(const Thread&) = delete;
-        boost::thread _thread;
+        Thread(const Thread&)            = delete;
+
+        boost::thread                        _thread;
         std::shared_ptr<mo::TypedSignalRelay<int(void)>> _inner_loop;
-        //std::function<int(void)> _inner_loop;
-        std::function<void(void)> _on_start;
-        std::function<void(void)> _on_exit;
-        Context*                  _ctx;
-        ThreadPool*               _pool;
-        boost::condition_variable_any _cv;
-        boost::recursive_mutex              _mtx;
-        bool                      _run;
-        bool                      _quit;
+
+        std::function<void(void)>             _on_start;
+        std::function<void(void)>             _on_exit;
+        Context*                              _ctx;
+        ThreadPool*                           _pool;
+        boost::condition_variable_any         _cv;
+        boost::recursive_mutex                _mtx;
+        volatile bool                         _run;
+        volatile bool                         _quit;
         std::queue<std::function<void(void)>> _work_queue;
         std::queue<std::function<void(void)>> _event_queue;
-        volatile bool _paused;
+        volatile bool                         _paused;
+        std::string                           _name;
     };
 }
