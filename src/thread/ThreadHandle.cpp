@@ -156,13 +156,18 @@ void ThreadHandle::SetThreadName(const std::string& name)
         {
             mo::SetThreadName(name.c_str());
             mo::SetStreamName(name.c_str(), _thread->GetContext()->GetStream());
+            _thread->_name = name;
+            _thread->GetContext()->SetName(name);
         }else
         {
             Thread* thread = _thread;
-            _thread->PushEventQueue([name, thread]()
+            std::string name_ = name;
+            _thread->PushEventQueue([name_, thread, this]()
             {
-                mo::SetThreadName(name.c_str());
-                mo::SetStreamName(name.c_str(), thread->GetContext()->GetStream());
+                mo::SetThreadName(name_.c_str());
+                mo::SetStreamName(name_.c_str(), thread->GetContext()->GetStream());
+                _thread->_name = name_;
+                _thread->GetContext()->SetName(name_);
             });
         }
     }
