@@ -644,7 +644,8 @@ bool IMetaObject::ConnectInput(InputParameter* input,
                              << " for datatype " << Demangle::TypeToName(output->GetTypeInfo());
                 return false;
             }
-            buffer->SetName(output->GetTreeName() + " buffer for " + input->GetTreeName());
+            std::string buffer_type = ParameterTypeFlagsToString(type_);
+            buffer->SetName(output->GetTreeName() + " " + buffer_type + " buffer for " + input->GetTreeName());
             if(input->SetInput(buffer))
             {
                 _pimpl->_parameter_connections.emplace_back(output_object, output->GetName(), input->GetName(), type_);
