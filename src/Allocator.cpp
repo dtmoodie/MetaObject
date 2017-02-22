@@ -289,6 +289,7 @@ public:
                 return true;
             }
         }
+        this->total_usage += total;
         LOG(trace) << "[CPU] Allocating block of size "
                    << total / (1024 * 1024) << " MB. Total usage: "
                    << total_usage / (1024 * 1024) << " MB";
@@ -309,6 +310,7 @@ public:
                 return std::get<0>(*itr);
             }
         }
+        this->total_usage += total;
         LOG(trace) << "[CPU] Allocating block of size "
                    << total / (1024 * 1024) << " MB. Total usage: "
                    << total_usage / (1024 * 1024) << " MB";

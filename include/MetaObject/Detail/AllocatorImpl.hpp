@@ -8,6 +8,14 @@
 #include <cuda_runtime.h>
 namespace mo
 {
+#define MO_CUDA_ERROR_CHECK(expr, msg) \
+{ \
+    cudaError_t err = (expr); \
+    if(err != cudaSuccess) \
+    { \
+       THROW(warning)  << #expr << " failed " << cudaGetErrorString(err) << " " msg; \
+    } \
+}
 
 unsigned char* alignMemory(unsigned char* ptr, int elemSize)
 {
@@ -196,6 +204,7 @@ bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
         cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
 {
     size_t sizeNeeded, stride;
+
     PaddingPolicy::SizeNeeded(rows, cols, elemSize, sizeNeeded, stride);
     for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr)
     {
@@ -204,23 +213,38 @@ bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
             mat->data = itr->ptr;
             mat->step = stride;
             mat->refcount = (int*)cv::fastMalloc(sizeof(int));
-            deallocateList.erase(itr);
+            clock_t time = clock();
             LOG(trace) << "[GPU] Reusing block of size (" << rows << "," << cols << ") "
-                       << mat->step * rows / (1024 * 1024) << " MB. total usage: " << memoryUsage / (1024 * 1024) << " MB";
+                       << mat->step * rows / (1024 * 1024) << " MB at " << (void*)itr->ptr
+                       << " which was stale for "
+                       << (time - itr->free_time) * 1000 / CLOCKS_PER_SEC
+                       << " ms. total usage: "
+                       << memoryUsage / (1024 * 1024) << " MB";
+            this->memoryUsage += sizeNeeded;
+            deallocateList.erase(itr);
             return true;
         }
     }
     if (rows > 1 && cols > 1)
     {
-        CV_CUDEV_SAFE_CALL(cudaMallocPitch(&mat->data, &mat->step, elemSize * cols, rows));
+
+        MO_CUDA_ERROR_CHECK(cudaMallocPitch(&mat->data, &mat->step, elemSize * cols, rows),
+                            << " while allocating " << rows << ", " << cols);
+
+        this->memoryUsage += mat->step * rows;
         LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") "
-                   << mat->step * rows / (1024 * 1024) << " MB. Total usage: " << memoryUsage / (1024 * 1024) << " MB";
+                   << mat->step * rows / (1024 * 1024) << " MB at "
+                   << (void*)mat->data << ". Total usage: "
+                   << memoryUsage / (1024 * 1024) << " MB";
     }
     else
     {
         CV_CUDEV_SAFE_CALL(cudaMalloc(&mat->data, elemSize * cols * rows));
+        this->memoryUsage += mat->step * rows;
         LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") "
-                   << cols * rows / (1024 * 1024) << " MB. Total usage: " << memoryUsage / (1024 * 1024) << " MB";
+                   << cols * rows / (1024 * 1024) << " MB at "
+                   << (void*)mat->data << ". Total usage: "
+                   << memoryUsage / (1024 * 1024) << " MB";
         mat->step = elemSize * cols;
     }
     mat->refcount = (int*)cv::fastMalloc(sizeof(int));
@@ -230,10 +254,10 @@ bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
 template<typename PaddingPolicy>
 void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(cv::cuda::GpuMat* mat)
 {
-    this->memoryUsage -= mat->rows*mat->step;
+    //this->memoryUsage -= mat->rows*mat->step;
     LOG(trace) << "[GPU] Releasing mat of size (" << mat->rows << ","
                << mat->cols << ") " << (mat->dataend - mat->datastart)/(1024*1024) << " MB to the memory pool";
-    deallocateList.emplace_back(mat->data, clock(), mat->dataend - mat->datastart);
+    deallocateList.emplace_back(mat->datastart, clock(), mat->dataend - mat->datastart);
     cv::fastFree(mat->refcount);
     clear();
 }
@@ -242,20 +266,26 @@ template<typename PaddingPolicy>
 unsigned char* StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t sizeNeeded)
 {
     unsigned char* ptr = nullptr;
+    auto time = clock();
     for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr)
     {
         if (itr->size == sizeNeeded)
         {
             ptr = itr->ptr;
-            deallocateList.erase(itr);
-            memoryUsage += sizeNeeded;
+            this->memoryUsage += sizeNeeded;
             current_allocations[ptr] = sizeNeeded;
+            LOG(trace) << "[GPU] Allocating block of size " << itr->size / (1024 * 1024)
+                       << "MB from the memory stack which was stale for " << (time - itr->free_time) * 1000 / CLOCKS_PER_SEC
+                       << " ms at " << (void*) itr->ptr;
+            deallocateList.erase(itr);
             return ptr;
         }
     }
     CV_CUDEV_SAFE_CALL(cudaMalloc(&ptr, sizeNeeded));
     this->memoryUsage += sizeNeeded;
     current_allocations[ptr] = sizeNeeded;
+    LOG(trace) << "[GPU] Allocating block of size " << sizeNeeded / (1024 * 1024)
+               << "MB at " <<  (void*) ptr;
     return ptr;
 }
 
@@ -282,7 +312,8 @@ void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::clear()
         {
             memoryUsage -= itr->size;
             LOG(trace) << "[GPU] Deallocating block of size " << itr->size /(1024*1024)
-                       << "MB. Which was stale for " << time - itr->free_time << " ms";
+                       << "MB. Which was stale for " << (time - itr->free_time) * 1000 / CLOCKS_PER_SEC << " ms at "
+                       << (void*)itr->ptr;
             CV_CUDEV_SAFE_CALL(cudaFree(itr->ptr));
             itr = deallocateList.erase(itr);
         }else
