@@ -14,6 +14,7 @@
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "MetaObject/Logging/CompileLogger.hpp"
 #include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
+#include "MetaObject/Parameters/IO/TextPolicy.hpp"
 #include "MetaObject/IO/Policy.hpp"
 #include "MetaObject/IO/memory.hpp"
 #include "shared_ptr.hpp"
@@ -23,6 +24,7 @@
 #include "cereal/archives/xml.hpp"
 #include "cereal/archives/portable_binary.hpp"
 #include <fstream>
+#include <istream>
 #include "instantiate.hpp"
 #ifdef HAVE_OPENCV
 #include <opencv2/core.hpp>
@@ -51,6 +53,15 @@ struct serializable_object: public IMetaObject
 
 BuildCallback* cb = nullptr;
 MO_REGISTER_OBJECT(serializable_object);
+
+
+
+BOOST_AUTO_TEST_CASE(test_serialization)
+{
+    BOOST_REQUIRE(mo::IO::Text::imp::stream_serializable<size_t>::value);
+    BOOST_REQUIRE(!mo::IO::Text::imp::stream_serializable<rcc::shared_ptr<serializable_object>>::value);
+}
+
 
 BOOST_AUTO_TEST_CASE(serialize_manual_xml)
 {
