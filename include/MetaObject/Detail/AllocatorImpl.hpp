@@ -276,7 +276,7 @@ template<typename PaddingPolicy>
 void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::clear()
 {
     auto time = clock();
-    for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr)
+    for (auto itr = deallocateList.begin(); itr != deallocateList.end(); )
     {
         if((time - itr->free_time) > deallocateDelay)
         {
@@ -285,6 +285,9 @@ void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::clear()
                        << "MB. Which was stale for " << time - itr->free_time << " ms";
             CV_CUDEV_SAFE_CALL(cudaFree(itr->ptr));
             itr = deallocateList.erase(itr);
+        }else
+        {
+            ++itr;
         }
     }
 }
@@ -471,7 +474,11 @@ void RefCountPolicyImpl<Allocator, cv::Mat>::deallocate(unsigned char* ptr, size
 template<class Allocator>
 RefCountPolicyImpl<Allocator, cv::cuda::GpuMat>::~RefCountPolicyImpl()
 {
-    CV_Assert(ref_count == 0 && "Warning, trying to delete allocator while cv::cuda::GpuMat's still reference it");
+    //CV_Assert(ref_count == 0 && "Warning, trying to delete allocator while cv::cuda::GpuMat's still reference it");
+    if(ref_count != 0)
+    {
+        LOG(warning) << "Trying to delete allocator while cv::cuda::GpuMat's still reference it";
+    }
 }
 template<class Allocator>
 bool RefCountPolicyImpl<Allocator,cv::cuda::GpuMat>::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
