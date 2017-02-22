@@ -1,4 +1,6 @@
 #include "MetaObject/Detail/AllocatorImpl.hpp"
+#include <ctime>
+
 
 using namespace mo;
 boost::thread_specific_ptr<Allocator> thread_specific_allocator;
@@ -385,11 +387,13 @@ CpuMemoryStack* CpuMemoryStack::GlobalInstance()
     static CpuMemoryStack* g_inst = nullptr;
     if(g_inst == nullptr)
     {
-#ifdef _MSC_VER
+/*#ifdef _MSC_VER
         g_inst = new mt_CpuMemoryStackImpl(1000);
 #else
+
         g_inst = new RefCountPolicy<mt_CpuMemoryStackImpl>(1000*1000);
-#endif
+#endif*/
+        g_inst = new RefCountPolicy<mt_CpuMemoryStackImpl>(1.5 * CLOCKS_PER_SEC);
     }
     return g_inst;
 }
@@ -399,11 +403,13 @@ CpuMemoryStack* CpuMemoryStack::ThreadInstance()
     static boost::thread_specific_ptr<CpuMemoryStack> g_inst;
     if(g_inst.get() == nullptr)
     {
-#ifdef _MSC_VER
+/*#ifdef _MSC_VER
         g_inst.reset(new CpuMemoryStackImpl(1000));
 #else
         g_inst.reset(new RefCountPolicy<CpuMemoryStackImpl>(1000*1000));
-#endif
+#endif*/
+        g_inst.reset(new RefCountPolicy<CpuMemoryStackImpl>(1.5 * CLOCKS_PER_SEC));
+
     }
     return g_inst.get();
 }
