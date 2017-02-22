@@ -21,6 +21,7 @@ https://github.com/dtmoodie/parameters
 
 namespace mo
 {
+    class TUpdateToken;
     template<typename T> class MO_EXPORTS ITypedParameter : virtual public IParameter
     {
     public:
@@ -41,15 +42,75 @@ namespace mo
         virtual bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr) = 0;
         
         // Update data, will call update_signal and set changed to true
-        virtual ITypedParameter<T>* UpdateData(T& data_,       mo::time_t ts = -1 * mo::second, Context* ctx = nullptr) = 0;
-        virtual ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr) = 0;
-        virtual ITypedParameter<T>* UpdateData(T* data_,       mo::time_t ts = -1 * mo::second, Context* ctx = nullptr) = 0;
+        virtual ITypedParameter<T>* UpdateData(T& data_,       mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t fn = std::numeric_limits<size_t>::max()) = 0;
+        virtual ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t fn = std::numeric_limits<size_t>::max()) = 0;
+        virtual ITypedParameter<T>* UpdateData(T* data_,       mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t fn = std::numeric_limits<size_t>::max()) = 0;
+
+        virtual TUpdateToken Update();
 
         virtual const TypeInfo& GetTypeInfo() const;
 
         virtual bool Update(IParameter* other);
     private:
         static const TypeInfo _type_info;
+    };
+
+    template<class T>
+    class TUpdateToken
+    {
+    public:
+        TUpdateToken(ITypedParameter<T>& param):
+            _param(param),
+            _ts(mo::time_t(-1 * mo::second)),
+            _fn(std::numeric_limits<size_t>::max()),
+            _cs(nullptr),
+            _ctx(nullptr)
+        {
+        }
+
+        ~TUpdateToken()
+        {
+            if(_cs)
+                _param.SetCoordinateSystem(_cs);
+            _param.UpdateData(_data, _ts, _ctx, _fn);
+        }
+
+        TUpdateToken& operator()(T&& data)
+        {
+            _data = std::forward<T>(data);
+        }
+
+        TUpdateToken& operator()(time_t&& ts)
+        {
+            _ts = ts;
+            return *this;
+        }
+
+        TUpdateToken& operator()(size_t fn)
+        {
+            _fn = fn;
+            return *this;
+        }
+        TUpdateToken& operator()(Context* ctx)
+        {
+            _ctx = ctx;
+            return *this;
+        }
+
+        TUpdateToken& operator()(ICoordinateSystem* cs)
+        {
+            _cs = cs;
+            return *this;
+        }
+
+    private:
+        T& _data;
+        ITypedParameter<T>& _param;
+        size_t _fn;
+        mo::time_t _ts;
+        ICoordinateSystem* _cs;
+        Context* _ctx;
+        IParameter& _param;
     };
 }
 #include "detail/ITypedParameterImpl.hpp"

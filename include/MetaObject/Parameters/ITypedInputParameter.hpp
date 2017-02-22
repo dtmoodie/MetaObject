@@ -27,9 +27,9 @@ namespace mo
         T GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
 
 
-        ITypedParameter<T>* UpdateData(T& data_, mo::time_t ts, Context* ctx);
-        ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts, Context* ctx);
-        ITypedParameter<T>* UpdateData(T* data_, mo::time_t ts, Context* ctx);
+        ITypedParameter<T>* UpdateData(T& data_, mo::time_t ts, Context* ctx, size_t fn = std::numeric_limits<size_t>::max());
+        ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts, Context* ctx, size_t fn = std::numeric_limits<size_t>::max());
+        ITypedParameter<T>* UpdateData(T* data_, mo::time_t ts, Context* ctx, size_t fn = std::numeric_limits<size_t>::max());
 
     protected:
         virtual void onInputDelete(IParameter const* param);

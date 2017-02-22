@@ -145,7 +145,6 @@ namespace mo
     {
         ar(_name);
         ar(_tree_root);
-        ar(_timestamp);
         ar(_flags);
     }
 

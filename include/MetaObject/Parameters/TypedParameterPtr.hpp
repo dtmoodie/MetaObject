@@ -13,9 +13,10 @@ namespace mo
         virtual T    GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
 		virtual bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
 
-		virtual ITypedParameter<T>* UpdateData(T& data_,       mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
-		virtual ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
-		virtual ITypedParameter<T>* UpdateData(T* data_,       mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+        virtual ITypedParameter<T>* UpdateData(T& data_,       mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t fn = std::numeric_limits<size_t>::max());
+        virtual ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t fn = std::numeric_limits<size_t>::max());
+        virtual ITypedParameter<T>* UpdateData(T* data_,       mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t fn = std::numeric_limits<size_t>::max());
+
 		virtual bool Update(IParameter* other);
 		virtual std::shared_ptr<IParameter> DeepCopy() const;
         ITypedParameter<T>* UpdatePtr(T* ptr);

@@ -36,7 +36,7 @@ IParameter::IParameter(const std::string& name_, ParameterType flags_, mo::time_
     _subscribers(0), 
     _timestamp(ts),
     _ctx(ctx),
-    _sequence_number(seq),
+    _frame_number(seq),
     _mtx(nullptr),
     _owns_mutex(false),
     _cs(nullptr)
@@ -201,11 +201,18 @@ void IParameter::OnUpdate(Context* ctx)
 	update_signal(ctx, this);
 }
 
-IParameter* IParameter::Commit(mo::time_t ts, Context* ctx)
+IParameter* IParameter::Commit(mo::time_t ts, Context* ctx, size_t fn)
 {
     {
         boost::recursive_mutex::scoped_lock lock(mtx());
         _timestamp = ts;
+        if(fn != std::numeric_limits<size_t>::max())
+        {
+            this->_frame_number = fn;
+        }else
+        {
+            ++this->_frame_number;
+        }
         modified = true;
     }
 	update_signal(ctx, this);
@@ -263,6 +270,7 @@ bool IParameter::CheckFlags(ParameterType flag)
 {
 	return _flags & flag;
 }
+
 std::shared_ptr<IParameter> IParameter::DeepCopy() const
 {
     return std::shared_ptr<IParameter>();
