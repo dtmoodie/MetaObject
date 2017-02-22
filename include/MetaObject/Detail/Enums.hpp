@@ -11,7 +11,8 @@ namespace mo
         State_e = 4,
         Control_e = 8,
         Buffer_e = 16,
-        Optional_e = 32
+        Optional_e = 32,
+        Desynced_e = 64
     };
     MO_EXPORTS std::string ParameteTypeToString(ParameterType type);
     MO_EXPORTS ParameterType StringToParameteType(const std::string& str);
