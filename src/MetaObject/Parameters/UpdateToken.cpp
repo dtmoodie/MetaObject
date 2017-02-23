@@ -2,7 +2,8 @@
 
 using namespace mo;
 
-UpdateToken::UpdateToken(IParameter& param)
+UpdateToken::UpdateToken(IParameter& param):
+    _param(param)
 {
 
 }

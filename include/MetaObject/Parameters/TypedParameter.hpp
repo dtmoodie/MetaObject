@@ -29,15 +29,26 @@ namespace mo
         typedef T ValueType;
         static const ParameterTypeFlags Type = TypedParameter_e;
 
-        TypedParameter(const std::string& name = "", const T& init = T(), ParameterType type = Control_e, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+        TypedParameter(const std::string& name = "",
+                       const T& init = T(),
+                       ParameterType type = Control_e,
+                       mo::time_t ts = -1 * mo::second,
+                       Context* ctx = nullptr);
         
-        T    GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
-        T*   GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
-        bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+        T*   GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn_ = nullptr);
+        T*   GetDataPtr(size_t fn, Context* ctx = nullptr, mo::time_t* ts_ = nullptr);
 
-        ITypedParameter<T>* UpdateData(T& data_,       mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t fn = std::numeric_limits<size_t>::max());
-        ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t fn = std::numeric_limits<size_t>::max());
-        ITypedParameter<T>* UpdateData(T* data_,       mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t fn = std::numeric_limits<size_t>::max());
+        T    GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn = nullptr);
+        T    GetData(size_t fn, Context* ctx = nullptr, mo::time_t* ts = nullptr);
+
+        bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn = nullptr);
+        bool GetData(T& value, size_t fn, Context* ctx = nullptr, mo::time_t* ts = nullptr);
+
+        virtual ITypedParameter<T>* UpdateData(T&& data,
+                                               mo::time_t ts = -1 * mo::second,
+                                               Context* ctx = nullptr,
+                                               size_t fn = std::numeric_limits<size_t>::max(),
+                                               ICoordinateSystem* cs = nullptr);
 
         virtual std::shared_ptr<IParameter> DeepCopy() const;
         bool Update(IParameter* other, Context* ctx);

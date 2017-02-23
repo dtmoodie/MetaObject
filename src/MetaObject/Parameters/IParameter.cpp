@@ -29,24 +29,24 @@ https://github.com/dtmoodie/parameters
 
 using namespace mo;
 
-IParameter::IParameter(const std::string& name_, ParameterType flags_, mo::time_t ts, Context* ctx, size_t seq) :
+IParameter::IParameter(const std::string& name_, ParameterType flags_, mo::time_t ts, Context* ctx, size_t fn) :
     _name(name_), 
     _flags(flags_), 
     modified(false), 
     _subscribers(0), 
-    _timestamp(ts),
+    _ts(ts),
     _ctx(ctx),
-    _frame_number(seq),
+    _fn(fn),
+    _cs(nullptr),
     _mtx(nullptr),
-    _owns_mutex(false),
-    _cs(nullptr)
+    _owns_mutex(false)
 {
     
 }
 
 IParameter::~IParameter()
 {
-	delete_signal(this);
+    _delete_signal(this);
     if(_owns_mutex)
         delete _mtx;
 }
@@ -67,22 +67,12 @@ IParameter* IParameter::SetTreeRoot(const std::string& treeRoot_)
 
 IParameter* IParameter::SetFrameNumber(size_t fn)
 {
-    this->_frame_number = fn;
+    this->_fn = fn;
 }
 
-size_t IParameter::GetFrameNumber() const
-{
-    return _frame_number;
-}
-
-void IParameter::SetCoordinateSystem(ICoordinateSystem* system)
+IParameter* IParameter::SetCoordinateSystem(ICoordinateSystem* system)
 {
     this->_cs = system;
-}
-
-ICoordinateSystem* IParameter::GetCoordinateSystem() const
-{
-    return _cs;
 }
 
 IParameter* IParameter::SetContext(Context* ctx)
@@ -111,7 +101,12 @@ const std::string IParameter::GetTreeName() const
 
 mo::time_t IParameter::GetTimestamp() const
 {
-    return _timestamp;
+    return _ts;
+}
+
+size_t IParameter::GetFrameNumber() const
+{
+    return _fn;
 }
 
 Context* IParameter::GetContext() const
@@ -119,10 +114,15 @@ Context* IParameter::GetContext() const
     return _ctx;
 }
 
+ICoordinateSystem* IParameter::GetCoordinateSystem() const
+{
+    return _cs;
+}
+
 std::shared_ptr<Connection> IParameter::RegisterUpdateNotifier(update_f* f)
 {
     boost::recursive_mutex::scoped_lock lock(mtx());
-	return f->Connect(&update_signal);
+    return f->Connect(&_update_signal);
 }
 
 std::shared_ptr<Connection> IParameter::RegisterUpdateNotifier(ISlot* f)
@@ -146,16 +146,17 @@ std::shared_ptr<Connection> IParameter::RegisterUpdateNotifier(std::shared_ptr<I
 	}
 	return std::shared_ptr<Connection>();
 }
+
 std::shared_ptr<Connection> IParameter::RegisterUpdateNotifier(std::shared_ptr<TypedSignalRelay<void(Context*, IParameter*)>>& relay)
 {
     boost::recursive_mutex::scoped_lock lock(mtx());
-	return update_signal.Connect(relay);
+    return _update_signal.Connect(relay);
 }
 
 std::shared_ptr<Connection> IParameter::RegisterDeleteNotifier(delete_f* f)
 {
     boost::recursive_mutex::scoped_lock lock(mtx());
-	return f->Connect(&delete_signal);
+    return f->Connect(&_delete_signal);
 }
 
 std::shared_ptr<Connection> IParameter::RegisterDeleteNotifier(ISlot* f)
@@ -179,10 +180,11 @@ std::shared_ptr<Connection> IParameter::RegisterDeleteNotifier(std::shared_ptr<I
 	}
 	return std::shared_ptr<Connection>();
 }
+
 std::shared_ptr<Connection> IParameter::RegisterDeleteNotifier(std::shared_ptr<TypedSignalRelay<void(IParameter const*)>>& relay)
 {
     boost::recursive_mutex::scoped_lock lock(mtx());
-	return delete_signal.Connect(relay);
+    return _delete_signal.Connect(relay);
 }
 
 
@@ -198,24 +200,28 @@ void IParameter::OnUpdate(Context* ctx)
         modified = true;
     }
 
-	update_signal(ctx, this);
+    _update_signal(ctx, this);
 }
 
-IParameter* IParameter::Commit(mo::time_t ts, Context* ctx, size_t fn)
+IParameter* IParameter::Commit(mo::time_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs_)
 {
     {
         boost::recursive_mutex::scoped_lock lock(mtx());
-        _timestamp = ts;
+        _ts = ts;
         if(fn != std::numeric_limits<size_t>::max())
         {
-            this->_frame_number = fn;
+            this->_fn = fn;
         }else
         {
-            ++this->_frame_number;
+            ++this->_fn;
+        }
+        if(cs_ != nullptr)
+        {
+            _cs = cs_;
         }
         modified = true;
     }
-	update_signal(ctx, this);
+    _update_signal(ctx, this);
     return this;
 }
 
@@ -256,6 +262,7 @@ bool IParameter::HasSubscriptions() const
 {
 	return _subscribers != 0;
 }
+
 void IParameter::SetFlags(ParameterType flags_)
 {
 	_flags = flags_;

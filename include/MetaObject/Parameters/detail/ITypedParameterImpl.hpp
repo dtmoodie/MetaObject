@@ -5,17 +5,24 @@ namespace mo
 {
 	template<typename T> class ITypedParameter;
 
-	template<typename T> ITypedParameter<T>::ITypedParameter(const std::string& name, ParameterType flags, mo::time_t ts, Context* ctx) :
-		IParameter(name, flags, ts, ctx)
+    template<typename T>
+    ITypedParameter<T>::ITypedParameter(const std::string& name,
+                                        ParameterType flags,
+                                        mo::time_t ts,
+                                        Context* ctx,
+                                        size_t fn):
+        IParameter(name, flags, ts, ctx, fn)
 	{
 	}
 
-	template<typename T> const TypeInfo& ITypedParameter<T>::GetTypeInfo() const
+    template<typename T>
+    const TypeInfo& ITypedParameter<T>::GetTypeInfo() const
 	{
 		return _type_info;
 	}
 
-	template<typename T> bool ITypedParameter<T>::Update(IParameter* other)
+    template<typename T>
+    bool ITypedParameter<T>::Update(IParameter* other)
 	{
 		auto typedParameter = dynamic_cast<ITypedParameter<T>*>(other);
 		if (typedParameter)
@@ -27,6 +34,7 @@ namespace mo
 		}
 		return false;
 	}
-    template<typename T> const TypeInfo ITypedParameter<T>::_type_info(typeid(T));
+    template<typename T>
+    const TypeInfo ITypedParameter<T>::_type_info(typeid(T));
 }
 #endif

@@ -21,34 +21,104 @@ https://github.com/dtmoodie/parameters
 
 namespace mo
 {
+    template<class T>
     class TUpdateToken;
-    template<typename T> class MO_EXPORTS ITypedParameter : virtual public IParameter
+    template<typename T>
+    class MO_EXPORTS ITypedParameter : virtual public IParameter
     {
     public:
         typedef std::shared_ptr<ITypedParameter<T>> Ptr;
         typedef T ValueType;
         
-        ITypedParameter(const std::string& name, ParameterType flags = Control_e, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+        /*!
+         * \brief ITypedParameter default constructor, passes args to IParameter
+         */
+        ITypedParameter(const std::string& name = "",
+                        ParameterType flags = Control_e,
+                        mo::time_t ts = -1 * mo::second,
+                        Context* ctx = nullptr,
+                        size_t fn = std::numeric_limits<size_t>::max());
 
         // The call is thread safe but the returned pointer may be modified by a different thread
         // ts is the timestamp for which you are requesting data, -1 indicates newest
         // ctx is the context of the data request, such as the thread of the object requesting the data
-        virtual T*   GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr) = 0;
+        /*!
+         * \brief GetDataPtr returns a pointer to data at a requested timestamp. Not thread safe.
+         * \param ts requested timestamp, default value returns newest data
+         * \param ctx context for data to be located and synchronized
+         * \param fn_ optional output frame number of requested data
+         * \return pointer to data, nullptr if failed
+         */
+        virtual T*   GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn_ = nullptr) = 0;
+        /*!
+         * \brief GetDataPtr returns a pointer to data at a requested frame number. Not thread safe
+         * \param fn requested frame number
+         * \param ctx context for data to be located, used for event stream synchronization
+         *        between parameter's _ctx and input ctx
+         * \param ts_ optional output timestamp of requested data
+         * \return pointer to data, nullptr if failed
+         */
+        virtual T*   GetDataPtr(size_t fn, Context* ctx = nullptr, mo::time_t* ts_ = nullptr) = 0;
 		
         // Copies data into value
         // Time index is the index for which you are requesting data
         // ctx is the context of the data request, such as the thread of the object requesting the data
-		virtual T    GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr) = 0;
-        virtual bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr) = 0;
+        /*!
+         * \brief GetData returns a copy of the data at the requested timestamp. Thread safe
+         * \param ts requested timestamp
+         * \param ctx context for synchronization
+         * \param fn optional output frame number of requested data
+         * \return copy of data, throws exception if access fails
+         */
+        virtual T    GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn = nullptr) = 0;
+
+        /*!
+         * \brief GetData returns a copy of the data at requested frame number. Thread safe
+         * \param fn requested frame number
+         * \param ctx is the context of the destination data used for synchronization
+         * \param ts is the optional output timestamp of requested data
+         * \return copy of data at requested frame number, throws exception on failure
+         */
+        virtual T    GetData(size_t fn, Context* ctx = nullptr, mo::time_t* ts = nullptr) = 0;
+
+        /*!
+         * \brief GetData copies data into value. Thread safe
+         * \param value reference to location of output
+         * \param ts requested timestamp, default value is newest
+         * \param ctx context for resulting data for synchronization
+         * \param fn optional output frame number of requested data
+         * \return true on success, false otherwise
+         */
+        virtual bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn = nullptr) = 0;
+        /*!
+         * \brief GetData copies data into value. Thread safe
+         * \param value return value
+         * \param fn requested frame number
+         * \param ctx context of returned data, used for synchronization
+         * \param ts optional output timestamp of data
+         * \return true on success, false otherwise
+         */
+        virtual bool GetData(T& value, size_t fn, Context* ctx = nullptr, mo::time_t ts = nullptr) = 0;
         
-        // Update data, will call update_signal and set changed to true
-        virtual ITypedParameter<T>* UpdateData(T& data_,       mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t fn = std::numeric_limits<size_t>::max()) = 0;
-        virtual ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t fn = std::numeric_limits<size_t>::max()) = 0;
-        virtual ITypedParameter<T>* UpdateData(T* data_,       mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t fn = std::numeric_limits<size_t>::max()) = 0;
+        /*!
+         * \brief UpdateData used to update the parameter and emit update signals.
+         *        Calls commit with provided values
+         * \param data is the new data value
+         * \param ts timestamp of new data
+         * \param fn frame number of new data
+         * \param ctx context of new data
+         * \param cs coordinate system of new data
+         * \return pointer to this parameter
+         */
+        virtual ITypedParameter<T>* UpdateData(T&& data,
+                                               mo::time_t ts = -1 * mo::second,
+                                               Context* ctx = nullptr,
+                                               size_t fn = std::numeric_limits<size_t>::max(),
+                                               ICoordinateSystem* cs = nullptr) = 0;
 
-        virtual TUpdateToken Update();
+        virtual TUpdateToken<T> Update();
 
-        virtual const TypeInfo& GetTypeInfo() const;
+        const TypeInfo& GetTypeInfo() const;
 
         virtual bool Update(IParameter* other);
     private:
@@ -61,7 +131,7 @@ namespace mo
     public:
         TUpdateToken(ITypedParameter<T>& param):
             _param(param),
-            _ts(mo::time_t(-1 * mo::second)),
+            _ts(-1 * mo::second),
             _fn(std::numeric_limits<size_t>::max()),
             _cs(nullptr),
             _ctx(nullptr)
@@ -70,9 +140,7 @@ namespace mo
 
         ~TUpdateToken()
         {
-            if(_cs)
-                _param.SetCoordinateSystem(_cs);
-            _param.UpdateData(_data, _ts, _ctx, _fn);
+            _param.UpdateData(_data, _ts, _fn, _ctx, _cs);
         }
 
         TUpdateToken& operator()(T&& data)
@@ -80,7 +148,7 @@ namespace mo
             _data = std::forward<T>(data);
         }
 
-        TUpdateToken& operator()(time_t&& ts)
+        TUpdateToken& operator()(mo::time_t&& ts)
         {
             _ts = ts;
             return *this;
@@ -110,7 +178,6 @@ namespace mo
         mo::time_t _ts;
         ICoordinateSystem* _cs;
         Context* _ctx;
-        IParameter& _param;
     };
 }
 #include "detail/ITypedParameterImpl.hpp"

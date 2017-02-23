@@ -12,21 +12,39 @@ namespace mo
 	}
 
 	template<typename T> 
-    T* TypedParameter<T>::GetDataPtr(mo::time_t ts, Context* ctx)
+    T* TypedParameter<T>::GetDataPtr(mo::time_t ts, Context* ctx, size_t* fn)
 	{
         if (ts > 0 * mo::second)
         {
             if(ts != this->_timestamp)
             {
-                LOG(debug) << "Requested timestamp " << ts << " != " << this->_timestamp;
+                LOG(debug) << "Requested timestamp " << ts << " != " << this->_ts;
                 return nullptr;
             }
         }
+        if(fn)
+            *fn = this->_fn;
 		return &data;
 	}
 
+    template<typename T>
+    T* TypedParameter<T>::GetDataPtr(size_t fn, Context* ctx, mo::time_t* ts)
+    {
+        if (fn != std::numeric_limits<size_t>::max())
+        {
+            if(fn != this->_fn && this->_fn != std::numeric_limits<size_t>::max())
+            {
+                LOG(debug) << "Requested frame " << fn << " != " << this->_fn;
+                return nullptr;
+            }
+        }
+        if(ts)
+            *ts = this->_ts;
+        return &data;
+    }
+
 	template<typename T> 
-    bool TypedParameter<T>::GetData(T& value, mo::time_t ts, Context* ctx)
+    bool TypedParameter<T>::GetData(T& value, mo::time_t ts, Context* ctx, size_t* fn)
 	{
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if (ts < 0 * mo::second)
@@ -38,6 +56,8 @@ namespace mo
             if(ts == this->_timestamp)
             {
                 value = data;
+                if(fn)
+                    *fn = this->_fn;
                 return true;
             }
         }
@@ -45,40 +65,73 @@ namespace mo
 	}
 
     template<typename T>
-    T TypedParameter<T>::GetData(mo::time_t ts, Context* ctx)
+    bool TypedParameter<T>::GetData(T& value, size_t fn, Context* ctx, mo::time_t* ts)
+    {
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+        if (this->_fn == fn)
+        {
+            if(ts)
+                *ts = this->_ts;
+            value = data;
+            return true;
+        }else
+        {
+            if(this->_fn == std::numeric_limits<size_t>::max())
+            {
+                value = data;
+                if(ts)
+                    *ts = this->_ts;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    template<typename T>
+    T TypedParameter<T>::GetData(mo::time_t ts, Context* ctx, size_t* fn)
     {
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(ts < 0 * mo::second)
         {
+            if(fn)
+                *fn = this->_fn;
             return data;
         }else
         {
-            ASSERT_EQ(ts, this->_timestamp) << " Timestamps do not match";
+            ASSERT_EQ(ts, this->_ts) << " Timestamps do not match";
+            if(fn)
+                *fn = this->_fn;
             return data;
         }
     }
 	
-    template<typename T> 
-    ITypedParameter<T>* TypedParameter<T>::UpdateData(T& data_, mo::time_t ts, Context* ctx)
-	{
-		data = data_;
-        IParameter::Commit(ts, ctx);
-		return this;
-	}
+    template<typename T>
+    T TypedParameter<T>::GetData(size_t fn, Context* ctx, mo::time_t* ts)
+    {
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+        if(this->_fn == std::numeric_limits<size_t>::max())
+        {
+            if(ts)
+                *ts = this->_ts;
+            return data;
+        }else
+        {
+            ASSERT_EQ(fn, this->_fn) << " Frame numbers do not match";
+            if(ts)
+                *ts = this->_ts;
+            return data;
+        }
+    }
 
-	template<typename T> 
-    ITypedParameter<T>* TypedParameter<T>::UpdateData(const T& data_, mo::time_t ts, Context* ctx)
+    template<typename T>
+    ITypedParameter<T>* TypedParameter<T>::UpdateData(T&& data_,
+                                                      mo::time_t ts,
+                                                      Context* ctx,
+                                                      size_t fn,
+                                                      ICoordinateSystem* cs)
 	{
-		data = data_;
-        IParameter::Commit(ts, ctx);
-		return this;
-	}
-	
-    template<typename T> 
-    ITypedParameter<T>* TypedParameter<T>::UpdateData(T* data_, mo::time_t ts, Context* ctx)
-	{
-		data = *data_;
-        IParameter::Commit(ts, ctx);
+        data = std::forward<T>(data_);
+        this->Commit(ts, ctx, fn, cs);
 		return this;
 	}
 	
