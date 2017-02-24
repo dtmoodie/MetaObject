@@ -44,7 +44,7 @@ namespace mo
         bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn = nullptr);
         bool GetData(T& value, size_t fn, Context* ctx = nullptr, mo::time_t* ts = nullptr);
 
-        virtual ITypedParameter<T>* UpdateData(T&& data,
+        virtual ITypedParameter<T>* UpdateData(const T& data,
                                                mo::time_t ts = -1 * mo::second,
                                                Context* ctx = nullptr,
                                                size_t fn = std::numeric_limits<size_t>::max(),

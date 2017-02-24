@@ -4,33 +4,60 @@ namespace mo
 {
     namespace Buffer
     {
-        template<class T> CircularBuffer<T>::CircularBuffer(const std::string& name, const T& init, mo::time_t ts, ParameterType type ):
+        template<class T>
+        CircularBuffer<T>::CircularBuffer(T&& init, const std::string& name, mo::time_t ts, ParameterType type ):
             ITypedInputParameter<T>(name),
             ITypedParameter<T>(name, mo::Buffer_e)
         {
             (void)&_circular_buffer_constructor;
             (void)&_circular_buffer_parameter_constructor;
             _data_buffer.set_capacity(10);
-            _data_buffer.push_back(std::make_pair(ts, init));
+            _data_buffer.push_back(State<T>(ts, init));
         }
 
+        template<class T>
+        CircularBuffer<T>::CircularBuffer(const std::string& name, mo::time_t ts, ParameterType type ):
+            ITypedInputParameter<T>(name),
+            ITypedParameter<T>(name, mo::Buffer_e)
+        {
+            _data_buffer.set_capacity(10);
+        }
 
-        template<class T> T* CircularBuffer<T>::GetDataPtr(mo::time_t ts, Context* ctx)
+        template<class T>
+        T* CircularBuffer<T>::GetDataPtr(mo::time_t ts, Context* ctx, size_t* fn)
         {
             if (ts < 0 * mo::second && _data_buffer.size())
                 return &_data_buffer.back().second;
 
             for (auto& itr : _data_buffer)
             {
-                if (itr.first == ts)
+                if (itr.ts == ts)
                 {
-                    return &itr.second;
+                    if(fn)
+                        *fn = itr.fn;
+                    return &itr;
+                }
+            }
+            return nullptr;
+        }
+
+        template<class T>
+        T* CircularBuffer<T>::GetDataPtr(size_t fn, Context* ctx, mo::time_t* ts)
+        {
+            for (auto& itr : _data_buffer)
+            {
+                if (itr.fn == fn)
+                {
+                    if(ts)
+                        *ts = itr.ts;
+                    return &itr;
                 }
             }
             return nullptr;
         }
          
-        template<class T> bool CircularBuffer<T>::GetData(T& value, mo::time_t ts, Context* ctx)
+        template<class T>
+        bool CircularBuffer<T>::GetData(T& value, mo::time_t ts, Context* ctx, size_t* fn)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             if (ts < 0 * mo::second  && _data_buffer.size())
@@ -40,26 +67,33 @@ namespace mo
             }
             for (auto& itr : _data_buffer)
             {
-                if (itr.first == ts)
+                if (itr.ts == ts)
                 {
-                    value = itr.second;
+                    value = itr;
+                    if(fn)
+                        *fn = itr.fn;
                     return true;
                 }
             }
             return false;
         }
 
-        template<class T> T CircularBuffer<T>::GetData(mo::time_t ts, Context* ctx)
+        template<class T>
+        T CircularBuffer<T>::GetData(mo::time_t ts, Context* ctx, size_t* fn)
         {
             if (ts < 0 * mo::second && _data_buffer.size())
             {
-                return _data_buffer.back().second;
+                if(fn)
+                    *fn = _data_buffer.back().fn;
+                return _data_buffer.back();
             }
             for (auto& itr : _data_buffer)
             {
-                if (itr.first == ts)
+                if (itr == ts)
                 {
-                    return itr.second;
+                    if(fn)
+                        *fn = itr.fn;
+                    return itr;
                 }
             }
             THROW(debug) << "Could not find timestamp " << ts << " in range (" << _data_buffer.back().first << "," << _data_buffer.front().first <<")";
@@ -67,33 +101,16 @@ namespace mo
         }
             
 
-        template<class T> ITypedParameter<T>* CircularBuffer<T>::UpdateData(T& data_, mo::time_t ts, Context* ctx)
+        template<class T>
+        ITypedParameter<T>* CircularBuffer<T>::UpdateData(T&& data_, mo::time_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            _data_buffer.push_back(std::pair<mo::time_t, T>(ts, data_));
-            IParameter::modified = true;
-            IParameter::OnUpdate(ctx);
-            return this;
-        }
-            
-        template<class T> ITypedParameter<T>* CircularBuffer<T>::UpdateData(const T& data_, mo::time_t ts, Context* ctx)
-        {
-            boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            _data_buffer.push_back(std::pair<mo::time_t, T>(ts, data_));
-            IParameter::modified = true;
-            IParameter::OnUpdate(ctx);
+            _data_buffer.push_back(State<T>(ts, fn, ctx, cs, data_));
+            this->modified = true;
+            this->Commit(ts, ctx, fn, cs);
             return this;
         }
 
-        template<class T> ITypedParameter<T>* CircularBuffer<T>::UpdateData(T* data_, mo::time_t ts, Context* ctx)
-        {
-            boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            _data_buffer.push_back(std::pair<mo::time_t, T>(ts, *data_));
-            IParameter::modified = true;
-            IParameter::OnUpdate(ctx);
-            return this;
-        }
-        
         template<class T> bool CircularBuffer<T>::Update(IParameter* other, Context* ctx)
         {
             auto typedParameter = dynamic_cast<ITypedParameter<T>*>(other);

@@ -21,6 +21,116 @@ https://github.com/dtmoodie/parameters
 
 namespace mo
 {
+    template<typename T, typename Enable = void> struct Stamped;
+
+    template<class T>
+    struct Stamped<T, typename std::enable_if<!std::is_pod<T>::value>::type>: public T
+    {
+        template<class...U>
+        Stamped(U...args):
+            T(args...)
+        {
+            ts = -1 * second;
+            fn = 0;
+        }
+
+        template<class...U>
+        Stamped(mo::time_t ts, size_t frame_number, U...args) : T(args...)
+        {
+            this->ts = ts;
+            this->fn = frame_number;
+        }
+
+        template<class A>
+        void serialize(A& ar)
+        {
+            ar(ts);
+            ar(ts);
+            ar(*static_cast<T*>(this));
+        }
+
+        mo::time_t ts;
+        size_t fn;
+    };
+
+    template<class T>
+    struct Stamped<T, typename std::enable_if<std::is_pod<T>::value>::type>
+    {
+        Stamped(T&& init):
+            data(std::forward<T>(init))
+        {
+            ts = -1 * second;
+            fn = 0;
+        }
+
+        template<class...U>
+        Stamped(mo::time_t ts, size_t frame_number, U&&...  init):
+            data(std::forward<U>(init)...)
+        {
+            this->ts = ts;
+            this->fn = frame_number;
+        }
+
+        template<class A>
+        void serialize(A& ar)
+        {
+            ar(ts);
+            ar(ts);
+            ar(data);
+        }
+
+        mo::time_t ts;
+        size_t fn;
+        T data;
+    };
+
+    // The state struct is used to save a snapshot of the state of a parameter at a point in time
+    template<class T>
+    struct State: public Stamped<T, void>
+    {
+        template<class...U>
+        State(mo::time_t ts, size_t fn, Context* ctx, ICoordinateSystem* cs, U&&... init):
+            Stamped<T, void>(ts, fn, std::forward<U>(init)...),
+            ctx(ctx),
+            cs(cs)
+        {
+
+        }
+        template<class...U>
+        State(mo::time_t ts, size_t fn, Context* ctx, U&&... init):
+            Stamped<T, void>(ts, fn, std::forward<U>(init)...),
+            ctx(ctx),
+            cs(nullptr)
+        {
+
+        }
+        template<class...U>
+        State(mo::time_t ts, size_t fn, U&&... init):
+            Stamped<T, void>(ts, fn, std::forward<U>(init)...),
+            ctx(nullptr),
+            cs(nullptr)
+        {
+
+        }
+        template<class...U>
+        State(mo::time_t ts, U&&... init):
+            Stamped<T, void>(ts, std::numeric_limits<size_t>::max(), std::forward<U>(init)...),
+            ctx(nullptr),
+            cs(nullptr)
+        {
+        }
+        template<class...U>
+        State(U&&... init):
+            Stamped<T, void>(-1 * second, std::numeric_limits<size_t>::max(), std::forward<U>(init)...),
+            ctx(nullptr),
+            cs(nullptr)
+        {
+        }
+        Context* ctx;
+        ICoordinateSystem* cs;
+    };
+
+
     template<class T>
     class TUpdateToken;
     template<typename T>
@@ -59,7 +169,7 @@ namespace mo
          * \return pointer to data, nullptr if failed
          */
         virtual T*   GetDataPtr(size_t fn, Context* ctx = nullptr, mo::time_t* ts_ = nullptr) = 0;
-		
+
         // Copies data into value
         // Time index is the index for which you are requesting data
         // ctx is the context of the data request, such as the thread of the object requesting the data
@@ -98,7 +208,7 @@ namespace mo
          * \param ts optional output timestamp of data
          * \return true on success, false otherwise
          */
-        virtual bool GetData(T& value, size_t fn, Context* ctx = nullptr, mo::time_t ts = nullptr) = 0;
+        virtual bool GetData(T& value, size_t fn, Context* ctx = nullptr, mo::time_t* ts = nullptr) = 0;
         
         /*!
          * \brief UpdateData used to update the parameter and emit update signals.
@@ -110,7 +220,7 @@ namespace mo
          * \param cs coordinate system of new data
          * \return pointer to this parameter
          */
-        virtual ITypedParameter<T>* UpdateData(T&& data,
+        virtual ITypedParameter<T>* UpdateData(const T& data,
                                                mo::time_t ts = -1 * mo::second,
                                                Context* ctx = nullptr,
                                                size_t fn = std::numeric_limits<size_t>::max(),

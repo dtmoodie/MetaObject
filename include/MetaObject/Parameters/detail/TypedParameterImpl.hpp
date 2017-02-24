@@ -124,13 +124,13 @@ namespace mo
     }
 
     template<typename T>
-    ITypedParameter<T>* TypedParameter<T>::UpdateData(T&& data_,
+    ITypedParameter<T>* TypedParameter<T>::UpdateData(const T& data_,
                                                       mo::time_t ts,
                                                       Context* ctx,
                                                       size_t fn,
                                                       ICoordinateSystem* cs)
 	{
-        data = std::forward<T>(data_);
+        data = data_;
         this->Commit(ts, ctx, fn, cs);
 		return this;
 	}

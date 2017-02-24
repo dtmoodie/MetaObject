@@ -29,26 +29,38 @@ namespace mo
 {
     namespace Buffer
     {
-        template<typename T> class CircularBuffer: public IBuffer, public ITypedInputParameter<T>
+        template<class T>
+        class CircularBuffer: public IBuffer, public ITypedInputParameter<T>
         {
             static ParameterConstructor<CircularBuffer<T>> _circular_buffer_parameter_constructor;
             static BufferConstructor<CircularBuffer<T>> _circular_buffer_constructor;
-            boost::circular_buffer<std::pair<mo::time_t, T>> _data_buffer;
+            boost::circular_buffer<State<T>> _data_buffer;
         public:
             typedef T ValueType;
             static const ParameterTypeFlags Type = cbuffer_e;
 
-            CircularBuffer(const std::string& name = "",
-                const T& init = T(), mo::time_t ts = -1 * mo::second,
+            CircularBuffer(T&& init, const std::string& name = "",
+                mo::time_t ts = -1 * mo::second,
                 ParameterType type = Buffer_e);
 
-            T*   GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
-            bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
-            T    GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            CircularBuffer(const std::string& name = "",
+                mo::time_t ts = -1 * mo::second,
+                ParameterType type = Buffer_e);
 
-            ITypedParameter<T>* UpdateData(T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
-            ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts = -1 * mo::second, Context* ctx= nullptr);
-            ITypedParameter<T>* UpdateData(T* data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            T*   GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn_ = nullptr);
+            T*   GetDataPtr(size_t fn, Context* ctx = nullptr, mo::time_t* ts_ = nullptr);
+
+            T    GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn = nullptr);
+            T    GetData(size_t fn, Context* ctx = nullptr, mo::time_t* ts = nullptr);
+
+            bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn = nullptr);
+            bool GetData(T& value, size_t fn, Context* ctx = nullptr, mo::time_t* ts = nullptr);
+
+            ITypedParameter<T>* UpdateData(T&& data,
+                                           mo::time_t ts = -1 * mo::second,
+                                           Context* ctx = nullptr,
+                                           size_t fn = std::numeric_limits<size_t>::max(),
+                                           ICoordinateSystem* cs = nullptr);
     
             bool Update(IParameter* other, Context* ctx = nullptr);
             std::shared_ptr<IParameter> DeepCopy() const;

@@ -55,7 +55,7 @@ namespace mo
             delete_slot.Clear();
             if(casted_param->GetTimestamp() >= 0 * mo::second)
             {
-                UpdateData(casted_param->GetDataPtr(), casted_param->GetTimestamp(), casted_param->GetContext());
+                UpdateData(*casted_param->GetDataPtr(), casted_param->GetTimestamp(), casted_param->GetContext());
             }
             shared_input = casted_param;
             casted_param->RegisterUpdateNotifier(&update_slot);
@@ -94,7 +94,7 @@ namespace mo
             if(shared_input) shared_input->Unsubscribe();
             if(casted_param->GetTimestamp() >= 0 * mo::second)
             {
-                UpdateData(casted_param->GetDataPtr(), casted_param->GetTimestamp(), casted_param->GetContext());
+                UpdateData(*casted_param->GetDataPtr(), casted_param->GetTimestamp(), casted_param->GetContext());
             }
             input = casted_param;
             input->Subscribe();
@@ -135,38 +135,75 @@ namespace mo
     }
     
     template<class T> 
-    T* ITypedInputParameter<T>::GetDataPtr(mo::time_t ts, Context* ctx)
+    T* ITypedInputParameter<T>::GetDataPtr(mo::time_t ts, Context* ctx, size_t* fn)
     {
         if(input)
-            return input->GetDataPtr(ts, ctx);
+            return input->GetDataPtr(ts, ctx, fn);
         if(shared_input)
-            return shared_input->GetDataPtr(ts, ctx);
+            return shared_input->GetDataPtr(ts, ctx, fn);
+        return nullptr;
+    }
+
+    template<class T>
+    T* ITypedInputParameter<T>::GetDataPtr(size_t fn, Context* ctx, mo::time_t* ts)
+    {
+        if(input)
+            return input->GetDataPtr(fn, ctx, ts);
+        if(shared_input)
+            return shared_input->GetDataPtr(fn, ctx, ts);
         return nullptr;
     }
 
     template<class T> 
-    bool ITypedInputParameter<T>::GetData(T& value, mo::time_t ts, Context* ctx)
+    bool ITypedInputParameter<T>::GetData(T& value, mo::time_t ts, Context* ctx, size_t* fn)
     {
         if(input)
-            return input->GetData(value, ts, ctx);
+            return input->GetData(value, ts, ctx, fn);
         if(shared_input)
-            return shared_input->GetData(value, ts, ctx);
+            return shared_input->GetData(value, ts, ctx, fn);
+        return false;
+    }
+
+    template<class T>
+    bool ITypedInputParameter<T>::GetData(T& value, size_t fn, Context* ctx, mo::time_t* ts)
+    {
+        if(input)
+            return input->GetData(value, fn, ctx, ts);
+        if(shared_input)
+            return shared_input->GetData(value, fn, ctx, ts);
         return false;
     }
     
     template<class T> 
-    T ITypedInputParameter<T>::GetData(mo::time_t ts, Context* ctx)
+    T ITypedInputParameter<T>::GetData(mo::time_t ts, Context* ctx, size_t* fn)
     {
         if(input)
-            return input->GetData(ts, ctx);
+            return input->GetData(ts, ctx, fn);
         if(shared_input)
-            return shared_input->GetData(ts, ctx);
+            return shared_input->GetData(ts, ctx, fn);
+        THROW(debug) << "Input not set for " << GetTreeName();
+        return T();
+    }
+
+    template<class T>
+    T ITypedInputParameter<T>::GetData(size_t fn, Context* ctx, mo::time_t* ts)
+    {
+        if(input)
+            return input->GetData(fn, ctx, ts);
+        if(shared_input)
+            return shared_input->GetData(fn, ctx, ts);
         THROW(debug) << "Input not set for " << GetTreeName();
         return T();
     }
 
     template<class T>
     bool ITypedInputParameter<T>::GetInput(mo::time_t ts)
+    {
+        return true;
+    }
+
+    template<class T>
+    bool ITypedInputParameter<T>::GetInput(size_t ts)
     {
         return true;
     }
@@ -186,30 +223,6 @@ namespace mo
     void ITypedInputParameter<T>::onInputUpdate(Context* ctx, IParameter* param)
     {
         this->OnUpdate(ctx);
-    }
-
-    template<class T>
-    ITypedParameter<T>* ITypedInputParameter<T>::UpdateData(T& data_, mo::time_t ts, Context* ctx)
-    {
-        if (ts >= 0 * mo::second)
-            _timestamp = ts;
-        return this;
-    }
-
-    template<class T>
-    ITypedParameter<T>* ITypedInputParameter<T>::UpdateData(const T& data_, mo::time_t ts, Context* ctx)
-    {
-        if (ts >= 0 * mo::second)
-            _timestamp = ts;
-        return this;
-    }
-
-    template<class T>
-    ITypedParameter<T>* ITypedInputParameter<T>::UpdateData(T* data_, mo::time_t ts, Context* ctx)
-    {
-        if (ts >= 0 * mo::second)
-            _timestamp = ts;
-        return this;
     }
 }
 #endif

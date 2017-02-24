@@ -7,7 +7,8 @@
 #endif
 namespace mo
 {
-    template<class T> class ITypedInputParameter: virtual public ITypedParameter<T>, virtual public InputParameter
+    template<class T>
+class ITypedInputParameter: virtual public ITypedParameter<T>, virtual public InputParameter
     {
     public:
         ITypedInputParameter(const std::string& name = "",  Context* ctx = nullptr);
@@ -18,18 +19,26 @@ namespace mo
         virtual bool AcceptsInput(std::weak_ptr<IParameter> param) const;
         virtual bool AcceptsInput(IParameter* param) const;
         virtual bool AcceptsType(TypeInfo type) const;
+
         IParameter* GetInputParam();
         
         bool GetInput(mo::time_t ts);
+        bool GetInput(size_t fn);
 
-        T* GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
-        bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
-        T GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+        T*   GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn_ = nullptr);
+        T*   GetDataPtr(size_t fn, Context* ctx = nullptr, mo::time_t* ts_ = nullptr);
 
+        T    GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn = nullptr);
+        T    GetData(size_t fn, Context* ctx = nullptr, mo::time_t* ts = nullptr);
 
-        ITypedParameter<T>* UpdateData(T& data_, mo::time_t ts, Context* ctx, size_t fn = std::numeric_limits<size_t>::max());
-        ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts, Context* ctx, size_t fn = std::numeric_limits<size_t>::max());
-        ITypedParameter<T>* UpdateData(T* data_, mo::time_t ts, Context* ctx, size_t fn = std::numeric_limits<size_t>::max());
+        bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn = nullptr);
+        bool GetData(T& value, size_t fn, Context* ctx = nullptr, mo::time_t* ts = nullptr);
+
+        ITypedParameter<T>* UpdateData(const T& data,
+                                       mo::time_t ts = -1 * mo::second,
+                                       Context* ctx = nullptr,
+                                       size_t fn = std::numeric_limits<size_t>::max(),
+                                       ICoordinateSystem* cs = nullptr){}
 
     protected:
         virtual void onInputDelete(IParameter const* param);

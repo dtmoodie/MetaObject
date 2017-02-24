@@ -11,7 +11,8 @@ namespace mo
             this->SetFlags(Buffer_e);
         }
 
-        template<class T> T* Map<T>::GetDataPtr(mo::time_t ts, Context* ctx)
+        template<class T>
+        T* Map<T>::GetDataPtr(mo::time_t ts, Context* ctx, size_t* fn)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             if (ts < 0 * mo::second && _data_buffer.size())
@@ -28,7 +29,8 @@ namespace mo
             }
             return nullptr;
         }
-        template<class T> bool Map<T>::GetData(T& value, mo::time_t ts, Context* ctx)
+        template<class T>
+        bool Map<T>::GetData(T& value, mo::time_t ts, Context* ctx, size_t* fn)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             if (ts < 0 * mo::second  && _data_buffer.size())
@@ -44,7 +46,8 @@ namespace mo
             }
             return false;
         }
-        template<class T> T Map<T>::GetData(mo::time_t ts, Context* ctx)
+        template<class T>
+        T Map<T>::GetData(mo::time_t ts, Context* ctx, size_t* fn)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             if (ts < 0 * mo::second && _data_buffer.size())
@@ -60,37 +63,20 @@ namespace mo
             THROW(debug) << "Desired time (" << ts << ") not found " << _data_buffer.begin()->first << ", " << _data_buffer.rbegin()->first;
             return T();
         }
-        template<class T> ITypedParameter<T>* Map<T>::UpdateData(T& data_, mo::time_t ts, Context* ctx)
+
+        template<class T>
+        ITypedParameter<T>* Map<T>::UpdateData(const T& data_, mo::time_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs)
         {
             {
                 boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-                _data_buffer[ts] = data_;
+                _data_buffer[{ts,fn}] = data_;
                 IParameter::modified = true;
             }
             IParameter::OnUpdate(ctx);
             return this;
         }
-        template<class T> ITypedParameter<T>* Map<T>::UpdateData(const T& data_, mo::time_t ts, Context* ctx)
-        {
-            {
-                boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-                _data_buffer[ts] = data_;
-                IParameter::modified = true;
-            }
-            IParameter::OnUpdate(ctx);
-            return this;
-        }
-        template<class T> ITypedParameter<T>* Map<T>::UpdateData(T* data_, mo::time_t ts, Context* ctx)
-        {
-            {
-                boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-                _data_buffer[ts] = *data_;
-                IParameter::modified = true;
-                this->_timestamp = ts;
-            }
-            IParameter::OnUpdate(ctx);
-            return this;
-        }
+
+
 
         template<class T> bool Map<T>::Update(IParameter* other, Context* ctx)
         {

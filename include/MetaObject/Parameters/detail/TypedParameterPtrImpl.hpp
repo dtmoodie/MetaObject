@@ -164,13 +164,13 @@ namespace mo
     }
 
     template<typename T> 
-    ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(T&& data_, mo::time_t ts,
+    ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(const T& data_, mo::time_t ts,
                                                          Context* ctx, size_t fn, ICoordinateSystem* cs)
 	{
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(ptr)
         {
-            *ptr = std::forward<T>(data_);
+            *ptr = data_;
             this->Commit(ts, ctx, fn, cs);
         }
         return this;
