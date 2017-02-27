@@ -12,16 +12,16 @@ namespace mo
         }
 
         template<class T>
-        T* Map<T>::GetDataPtr(mo::time_t ts, Context* ctx, size_t* fn)
+        T* Map<T>::GetDataPtr(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            if (ts < 0 * mo::second && _data_buffer.size())
+            if (!ts && _data_buffer.size())
             {
                 return &(_data_buffer.rbegin()->second);
             }
             else
             {
-                auto itr = _data_buffer.find(ts);
+                auto itr = _data_buffer.find(*ts);
                 if (itr != _data_buffer.end())
                 {
                     return &itr->second;
@@ -29,42 +29,110 @@ namespace mo
             }
             return nullptr;
         }
+
         template<class T>
-        bool Map<T>::GetData(T& value, mo::time_t ts, Context* ctx, size_t* fn)
+        T* Map<T>::GetDataPtr(size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            if (ts < 0 * mo::second  && _data_buffer.size())
+            if (fn == std::numeric_limits<size_t>::max() && _data_buffer.size())
             {
+                if(ts)
+                    *ts = _data_buffer.rbegin()->first.ts;
+                return &(_data_buffer.rbegin()->second);
+            }
+            else
+            {
+                auto itr = _data_buffer.find(fn);
+                if (itr != _data_buffer.end())
+                {
+                    return &itr->second;
+                }
+            }
+            return nullptr;
+        }
+
+        template<class T>
+        bool Map<T>::GetData(T& value, boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
+        {
+            boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+            if (!ts && _data_buffer.size())
+            {
+                if(fn)
+                    *fn = _data_buffer.rbegin()->first.fn;
                 value = _data_buffer.rbegin()->second;
                 return true;
             }
-            auto itr = _data_buffer.find(ts);
+            auto itr = _data_buffer.find(*ts);
             if (itr != _data_buffer.end())
             {
+                if(fn)
+                    *fn = itr->first.fn;
                 value = itr->second;
                 return true;
             }
             return false;
         }
+
         template<class T>
-        T Map<T>::GetData(mo::time_t ts, Context* ctx, size_t* fn)
+        bool Map<T>::GetData(T& value, size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            if (ts < 0 * mo::second && _data_buffer.size())
+            auto itr = _data_buffer.find(fn);
+            if (itr != _data_buffer.end())
             {
-                return _data_buffer.rbegin()->second;
-
+                if(ts)
+                    *ts = itr->first.ts;
+                value = itr->second;
+                return true;
             }
-            auto itr = _data_buffer.find(ts);
+            return false;
+        }
+
+        template<class T>
+        T Map<T>::GetData(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
+        {
+            boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+            if (!ts && _data_buffer.size())
+            {
+                if(fn)
+                    *fn = _data_buffer.rbegin()->first.fn;
+                return _data_buffer.rbegin()->second;
+            }
+            auto itr = _data_buffer.find(*ts);
             if (itr != _data_buffer.end())
             {
                 return  itr->second;
             }
-            THROW(debug) << "Desired time (" << ts << ") not found " << _data_buffer.begin()->first << ", " << _data_buffer.rbegin()->first;
+            THROW(debug) << "Desired time (" << ts << ") not found "
+                         << _data_buffer.begin()->first << ", "
+                         << _data_buffer.rbegin()->first;
             return T();
         }
 
         template<class T>
+        T Map<T>::GetData(size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
+        {
+            boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+            if (fn == std::numeric_limits<size_t>::max() && _data_buffer.size())
+            {
+                if(ts)
+                    *ts = _data_buffer.rbegin()->first.ts;
+                return _data_buffer.rbegin()->second;
+            }
+            auto itr = _data_buffer.find(fn);
+            if (itr != _data_buffer.end())
+            {
+                if(ts)
+                    *ts = _data_buffer.rbegin()->first.ts;
+                return  itr->second;
+            }
+            THROW(debug) << "Desired time (" << fn << ") not found "
+                         << _data_buffer.begin()->first << ", "
+                         << _data_buffer.rbegin()->first;
+            return T();
+        }
+
+        /*template<class T>
         ITypedParameter<T>* Map<T>::UpdateData(const T& data_, mo::time_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs)
         {
             {
@@ -74,7 +142,7 @@ namespace mo
             }
             IParameter::OnUpdate(ctx);
             return this;
-        }
+        }*/
 
 
 
@@ -96,23 +164,45 @@ namespace mo
             }
             return false;
         }
-        template<class T> void Map<T>::SetSize(long long size)
+        template<class T> void Map<T>::SetSize(size_t size)
         {
 
         }
-        template<class T> long long Map<T>::GetSize() 
+        template<class T> void Map<T>::SetSize(mo::time_t size)
+        {
+
+        }
+        template<class T> size_t Map<T>::GetSize()
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             return _data_buffer.size();
         }
-        template<class T> void Map<T>::GetTimestampRange(mo::time_t& start, mo::time_t& end)
+        template<class T>
+        bool Map<T>::GetTimestampRange(mo::time_t& start, mo::time_t& end)
         {
             if (_data_buffer.size())
             {
                 boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-                start = _data_buffer.begin()->first;
-                end = _data_buffer.rbegin()->first;
+                if(_data_buffer.begin()->first.ts && _data_buffer.rbegin()->first.ts)
+                {
+                    start = *_data_buffer.begin()->first.ts;
+                    end = *_data_buffer.rbegin()->first.ts;
+                    return true;
+                }
             }
+            return false;
+        }
+
+        template<class T> bool Map<T>::GetFrameNumberRange(size_t& start, size_t& end)
+        {
+            if (_data_buffer.size())
+            {
+                boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+                start = _data_buffer.begin()->first.fn;
+                end = _data_buffer.rbegin()->first.fn;
+                return true;
+            }
+            return false;
         }
         template<class T> std::shared_ptr<IParameter> Map<T>::DeepCopy() const
         {
@@ -122,7 +212,7 @@ namespace mo
         }
         template<class T> void Map<T>::onInputUpdate(Context* ctx, IParameter* param)
         {
-            UpdateData(this->input->GetDataPtr(), this->input->GetTimestamp(), ctx);
+            //UpdateData(_data = *this->input->GetDataPtr(), _timestamp = this->input->GetTimestamp(), _context = ctx);
         }
     }
 }

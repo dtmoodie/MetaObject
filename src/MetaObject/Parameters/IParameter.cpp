@@ -29,20 +29,15 @@ https://github.com/dtmoodie/parameters
 
 using namespace mo;
 
-IParameter::IParameter(const std::string& name_, ParameterType flags_, mo::time_t ts, Context* ctx, size_t fn) :
-    _name(name_), 
-    _flags(flags_), 
+/*IParameter::IParameter(const std::string& name_, ParameterType flags_, mo::time_t ts, Context* ctx, size_t fn) :
+    IParameterImpl(_parameter_name = name_, _parameter_flags = flags_, _timestamp = ts, _context = ctx, _frame_number = fn),
     modified(false), 
-    _subscribers(0), 
-    _ts(ts),
-    _ctx(ctx),
-    _fn(fn),
-    _cs(nullptr),
+    _subscribers(0),
     _mtx(nullptr),
     _owns_mutex(false)
 {
     
-}
+}*/
 
 IParameter::~IParameter()
 {
@@ -68,11 +63,13 @@ IParameter* IParameter::SetTreeRoot(const std::string& treeRoot_)
 IParameter* IParameter::SetFrameNumber(size_t fn)
 {
     this->_fn = fn;
+    return this;
 }
 
 IParameter* IParameter::SetCoordinateSystem(ICoordinateSystem* system)
 {
     this->_cs = system;
+    return this;
 }
 
 IParameter* IParameter::SetContext(Context* ctx)
@@ -99,7 +96,7 @@ const std::string IParameter::GetTreeName() const
         return _name;
 }
 
-mo::time_t IParameter::GetTimestamp() const
+boost::optional<mo::time_t> IParameter::GetTimestamp() const
 {
     return _ts;
 }
@@ -203,14 +200,14 @@ void IParameter::OnUpdate(Context* ctx)
     _update_signal(ctx, this);
 }
 
-IParameter* IParameter::Commit(mo::time_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs_)
+IParameter* IParameter::Commit(boost::optional<mo::time_t> ts_, Context* ctx_, boost::optional<size_t> fn, ICoordinateSystem* cs_)
 {
     {
         boost::recursive_mutex::scoped_lock lock(mtx());
-        _ts = ts;
-        if(fn != std::numeric_limits<size_t>::max())
+        _ts = ts_;
+        if(fn)
         {
-            this->_fn = fn;
+            this->_fn = *fn;
         }else
         {
             ++this->_fn;
@@ -221,7 +218,7 @@ IParameter* IParameter::Commit(mo::time_t ts, Context* ctx, size_t fn, ICoordina
         }
         modified = true;
     }
-    _update_signal(ctx, this);
+    _update_signal(ctx_, this);
     return this;
 }
 

@@ -25,6 +25,9 @@ https://github.com/dtmoodie/MetaObject
 #include <boost/units/systems/si/prefixes.hpp>
 #include <boost/units/systems/si/time.hpp>
 #include <boost/units/io.hpp>
+#include <boost/optional.hpp>
+#include <boost/optional/optional_io.hpp>
+#include <boost/parameter.hpp>
 #if BOOST_VERSION > 105400
 #include <boost/core/noncopyable.hpp>
 #else
@@ -40,6 +43,14 @@ namespace boost
 
 namespace mo
 {
+
+    BOOST_PARAMETER_NAME(timestamp)
+    BOOST_PARAMETER_NAME(frame_number)
+    BOOST_PARAMETER_NAME(coordinate_system)
+    BOOST_PARAMETER_NAME(context)
+    BOOST_PARAMETER_NAME(parameter_name)
+    BOOST_PARAMETER_NAME(parameter_flags)
+
     class ICoordinateSystem;
 
     static const auto milli = boost::units::si::milli;
@@ -77,18 +88,50 @@ namespace mo
     
     class UpdateToken;
 
-    class MO_EXPORTS IParameter: boost::noncopyable
+    class MO_EXPORTS IParameterImpl
+    {
+    public:
+        template<class ArgumentPack>
+        IParameterImpl(ArgumentPack const& args)
+        {
+            //this->_name = args[_parameter_name | ""];
+            //this->_ctx = args[_context | nullptr];
+            //this->_cs = args[_coordinate_system | nullptr];
+            //this->_ts = args[_timestamp | boost::optional<mo::time_t>()];
+            //this->_fn = args[_frame_number | 0];
+            //this->_flags = args[_parameter_flags | mo::Control_e];
+        }
+    protected:
+        boost::optional<mo::time_t>              _ts;
+        size_t                                    _fn;
+        ICoordinateSystem*                       _cs;
+        Context*                                 _ctx; // Context of object that owns this parameter
+        std::string                              _name;
+        std::string                              _tree_root;
+        ParameterType                            _flags;
+    };
+
+    class MO_EXPORTS IParameter: boost::noncopyable, public IParameterImpl
     {
     public:
         typedef std::shared_ptr<IParameter> Ptr;
         typedef TypedSlot<void(Context*, IParameter*)> update_f;
         typedef TypedSlot<void(IParameter const*)> delete_f;
 
-        IParameter(const std::string& name_  = "",
+        BOOST_PARAMETER_CONSTRUCTOR(
+                IParameter, (IParameterImpl), tag,
+                (optional (timestamp, *))
+                (optional (frame_number, *))
+                (optional (coordinate_system, *))
+                (optional (context, *))
+                (optional (parameter_name, *))
+                (optional (parameter_flags, *)))
+
+        /*IParameter(const std::string& name_,
                    ParameterType      flags_ = Control_e,
                    mo::time_t         ts_    = -1 * mo::second,
                    Context*           ctx_   = nullptr,
-                   size_t             fn_    = std::numeric_limits<size_t>::max());
+                   size_t             fn_    = std::numeric_limits<size_t>::max());*/
 
         virtual ~IParameter();
 
@@ -99,13 +142,13 @@ namespace mo
         IParameter*         SetTimestamp(mo::time_t ts);
         IParameter*         SetCoordinateSystem(ICoordinateSystem* cs_);
 
-        const std::string& GetName()      const;
-        const std::string  GetTreeName()  const;
-        const std::string& GetTreeRoot()  const;
-        mo::time_t         GetTimestamp() const;
-        size_t             GetFrameNumber() const;
-        Context*           GetContext()   const;
-        ICoordinateSystem* GetCoordinateSystem() const;
+        const std::string&          GetName()      const;
+        const std::string           GetTreeName()  const;
+        const std::string&          GetTreeRoot()  const;
+        boost::optional<mo::time_t> GetTimestamp() const;
+        size_t                      GetFrameNumber() const;
+        Context*                    GetContext()   const;
+        ICoordinateSystem*          GetCoordinateSystem() const;
 
 		void Subscribe();
 		void Unsubscribe();
@@ -132,10 +175,10 @@ namespace mo
         // Sets changed to true and emits update signal
         void OnUpdate(Context* ctx = nullptr);
 
-        IParameter* Commit(mo::time_t         ts_   = -1 * mo::second,
-                           Context*           ctx_  = nullptr,
-                           size_t             fn_   = std::numeric_limits<size_t>::max(),
-                           ICoordinateSystem* cs_   = nullptr);
+        IParameter* Commit(boost::optional<mo::time_t> ts_   = boost::optional<mo::time_t>(),
+                           Context*                    ctx_  = nullptr,
+                           boost::optional<size_t>     fn_   = boost::optional<size_t>(),
+                           ICoordinateSystem*          cs_   = nullptr);
         
         template<class Archive> void serialize(Archive& ar);
 
@@ -153,16 +196,9 @@ namespace mo
 
         TypedSignal<void(Context*, IParameter*)> _update_signal;
         TypedSignal<void(IParameter const*)>	 _delete_signal;
-        std::string                              _name;
-        std::string                              _tree_root;
-        boost::recursive_mutex*                  _mtx;
-        Context*                                 _ctx; // Context of object that owns this parameter
-        int                                      _subscribers;
-        ParameterType                            _flags;
-        bool                                     _owns_mutex;
-        ICoordinateSystem*                       _cs;
-        mo::time_t                               _ts;
-        size_t                                     _fn;
+        boost::recursive_mutex*                  _mtx = nullptr;
+        int                                      _subscribers = 0;
+        bool                                     _owns_mutex = false;
     };
 
     template<typename Archive>

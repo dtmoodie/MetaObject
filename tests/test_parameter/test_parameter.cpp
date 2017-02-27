@@ -50,7 +50,7 @@ struct ParameterUpdateToken
     }
     ~ParameterUpdateToken()
     {
-        if(_timestamp_changed)
+        //if(_timestamp_changed)
             
     }
     ParameterUpdateToken& operator()(mo::Context* ctx)

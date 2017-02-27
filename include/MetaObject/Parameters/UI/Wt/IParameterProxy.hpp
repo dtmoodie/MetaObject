@@ -165,7 +165,8 @@ namespace wt
             if(ptr)
             {
                 _app->getUpdateLock();
-                _data_proxy.UpdateUi(*ptr, _param->GetTimestamp());
+                // TODO FIX ME
+                _data_proxy.UpdateUi(*ptr, *_param->GetTimestamp());
                 _app->requestUpdate();
             }
         }

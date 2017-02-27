@@ -12,11 +12,11 @@ namespace mo
 	}
 
 	template<typename T> 
-    T* TypedParameter<T>::GetDataPtr(mo::time_t ts, Context* ctx, size_t* fn)
+    T* TypedParameter<T>::GetDataPtr(mo::time_t ts, Context* ctx, boost::optional<size_t>* fn)
 	{
         if (ts > 0 * mo::second)
         {
-            if(ts != this->_timestamp)
+            if(ts != IParameter::_ts)
             {
                 LOG(debug) << "Requested timestamp " << ts << " != " << this->_ts;
                 return nullptr;
@@ -28,7 +28,7 @@ namespace mo
 	}
 
     template<typename T>
-    T* TypedParameter<T>::GetDataPtr(size_t fn, Context* ctx, mo::time_t* ts)
+    T* TypedParameter<T>::GetDataPtr(size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
     {
         if (fn != std::numeric_limits<size_t>::max())
         {
@@ -44,7 +44,7 @@ namespace mo
     }
 
 	template<typename T> 
-    bool TypedParameter<T>::GetData(T& value, mo::time_t ts, Context* ctx, size_t* fn)
+    bool TypedParameter<T>::GetData(T& value, mo::time_t ts, Context* ctx, boost::optional<size_t>* fn)
 	{
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if (ts < 0 * mo::second)
@@ -53,7 +53,7 @@ namespace mo
             return true;
         }else
         {
-            if(ts == this->_timestamp)
+            if(ts == IParameter::_ts)
             {
                 value = data;
                 if(fn)
@@ -65,7 +65,7 @@ namespace mo
 	}
 
     template<typename T>
-    bool TypedParameter<T>::GetData(T& value, size_t fn, Context* ctx, mo::time_t* ts)
+    bool TypedParameter<T>::GetData(T& value, size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
     {
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if (this->_fn == fn)
@@ -88,7 +88,7 @@ namespace mo
     }
 
     template<typename T>
-    T TypedParameter<T>::GetData(mo::time_t ts, Context* ctx, size_t* fn)
+    T TypedParameter<T>::GetData(mo::time_t ts, Context* ctx, boost::optional<size_t>* fn)
     {
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(ts < 0 * mo::second)
@@ -106,7 +106,7 @@ namespace mo
     }
 	
     template<typename T>
-    T TypedParameter<T>::GetData(size_t fn, Context* ctx, mo::time_t* ts)
+    T TypedParameter<T>::GetData(size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
     {
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(this->_fn == std::numeric_limits<size_t>::max())

@@ -21,7 +21,7 @@ namespace Parameters
                 (void)&_constructor;
                 _size = 10;
             }
-            virtual void UpdateData(T& data_, mo::time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
+            /*virtual void UpdateData(T& data_, mo::time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
             {
                 Map<T>::UpdateData(data_, time_index, stream);
                 clean();
@@ -35,7 +35,7 @@ namespace Parameters
             {
                 Map<T>::UpdateData(data_, time_index, stream);
                 clean();
-            }
+            }*/
             void clean()
             {
                 while(_data_buffer.size() > _size)

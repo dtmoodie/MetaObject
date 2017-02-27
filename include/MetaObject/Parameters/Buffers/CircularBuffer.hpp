@@ -27,6 +27,8 @@ https://github.com/dtmoodie/parameters
 
 namespace mo
 {
+
+
     namespace Buffer
     {
         template<class T>
@@ -47,30 +49,33 @@ namespace mo
                 mo::time_t ts = -1 * mo::second,
                 ParameterType type = Buffer_e);
 
-            T*   GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn_ = nullptr);
-            T*   GetDataPtr(size_t fn, Context* ctx = nullptr, mo::time_t* ts_ = nullptr);
+            T*   GetDataPtr(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
+                                    Context* ctx = nullptr, size_t* fn_ = nullptr);
+            T*   GetDataPtr(size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts_ = nullptr);
 
-            T    GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn = nullptr);
-            T    GetData(size_t fn, Context* ctx = nullptr, mo::time_t* ts = nullptr);
+            T    GetData(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
+                                 Context* ctx = nullptr, size_t* fn = nullptr);
+            T    GetData(size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr);
 
-            bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn = nullptr);
-            bool GetData(T& value, size_t fn, Context* ctx = nullptr, mo::time_t* ts = nullptr);
+            bool GetData(T& value, boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
+                                 Context* ctx = nullptr, size_t* fn = nullptr);
+            bool GetData(T& value, size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr);
 
-            ITypedParameter<T>* UpdateData(T&& data,
-                                           mo::time_t ts = -1 * mo::second,
-                                           Context* ctx = nullptr,
-                                           size_t fn = std::numeric_limits<size_t>::max(),
-                                           ICoordinateSystem* cs = nullptr);
-    
+
             bool Update(IParameter* other, Context* ctx = nullptr);
             std::shared_ptr<IParameter> DeepCopy() const;
 
-            virtual void SetSize(long long size);
-            virtual long long GetSize();
-            virtual void GetTimestampRange(mo::time_t& start, mo::time_t& end);
+            void SetSize(size_t size);
+            void SetSize(mo::time_t size);
+            virtual size_t GetSize();
+            bool GetTimestampRange(mo::time_t& start, mo::time_t& end);
+            bool GetFrameNumberRange(size_t& start,size_t& end);
             
             void onInputUpdate(Context* ctx, IParameter* param);
             virtual ParameterTypeFlags GetBufferType() const{ return cbuffer_e;}
+        protected:
+            bool UpdateDataImpl(const T& data, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs);
+
         };
     }
     

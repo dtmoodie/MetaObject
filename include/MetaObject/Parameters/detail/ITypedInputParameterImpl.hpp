@@ -53,10 +53,8 @@ namespace mo
             if(shared_input) shared_input->Unsubscribe();
             update_slot.Clear();
             delete_slot.Clear();
-            if(casted_param->GetTimestamp() >= 0 * mo::second)
-            {
-                UpdateData(*casted_param->GetDataPtr(), casted_param->GetTimestamp(), casted_param->GetContext());
-            }
+            auto ts = casted_param->GetTimestamp();
+            //UpdateData(*casted_param->GetDataPtr(), ts, casted_param->GetContext());
             shared_input = casted_param;
             casted_param->RegisterUpdateNotifier(&update_slot);
 			casted_param->RegisterDeleteNotifier(&delete_slot);
@@ -92,10 +90,8 @@ namespace mo
         {
             if(input) input->Unsubscribe();
             if(shared_input) shared_input->Unsubscribe();
-            if(casted_param->GetTimestamp() >= 0 * mo::second)
-            {
-                UpdateData(*casted_param->GetDataPtr(), casted_param->GetTimestamp(), casted_param->GetContext());
-            }
+            ITypedParameter<T>::UpdateData(_data  = *casted_param->GetDataPtr(), _timestamp = casted_param->GetTimestamp(), _context = casted_param->GetContext());
+
             input = casted_param;
             input->Subscribe();
 			casted_param->RegisterUpdateNotifier(&update_slot);
@@ -135,7 +131,7 @@ namespace mo
     }
     
     template<class T> 
-    T* ITypedInputParameter<T>::GetDataPtr(mo::time_t ts, Context* ctx, size_t* fn)
+    T* ITypedInputParameter<T>::GetDataPtr(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
     {
         if(input)
             return input->GetDataPtr(ts, ctx, fn);
@@ -145,7 +141,7 @@ namespace mo
     }
 
     template<class T>
-    T* ITypedInputParameter<T>::GetDataPtr(size_t fn, Context* ctx, mo::time_t* ts)
+    T* ITypedInputParameter<T>::GetDataPtr(size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
     {
         if(input)
             return input->GetDataPtr(fn, ctx, ts);
@@ -155,7 +151,7 @@ namespace mo
     }
 
     template<class T> 
-    bool ITypedInputParameter<T>::GetData(T& value, mo::time_t ts, Context* ctx, size_t* fn)
+    bool ITypedInputParameter<T>::GetData(T& value, boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
     {
         if(input)
             return input->GetData(value, ts, ctx, fn);
@@ -165,7 +161,7 @@ namespace mo
     }
 
     template<class T>
-    bool ITypedInputParameter<T>::GetData(T& value, size_t fn, Context* ctx, mo::time_t* ts)
+    bool ITypedInputParameter<T>::GetData(T& value, size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
     {
         if(input)
             return input->GetData(value, fn, ctx, ts);
@@ -175,7 +171,7 @@ namespace mo
     }
     
     template<class T> 
-    T ITypedInputParameter<T>::GetData(mo::time_t ts, Context* ctx, size_t* fn)
+    T ITypedInputParameter<T>::GetData(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
     {
         if(input)
             return input->GetData(ts, ctx, fn);
@@ -186,7 +182,7 @@ namespace mo
     }
 
     template<class T>
-    T ITypedInputParameter<T>::GetData(size_t fn, Context* ctx, mo::time_t* ts)
+    T ITypedInputParameter<T>::GetData(size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
     {
         if(input)
             return input->GetData(fn, ctx, ts);

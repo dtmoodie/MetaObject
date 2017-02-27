@@ -7,51 +7,78 @@ namespace mo
     {
         template<class T> StreamBuffer<T>::StreamBuffer(const std::string& name):
             ITypedParameter<T>(name, Buffer_e),
-            _current_timestamp(-1* mo::second), _padding(500 * mo::milli * mo::second)
+            _time_padding(500 * mo::milli * mo::second)
         {
         
         }
 
-        template<class T> T*   StreamBuffer<T>::GetDataPtr(mo::time_t ts, Context* ctx)
+        template<class T> T*   StreamBuffer<T>::GetDataPtr(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
         {
-            T* result = Map<T>::GetDataPtr(ts, ctx);
-            if(result && ts < 0 * mo::second )
+            T* result = Map<T>::GetDataPtr(ts, ctx, &_current_frame_number);
+            if(result)
             {
                 _current_timestamp = ts;
                 prune();
             }
+            if(fn)
+                *fn = _current_frame_number;
             return result;
         }
-        template<class T> bool StreamBuffer<T>::GetData(T& value, mo::time_t ts, Context* ctx)
+
+        template<class T> T* StreamBuffer<T>::GetDataPtr(size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
         {
-            if(Map<T>::GetData(value, ts, ctx))
+            T* result = Map<T>::GetDataPtr(fn, ctx, ts);
+            if(result)
+            {
+                if(ts)
+                    _current_timestamp = *ts;
+                prune();
+            }
+            return result;
+        }
+
+        template<class T> bool StreamBuffer<T>::GetData(T& value, boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
+        {
+            if(Map<T>::GetData(value, ts, ctx, &_current_frame_number))
             {
                 _current_timestamp = ts;
+                if(fn)
+                    *fn = _current_frame_number;
                 prune();
                 return true;
             }
             return false;
         }
-        template<class T> T StreamBuffer<T>::GetData(mo::time_t ts, Context* ctx)
+        template<class T> T StreamBuffer<T>::GetData(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
         {
-            T result = Map<T>::GetData(ts, ctx);
+            T result = Map<T>::GetData(ts, ctx, &_current_frame_number);
             _current_timestamp = ts;
+            if(fn)
+                *fn = _current_frame_number;
             prune();
             return result;
         }
-        template<class T> void StreamBuffer<T>::SetSize(long long size)
+        template<class T> void StreamBuffer<T>::SetSize(size_t size)
         {
-            _padding = mo::time_t(size * mo::milli * mo::second);
+            if(_time_padding)
+                _time_padding = boost::none;
+            _frame_padding = size;
+        }
+        template<class T> void StreamBuffer<T>::SetSize(mo::time_t time)
+        {
+            if(_frame_padding)
+                _frame_padding = boost::none;
+            _time_padding = time;
         }
         template<class T> void StreamBuffer<T>::prune()
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            if(_current_timestamp >= 0 * mo::second)
+            if(_current_timestamp && _time_padding)
             {
                 auto itr = this->_data_buffer.begin();
                 while(itr != this->_data_buffer.end())
                 {
-                    if(itr->first < _current_timestamp - _padding)
+                    if(itr->first < (*_current_timestamp - *_time_padding))
                     {
                         itr = this->_data_buffer.erase(itr);
                     }else
@@ -59,6 +86,9 @@ namespace mo
                         break;
                     }
                 }
+            }if(_frame_padding)
+            {
+
             }
         }
         template<class T> std::shared_ptr<IParameter> StreamBuffer<T>::DeepCopy() const
@@ -79,7 +109,7 @@ namespace mo
             _size = size;
         }
         
-        template<class T>
+        /*template<class T>
         ITypedParameter<T>* BlockingStreamBuffer<T>::UpdateData(T& data_, mo::time_t ts, Context* ctx)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
@@ -128,17 +158,17 @@ namespace mo
             }
             IParameter::OnUpdate(ctx);
             return this;
-        }
+        }*/
         template<class T>
         void BlockingStreamBuffer<T>::prune()
         {
             boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
-            if (this->_current_timestamp >= 0 * mo::second)
+            if (StreamBuffer<T>::_current_timestamp && StreamBuffer<T>::_time_padding)
             {
                 auto itr = this->_data_buffer.begin();
                 while (itr != this->_data_buffer.end())
                 {
-                    if (itr->first < this->_current_timestamp - this->_padding)
+                    if (itr->first < *StreamBuffer<T>::_current_timestamp - *StreamBuffer<T>::_time_padding)
                     {
                         itr = this->_data_buffer.erase(itr);
                     }

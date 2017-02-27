@@ -18,19 +18,23 @@ UpdateToken::~UpdateToken()
 UpdateToken& UpdateToken::operator()(time_t&& ts)
 {
     _ts = ts;
+    return *this;
 }
 
 UpdateToken& UpdateToken::operator()(size_t fn)
 {
     _fn = fn;
+    return *this;
 }
 
 UpdateToken& UpdateToken::operator()(Context* ctx)
 {
     _ctx = ctx;
+    return *this;
 }
 
 UpdateToken& UpdateToken::operator()(ICoordinateSystem* cs)
 {
     _cs = cs;
+    return *this;
 }

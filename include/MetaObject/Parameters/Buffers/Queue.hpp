@@ -19,9 +19,17 @@ namespace mo
             static const ParameterTypeFlags Type = Queue_e;
 
             Queue(const std::string& name);
-            T*   GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
-            bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
-            T    GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            T*   GetDataPtr(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
+                                    Context* ctx = nullptr, size_t* fn_ = nullptr);
+            T*   GetDataPtr(size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts_ = nullptr);
+
+            T    GetData(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
+                                 Context* ctx = nullptr, size_t* fn = nullptr);
+            T    GetData(size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr);
+
+            bool GetData(T& value, boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
+                                 Context* ctx = nullptr, size_t* fn = nullptr);
+            bool GetData(T& value, size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr);
 
             ITypedParameter<T>* UpdateData(T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
             ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);

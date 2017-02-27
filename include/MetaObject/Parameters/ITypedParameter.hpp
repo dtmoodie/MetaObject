@@ -21,21 +21,27 @@ https://github.com/dtmoodie/parameters
 
 namespace mo
 {
-    template<typename T, typename Enable = void> struct Stamped;
+
+    BOOST_PARAMETER_NAME(data);
 
     template<class T>
-    struct Stamped<T, typename std::enable_if<!std::is_pod<T>::value>::type>: public T
+    struct Stamped
     {
-        template<class...U>
-        Stamped(U...args):
-            T(args...)
-        {
-            ts = -1 * second;
-            fn = 0;
-        }
+        Stamped(const T& data):
+            data(data), fn(0){}
+
+        Stamped(mo::time_t ts, const T& data):
+            ts(ts), data(data){}
+
+        Stamped(size_t fn, const T& data):
+            fn(fn), data(data){}
+
+        Stamped(mo::time_t ts, size_t fn, const T& data):
+            ts(ts), fn(fn), data(data){}
 
         template<class...U>
-        Stamped(mo::time_t ts, size_t frame_number, U...args) : T(args...)
+        Stamped(mo::time_t ts, size_t frame_number, U...args) :
+            data(args...)
         {
             this->ts = ts;
             this->fn = frame_number;
@@ -45,83 +51,60 @@ namespace mo
         void serialize(A& ar)
         {
             ar(ts);
-            ar(ts);
+            ar(fn);
             ar(*static_cast<T*>(this));
         }
 
-        mo::time_t ts;
-        size_t fn;
-    };
-
-    template<class T>
-    struct Stamped<T, typename std::enable_if<std::is_pod<T>::value>::type>
-    {
-        Stamped(T&& init):
-            data(std::forward<T>(init))
-        {
-            ts = -1 * second;
-            fn = 0;
-        }
-
-        template<class...U>
-        Stamped(mo::time_t ts, size_t frame_number, U&&...  init):
-            data(std::forward<U>(init)...)
-        {
-            this->ts = ts;
-            this->fn = frame_number;
-        }
-
-        template<class A>
-        void serialize(A& ar)
-        {
-            ar(ts);
-            ar(ts);
-            ar(data);
-        }
-
-        mo::time_t ts;
+        boost::optional<mo::time_t> ts;
         size_t fn;
         T data;
     };
 
     // The state struct is used to save a snapshot of the state of a parameter at a point in time
     template<class T>
-    struct State: public Stamped<T, void>
+    struct State: public Stamped<T>
     {
-        template<class...U>
-        State(mo::time_t ts, size_t fn, Context* ctx, ICoordinateSystem* cs, U&&... init):
-            Stamped<T, void>(ts, fn, std::forward<U>(init)...),
+
+        State(mo::time_t ts, size_t fn, Context* ctx, ICoordinateSystem* cs, const T& init):
+            Stamped<T>(ts, fn, init),
             ctx(ctx),
             cs(cs)
         {
 
         }
-        template<class...U>
-        State(mo::time_t ts, size_t fn, Context* ctx, U&&... init):
-            Stamped<T, void>(ts, fn, std::forward<U>(init)...),
+
+        State(mo::time_t ts, size_t fn, Context* ctx, const T& init):
+            Stamped<T>(ts, fn, init),
             ctx(ctx),
             cs(nullptr)
         {
 
         }
-        template<class...U>
-        State(mo::time_t ts, size_t fn, U&&... init):
-            Stamped<T, void>(ts, fn, std::forward<U>(init)...),
+        State(size_t fn, Context* ctx, ICoordinateSystem* cs, const T& init):
+            Stamped<T>(fn, init),
+            ctx(ctx),
+            cs(cs)
+        {
+
+        }
+
+        State(mo::time_t ts, size_t fn, const T&init):
+            Stamped<T>(ts, fn, init),
             ctx(nullptr),
             cs(nullptr)
         {
 
         }
-        template<class...U>
-        State(mo::time_t ts, U&&... init):
-            Stamped<T, void>(ts, std::numeric_limits<size_t>::max(), std::forward<U>(init)...),
+
+        State(mo::time_t ts, const T& init):
+            Stamped<T>(ts, init),
             ctx(nullptr),
             cs(nullptr)
         {
         }
-        template<class...U>
-        State(U&&... init):
-            Stamped<T, void>(-1 * second, std::numeric_limits<size_t>::max(), std::forward<U>(init)...),
+
+        State(const T& init):
+            Stamped<T>(init),
             ctx(nullptr),
             cs(nullptr)
         {
@@ -159,7 +142,8 @@ namespace mo
          * \param fn_ optional output frame number of requested data
          * \return pointer to data, nullptr if failed
          */
-        virtual T*   GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn_ = nullptr) = 0;
+        virtual T*   GetDataPtr(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
+                                Context* ctx = nullptr, size_t* fn_ = nullptr) = 0;
         /*!
          * \brief GetDataPtr returns a pointer to data at a requested frame number. Not thread safe
          * \param fn requested frame number
@@ -168,7 +152,7 @@ namespace mo
          * \param ts_ optional output timestamp of requested data
          * \return pointer to data, nullptr if failed
          */
-        virtual T*   GetDataPtr(size_t fn, Context* ctx = nullptr, mo::time_t* ts_ = nullptr) = 0;
+        virtual T*   GetDataPtr(size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts_ = nullptr) = 0;
 
         // Copies data into value
         // Time index is the index for which you are requesting data
@@ -180,7 +164,8 @@ namespace mo
          * \param fn optional output frame number of requested data
          * \return copy of data, throws exception if access fails
          */
-        virtual T    GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn = nullptr) = 0;
+        virtual T    GetData(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
+                             Context* ctx = nullptr, size_t* fn = nullptr) = 0;
 
         /*!
          * \brief GetData returns a copy of the data at requested frame number. Thread safe
@@ -189,7 +174,7 @@ namespace mo
          * \param ts is the optional output timestamp of requested data
          * \return copy of data at requested frame number, throws exception on failure
          */
-        virtual T    GetData(size_t fn, Context* ctx = nullptr, mo::time_t* ts = nullptr) = 0;
+        virtual T    GetData(size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr) = 0;
 
         /*!
          * \brief GetData copies data into value. Thread safe
@@ -199,7 +184,8 @@ namespace mo
          * \param fn optional output frame number of requested data
          * \return true on success, false otherwise
          */
-        virtual bool GetData(T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr, size_t* fn = nullptr) = 0;
+        virtual bool GetData(T& value, boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
+                             Context* ctx = nullptr, size_t* fn = nullptr) = 0;
         /*!
          * \brief GetData copies data into value. Thread safe
          * \param value return value
@@ -208,7 +194,7 @@ namespace mo
          * \param ts optional output timestamp of data
          * \return true on success, false otherwise
          */
-        virtual bool GetData(T& value, size_t fn, Context* ctx = nullptr, mo::time_t* ts = nullptr) = 0;
+        virtual bool GetData(T& value, size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr) = 0;
         
         /*!
          * \brief UpdateData used to update the parameter and emit update signals.
@@ -220,17 +206,33 @@ namespace mo
          * \param cs coordinate system of new data
          * \return pointer to this parameter
          */
-        virtual ITypedParameter<T>* UpdateData(const T& data,
-                                               mo::time_t ts = -1 * mo::second,
-                                               Context* ctx = nullptr,
-                                               size_t fn = std::numeric_limits<size_t>::max(),
-                                               ICoordinateSystem* cs = nullptr) = 0;
+        BOOST_PARAMETER_MEMBER_FUNCTION(
+                (ITypedParameter<T>*),
+                UpdateData,
+                tag,
+                (required (data, *))
+                (optional
+                 (timestamp,         *, boost::optional<mo::time_t>() )
+                 (context,           *, nullptr)
+                 (frame_number,      *, boost::optional<size_t>() )
+                 (coordinate_system, *, nullptr)
+                 )
+                )
+        {
+            //UpdateDataImpl(data);
+            //Commit(timestamp, context, frame_number, coordinate_system);
+            UpdateDataImpl(data, timestamp, context, frame_number, coordinate_system);
+            return this;
+        }
+
 
         virtual TUpdateToken<T> Update();
 
         const TypeInfo& GetTypeInfo() const;
 
         virtual bool Update(IParameter* other);
+    protected:
+        virtual bool UpdateDataImpl(const T& data, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs) = 0;
     private:
         static const TypeInfo _type_info;
     };
@@ -250,7 +252,7 @@ namespace mo
 
         ~TUpdateToken()
         {
-            _param.UpdateData(_data, _ts, _fn, _ctx, _cs);
+            _param.UpdateData(_data, _ts, _ctx, _fn, _cs);
         }
 
         TUpdateToken& operator()(T&& data)
@@ -282,7 +284,7 @@ namespace mo
         }
 
     private:
-        T& _data;
+        T _data;
         ITypedParameter<T>& _param;
         size_t _fn;
         mo::time_t _ts;

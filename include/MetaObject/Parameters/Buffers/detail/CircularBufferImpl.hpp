@@ -24,25 +24,25 @@ namespace mo
         }
 
         template<class T>
-        T* CircularBuffer<T>::GetDataPtr(mo::time_t ts, Context* ctx, size_t* fn)
+        T* CircularBuffer<T>::GetDataPtr(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
         {
-            if (ts < 0 * mo::second && _data_buffer.size())
-                return &_data_buffer.back().second;
+            if(!ts)
+                return &_data_buffer.back().data;
 
             for (auto& itr : _data_buffer)
             {
                 if (itr.ts == ts)
                 {
-                    if(fn)
+                    if(fn && itr.fn)
                         *fn = itr.fn;
-                    return &itr;
+                    return &itr.data;
                 }
             }
             return nullptr;
         }
 
         template<class T>
-        T* CircularBuffer<T>::GetDataPtr(size_t fn, Context* ctx, mo::time_t* ts)
+        T* CircularBuffer<T>::GetDataPtr(size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
         {
             for (auto& itr : _data_buffer)
             {
@@ -50,26 +50,27 @@ namespace mo
                 {
                     if(ts)
                         *ts = itr.ts;
-                    return &itr;
+                    return &itr.data;
                 }
             }
             return nullptr;
         }
          
         template<class T>
-        bool CircularBuffer<T>::GetData(T& value, mo::time_t ts, Context* ctx, size_t* fn)
+        bool CircularBuffer<T>::GetData(T& value, boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            if (ts < 0 * mo::second  && _data_buffer.size())
+
+            if (!ts && _data_buffer.size())
             {
-                value = _data_buffer.back().second;
+                value = _data_buffer.back().data;
                 return true;
             }
             for (auto& itr : _data_buffer)
             {
                 if (itr.ts == ts)
                 {
-                    value = itr;
+                    value = itr.data;
                     if(fn)
                         *fn = itr.fn;
                     return true;
@@ -79,33 +80,88 @@ namespace mo
         }
 
         template<class T>
-        T CircularBuffer<T>::GetData(mo::time_t ts, Context* ctx, size_t* fn)
+        bool CircularBuffer<T>::GetData(T& value, size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
         {
-            if (ts < 0 * mo::second && _data_buffer.size())
+            boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+            if (fn == std::numeric_limits<size_t>::max() && _data_buffer.size())
             {
-                if(fn)
-                    *fn = _data_buffer.back().fn;
-                return _data_buffer.back();
+                value = _data_buffer.back().data;
+                if(ts)
+                    *ts = _data_buffer.back().ts;
+                return true;
             }
             for (auto& itr : _data_buffer)
             {
-                if (itr == ts)
+                if (itr.fn == fn)
+                {
+                    value = itr.data;
+                    if(ts)
+                        *ts = itr.ts;
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        template<class T>
+        T CircularBuffer<T>::GetData(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
+        {
+            if (!ts && _data_buffer.size())
+            {
+                if(fn)
+                    *fn = _data_buffer.back().fn;
+                return _data_buffer.back().data;
+            }
+            for (auto& itr : _data_buffer)
+            {
+                if (itr.ts == ts)
                 {
                     if(fn)
                         *fn = itr.fn;
-                    return itr;
+                    return itr.data;
                 }
             }
-            THROW(debug) << "Could not find timestamp " << ts << " in range (" << _data_buffer.back().first << "," << _data_buffer.front().first <<")";
+            THROW(debug) << "Could not find timestamp " << ts
+                         << " in range (" << _data_buffer.back().ts << "," << _data_buffer.front().ts <<")";
             return T();
         }
-            
 
         template<class T>
-        ITypedParameter<T>* CircularBuffer<T>::UpdateData(T&& data_, mo::time_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs)
+        T CircularBuffer<T>::GetData(size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
+        {
+            if (fn == std::numeric_limits<size_t>::max() && _data_buffer.size())
+            {
+                if(ts)
+                    *ts = _data_buffer.back().ts;
+                return _data_buffer.back().data;
+            }
+            for (auto& itr : _data_buffer)
+            {
+                if (itr.fn == fn)
+                {
+                    if(ts)
+                        *ts = itr.ts;
+                    return itr.data;
+                }
+            }
+            THROW(debug) << "Could not find frame number" << ts
+                         << " in range (" << _data_buffer.back().fn << ","
+                         << _data_buffer.front().fn <<")";
+            return T();
+        }
+
+        template<class T>
+        bool CircularBuffer<T>::UpdateDataImpl(const T& data_,
+                                               boost::optional<mo::time_t> ts,
+                                               Context* ctx,
+                                               boost::optional<size_t> fn,
+                                               ICoordinateSystem* cs)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            _data_buffer.push_back(State<T>(ts, fn, ctx, cs, data_));
+            if(ts)
+                _data_buffer.push_back(State<T>(*ts, fn ? *fn : 0, ctx, cs, data_));
+            else
+                _data_buffer.push_back(State<T>(fn ? *fn : 0, ctx, cs, data_));
             this->modified = true;
             this->Commit(ts, ctx, fn, cs);
             return this;
@@ -128,25 +184,45 @@ namespace mo
             return false;
         }
 
-        template<class T> void  CircularBuffer<T>::SetSize(long long size)
+        template<class T> void CircularBuffer<T>::SetSize(size_t size)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             _data_buffer.set_capacity(size);
         }
-        template<class T> long long CircularBuffer<T>::GetSize()
+
+        template<class T> size_t CircularBuffer<T>::GetSize()
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             return _data_buffer.capacity();
         }
-        template<class T> void  CircularBuffer<T>::GetTimestampRange(mo::time_t& start, mo::time_t& end) 
+
+        template<class T> bool CircularBuffer<T>::GetTimestampRange(mo::time_t& start, mo::time_t& end)
         {
             if (_data_buffer.size())
             {
                 boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-                start = _data_buffer.back().first;
-                end = _data_buffer.front().first;
+                if(_data_buffer.back().ts && _data_buffer.front().ts)
+                {
+                    start = *_data_buffer.back().ts;
+                    end = *_data_buffer.front().ts;
+                    return true;
+                }
             }
+            return false;
         }
+
+        template<class T> bool CircularBuffer<T>::GetFrameNumberRange(size_t& start,size_t& end)
+        {
+            if (_data_buffer.size())
+            {
+                boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+                start = _data_buffer.back().fn;
+                end = _data_buffer.front().fn;
+                return true;
+            }
+            return false;
+        }
+
         template<class T> std::shared_ptr<IParameter>  CircularBuffer<T>::DeepCopy() const
         {
             auto buffer = new CircularBuffer<T>(IParameter::_name);
@@ -158,7 +234,7 @@ namespace mo
         {
             if(this->input)
             {
-                UpdateData(this->input->GetDataPtr(), this->input->GetTimestamp(), ctx);
+                //UpdateData(*this->input->GetDataPtr(), this->input->GetTimestamp(), ctx);
             }
         }
         template<typename T> ParameterConstructor<CircularBuffer<T>> CircularBuffer<T>::_circular_buffer_parameter_constructor;
