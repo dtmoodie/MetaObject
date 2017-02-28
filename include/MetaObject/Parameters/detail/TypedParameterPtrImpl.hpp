@@ -79,7 +79,7 @@ namespace mo
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(ts)
         {
-            if(ts != IParameter::_ts && this->_ts != -1 * mo::second)
+            if(ts != IParameter::_ts && this->_ts)
             {
                 THROW(debug) << "Requested timestamp != current ["
                              << ts << " != " << IParameter::_ts
@@ -175,7 +175,18 @@ namespace mo
         }
         return this;
     }*/
-	
+    template<typename T>
+    bool TypedParameterPtr<T>::UpdateDataImpl(const T& data, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs)
+    {
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+        if(ptr)
+        {
+            *ptr = data;
+            this->Commit(ts, ctx, fn, cs);
+        }
+        return this;
+    }
+
     template<typename T> 
     bool TypedParameterPtr<T>::Update(IParameter* other)
 	{

@@ -99,6 +99,7 @@ namespace mo
         return false;
     }
 
+
     template<typename T>
     void TypedInputParameterPtr<T>::onInputDelete(IParameter const* param)
     {
@@ -106,5 +107,6 @@ namespace mo
         this->shared_input.reset();
         this->input = nullptr;
     }
+
 }
 #endif

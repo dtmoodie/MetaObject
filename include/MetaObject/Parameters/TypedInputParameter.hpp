@@ -95,7 +95,9 @@ namespace mo
         bool SetInput(IParameter* input);
         void SetUserDataPtr(const T** user_var_);
         bool GetInput(mo::time_t ts = -1 * mo::second);
+
     protected:
+        virtual bool UpdateDataImpl(const T& data, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs){return true;}
         const T** userVar; // Pointer to the user space pointer variable of type T
         void updateUserVar();
         virtual void onInputUpdate(Context* ctx, IParameter* param);

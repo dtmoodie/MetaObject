@@ -38,6 +38,7 @@ class ITypedInputParameter: virtual public ITypedParameter<T>, virtual public In
         virtual bool GetData(T& value, size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr);
 
     protected:
+        virtual bool UpdateDataImpl(const T& data, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs){return true;}
         virtual void onInputDelete(IParameter const* param);
         virtual void onInputUpdate(Context* ctx, IParameter* param);
         std::shared_ptr<ITypedParameter<T>> shared_input;

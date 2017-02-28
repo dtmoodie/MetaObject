@@ -12,9 +12,9 @@ namespace mo
 	}
 
 	template<typename T> 
-    T* TypedParameter<T>::GetDataPtr(mo::time_t ts, Context* ctx, boost::optional<size_t>* fn)
+    T* TypedParameter<T>::GetDataPtr(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
 	{
-        if (ts > 0 * mo::second)
+        if (ts)
         {
             if(ts != IParameter::_ts)
             {
@@ -44,10 +44,10 @@ namespace mo
     }
 
 	template<typename T> 
-    bool TypedParameter<T>::GetData(T& value, mo::time_t ts, Context* ctx, boost::optional<size_t>* fn)
+    bool TypedParameter<T>::GetData(T& value, boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
 	{
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-        if (ts < 0 * mo::second)
+        if (ts)
         {
             value = data;
             return true;
@@ -88,10 +88,10 @@ namespace mo
     }
 
     template<typename T>
-    T TypedParameter<T>::GetData(mo::time_t ts, Context* ctx, boost::optional<size_t>* fn)
+    T TypedParameter<T>::GetData(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
     {
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-        if(ts < 0 * mo::second)
+        if(ts)
         {
             if(fn)
                 *fn = this->_fn;
@@ -124,15 +124,15 @@ namespace mo
     }
 
     template<typename T>
-    ITypedParameter<T>* TypedParameter<T>::UpdateData(const T& data_,
-                                                      mo::time_t ts,
-                                                      Context* ctx,
-                                                      size_t fn,
-                                                      ICoordinateSystem* cs)
+    bool TypedParameter<T>::UpdateDataImpl(const T& data_,
+                                          boost::optional<mo::time_t> ts,
+                                          Context* ctx,
+                                          boost::optional<size_t> fn,
+                                          ICoordinateSystem* cs)
 	{
         data = data_;
         this->Commit(ts, ctx, fn, cs);
-		return this;
+        return true;
 	}
 	
     template<typename T> 
