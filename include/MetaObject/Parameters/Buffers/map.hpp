@@ -32,7 +32,7 @@ namespace mo
     {
         struct SequenceKey
         {
-            SequenceKey(mo::time_t ts, size_t fn):
+            SequenceKey(boost::optional<mo::time_t> ts, size_t fn):
                 ts(ts), fn(fn){}
             SequenceKey(mo::time_t ts):
                 ts(ts), fn(std::numeric_limits<size_t>::max()){}

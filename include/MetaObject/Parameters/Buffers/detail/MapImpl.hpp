@@ -132,17 +132,21 @@ namespace mo
             return T();
         }
 
-        /*template<class T>
-        ITypedParameter<T>* Map<T>::UpdateData(const T& data_, mo::time_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs)
+        template<class T>
+        bool Map<T>::UpdateDataImpl(const T& data_, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs)
         {
             {
                 boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-                _data_buffer[{ts,fn}] = data_;
+                if(fn)
+                    IParameter::_fn = *fn;
+                else
+                    ++IParameter::_fn;
+                _data_buffer[{ts,IParameter::_fn}] = data_;
                 IParameter::modified = true;
             }
             IParameter::OnUpdate(ctx);
             return this;
-        }*/
+        }
 
 
 
@@ -212,7 +216,10 @@ namespace mo
         }
         template<class T> void Map<T>::onInputUpdate(Context* ctx, IParameter* param)
         {
-            //UpdateData(_data = *this->input->GetDataPtr(), _timestamp = this->input->GetTimestamp(), _context = ctx);
+            T* data = this->input->GetDataPtr();
+            if(data)
+                //ITypedParameter<T>::UpdateData(_data = *data, _timestamp = this->input->GetTimestamp(), _context = ctx);
+                UpdateDataImpl(*data, this->input->GetTimestamp(), ctx, this->input->GetFrameNumber(), this->input->GetCoordinateSystem());
         }
     }
 }

@@ -66,7 +66,7 @@ namespace mo
             std::shared_ptr<IParameter> DeepCopy() const;
 
             void SetSize(size_t size);
-            void SetSize(mo::time_t size);
+            void SetSize(mo::time_t size){}
             virtual size_t GetSize();
             bool GetTimestampRange(mo::time_t& start, mo::time_t& end);
             bool GetFrameNumberRange(size_t& start,size_t& end);

@@ -49,12 +49,36 @@ namespace mo
             }
             return false;
         }
+
+        template<class T> bool StreamBuffer<T>::GetData(T& value, size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
+        {
+            if(Map<T>::GetData(value, fn, ctx, &_current_timestamp))
+            {
+                if(ts)
+                    *ts = _current_timestamp;
+                prune();
+                return true;
+            }
+            return false;
+        }
+
         template<class T> T StreamBuffer<T>::GetData(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
         {
             T result = Map<T>::GetData(ts, ctx, &_current_frame_number);
             _current_timestamp = ts;
             if(fn)
                 *fn = _current_frame_number;
+            prune();
+            return result;
+        }
+
+        template<class T> T StreamBuffer<T>::GetData(size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
+        {
+            T result = Map<T>::GetData(fn, ctx, &_current_timestamp);
+            //_current_timestamp = ts;
+            _current_frame_number = fn;
+            if(ts)
+                *ts = _current_timestamp;
             prune();
             return result;
         }
@@ -109,8 +133,8 @@ namespace mo
             _size = size;
         }
         
-        /*template<class T>
-        ITypedParameter<T>* BlockingStreamBuffer<T>::UpdateData(T& data_, mo::time_t ts, Context* ctx)
+        template<class T>
+        bool BlockingStreamBuffer<T>::UpdateDataImpl(const T& data_, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             while (this->_data_buffer.size() >= _size)
@@ -118,47 +142,17 @@ namespace mo
                 LOG(trace) << "Pushing to " << this->GetTreeName() << " waiting on read";
                 _cv.wait(lock);
             }
-            this->_data_buffer[ts] = data_;
+            if(fn)
+                IParameter::_fn = *fn;
+            else
+                ++IParameter::_fn;
+            Map<T>::_data_buffer[{ts,IParameter::_fn}] = data_;
             IParameter::modified = true;
-            this->_timestamp = ts;
+            IParameter::_ts = ts;
             IParameter::OnUpdate(ctx);
             return this;
         }
-        template<class T>
-        ITypedParameter<T>* BlockingStreamBuffer<T>::UpdateData(const T& data_, mo::time_t ts, Context* ctx)
-        {
-            boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
-            while (this->_data_buffer.size() >= _size)
-            {
-                LOG(trace) << "Pushing to " << this->GetTreeName() << " waiting on read";
-                _cv.wait(lock);
-            }
-            this->_data_buffer[ts] = data_;
-            IParameter::modified = true;
-            this->_timestamp = ts;
-            IParameter::OnUpdate(ctx);
-            return this;
-        }
-        template<class T>
-        ITypedParameter<T>* BlockingStreamBuffer<T>::UpdateData(T* data_, mo::time_t ts, Context* ctx)
-        {
-            {
-                boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
-                while(this->_data_buffer.size() >= _size)
-                {
-                    LOG(trace) << "Pushing to " << this->GetTreeName() << " waiting on read";
-                    _cv.wait_for(lock, boost::chrono::microseconds(100));
-                    lock.unlock();
-                    IParameter::OnUpdate(ctx);
-                    lock.lock();
-                }
-                this->_data_buffer[ts] = *data_;
-                IParameter::modified = true;
-                this->_timestamp = ts;
-            }
-            IParameter::OnUpdate(ctx);
-            return this;
-        }*/
+
         template<class T>
         void BlockingStreamBuffer<T>::prune()
         {

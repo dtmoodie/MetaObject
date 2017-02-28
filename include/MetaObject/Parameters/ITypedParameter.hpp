@@ -213,15 +213,17 @@ namespace mo
                 (required (data, *))
                 (optional
                  (timestamp,         *, boost::optional<mo::time_t>() )
-                 (context,           *, nullptr)
+                 (context,           *, (Context*)nullptr)
                  (frame_number,      *, boost::optional<size_t>() )
-                 (coordinate_system, *, nullptr)
+                 (coordinate_system, *, (ICoordinateSystem*)nullptr)
                  )
                 )
         {
+            // TODO: Get working
             //UpdateDataImpl(data);
             //Commit(timestamp, context, frame_number, coordinate_system);
-            UpdateDataImpl(data, timestamp, context, frame_number, coordinate_system);
+            //boost::optional<mo::time_t> ts = timestamp;
+            //UpdateDataImpl(data, ts, context, frame_number, coordinate_system);
             return this;
         }
 
