@@ -123,6 +123,7 @@ set(RCC_PERMODULE_INTERFACE_SOURCE ${RCC_PERMODULE_INTERFACE_SOURCE} PARENT_SCOP
 
 set(MO_PROFILING_MODE "BUILTIN" CACHE STRING "Set MetaObject profiling mode")
 set_property(CACHE MO_PROFILING_MODE PROPERTY STRINGS BUILTIN DYNAMIC NONE)
+include_directories("dependencies/Remotery/lib")
 if(${MO_PROFILING_MODE} STREQUAL "BUILTIN")
   add_definitions(-DRMT_BUILTIN)
   list(APPEND link_libs Remotery)

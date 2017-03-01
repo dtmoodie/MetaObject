@@ -1,6 +1,10 @@
 #include "MetaObject/Thread/ThreadPool.hpp"
-
+#include "MetaObject/Thread/Thread.hpp"
 using namespace mo;
+ThreadPool::PooledThread::~PooledThread()
+{
+    delete this->thread;
+}
 
 ThreadPool* ThreadPool::Instance()
 {

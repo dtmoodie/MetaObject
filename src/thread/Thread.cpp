@@ -84,6 +84,7 @@ Thread::~Thread()
 {
     _quit = true;
     _run = false;
+    LOG(info) << "Shutting down " << this->_name << " thread";
     _thread.interrupt();
     _thread.join();
 }

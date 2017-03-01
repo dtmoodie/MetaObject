@@ -16,7 +16,7 @@
 #else
   #include "dlfcn.h"
 #endif
-#include "dependencies/Remotery/lib/Remotery.h"
+#include "Remotery.h"
 
 using namespace mo;
 

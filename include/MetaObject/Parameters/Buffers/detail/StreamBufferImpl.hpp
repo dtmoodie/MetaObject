@@ -15,9 +15,16 @@ namespace mo
         template<class T> T*   StreamBuffer<T>::GetDataPtr(long long ts, Context* ctx)
         {
             T* result = Map<T>::GetDataPtr(ts, ctx);
-            if(result && ts != -1)
+            if(result)
             {
-                _current_timestamp = ts;
+                if(ts == -1)
+                {
+                    boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
+                    _current_timestamp = this->_data_buffer.rbegin()->first;
+                }else
+                {
+                    _current_timestamp = ts;
+                }
                 prune();
             }
             return result;
@@ -146,6 +153,16 @@ namespace mo
                     {
                         break;
                     }
+                }
+            }else
+            {
+                // start dropping data from the beginning
+                int size = this->_data_buffer.size();
+                auto itr = this->_data_buffer.begin();
+                while(size >= this->_size && itr != this->_data_buffer.end())
+                {
+                    itr = this->_data_buffer.erase(itr);
+                    --size;
                 }
             }
             lock.unlock();
