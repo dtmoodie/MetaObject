@@ -90,7 +90,7 @@ namespace mo
         {
             if(input) input->Unsubscribe();
             if(shared_input) shared_input->Unsubscribe();
-            ITypedParameter<T>::UpdateData(_data  = *casted_param->GetDataPtr(), _timestamp = casted_param->GetTimestamp(), _context = casted_param->GetContext());
+            //ITypedParameter<T>::UpdateData(*casted_param->GetDataPtr(), tag::_timestamp = casted_param->GetTimestamp(), tag::_context = casted_param->GetContext());
 
             input = casted_param;
             input->Subscribe();

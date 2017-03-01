@@ -20,6 +20,8 @@ https://github.com/dtmoodie/MetaObject
 #include "MetaObject/Detail/Export.hpp"
 #include "MetaObject/Detail/Enums.hpp"
 #include "MetaObject/Signals/TypedSignal.hpp"
+#include "NamedParameter.hpp"
+
 #include <boost/version.hpp>
 #include <boost/units/systems/si.hpp>
 #include <boost/units/systems/si/prefixes.hpp>
@@ -27,7 +29,8 @@ https://github.com/dtmoodie/MetaObject
 #include <boost/units/io.hpp>
 #include <boost/optional.hpp>
 #include <boost/optional/optional_io.hpp>
-#include <boost/parameter.hpp>
+
+
 #if BOOST_VERSION > 105400
 #include <boost/core/noncopyable.hpp>
 #else
@@ -44,12 +47,12 @@ namespace boost
 namespace mo
 {
 
-    BOOST_PARAMETER_NAME(timestamp)
+    /*BOOST_PARAMETER_NAME(timestamp)
     BOOST_PARAMETER_NAME(frame_number)
     BOOST_PARAMETER_NAME(coordinate_system)
     BOOST_PARAMETER_NAME(context)
     BOOST_PARAMETER_NAME(parameter_name)
-    BOOST_PARAMETER_NAME(parameter_flags)
+    BOOST_PARAMETER_NAME(parameter_flags)*/
 
     class ICoordinateSystem;
 
@@ -71,6 +74,14 @@ namespace mo
 	class TypeInfo;
     class IParameter;
 
+    MO_KEYWORD_INPUT(timestamp, boost::optional<mo::time_t>)
+    MO_KEYWORD_INPUT(frame_number,size_t)
+    MO_KEYWORD_INPUT(coordinate_system, ICoordinateSystem*)
+    MO_KEYWORD_INPUT(context, Context*)
+    MO_KEYWORD_INPUT(parameter_name, std::string)
+    MO_KEYWORD_INPUT(tree_root, std::string)
+    MO_KEYWORD_INPUT(parameter_flags, ParameterType)
+
     namespace UI
     {
         namespace qt
@@ -88,50 +99,30 @@ namespace mo
     
     class UpdateToken;
 
-    class MO_EXPORTS IParameterImpl
-    {
-    public:
-        template<class ArgumentPack>
-        IParameterImpl(ArgumentPack const& args)
-        {
-            //this->_name = args[_parameter_name | ""];
-            //this->_ctx = args[_context | nullptr];
-            //this->_cs = args[_coordinate_system | nullptr];
-            //this->_ts = args[_timestamp | boost::optional<mo::time_t>()];
-            //this->_fn = args[_frame_number | 0];
-            //this->_flags = args[_parameter_flags | mo::Control_e];
-        }
-    protected:
-        boost::optional<mo::time_t>              _ts;
-        size_t                                    _fn;
-        ICoordinateSystem*                       _cs;
-        Context*                                 _ctx; // Context of object that owns this parameter
-        std::string                              _name;
-        std::string                              _tree_root;
-        ParameterType                            _flags;
-    };
-
-    class MO_EXPORTS IParameter: boost::noncopyable, public IParameterImpl
+    class MO_EXPORTS IParameter: boost::noncopyable
     {
     public:
         typedef std::shared_ptr<IParameter> Ptr;
         typedef TypedSlot<void(Context*, IParameter*)> update_f;
         typedef TypedSlot<void(IParameter const*)> delete_f;
 
-        BOOST_PARAMETER_CONSTRUCTOR(
-                IParameter, (IParameterImpl), tag,
-                (optional (timestamp, *))
-                (optional (frame_number, *))
-                (optional (coordinate_system, *))
-                (optional (context, *))
-                (optional (parameter_name, *))
-                (optional (parameter_flags, *)))
+        template<class...Args>
+        IParameter(const Args&... args)
+        {
+            _name      = GetKeywordInputDefault<tag::parameter_name>("unnamed", args...);
+            _ts        = GetKeywordInputDefault<tag::timestamp>(boost::optional<mo::time_t>(), args...);
+            _fn        = GetKeywordInputDefault<tag::frame_number>(0, args...);
+            _ctx       = GetKeywordInputDefault<tag::context>(nullptr, args...);
+            _cs        = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...);
+            _flags     = GetKeywordInputDefault<tag::parameter_flags>(mo::Control_e, args...);
+            _tree_root = GetKeywordInputDefault<tag::tree_root>("", args...);
+        }
 
-        /*IParameter(const std::string& name_,
+        IParameter(const std::string& name_  = "",
                    ParameterType      flags_ = Control_e,
                    mo::time_t         ts_    = -1 * mo::second,
                    Context*           ctx_   = nullptr,
-                   size_t             fn_    = std::numeric_limits<size_t>::max());*/
+                   size_t             fn_    = std::numeric_limits<size_t>::max());
 
         virtual ~IParameter();
 
@@ -193,7 +184,13 @@ namespace mo
         bool modified = false;
 	protected:
         template<class T> friend class UI::qt::ParameterProxy;
-
+        boost::optional<mo::time_t>              _ts;
+        size_t                                   _fn;
+        ICoordinateSystem*                       _cs;
+        Context*                                 _ctx; // Context of object that owns this parameter
+        std::string                              _name;
+        std::string                              _tree_root;
+        ParameterType                            _flags;
         TypedSignal<void(Context*, IParameter*)> _update_signal;
         TypedSignal<void(IParameter const*)>	 _delete_signal;
         boost::recursive_mutex*                  _mtx = nullptr;

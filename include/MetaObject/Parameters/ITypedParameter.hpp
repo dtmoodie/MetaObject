@@ -22,8 +22,6 @@ https://github.com/dtmoodie/parameters
 namespace mo
 {
 
-    BOOST_PARAMETER_NAME(data);
-
     template<class T>
     struct Stamped
     {
@@ -206,24 +204,16 @@ namespace mo
          * \param cs coordinate system of new data
          * \return pointer to this parameter
          */
-        BOOST_PARAMETER_MEMBER_FUNCTION(
-                (ITypedParameter<T>*),
-                UpdateData,
-                tag,
-                (required (data, *))
-                (optional
-                 (timestamp,         *, boost::optional<mo::time_t>() )
-                 (context,           *, (Context*)nullptr)
-                 (frame_number,      *, boost::optional<size_t>() )
-                 (coordinate_system, *, (ICoordinateSystem*)nullptr)
-                 )
-                )
+        template<class... Args>
+        ITypedParameter<T>* UpdateData(const T& data, const Args&... args)
         {
-            // TODO: Get working
-            //UpdateDataImpl(data);
-            //Commit(timestamp, context, frame_number, coordinate_system);
-            //boost::optional<mo::time_t> ts = timestamp;
-            //UpdateDataImpl(data, ts, context, frame_number, coordinate_system);
+            boost::optional<size_t> fn;
+            const size_t* fnptr = GetKeywordInputOptional<tag::frame_number>(args...);
+            if(fnptr)
+                fn = *fnptr;
+            UpdateDataImpl(data, GetKeywordInputDefault<tag::timestamp>(boost::optional<mo::time_t>(), args...),
+                                 GetKeywordInputDefault<tag::context>(nullptr, args...),
+                                 fn, GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...));
             return this;
         }
 
@@ -254,7 +244,7 @@ namespace mo
 
         ~TUpdateToken()
         {
-            _param.UpdateData(_data, _ts, _ctx, _fn, _cs);
+            //_param.UpdateData(_data, _ts, _ctx, _fn, _cs);
         }
 
         TUpdateToken& operator()(T&& data)

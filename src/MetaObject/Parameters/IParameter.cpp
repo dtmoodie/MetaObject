@@ -29,15 +29,18 @@ https://github.com/dtmoodie/parameters
 
 using namespace mo;
 
-/*IParameter::IParameter(const std::string& name_, ParameterType flags_, mo::time_t ts, Context* ctx, size_t fn) :
-    IParameterImpl(_parameter_name = name_, _parameter_flags = flags_, _timestamp = ts, _context = ctx, _frame_number = fn),
+IParameter::IParameter(const std::string& name_, ParameterType flags_, mo::time_t ts, Context* ctx, size_t fn) :
     modified(false), 
     _subscribers(0),
     _mtx(nullptr),
-    _owns_mutex(false)
+    _owns_mutex(false),
+    _name(name_),
+    _flags(flags_),
+    _ctx(ctx),
+    _fn(fn)
 {
     
-}*/
+}
 
 IParameter::~IParameter()
 {

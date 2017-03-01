@@ -60,7 +60,7 @@ const mo::TypeInfo& InputParameterAny::GetTypeInfo() const
 
 void InputParameterAny::on_param_update(mo::Context* ctx, mo::IParameter* param)
 {
-    Commit(-1, ctx); // Notify owning parent of update
+    //Commit(-1, ctx); // Notify owning parent of update
 }
 
 void InputParameterAny::on_param_delete(mo::IParameter const *)

@@ -123,6 +123,9 @@ BOOST_AUTO_TEST_CASE(wrapped_parameter)
 	BOOST_CHECK_EQUAL(param.GetData(), 10);
 	param.UpdateData(5);
 	BOOST_CHECK_EQUAL(param.GetData(), 5);
+    param.UpdateData(10, mo::tag::_timestamp = mo::time_t(1 * mo::second));
+    BOOST_CHECK_EQUAL(param.GetData(), 10);
+    BOOST_CHECK_EQUAL(*param.GetTimestamp(), mo::time_t(1 * mo::second));
 	value = 11;
 	BOOST_CHECK_EQUAL(param.GetData(), 11);
 	bool update_handler_called = false;

@@ -28,7 +28,7 @@ namespace mo
 		if (typedParameter)
 		{
 			boost::recursive_mutex::scoped_lock lock(typedParameter->mtx());
-			UpdateData(typedParameter->GetData(), other->GetTimestamp(), other->GetContext());
+            //UpdateData(typedParameter->GetData(), other->GetTimestamp(), other->GetContext());
 			OnUpdate(other->GetContext());
 			return true;
 		}
