@@ -19,6 +19,7 @@ namespace mo
         {
             PooledThread(bool available_, Thread* thread_):
                 available(available_), thread(thread_){}
+            ~PooledThread();
             bool available = true;
             int ref_count = 0;
             Thread* thread;

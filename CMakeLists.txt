@@ -11,6 +11,8 @@ set(WITH_QT "TRUE" CACHE BOOL "Enable QT support")
 set(WITH_PYTHON "TRUE" CACHE BOOL "Enable Python bindings")
 set(WITH_OPENCV "TRUE" CACHE BOOL "Enable OpenCV types")
 set(WITH_CUDA "TRUE" CACHE BOOL "Enable CUDA recompilation")
+set(WITH_WT "TRUE" CACHE BOOL "Enable WT support")
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -124,6 +126,7 @@ set(RCC_PERMODULE_INTERFACE_SOURCE ${RCC_PERMODULE_INTERFACE_SOURCE} PARENT_SCOP
 
 set(MO_PROFILING_MODE "BUILTIN" CACHE STRING "Set MetaObject profiling mode")
 set_property(CACHE MO_PROFILING_MODE PROPERTY STRINGS BUILTIN DYNAMIC NONE)
+include_directories("dependencies/Remotery/lib")
 if(${MO_PROFILING_MODE} STREQUAL "BUILTIN")
   add_definitions(-DRMT_BUILTIN)
   list(APPEND link_libs Remotery)
@@ -160,30 +163,31 @@ if(WITH_QT)
 endif()
 
 # WT
+if(WITH_WT)
 find_package(Wt QUIET)
-if(Wt_FOUND)
-  add_definitions(-DHAVE_WT)
-  include_directories(${Wt_INCLUDE_DIR})
-  list(APPEND link_libs
-    debug;${Wt_HTTP_DEBUG_LIBRARY}
-    debug;${Wt_DEBUG_LIBRARY}
-    optimized;${Wt_LIBRARY}
-    optimized;${Wt_HTTP_LIBRARY} 
-  )
+  if(Wt_FOUND)
+    add_definitions(-DHAVE_WT)
+    include_directories(${Wt_INCLUDE_DIR})
+    list(APPEND link_libs
+      debug;${Wt_HTTP_DEBUG_LIBRARY}
+      debug;${Wt_DEBUG_LIBRARY}
+      optimized;${Wt_LIBRARY}
+      optimized;${Wt_HTTP_LIBRARY}
+    )
 
-  find_path(Wt_BIN_DIR
-    NAMES wt.dll wtd.dll
-    PATHS ${Wt_DIR} "${Wt_INCLUDE_DIR}/../"
-    ENV ${Wt_DIR}
-   PATH PATH_SUFFIXES bin)
+    find_path(Wt_BIN_DIR
+      NAMES wt.dll wtd.dll
+      PATHS ${Wt_DIR} "${Wt_INCLUDE_DIR}/../"
+      ENV ${Wt_DIR}
+      PATH PATH_SUFFIXES bin)
 
-  if(Wt_BIN_DIR)
-    set(Wt_BIN_DIR_DBG ${Wt_BIN_DIR} CACHE PATH "" FORCE)
-    set(Wt_BIN_DIR_OPT ${Wt_BIN_DIR} CACHE PATH "" FORCE)
-    set(BIN_DIRS "${BIN_DIRS};Wt" CACHE STRING "" FORCE)
-  endif(Wt_BIN_DIR)
-endif(Wt_FOUND)
-
+    if(Wt_BIN_DIR)
+      set(Wt_BIN_DIR_DBG ${Wt_BIN_DIR} CACHE PATH "" FORCE)
+      set(Wt_BIN_DIR_OPT ${Wt_BIN_DIR} CACHE PATH "" FORCE)
+      set(BIN_DIRS "${BIN_DIRS};Wt" CACHE STRING "" FORCE)
+    endif(Wt_BIN_DIR)
+  endif(Wt_FOUND)
+endif(WITH_WT)
 # OpenCV
 if(WITH_OPENCV)
   find_package(OpenCV QUIET COMPONENTS core cudaarithm)

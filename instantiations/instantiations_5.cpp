@@ -11,6 +11,34 @@
 #include "cereal/types/vector.hpp"
 #include <boost/lexical_cast.hpp>
 
+namespace mo
+{
+namespace IO
+{
+namespace Text
+{
+    namespace imp
+    {
+        template<typename T>
+        void Serialize_imp(std::ostream &os, const cv::Rect_<T>& obj, int)
+        {
+            os << obj.x << ", " << obj.y << ", " <<  obj.width << ", " << obj.height;
+        }
+        template<typename T>
+        void DeSerialize_imp(std::istream &is, cv::Rect_<T>& obj, int)
+        {
+            char c;
+            for(int i = 0; i < 4; ++i)
+            {
+                is >> obj[i];
+                is >> c;
+            }
+        }
+    }
+}
+}
+}
+
 INSTANTIATE_META_PARAMETER(cv::Rect);
 INSTANTIATE_META_PARAMETER(cv::Rect2d);
 INSTANTIATE_META_PARAMETER(cv::Rect2f);

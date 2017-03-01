@@ -12,6 +12,25 @@ namespace Text
 {
     namespace imp
     {
+        // test if stream serialization of a type is possible
+        template<class T>
+        struct stream_serializable
+        {
+            //const static bool value = sizeof(decltype(std::declval<std::istream>() >> std::declval<T>(), size_t())) == sizeof(size_t);
+            template<class U>
+            static constexpr auto check(std::stringstream is, U val, int)->decltype(is >> val, size_t())
+            {
+                return 0;
+            }
+            template<class U>
+            static constexpr int check(std::stringstream is, U val, size_t)
+            {
+                return 0;
+            }
+            static const bool value = sizeof(check<T>(std::stringstream(), std::declval<T>(), 0)) == sizeof(size_t);
+        };
+
+
         template<typename T>
         auto Serialize_imp(std::ostream& os, T const& obj, int) ->decltype(os << obj, void())
         {
@@ -67,6 +86,26 @@ namespace Text
                     obj[index] = value;
                 }
             }
+        }
+
+        template<class T1, class T2>
+        typename std::enable_if<stream_serializable<T1>::value && stream_serializable<T2>::value >::type
+        DeSerialize_imp(std::istream& is, std::map<T1, T2>& obj, int)
+        {
+            std::string str;
+            is >> str;
+            auto pos = str.find('=');
+            if(pos == std::string::npos)
+                return;
+            std::stringstream ss;
+            ss << str.substr(0, pos);
+            T1 key;
+            ss >> key;
+            ss.str("");
+            ss << str.substr(pos + 1);
+            T2 value;
+            ss >> value;
+            obj[key] = value;
         }
 
 

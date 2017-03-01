@@ -17,11 +17,19 @@ namespace mo
             T* result = Map<T>::GetDataPtr(ts, ctx, &_current_frame_number);
             if(result)
             {
-                _current_timestamp = ts;
+                if(!ts)
+                {
+                    boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
+                    _current_timestamp = this->_data_buffer.rbegin()->first.ts;
+                }else
+                {
+                    _current_timestamp = ts;
+                }
                 prune();
-            }
-            if(fn)
+                if(fn)
                 *fn = _current_frame_number;
+            }
+            
             return result;
         }
 

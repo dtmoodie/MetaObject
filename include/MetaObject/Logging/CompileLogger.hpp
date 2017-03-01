@@ -15,7 +15,7 @@ namespace mo
 
     protected:
         void LogInternal(int severity, const char * format, va_list args);
-        static const size_t LOGSYSTEM_MAX_BUFFER = 4096;
+        static const size_t LOGSYSTEM_MAX_BUFFER = 409600;
         char m_buff[LOGSYSTEM_MAX_BUFFER];
     };
 

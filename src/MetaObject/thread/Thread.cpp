@@ -84,6 +84,7 @@ Thread::~Thread()
 {
     _quit = true;
     _run = false;
+    LOG(info) << "Shutting down " << this->_name << " thread";
     _thread.interrupt();
     _thread.join();
 }
@@ -177,7 +178,7 @@ void Thread::Main()
         }
     }
     _paused = true;
-    LOG(debug) << "Thread exiting";
+    LOG(debug) << _name << " Thread exiting";
     if(_on_exit)
         _on_exit();
 }
