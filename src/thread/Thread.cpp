@@ -29,9 +29,13 @@ void Thread::Stop()
 {
     _run = false;
     _thread.interrupt();
+    int wait_count = 0;
     while(!_paused)
     {
         boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+        ++wait_count;
+        if(wait_count % 1000 == 0)
+            LOG(warning) << "Waited 1000 seconds for " << this->_name << " to stop";
     }
 }
 void Thread::SetExitCallback(const std::function<void(void)>& f)

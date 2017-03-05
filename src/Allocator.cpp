@@ -272,7 +272,7 @@ public:
 
     ~CpuMemoryStackImpl()
     {
-        cleanup(true);
+        cleanup(true, true);
     }
 
     bool allocate(void** ptr, size_t total, size_t elemSize)
@@ -327,7 +327,7 @@ public:
         return true;
     }
 private:
-    void cleanup(bool force  = false)
+    void cleanup(bool force  = false, bool destructor = false)
     {
         auto time = clock();
         if (force)
@@ -337,6 +337,8 @@ private:
             if((time - std::get<1>(*itr)) > deallocation_delay)
             {
                 total_usage -= std::get<2>(*itr);
+                if(!destructor)
+                {
 #ifdef _MSC_VER
                 LOG(trace) << "[CPU] DeAllocating block of size " << std::get<2>(*itr) / (1024 * 1024)
                     << " MB. Which was stale for " << time - std::get<1>(*itr)
@@ -346,6 +348,7 @@ private:
                     << " MB. Which was stale for " << (time - std::get<1>(*itr)) / 1000
                     << " ms. Total usage: " << total_usage / (1024 * 1024) << " MB";
 #endif
+                }
                 CV_CUDEV_SAFE_CALL(cudaFreeHost((void*)std::get<0>(*itr)));
                 itr = deallocate_stack.erase(itr);
             }else
