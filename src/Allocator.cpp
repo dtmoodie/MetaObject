@@ -398,7 +398,7 @@ CpuMemoryStack* CpuMemoryStack::GlobalInstance()
 
         g_inst = new RefCountPolicy<mt_CpuMemoryStackImpl>(1000*1000);
 #endif*/
-        g_inst = new RefCountPolicy<mt_CpuMemoryStackImpl>(1.5 * CLOCKS_PER_SEC);
+        g_inst = new mt_CpuMemoryStackImpl(1.5 * CLOCKS_PER_SEC);
     }
     return g_inst;
 }
@@ -413,7 +413,7 @@ CpuMemoryStack* CpuMemoryStack::ThreadInstance()
 #else
         g_inst.reset(new RefCountPolicy<CpuMemoryStackImpl>(1000*1000));
 #endif*/
-        g_inst.reset(new RefCountPolicy<CpuMemoryStackImpl>(1.5 * CLOCKS_PER_SEC));
+        g_inst.reset(new CpuMemoryStackImpl(1.5 * CLOCKS_PER_SEC));
 
     }
     return g_inst.get();

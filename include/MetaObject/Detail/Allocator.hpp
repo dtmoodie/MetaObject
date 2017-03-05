@@ -179,7 +179,6 @@ template<typename PaddingPolicy>
 class MO_EXPORTS PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>
         : public virtual AllocationPolicy
         , public virtual PaddingPolicy
-        , public virtual cv::cuda::GpuMat::Allocator
 {
 public:
     typedef cv::cuda::GpuMat MatType;
