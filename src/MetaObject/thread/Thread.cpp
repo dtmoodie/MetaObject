@@ -86,7 +86,7 @@ Thread::~Thread()
     _run = false;
     LOG(info) << "Shutting down " << this->_name << " thread";
     _thread.interrupt();
-    _thread.join();
+    _thread.timed_join(boost::posix_time::time_duration(0,0,10));
 }
 
 void Thread::Main()

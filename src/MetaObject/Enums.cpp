@@ -33,6 +33,7 @@ ParameterType mo::StringToParameteType(const std::string& str)
     else if(str == "Optional")
         return Optional_e;
     THROW(debug) << "Invalid string " << str;
+    return None_e;
 }
 
 std::string mo::ParameterTypeFlagsToString(ParameterTypeFlags flags)
@@ -67,4 +68,5 @@ ParameterTypeFlags mo::StringToParameterTypeFlags(const std::string& str)
     else if(str == "NNStreamBuffer")
         return NNStreamBuffer_e;
     THROW(debug) << "Invalid string " << str;
+    return None_e;
 }
