@@ -26,7 +26,7 @@ if(WITH_PYTHON)
     find_package(Boost COMPONENTS python)
     if(Boost_FOUND)
       list(APPEND link_libs "${PYTHON_LIBRAY}")
-      get_filename_component(_python_lib_dir "${PYTHON_DEBUG_LIBRARY}" DIRECTORY)
+      get_filename_component(_python_lib_dir "${PYTHON_LIBRARY}" DIRECTORY)
       link_directories(${_python_lib_dir})
       include_directories(${PYTHON_INCLUDE_DIR})
       add_definitions(-DHAVE_BOOST_PYTHON)
@@ -79,11 +79,8 @@ find_package(Boost REQUIRED COMPONENTS ${Boost_required_components})
 
 
 # ---------------------- cereal ---------------------------------
-set(cereal_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include" CACHE PATH "")
-find_package(cereal REQUIRED)
-if(cereal_FOUND)
-  include_directories(${cereal_INCLUDE_DIRS})
-endif()
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include")
+
 set(PROJECT_BIN_DIRS_RELWITHDEBINFO "")
 set(PROJECT_BIN_DIRS_RELEASE "")
 set(PROJECT_BIN_DIRS_DEBUG "")
@@ -124,6 +121,11 @@ set(RCC_PERMODULE_INTERFACE_SOURCE ${RCC_PERMODULE_INTERFACE_SOURCE} PARENT_SCOP
 set(MO_PROFILING_MODE "BUILTIN" CACHE STRING "Set MetaObject profiling mode")
 set_property(CACHE MO_PROFILING_MODE PROPERTY STRINGS BUILTIN DYNAMIC NONE)
 include_directories("dependencies/Remotery/lib")
+find_package(NVToolsExt QUIET)
+if(NVToolsExt)
+  include_directories(${NV_TOOLS_EXT_INCLUDE_DIR})
+  add_definitions(-DHAVE_NVTX)
+endif()
 if(${MO_PROFILING_MODE} STREQUAL "BUILTIN")
   add_definitions(-DRMT_BUILTIN)
   list(APPEND link_libs Remotery)
@@ -184,6 +186,7 @@ find_package(Wt QUIET)
     endif(Wt_BIN_DIR)
   endif(Wt_FOUND)
 endif(WITH_WT)
+
 # OpenCV
 if(WITH_OPENCV)
   find_package(OpenCV QUIET COMPONENTS core)
@@ -218,6 +221,7 @@ target_link_libraries(MetaObject
   ${CUDA_CUDART_LIBRARY}
   ${CUDA_CUDA_LIBRARY}
 )
+
 ocv_add_precompiled_header_to_target(MetaObject src/precompiled.hpp)
 
 if(RCC_VERBOSE_CONFIG)

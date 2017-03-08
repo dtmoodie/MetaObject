@@ -3,8 +3,10 @@
 #include "MetaObject/Thread/ThreadRegistry.hpp"
 #include <string>
 #include <sstream>
+#ifdef HAVE_NVTX
 #include "nvToolsExt.h"
 #include "nvToolsExtCuda.h"
+#endif
 #ifdef HAVE_CUDA
 #include "cuda.h"
   #ifdef HAVE_OPENCV
