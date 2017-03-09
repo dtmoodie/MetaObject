@@ -20,6 +20,7 @@ namespace mo
             bool GetData(T& value, long long ts = -1, Context* ctx = nullptr);
             T    GetData(long long ts = -1, Context* ctx = nullptr);
             void SetSize(long long size);
+            long long GetSize(){return _padding;}
             std::shared_ptr<IParameter> DeepCopy() const;
             virtual ParameterTypeFlags GetBufferType() const{ return StreamBuffer_e;}
         protected:
@@ -36,7 +37,7 @@ namespace mo
             BlockingStreamBuffer(const std::string& name = "");
 
             void SetSize(long long size);
-
+            long long GetSize(){return _size;}
             ITypedParameter<T>* UpdateData(T& data_, long long ts = -1, Context* ctx = nullptr);
             ITypedParameter<T>* UpdateData(const T& data_, long long ts = -1, Context* ctx = nullptr);
             ITypedParameter<T>* UpdateData(T* data_, long long ts = -1, Context* ctx = nullptr);
