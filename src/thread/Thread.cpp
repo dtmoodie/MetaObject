@@ -92,6 +92,46 @@ Thread::~Thread()
     _thread.interrupt();
     _thread.timed_join(boost::posix_time::time_duration(0,0,10));
 }
+void Thread::HandleEvents(int ms)
+{
+    boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
+    {
+        boost::recursive_mutex::scoped_lock lock(_mtx);
+        while (_work_queue.size())
+        {
+            _work_queue.back()();
+            _work_queue.pop();
+            if(boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time()
+                                                - start).total_milliseconds() >= ms)
+            {
+                return;
+            }
+        }
+        while(_event_queue.size())
+        {
+            _event_queue.back()();
+            _event_queue.pop();
+            if(boost::posix_time::time_duration(
+                boost::posix_time::microsec_clock::universal_time()- start).total_milliseconds() >= ms)
+            {
+                return;
+            }
+        }
+        while(mo::ThreadSpecificQueue::RunOnce())
+        {
+            if(boost::posix_time::time_duration(
+                boost::posix_time::microsec_clock::universal_time() - start).total_milliseconds() >= ms)
+            {
+                return;
+            }
+        }
+    }
+    boost::posix_time::time_duration elapsed = boost::posix_time::microsec_clock::universal_time() - start;
+    if(elapsed.total_milliseconds() < ms)
+    {
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(ms - elapsed.total_milliseconds()));
+    }
+}
 
 void Thread::Main()
 {
@@ -132,7 +172,8 @@ void Thread::Main()
                     int delay = (*_inner_loop)();
                     if (delay)
                     {
-                        boost::this_thread::sleep_for(boost::chrono::milliseconds(delay));
+                        // process events
+                        HandleEvents(delay);
                     }
                 }
             }catch(boost::thread_interrupted& e)
@@ -149,25 +190,12 @@ void Thread::Main()
         {
             while(!_run)
             {
-
                 try
                 {
                     _paused = true;
                     boost::recursive_mutex::scoped_lock lock(_mtx);
+                    HandleEvents(10);
                     _cv.wait_for(lock, boost::chrono::milliseconds(10));
-                    {
-                        while (_work_queue.size())
-                        {
-                            _work_queue.back()();
-                            _work_queue.pop();
-                        }
-                        while(_event_queue.size())
-                        {
-                            _event_queue.back()();
-                            _event_queue.pop();
-                        }
-                        mo::ThreadSpecificQueue::RunOnce();
-                    }
                 }catch(boost::thread_interrupted& e)
                 {
                     if(_quit)

@@ -39,6 +39,7 @@ namespace mo
         Thread(ThreadPool* pool);
         ~Thread();
         void Main();
+        void HandleEvents(int ms);
 
         Thread& operator=(const Thread&) = delete;
         Thread(const Thread&)            = delete;

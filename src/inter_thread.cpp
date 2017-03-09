@@ -16,7 +16,7 @@ struct impl
         std::function<void(void)> function;
         void* obj;
     };
-
+    struct QueueRegistery;
     struct EventQueue
     {
         void push(const Event& ev)
@@ -59,7 +59,7 @@ struct impl
         }
 
     private:
-        //ConcurrentQueue<Event> queue;
+        friend class QueueRegistery;
         moodycamel::ConcurrentQueue<Event> queue;
         std::function<void(void)> callback;
         std::mutex mtx;
@@ -86,6 +86,18 @@ struct impl
             for(auto& queue : queues)
             {
                 queue.second.remove(obj);
+            }
+        }
+        void Clear()
+        {
+            std::unique_lock<std::mutex> lock(mtx);
+            Event ev;
+            for(auto& itr : queues)
+            {
+                while(itr.second.pop(ev))
+                {
+
+                }
             }
         }
 
@@ -132,14 +144,17 @@ struct impl
         if (std::get<1>(*queue))
             std::get<1>(*queue)();*/
     }
-    void run(size_t id)
+    int run(size_t id)
     {
         auto queue = QueueRegistery::Instance().GetQueue(id);
         Event ev;
+        int count = 0;
         while(queue->pop(ev))
         {
             ev.function();
+            ++count;
         }
+        return count;
 
         /*std::tuple<ConcurrentQueue<std::pair<std::function<void(void)>, void*>>, std::function<void(void)>, std::mutex>* queue = nullptr;
         {
@@ -156,13 +171,16 @@ struct impl
             lock.lock();
         }*/
     }
-    void run_once(size_t id)
+    bool run_once(size_t id)
     {
         auto queue = QueueRegistery::Instance().GetQueue(id);
         Event ev;
         if(queue->pop(ev))
+        {
             ev.function();
-
+            return true;
+        }
+        return false;
         /*std::tuple<ConcurrentQueue<std::pair<std::function<void(void)>, void*>>, std::function<void(void)>, std::mutex>* queue = nullptr;
         {
             std::lock_guard<std::mutex> lock(mtx);
@@ -204,6 +222,10 @@ struct impl
         //std::lock_guard<std::mutex> lock(mtx);
         //return std::get<0>(thread_queues[id]).size();
 	}
+    void Cleanup()
+    {
+        QueueRegistery::Instance().Clear();
+    }
 };
 void ThreadSpecificQueue::Push(const std::function<void(void)>& f, size_t id, void* obj)
 {
@@ -217,17 +239,17 @@ void ThreadSpecificQueue::Push(const std::function<void(void)>& f, size_t id, vo
 #endif
     impl::inst()->push(f, id, obj);
 }
-void ThreadSpecificQueue::Run(size_t id)
+int ThreadSpecificQueue::Run(size_t id)
 {
-    impl::inst()->run(id);
+    return impl::inst()->run(id);
 }
 void ThreadSpecificQueue::RegisterNotifier(const std::function<void(void)>& f, size_t id)
 {
     impl::inst()->register_notifier(f, id);
 }
-void ThreadSpecificQueue::RunOnce(size_t id)
+bool ThreadSpecificQueue::RunOnce(size_t id)
 {
-    impl::inst()->run_once(id);
+    return impl::inst()->run_once(id);
 }
 void ThreadSpecificQueue::RemoveFromQueue(void* obj)
 {
@@ -239,4 +261,8 @@ void ThreadSpecificQueue::RemoveFromQueue(void* obj)
 size_t ThreadSpecificQueue::Size(size_t id)
 {
 	return impl::inst()->size(id);
+}
+void ThreadSpecificQueue::Cleanup()
+{
+    impl::inst()->Cleanup();
 }
