@@ -35,7 +35,7 @@ INSTANTIATE_META_PARAMETER(std::string);
 typedef std::map<std::string, std::string> StringMap;
 INSTANTIATE_META_PARAMETER(StringMap);
 
-void mo::instantiations::initialize()
+void mo::MetaParameters::initialize()
 {
     
 }

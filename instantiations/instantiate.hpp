@@ -1,26 +1,26 @@
 #pragma once
 
-#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined instantiations_EXPORTS
-  #define INST_EXPORTS __declspec(dllexport)
+#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined MetaParameters_EXPORTS
+  #define METAPARAMTERS_EXPORTS __declspec(dllexport)
 #elif defined __GNUC__ && __GNUC__ >= 4
-  #define INST_EXPORTS __attribute__ ((visibility ("default")))
+  #define METAPARAMTERS_EXPORTS __attribute__ ((visibility ("default")))
 #else
-  #define INST_EXPORTS
+  #define METAPARAMTERS_EXPORTS
 #endif
 
 #ifdef _MSC_VER
-  #ifndef instantiations_EXPORTS
+  #ifndef MetaParameters_EXPORTS
     #ifdef _DEBUG
-      #pragma comment(lib, "instantiationsd.lib")
+      #pragma comment(lib, "MetaParametersd.lib")
     #else
-      #pragma comment(lib, "instantiations.lib")
+      #pragma comment(lib, "MetaParameters.lib")
     #endif
   #endif
 #endif
 namespace mo
 {
-    namespace instantiations
+    namespace MetaParameters
     {
-        INST_EXPORTS void initialize();
+        METAPARAMTERS_EXPORTS void initialize();
     }
 }
