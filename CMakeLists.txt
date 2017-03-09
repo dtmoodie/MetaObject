@@ -86,7 +86,7 @@ find_package(Boost REQUIRED COMPONENTS ${Boost_required_components})
 
 # ---------------------- cereal ---------------------------------
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include")
-
+set(MetaObject_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include;${CMAKE_CURRENT_SOURCE_DIR}/MetaParameters" CACHE PATH "" FORCE)
 set(PROJECT_BIN_DIRS_RELWITHDEBINFO "")
 set(PROJECT_BIN_DIRS_RELEASE "")
 set(PROJECT_BIN_DIRS_DEBUG "")
@@ -253,8 +253,8 @@ endif()
 
 
 # -------------------- instantiations --------------------------
-file(GLOB_RECURSE instantiations_src "instantiations/*.cpp")
-include_directories("instantiations")
+file(GLOB_RECURSE instantiations_src "MetaParameters/*")
+include_directories("MetaParameters")
 add_library(MetaParameters SHARED ${instantiations_src})
 set_target_properties(MetaParameters PROPERTIES FOLDER Dependencies)
 target_link_libraries(MetaParameters MetaObject)

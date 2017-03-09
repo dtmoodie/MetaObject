@@ -7,7 +7,6 @@
 #include "MetaObject/Parameters/Buffers/map.hpp"
 #include "MetaObject/Parameters/IO/CerealPolicy.hpp"
 #include "MetaObject/Parameters/IO/TextPolicy.hpp"
-#include "instantiate.hpp"
 #include "MetaObject/Parameters/Types.hpp"
 #include <cereal/types/vector.hpp>
 #include <cereal/types/string.hpp>

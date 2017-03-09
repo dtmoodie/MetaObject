@@ -20,7 +20,7 @@
 #endif
 #include <cereal/types/string.hpp>
 #include <cereal/types/map.hpp>
-#include "instantiate.hpp"
+#include "MetaParameters.hpp"
 
 
 INSTANTIATE_META_PARAMETER(bool);
