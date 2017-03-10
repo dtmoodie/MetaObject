@@ -25,7 +25,7 @@
 #include "cereal/archives/portable_binary.hpp"
 #include <fstream>
 #include <istream>
-#include "instantiate.hpp"
+#include "MetaParameters.hpp"
 #ifdef HAVE_OPENCV
 #include <opencv2/core.hpp>
 #endif
