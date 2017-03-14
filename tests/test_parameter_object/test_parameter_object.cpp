@@ -157,10 +157,12 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
 
 BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
 {
+    mo::Context ctx;
     auto input = input_parametered_object::Create();
     auto input_ = input->GetParameterOptional("test_input");
 
     auto output = output_parametered_object::Create();
+    output->SetContext(&ctx);
     auto output_ = output->GetParameterOptional("test_output");
 
     BOOST_REQUIRE(input_);
@@ -171,10 +173,14 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
     BOOST_REQUIRE(buffer);
     BOOST_REQUIRE(input_param->SetInput(buffer));
     output->test_output_param.UpdateData(0, 0);
-    
-    std::thread background_thread(
-        [&input]()
+    volatile bool started = false;
+    volatile int count = 0;
+    boost::thread background_thread(
+        [&input, &started, &count]()
     {
+        mo::Context _ctx;
+        input->SetContext(&_ctx);
+        started = true;
         int data;
         for(int i = 0; i < 1000; ++i)
         {
@@ -182,17 +188,29 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
             while(!good)
             {
                 good = input->test_input_param.GetData(data, i);
+                if(boost::this_thread::interruption_requested())
+                    return;
             }
+            ++count;
             BOOST_REQUIRE_EQUAL(data, i * 10);
             boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
         }
+        mo::Allocator::CleanupThreadSpecificAllocator();
     });
-
+    while(!started)
+    {
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    }
     for(int i = 1; i < 1000; ++i)
     {
         output->test_output_param.UpdateData(i*10, i);
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
     }
-    background_thread.join();
+    std::cout << "Waiting for background thread to close\n";
+    background_thread.interrupt();
+    background_thread.timed_join(boost::posix_time::time_duration(0,2,0));
+    //background_thread.();
+    mo::Allocator::CleanupThreadSpecificAllocator();
 }
 
 

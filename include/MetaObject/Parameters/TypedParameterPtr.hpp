@@ -3,7 +3,7 @@
 #include "MetaParameter.hpp"
 namespace mo
 {
-	template<typename T> class TypedParameterPtr :public ITypedParameter< T >
+    template<typename T> class TypedParameterPtr : virtual public ITypedParameter< T >
 	{
 	public:
 		TypedParameterPtr(const std::string& name = "", T* ptr_ = nullptr, ParameterType type = Control_e, bool ownsData_ = false);

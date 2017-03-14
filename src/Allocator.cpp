@@ -437,6 +437,13 @@ Allocator* Allocator::GetThreadSpecificAllocator()
     }
     return thread_specific_allocator.get();
 }
+void Allocator::CleanupThreadSpecificAllocator()
+{
+    if(auto ptr = thread_specific_allocator.release())
+    {
+        delete ptr;
+    }
+}
 
 // ================================================================
 // CpuStackPolicy

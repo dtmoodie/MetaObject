@@ -92,6 +92,7 @@ class MO_EXPORTS Allocator
 public:
     static Allocator* GetThreadSafeAllocator();
     static Allocator* GetThreadSpecificAllocator();
+    static void CleanupThreadSpecificAllocator();
 
     // Used for stl allocators
     virtual unsigned char* allocateGpu(size_t num_bytes) = 0;

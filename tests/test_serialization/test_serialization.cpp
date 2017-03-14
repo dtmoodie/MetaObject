@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(test_serialization)
 BOOST_AUTO_TEST_CASE(serialize_manual_xml)
 {
     cb = new BuildCallback();
-    mo::instantiations::initialize();
+    mo::MetaParameters::initialize();
     MetaObjectFactory::Instance()->GetObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
     rcc::shared_ptr<serializable_object> obj = serializable_object::Create();
     {
