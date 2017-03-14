@@ -50,7 +50,24 @@ namespace mo
 		bool SwapObjects();
         void SetCompileCallback(std::function<void(const std::string, int)>& f);
         std::shared_ptr<Connection> ConnectConstructorAdded(TypedSlot<void(void)>* slot);
-
+		template<class T>
+		std::vector<IObjectConstructor*> GetConstructors()
+		{
+			return GetConstructors(T::s_interfaceID);
+		}
+		template<class T>
+		std::vector<typename T::InterfaceInfo*> GetObjectInfos()
+		{
+			auto constructors = GetConstructors<T>();
+			std::vector<typename T::InterfaceInfo*> output;
+			for (auto constructor : constructors)
+			{
+				typename T::InterfaceInfo* info = dynamic_cast<typename T::InterfaceInfo*>(constructor->GetObjectInfo());
+				if (info)
+					output.push_back(info);
+			}
+			return output;
+		}
     private:
         MetaObjectFactory(SystemTable* system_table);
         ~MetaObjectFactory();
