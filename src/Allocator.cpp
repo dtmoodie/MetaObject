@@ -1,4 +1,5 @@
 #include "MetaObject/Detail/AllocatorImpl.hpp"
+#include "MetaObject/Thread/Cuda.hpp"
 #include <ctime>
 
 
@@ -329,6 +330,8 @@ public:
 private:
     void cleanup(bool force  = false, bool destructor = false)
     {
+        if(IsCudaThread())
+            return;
         auto time = clock();
         if (force)
             time = 0;
@@ -800,7 +803,7 @@ void PinnedAllocator::deallocate(cv::UMatData* u) const
     {
         if (!(u->flags & cv::UMatData::USER_ALLOCATED))
         {
-            cudaFreeHost(u->origdata);   
+            cudaFreeHost(u->origdata);
             u->origdata = 0;
         }
 

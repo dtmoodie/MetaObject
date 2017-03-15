@@ -8,11 +8,13 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 set(link_libs "")
 
-set(WITH_QT "TRUE" CACHE BOOL "Enable QT support")
-set(WITH_PYTHON "TRUE" CACHE BOOL "Enable Python bindings")
-set(WITH_OPENCV "TRUE" CACHE BOOL "Enable OpenCV types")
-set(WITH_CUDA "TRUE" CACHE BOOL "Enable CUDA recompilation")
-set(WITH_WT "TRUE" CACHE BOOL "Enable WT support")
+option(BUILD_TESTS "Build tests" ON)
+option(BUILD_EXAMPLES "Build examples" ON)
+option(WITH_QT "Enable QT support" ON)
+option(WITH_PYTHON "Enable Python bindings" ON)
+option(WITH_OPENCV "Enable OpenCV types" ON )
+option(WITH_CUDA "Enable CUDA recompilation" ON)
+option(WITH_WT "Enable WT support" ON)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -107,7 +109,7 @@ if(WITH_CUDA)
   ENDIF(${CUDA_FOUND})
 endif(WITH_CUDA)
 
-# ---------------------- rcc ---------------------------------  
+# ---------------------- rcc ---------------------------------
 SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
 set(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${CMAKE_CURRENT_LIST_DIR}/include;${cereal_INCLUDE_DIRS}")
 set(RCC_LIBRARY_DIRS_DEBUG "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/Debug")
@@ -199,7 +201,7 @@ if(WITH_OPENCV)
   if(OpenCV_FOUND)
     add_definitions(-DHAVE_OPENCV)
     include_directories(${OpenCV_INCLUDE_DIRS})
-	set(BIN_DIRS "${BIN_DIRS};OpenCV" CACHE STRING "" FORCE)
+    set(BIN_DIRS "${BIN_DIRS};OpenCV" CACHE STRING "" FORCE)
   endif()
 endif(WITH_OPENCV)
 
@@ -320,7 +322,7 @@ ELSE(Boost_LIBRARY_DIR_RELEASE AND EXISTS "${Boost_LIBRARY_DIR_RELEASE}" AND IS_
   ENDIF(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
 ENDIF(Boost_LIBRARY_DIR_RELEASE AND EXISTS "${Boost_LIBRARY_DIR_RELEASE}" AND IS_DIRECTORY "${Boost_LIBRARY_DIR_RELEASE}")
 # ----------------------- tests -----------------------------------
-if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
+if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
   include(CTest)
   enable_testing()
   SUBDIRLIST(tests "${CMAKE_CURRENT_LIST_DIR}/tests")
@@ -350,15 +352,16 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND)
 endif()
 message(STATUS
     "-- MetaObject config\n"
-    "  OpenCV\t\t${OpenCV_VERSION}\n"
+    "  OpenCV\t\t${OpenCV_VERSION} - ${OpenCV_DIR}\n"
     "  Qt5\t\t${Qt5_VERSION}\n"
     "  Python\t\t${HAVE_PYTHON}\n"
     "  Wt\t\t${Wt_FOUND}\n"
     "  ZeroMQ\t\t${ZeroMQ_FOUND}\n"
     "  Tests\t\t${Boost_UNIT_TEST_FRAMEWORK_FOUND}")
 # ----------------------- examples ---------------------------
-ADD_SUBDIRECTORY("examples")
-
+if(BUILD_EXAMPLES)
+    ADD_SUBDIRECTORY("examples")
+endif()
 # ----------------------- install ----------------------------
 install(TARGETS MetaObject MetaParameters
         RUNTIME DESTINATION bin

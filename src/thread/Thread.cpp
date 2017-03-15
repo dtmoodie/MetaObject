@@ -4,6 +4,7 @@
 #include "MetaObject/Signals/TypedSlot.hpp"
 #include "MetaObject/Thread/BoostThread.h"
 #include "MetaObject/Thread/ThreadRegistry.hpp"
+#include "MetaObject/Logging/Profiling.hpp"
 using namespace mo;
 
 
@@ -86,6 +87,7 @@ Thread::Thread(ThreadPool* pool)
 
 Thread::~Thread()
 {
+    PROFILE_FUNCTION
     _quit = true;
     _run = false;
     LOG(info) << "Shutting down " << this->_name << " thread";
@@ -97,6 +99,14 @@ void Thread::HandleEvents(int ms)
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
     {
         boost::recursive_mutex::scoped_lock lock(_mtx);
+        while(mo::ThreadSpecificQueue::RunOnce())
+        {
+            if(boost::posix_time::time_duration(
+                boost::posix_time::microsec_clock::universal_time() - start).total_milliseconds() >= ms)
+            {
+                return;
+            }
+        }
         while (_work_queue.size())
         {
             _work_queue.back()();
@@ -113,14 +123,6 @@ void Thread::HandleEvents(int ms)
             _event_queue.pop();
             if(boost::posix_time::time_duration(
                 boost::posix_time::microsec_clock::universal_time()- start).total_milliseconds() >= ms)
-            {
-                return;
-            }
-        }
-        while(mo::ThreadSpecificQueue::RunOnce())
-        {
-            if(boost::posix_time::time_duration(
-                boost::posix_time::microsec_clock::universal_time() - start).total_milliseconds() >= ms)
             {
                 return;
             }
@@ -151,6 +153,7 @@ void Thread::Main()
     {
         {
             boost::recursive_mutex::scoped_lock lock(_mtx);
+            PROFILE_RANGE(events);
             while (_work_queue.size())
             {
                 _work_queue.back()();
@@ -169,12 +172,17 @@ void Thread::Main()
             {
                 if (_inner_loop->HasSlots())
                 {
+                    PROFILE_RANGE(inner_loop);
                     int delay = (*_inner_loop)();
                     if (delay)
                     {
                         // process events
+                        PROFILE_RANGE(events);
                         HandleEvents(delay);
                     }
+                }else
+                {
+                    HandleEvents(10);
                 }
             }catch(boost::thread_interrupted& e)
             {
@@ -192,6 +200,7 @@ void Thread::Main()
             {
                 try
                 {
+                    PROFILE_RANGE(events);
                     _paused = true;
                     boost::recursive_mutex::scoped_lock lock(_mtx);
                     HandleEvents(10);
