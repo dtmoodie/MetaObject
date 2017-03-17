@@ -92,6 +92,7 @@ class MO_EXPORTS Allocator
 public:
     static Allocator* GetThreadSafeAllocator();
     static Allocator* GetThreadSpecificAllocator();
+    static void SetThreadSpecificAllocator(Allocator* allocator);
     static void CleanupThreadSpecificAllocator();
 
     // Used for stl allocators

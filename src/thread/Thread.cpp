@@ -5,6 +5,8 @@
 #include "MetaObject/Thread/BoostThread.h"
 #include "MetaObject/Thread/ThreadRegistry.hpp"
 #include "MetaObject/Logging/Profiling.hpp"
+#include "MetaObject/Detail/Allocator.hpp"
+
 using namespace mo;
 
 
@@ -138,6 +140,7 @@ void Thread::HandleEvents(int ms)
 void Thread::Main()
 {
     mo::Context ctx;
+    //mo::Allocator::SetThreadSpecificAllocator(ctx.allocator);
     {
         boost::recursive_mutex::scoped_lock lock(_mtx);
         _ctx = &ctx;
@@ -222,6 +225,7 @@ void Thread::Main()
     LOG(debug) << _name << " Thread exiting";
     if(_on_exit)
         _on_exit();
+    mo::Allocator::CleanupThreadSpecificAllocator();
 }
 size_t Thread::GetId() const
 {

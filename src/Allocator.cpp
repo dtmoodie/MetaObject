@@ -5,6 +5,7 @@
 
 using namespace mo;
 boost::thread_specific_ptr<Allocator> thread_specific_allocator;
+thread_local Allocator* thread_specific_allocator_unowned = nullptr;
 boost::thread_specific_ptr<std::string> current_scope;
 
 thread_local cv::MatAllocator* t_cpuAllocator = nullptr;
@@ -434,12 +435,20 @@ Allocator* Allocator::GetThreadSafeAllocator()
 
 Allocator* Allocator::GetThreadSpecificAllocator()
 {
+    if(thread_specific_allocator_unowned)
+        return thread_specific_allocator_unowned;
     if(thread_specific_allocator.get() == nullptr)
     {
         thread_specific_allocator.reset(new mt_UniversalAllocator_t());
     }
     return thread_specific_allocator.get();
 }
+void Allocator::SetThreadSpecificAllocator(Allocator* allocator)
+{
+    CleanupThreadSpecificAllocator();
+    thread_specific_allocator_unowned = allocator;
+}
+
 void Allocator::CleanupThreadSpecificAllocator()
 {
     if(auto ptr = thread_specific_allocator.release())
