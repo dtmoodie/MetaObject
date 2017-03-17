@@ -21,7 +21,7 @@ MO_EXPORTS void InstallThrustPoolingAllocator();
 template<class T>
 class GpuThreadAllocatorSetter
 {
-    DEFINE_HAS_STATIC_FUNCTION(HasGpuDefaultAllocator, setDefaultThreadAllocator, cv::cuda::GpuMat::Allocator*);
+    DEFINE_HAS_STATIC_FUNCTION(HasGpuDefaultAllocator, setDefaultThreadAllocator, void(*)(cv::cuda::GpuMat::Allocator*));
 public:
     static bool Set(cv::cuda::GpuMat::Allocator* allocator)
     {
@@ -42,7 +42,7 @@ private:
 template<class T>
 class CpuThreadAllocatorSetter
 {
-    DEFINE_HAS_STATIC_FUNCTION(HasCpuDefaultAllocator, setDefaultThreadAllocator, cv::MatAllocator*);
+    DEFINE_HAS_STATIC_FUNCTION(HasCpuDefaultAllocator, setDefaultThreadAllocator, void(*)(cv::MatAllocator*));
 public:
     static bool Set(cv::MatAllocator* allocator)
     {

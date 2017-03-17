@@ -7,6 +7,7 @@
 #include <boost/thread/tss.hpp>
 #include "MetaObject/Detail/Allocator.hpp"
 #include "MetaObject/Thread/ThreadRegistry.hpp"
+
 using namespace mo;
 boost::thread_specific_ptr<Context> thread_specific_context;
 

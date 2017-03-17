@@ -3,7 +3,6 @@
 #include <opencv2/core/cuda.hpp>
 #include <string>
 
-
 namespace mo
 {
     class Allocator;

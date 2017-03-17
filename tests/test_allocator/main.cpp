@@ -36,7 +36,16 @@ BOOST_AUTO_TEST_CASE(initialize_global)
     BOOST_REQUIRE(mo::Allocator::GetThreadSafeAllocator());
 }
 
+DEFINE_HAS_STATIC_FUNCTION(HasGpuDefaultAllocator, setDefaultThreadAllocator, void(*)(cv::cuda::GpuMat::Allocator*));
+DEFINE_HAS_STATIC_FUNCTION(HasCpuDefaultAllocator, setDefaultThreadAllocator, void(*)(cv::MatAllocator*));
 
+BOOST_AUTO_TEST_CASE(test_set_allocator)
+{
+    BOOST_REQUIRE(HasGpuDefaultAllocator<cv::cuda::GpuMat>::value);
+    BOOST_REQUIRE(HasCpuDefaultAllocator<cv::Mat>::value);
+    BOOST_REQUIRE(mo::GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(mo::Allocator::GetThreadSafeAllocator()));
+    BOOST_REQUIRE(mo::CpuThreadAllocatorSetter<cv::Mat>::Set(mo::Allocator::GetThreadSafeAllocator()));
+}
 
 BOOST_AUTO_TEST_CASE(test_cpu_pooled_allocation)
 {
@@ -73,8 +82,8 @@ BOOST_AUTO_TEST_CASE(test_cpu_pooled_allocation)
     }
     end = boost::posix_time::microsec_clock::local_time();
     double pooled_time = boost::posix_time::time_duration(end - start).total_milliseconds();
-    
-    
+
+
 
     // Test the thread safe allocators
     mo::mt_CpuPoolPolicy mtPoolAllocator;
@@ -94,7 +103,7 @@ BOOST_AUTO_TEST_CASE(test_cpu_pooled_allocation)
     BOOST_REQUIRE_LT(pooled_time, non_pooled_time);
     std::cout << "\n ======================================================================== \n";
     std::cout << " Random Allocation Pattern\n";
-    std::cout 
+    std::cout
         << " Default Allocator Time: " << non_pinned_time << "\n"
         << " Pinned Allocator Time:  " << non_pooled_time << "\n"
         << " Pooled Time:            " << pooled_time << "\n"
@@ -165,7 +174,7 @@ BOOST_AUTO_TEST_CASE(test_cpu_stack_allocation)
     BOOST_REQUIRE_LT(pooled_time, non_pooled_time);
     std::cout << "\n ======================================================================== \n";
     std::cout << " Fixed Allocation Pattern\n";
-    std::cout 
+    std::cout
         << " Default Allocator Time:   " << non_pinned_time << "\n"
         << " Pinned Allocator Time:    " << non_pooled_time << "\n"
         << " Pooled Time:              " << pooled_time << "\n"
@@ -302,10 +311,10 @@ BOOST_AUTO_TEST_CASE(test_gpu_static_allocation_pattern)
             cv::cuda::subtract(Y, cv::Scalar(100), Y, cv::noArray(), -1, stream);
         }
     }
-    
+
     auto end = boost::posix_time::microsec_clock::local_time();
     double zero_allocation = boost::posix_time::time_duration(end - start).total_milliseconds();
-    
+
     // Default allocator
     start = boost::posix_time::microsec_clock::local_time();
     for(int i = 0; i < 1000; ++i)
@@ -424,7 +433,7 @@ BOOST_AUTO_TEST_CASE(async_transfer_rate_random)
         sizes[i] = size;
     }
     {
-        
+
         std::vector<cv::Mat> h_data;
         std::vector<cv::cuda::GpuMat> d_data;
         std::vector<cv::Mat> result;
@@ -454,7 +463,7 @@ BOOST_AUTO_TEST_CASE(async_transfer_rate_random)
     }
 
     {
-        
+
         cv::cuda::Stream stream;
         start = boost::posix_time::microsec_clock::local_time();
         mo::scoped_profile profile("default allocation");
@@ -496,10 +505,10 @@ BOOST_AUTO_TEST_CASE(async_transfer_rate_random)
         pooled_time = boost::posix_time::time_duration(end - start).total_milliseconds();
         std::cout << "Pooled Allocation:  " << pooled_time << "\n";
     }
-    
-    
-              
-              
+
+
+
+
 }
 
 
