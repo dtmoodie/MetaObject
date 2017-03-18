@@ -221,7 +221,7 @@ add_subdirectory("dependencies/Remotery")
 set_target_properties(Remotery PROPERTIES FOLDER Dependencies)
 GroupSources(include)
 GroupSources(src)
-cuda_add_library(MetaObject SHARED ${src} ${hdr} ${knl} src/precompiled.hpp)
+cuda_add_library(MetaObject SHARED ${src} ${hdr} ${knl} src/MetaObject/precompiled.hpp)
 
 if(NOT CUDA_CUDA_LIBRARY)
     set(CUDA_CUDA_LIBRARY "/usr/local/nvidia/lib64/libcuda.so")
