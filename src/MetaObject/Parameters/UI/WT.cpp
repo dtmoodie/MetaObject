@@ -1,5 +1,6 @@
 #include "MetaObject/Parameters/UI/WidgetFactory.hpp"
 #include "MetaObject/Parameters/IParameter.hpp"
+#include <map>
 using namespace mo;
 using namespace mo::UI;
 

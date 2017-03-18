@@ -15,7 +15,7 @@ UpdateToken::~UpdateToken()
     _param.Commit(_ts, _ctx, _fn);
 }
 
-UpdateToken& UpdateToken::operator()(time_t&& ts)
+UpdateToken& UpdateToken::operator()(mo::time_t&& ts)
 {
     _ts = ts;
     return *this;
