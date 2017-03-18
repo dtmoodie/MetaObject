@@ -39,12 +39,16 @@ BOOST_AUTO_TEST_CASE(initialize_global)
 DEFINE_HAS_STATIC_FUNCTION(HasGpuDefaultAllocator, setDefaultThreadAllocator, void(*)(cv::cuda::GpuMat::Allocator*));
 DEFINE_HAS_STATIC_FUNCTION(HasCpuDefaultAllocator, setDefaultThreadAllocator, void(*)(cv::MatAllocator*));
 
-BOOST_AUTO_TEST_CASE(test_set_allocator)
+BOOST_AUTO_TEST_CASE(test_cpu_set_allocator)
+{
+    BOOST_REQUIRE(HasCpuDefaultAllocator<cv::Mat>::value);
+    BOOST_REQUIRE(mo::CpuThreadAllocatorSetter<cv::Mat>::Set(mo::Allocator::GetThreadSafeAllocator()));
+}
+
+BOOST_AUTO_TEST_CASE(test_gpu_set_allocator)
 {
     BOOST_REQUIRE(HasGpuDefaultAllocator<cv::cuda::GpuMat>::value);
-    BOOST_REQUIRE(HasCpuDefaultAllocator<cv::Mat>::value);
     BOOST_REQUIRE(mo::GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(mo::Allocator::GetThreadSafeAllocator()));
-    BOOST_REQUIRE(mo::CpuThreadAllocatorSetter<cv::Mat>::Set(mo::Allocator::GetThreadSafeAllocator()));
 }
 
 BOOST_AUTO_TEST_CASE(test_cpu_pooled_allocation)

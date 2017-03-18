@@ -3,7 +3,7 @@
 #include <MetaObject/Parameters/MetaParameter.hpp>
 #include "SerializationFunctionRegistry.hpp"
 #include <boost/lexical_cast.hpp>
-
+#include <map>
 namespace mo 
 { 
 namespace IO 

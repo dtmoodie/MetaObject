@@ -12,7 +12,8 @@ namespace mo
         Control_e = 8,
         Buffer_e = 16,
         Optional_e = 32,
-        Desynced_e = 64
+        Desynced_e = 64,
+        Constant_e = 128 /* If this flag is set, the timestamp will not be set on this parameter */
     };
     MO_EXPORTS std::string ParameteTypeToString(ParameterType type);
     MO_EXPORTS ParameterType StringToParameteType(const std::string& str);

@@ -14,6 +14,7 @@
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "MetaObject/Logging/CompileLogger.hpp"
 #include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
+#include "MetaObject/Detail/Allocator.hpp"
 
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
