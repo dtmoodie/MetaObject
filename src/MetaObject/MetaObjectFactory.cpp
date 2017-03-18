@@ -298,6 +298,14 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
             return false;
         }
     }
+
+    typedef void(*InitFunctor)();
+    InitFunctor init = (InitFunctor)dlsym(handle, "InitModule");
+    if(init)
+    {
+        init();
+    }
+
     typedef IPerModuleInterface* (*moduleFunctor)();
 
     moduleFunctor module = (moduleFunctor)dlsym(handle, "GetPerModuleInterface");

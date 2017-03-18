@@ -45,7 +45,7 @@ function(caffe_detect_installed_gpus out_variable)
   endif()
 endfunction()
 
-function(EagleLib_select_nvcc_arch_flags out_variable)
+function(MetaObject_select_nvcc_arch_flags out_variable)
   # List of arch names
   set(__archs_names "Kepler" "Maxwell" "Pascal" "All" "Manual")
   set(__archs_name_default "All")
@@ -122,6 +122,6 @@ function(EagleLib_select_nvcc_arch_flags out_variable)
   set(${out_variable}_readable ${__nvcc_archs_readable} PARENT_SCOPE)
 endfunction()
 
-EagleLib_select_nvcc_arch_flags(NVCC_FLAGS_EXTRA)
+MetaObject_select_nvcc_arch_flags(NVCC_FLAGS_EXTRA)
 list(APPEND CUDA_NVCC_FLAGS ${NVCC_FLAGS_EXTRA})
 message(STATUS "Added CUDA NVCC flags for: ${NVCC_FLAGS_EXTRA_readable}")

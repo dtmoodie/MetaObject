@@ -12,6 +12,7 @@ std::string mo::ParameteTypeToString(ParameterType type)
     case Control_e: return "Control";
     case Buffer_e: return "Buffer";
     case Optional_e: return "Optional";
+    case Desynced_e: return "";
     }
     return "";
 }
@@ -47,6 +48,7 @@ std::string mo::ParameterTypeFlagsToString(ParameterTypeFlags flags)
     case StreamBuffer_e: return "StreamBuffer";
     case BlockingStreamBuffer_e: return "BlockingStreamBuffer";
     case NNStreamBuffer_e: return "NNStreamBuffer";
+    case ForceBufferedConnection_e: return "";
     }
     return "";
 }
@@ -68,5 +70,5 @@ ParameterTypeFlags mo::StringToParameterTypeFlags(const std::string& str)
     else if(str == "NNStreamBuffer")
         return NNStreamBuffer_e;
     THROW(debug) << "Invalid string " << str;
-    return None_e;
+    return TypedParameter_e;
 }

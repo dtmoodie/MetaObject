@@ -5,11 +5,23 @@
 #include "MetaObject/Detail/HelperMacros.hpp"
 #include "boost/lexical_cast.hpp"
 #include <boost/thread/tss.hpp>
+#include "MetaObject/Detail/Allocator.hpp"
+#include "MetaObject/Thread/ThreadRegistry.hpp"
 
 using namespace mo;
 boost::thread_specific_ptr<Context> thread_specific_context;
 
 thread_local Context* thread_set_context = nullptr;
+
+Context::Context(const std::string& name)
+{
+    thread_id = GetThisThread();
+    allocator = Allocator::GetThreadSpecificAllocator();
+    GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(allocator);
+    CpuThreadAllocatorSetter<cv::Mat>::Set(allocator);
+    if(name.size())
+        SetName(name);
+}
 
 Context* Context::GetDefaultThreadContext()
 {
@@ -41,24 +53,6 @@ void Context::SetName(const std::string& name)
     }
     this->name = name;
 }
-
-/*Context::Context(const std::string& name)
-{
-    thread_id = GetThisThread();
-    allocator = Allocator::GetThreadSpecificAllocator();
-    GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(allocator);
-    CpuThreadAllocatorSetter<cv::Mat>::Set(allocator);
-    if(name.size())
-    {
-        allocator->SetName(name);
-        mo::SetThreadName(name.c_str());
-
-    }else
-    {
-        allocator->SetName("Thread " + boost::lexical_cast<std::string>(thread_id) + " allocator");
-    }
-    this->name = name;
-}*/
 
 Context::~Context()
 {

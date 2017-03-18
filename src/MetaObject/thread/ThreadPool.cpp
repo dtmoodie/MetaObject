@@ -32,10 +32,10 @@ ThreadHandle ThreadPool::RequestThread()
 
 void ThreadPool::Cleanup()
 {
-    for(auto& thread : _threads)
+    /*for(auto& thread : _threads)
     {
         delete thread.thread;
-    }
+    }*/
     _threads.clear();
 }
 

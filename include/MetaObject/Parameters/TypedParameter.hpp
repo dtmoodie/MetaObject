@@ -23,7 +23,7 @@ https://github.com/dtmoodie/parameters
 namespace mo
 {
     template<typename T> 
-    class MO_EXPORTS TypedParameter : public ITypedParameter<T>
+    class MO_EXPORTS TypedParameter : virtual public ITypedParameter<T>
     {
     public:
         typedef T ValueType;
@@ -52,7 +52,7 @@ namespace mo
 
         virtual std::shared_ptr<IParameter> DeepCopy() const;
         bool Update(IParameter* other, Context* ctx);
-        
+
     protected:
         T data;
     private:

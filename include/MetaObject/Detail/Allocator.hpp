@@ -21,7 +21,7 @@ MO_EXPORTS void InstallThrustPoolingAllocator();
 template<class T>
 class GpuThreadAllocatorSetter
 {
-    DEFINE_HAS_STATIC_FUNCTION(HasGpuDefaultAllocator, setDefaultThreadAllocator, cv::cuda::GpuMat::Allocator*);
+    DEFINE_HAS_STATIC_FUNCTION(HasGpuDefaultAllocator, setDefaultThreadAllocator, void(*)(cv::cuda::GpuMat::Allocator*));
 public:
     static bool Set(cv::cuda::GpuMat::Allocator* allocator)
     {
@@ -42,7 +42,7 @@ private:
 template<class T>
 class CpuThreadAllocatorSetter
 {
-    DEFINE_HAS_STATIC_FUNCTION(HasCpuDefaultAllocator, setDefaultThreadAllocator, cv::MatAllocator*);
+    DEFINE_HAS_STATIC_FUNCTION(HasCpuDefaultAllocator, setDefaultThreadAllocator, void(*)(cv::MatAllocator*));
 public:
     static bool Set(cv::MatAllocator* allocator)
     {
@@ -92,6 +92,8 @@ class MO_EXPORTS Allocator
 public:
     static Allocator* GetThreadSafeAllocator();
     static Allocator* GetThreadSpecificAllocator();
+    static void SetThreadSpecificAllocator(Allocator* allocator);
+    static void CleanupThreadSpecificAllocator();
 
     // Used for stl allocators
     virtual unsigned char* allocateGpu(size_t num_bytes) = 0;
@@ -179,7 +181,6 @@ template<typename PaddingPolicy>
 class MO_EXPORTS PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>
         : public virtual AllocationPolicy
         , public virtual PaddingPolicy
-        , public virtual cv::cuda::GpuMat::Allocator
 {
 public:
     typedef cv::cuda::GpuMat MatType;

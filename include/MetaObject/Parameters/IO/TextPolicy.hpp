@@ -3,7 +3,7 @@
 #include <MetaObject/Parameters/MetaParameter.hpp>
 #include "SerializationFunctionRegistry.hpp"
 #include <boost/lexical_cast.hpp>
-
+#include <map>
 namespace mo 
 { 
 namespace IO 
@@ -106,6 +106,20 @@ namespace Text
             T2 value;
             ss >> value;
             obj[key] = value;
+        }
+
+        template<class T1, class T2>
+        typename std::enable_if<stream_serializable<T1>::value && stream_serializable<T2>::value >::type
+        Serialize_imp(std::ostream& os, std::map<T1, T2> const& obj, int)
+        {
+            int count = 0;
+            for(const auto& pair : obj)
+            {
+                if(count != 0)
+                    os << ", ";
+                os << pair.first << "=" << pair.second;
+                ++count;
+            }
         }
 
 

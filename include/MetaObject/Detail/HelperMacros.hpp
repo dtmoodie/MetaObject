@@ -21,6 +21,22 @@
 
 #define ENUM_EXPAND(...) {MO_STRINGIFY(__VA_ARGS__)}, {__VA_ARGS__}
 
+
+/*!
+    This macro is used for determining of a class has a desired static function.
+    It can be used as follows:
+    DEFINE_HAS_STATIC_FUNCTION(HasFoo, foo, void(*)(int));
+    struct Has
+    {
+        static void foo(int);
+    };
+    struct DoesNotHave
+    {
+        static void foo(int, int);
+    };
+    HasFoo<Has>::value == 1;
+    HasFoo<DoesNotHave>::value == 0;
+*/
 #define DEFINE_HAS_STATIC_FUNCTION(traitsName, funcName, signature)            \
     template <typename U>                                                      \
     class traitsName                                                           \
@@ -51,13 +67,14 @@ template<typename T> class Detect_##X {                                         
     enum { value = sizeof(func<Derived>(0)) == 2 };                                 \
 };
 
-
-template<class T>
-struct Void
+namespace mo
 {
-    typedef void type;
-};
-
+    template<class T>
+    struct Void
+    {
+        typedef void type;
+    };
+}
 
 
 #define DEFINE_TYPEDEF_DETECTOR(TYPEDEF_NAME)                                       \
@@ -67,7 +84,7 @@ struct has_##TYPEDEF_NAME                                                       
     enum { value = 0 };                                                         \
 };                                                                              \
 template<class T>                                                               \
-struct has_##TYPEDEF_NAME<T, typename Void<typename T::PARENT_CLASS>::type >\
+struct has_##TYPEDEF_NAME<T, typename mo::Void<typename T::PARENT_CLASS>::type >\
 {                                                                               \
     enum { value = 1 };                                                         \
 };

@@ -17,13 +17,13 @@
 #include "MetaObject/Parameters/TypedParameter.hpp"
 #include "MetaObject/Parameters/TypedParameterPtr.hpp"
 //#include "MetaObject/Parameters/RangedParameter.hpp"
-#include "instantiate.hpp"
+#include "MetaParameters.hpp"
 using namespace mo;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
     ui(new Ui::MainWindow)
 {
-    mo::instantiations::initialize();
+    mo::MetaParameters::initialize();
     ui->setupUi(this);
     {
         /*auto param = new mo::RangedParameter<std::vector<float>>(0.0,20,"vector float");

@@ -71,7 +71,7 @@ namespace mo
         }else if(this->shared_input)
         {
             this->Commit(this->shared_input->GetTimestamp(), ctx);
-            if((ctx && this->_ctx && ctx->thread_id == this->_ctx->thread_id) || (ctx == nullptr &&  this->_ctx == nullptr))
+            if((ctx && this->_ctx && ctx->thread_id == this->_ctx->thread_id) || ((ctx == nullptr) &&  (this->_ctx == nullptr)))
             {
                 if(userVar)
                     *userVar = this->shared_input->GetDataPtr();

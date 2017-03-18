@@ -1,9 +1,11 @@
 #include "MetaObject/Detail/AllocatorImpl.hpp"
+#include "MetaObject/Thread/Cuda.hpp"
 #include <ctime>
 
 
 using namespace mo;
 boost::thread_specific_ptr<Allocator> thread_specific_allocator;
+thread_local Allocator* thread_specific_allocator_unowned = nullptr;
 boost::thread_specific_ptr<std::string> current_scope;
 
 thread_local cv::MatAllocator* t_cpuAllocator = nullptr;
@@ -272,7 +274,7 @@ public:
 
     ~CpuMemoryStackImpl()
     {
-        cleanup(true);
+        cleanup(true, true);
     }
 
     bool allocate(void** ptr, size_t total, size_t elemSize)
@@ -327,8 +329,10 @@ public:
         return true;
     }
 private:
-    void cleanup(bool force  = false)
+    void cleanup(bool force  = false, bool destructor = false)
     {
+        if(IsCudaThread())
+            return;
         auto time = clock();
         if (force)
             time = 0;
@@ -337,6 +341,8 @@ private:
             if((time - std::get<1>(*itr)) > deallocation_delay)
             {
                 total_usage -= std::get<2>(*itr);
+                if(!destructor)
+                {
 #ifdef _MSC_VER
                 LOG(trace) << "[CPU] DeAllocating block of size " << std::get<2>(*itr) / (1024 * 1024)
                     << " MB. Which was stale for " << time - std::get<1>(*itr)
@@ -346,6 +352,7 @@ private:
                     << " MB. Which was stale for " << (time - std::get<1>(*itr)) / 1000
                     << " ms. Total usage: " << total_usage / (1024 * 1024) << " MB";
 #endif
+                }
                 CV_CUDEV_SAFE_CALL(cudaFreeHost((void*)std::get<0>(*itr)));
                 itr = deallocate_stack.erase(itr);
             }else
@@ -395,7 +402,7 @@ CpuMemoryStack* CpuMemoryStack::GlobalInstance()
 
         g_inst = new RefCountPolicy<mt_CpuMemoryStackImpl>(1000*1000);
 #endif*/
-        g_inst = new RefCountPolicy<mt_CpuMemoryStackImpl>(1.5 * CLOCKS_PER_SEC);
+        g_inst = new mt_CpuMemoryStackImpl(1.5 * CLOCKS_PER_SEC);
     }
     return g_inst;
 }
@@ -410,7 +417,7 @@ CpuMemoryStack* CpuMemoryStack::ThreadInstance()
 #else
         g_inst.reset(new RefCountPolicy<CpuMemoryStackImpl>(1000*1000));
 #endif*/
-        g_inst.reset(new RefCountPolicy<CpuMemoryStackImpl>(1.5 * CLOCKS_PER_SEC));
+        g_inst.reset(new CpuMemoryStackImpl(1.5 * CLOCKS_PER_SEC));
 
     }
     return g_inst.get();
@@ -428,11 +435,26 @@ Allocator* Allocator::GetThreadSafeAllocator()
 
 Allocator* Allocator::GetThreadSpecificAllocator()
 {
+    if(thread_specific_allocator_unowned)
+        return thread_specific_allocator_unowned;
     if(thread_specific_allocator.get() == nullptr)
     {
         thread_specific_allocator.reset(new mt_UniversalAllocator_t());
     }
     return thread_specific_allocator.get();
+}
+void Allocator::SetThreadSpecificAllocator(Allocator* allocator)
+{
+    CleanupThreadSpecificAllocator();
+    thread_specific_allocator_unowned = allocator;
+}
+
+void Allocator::CleanupThreadSpecificAllocator()
+{
+    if(auto ptr = thread_specific_allocator.release())
+    {
+        delete ptr;
+    }
 }
 
 // ================================================================
@@ -790,7 +812,7 @@ void PinnedAllocator::deallocate(cv::UMatData* u) const
     {
         if (!(u->flags & cv::UMatData::USER_ALLOCATED))
         {
-            cudaFreeHost(u->origdata);   
+            cudaFreeHost(u->origdata);
             u->origdata = 0;
         }
 

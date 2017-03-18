@@ -4,6 +4,9 @@
 #include "MetaObject/Signals/TypedSlot.hpp"
 #include "MetaObject/Thread/BoostThread.h"
 #include "MetaObject/Thread/ThreadRegistry.hpp"
+#include "MetaObject/Logging/Profiling.hpp"
+#include "MetaObject/Detail/Allocator.hpp"
+
 using namespace mo;
 
 
@@ -29,9 +32,13 @@ void Thread::Stop()
 {
     _run = false;
     _thread.interrupt();
+    int wait_count = 0;
     while(!_paused)
     {
         boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+        ++wait_count;
+        if(wait_count % 1000 == 0)
+            LOG(warning) << "Waited 1000 seconds for " << this->_name << " to stop";
     }
 }
 void Thread::SetExitCallback(const std::function<void(void)>& f)
@@ -82,16 +89,58 @@ Thread::Thread(ThreadPool* pool)
 
 Thread::~Thread()
 {
+    PROFILE_FUNCTION
     _quit = true;
     _run = false;
     LOG(info) << "Shutting down " << this->_name << " thread";
     _thread.interrupt();
     _thread.timed_join(boost::posix_time::time_duration(0,0,10));
 }
+void Thread::HandleEvents(int ms)
+{
+    boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
+    {
+        boost::recursive_mutex::scoped_lock lock(_mtx);
+        while(mo::ThreadSpecificQueue::RunOnce())
+        {
+            if(boost::posix_time::time_duration(
+                boost::posix_time::microsec_clock::universal_time() - start).total_milliseconds() >= ms)
+            {
+                return;
+            }
+        }
+        while (_work_queue.size())
+        {
+            _work_queue.back()();
+            _work_queue.pop();
+            if(boost::posix_time::time_duration(boost::posix_time::microsec_clock::universal_time()
+                                                - start).total_milliseconds() >= ms)
+            {
+                return;
+            }
+        }
+        while(_event_queue.size())
+        {
+            _event_queue.back()();
+            _event_queue.pop();
+            if(boost::posix_time::time_duration(
+                boost::posix_time::microsec_clock::universal_time()- start).total_milliseconds() >= ms)
+            {
+                return;
+            }
+        }
+    }
+    boost::posix_time::time_duration elapsed = boost::posix_time::microsec_clock::universal_time() - start;
+    if(elapsed.total_milliseconds() < ms)
+    {
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(ms - elapsed.total_milliseconds()));
+    }
+}
 
 void Thread::Main()
 {
     mo::Context ctx;
+    //mo::Allocator::SetThreadSpecificAllocator(ctx.allocator);
     {
         boost::recursive_mutex::scoped_lock lock(_mtx);
         _ctx = &ctx;
@@ -107,6 +156,7 @@ void Thread::Main()
     {
         {
             boost::recursive_mutex::scoped_lock lock(_mtx);
+            PROFILE_RANGE(events);
             while (_work_queue.size())
             {
                 _work_queue.back()();
@@ -125,11 +175,17 @@ void Thread::Main()
             {
                 if (_inner_loop->HasSlots())
                 {
+                    PROFILE_RANGE(inner_loop);
                     int delay = (*_inner_loop)();
                     if (delay)
                     {
-                        boost::this_thread::sleep_for(boost::chrono::milliseconds(delay));
+                        // process events
+                        PROFILE_RANGE(events);
+                        HandleEvents(delay);
                     }
+                }else
+                {
+                    HandleEvents(10);
                 }
             }catch(boost::thread_interrupted& e)
             {
@@ -148,8 +204,10 @@ void Thread::Main()
 
                 try
                 {
+                    PROFILE_RANGE(events);
                     _paused = true;
                     boost::recursive_mutex::scoped_lock lock(_mtx);
+                    HandleEvents(10);
                     _cv.wait_for(lock, boost::chrono::milliseconds(10));
                     {
                         while (_work_queue.size())
@@ -181,6 +239,7 @@ void Thread::Main()
     LOG(debug) << _name << " Thread exiting";
     if(_on_exit)
         _on_exit();
+    mo::Allocator::CleanupThreadSpecificAllocator();
 }
 size_t Thread::GetId() const
 {
