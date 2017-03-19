@@ -82,7 +82,7 @@ namespace mo
 	typedef std::shared_ptr<ParameterUpdateSlot> ParameterUpdateSlotPtr;
 	typedef std::shared_ptr<ParameterDeleteSlot> ParameterDeleteSlotPtr;
 
-	MO_KEYWORD_INPUT(timestamp, boost::optional<mo::time_t>)
+	MO_KEYWORD_INPUT(timestamp, mo::time_t)
 	MO_KEYWORD_INPUT(frame_number, size_t)
 	MO_KEYWORD_INPUT(coordinate_system, ICoordinateSystem*)
 	MO_KEYWORD_INPUT(context, Context*)
@@ -101,7 +101,8 @@ namespace mo
         IParameter(const Args&... args)
         {
             _name      = GetKeywordInputDefault<tag::parameter_name>("unnamed", args...);
-            _ts        = GetKeywordInputDefault<tag::timestamp>(boost::optional<mo::time_t>(), args...);
+			if(const mo::time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...))
+				_ts = *ts;
             _fn        = GetKeywordInputDefault<tag::frame_number>(0, args...);
             _ctx       = GetKeywordInputDefault<tag::context>(nullptr, args...);
             _cs        = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...);

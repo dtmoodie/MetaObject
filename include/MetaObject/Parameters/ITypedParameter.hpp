@@ -211,7 +211,8 @@ namespace mo
             const size_t* fnptr = GetKeywordInputOptional<tag::frame_number>(args...);
             if(fnptr)
                 fn = *fnptr;
-            UpdateDataImpl(data, GetKeywordInputDefault<tag::timestamp>(boost::optional<mo::time_t>(), args...),
+			const mo::time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...);
+            UpdateDataImpl(data, ts ? boost::optional<mo::time_t>(*ts) : boost::optional<mo::time_t>(),
                                  GetKeywordInputDefault<tag::context>(nullptr, args...),
                                  fn, GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...));
             return this;

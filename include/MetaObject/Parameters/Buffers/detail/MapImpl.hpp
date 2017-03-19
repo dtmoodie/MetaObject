@@ -129,7 +129,7 @@ namespace mo
                 _data_buffer[{ts,IParameter::_fn}] = data_;
                 IParameter::_modified = true;
             }
-            IParameter::OnUpdate(ctx);
+			this->Commit(ts, ctx, fn, cs);
             return true;
         }
 

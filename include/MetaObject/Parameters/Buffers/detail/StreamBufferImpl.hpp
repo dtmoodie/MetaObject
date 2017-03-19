@@ -167,7 +167,7 @@ namespace mo
             IParameter::_modified = true;
             IParameter::_ts = ts;
             IParameter::OnUpdate(ctx);
-            return this;
+            return true;
         }
 
         template<class T>

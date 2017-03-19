@@ -26,7 +26,7 @@ namespace mo
         template<class T>
         T* CircularBuffer<T>::GetDataPtr(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
         {
-            if(!ts)
+            if(!ts && _data_buffer.size())
                 return &_data_buffer.back().data;
 
             for (auto& itr : _data_buffer)
@@ -157,12 +157,14 @@ namespace mo
                                                boost::optional<size_t> fn,
                                                ICoordinateSystem* cs)
         {
-            boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            if(ts)
-                _data_buffer.push_back(State<T>(*ts, fn ? *fn : 0, ctx, cs, data_));
-            else
-                _data_buffer.push_back(State<T>(fn ? *fn : 0, ctx, cs, data_));
-            this->_modified = true;
+			{
+				boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+				if (ts)
+					_data_buffer.push_back(State<T>(*ts, fn ? *fn : 0, ctx, cs, data_));
+				else
+					_data_buffer.push_back(State<T>(fn ? *fn : 0, ctx, cs, data_));
+				this->_modified = true;
+			}
             this->Commit(ts, ctx, fn, cs);
             return true;
         }
@@ -234,7 +236,8 @@ namespace mo
         {
             if(this->input)
             {
-                //UpdateData(*this->input->GetDataPtr(), this->input->GetTimestamp(), ctx);
+				boost::recursive_mutex::scoped_lock lock(this->input->mtx());
+				UpdateDataImpl(*this->input->GetDataPtr(), this->input->GetTimestamp(), this->input->GetContext(), this->input->GetFrameNumber(), this->input->GetCoordinateSystem());
             }
         }
         template<typename T> ParameterConstructor<CircularBuffer<T>> CircularBuffer<T>::_circular_buffer_parameter_constructor;

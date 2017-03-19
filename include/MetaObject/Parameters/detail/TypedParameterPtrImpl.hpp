@@ -30,17 +30,31 @@ namespace mo
 	{
         if(ts)
         {
-            if(ts != this->_ts &&
-               IParameter::_ts)
-            {
-                LOG(trace) << "Requested timestamp != current [" << ts
-                           << " != " << this->_fn
-                           << "] for parameter " << this->GetTreeName();
-                return nullptr;
-            }else if(!IParameter::_ts)
-            {
-                return ptr;
-            }
+			if (ts == this->_ts)
+			{
+				return ptr;
+			}
+			else
+			{
+				if (this->_ts)
+				{
+					LOG(trace) << "Requested timestamp != current [" << ts
+							   << " != " << this->_fn
+							   << "] for parameter " << this->GetTreeName();
+					return nullptr;
+				}
+				else
+				{
+					if (this->CheckFlags(mo::Unstamped_e))
+					{
+						return ptr;
+					}
+					else
+					{
+						return nullptr;
+					}
+				}
+			}
         }
         if(fn_)
         {
