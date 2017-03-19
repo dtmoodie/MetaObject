@@ -5,7 +5,8 @@
 #include <boost/lexical_cast.hpp>
 #include <map>
 namespace mo 
-{ 
+{
+	template<class T> class ITypedParameter;
 namespace IO 
 { 
 namespace Text 

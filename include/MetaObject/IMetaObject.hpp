@@ -32,6 +32,7 @@ namespace mo
     struct SignalInfo;
     struct SlotInfo;
     struct CallbackInfo;
+	class ParameterOwner {};
     /*
       The IMetaObject interface class defines interfaces for introspection and serialization
       A IMetaObject derivative should use the IMetaObject macros for defining parameters, signals, 
@@ -54,7 +55,7 @@ namespace mo
     */
 	
 
-    class MO_EXPORTS IMetaObject: public IObject
+    class MO_EXPORTS IMetaObject: public IObject, public ParameterOwner
     {
     public:
         typedef IMetaObject Interface;

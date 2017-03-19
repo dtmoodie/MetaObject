@@ -25,25 +25,50 @@ class ITypedInputParameter: virtual public ITypedParameter<T>, virtual public In
         bool GetInput(mo::time_t ts);
         bool GetInput(size_t fn);
 
-        virtual T*   GetDataPtr(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
-                                Context* ctx = nullptr, size_t* fn_ = nullptr);
-        virtual T*   GetDataPtr(size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts_ = nullptr);
+        T*   GetDataPtr(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
+                        Context* ctx = nullptr, 
+			            size_t* fn_ = nullptr);
 
-        virtual T    GetData(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
-                             Context* ctx = nullptr, size_t* fn = nullptr);
-        virtual T    GetData(size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr);
+        T*   GetDataPtr(size_t fn, 
+			            Context* ctx = nullptr, 
+			            boost::optional<mo::time_t>* ts_ = nullptr);
 
-        virtual bool GetData(T& value, boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
-                             Context* ctx = nullptr, size_t* fn = nullptr);
-        virtual bool GetData(T& value, size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr);
+        T    GetData(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
+                     Context* ctx = nullptr, 
+			         size_t* fn = nullptr);
+
+        T    GetData(size_t fn, 
+			         Context* ctx = nullptr, 
+			         boost::optional<mo::time_t>* ts = nullptr);
+
+        bool GetData(T& value, 
+			         boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
+                     Context* ctx = nullptr, 
+			         size_t* fn = nullptr);
+
+        bool GetData(T& value, 
+			         size_t fn, 
+			         Context* ctx = nullptr, 
+			         boost::optional<mo::time_t>* ts = nullptr);
+
+		boost::optional<mo::time_t> GetInputTimestamp();
+		size_t                      GetInputFrameNumber();
 
     protected:
-        virtual bool UpdateDataImpl(const T& data, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs){return true;}
+        bool UpdateDataImpl(const T& data, 
+			                boost::optional<mo::time_t> ts, 
+			                Context* ctx, 
+			                boost::optional<size_t> fn, 
+			                ICoordinateSystem* cs)
+		{
+			return true;
+		}
+
         virtual void onInputDelete(IParameter const* param);
         virtual void onInputUpdate(Context* ctx, IParameter* param);
+
         std::shared_ptr<ITypedParameter<T>> shared_input;
         ITypedParameter<T>* input;
-
     private:
 		TypedSlot<void(Context*, IParameter*)> update_slot;
 		TypedSlot<void(IParameter const*)> delete_slot;

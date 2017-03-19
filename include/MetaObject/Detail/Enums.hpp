@@ -20,9 +20,9 @@ namespace mo
     enum ParameterTypeFlags
     {
         TypedParameter_e = 0,
-        cbuffer_e ,
-        cmap_e,
-        map_e,
+        CircularBuffer_e ,
+        ConstMap_e,
+        Map_e,
         StreamBuffer_e,
         BlockingStreamBuffer_e,
         NNStreamBuffer_e,

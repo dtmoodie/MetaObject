@@ -7,7 +7,9 @@ namespace mo
     {
         template<class T> StreamBuffer<T>::StreamBuffer(const std::string& name):
             ITypedParameter<T>(name, Buffer_e),
-            _time_padding(500 * mo::milli * mo::second)
+            _time_padding(500 * mo::milli * mo::second),
+            _frame_padding(100)
+
         {
         
         }
@@ -90,13 +92,13 @@ namespace mo
             prune();
             return result;
         }
-        template<class T> void StreamBuffer<T>::SetSize(size_t size)
+        template<class T> void StreamBuffer<T>::SetFrameBufferSize(size_t size)
         {
             if(_time_padding)
                 _time_padding = boost::none;
             _frame_padding = size;
         }
-        template<class T> void StreamBuffer<T>::SetSize(mo::time_t time)
+        template<class T> void StreamBuffer<T>::SetTimestampSize(mo::time_t time)
         {
             if(_frame_padding)
                 _frame_padding = boost::none;
@@ -115,12 +117,23 @@ namespace mo
                         itr = this->_data_buffer.erase(itr);
                     }else
                     {
-                        break;
+                        ++itr;
                     }
                 }
-            }if(_frame_padding)
+            }
+            if(_frame_padding && _current_frame_number > *_frame_padding)
             {
-
+                auto itr = this->_data_buffer.begin();
+                while(itr != this->_data_buffer.end())
+                {
+                    if(itr->first < (_current_frame_number - *_frame_padding))
+                    {
+                        itr = this->_data_buffer.erase(itr);
+                    }else
+                    {
+                        ++itr;
+                    }
+                }
             }
         }
         template<class T> std::shared_ptr<IParameter> StreamBuffer<T>::DeepCopy() const
@@ -136,16 +149,12 @@ namespace mo
         {
 
         }
-        template<class T> void BlockingStreamBuffer<T>::SetSize(long long size)
-        {
-            _size = size;
-        }
         
         template<class T>
         bool BlockingStreamBuffer<T>::UpdateDataImpl(const T& data_, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            while (this->_data_buffer.size() >= _size)
+            while (this->_data_buffer.size() > _size)
             {
                 LOG(trace) << "Pushing to " << this->GetTreeName() << " waiting on read";
                 _cv.wait(lock);
@@ -155,7 +164,7 @@ namespace mo
             else
                 ++IParameter::_fn;
             Map<T>::_data_buffer[{ts,IParameter::_fn}] = data_;
-            IParameter::modified = true;
+            IParameter::_modified = true;
             IParameter::_ts = ts;
             IParameter::OnUpdate(ctx);
             return this;
@@ -165,21 +174,48 @@ namespace mo
         void BlockingStreamBuffer<T>::prune()
         {
             boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
-            if (StreamBuffer<T>::_current_timestamp && StreamBuffer<T>::_time_padding)
+            if (_current_timestamp && _time_padding)
             {
                 auto itr = this->_data_buffer.begin();
                 while (itr != this->_data_buffer.end())
                 {
-                    if (itr->first < *StreamBuffer<T>::_current_timestamp - *StreamBuffer<T>::_time_padding)
+                    if (itr->first < (*_current_timestamp - *_time_padding))
                     {
                         itr = this->_data_buffer.erase(itr);
                     }
                     else
                     {
-                        break;
+                        ++itr;
                     }
                 }
             }
+            if (_frame_padding && _current_frame_number > *_frame_padding)
+            {
+                auto itr = this->_data_buffer.begin();
+                while (itr != this->_data_buffer.end())
+                {
+                    if (itr->first < (_current_frame_number - *_frame_padding))
+                    {
+                        itr = this->_data_buffer.erase(itr);
+                    }
+                    else
+                    {
+                        ++itr;
+                    }
+                }
+            }
+            /*auto itr = this->_data_buffer.begin();
+            while(this->_data_buffer.size() > _size)
+            {
+                if(_current_timestamp)
+                    if(itr->first.ts == _current_timestamp)
+                        break;
+                if(_current_frame_number)
+                    if(itr->first.fn == _current_frame_number)
+                        break;
+                itr = this->_data_buffer.erase(itr);
+            }*/
+            
             lock.unlock();
             _cv.notify_all();
         }

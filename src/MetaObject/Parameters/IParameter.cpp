@@ -30,14 +30,15 @@ https://github.com/dtmoodie/parameters
 using namespace mo;
 
 IParameter::IParameter(const std::string& name_, ParameterType flags_, mo::time_t ts, Context* ctx, size_t fn) :
-    modified(false), 
+    _modified(false), 
     _subscribers(0),
     _mtx(nullptr),
     _owns_mutex(false),
     _name(name_),
     _flags(flags_),
     _ctx(ctx),
-    _fn(fn)
+    _fn(fn),
+    _cs(nullptr)
 {
     
 }
@@ -197,7 +198,7 @@ void IParameter::OnUpdate(Context* ctx)
 {
     {
         boost::recursive_mutex::scoped_lock lock(mtx());
-        modified = true;
+        _modified = true;
     }
 
     _update_signal(ctx, this);
@@ -219,7 +220,7 @@ IParameter* IParameter::Commit(boost::optional<mo::time_t> ts_, Context* ctx_, b
         {
             _cs = cs_;
         }
-        modified = true;
+        _modified = true;
     }
     _update_signal(ctx_, this);
     return this;
@@ -273,9 +274,9 @@ void IParameter::AppendFlags(ParameterType flags_)
 	_flags = ParameterType(_flags | flags_);
 }
 
-bool IParameter::CheckFlags(ParameterType flag)
+bool IParameter::CheckFlags(ParameterType flag) const
 {
-	return _flags & flag;
+	return (_flags & flag) != 0;
 }
 
 std::shared_ptr<IParameter> IParameter::DeepCopy() const

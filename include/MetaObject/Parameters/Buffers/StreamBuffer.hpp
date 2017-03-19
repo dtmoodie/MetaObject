@@ -29,8 +29,8 @@ namespace mo
             bool GetData(T& value, size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr);
 
 
-            void SetSize(size_t size);
-            void SetSize(mo::time_t size);
+            void SetFrameBufferSize(size_t size);
+            void SetTimestampSize(mo::time_t size);
             std::shared_ptr<IParameter> DeepCopy() const;
             virtual ParameterTypeFlags GetBufferType() const{ return StreamBuffer_e;}
         protected:
@@ -41,6 +41,7 @@ namespace mo
             boost::optional<mo::time_t> _time_padding;
             boost::optional<size_t> _frame_padding;
         };
+
         template<class T> class MO_EXPORTS BlockingStreamBuffer : public StreamBuffer<T>
         {
         public:
@@ -49,11 +50,6 @@ namespace mo
 
             BlockingStreamBuffer(const std::string& name = "");
 
-            void SetSize(long long size);
-
-            /*ITypedParameter<T>* UpdateData(T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
-            ITypedParameter<T>* UpdateData(const T& data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
-            ITypedParameter<T>* UpdateData(T* data_, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);*/
             virtual ParameterTypeFlags GetBufferType() const{ return BlockingStreamBuffer_e;}
         protected:
             bool UpdateDataImpl(const T& data, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs);

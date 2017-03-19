@@ -42,9 +42,9 @@ std::string mo::ParameterTypeFlagsToString(ParameterTypeFlags flags)
     switch(flags)
     {
     case TypedParameter_e: return "Typed";
-    case cbuffer_e: return "cbuffer";
-    case cmap_e: return "cmap";
-    case map_e: return "map";
+    case CircularBuffer_e: return "circularbuffer";
+    case ConstMap_e: return "constmap";
+    case Map_e: return "map";
     case StreamBuffer_e: return "StreamBuffer";
     case BlockingStreamBuffer_e: return "BlockingStreamBuffer";
     case NNStreamBuffer_e: return "NNStreamBuffer";
@@ -57,12 +57,12 @@ ParameterTypeFlags mo::StringToParameterTypeFlags(const std::string& str)
 {
     if(str == "Typed")
         return TypedParameter_e;
-    else if(str == "cbuffer")
-        return cbuffer_e;
-    else if(str == "cmap")
-        return cmap_e;
+    else if(str == "circularbuffer")
+        return CircularBuffer_e;
+    else if(str == "constmap")
+        return ConstMap_e;
     else if(str == "map")
-        return map_e;
+        return Map_e;
     else if(str == "StreamBuffer")
         return StreamBuffer_e;
     else if(str == "BlockingStreamBuffer")

@@ -1,6 +1,6 @@
 
 #define BOOST_TEST_MAIN
-
+#define _VARIADIC_MAX  10
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Detail/IMetaObjectImpl.hpp"
 #include "MetaObject/Signals/TypedSignal.hpp"

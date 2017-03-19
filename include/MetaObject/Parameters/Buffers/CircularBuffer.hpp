@@ -39,7 +39,7 @@ namespace mo
             boost::circular_buffer<State<T>> _data_buffer;
         public:
             typedef T ValueType;
-            static const ParameterTypeFlags Type = cbuffer_e;
+            static const ParameterTypeFlags Type = CircularBuffer_e;
 
             CircularBuffer(T&& init, const std::string& name = "",
                 mo::time_t ts = -1 * mo::second,
@@ -65,14 +65,14 @@ namespace mo
             bool Update(IParameter* other, Context* ctx = nullptr);
             std::shared_ptr<IParameter> DeepCopy() const;
 
-            void SetSize(size_t size);
-            void SetSize(mo::time_t size){}
+            void SetFrameBufferSize(size_t size);
+            void SetTimestampSize(mo::time_t size){}
             virtual size_t GetSize();
             bool GetTimestampRange(mo::time_t& start, mo::time_t& end);
             bool GetFrameNumberRange(size_t& start,size_t& end);
             
             void onInputUpdate(Context* ctx, IParameter* param);
-            virtual ParameterTypeFlags GetBufferType() const{ return cbuffer_e;}
+            virtual ParameterTypeFlags GetBufferType() const{ return CircularBuffer_e;}
         protected:
             bool UpdateDataImpl(const T& data, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs);
 

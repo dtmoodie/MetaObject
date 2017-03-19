@@ -55,7 +55,7 @@ namespace mo
             void ParameterProxy<T>::onUiUpdate()
             {
                 //TODO Notify parameter of update on the processing thread.
-                parameter->modified = true;
+                parameter->_modified = true;
                 parameter->OnUpdate(nullptr);
             }
             

@@ -9,8 +9,8 @@ namespace mo
         {
         public:
             virtual ~IBuffer() {}
-            virtual void SetSize(size_t size = -1) = 0;
-            virtual void SetSize(mo::time_t time) = 0;
+            virtual void SetFrameBufferSize(size_t size = -1) = 0;
+            virtual void SetTimestampSize(mo::time_t time) = 0;
 
             // These are not const accessors because I may need to lock a mutex inside of them.
             virtual size_t GetSize() = 0;

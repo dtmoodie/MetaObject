@@ -15,18 +15,35 @@ namespace mo
             NNStreamBuffer(const std::string& name = "");
 
             T*   GetDataPtr(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
-                                    Context* ctx = nullptr, size_t* fn_ = nullptr);
-            T*   GetDataPtr(size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts_ = nullptr);
+                            Context* ctx = nullptr, 
+							size_t* fn_ = nullptr);
+
+            T*   GetDataPtr(size_t fn, 
+				            Context* ctx = nullptr, 
+				            boost::optional<mo::time_t>* ts_ = nullptr);
 
             T    GetData(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
-                                 Context* ctx = nullptr, size_t* fn = nullptr);
-            T    GetData(size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr);
+                         Context* ctx = nullptr, 
+				         size_t* fn = nullptr);
 
-            bool GetData(T& value, boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
-                                 Context* ctx = nullptr, size_t* fn = nullptr);
-            bool GetData(T& value, size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr);
+            T    GetData(size_t fn, 
+				         Context* ctx = nullptr, 
+				         boost::optional<mo::time_t>* ts = nullptr);
+
+            bool GetData(T& value, 
+				         boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
+                         Context* ctx = nullptr, 
+				         size_t* fn = nullptr);
+
+            bool GetData(T& value, 
+				         size_t fn, 
+				         Context* ctx = nullptr, 
+				         boost::optional<mo::time_t>* ts = nullptr);
+
             virtual ParameterTypeFlags GetBufferType() const{ return NNStreamBuffer_e;}
         protected:
+			typename std::map<SequenceKey, T>::iterator Search(boost::optional<mo::time_t> ts);
+			typename std::map<SequenceKey, T>::iterator Search(size_t fn);
         };
     }
 

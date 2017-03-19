@@ -162,9 +162,9 @@ namespace mo
                 _data_buffer.push_back(State<T>(*ts, fn ? *fn : 0, ctx, cs, data_));
             else
                 _data_buffer.push_back(State<T>(fn ? *fn : 0, ctx, cs, data_));
-            this->modified = true;
+            this->_modified = true;
             this->Commit(ts, ctx, fn, cs);
-            return this;
+            return true;
         }
 
         template<class T> bool CircularBuffer<T>::Update(IParameter* other, Context* ctx)
@@ -177,14 +177,14 @@ namespace mo
                 {
                     boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
                     _data_buffer.push_back(std::pair<mo::time_t, T>(typedParameter->GetTimestamp(), data));
-                    IParameter::modified = true;
+                    IParameter::_modified = true;
                     IParameter::OnUpdate(ctx);
                 }
             }
             return false;
         }
 
-        template<class T> void CircularBuffer<T>::SetSize(size_t size)
+        template<class T> void CircularBuffer<T>::SetFrameBufferSize(size_t size)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             _data_buffer.set_capacity(size);

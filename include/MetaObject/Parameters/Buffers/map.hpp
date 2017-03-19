@@ -35,7 +35,7 @@ namespace mo
             SequenceKey(boost::optional<mo::time_t> ts, size_t fn):
                 ts(ts), fn(fn){}
             SequenceKey(mo::time_t ts):
-                ts(ts), fn(std::numeric_limits<size_t>::max()){}
+                ts(ts), fn(0){}
             SequenceKey(size_t fn):
                 fn(fn){}
             boost::optional<mo::time_t> ts;
@@ -52,10 +52,9 @@ namespace mo
 
         inline bool operator<(const SequenceKey& lhs, const SequenceKey& rhs)
         {
-
             if(lhs.ts && rhs.ts)
             {
-                return lhs.ts < rhs.ts;
+                return *lhs.ts < *rhs.ts;
             }else
             {
                 return lhs.fn < rhs.fn;
@@ -67,7 +66,7 @@ namespace mo
         {
         public:
             typedef T ValueType;
-            static const ParameterTypeFlags Type = map_e;
+            static const ParameterTypeFlags Type = Map_e;
 
             Map(const std::string& name = "");
 
@@ -83,25 +82,21 @@ namespace mo
                                  Context* ctx = nullptr, size_t* fn = nullptr);
             bool GetData(T& value, size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr);
 
-            /*ITypedParameter<T>* UpdateData(const T& data,
-                                           mo::time_t ts = -1 * mo::second,
-                                           Context* ctx = nullptr,
-                                           size_t fn = std::numeric_limits<size_t>::max(),
-                                           ICoordinateSystem* cs = nullptr);*/
-
             bool Update(IParameter* other, Context* ctx = nullptr);
             std::shared_ptr<IParameter> DeepCopy() const;
 
-            void SetSize(size_t size);
-            void SetSize(mo::time_t size);
+            void SetFrameBufferSize(size_t size);
+            void SetTimestampSize(mo::time_t size);
             size_t GetSize();
             bool GetTimestampRange(mo::time_t& start, mo::time_t& end);
             bool GetFrameNumberRange(size_t& start, size_t& end);
-            virtual ParameterTypeFlags GetBufferType() const{ return map_e;}
+            virtual ParameterTypeFlags GetBufferType() const{ return Map_e;}
         protected:
             bool UpdateDataImpl(const T& data, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs);
             std::map<SequenceKey, T> _data_buffer;
             virtual void onInputUpdate(Context* ctx, IParameter* param);
+			typename std::map<SequenceKey, T>::iterator Search(boost::optional<mo::time_t> ts);
+			typename std::map<SequenceKey, T>::iterator Search(size_t fn);
         };
     }
 

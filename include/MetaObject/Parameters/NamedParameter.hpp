@@ -96,24 +96,23 @@ namespace mo
         return 0;
     }
 
+	template<class T, class U>
+	constexpr int CountTypeImpl(const U& value)
+	{
+		return std::is_same<T, U>::value ? 1 : 0;
+	}
 
-    template<class T, class U>
-    constexpr int CountTypeImpl(const U& value)
-    {
-        return std::is_same<T, U>::value ? 1 : 0;
-    }
+	template<class T, class U, class...Args>
+	constexpr int CountTypeImpl(const U& value, const Args&... args)
+	{
+		return CountTypeImpl<T, Args...>(args...) + (std::is_same<T, U>::value ? 1 : 0);
+	}
 
-    template<class T, class U, class...Args>
-    constexpr int CountTypeImpl(const U& value, const Args&... args)
-    {
-        return CountTypeImpl<T, Args...>(args...) + (std::is_same<T, U>::value ? 1 : 0);
-    }
-
-    template<class T, class ...Args>
-    constexpr int CountType(const Args&... args)
-    {
-        return CountTypeImpl<T, Args...>(args...);
-    }
+	template<class T, class ...Args>
+	constexpr int CountType(const Args&... args)
+	{
+		return CountTypeImpl<T, Args...>(args...);
+	}
 
     template <size_t N, typename... Args>
     auto GetPositionalInput(Args&&... as) noexcept ->decltype(std::get<N>(std::forward_as_tuple(std::forward<Args>(as)...)))
@@ -134,8 +133,9 @@ namespace mo
     typename std::enable_if<!std::is_base_of<kwargs::TaggedBase, T>::value, typename Tag::VoidType>::type
     GetKeyImpl(const T& arg, const Args&... args)
     {
-        static_assert(CountType<typename Tag::Type, T, Args...>(arg, args...) <= 1, "Cannot infer type when there are multiple variadic parameters with desired type");
-        //ASSERT_EQUALITY((CountType<typename Tag::Type, T, Args...>(arg, args...)), 1);
+#ifndef _MSC_VER
+        static_assert(CountType<typename Tag::Type, T, Args...>::value <= 1, "Cannot infer type when there are multiple variadic parameters with desired type");
+#endif
         return std::is_same<typename Tag::Type, T>::value ? // This infers the type
                     (typename Tag::VoidType*)&arg :
                     const_cast<void*>(GetKeyImpl<Tag, Args...>(args...));

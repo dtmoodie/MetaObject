@@ -131,7 +131,7 @@ namespace mo
     }
     
     template<class T> 
-    T* ITypedInputParameter<T>::GetDataPtr(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
+    T* ITypedInputParameter<T>::GetDataPtr(boost::optional<mo::time_t> ts,Context* ctx, size_t* fn)
     {
         if(input)
             return input->GetDataPtr(ts, ctx, fn);
@@ -191,6 +191,27 @@ namespace mo
         THROW(debug) << "Input not set for " << GetTreeName();
         return T();
     }
+	template<class T>
+	boost::optional<mo::time_t> ITypedInputParameter<T>::GetInputTimestamp()
+	{
+		if (input)
+			return input->GetTimestamp();
+		if (shared_input)
+			return shared_input->GetTimestamp();
+		THROW(debug) << "Input not set for " << GetTreeName();
+		return boost::optional<mo::time_t>();
+	}
+
+	template<class T>
+	size_t                      ITypedInputParameter<T>::GetInputFrameNumber()
+	{
+		if (input)
+			return input->GetFrameNumber();
+		if (shared_input)
+			return shared_input->GetFrameNumber();
+		THROW(debug) << "Input not set for " << GetTreeName();
+		return size_t(0);
+	}
 
     template<class T>
     bool ITypedInputParameter<T>::GetInput(mo::time_t ts)
