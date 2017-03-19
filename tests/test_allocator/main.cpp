@@ -391,6 +391,7 @@ BOOST_AUTO_TEST_CASE(stl_allocator_pool)
     double default_allocation = boost::posix_time::time_duration(end - start).total_milliseconds();
 
     start = boost::posix_time::microsec_clock::local_time();
+#ifndef _MSC_VER
     for(int i = 0; i < 10000; ++i)
     {
         std::vector<float, PinnedStlAllocator<float>> vec;
@@ -400,10 +401,12 @@ BOOST_AUTO_TEST_CASE(stl_allocator_pool)
         view *= 100;
         view += 10;
     }
+#endif
     end = boost::posix_time::microsec_clock::local_time();
     double pinned_allocation = boost::posix_time::time_duration(end - start).total_milliseconds();
 
     start = boost::posix_time::microsec_clock::local_time();
+#ifndef _MSC_VER
     for(int i = 0; i < 10000; ++i)
     {
         std::vector<float, PinnedStlAllocatorPoolThread<float>> vec;
@@ -413,6 +416,7 @@ BOOST_AUTO_TEST_CASE(stl_allocator_pool)
         view *= 100;
         view += 10;
     }
+#endif
     end = boost::posix_time::microsec_clock::local_time();
     double pooled_allocation = boost::posix_time::time_duration(end - start).total_milliseconds();
 
