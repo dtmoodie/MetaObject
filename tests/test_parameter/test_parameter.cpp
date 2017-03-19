@@ -108,7 +108,7 @@ template<class Tag, class T, class ... Args> Tag indexArgs(T arg, Args... args)
 template<class T, class ... Args>
 void func(const T& data, Args... args)
 {
-    auto value = indexArgs<::tag::test_timestamp, Args...>(args...);
+    //auto value = indexArgs<::tag::test_timestamp, Args...>(args...);
 }
 
 

@@ -7,7 +7,8 @@ class MO_EXPORTS InputParameterAny: public mo::InputParameter
 {
 public:
     InputParameterAny(const std::string& name = "");
-    virtual bool GetInput(long long ts = -1);
+    bool GetInput(boost::optional<mo::time_t> ts, size_t* fn = nullptr);
+    bool GetInput(size_t fn, boost::optional<mo::time_t>* ts = nullptr);
 
     // This gets a pointer to the variable that feeds into this input
     virtual IParameter* GetInputParam();

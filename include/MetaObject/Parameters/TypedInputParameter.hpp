@@ -94,7 +94,8 @@ namespace mo
         bool SetInput(std::shared_ptr<IParameter> input);
         bool SetInput(IParameter* input);
         void SetUserDataPtr(const T** user_var_);
-        bool GetInput(mo::time_t ts = -1 * mo::second);
+        bool GetInput(boost::optional<mo::time_t> ts, size_t* fn = nullptr);
+        bool GetInput(size_t fn, boost::optional<mo::time_t>* ts = nullptr);
 
     protected:
         virtual bool UpdateDataImpl(const T& data, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs){return true;}

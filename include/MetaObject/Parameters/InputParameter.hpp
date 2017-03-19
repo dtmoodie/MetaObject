@@ -37,8 +37,8 @@ namespace mo
 
         // This loads the value at the requested timestamp into the input
         // parameter such that it can be read
-        virtual bool GetInput(mo::time_t ts = -1 * mo::second) = 0;
-        virtual bool GetInput(size_t fn) = 0;
+        virtual bool GetInput(boost::optional<mo::time_t> ts, size_t* fn = nullptr){return false;}
+        virtual bool GetInput(size_t fn, boost::optional<mo::time_t>* ts = nullptr){return false;}
         // This gets a pointer to the variable that feeds into this input
         virtual IParameter* GetInputParam() = 0;
 

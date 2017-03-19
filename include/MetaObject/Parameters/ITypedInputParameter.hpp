@@ -21,9 +21,6 @@ class ITypedInputParameter: virtual public ITypedParameter<T>, virtual public In
         virtual bool AcceptsType(TypeInfo type) const;
 
         IParameter* GetInputParam();
-        
-        bool GetInput(mo::time_t ts);
-        bool GetInput(size_t fn);
 
         T*   GetDataPtr(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
                         Context* ctx = nullptr, 

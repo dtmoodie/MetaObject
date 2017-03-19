@@ -29,7 +29,7 @@ https://github.com/dtmoodie/parameters
 
 using namespace mo;
 
-IParameter::IParameter(const std::string& name_, ParameterType flags_, mo::time_t ts, Context* ctx, size_t fn) :
+IParameter::IParameter(const std::string& name_, ParameterType flags_, boost::optional<mo::time_t> ts, Context* ctx, size_t fn) :
     _modified(false), 
     _subscribers(0),
     _mtx(nullptr),

@@ -8,7 +8,7 @@ namespace mo
     template<typename T>
     ITypedParameter<T>::ITypedParameter(const std::string& name,
                                         ParameterType flags,
-                                        mo::time_t ts,
+                                        boost::optional<mo::time_t> ts,
                                         Context* ctx,
                                         size_t fn):
         IParameter(name, flags, ts, ctx, fn)

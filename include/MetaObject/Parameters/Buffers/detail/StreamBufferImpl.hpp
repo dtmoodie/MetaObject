@@ -174,12 +174,12 @@ namespace mo
         void BlockingStreamBuffer<T>::prune()
         {
             boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
-            if (_current_timestamp && _time_padding)
+            if (this->_current_timestamp && this->_time_padding)
             {
                 auto itr = this->_data_buffer.begin();
                 while (itr != this->_data_buffer.end())
                 {
-                    if (itr->first < (*_current_timestamp - *_time_padding))
+                    if (itr->first < (*(this->_current_timestamp) - *(this->_time_padding)))
                     {
                         itr = this->_data_buffer.erase(itr);
                     }
@@ -189,12 +189,12 @@ namespace mo
                     }
                 }
             }
-            if (_frame_padding && _current_frame_number > *_frame_padding)
+            if (this->_frame_padding && this->_current_frame_number > *(this->_frame_padding))
             {
                 auto itr = this->_data_buffer.begin();
                 while (itr != this->_data_buffer.end())
                 {
-                    if (itr->first < (_current_frame_number - *_frame_padding))
+                    if (itr->first < (this->_current_frame_number - *(this->_frame_padding)))
                     {
                         itr = this->_data_buffer.erase(itr);
                     }

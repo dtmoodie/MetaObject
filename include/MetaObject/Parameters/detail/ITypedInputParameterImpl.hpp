@@ -11,7 +11,7 @@ namespace mo
 
     template<class T> 
     ITypedInputParameter<T>::ITypedInputParameter(const std::string& name, Context* ctx):
-            ITypedParameter<T>(name, Input_e, -1* mo::second, ctx),
+            ITypedParameter<T>(name, Input_e, {}, ctx),
             input(nullptr),
             IParameter(name, Input_e)
     {
@@ -211,18 +211,6 @@ namespace mo
 			return shared_input->GetFrameNumber();
 		THROW(debug) << "Input not set for " << GetTreeName();
 		return size_t(0);
-	}
-
-    template<class T>
-    bool ITypedInputParameter<T>::GetInput(mo::time_t ts)
-    {
-        return true;
-    }
-
-    template<class T>
-    bool ITypedInputParameter<T>::GetInput(size_t ts)
-    {
-        return true;
     }
     
     // ---- protected functions

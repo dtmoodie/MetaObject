@@ -44,7 +44,7 @@ if(WIN32)
   list(APPEND CMAKE_CXX_FLAGS_RELEASE "/Zo /d2Zi+ /Oy-")
   ADD_DEFINITIONS(-D_ENABLE_ATOMIC_ALIGNMENT_FIX)
 else(WIN32)
-  list(APPEND CMAKE_CXX_FLAGS "-std=c++11")
+  #list(APPEND CMAKE_CXX_FLAGS "--std=c++11")
   list(APPEND link_libs pthread)
   add_definitions(-D_MWAITXINTRIN_H_INCLUDED)
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
@@ -383,8 +383,8 @@ endif()
 message(STATUS
     "-- MetaObject config\n"
 	"  C++ flags \t\t ${CMAKE_CXX_FLAGS}\n"
-	"  C++ Rel flags\t\t${CMAKE_CXX_FLAGS_RELEASE}\n"
-	"  C++ Deb flags\t\t${CMAKE_CXX_FLAGS_DEBUG}\n"
+        "  C++ Rel flags\t${CMAKE_CXX_FLAGS_RELEASE}\n"
+        "  C++ Deb flags\t${CMAKE_CXX_FLAGS_DEBUG}\n"
     "  OpenCV\t\t${OpenCV_VERSION} - ${OpenCV_DIR}\n"
     "  Qt5\t\t${Qt5_VERSION}\n"
     "  Python\t\t${HAVE_PYTHON}\n"

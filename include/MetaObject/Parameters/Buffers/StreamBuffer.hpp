@@ -1,7 +1,7 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
 #include "MetaObject/Parameters/ITypedInputParameter.hpp"
-#include "map.hpp"
+#include "Map.hpp"
 #include "IBuffer.hpp"
 #include <boost/thread/condition_variable.hpp>
 namespace mo

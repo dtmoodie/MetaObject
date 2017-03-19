@@ -52,7 +52,7 @@ void keywordFunction(const Args&... args)
 {
     const size_t& fn = mo::GetKeywordInput<test::tag::frame_number>(args...);
     const double& timestamp = mo::GetKeywordInput<test::tag::timestamp>(args...);
-    const PrintConstruct& pc = mo::GetKeywordInput<test::tag::dummy>(args...);
+    //const PrintConstruct& pc = mo::GetKeywordInput<test::tag::dummy>(args...);
     const int& optional = mo::GetKeywordInputDefault<test::tag::optional>(4, args...);
     std::cout << "Frame number: " << fn << "\n";
     std::cout << "Timestamp: " << timestamp << std::endl;

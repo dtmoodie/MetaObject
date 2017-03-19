@@ -10,11 +10,15 @@ InputParameterAny::InputParameterAny(const std::string& name):
     this->AppendFlags(mo::Input_e);
 }
 
-bool InputParameterAny::GetInput(long long ts)
+bool InputParameterAny::GetInput(boost::optional<mo::time_t> ts, size_t* fn)
 {
     return true;
 }
 
+bool InputParameterAny::GetInput(size_t fn, boost::optional<mo::time_t>* ts)
+{
+    return true;
+}
 
 IParameter* InputParameterAny::GetInputParam()
 {

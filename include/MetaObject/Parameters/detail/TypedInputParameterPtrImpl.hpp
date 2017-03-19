@@ -80,25 +80,44 @@ namespace mo
     }
 
     template<typename T>
-    bool TypedInputParameterPtr<T>::GetInput(mo::time_t ts)
+    bool TypedInputParameterPtr<T>::GetInput(boost::optional<mo::time_t> ts, size_t* fn)
     {
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(userVar)
         {
             if(this->shared_input)
             {
-                *userVar = this->shared_input->GetDataPtr(ts, this->_ctx);
+                *userVar = this->shared_input->GetDataPtr(ts, this->_ctx, fn);
                 return *userVar != nullptr;
             }
             if(this->input)
             {
-                *userVar = this->input->GetDataPtr(ts, this->_ctx);
+                *userVar = this->input->GetDataPtr(ts, this->_ctx, fn);
                 return *userVar != nullptr;
             }
         }
         return false;
     }
 
+    template<typename T>
+    bool TypedInputParameterPtr<T>::GetInput(size_t fn, boost::optional<mo::time_t>* ts)
+    {
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+        if(userVar)
+        {
+            if(this->shared_input)
+            {
+                *userVar = this->shared_input->GetDataPtr(fn, this->_ctx, ts);
+                return *userVar != nullptr;
+            }
+            if(this->input)
+            {
+                *userVar = this->input->GetDataPtr(fn, this->_ctx, ts);
+                return *userVar != nullptr;
+            }
+        }
+        return false;
+    }
 
     template<typename T>
     void TypedInputParameterPtr<T>::onInputDelete(IParameter const* param)

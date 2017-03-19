@@ -2,7 +2,7 @@
 #include "MetaObject/Parameters/MetaParameter.hpp"
 #include "MetaObject/Parameters/Buffers/CircularBuffer.hpp"
 #include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
-#include "MetaObject/Parameters/Buffers/map.hpp"
+#include "MetaObject/Parameters/Buffers/Map.hpp"
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Signals/TypedSignal.hpp"
 #include "MetaObject/Detail/Counter.hpp"

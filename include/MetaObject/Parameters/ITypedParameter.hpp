@@ -126,9 +126,9 @@ namespace mo
          */
         ITypedParameter(const std::string& name = "",
                         ParameterType flags = Control_e,
-                        mo::time_t ts = -1 * mo::second,
+                        boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
                         Context* ctx = nullptr,
-                        size_t fn = std::numeric_limits<size_t>::max());
+                        size_t fn = 0);
 
         // The call is thread safe but the returned pointer may be modified by a different thread
         // ts is the timestamp for which you are requesting data, -1 indicates newest

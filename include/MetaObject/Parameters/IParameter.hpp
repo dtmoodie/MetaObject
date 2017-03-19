@@ -109,11 +109,11 @@ namespace mo
             _tree_root = GetKeywordInputDefault<tag::tree_root>("", args...);
         }
 
-        IParameter(const std::string& name_  = "",
-                   ParameterType      flags_ = Control_e,
-                   mo::time_t         ts_    = -1 * mo::second,
-                   Context*           ctx_   = nullptr,
-                   size_t             fn_    = std::numeric_limits<size_t>::max());
+        IParameter(const std::string& name_        = "",
+                   ParameterType      flags_       = Control_e,
+                   boost::optional<mo::time_t> ts_ = boost::optional<mo::time_t>(),
+                   Context*           ctx_         = nullptr,
+                   size_t             fn_          = 0);
 
         virtual ~IParameter();
 
@@ -248,4 +248,17 @@ namespace mo
         Context* _ctx;
         IParameter& _param;
     };
+}
+namespace cereal
+{
+    template<class AR> void save(AR& ar, const mo::time_t& time)
+    {
+        ar(time.value());
+    }
+    template<class AR> void load(AR& ar, mo::time_t& time)
+    {
+        double value;
+        ar(value);
+        time.from_value(value);
+    }
 }

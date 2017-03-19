@@ -97,21 +97,21 @@ namespace mo
     }
 
 	template<class T, class U>
-	constexpr int CountTypeImpl(const U& value)
+    constexpr int CountTypeImpl(const U& value)
 	{
 		return std::is_same<T, U>::value ? 1 : 0;
 	}
 
 	template<class T, class U, class...Args>
-	constexpr int CountTypeImpl(const U& value, const Args&... args)
+    constexpr int CountTypeImpl(const U& value, const Args&... args)
 	{
-		return CountTypeImpl<T, Args...>(args...) + (std::is_same<T, U>::value ? 1 : 0);
+        return CountTypeImpl<T, Args...>(args...) + (std::is_same<T, U>::value ? 1 : 0);
 	}
 
 	template<class T, class ...Args>
-	constexpr int CountType(const Args&... args)
+    constexpr int CountType(const Args&... args)
 	{
-		return CountTypeImpl<T, Args...>(args...);
+        return CountTypeImpl<T, Args...>(args...);
 	}
 
     template <size_t N, typename... Args>
@@ -133,8 +133,8 @@ namespace mo
     typename std::enable_if<!std::is_base_of<kwargs::TaggedBase, T>::value, typename Tag::VoidType>::type
     GetKeyImpl(const T& arg, const Args&... args)
     {
-#ifndef _MSC_VER
-        static_assert(CountType<typename Tag::Type, T, Args...>::value <= 1, "Cannot infer type when there are multiple variadic parameters with desired type");
+#if !defined(_MSC_VER) && !defined(__CUDA_ARCH__) && !defined(__CUDACC__)
+        static_assert(CountType<typename Tag::Type>(arg, args...) <= 1, "Cannot infer type when there are multiple variadic parameters with desired type");
 #endif
         return std::is_same<typename Tag::Type, T>::value ? // This infers the type
                     (typename Tag::VoidType*)&arg :
