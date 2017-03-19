@@ -42,11 +42,11 @@ namespace mo
             static const ParameterTypeFlags Type = CircularBuffer_e;
 
             CircularBuffer(T&& init, const std::string& name = "",
-                mo::time_t ts = -1 * mo::second,
+                boost::optional<mo::time_t> ts = {},
                 ParameterType type = Buffer_e);
 
             CircularBuffer(const std::string& name = "",
-                mo::time_t ts = -1 * mo::second,
+                boost::optional<mo::time_t> ts = {},
                 ParameterType type = Buffer_e);
 
             T*   GetDataPtr(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),

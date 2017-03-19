@@ -204,8 +204,8 @@ namespace mo
                     }
                 }
             }
-            /*auto itr = this->_data_buffer.begin();
-            while(this->_data_buffer.size() > _size)
+            auto itr = this->_data_buffer.begin();
+            while(this->_data_buffer.size() >= _size)
             {
                 if(_current_timestamp)
                     if(itr->first.ts == _current_timestamp)
@@ -214,7 +214,7 @@ namespace mo
                     if(itr->first.fn == _current_frame_number)
                         break;
                 itr = this->_data_buffer.erase(itr);
-            }*/
+            }
             
             lock.unlock();
             _cv.notify_all();

@@ -5,7 +5,7 @@ namespace mo
     namespace Buffer
     {
         template<class T>
-        CircularBuffer<T>::CircularBuffer(T&& init, const std::string& name, mo::time_t ts, ParameterType type ):
+        CircularBuffer<T>::CircularBuffer(T&& init, const std::string& name, boost::optional<mo::time_t> ts, ParameterType type ):
             ITypedInputParameter<T>(name),
             ITypedParameter<T>(name, mo::Buffer_e)
         {
@@ -16,7 +16,7 @@ namespace mo
         }
 
         template<class T>
-        CircularBuffer<T>::CircularBuffer(const std::string& name, mo::time_t ts, ParameterType type ):
+        CircularBuffer<T>::CircularBuffer(const std::string& name, boost::optional<mo::time_t> ts, ParameterType type ):
             ITypedInputParameter<T>(name),
             ITypedParameter<T>(name, mo::Buffer_e)
         {
