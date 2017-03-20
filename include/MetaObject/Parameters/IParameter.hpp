@@ -203,7 +203,8 @@ namespace mo
 		// Check if a single flag is set
         bool CheckFlags(ParameterType flag) const;
 
-		
+        // Set to true if modified by the user interface etc, set to false by the owning object.
+        bool									_modified = false;
 	protected:
 		friend class ParameterOwner;
         template<class T> friend class UI::qt::ParameterProxy;
@@ -219,8 +220,6 @@ namespace mo
         boost::recursive_mutex*                  _mtx = nullptr;
         int                                      _subscribers = 0;
         bool                                     _owns_mutex = false;
-		// Set to true if modified by the user interface etc, set to false by the owning object.
-		bool									_modified = false;
     };
 
     template<typename Archive>

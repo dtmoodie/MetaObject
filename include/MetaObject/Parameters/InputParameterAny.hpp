@@ -10,6 +10,9 @@ public:
     bool GetInput(boost::optional<mo::time_t> ts, size_t* fn = nullptr);
     bool GetInput(size_t fn, boost::optional<mo::time_t>* ts = nullptr);
 
+    size_t GetInputFrameNumber();
+    boost::optional<mo::time_t> GetInputTimestamp();
+
     // This gets a pointer to the variable that feeds into this input
     virtual IParameter* GetInputParam();
     virtual bool SetInput(std::shared_ptr<mo::IParameter> param);

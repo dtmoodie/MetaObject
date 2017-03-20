@@ -219,7 +219,7 @@ namespace mo
         }
 
 
-        virtual TUpdateToken<T> Update();
+        //virtual TUpdateToken<T> Update();
 
         const TypeInfo& GetTypeInfo() const;
 
@@ -253,9 +253,20 @@ namespace mo
             _data = std::forward<T>(data);
         }
 
-        TUpdateToken& operator()(mo::time_t&& ts)
+        TUpdateToken& operator()(const T& data)
+        {
+            _data = data;
+        }
+
+        TUpdateToken& operator()(const mo::time_t& ts)
         {
             _ts = ts;
+            return *this;
+        }
+
+        TUpdateToken& operator()(mo::time_t&& ts)
+        {
+            _ts = std::forward<mo::time_t>(ts);
             return *this;
         }
 

@@ -34,11 +34,11 @@ namespace mo
 		}
 		return false;
 	}
-    template<typename T>
+    /*template<typename T>
     TUpdateToken<T> ITypedParameter<T>::Update()
     {
         return TUpdateToken<T>(*this);
-    }
+    }*/
 
     template<typename T>
     const TypeInfo ITypedParameter<T>::_type_info(typeid(T));
