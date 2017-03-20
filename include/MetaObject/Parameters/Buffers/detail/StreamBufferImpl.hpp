@@ -207,11 +207,11 @@ namespace mo
             auto itr = this->_data_buffer.begin();
             while(this->_data_buffer.size() >= _size)
             {
-                if(_current_timestamp)
-                    if(itr->first.ts == _current_timestamp)
+                if(this->_current_timestamp)
+                    if(itr->first.ts == this->_current_timestamp)
                         break;
-                if(_current_frame_number)
-                    if(itr->first.fn == _current_frame_number)
+                if(this->_current_frame_number)
+                    if(itr->first.fn == this->_current_frame_number)
                         break;
                 itr = this->_data_buffer.erase(itr);
             }
