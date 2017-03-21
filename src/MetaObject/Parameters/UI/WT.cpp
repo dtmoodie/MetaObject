@@ -3,7 +3,7 @@
 #include <map>
 using namespace mo;
 using namespace mo::UI;
-
+#include <map>
 #ifdef HAVE_WT
 #include "MetaObject/Parameters/UI/WT.hpp"
 #include <boost/thread.hpp>
