@@ -20,6 +20,10 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 include(cmake/OpenCVPCHSupport.cmake)
+set(include_dirs_ "")
+set(link_dirs_deb "")
+set(link_dirs_rel "")
+set(compile_flags "")
 
 set(HAVE_PYTHON OFF)
 if(WITH_PYTHON)
@@ -346,6 +350,46 @@ ENDIF(Boost_LIBRARY_DIR_RELEASE AND EXISTS "${Boost_LIBRARY_DIR_RELEASE}" AND IS
 list(REMOVE_DUPLICATES PROJECT_BIN_DIRS_DEBUG)
 list(REMOVE_DUPLICATES PROJECT_BIN_DIRS_RELEASE)
 list(REMOVE_DUPLICATES PROJECT_BIN_DIRS_RELWITHDEBINFO)
+
+get_target_property(target_include_dirs_ MetaObject INCLUDE_DIRECTORIES)
+get_target_property(target_link_libs_    MetaObject LINK_LIBRARIES)
+set(LINK_DIRS_RELEASE "")
+set(LINK_DIRS_DEBUG "")
+
+foreach( lib ${target_link_libs_})
+    if(EXISTS ${lib})
+        GET_FILENAME_COMPONENT(dir ${lib} DIRECTORY)
+        if(dir)
+            if(RCC_VERBOSE_CONFIG)
+                message(STATUS "Library ${lib} link directory: ${dir}")
+            endif()
+            list(APPEND LINK_DIRS_RELEASE ${dir})
+            list(APPEND LINK_DIRS_DEBUG ${dir})
+        endif()
+    endif()
+	if(TARGET ${lib})
+	    get_target_property(rel ${lib} IMPORTED_IMPLIB_RELEASE)
+        get_target_property(_rel ${lib} IMPORTED_LOCATION_RELEASE)
+        get_target_property(deb ${lib} IMPORTED_IMPLIB_DEBUG)
+        get_target_property(_deb ${lib} IMPORTED_LOCATION_DEBUG)
+		GET_FILENAME_COMPONENT(rel_ ${rel} DIRECTORY)
+        GET_FILENAME_COMPONENT(deb_ ${deb} DIRECTORY)
+        LIST(APPEND LINK_DIRS_DEBUG "${deb_}")
+        LIST(APPEND LINK_DIRS_RELEASE "${rel_}")
+	endif()
+endforeach()
+list(APPEND LINK_DIRS_RELEASE ${BOOST_LIBRARYDIR})
+list(APPEND LINK_DIRS_DEBUG ${BOOST_LIBRARYDIR})
+if(MSVC)
+	list(APPEND LINK_DIRS_RELEASE "${CMAKE_BINARY_DIR}/Release")
+	list(APPEND LINK_DIRS_DEBUG "${CMAKE_BINARY_DIR}/Debug")
+endif()
+LIST(REMOVE_DUPLICATES target_include_dirs_)
+LIST(REMOVE_DUPLICATES LINK_DIRS_RELEASE)
+LIST(REMOVE_DUPLICATES LINK_DIRS_DEBUG)
+
+WRITE_RCC_CONFIG("${target_include_dirs_}" "${LINK_DIRS_DEBUG}" "${LINK_DIRS_RELEASE}" "")
+
 # ----------------------- tests -----------------------------------
 if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
   include(CTest)
@@ -382,9 +426,9 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
 endif()
 message(STATUS
     "-- MetaObject config\n"
-	"  C++ flags \t\t ${CMAKE_CXX_FLAGS}\n"
-        "  C++ Rel flags\t${CMAKE_CXX_FLAGS_RELEASE}\n"
-        "  C++ Deb flags\t${CMAKE_CXX_FLAGS_DEBUG}\n"
+	"  C++ flags \t${CMAKE_CXX_FLAGS}\n"
+    "  C++ Rel flags\t${CMAKE_CXX_FLAGS_RELEASE}\n"
+    "  C++ Deb flags\t${CMAKE_CXX_FLAGS_DEBUG}\n"
     "  OpenCV\t\t${OpenCV_VERSION} - ${OpenCV_DIR}\n"
     "  Qt5\t\t${Qt5_VERSION}\n"
     "  Python\t\t${HAVE_PYTHON}\n"
