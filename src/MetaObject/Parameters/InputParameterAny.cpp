@@ -21,12 +21,16 @@ bool InputParameterAny::GetInput(size_t fn, boost::optional<mo::time_t>* ts)
 }
 size_t InputParameterAny::GetInputFrameNumber()
 {
-
+    if(input)
+        return input->GetFrameNumber();
+    return 0;
 }
 
 boost::optional<mo::time_t> InputParameterAny::GetInputTimestamp()
 {
-
+    if(input)
+        return input->GetTimestamp();
+    return {};
 }
 
 IParameter* InputParameterAny::GetInputParam()
