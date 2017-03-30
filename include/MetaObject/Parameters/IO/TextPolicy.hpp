@@ -4,14 +4,34 @@
 #include "SerializationFunctionRegistry.hpp"
 #include <boost/lexical_cast.hpp>
 #include <map>
-namespace mo 
-{ 
-namespace IO 
-{ 
-namespace Text 
+#include <iomanip>
+namespace mo
+{
+namespace IO
+{
+namespace Text
 {
     namespace imp
     {
+        inline int textSize(const std::string& str)
+        {
+            return str.size();
+        }
+        inline int textSize(int value)
+        {
+            int sign = 0;
+            if(value < 0)
+                sign = 1;
+            value = abs(value);
+            if(value > 1000)
+                return 4 + sign;
+            if(value > 100)
+                return 3 + sign;
+            if(value > 10)
+                return 2 + sign;
+            return 1 + sign;
+        }
+
         // test if stream serialization of a type is possible
         template<class T>
         struct stream_serializable
@@ -57,14 +77,41 @@ namespace Text
         template<typename T>
         auto Serialize_imp(std::ostream& os, std::vector<T> const& obj, int)->decltype(os << std::declval<T>(), void())
         {
-            os << "[";
+            /*os << "[";
             for(int i = 0; i < obj.size(); ++i)
             {
                 if(i != 0)
                     os << ", ";
                 os << obj[i];
             }
-            os << "]";
+            os << "]";*/
+            os << "size = " << obj.size();
+            os << '\n';
+
+            int max_size = 0;
+            for(const auto& item : obj)
+            {
+                max_size = std::max(max_size, textSize(item));
+            }
+            max_size += 4;
+            // index is 3 digits plus '=' sign
+            int i = 0;
+            while( i < obj.size()) // row
+            {
+                int col_count = 0;
+                while( i < obj.size() && col_count < 6) // col
+                {
+                    os << std::setw(3) << std::setfill('0') << i;
+                    os << '=';
+                    int size = textSize(obj[i]);
+                    for(int j = size; j < max_size; ++j)
+                        os << ' ';
+                    os << obj[i] << ' ';
+                    ++col_count;
+                    ++i;
+                }
+                os << '\n';
+            }
         }
 
         template<typename T>
@@ -97,14 +144,18 @@ namespace Text
             auto pos = str.find('=');
             if(pos == std::string::npos)
                 return;
-            std::stringstream ss;
-            ss << str.substr(0, pos);
             T1 key;
-            ss >> key;
-            ss.str("");
-            ss << str.substr(pos + 1);
             T2 value;
-            ss >> value;
+            {
+                std::stringstream ss;
+                ss << str.substr(0, pos);
+                ss >> key;
+            }
+            {
+                std::stringstream ss;
+                ss << str.substr(pos + 1);
+                ss >> value;
+            }
             obj[key] = value;
         }
 
@@ -153,7 +204,7 @@ namespace Text
             std::vector<T>* ptr = param->GetDataPtr();
             if (ptr)
             {
-                ss << ptr->size();
+                /*ss << ptr->size();
                 ss << "[";
                 for (size_t i = 0; i < ptr->size(); ++i)
                 {
@@ -161,7 +212,8 @@ namespace Text
                         ss << ", ";
                     ss << (*ptr)[i];
                 }
-                ss << "]";
+                ss << "]";*/
+                Serialize_imp(ss, *ptr, 0);
                 return true;
             }
             return false;
@@ -207,7 +259,7 @@ namespace Text
             return false;
         }
     }
-    
+
 
     template<typename T> bool WrapSerialize(IParameter* param, std::stringstream& ss)
     {
@@ -235,7 +287,7 @@ namespace Text
         }
         return false;
     }
-    
+
     template<class T> struct Policy
     {
         Policy()
@@ -246,7 +298,7 @@ namespace Text
                 std::bind(&WrapDeSerialize<T>, std::placeholders::_1, std::placeholders::_2));
         }
     };
-} // Text 
+} // Text
 } // IO
 
 #define PARAMETER_TEXT_SERIALIZATION_POLICY_INST_(N) \
