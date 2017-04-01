@@ -65,20 +65,13 @@ namespace mo
 
     template<typename T>
     T* TypedParameterPtr<T>::GetDataPtr(size_t fn, Context* ctx, boost::optional<mo::time_t>* ts_)
-    {
-        if(fn != std::numeric_limits<size_t>::max())
+    {        
+        if(fn != this->_fn)
         {
-            if(fn != this->_fn &&
-               this->_fn != std::numeric_limits<size_t>::max())
-            {
-                LOG(trace) << "Requested frame != current [" << fn
-                           << " != " << this->_fn
-                           << "] for parameter " << this->GetTreeName();
-                return nullptr;
-            }else if(this->_fn == std::numeric_limits<size_t>::max())
-            {
-                return ptr;
-            }
+            LOG(trace) << "Requested frame != current [" << fn
+                       << " != " << this->_fn
+                       << "] for parameter " << this->GetTreeName();
+            return nullptr;
         }
         if(ts_)
         {

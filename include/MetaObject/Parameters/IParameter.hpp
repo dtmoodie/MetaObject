@@ -114,7 +114,7 @@ namespace mo
                    ParameterType      flags_       = Control_e,
                    boost::optional<mo::time_t> ts_ = boost::optional<mo::time_t>(),
                    Context*           ctx_         = nullptr,
-                   size_t             fn_          = 0);
+                   size_t             fn_          = -1);
 
         virtual ~IParameter();
 
