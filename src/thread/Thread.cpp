@@ -94,7 +94,14 @@ Thread::~Thread()
     _run = false;
     LOG(info) << "Shutting down " << this->_name << " thread";
     _thread.interrupt();
-    _thread.timed_join(boost::posix_time::time_duration(0,0,10));
+    if(!_thread.timed_join(boost::posix_time::time_duration(0,0,10)))
+    {
+        LOG(warning) << this->_name << " did not join after waiting 10 seconds";
+        while(!_thread.timed_join(boost::posix_time::time_duration(0,0,10)))
+        {
+            _thread.interrupt();
+        }
+    }
 }
 void Thread::HandleEvents(int ms)
 {
@@ -136,11 +143,19 @@ void Thread::HandleEvents(int ms)
         boost::this_thread::sleep_for(boost::chrono::milliseconds(ms - elapsed.total_milliseconds()));
     }
 }
+struct ThreadAllocatorDeleter
+{
+    ~ThreadAllocatorDeleter()
+    {
+        mo::Allocator::CleanupThreadSpecificAllocator();
+    }
+};
 
 void Thread::Main()
 {
+    ThreadAllocatorDeleter allocator_deleter;
+    (void)allocator_deleter;
     mo::Context ctx;
-    //mo::Allocator::SetThreadSpecificAllocator(ctx.allocator);
     {
         boost::recursive_mutex::scoped_lock lock(_mtx);
         _ctx = &ctx;
@@ -152,8 +167,9 @@ void Thread::Main()
     if(_on_start)
         _on_start();
 
-    while(!boost::this_thread::interruption_requested())
+    while(!_quit)
     {
+        try
         {
             boost::recursive_mutex::scoped_lock lock(_mtx);
             PROFILE_RANGE(events);
@@ -168,7 +184,14 @@ void Thread::Main()
                 _event_queue.pop();
             }
             mo::ThreadSpecificQueue::RunOnce();
+        }catch(boost::thread_interrupted& e)
+        {
+
+        }catch(...)
+        {
+
         }
+
         if(_run)
         {
             try
@@ -191,15 +214,16 @@ void Thread::Main()
             {
                 if(_quit)
                 {
-                    throw e;
+                    break;
                 }
             }catch(...)
             {
                 boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+                LOG(warning) << "Unknown exception thrown in inner loop, in thread " << _name;
             }
         }else
         {
-            while(!_run)
+            while(!_run && ! boost::this_thread::interruption_requested())
             {
                 try
                 {
@@ -212,20 +236,30 @@ void Thread::Main()
                 {
                     if(_quit)
                     {
-                        throw e;
+                        break;
                     }
+                }catch(std::exception& e)
+                {
+
+                }catch(...)
+                {
+
                 }
             }
+            if(boost::this_thread::interruption_requested() && _quit)
+                break;
             if(_on_start)
                 _on_start();
             _paused = false;
         }
     }
     _paused = true;
-    LOG(debug) << _name << " Thread exiting";
     if(_on_exit)
         _on_exit();
-    mo::Allocator::CleanupThreadSpecificAllocator();
+    if(_quit == false)
+        LOG(warning)  << _name << " exiting without quit being called";
+    LOG(info) << _name << " Thread exiting";
+
 }
 size_t Thread::GetId() const
 {
