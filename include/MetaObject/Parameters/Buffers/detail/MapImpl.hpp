@@ -26,6 +26,9 @@ namespace mo
                     return &itr->second;
                 }
             }
+            if(_data_buffer.size())
+                LOG(trace) << "Timestamp [" << ts << "] not found in data buffer ("
+                           << _data_buffer.begin()->first << ", " << _data_buffer.rbegin()->first << ")";
             return nullptr;
         }
         template<class T> bool Map<T>::GetData(T& value, long long ts, Context* ctx)
@@ -114,12 +117,12 @@ namespace mo
         {
 
         }
-        template<class T> long long Map<T>::GetSize() 
+        template<class T> long long Map<T>::GetSize()
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             return _data_buffer.size();
         }
-        template<class T> void Map<T>::GetTimestampRange(long long& start, long long& end) 
+        template<class T> void Map<T>::GetTimestampRange(long long& start, long long& end)
         {
             if (_data_buffer.size())
             {

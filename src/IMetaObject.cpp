@@ -23,48 +23,48 @@
 using namespace mo;
 int IMetaObject::Connect(IMetaObject* sender, const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name)
 {
-	int count = 0;
+    int count = 0;
     auto my_signals = sender->GetSignals(signal_name);
     auto my_slots = receiver->GetSlots(slot_name);
-	
+
     for (auto signal : my_signals)
-	{
+    {
         for (auto slot : my_slots)
-		{
-			if (signal->GetSignature() == slot->GetSignature())
-			{
-				auto connection = slot->Connect(signal);
-				if (connection)
-				{
-					sender->AddConnection(connection, signal_name, slot_name, slot->GetSignature(), receiver);
-					++count;
-				}
-				break;
+        {
+            if (signal->GetSignature() == slot->GetSignature())
+            {
+                auto connection = slot->Connect(signal);
+                if (connection)
+                {
+                    sender->AddConnection(connection, signal_name, slot_name, slot->GetSignature(), receiver);
+                    ++count;
+                }
+                break;
             }else
             {
                 LOG(debug) << "Signature mismatch, Slot (" << slot_name << " -  " <<  slot->GetSignature().name()
                            << ") != Signal (" << signal_name << " - " << signal->GetSignature().name() << ")";
             }
-		}
-	}
-	
-	return count;
+        }
+    }
+
+    return count;
 }
 
 bool IMetaObject::Connect(IMetaObject* sender, const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name, const TypeInfo& signature)
 {
-	auto signal = sender->GetSignal(signal_name, signature);
-	if (signal)
-	{
-		auto slot = receiver->GetSlot(slot_name, signature);
-		if (slot)
-		{
-			auto connection = slot->Connect(signal);
-			sender->AddConnection(connection, signal_name, slot_name, signature, receiver);
-			return true;
-		}
-	}
-	return false;
+    auto signal = sender->GetSignal(signal_name, signature);
+    if (signal)
+    {
+        auto slot = receiver->GetSlot(slot_name, signature);
+        if (slot)
+        {
+            auto connection = slot->Connect(signal);
+            sender->AddConnection(connection, signal_name, slot_name, signature, receiver);
+            return true;
+        }
+    }
+    return false;
 }
 
 IMetaObject::IMetaObject()
@@ -86,7 +86,7 @@ IMetaObject::~IMetaObject()
 void IMetaObject::Init(bool firstInit)
 {
     InitParameters(firstInit);
-	InitSignals(firstInit);
+    InitSignals(firstInit);
     BindSlots(firstInit);
     InitCustom(firstInit);
     auto params = GetParameters();
@@ -108,31 +108,31 @@ void IMetaObject::Init(bool firstInit)
 
     if(firstInit == false)
     {
-		auto connections_copy = _pimpl->_parameter_connections;
-		_pimpl->_parameter_connections.clear();
-		for (auto& parameter_connection : connections_copy)
-		{
-			rcc::shared_ptr<IMetaObject> obj(parameter_connection.output_object);
-			if (obj)
-			{
-				auto output = obj->GetOutput(parameter_connection.output_parameter);
-				if (output == nullptr)
-				{
+        auto connections_copy = _pimpl->_parameter_connections;
+        _pimpl->_parameter_connections.clear();
+        for (auto& parameter_connection : connections_copy)
+        {
+            rcc::shared_ptr<IMetaObject> obj(parameter_connection.output_object);
+            if (obj)
+            {
+                auto output = obj->GetOutput(parameter_connection.output_parameter);
+                if (output == nullptr)
+                {
                     LOG(debug) << "Unable to find " << parameter_connection.output_parameter
                                << " in " << obj->GetTypeName() << " reinitializing";
-					obj->InitParameters(firstInit);
-					output = obj->GetOutput(parameter_connection.output_parameter);
-					if (output == nullptr)
+                    obj->InitParameters(firstInit);
+                    output = obj->GetOutput(parameter_connection.output_parameter);
+                    if (output == nullptr)
                     {
                         LOG(info) << "Unable to find " << parameter_connection.output_parameter << " in "
                                   << obj->GetTypeName() << " unable to reconnect " << parameter_connection.input_parameter
                                   << " from object " << this->GetTypeName();
-						continue;
+                        continue;
                     }
-				}
-				auto input = this->GetInput(parameter_connection.input_parameter);
-				if (input)
-				{
+                }
+                auto input = this->GetInput(parameter_connection.input_parameter);
+                if (input)
+                {
                     if(this->ConnectInput(input, obj.Get(), output, parameter_connection.connection_type))
                     {
                        LOG(debug) << "Reconnected " << GetTypeName() << ":" << parameter_connection.input_parameter
@@ -142,13 +142,13 @@ void IMetaObject::Init(bool firstInit)
                         LOG(info) << "Reconnect FAILED " << GetTypeName() << ":" << parameter_connection.input_parameter
                                    << " to " << obj->GetTypeName() << ":" << parameter_connection.output_parameter;
                     }
-				}
-				else
-				{
+                }
+                else
+                {
                     LOG(debug) << "Unable to find input parameter "
                                << parameter_connection.input_parameter
                                << " in object " << this->GetTypeName();
-				}
+                }
             }else
             {
                 LOG(debug) << "Output object no longer exists for input ["
@@ -156,7 +156,7 @@ void IMetaObject::Init(bool firstInit)
                            << "] expected output name ["
                            << parameter_connection.output_parameter << "]";
             }
-		}
+        }
         // Rebuild connections
         for(auto& connection : _pimpl->_connections)
         {
@@ -279,7 +279,7 @@ void IMetaObject::Serialize(ISimpleSerializer *pSerializer)
 void IMetaObject::SerializeConnections(ISimpleSerializer* pSerializer)
 {
     SERIALIZE(_pimpl->_connections);
-	SERIALIZE(_pimpl->_parameter_connections);
+    SERIALIZE(_pimpl->_parameter_connections);
     SERIALIZE(_ctx);
     SERIALIZE(_sig_manager);
 }
@@ -310,7 +310,7 @@ int IMetaObject::DisconnectByName(const std::string& name)
     int count = 0;
     for(auto& sig : my_signals)
     {
-		count += sig->Disconnect() ? 1 : 0;
+        count += sig->Disconnect() ? 1 : 0;
     }
     return count;
 }
@@ -397,7 +397,7 @@ std::vector<IParameter*> IMetaObject::GetParameters(const TypeInfo& filter) cons
     {
         if(itr.second->GetTypeInfo() == filter)
             output.push_back(itr.second);
-        
+
     }
     for (auto& itr : _pimpl->_implicit_parameters)
     {
@@ -428,7 +428,7 @@ InputParameter* IMetaObject::GetInput(const std::string& name) const
     auto itr = _pimpl->_input_parameters.find(name);
     if(itr != _pimpl->_input_parameters.end())
     {
-        return itr->second;   
+        return itr->second;
     }
     return nullptr;
 }
@@ -451,7 +451,7 @@ std::vector<InputParameter*> IMetaObject::GetInputs(const std::string& name_filt
         {
             output.push_back(param.second);
         }
-        
+
     }
     return output;
 }
@@ -629,12 +629,12 @@ bool IMetaObject::ConnectInput(InputParameter* input,
         LOG(debug) << "NULL input or output passed in";
         return false;
     }
-    
+
     if(input && input->AcceptsInput(output))
     {
         // Check contexts to see if a buffer needs to be setup
         auto output_ctx = output->GetContext();
-        if(type_ & ForceBufferedConnection_e)
+        if(type_ & ForceBufferedConnection_e || input->CheckFlags(RequestBuffered_e))
         {
             type_ = ParameterTypeFlags(type_ & ~ForceBufferedConnection_e);
             auto buffer = Buffer::BufferFactory::CreateProxy(output, type_);
@@ -669,17 +669,17 @@ bool IMetaObject::ConnectInput(InputParameter* input,
                 {
                     buffer->SetName(output->GetTreeName() + " buffer for " + input->GetTreeName());
                     if(input->SetInput(buffer))
-					{
-						_pimpl->_parameter_connections.emplace_back(output_object, output->GetName(), input->GetName(), type_);
-						return true;
-					}
+                    {
+                        _pimpl->_parameter_connections.emplace_back(output_object, output->GetName(), input->GetName(), type_);
+                        return true;
+                    }
                     else
                     {
                         LOG(debug) << "Failed to connect output " << output->GetName()
                                    << "[" << Demangle::TypeToName(output->GetTypeInfo()) << "] to input "
                             << dynamic_cast<IParameter*>(input)->GetName() << "["
                             << Demangle::TypeToName(dynamic_cast<IParameter*>(input)->GetTypeInfo()) << "]";
-						return false;
+                        return false;
                     }
                 }else
                 {
@@ -688,32 +688,32 @@ bool IMetaObject::ConnectInput(InputParameter* input,
             }else
             {
                 if(input->SetInput(output))
-				{
-					_pimpl->_parameter_connections.emplace_back(output_object, output->GetName(), input->GetName(), type_);
-					return true;
-				}
+                {
+                    _pimpl->_parameter_connections.emplace_back(output_object, output->GetName(), input->GetName(), type_);
+                    return true;
+                }
                 else
                 {
                     LOG(debug) << "Failed to connect output " << output->GetName()
                                << "[" << Demangle::TypeToName(output->GetTypeInfo()) << "] to input "
                                << dynamic_cast<IParameter*>(input)->GetName()
                                << "[" << Demangle::TypeToName(dynamic_cast<IParameter*>(input)->GetTypeInfo()) << "]";
-					return false;
+                    return false;
                 }
             }
         }else
         {
             if(input->SetInput(output))
-			{
-				_pimpl->_parameter_connections.emplace_back(output_object, output->GetName(), input->GetName(), type_);
-				return true;
-			}else
+            {
+                _pimpl->_parameter_connections.emplace_back(output_object, output->GetName(), input->GetName(), type_);
+                return true;
+            }else
             {
                 LOG(debug) << "Failed to connect output " << output->GetName()
                            << "[" << Demangle::TypeToName(output->GetTypeInfo()) << "] to input "
                            << dynamic_cast<IParameter*>(input)->GetName()
                            << "[" << Demangle::TypeToName(dynamic_cast<IParameter*>(input)->GetTypeInfo()) << "]";
-				return false;
+                return false;
             }
         }
     }
@@ -723,12 +723,12 @@ bool IMetaObject::ConnectInput(InputParameter* input,
     return false;
 }
 
-bool IMetaObject::ConnectInput(IMetaObject* out_obj, IParameter* out_param, 
+bool IMetaObject::ConnectInput(IMetaObject* out_obj, IParameter* out_param,
                                IMetaObject* in_obj, InputParameter* in_param,
                                ParameterTypeFlags type)
 {
-	return in_obj->ConnectInput(in_param, out_obj, out_param, type);
-}								 
+    return in_obj->ConnectInput(in_param, out_obj, out_param, type);
+}
 IParameter* IMetaObject::AddParameter(std::shared_ptr<IParameter> param)
 {
     param->SetMtx(_mtx);
@@ -869,7 +869,7 @@ std::vector<ISlot*> IMetaObject::GetSlots(const std::string& name) const
 
 std::vector<std::pair<ISlot*, std::string>> IMetaObject::GetSlots(const TypeInfo& signature) const
 {
-	std::vector<std::pair<ISlot*, std::string>> output;
+    std::vector<std::pair<ISlot*, std::string>> output;
     for(auto& type : _pimpl->_slots)
     {
         auto itr = type.second.find(signature);
@@ -901,64 +901,64 @@ ISlot* IMetaObject::GetSlot(const std::string& name, const TypeInfo& signature) 
 
 bool IMetaObject::ConnectByName(const std::string& name, ISlot* slot)
 {
-	auto signal = GetSignal(name, slot->GetSignature());
-	if (signal)
-	{
-		auto connection = signal->Connect(slot);
-		if (connection)
-		{
-			AddConnection(connection, name, "", slot->GetSignature());
-			return true;
-		}
-	}
-	return false;
+    auto signal = GetSignal(name, slot->GetSignature());
+    if (signal)
+    {
+        auto connection = signal->Connect(slot);
+        if (connection)
+        {
+            AddConnection(connection, name, "", slot->GetSignature());
+            return true;
+        }
+    }
+    return false;
 }
 bool IMetaObject::ConnectByName(const std::string& name, ISignal* signal)
 {
-	auto slot = GetSlot(name, signal->GetSignature());
-	if (slot)
-	{
-		auto connection = slot->Connect(signal);
-		if (connection)
-		{
-			AddConnection(connection, "", name, signal->GetSignature());
-			return true;
-		}
-	}
-	return false;
+    auto slot = GetSlot(name, signal->GetSignature());
+    if (slot)
+    {
+        auto connection = slot->Connect(signal);
+        if (connection)
+        {
+            AddConnection(connection, "", name, signal->GetSignature());
+            return true;
+        }
+    }
+    return false;
 }
 
 int IMetaObject::ConnectByName(const std::string& name, RelayManager* mgr)
 {
 
-	return 0;
+    return 0;
 }
 
 int  IMetaObject::ConnectByName(const std::string& signal_name,
                                 IMetaObject* receiver,
                                 const std::string& slot_name)
 {
-	int count = 0;
+    int count = 0;
     auto my_signals = GetSignals(signal_name);
     auto my_slots = receiver->GetSlots(slot_name);
     for (auto signal : my_signals)
-	{
+    {
         for (auto slot : my_slots)
-		{
-			if (signal->GetSignature() == slot->GetSignature())
-			{
-				auto connection = slot->Connect(signal);
-				if (connection)
-				{
+        {
+            if (signal->GetSignature() == slot->GetSignature())
+            {
+                auto connection = slot->Connect(signal);
+                if (connection)
+                {
                     AddConnection(connection, signal_name,
                                   slot_name, slot->GetSignature(), receiver);
-					++count;
-					break;
-				}
-			}
-		}
-	}
-	return count;
+                    ++count;
+                    break;
+                }
+            }
+        }
+    }
+    return count;
 }
 
 bool IMetaObject::ConnectByName(const std::string& signal_name,
@@ -966,18 +966,18 @@ bool IMetaObject::ConnectByName(const std::string& signal_name,
                                 const std::string& slot_name,
                                 const TypeInfo& signature)
 {
-	auto signal = GetSignal(signal_name, signature);
-	auto slot = receiver->GetSlot(slot_name, signature);
-	if (signal && slot)
-	{
-		auto connection = slot->Connect(signal);
-		if (connection)
-		{
-			AddConnection(connection, signal_name, slot_name, signature, receiver);
-			return true;
-		}
-	}
-	return false;
+    auto signal = GetSignal(signal_name, signature);
+    auto slot = receiver->GetSlot(slot_name, signature);
+    if (signal && slot)
+    {
+        auto connection = slot->Connect(signal);
+        if (connection)
+        {
+            AddConnection(connection, signal_name, slot_name, signature, receiver);
+            return true;
+        }
+    }
+    return false;
 }
 
 int IMetaObject::ConnectAll(RelayManager* mgr)
@@ -996,13 +996,13 @@ int IMetaObject::ConnectAll(RelayManager* mgr)
 void IMetaObject::AddSlot(ISlot* slot, const std::string& name)
 {
     _pimpl->_slots[name][slot->GetSignature()] = slot;
-	slot->SetParent(this);
+    slot->SetParent(this);
 }
 
 void IMetaObject::AddSignal(ISignal* sig, const std::string& name)
 {
-	_pimpl->_signals[name][sig->GetSignature()] = sig;
-	sig->SetParent(this);
+    _pimpl->_signals[name][sig->GetSignature()] = sig;
+    sig->SetParent(this);
 }
 
 std::vector<std::pair<ISignal*, std::string>> IMetaObject::GetSignals() const
@@ -1048,15 +1048,15 @@ std::vector<std::pair<ISignal*, std::string>> IMetaObject::GetSignals(const Type
 
 ISignal* IMetaObject::GetSignal(const std::string& name, const TypeInfo& type) const
 {
-	auto name_itr = _pimpl->_signals.find(name);
-	if (name_itr != _pimpl->_signals.end())
-	{
-		auto type_itr = name_itr->second.find(type);
-		if (type_itr != name_itr->second.end())
-		{
-			return type_itr->second;
-		}
-	}
+    auto name_itr = _pimpl->_signals.find(name);
+    if (name_itr != _pimpl->_signals.end())
+    {
+        auto type_itr = name_itr->second.find(type);
+        if (type_itr != name_itr->second.end())
+        {
+            return type_itr->second;
+        }
+    }
     if(name == "parameter_updated")
     {
         return &(_pimpl->_sig_parameter_updated);
@@ -1065,7 +1065,7 @@ ISignal* IMetaObject::GetSignal(const std::string& name, const TypeInfo& type) c
     {
         return &(_pimpl->_sig_parameter_added);
     }
-	return nullptr;
+    return nullptr;
 }
 
 void IMetaObject::AddConnection(std::shared_ptr<Connection>& connection,
@@ -1074,13 +1074,13 @@ void IMetaObject::AddConnection(std::shared_ptr<Connection>& connection,
                                 const TypeInfo& signature,
                                 IMetaObject* obj)
 {
-	ConnectionInfo info;
-	info.connection = connection;
-	info.obj = rcc::weak_ptr<IMetaObject>(obj);
-	info.signal_name = signal_name;
-	info.slot_name = slot_name;
-	info.signature = signature;
-	_pimpl->_connections.push_back(info);
+    ConnectionInfo info;
+    info.connection = connection;
+    info.obj = rcc::weak_ptr<IMetaObject>(obj);
+    info.signal_name = signal_name;
+    info.slot_name = slot_name;
+    info.signature = signature;
+    _pimpl->_connections.push_back(info);
 }
 void IMetaObject::onParameterUpdate(Context* ctx, IParameter* param)
 {

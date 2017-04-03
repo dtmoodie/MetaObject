@@ -9,7 +9,7 @@ namespace mo
             ITypedParameter<T>(name, Buffer_e),
             _current_timestamp(-1), _padding(5)
         {
-        
+
         }
 
         template<class T> T*   StreamBuffer<T>::GetDataPtr(long long ts, Context* ctx)
@@ -55,16 +55,14 @@ namespace mo
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             if(_current_timestamp != -1)
             {
+                // Temp fix until merged with boost_timestamp, only prune _padding images behind current frame
+                auto end_itr = this->_data_buffer.find(_current_timestamp);
+                for(int i = 0; i < _padding && end_itr != this->_data_buffer.begin(); ++i)
+                    --end_itr;
                 auto itr = this->_data_buffer.begin();
-                while(itr != this->_data_buffer.end())
+                while(itr != end_itr)
                 {
-                    if(itr->first < _current_timestamp - _padding)
-                    {
-                        itr = this->_data_buffer.erase(itr);
-                    }else
-                    {
-                        break;
-                    }
+                    itr = this->_data_buffer.erase(itr);
                 }
             }
         }
@@ -85,7 +83,7 @@ namespace mo
         {
             _size = size;
         }
-        
+
         template<class T>
         ITypedParameter<T>* BlockingStreamBuffer<T>::UpdateData(T& data_, long long ts, Context* ctx)
         {
