@@ -204,8 +204,8 @@ BOOST_AUTO_TEST_CASE(test_meta_object_internal_slot)
 	auto constructor = MetaObjectFactory::Instance()->GetConstructor("test_meta_object_slots");
 	auto obj = constructor->Construct();
 	auto meta_obj = static_cast<test_meta_object_slots*>(obj);
-    auto slot = meta_obj->GetSlot_test_void<void()>();
-    auto overload = meta_obj->GetSlot_test_void<void(int)>();
+    //auto slot = meta_obj->GetSlot_test_void<void()>();
+    //auto overload = meta_obj->GetSlot_test_void<void(int)>();
 	meta_obj->Init(true);
 	meta_obj->SetupSignals(&mgr);
 	TypedSignal<void(void)> signal;
@@ -292,7 +292,7 @@ BOOST_AUTO_TEST_CASE(rest)
         auto constructor = MetaObjectFactory::Instance()->GetConstructor("test_meta_object_parameter");
         auto obj = constructor->Construct();
         obj->Init(true);
-        test_meta_object_parameter* ptr = static_cast<test_meta_object_parameter*>(obj);
+        //test_meta_object_parameter* ptr = static_cast<test_meta_object_parameter*>(obj);
     }
 }
 

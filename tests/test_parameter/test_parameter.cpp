@@ -14,7 +14,7 @@
 #include "MetaObject/Parameters/Types.hpp"
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
-
+#include <boost/any.hpp>
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>
 #else
@@ -42,16 +42,90 @@ struct parametered_object: public IMetaObject
     }
 };
 
+struct ParameterUpdateToken
+{
+    ParameterUpdateToken(mo::IParameter& param):
+        _param(param)
+    {
+    }
+    ~ParameterUpdateToken()
+    {
+        //if(_timestamp_changed)
+            
+    }
+    ParameterUpdateToken& operator()(mo::Context* ctx)
+    {
+        _ctx = ctx;
+        return *this;
+    }
+    ParameterUpdateToken& operator()(long long fn)
+    {
+        _frame_number = fn;
+        return *this;
+    }
+    ParameterUpdateToken& operator()(mo::time_t time)
+    {
+        _timestamp = time;
+        _timestamp_changed = true;
+        return *this;
+    }
+    long long _frame_number = -1;
+    mo::time_t _timestamp;
+    mo::Context* _ctx = nullptr;
+    bool _timestamp_changed;
+    mo::IParameter& _param;
+};
+
+template<class T> struct TagType
+{
+
+};
+
+namespace tag
+{
+    struct test_timestamp
+    {
+        test_timestamp& operator= (const mo::time_t& type){data = &type; return *this;}
+        const void* data = nullptr;
+        static test_timestamp instance;
+    };
+    test_timestamp test_timestamp::instance;
+    static test_timestamp& _test_timestamp = test_timestamp::instance;
+}
+
+template<class Tag> Tag indexArgs()
+{
+    return Tag::instance;
+}
+
+template<class Tag, class T, class ... Args> Tag indexArgs(T arg, Args... args)
+{
+    if(std::is_same<Tag, T>::value)
+        return arg;
+    return indexArgs<Tag>(args...);
+}
+
+template<class T, class ... Args>
+void func(const T& data, Args... args)
+{
+    //auto value = indexArgs<::tag::test_timestamp, Args...>(args...);
+}
+
+
 MO_REGISTER_OBJECT(parametered_object)
 
 BOOST_AUTO_TEST_CASE(wrapped_parameter)
 {
+    func(10, ::tag::_test_timestamp = mo::time_t(-1 * mo::second));
 	int value = 10;
 	TypedParameterPtr<int> param("Test wrapped param", &value);
 
 	BOOST_CHECK_EQUAL(param.GetData(), 10);
 	param.UpdateData(5);
 	BOOST_CHECK_EQUAL(param.GetData(), 5);
+    param.UpdateData(10, mo::tag::_timestamp = mo::time_t(1 * mo::second));
+    BOOST_CHECK_EQUAL(param.GetData(), 10);
+    BOOST_CHECK_EQUAL(*param.GetTimestamp(), mo::time_t(1 * mo::second));
 	value = 11;
 	BOOST_CHECK_EQUAL(param.GetData(), 11);
 	bool update_handler_called = false;
@@ -75,7 +149,7 @@ BOOST_AUTO_TEST_CASE(input_parameter)
 {
 	int value = 10;
 	TypedParameterPtr<int> param("Test wrapped param", &value);
-	ITypedInputParameter<int> input_param;
+    ITypedInputParameter<int> input_param;
 	BOOST_REQUIRE(input_param.SetInput(&param));
 	BOOST_REQUIRE_EQUAL(input_param.GetData(), value);
 	

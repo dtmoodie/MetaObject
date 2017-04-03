@@ -2,6 +2,7 @@
 #include <IObject.h>
 #include "MetaObject/Detail/Export.hpp"
 #include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
+#include "MetaObject/Parameters/IParameter.hpp"
 #include <memory>
 
 namespace boost
@@ -31,6 +32,7 @@ namespace mo
     struct SignalInfo;
     struct SlotInfo;
     struct CallbackInfo;
+	class ParameterOwner {};
     /*
       The IMetaObject interface class defines interfaces for introspection and serialization
       A IMetaObject derivative should use the IMetaObject macros for defining parameters, signals, 
@@ -53,7 +55,7 @@ namespace mo
     */
 	
 
-    class MO_EXPORTS IMetaObject: public IObject
+    class MO_EXPORTS IMetaObject: public IObject, public ParameterOwner
     {
     public:
         typedef IMetaObject Interface;
@@ -153,7 +155,7 @@ namespace mo
         virtual std::vector<IParameter*> GetParameters(const std::string& filter = "") const;
         virtual std::vector<IParameter*> GetParameters(const TypeInfo& filter) const;
 
-        template<class T> T                   GetParameterValue(const std::string& name, long long ts = -1, Context* ctx = nullptr) const;
+        template<class T> T                   GetParameterValue(const std::string& name, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr) const;
         template<class T> ITypedParameter<T>* GetParameter(const std::string& name) const;
         template<class T> ITypedParameter<T>* GetParameterOptional(const std::string& name) const;
         
@@ -168,8 +170,8 @@ namespace mo
         virtual IParameter* AddParameter(std::shared_ptr<IParameter> param);
         virtual IParameter* AddParameter(IParameter* param);
 
-        template<class T> ITypedParameter<T>* UpdateParameter(const std::string& name, T& value, long long ts = -1, Context* ctx = nullptr);
-        template<class T> ITypedParameter<T>* UpdateParameter(const std::string& name, const T& value, long long ts = -1, Context* ctx = nullptr);
+        template<class T> ITypedParameter<T>* UpdateParameter(const std::string& name, T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
+        template<class T> ITypedParameter<T>* UpdateParameter(const std::string& name, const T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
         template<class T> ITypedParameter<T>* UpdateParameterPtr(const std::string& name, T& ptr);
 
         void AddSignal(ISignal* signal, const std::string& name);

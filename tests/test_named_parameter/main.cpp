@@ -1,6 +1,6 @@
 
 #define BOOST_TEST_MAIN
-
+#define _VARIADIC_MAX  10
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Detail/IMetaObjectImpl.hpp"
 #include "MetaObject/Signals/TypedSignal.hpp"
@@ -12,6 +12,7 @@
 #include "MetaObject/Parameters/TypedParameterPtr.hpp"
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "MetaObject/Parameters/Types.hpp"
+#include "MetaObject/Parameters/NamedParameter.hpp"
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
 
@@ -33,146 +34,32 @@ struct PrintConstruct
     }
     int member = 0;
 };
-#define MO_KEYWORD_INPUT(name, type) \
-namespace tag \
-{ \
-    struct name \
-    { \
-        typedef type Type; \
-        typedef const Type& ConstRef; \
-        typedef Type& Ref; \
-        typedef ConstRef StorageType; \
-        typedef const void* VoidType; \
-    }; \
-    static mo::kwargs::TypedKeyword<name>& _##name = \
-            mo::kwargs::TypedKeyword<name>::instance; \
-}
 
-#define MO_KEYWORD_OUTPUT(name, type) \
-namespace tag \
-{ \
-    struct name \
-    { \
-        typedef type Type; \
-        typedef const Type& ConstRef; \
-        typedef Type& Ref; \
-        typedef Ref StorageType; \
-        typedef void* VoidType; \
-    }; \
-    static mo::kwargs::TypedKeyword<name>& _##name = \
-            mo::kwargs::TypedKeyword<name>::instance; \
-}
 
-namespace mo
+
+namespace test
 {
-    namespace kwargs
-    {
-        template<class Tag>
-        struct TaggedArgument
-        {
-            typedef Tag TagType;
-            explicit TaggedArgument(typename Tag::StorageType val):
-                arg(val)
-            {
-
-            }
-            typename Tag::VoidType get() const
-            {
-                return &arg;
-            }
-        protected:
-            typename Tag::StorageType arg;
-        };
-
-        template<class Tag>
-        struct TypedKeyword
-        {
-            static TypedKeyword instance;
-            TaggedArgument<Tag> operator=(typename Tag::StorageType data)
-            {
-                return TaggedArgument<Tag>(data);
-            }
-        };
-        template<class T> TypedKeyword<T> TypedKeyword<T>::instance;
-    }
-    MO_KEYWORD_INPUT(timestamp, double);
-    MO_KEYWORD_INPUT(frame_number, size_t);
-    MO_KEYWORD_INPUT(dummy, PrintConstruct);
-    MO_KEYWORD_OUTPUT(output, PrintConstruct);
+    MO_KEYWORD_INPUT(timestamp, double)
+    MO_KEYWORD_INPUT(frame_number, size_t)
+    MO_KEYWORD_INPUT(dummy, PrintConstruct)
+    MO_KEYWORD_OUTPUT(output, PrintConstruct)
+    MO_KEYWORD_INPUT(optional, int)
 }
 
-
-
-template<class Tag>
-typename Tag::VoidType GetKeyImpl()
-{
-    return 0;
-}
-
-
-
-template<class Tag, class T, class... Args>
-typename Tag::VoidType GetKeyImpl(const T& arg, const Args&... args)
-{
-    return std::is_same<typename T::TagType, Tag>::value ?
-                const_cast<void*>(arg.get()) :
-                const_cast<void*>(GetKeyImpl<Tag, Args...>(args...));
-}
-
-template<class Tag, class... Args>
-typename Tag::ConstRef GetInput(const Args&... args)
-{
-    const void* ptr = GetKeyImpl<Tag>(args...);
-    assert(ptr);
-    return *(static_cast<const typename Tag::Type*>(ptr));
-}
-
-template<class Tag, class... Args>
-typename Tag::ConstRef GetInputDefault(typename Tag::ConstRef def, const Args&... args)
-{
-    const void* ptr = GetKeyImpl<Tag>(args...);
-    if(ptr)
-        return *(const typename Tag::Type*)ptr;
-    return def;
-}
-
-template<class Tag, class... Args>
-const typename Tag::Type* GetInputOptional(const Args&... args)
-{
-    const void* ptr = GetKeyImpl<Tag>(args...);
-    if(ptr)
-        return (const typename Tag::Type*)ptr;
-    return nullptr;
-}
-
-template<class Tag, class... Args>
-typename Tag::Ref GetOutput(const Args&... args)
-{
-    static_assert(!std::is_const<typename Tag::VoidType>::value, "Tag type is not an output tag");
-    void* ptr = GetKeyImpl<Tag>(args...);
-    assert(ptr);
-    return *(static_cast<typename Tag::Type*>(ptr));
-}
-
-template<class Tag, class... Args>
-typename Tag::Type* GetOutputOptional(const Args&... args)
-{
-    static_assert(!std::is_const<typename Tag::VoidType>::value, "Tag type is not an output tag");
-    void* ptr = GetKeyImpl<Tag>(args...);
-    if(ptr)
-        return (static_cast<typename Tag::Type*>(ptr));
-    return nullptr;
-}
 
 template<class... Args>
 void keywordFunction(const Args&... args)
 {
-    const size_t& fn = GetInput<tag::frame_number>(args...);
-    const double& timestamp = GetInput<tag::timestamp>(args...);
-    const PrintConstruct& pc = GetInput<tag::dummy>(args...);
+    const size_t& fn = mo::GetKeywordInput<test::tag::frame_number>(args...);
+    const double& timestamp = mo::GetKeywordInput<test::tag::timestamp>(args...);
+    //const PrintConstruct& pc = mo::GetKeywordInput<test::tag::dummy>(args...);
+    const int& optional = mo::GetKeywordInputDefault<test::tag::optional>(4, args...);
     std::cout << "Frame number: " << fn << "\n";
     std::cout << "Timestamp: " << timestamp << std::endl;
-    PrintConstruct& pc_out = GetOutput<tag::output>(args...);
+    std::cout << "Optional: " << optional << std::endl;
+    std::cout << "Positional: " << mo::GetPositionalInput<0>(args...) << std::endl;
+    std::cout << "size_t count: " << mo::CountType<size_t>(args...) << std::endl;
+    PrintConstruct& pc_out = GetKeywordOutput<test::tag::output>(args...);
     pc_out.member = fn;
 }
 
@@ -181,9 +68,10 @@ BOOST_AUTO_TEST_CASE(named_parameter)
 {
     size_t fn = 100;
     PrintConstruct pc;
-    keywordFunction(tag::_frame_number = fn, tag::_timestamp = 0.5, tag::_dummy = pc, tag::_output = pc);
+    int asdf = 10;
+    keywordFunction(asdf, test::tag::_frame_number = fn, test::tag::_timestamp = 0.5, test::tag::_dummy = pc, test::tag::_output = pc);
     fn = 200;
-    keywordFunction(tag::_frame_number = fn, tag::_dummy = pc, tag::_timestamp = 1.0, tag::_output = pc);
+    keywordFunction(asdf, fn, test::tag::_dummy = pc, test::tag::_timestamp = 1.0, test::tag::_output = pc, test::tag::_optional = 5);
 
 }
 

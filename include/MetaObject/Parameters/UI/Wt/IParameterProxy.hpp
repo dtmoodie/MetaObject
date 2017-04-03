@@ -128,7 +128,7 @@ namespace wt
         static const bool IS_DEFAULT = true;
         TPlotDataProxy(){}
         void CreateUi(Wt::WContainerWidget* container, T* data, bool read_only, const std::string& name = ""){}
-        void UpdateUi(const T& data, long long ts){}
+        void UpdateUi(const T& data, mo::time_t ts){}
         void onUiUpdate(T& data){}
     };
 
@@ -165,7 +165,8 @@ namespace wt
             if(ptr)
             {
                 _app->getUpdateLock();
-                _data_proxy.UpdateUi(*ptr, _param->GetTimestamp());
+                // TODO FIX ME
+                _data_proxy.UpdateUi(*ptr, *_param->GetTimestamp());
                 _app->requestUpdate();
             }
         }

@@ -30,32 +30,73 @@ namespace mo
     class Context;
     namespace Buffer
     {
-        template<typename T> class Map: public ITypedInputParameter<T>, public IBuffer
+        struct SequenceKey
+        {
+            SequenceKey(boost::optional<mo::time_t> ts, size_t fn):
+                ts(ts), fn(fn){}
+            SequenceKey(mo::time_t ts):
+                ts(ts), fn(0){}
+            SequenceKey(size_t fn):
+                fn(fn){}
+            boost::optional<mo::time_t> ts;
+            size_t fn;
+        };
+        inline std::ostream& operator<<(std::ostream& os, const SequenceKey& key)
+        {
+          if(key.ts)
+              os << *key.ts << " ";
+          if(key.fn != std::numeric_limits<size_t>::max())
+              os << key.fn;
+          return os;
+        }
+
+        inline bool operator<(const SequenceKey& lhs, const SequenceKey& rhs)
+        {
+            if(lhs.ts && rhs.ts)
+            {
+                return *lhs.ts < *rhs.ts;
+            }else
+            {
+                return lhs.fn < rhs.fn;
+            }
+        }
+
+        template<typename T>
+        class Map: public ITypedInputParameter<T>, public IBuffer
         {
         public:
             typedef T ValueType;
-            static const ParameterTypeFlags Type = map_e;
+            static const ParameterTypeFlags Type = Map_e;
 
             Map(const std::string& name = "");
 
-            T*   GetDataPtr(long long ts = -1, Context* ctx = nullptr);
-            bool GetData(T& value, long long ts = -1, Context* ctx = nullptr);
-            T    GetData(long long ts = -1, Context* ctx = nullptr);
-            
-            ITypedParameter<T>* UpdateData(T& data_, long long ts = -1, Context* ctx = nullptr);
-            ITypedParameter<T>* UpdateData(const T& data_, long long ts = -1, Context* ctx = nullptr);
-            ITypedParameter<T>* UpdateData(T* data_, long long ts = -1, Context* ctx = nullptr);
+            T*   GetDataPtr(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
+                                    Context* ctx = nullptr, size_t* fn_ = nullptr);
+            T*   GetDataPtr(size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts_ = nullptr);
+
+            T    GetData(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
+                                 Context* ctx = nullptr, size_t* fn = nullptr);
+            T    GetData(size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr);
+
+            bool GetData(T& value, boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(),
+                                 Context* ctx = nullptr, size_t* fn = nullptr);
+            bool GetData(T& value, size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr);
 
             bool Update(IParameter* other, Context* ctx = nullptr);
             std::shared_ptr<IParameter> DeepCopy() const;
 
-            void SetSize(long long size);
-            long long GetSize();
-            void GetTimestampRange(long long& start, long long& end);
-            virtual ParameterTypeFlags GetBufferType() const{ return map_e;}
+            void SetFrameBufferSize(size_t size);
+            void SetTimestampSize(mo::time_t size);
+            size_t GetSize();
+            bool GetTimestampRange(mo::time_t& start, mo::time_t& end);
+            bool GetFrameNumberRange(size_t& start, size_t& end);
+            virtual ParameterTypeFlags GetBufferType() const{ return Map_e;}
         protected:
-            std::map<long long, T> _data_buffer;
+            bool UpdateDataImpl(const T& data, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs);
+            std::map<SequenceKey, T> _data_buffer;
             virtual void onInputUpdate(Context* ctx, IParameter* param);
+			typename std::map<SequenceKey, T>::iterator Search(boost::optional<mo::time_t> ts);
+			typename std::map<SequenceKey, T>::iterator Search(size_t fn);
         };
     }
 

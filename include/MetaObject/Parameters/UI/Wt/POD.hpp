@@ -128,7 +128,7 @@ namespace wt
             _chart->setMargin(Wt::WLength::Auto, Wt::Left | Wt::Right);
         }
 
-        void UpdateUi(const T& data, long long ts)
+        void UpdateUi(const T& data, mo::time_t ts)
         {
             _data_history.push_back(std::make_pair(data, ts));
             for(int i = 0; i < _data_history.size(); ++i)
@@ -143,7 +143,7 @@ namespace wt
         }
 
         Wt::Chart::WCartesianChart* _chart;
-        boost::circular_buffer<std::pair<T, long long>> _data_history;
+        boost::circular_buffer<std::pair<T, mo::time_t>> _data_history;
         Wt::WStandardItemModel* _model;
         int _model_column;
     };

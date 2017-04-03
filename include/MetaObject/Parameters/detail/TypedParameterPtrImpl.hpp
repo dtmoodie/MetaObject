@@ -8,7 +8,11 @@ namespace mo
     template<typename T, int N, typename Enable> struct MetaParameter;
     
 
-	template<typename T> TypedParameterPtr<T>::TypedParameterPtr(const std::string& name, T* ptr_, ParameterType type, bool ownsData_) :
+    template<typename T>
+    TypedParameterPtr<T>::TypedParameterPtr(const std::string& name,
+                                            T* ptr_,
+                                            ParameterType type,
+                                            bool ownsData_) :
 		ptr(ptr_), ownsData(ownsData_), ITypedParameter<T>(name, type)
 	{
         (void)&_meta_parameter;
@@ -22,47 +26,111 @@ namespace mo
 	}
 
     template<typename T> 
-    T* TypedParameterPtr<T>::GetDataPtr(long long ts, Context* ctx)
+    T* TypedParameterPtr<T>::GetDataPtr(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn_)
 	{
-        if(ts != -1)
+        if(ts)
         {
-            if(ts != this->_timestamp && this->_timestamp != -1)
-            {
-                LOG(trace) << "Requested timestamp != current [" << ts << " != " << this->_timestamp << "] for parameter " << this->GetTreeName();
-                return nullptr;
-            }else if(this->_timestamp == -1)
-            {
-                return ptr;
-            }
+			if (ts == this->_ts)
+			{
+				return ptr;
+			}
+			else
+			{
+				if (this->_ts)
+				{
+					LOG(trace) << "Requested timestamp != current [" << ts
+							   << " != " << this->_fn
+							   << "] for parameter " << this->GetTreeName();
+					return nullptr;
+				}
+				else
+				{
+					if (this->CheckFlags(mo::Unstamped_e))
+					{
+						return ptr;
+					}
+					else
+					{
+						return nullptr;
+					}
+				}
+			}
+        }
+        if(fn_)
+        {
+            *fn_ = IParameter::_fn;
         }
 		return ptr;
 	}
+
+    template<typename T>
+    T* TypedParameterPtr<T>::GetDataPtr(size_t fn, Context* ctx, boost::optional<mo::time_t>* ts_)
+    {        
+        if(fn != this->_fn)
+        {
+            LOG(trace) << "Requested frame != current [" << fn
+                       << " != " << this->_fn
+                       << "] for parameter " << this->GetTreeName();
+            return nullptr;
+        }
+        if(ts_)
+        {
+            *ts_ = IParameter::_ts;
+        }
+        return ptr;
+    }
 	
     template<typename T> 
-    T TypedParameterPtr<T>::GetData(long long ts, Context* ctx)
+    T TypedParameterPtr<T>::GetData(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
 	{
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-        if(ts != -1)
+        if(ts)
         {
-            if(ts != this->_timestamp)
+            if(ts != IParameter::_ts && this->_ts)
             {
-                THROW(debug) << "Requested timestamp != current [" << ts << " != " << this->_timestamp << "] for parameter " << this->GetTreeName();
+                THROW(debug) << "Requested timestamp != current ["
+                             << ts << " != " << IParameter::_ts
+                             << "] for parameter " << this->GetTreeName();
             }
         }
         if(ptr == nullptr)
             THROW(debug) << "Data pointer not set";
+        if(fn)
+            *fn = this->_fn;
 		return *ptr;
 	}
 	
-    template<typename T> 
-    bool TypedParameterPtr<T>::GetData(T& value, long long ts, Context* ctx)
+    template<typename T>
+    T TypedParameterPtr<T>::GetData(size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
+    {
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+        if(fn != std::numeric_limits<size_t>::max())
+        {
+            if(fn != IParameter::_fn && IParameter::_fn != std::numeric_limits<size_t>::max())
+            {
+                THROW(debug) << "Requested frame != current ["
+                             << fn << " != " << IParameter::_fn
+                             << "] for parameter " << this->GetTreeName();
+            }
+        }
+        if(ptr == nullptr)
+            THROW(debug) << "Data pointer not set";
+        if(ts)
+            *ts = IParameter::_ts;
+        return *ptr;
+    }
+
+    template<typename T>
+    bool TypedParameterPtr<T>::GetData(T& value, boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
 	{
 		boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-        if(ts != -1)
+        if(ts)
         {
-            if(ts != this->_timestamp)
+            if(ts != this->_ts)
             {
-                LOG(trace) << "Requested timestamp != current [" << ts << " != " << this->_timestamp << "] for parameter " << this->GetTreeName();
+                LOG(trace) << "Requested timestamp != current ["
+                           << ts << " != " << IParameter::_ts
+                           << "] for parameter " << this->GetTreeName();
                 return false;
             }
         }
@@ -70,61 +138,62 @@ namespace mo
 		if (ptr)
 		{
 			value = *ptr;
+            if(fn)
+                *fn = this->_fn;
 			return true;
 		}
 		return false;
 	}
 	
-    template<typename T> 
-    ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(T& data_, long long time_index, Context* ctx)
+    template<typename T>
+    bool TypedParameterPtr<T>::GetData(T& value, size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
+    {
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+        if(fn != std::numeric_limits<size_t>::max())
+        {
+            if(fn != this->_fn)
+            {
+                LOG(trace) << "Requested frame != current ["
+                           << fn << " != " << this->_fn
+                           << "] for parameter " << this->GetTreeName();
+                return false;
+            }
+        }
+
+        if (ptr)
+        {
+            value = *ptr;
+            if(ts)
+                *ts = this->_ts;
+            return true;
+        }
+        return false;
+    }
+
+    /*template<typename T>
+    ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(const T& data_, boost::optional<mo::time_t> ts,
+                                                         Context* ctx, size_t fn, ICoordinateSystem* cs)
 	{
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(ptr)
         {
             *ptr = data_;
-            IParameter::_timestamp = time_index;
-            IParameter::modified = true;
-            IParameter::OnUpdate(ctx);
+            this->Commit(ts, ctx, fn, cs);
         }
         return this;
-	}
-	
-    template<typename T> 
-    ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(const T& data_, long long time_index, Context* ctx)
-	{
-        bool updated = false;
-        {
-            boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            if (ptr)
-            {
-                *ptr = data_;
-                IParameter::_timestamp = time_index;
-                IParameter::modified = true;
-                updated = true;
-            }
-        }
-        if(updated)
-        {
-            IParameter::OnUpdate(ctx);
-            return this;
-        }
-        return nullptr;
-	}
-	
-    template<typename T> 
-    ITypedParameter<T>* TypedParameterPtr<T>::UpdateData(T* data_, long long time_index, Context* ctx)
-	{
+    }*/
+    template<typename T>
+    bool TypedParameterPtr<T>::UpdateDataImpl(const T& data, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs)
+    {
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         if(ptr)
         {
-            *ptr = *data_;
-            IParameter::_timestamp = time_index;
-            IParameter::modified = true;
-            IParameter::OnUpdate(ctx);
+            *ptr = data;
+            this->Commit(ts, ctx, fn, cs);
         }
         return this;
-	}
-	
+    }
+
     template<typename T> 
     bool TypedParameterPtr<T>::Update(IParameter* other)
 	{
@@ -133,9 +202,10 @@ namespace mo
 		if (typed)
 		{
 			*ptr = typed->GetData();
-			IParameter::_timestamp = other->GetTimestamp();
-			IParameter::modified = true;
-			IParameter::OnUpdate(nullptr);
+            this->Commit(other->GetTimestamp(),
+                         other->GetContext(),
+                         other->GetFrameNumber(),
+                         other->GetCoordinateSystem());
 			return true;
 		}
 		return false;
@@ -148,13 +218,15 @@ namespace mo
 	}
 
     template<typename T>
-    ITypedParameter<T>* TypedParameterPtr<T>::UpdatePtr(T* ptr)
+    ITypedParameter<T>* TypedParameterPtr<T>::UpdatePtr(T* ptr, bool ownsData_)
     {
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
         this->ptr = ptr;
+        this->ownsData = ownsData_;
         return this;
     }
     
-    template<typename T> MetaParameter<T, 100, void> TypedParameterPtr<T>::_meta_parameter;
+    template<typename T>
+    MetaParameter<T, 100, void> TypedParameterPtr<T>::_meta_parameter;
 }
 #endif

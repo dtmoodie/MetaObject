@@ -7,6 +7,7 @@
 #include <iomanip>
 namespace mo
 {
+    template<class T> class ITypedParameter;
 namespace IO
 {
 namespace Text
@@ -36,7 +37,6 @@ namespace Text
         template<class T>
         struct stream_serializable
         {
-            //const static bool value = sizeof(decltype(std::declval<std::istream>() >> std::declval<T>(), size_t())) == sizeof(size_t);
             template<class U>
             static constexpr auto check(std::stringstream is, U val, int)->decltype(is >> val, size_t())
             {
@@ -77,14 +77,6 @@ namespace Text
         template<typename T>
         auto Serialize_imp(std::ostream& os, std::vector<T> const& obj, int)->decltype(os << std::declval<T>(), void())
         {
-            /*os << "[";
-            for(int i = 0; i < obj.size(); ++i)
-            {
-                if(i != 0)
-                    os << ", ";
-                os << obj[i];
-            }
-            os << "]";*/
             os << "size = " << obj.size();
             os << '\n';
 
@@ -204,15 +196,6 @@ namespace Text
             std::vector<T>* ptr = param->GetDataPtr();
             if (ptr)
             {
-                /*ss << ptr->size();
-                ss << "[";
-                for (size_t i = 0; i < ptr->size(); ++i)
-                {
-                    if (i != 0)
-                        ss << ", ";
-                    ss << (*ptr)[i];
-                }
-                ss << "]";*/
                 Serialize_imp(ss, *ptr, 0);
                 return true;
             }

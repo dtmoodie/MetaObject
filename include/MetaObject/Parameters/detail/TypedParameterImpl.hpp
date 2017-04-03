@@ -3,7 +3,7 @@
 namespace mo
 {
 	template<typename T> 
-    TypedParameter<T>::TypedParameter(const std::string& name, const T& init, ParameterType type, long long ts, Context* ctx) :
+    TypedParameter<T>::TypedParameter(const std::string& name, const T& init, ParameterType type, mo::time_t ts, Context* ctx) :
 		ITypedParameter<T>(name, type, ts, ctx), data(init),
         IParameter(name, mo::Control_e, ts, ctx)
 	{
@@ -12,32 +12,52 @@ namespace mo
 	}
 
 	template<typename T> 
-    T* TypedParameter<T>::GetDataPtr(long long ts, Context* ctx)
+    T* TypedParameter<T>::GetDataPtr(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
 	{
-		if (ts != -1)
+        if (ts)
         {
-            if(ts != this->_timestamp)
+            if(ts != IParameter::_ts)
             {
-                LOG(debug) << "Requested timestamp " << ts << " != " << this->_timestamp;
+                LOG(debug) << "Requested timestamp " << ts << " != " << this->_ts;
                 return nullptr;
             }
         }
+        if(fn)
+            *fn = this->_fn;
 		return &data;
 	}
 
+    template<typename T>
+    T* TypedParameter<T>::GetDataPtr(size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
+    {
+        if (fn != std::numeric_limits<size_t>::max())
+        {
+            if(fn != this->_fn && this->_fn != std::numeric_limits<size_t>::max())
+            {
+                LOG(debug) << "Requested frame " << fn << " != " << this->_fn;
+                return nullptr;
+            }
+        }
+        if(ts)
+            *ts = this->_ts;
+        return &data;
+    }
+
 	template<typename T> 
-    bool TypedParameter<T>::GetData(T& value, long long ts, Context* ctx)
+    bool TypedParameter<T>::GetData(T& value, boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
 	{
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-		if (ts == -1)
+        if (ts)
         {
             value = data;
             return true;
         }else
         {
-            if(ts == this->_timestamp)
+            if(ts == IParameter::_ts)
             {
                 value = data;
+                if(fn)
+                    *fn = this->_fn;
                 return true;
             }
         }
@@ -45,41 +65,74 @@ namespace mo
 	}
 
     template<typename T>
-    T TypedParameter<T>::GetData(long long ts, Context* ctx)
+    bool TypedParameter<T>::GetData(T& value, size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
     {
         boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-        if(ts == -1)
+        if (this->_fn == fn)
         {
+            if(ts)
+                *ts = this->_ts;
+            value = data;
+            return true;
+        }else
+        {
+            if(this->_fn == std::numeric_limits<size_t>::max())
+            {
+                value = data;
+                if(ts)
+                    *ts = this->_ts;
+                return true;
+            }
+        }
+        return false;
+    }
+
+    template<typename T>
+    T TypedParameter<T>::GetData(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
+    {
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+        if(ts)
+        {
+            if(fn)
+                *fn = this->_fn;
             return data;
         }else
         {
-            ASSERT_EQ(ts, this->_timestamp) << " Timestamps do not match";
+            ASSERT_EQ(ts, this->_ts) << " Timestamps do not match";
+            if(fn)
+                *fn = this->_fn;
             return data;
         }
     }
 	
-    template<typename T> 
-    ITypedParameter<T>* TypedParameter<T>::UpdateData(T& data_, long long ts, Context* ctx)
-	{
-		data = data_;
-        IParameter::Commit(ts, ctx);
-		return this;
-	}
+    template<typename T>
+    T TypedParameter<T>::GetData(size_t fn, Context* ctx, boost::optional<mo::time_t>* ts)
+    {
+        boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+        if(this->_fn == std::numeric_limits<size_t>::max())
+        {
+            if(ts)
+                *ts = this->_ts;
+            return data;
+        }else
+        {
+            ASSERT_EQ(fn, this->_fn) << " Frame numbers do not match";
+            if(ts)
+                *ts = this->_ts;
+            return data;
+        }
+    }
 
-	template<typename T> 
-    ITypedParameter<T>* TypedParameter<T>::UpdateData(const T& data_, long long ts, Context* ctx)
+    template<typename T>
+    bool TypedParameter<T>::UpdateDataImpl(const T& data_,
+                                          boost::optional<mo::time_t> ts,
+                                          Context* ctx,
+                                          boost::optional<size_t> fn,
+                                          ICoordinateSystem* cs)
 	{
-		data = data_;
-        IParameter::Commit(ts, ctx);
-		return this;
-	}
-	
-    template<typename T> 
-    ITypedParameter<T>* TypedParameter<T>::UpdateData(T* data_, long long ts, Context* ctx)
-	{
-		data = *data_;
-        IParameter::Commit(ts, ctx);
-		return this;
+        data = data_;
+        this->Commit(ts, ctx, fn, cs);
+        return true;
 	}
 	
     template<typename T> 

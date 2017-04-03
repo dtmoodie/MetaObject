@@ -29,15 +29,26 @@ namespace mo
         typedef T ValueType;
         static const ParameterTypeFlags Type = TypedParameter_e;
 
-        TypedParameter(const std::string& name = "", const T& init = T(), ParameterType type = Control_e, long long ts = -1, Context* ctx = nullptr);
+        TypedParameter(const std::string& name = "",
+                       const T& init = T(),
+                       ParameterType type = Control_e,
+                       mo::time_t ts = -1 * mo::second,
+                       Context* ctx = nullptr);
         
-		T    GetData(long long ts= -1, Context* ctx = nullptr);
-        T*   GetDataPtr(long long ts= -1, Context* ctx = nullptr);
-        bool GetData(T& value, long long ts= -1, Context* ctx = nullptr);
+        T*   GetDataPtr(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(), Context* ctx = nullptr, size_t* fn_ = nullptr);
+        T*   GetDataPtr(size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts_ = nullptr);
 
-        ITypedParameter<T>* UpdateData(T& data_,       long long ts = -1, Context* ctx = nullptr);
-        ITypedParameter<T>* UpdateData(const T& data_, long long ts = -1, Context* ctx = nullptr);
-        ITypedParameter<T>* UpdateData(T* data_,       long long ts = -1, Context* ctx = nullptr);
+        T    GetData(boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(), Context* ctx = nullptr, size_t* fn = nullptr);
+        T    GetData(size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr);
+
+        bool GetData(T& value, boost::optional<mo::time_t> ts = boost::optional<mo::time_t>(), Context* ctx = nullptr, size_t* fn = nullptr);
+        bool GetData(T& value, size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr);
+
+        virtual bool UpdateDataImpl(const T& data,
+                                               boost::optional<mo::time_t> ts = boost::optional<mo::time_t>() ,
+                                               Context* ctx = nullptr,
+                                               boost::optional<size_t> fn = boost::optional<size_t>(),
+                                               ICoordinateSystem* cs = nullptr);
 
         virtual std::shared_ptr<IParameter> DeepCopy() const;
         bool Update(IParameter* other, Context* ctx);
