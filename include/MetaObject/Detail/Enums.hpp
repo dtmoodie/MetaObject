@@ -28,7 +28,8 @@ namespace mo
         Unstamped_e = 128,
 		/* Set this flag to signify that this parameter should be the one used
 		   for synchronizing inputs. */
-		Sync_e = 256
+	Sync_e = 256,
+	RequestBuffered_e = 512
     };
     MO_EXPORTS std::string ParameteTypeToString(ParameterType type);
     MO_EXPORTS ParameterType StringToParameteType(const std::string& str);

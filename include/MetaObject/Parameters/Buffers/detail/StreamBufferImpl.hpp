@@ -149,6 +149,10 @@ namespace mo
         {
 
         }
+        template<class T> void BlockingStreamBuffer<T>::SetSize(long long size)
+        {
+            _size = size;
+        }
         
         template<class T>
         bool BlockingStreamBuffer<T>::UpdateDataImpl(const T& data_, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs)
