@@ -48,6 +48,7 @@ std::string mo::ParameterTypeFlagsToString(ParameterTypeFlags flags)
     case StreamBuffer_e: return "StreamBuffer";
     case BlockingStreamBuffer_e: return "BlockingStreamBuffer";
     case NNStreamBuffer_e: return "NNStreamBuffer";
+    case Queue_e: return "Queue";
     case ForceBufferedConnection_e: return "";
     }
     return "";

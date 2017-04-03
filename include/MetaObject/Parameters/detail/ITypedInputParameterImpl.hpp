@@ -203,7 +203,7 @@ namespace mo
 	}
 
 	template<class T>
-	size_t                      ITypedInputParameter<T>::GetInputFrameNumber()
+    size_t ITypedInputParameter<T>::GetInputFrameNumber()
 	{
 		if (input)
 			return input->GetFrameNumber();

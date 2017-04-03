@@ -122,18 +122,12 @@ namespace mo
         {
             {
                 boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-                if(fn)
-                    IParameter::_fn = *fn;
-                else
-                    ++IParameter::_fn;
                 _data_buffer[{ts,IParameter::_fn}] = data_;
                 IParameter::_modified = true;
             }
 			this->Commit(ts, ctx, fn, cs);
             return true;
         }
-
-
 
         template<class T> bool Map<T>::Update(IParameter* other, Context* ctx)
         {
@@ -223,7 +217,6 @@ namespace mo
         {
             T* data = this->input->GetDataPtr();
             if(data)
-                //ITypedParameter<T>::UpdateData(_data = *data, _timestamp = this->input->GetTimestamp(), _context = ctx);
                 UpdateDataImpl(*data, this->input->GetTimestamp(), ctx, this->input->GetFrameNumber(), this->input->GetCoordinateSystem());
         }
     }

@@ -156,7 +156,8 @@ namespace mo
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             while (this->_data_buffer.size() > _size)
             {
-                LOG(trace) << "Pushing to " << this->GetTreeName() << " waiting on read";
+                LOG(trace) << "Pushing to " << this->GetTreeName() << " waiting on read, current buffer size " << this->_data_buffer.size();
+
                 _cv.wait(lock);
             }
             if(fn)
@@ -174,36 +175,7 @@ namespace mo
         void BlockingStreamBuffer<T>::prune()
         {
             boost::unique_lock<boost::recursive_mutex> lock(IParameter::mtx());
-            if (this->_current_timestamp && this->_time_padding)
-            {
-                auto itr = this->_data_buffer.begin();
-                while (itr != this->_data_buffer.end())
-                {
-                    if (itr->first < (*(this->_current_timestamp) - *(this->_time_padding)))
-                    {
-                        itr = this->_data_buffer.erase(itr);
-                    }
-                    else
-                    {
-                        ++itr;
-                    }
-                }
-            }
-            if (this->_frame_padding && this->_current_frame_number > *(this->_frame_padding))
-            {
-                auto itr = this->_data_buffer.begin();
-                while (itr != this->_data_buffer.end())
-                {
-                    if (itr->first < (this->_current_frame_number - *(this->_frame_padding)))
-                    {
-                        itr = this->_data_buffer.erase(itr);
-                    }
-                    else
-                    {
-                        ++itr;
-                    }
-                }
-            }
+            StreamBuffer<T>::prune();
             auto itr = this->_data_buffer.begin();
             while(this->_data_buffer.size() >= _size)
             {
@@ -213,6 +185,9 @@ namespace mo
                 if(this->_current_frame_number)
                     if(itr->first.fn == this->_current_frame_number)
                         break;
+#ifdef _DEBUG
+                LOG(trace) << "Removing item at (fn/ts) " << itr->first.fn << "/" << itr->first.ts << " from " << this->GetTreeName();
+#endif
                 itr = this->_data_buffer.erase(itr);
             }
             
