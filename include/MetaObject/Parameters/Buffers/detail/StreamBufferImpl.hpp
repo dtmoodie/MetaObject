@@ -109,9 +109,14 @@ namespace mo
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             if(_current_timestamp && _time_padding)
             {
+                // Temp fix until merged with boost_timestamp, only prune _padding images behind current frame
+                auto end_itr = this->_data_buffer.find(_current_timestamp);
+                for(int i = 0; i < _padding && end_itr != this->_data_buffer.begin(); ++i)
+                    --end_itr;
                 auto itr = this->_data_buffer.begin();
                 while(itr != this->_data_buffer.end())
                 {
+<<<<<<< Temporary merge branch 1
                     if(itr->first < (*_current_timestamp - *_time_padding))
                     {
                         itr = this->_data_buffer.erase(itr);
@@ -133,6 +138,9 @@ namespace mo
                     {
                         ++itr;
                     }
+=======
+                    itr = this->_data_buffer.erase(itr);
+>>>>>>> Temporary merge branch 2
                 }
             }
         }

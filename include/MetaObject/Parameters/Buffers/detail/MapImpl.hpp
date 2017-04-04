@@ -155,13 +155,21 @@ namespace mo
         {
 
         }
+<<<<<<< Temporary merge branch 1
         template<class T> size_t Map<T>::GetSize()
+=======
+        template<class T> long long Map<T>::GetSize()
+>>>>>>> Temporary merge branch 2
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             return _data_buffer.size();
         }
+<<<<<<< Temporary merge branch 1
         template<class T>
         bool Map<T>::GetTimestampRange(mo::time_t& start, mo::time_t& end)
+=======
+        template<class T> void Map<T>::GetTimestampRange(long long& start, long long& end)
+>>>>>>> Temporary merge branch 2
         {
             if (_data_buffer.size())
             {

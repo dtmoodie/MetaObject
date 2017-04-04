@@ -6,21 +6,21 @@ namespace mo
     enum ParameterType
     {
         None_e = 0,
-        /* This flag is set if the parameter is an input parameter */
+		/* This flag is set if the parameter is an input parameter */
         Input_e = 1,
-        /* This flag is set if the parameter is an output parmaeter */
+		/* This flag is set if the parameter is an output parmaeter */
         Output_e = 2,
-        /* This flag is set if hte parameter is an indicator of the underlying state of an object
-           thus it is read only access*/
+		/* This flag is set if hte parameter is an indicator of the underlying state of an object
+		   thus it is read only access*/
         State_e = 4,
-        /* This flag is set if the parameter is a control input*/
+		/* This flag is set if the parameter is a control input*/
         Control_e = 8,
-        /* This flag is set if the parameter's underlying type is a buffer object */
+		/* This flag is set if the parameter's underlying type is a buffer object */
         Buffer_e = 16,
-        /* This flag is set if the parameter is an optional input */
+		/* This flag is set if the parameter is an optional input */
         Optional_e = 32,
-        /* Set this flag on an input parameter to allow desychronization between it and
-           other input parameters */
+		/* Set this flag on an input parameter to allow desychronization between it and
+		   other input parameters */
         Desynced_e = 64,
         /* If this flag is set, the timestamp will not be set on this parameter
          This is needed to differentiate between a parameter that has not been set
