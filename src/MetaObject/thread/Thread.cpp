@@ -97,10 +97,6 @@ Thread::~Thread()
     if(!_thread.timed_join(boost::posix_time::time_duration(0,0,10)))
     {
         LOG(warning) << this->_name << " did not join after waiting 10 seconds";
-        while(!_thread.timed_join(boost::posix_time::time_duration(0,0,10)))
-        {
-            _thread.interrupt();
-        }
     }
 }
 void Thread::HandleEvents(int ms)

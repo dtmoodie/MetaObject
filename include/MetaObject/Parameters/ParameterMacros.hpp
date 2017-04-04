@@ -45,8 +45,8 @@ APPEND_FLAGS(name, mo::Optional_e);
 #define APPEND_FLAGS(name, flags) \
 void init_parameters_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
 { \
-    name##_param.AppendFlags(flags); \
     init_parameters_(firstInit, --dummy); \
+    name##_param.AppendFlags(flags); \
 }
 
 

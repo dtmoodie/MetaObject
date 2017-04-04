@@ -11,7 +11,7 @@ namespace mo
             _frame_padding(100)
 
         {
-        
+
         }
 
         template<class T> T*   StreamBuffer<T>::GetDataPtr(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
@@ -31,7 +31,7 @@ namespace mo
                 if(fn)
                 *fn = _current_frame_number;
             }
-            
+
             return result;
         }
 
@@ -149,11 +149,7 @@ namespace mo
         {
 
         }
-        template<class T> void BlockingStreamBuffer<T>::SetSize(long long size)
-        {
-            _size = size;
-        }
-        
+
         template<class T>
         bool BlockingStreamBuffer<T>::UpdateDataImpl(const T& data_, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs)
         {
@@ -171,6 +167,7 @@ namespace mo
             Map<T>::_data_buffer[{ts,IParameter::_fn}] = data_;
             IParameter::_modified = true;
             IParameter::_ts = ts;
+            lock.unlock();
             IParameter::OnUpdate(ctx);
             return true;
         }
@@ -194,7 +191,7 @@ namespace mo
 #endif
                 itr = this->_data_buffer.erase(itr);
             }
-            
+
             lock.unlock();
             _cv.notify_all();
         }
