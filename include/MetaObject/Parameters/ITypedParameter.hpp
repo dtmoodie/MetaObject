@@ -120,7 +120,7 @@ namespace mo
     public:
         typedef std::shared_ptr<ITypedParameter<T>> Ptr;
         typedef T ValueType;
-        
+
         /*!
          * \brief ITypedParameter default constructor, passes args to IParameter
          */
@@ -193,7 +193,7 @@ namespace mo
          * \return true on success, false otherwise
          */
         virtual bool GetData(T& value, size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr) = 0;
-        
+
         /*!
          * \brief UpdateData used to update the parameter and emit update signals.
          *        Calls commit with provided values
@@ -211,8 +211,8 @@ namespace mo
             const size_t* fnptr = GetKeywordInputOptional<tag::frame_number>(args...);
             if(fnptr)
                 fn = *fnptr;
-			const mo::time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...);
-            UpdateDataImpl(data, ts ? boost::optional<mo::time_t>(*ts) : boost::optional<mo::time_t>(),
+            const mo::time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...);
+            UpdateDataImpl(data, ts ? *ts : boost::optional<mo::time_t>(),
                                  GetKeywordInputDefault<tag::context>(nullptr, args...),
                                  fn, GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...));
             return this;

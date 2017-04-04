@@ -22,13 +22,14 @@ namespace mo
 		/* Set this flag on an input parameter to allow desychronization between it and
 		   other input parameters */
         Desynced_e = 64,
-		/* If this flag is set, the timestamp will not be set on this parameter
-		 This is needed to differentiate between a parameter that has not been set
-		 yet and one that will never be set */
+        /* If this flag is set, the timestamp will not be set on this parameter
+         This is needed to differentiate between a parameter that has not been set
+         yet and one that will never be set */
         Unstamped_e = 128,
-		/* Set this flag to signify that this parameter should be the one used
-		   for synchronizing inputs. */
-		Sync_e = 256
+        /* Set this flag to signify that this parameter should be the one used
+           for synchronizing inputs. */
+    Sync_e = 256,
+    RequestBuffered_e = 512
     };
     MO_EXPORTS std::string ParameteTypeToString(ParameterType type);
     MO_EXPORTS ParameterType StringToParameteType(const std::string& str);
@@ -42,6 +43,8 @@ namespace mo
         BlockingStreamBuffer_e,
         NNStreamBuffer_e,
         Queue_e,
+        BlockingQueue_e,
+        DroppingQueue_e,
         ForceBufferedConnection_e = 1024,
         ForceDirectConnection_e = 2048
     };

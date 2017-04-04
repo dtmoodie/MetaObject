@@ -1,5 +1,5 @@
 #pragma once
-
+#include <boost/optional.hpp>
 #define MO_KEYWORD_INPUT(name, type) \
 namespace tag \
 { \
@@ -54,16 +54,27 @@ namespace mo
         {
             typedef Tag TagType;
             explicit TaggedArgument(typename Tag::StorageType val):
-                arg(val)
+                arg(&val)
             {
 
             }
+            explicit TaggedArgument(const boost::optional<typename Tag::Type>& val)
+            {
+                if(val)
+                {
+                    arg = &(*val);
+                }else
+                {
+                    arg = nullptr;
+                }
+            }
+
             typename Tag::VoidType get() const
             {
-                return &arg;
+                return arg;
             }
         protected:
-            typename Tag::StorageType arg;
+            typename Tag::VoidType arg;
         };
 
         template<class Tag>
@@ -71,6 +82,10 @@ namespace mo
         {
             static TypedKeyword instance;
             TaggedArgument<Tag> operator=(typename Tag::StorageType data)
+            {
+                return TaggedArgument<Tag>(data);
+            }
+            TaggedArgument<Tag> operator=(const boost::optional<typename Tag::Type>& data)
             {
                 return TaggedArgument<Tag>(data);
             }
@@ -96,23 +111,23 @@ namespace mo
         return 0;
     }
 
-	template<class T, class U>
+    template<class T, class U>
     constexpr int CountTypeImpl(const U& value)
-	{
-		return std::is_same<T, U>::value ? 1 : 0;
-	}
+    {
+        return std::is_same<T, U>::value ? 1 : 0;
+    }
 
-	template<class T, class U, class...Args>
+    template<class T, class U, class...Args>
     constexpr int CountTypeImpl(const U& value, const Args&... args)
-	{
+    {
         return CountTypeImpl<T, Args...>(args...) + (std::is_same<T, U>::value ? 1 : 0);
-	}
+    }
 
-	template<class T, class ...Args>
+    template<class T, class ...Args>
     constexpr int CountType(const Args&... args)
-	{
+    {
         return CountTypeImpl<T, Args...>(args...);
-	}
+    }
 
     template <size_t N, typename... Args>
     auto GetPositionalInput(Args&&... as) noexcept ->decltype(std::get<N>(std::forward_as_tuple(std::forward<Args>(as)...)))
@@ -128,6 +143,20 @@ namespace mo
                     const_cast<void*>(arg.get()) :
                     const_cast<void*>(GetKeyImpl<Tag, Args...>(args...));
     }
+    template<class Tag> typename Tag::VoidType GetPtr(const boost::optional<typename Tag::Type>& arg)
+    {
+        if(arg)
+            return arg.get_ptr();
+        return nullptr;
+    }
+    template<class Tag> typename Tag::VoidType GetPtr(const typename Tag::Type& arg)
+    {
+        return &arg;
+    }
+    template<class Tag, class T> typename Tag::VoidType GetPtr(const T& arg)
+    {
+        return nullptr;
+    }
 
     template<class Tag, class T, class... Args>
     typename std::enable_if<!std::is_base_of<kwargs::TaggedBase, T>::value, typename Tag::VoidType>::type
@@ -136,9 +165,11 @@ namespace mo
 #if !defined(_MSC_VER) && !defined(__CUDA_ARCH__) && !defined(__CUDACC__)
         static_assert(CountType<typename Tag::Type>(arg, args...) <= 1, "Cannot infer type when there are multiple variadic parameters with desired type");
 #endif
-        return std::is_same<typename Tag::Type, T>::value ? // This infers the type
-                    (typename Tag::VoidType*)&arg :
-                    const_cast<void*>(GetKeyImpl<Tag, Args...>(args...));
+
+        return std::is_same<boost::optional<typename Tag::Type>, T>::value ||
+                        std::is_same<typename Tag::Type, T>::value ? // This infers the type
+                            GetPtr<Tag>(arg) :
+                                const_cast<void*>(GetKeyImpl<Tag, Args...>(args...));
     }
 
     template<class Tag, class... Args>

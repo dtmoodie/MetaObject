@@ -11,7 +11,7 @@ namespace mo
             _frame_padding(100)
 
         {
-        
+
         }
 
         template<class T> T*   StreamBuffer<T>::GetDataPtr(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
@@ -31,7 +31,7 @@ namespace mo
                 if(fn)
                 *fn = _current_frame_number;
             }
-            
+
             return result;
         }
 
@@ -120,6 +120,21 @@ namespace mo
                         ++itr;
                     }
                 }
+                // Temp fix until merged with boost_timestamp, only prune _padding images behind current frame
+                /*auto end_itr = this->_data_buffer.find(_current_timestamp);
+                for(int i = 0; i < _padding && end_itr != this->_data_buffer.begin(); ++i)
+                    --end_itr;
+                auto itr = this->_data_buffer.begin();
+                while(itr != this->_data_buffer.end())
+                {
+                    if(itr->first < (*_current_timestamp - *_time_padding))
+                    {
+                        itr = this->_data_buffer.erase(itr);
+                    }else
+                    {
+                        ++itr;
+                    }
+                }*/
             }
             if(_frame_padding && _current_frame_number > *_frame_padding)
             {
@@ -149,7 +164,7 @@ namespace mo
         {
 
         }
-        
+
         template<class T>
         bool BlockingStreamBuffer<T>::UpdateDataImpl(const T& data_, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs)
         {
@@ -167,6 +182,7 @@ namespace mo
             Map<T>::_data_buffer[{ts,IParameter::_fn}] = data_;
             IParameter::_modified = true;
             IParameter::_ts = ts;
+            lock.unlock();
             IParameter::OnUpdate(ctx);
             return true;
         }
@@ -190,7 +206,7 @@ namespace mo
 #endif
                 itr = this->_data_buffer.erase(itr);
             }
-            
+
             lock.unlock();
             _cv.notify_all();
         }
