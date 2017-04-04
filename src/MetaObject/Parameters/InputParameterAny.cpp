@@ -37,6 +37,10 @@ IParameter* InputParameterAny::GetInputParam()
 {
     return input;
 }
+bool InputParameterAny::IsInputSet() const
+{
+    return input != nullptr;
+}
 
 bool InputParameterAny::SetInput(std::shared_ptr<mo::IParameter> param)
 {

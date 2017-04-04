@@ -50,7 +50,7 @@ class ITypedInputParameter: virtual public ITypedParameter<T>, virtual public In
 
 		boost::optional<mo::time_t> GetInputTimestamp();
 		size_t                      GetInputFrameNumber();
-
+        virtual bool IsInputSet() const;
     protected:
         bool UpdateDataImpl(const T& data, 
 			                boost::optional<mo::time_t> ts, 

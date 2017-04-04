@@ -15,6 +15,7 @@ public:
 
     // This gets a pointer to the variable that feeds into this input
     virtual IParameter* GetInputParam();
+    virtual bool IsInputSet() const;
     virtual bool SetInput(std::shared_ptr<mo::IParameter> param);
     virtual bool SetInput(mo::IParameter* param = nullptr);
 

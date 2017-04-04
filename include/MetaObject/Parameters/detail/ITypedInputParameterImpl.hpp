@@ -212,7 +212,12 @@ namespace mo
 		THROW(debug) << "Input not set for " << GetTreeName();
 		return size_t(0);
     }
-    
+
+    template<class T>
+    bool ITypedInputParameter<T>::IsInputSet() const
+    {
+        return input || shared_input;
+    }
     // ---- protected functions
     template<class T> 
     void ITypedInputParameter<T>::onInputDelete(IParameter const* param)

@@ -47,6 +47,7 @@ namespace mo
 
 		virtual boost::optional<mo::time_t> GetInputTimestamp() = 0;
 		virtual size_t GetInputFrameNumber() = 0;
+        virtual bool IsInputSet() const = 0;
         
         virtual bool AcceptsInput(std::weak_ptr<IParameter> param) const = 0;
         virtual bool AcceptsInput(IParameter* param) const = 0;
