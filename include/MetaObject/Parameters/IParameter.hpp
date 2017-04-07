@@ -49,11 +49,14 @@ namespace mo
 
     static const auto milli = boost::units::si::milli;
     static const auto nano = boost::units::si::nano;
+    static const auto micro = boost::units::si::micro;
     static const auto second = boost::units::si::second;
     static const auto millisecond = milli * second;
     static const auto nanosecond = nano * second;
+    static const auto microseconds = micro * second;
     static const auto ms = millisecond;
     static const auto ns = nanosecond;
+    static const auto us = microseconds;
     typedef boost::units::quantity<boost::units::si::time> time_t;
 
     namespace UI
