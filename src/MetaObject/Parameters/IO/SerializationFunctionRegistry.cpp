@@ -112,22 +112,26 @@ SerializationFunctionRegistry::DeSerializeText_f SerializationFunctionRegistry::
 
 void SerializationFunctionRegistry::SetBinarySerializationFunctions(const TypeInfo& type, SerializeBinary_f s, DeSerializeBinary_f l)
 {
-    _pimpl->_binary_map[type] = std::make_pair(s, l);
+    if(_pimpl->_binary_map.find(type) == _pimpl->_binary_map.end())
+        _pimpl->_binary_map[type] = std::make_pair(s, l);
 }
 
 void SerializationFunctionRegistry::SetXmlSerializationFunctions(const TypeInfo& type, SerializeXml_f s, DeSerializeXml_f l)
 {
-    _pimpl->_xml_map[type] = std::make_pair(s, l);
+    if(_pimpl->_xml_map.find(type) == _pimpl->_xml_map.end())
+        _pimpl->_xml_map[type] = std::make_pair(s, l);
 }
 
 void SerializationFunctionRegistry::SetJsonSerializationFunctions(const TypeInfo& type, SerializeJson_f serialize, DeSerializeJson_f deserialize)
 {
-    _pimpl->_json_map[type] = std::make_pair(serialize, deserialize);
+    if(_pimpl->_json_map.find(type) == _pimpl->_json_map.end())
+        _pimpl->_json_map[type] = std::make_pair(serialize, deserialize);
 }
 
 void SerializationFunctionRegistry::SetTextSerializationFunctions(const TypeInfo& type, SerializeText_f serialize, DeSerializeText_f deserialize)
 {
-    _pimpl->_text_map[type] = std::make_pair(serialize, deserialize);
+    if(_pimpl->_text_map.find(type) == _pimpl->_text_map.end())
+        _pimpl->_text_map[type] = std::make_pair(serialize, deserialize);
 }
 
 SerializationFunctionRegistry::SerializeBinary_f SerializationFunctionRegistry::GetSaveFunction(const TypeInfo& type, cereal::BinaryOutputArchive& ar)
