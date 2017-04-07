@@ -52,12 +52,17 @@ namespace mo
         Context*                              _ctx;
         ThreadPool*                           _pool;
         boost::condition_variable_any         _cv;
-        boost::recursive_mutex                _mtx;
+        boost::recursive_timed_mutex                _mtx;
+        // if _run == true, execute the main inner loop
         volatile bool                         _run;
+        // if _quit == true, cleanup and exit the thread
         volatile bool                         _quit;
+        // Set by work thread, if true then it is not executing the inner loop
+        volatile bool                         _paused;
+        // Set by the thread handle, set this flag to skip executing the event loop because inner loop needs to run again asap
+        volatile bool                         _run_inner_loop;
         std::queue<std::function<void(void)>> _work_queue;
         std::queue<std::function<void(void)>> _event_queue;
-        volatile bool                         _paused;
         std::string                           _name;
     };
 }
