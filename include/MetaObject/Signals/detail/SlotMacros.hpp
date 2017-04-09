@@ -85,6 +85,22 @@ std::vector<slot_info> list_slots_(mo::_counter_<N> dummy) \
     return slot_info; \
 }
 
+#define SLOT_TOOLTIP_(name, tooltip, N) \
+static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy) \
+{ \
+    list_slots_(info, --dummy); \
+    for(auto it : info) \
+    { \
+        if(it->name == #name) \
+        { \
+            if(it->tooltip.empty()) \
+            { \
+                it->tooltip = tooltip; \
+            } \
+        } \
+    } \
+}
+
 #ifndef __CUDACC__
   #ifdef _MSC_VER
     #define MO_SLOT(RET, ...) BOOST_PP_CAT( BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__)(RET, __COUNTER__, __VA_ARGS__), BOOST_PP_EMPTY())
@@ -97,3 +113,4 @@ std::vector<slot_info> list_slots_(mo::_counter_<N> dummy) \
   #define DESCRIBE_SLOT(NAME, DESCRIPTION)
 #endif
 #define PARAM_UPDATE_SLOT(NAME) MO_SLOT(void, on_##NAME##_modified, mo::Context*, mo::IParameter*)
+#define SLOT_TOOLTIP(name, tooltip) SLOT_TOOLTIP_(name, tooltip, __COUNTER__)
