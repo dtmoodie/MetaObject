@@ -187,7 +187,7 @@ namespace mo
 
         // Commit changes to a parameter, updates underlying meta info and emits signals accordingly
         IParameter* Commit(boost::optional<mo::time_t> ts_   = boost::optional<mo::time_t>(), // The timestamp of the new data
-                           Context*                    ctx_  = nullptr,                       // The context from which the data was updated
+                           Context*                    ctx_  = Context::GetDefaultThreadContext(),                       // The context from which the data was updated
                            boost::optional<size_t>     fn_   = boost::optional<size_t>(),     // The frame number of the update
                            ICoordinateSystem*          cs_   = nullptr);                      // The coordinate system of the update
 

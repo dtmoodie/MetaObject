@@ -213,7 +213,7 @@ namespace mo
                 fn = *fnptr;
             const mo::time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...);
             UpdateDataImpl(data, ts ? *ts : boost::optional<mo::time_t>(),
-                                 GetKeywordInputDefault<tag::context>(nullptr, args...),
+                                 GetKeywordInputDefault<tag::context>(Context::GetDefaultThreadContext(), args...),
                                  fn, GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...));
             return this;
         }
