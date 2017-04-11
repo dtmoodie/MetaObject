@@ -187,7 +187,8 @@ namespace mo
                            Context*                    ctx_  = nullptr,                       // The context from which the data was updated
                            boost::optional<size_t>     fn_   = boost::optional<size_t>(),     // The frame number of the update
                            ICoordinateSystem*          cs_   = nullptr);                      // The coordinate system of the update
-
+        // Commit a parameter's value copying metadata info from another parmaeter
+        IParameter* Commit(const IParameter& other);
         // Used for cereal serialization
         template<class Archive> void serialize(Archive& ar);
 

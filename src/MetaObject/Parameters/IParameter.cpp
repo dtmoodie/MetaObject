@@ -226,6 +226,11 @@ IParameter* IParameter::Commit(boost::optional<mo::time_t> ts_, Context* ctx_, b
     return this;
 }
 
+IParameter* IParameter::Commit(const IParameter& other)
+{
+    return Commit(other.GetTimestamp(), other.GetContext(), other.GetFrameNumber(), other.GetCoordinateSystem());
+}
+
 boost::recursive_mutex& IParameter::mtx()
 {
     if(_mtx == nullptr)

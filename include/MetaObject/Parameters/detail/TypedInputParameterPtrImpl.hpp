@@ -62,7 +62,7 @@ namespace mo
     {
         if(this->input)
         {
-            this->Commit(this->input->GetTimestamp(), ctx);
+            this->Commit(this->input->GetTimestamp(), ctx, this->shared_input->GetFrameNumber(), this->shared_input->GetCoordinateSystem());
             if((ctx && this->_ctx && ctx->thread_id == this->_ctx->thread_id) || (ctx == nullptr &&  this->_ctx == nullptr))
             {
                 if(userVar)
@@ -70,7 +70,7 @@ namespace mo
             }
         }else if(this->shared_input)
         {
-            this->Commit(this->shared_input->GetTimestamp(), ctx);
+            this->Commit(this->shared_input->GetTimestamp(), ctx, this->shared_input->GetFrameNumber(), this->shared_input->GetCoordinateSystem());
             if((ctx && this->_ctx && ctx->thread_id == this->_ctx->thread_id) || ((ctx == nullptr) &&  (this->_ctx == nullptr)))
             {
                 if(userVar)

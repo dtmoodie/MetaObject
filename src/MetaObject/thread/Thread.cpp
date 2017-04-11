@@ -33,7 +33,7 @@ void Thread::Stop()
     _run = false;
     _thread.interrupt();
     int wait_count = 0;
-    while(!_paused)
+    while(!_paused && _thread.joinable())
     {
         boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
         ++wait_count;
