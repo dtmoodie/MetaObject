@@ -49,11 +49,14 @@ namespace mo
 
     static const auto milli = boost::units::si::milli;
     static const auto nano = boost::units::si::nano;
+    static const auto micro = boost::units::si::micro;
     static const auto second = boost::units::si::second;
     static const auto millisecond = milli * second;
     static const auto nanosecond = nano * second;
+    static const auto microseconds = micro * second;
     static const auto ms = millisecond;
     static const auto ns = nanosecond;
+    static const auto us = microseconds;
     typedef boost::units::quantity<boost::units::si::time> time_t;
 
     namespace UI
@@ -184,7 +187,7 @@ namespace mo
 
         // Commit changes to a parameter, updates underlying meta info and emits signals accordingly
         IParameter* Commit(boost::optional<mo::time_t> ts_   = boost::optional<mo::time_t>(), // The timestamp of the new data
-                           Context*                    ctx_  = nullptr,                       // The context from which the data was updated
+                           Context*                    ctx_  = Context::GetDefaultThreadContext(),                       // The context from which the data was updated
                            boost::optional<size_t>     fn_   = boost::optional<size_t>(),     // The frame number of the update
                            ICoordinateSystem*          cs_   = nullptr);                      // The coordinate system of the update
         // Commit a parameter's value copying metadata info from another parmaeter

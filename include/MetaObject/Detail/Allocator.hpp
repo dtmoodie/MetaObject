@@ -606,7 +606,7 @@ public:
     pointer allocate(size_type n)
     {
         pointer ptr = nullptr;
-        CpuMemoryPool::GlobalInstance()->allocate(&ptr, n*sizeof(T), sizeof(T));
+        CpuMemoryPool::GlobalInstance()->allocate((void**)&ptr, n*sizeof(T), sizeof(T));
         return ptr;
     }
 
@@ -616,4 +616,39 @@ public:
     }
 };
 
+template<> class PinnedStlAllocatorPoolGlobal<void>
+{
+public:
+    typedef void value_type;
+    typedef void* pointer;
+    typedef const void* const_pointer;
+    typedef std::size_t size_type;
+    typedef std::ptrdiff_t difference_type;
+    template< class U > struct rebind { typedef PinnedStlAllocatorPoolGlobal<U> other; };
+
+    pointer allocate(size_type n, std::allocator<void>::const_pointer hint)
+    {
+        return allocate(n);
+    }
+
+    pointer allocate(size_type n)
+    {
+        pointer ptr = nullptr;
+        CpuMemoryPool::GlobalInstance()->allocate(&ptr, n, 1);
+        return ptr;
+    }
+
+    void deallocate(pointer ptr, size_type n)
+    {
+        CpuMemoryPool::GlobalInstance()->deallocate(ptr, n);
+    }
+};
+template<class T, class U> bool operator==(const PinnedStlAllocatorPoolGlobal<T>& lhs, const PinnedStlAllocatorPoolGlobal<U>& rhs)
+{
+    return &lhs == &rhs;
+}
+template<class T, class U> bool operator!=(const PinnedStlAllocatorPoolGlobal<T>& lhs, const PinnedStlAllocatorPoolGlobal<U>& rhs)
+{
+    return &lhs != &rhs;
+}
 } // namespace mo

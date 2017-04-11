@@ -21,6 +21,8 @@ Context::Context(const std::string& name)
     CpuThreadAllocatorSetter<cv::Mat>::Set(allocator);
     if(name.size())
         SetName(name);
+    if(!thread_set_context)
+        thread_set_context = this;
 }
 
 Context* Context::GetDefaultThreadContext()
