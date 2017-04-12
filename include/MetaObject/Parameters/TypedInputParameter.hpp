@@ -30,7 +30,7 @@ namespace mo
         {
             this->input = nullptr;
         }
-        
+
         T* GetDataPtr(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr)
         {
             return userVar;
@@ -42,7 +42,7 @@ namespace mo
                 value = *userVar;
                 return true;
             }
-            return false;                
+            return false;
         }
         T GetData(mo::time_t ts = -1 * mo::second, Context* ctx = nullptr)
         {
@@ -50,7 +50,7 @@ namespace mo
                 return this->input->GetData(ts, ctx);
             if(this->shared_input)
                 return this->shared_input->GetData(ts, ctx);
-            return false;                
+            return false;
         }
         void UpdateData(T& data_, mo::time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
         {
@@ -83,8 +83,8 @@ namespace mo
         }
     };
 
-    // Meant to reference a pointer variable in user space, and to update that variable whenever 
-    // IE int* myVar; 
+    // Meant to reference a pointer variable in user space, and to update that variable whenever
+    // IE int* myVar;
     // auto typedParam = TypedInputParameterPtr(&myVar); // TypedInputParameter now updates myvar to point to whatever the
     // input variable is for typedParam.
     template<typename T> class TypedInputParameterPtr : virtual public ITypedInputParameter<T>
@@ -106,4 +106,4 @@ namespace mo
     };
 }
 #include "MetaObject/Parameters/detail/TypedInputParameterImpl.hpp"
-#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"
+//#include "MetaObject/Parameters/detail/TypedInputParameterPtrImpl.hpp"

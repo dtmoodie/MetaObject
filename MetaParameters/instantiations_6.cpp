@@ -8,6 +8,7 @@
 #include "MetaObject/Parameters/IO/CerealPolicy.hpp"
 #include "MetaObject/Parameters/IO/TextPolicy.hpp"
 #include "MetaObject/Parameters/Types.hpp"
+#include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
 #include <cereal/types/vector.hpp>
 #include <cereal/types/string.hpp>
 
@@ -20,7 +21,7 @@ namespace mo
         {
             namespace imp
             {
-            
+
             template<> bool DeSerialize<EnumParameter>(ITypedParameter<EnumParameter>* param, std::stringstream& ss)
             {
                 EnumParameter* ptr = param->GetDataPtr();

@@ -206,24 +206,35 @@ bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
     size_t sizeNeeded, stride;
 
     PaddingPolicy::SizeNeeded(rows, cols, elemSize, sizeNeeded, stride);
+    typedef typename std::list<typename StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::FreeMemory>::iterator Itr;
+    std::vector<std::pair<clock_t, Itr>> candidates;
+    clock_t time = clock();
     for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr)
     {
         if(itr->size == sizeNeeded)
         {
-            mat->data = itr->ptr;
-            mat->step = stride;
-            mat->refcount = (int*)cv::fastMalloc(sizeof(int));
-            clock_t time = clock();
-            LOG(trace) << "[GPU] Reusing block of size (" << rows << "," << cols << ") "
-                       << mat->step * rows / (1024 * 1024) << " MB at " << (void*)itr->ptr
-                       << " which was stale for "
-                       << (time - itr->free_time) * 1000 / CLOCKS_PER_SEC
-                       << " ms. total usage: "
-                       << memoryUsage / (1024 * 1024) << " MB";
-            this->memoryUsage += sizeNeeded;
-            deallocateList.erase(itr);
-            return true;
+            candidates.emplace_back((time - itr->free_time), itr);
         }
+    }
+    if(candidates.size())
+    {
+        auto best_candidate = std::max_element(candidates.begin(), candidates.end(), [](const std::pair<clock_t, Itr>& i1, const std::pair<clock_t, Itr>& i2)
+        {
+            return i1.first < i2.first;
+        });
+        mat->data = best_candidate->second->ptr;
+        mat->step = stride;
+        mat->refcount = (int*)cv::fastMalloc(sizeof(int));
+
+        LOG(trace) << "[GPU] Reusing block of size (" << rows << "," << cols << ") "
+                   << mat->step * rows / (1024 * 1024) << " MB at " << (void*)best_candidate->second->ptr
+                   << " which was stale for "
+                   << best_candidate->first * 1000 / CLOCKS_PER_SEC
+                   << " ms. total usage: "
+                   << memoryUsage / (1024 * 1024) << " MB";
+        this->memoryUsage += sizeNeeded;
+        deallocateList.erase(best_candidate->second);
+        return true;
     }
     if (rows > 1 && cols > 1)
     {

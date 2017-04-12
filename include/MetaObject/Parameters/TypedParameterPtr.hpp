@@ -16,8 +16,8 @@ namespace mo
      */
     template<typename T>
     class TypedParameterPtr: virtual public ITypedParameter< T >
-	{
-	public:
+    {
+    public:
         /*!
          * \brief TypedParameterPtr default constructor
          * \param name of the parameter
@@ -45,14 +45,14 @@ namespace mo
                                                size_t fn = std::numeric_limits<size_t>::max(),
                                                ICoordinateSystem* cs = nullptr);*/
 
-		virtual bool Update(IParameter* other);
-		virtual std::shared_ptr<IParameter> DeepCopy() const;
+        virtual bool Update(IParameter* other);
+        virtual std::shared_ptr<IParameter> DeepCopy() const;
         ITypedParameter<T>* UpdatePtr(T* ptr, bool ownsData_ = false);
-	protected:
+    protected:
         virtual bool UpdateDataImpl(const T& data, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs);
-		T* ptr;
-		bool ownsData;
+        T* ptr;
+        bool ownsData;
         static MetaParameter<T, 100> _meta_parameter;
-	};
+    };
 }
-#include "detail/TypedParameterPtrImpl.hpp"
+//#include "detail/TypedParameterPtrImpl.hpp"

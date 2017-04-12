@@ -7,7 +7,7 @@
 #include "MetaObject/Parameters/Buffers/Map.hpp"
 #include "MetaObject/Parameters/IO/CerealPolicy.hpp"
 #include "MetaObject/Parameters/IO/TextPolicy.hpp"
-
+#include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
 #ifdef emit
 #undef emit
 #endif
@@ -37,5 +37,5 @@ INSTANTIATE_META_PARAMETER(StringMap);
 
 void mo::MetaParameters::initialize()
 {
-    
+
 }

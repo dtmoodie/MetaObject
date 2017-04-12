@@ -9,7 +9,7 @@
 #include <cereal/types/string.hpp>
 #include <cereal/types/vector.hpp>
 #include "MetaObject/Parameters/IO/CerealPolicy.hpp"
-
+#include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
 INSTANTIATE_META_PARAMETER(std::vector<int>);
 INSTANTIATE_META_PARAMETER(std::vector<unsigned short>);
 INSTANTIATE_META_PARAMETER(std::vector<unsigned int>);

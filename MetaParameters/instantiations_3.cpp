@@ -11,7 +11,7 @@
 #include <boost/lexical_cast.hpp>
 #include "MetaObject/Parameters/IO/cvSpecializations.hpp"
 #include "cereal/types/vector.hpp"
-
+#include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
 INSTANTIATE_META_PARAMETER(cv::Point2f);
 INSTANTIATE_META_PARAMETER(cv::Point2d);
 INSTANTIATE_META_PARAMETER(cv::Point3d);

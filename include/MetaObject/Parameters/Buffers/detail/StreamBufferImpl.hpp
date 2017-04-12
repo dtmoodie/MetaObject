@@ -171,9 +171,8 @@ namespace mo
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             while (this->_data_buffer.size() > _size)
             {
-                LOG(trace) << "Pushing to " << this->GetTreeName() << " waiting on read, current buffer size " << this->_data_buffer.size();
-
-                _cv.wait(lock);
+                LOG_EVERY_N(debug, 100) << "Pushing to " << this->GetTreeName() << " waiting on read, current buffer size " << this->_data_buffer.size();
+                _cv.wait_for(lock, boost::chrono::milliseconds(2));
             }
             if(fn)
                 IParameter::_fn = *fn;

@@ -6,29 +6,31 @@ using namespace mo;
 
 ISlot::~ISlot()
 {
-	ThreadSpecificQueue::RemoveFromQueue(this);
-	if (_parent)
-	{
-		ThreadSpecificQueue::RemoveFromQueue(_parent);
-	}
+    ThreadSpecificQueue::RemoveFromQueue(this);
+    if (_parent)
+    {
+        ThreadSpecificQueue::RemoveFromQueue(_parent);
+    }
 }
 
 void ISlot::SetParent(IMetaObject* parent)
 {
-	_parent = parent;
+    _parent = parent;
 }
 
 IMetaObject* ISlot::GetParent() const
 {
-	return _parent;
+    return _parent;
 }
 const Context* ISlot::GetContext() const
 {
+    if(_ctx)
+        return _ctx;
     if(_parent)
     {
         return _parent->GetContext();
     }
-    return _ctx;
+    return nullptr;
 }
 void ISlot::SetContext(Context* ctx)
 {

@@ -58,7 +58,7 @@ void Context::SetName(const std::string& name)
 
 Context::~Context()
 {
-    stream.waitForCompletion();
+    //stream.waitForCompletion();
 }
 
 cv::cuda::Stream &Context::GetStream()

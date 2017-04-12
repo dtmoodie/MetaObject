@@ -6,20 +6,18 @@
 
 namespace mo
 {
-    template<class T> 
+    template<class T>
     class ITypedInputParameter;
 
-    template<class T> 
+    template<class T>
     ITypedInputParameter<T>::ITypedInputParameter(const std::string& name, Context* ctx):
-            ITypedParameter<T>(name, Input_e, {}, ctx),
-            input(nullptr),
-            IParameter(name, Input_e)
+            input(nullptr)
     {
-		update_slot = std::bind(&ITypedInputParameter<T>::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2);
-		delete_slot = std::bind(&ITypedInputParameter<T>::onInputDelete, this, std::placeholders::_1);
+        update_slot = std::bind(&ITypedInputParameter<T>::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2);
+        delete_slot = std::bind(&ITypedInputParameter<T>::onInputDelete, this, std::placeholders::_1);
     }
-    
-    template<class T> 
+
+    template<class T>
     ITypedInputParameter<T>::~ITypedInputParameter()
     {
         if(input)
@@ -27,8 +25,8 @@ namespace mo
         if(shared_input)
             shared_input->Unsubscribe();
     }
-    
-    template<class T> 
+
+    template<class T>
     bool ITypedInputParameter<T>::SetInput(std::shared_ptr<IParameter> param)
     {
         boost::recursive_mutex::scoped_lock lock(this->mtx());
@@ -57,7 +55,7 @@ namespace mo
             //UpdateData(*casted_param->GetDataPtr(), ts, casted_param->GetContext());
             shared_input = casted_param;
             casted_param->RegisterUpdateNotifier(&update_slot);
-			casted_param->RegisterDeleteNotifier(&delete_slot);
+            casted_param->RegisterDeleteNotifier(&delete_slot);
 
             this->OnUpdate(casted_param->GetContext());
             return true;
@@ -65,7 +63,7 @@ namespace mo
         return false;
     }
 
-    template<class T> 
+    template<class T>
     bool ITypedInputParameter<T>::SetInput(IParameter* param)
     {
         boost::recursive_mutex::scoped_lock lock(this->mtx());
@@ -94,15 +92,15 @@ namespace mo
 
             input = casted_param;
             input->Subscribe();
-			casted_param->RegisterUpdateNotifier(&update_slot);
-			casted_param->RegisterDeleteNotifier(&delete_slot);
+            casted_param->RegisterUpdateNotifier(&update_slot);
+            casted_param->RegisterDeleteNotifier(&delete_slot);
             this->OnUpdate(casted_param->GetContext());
             return true;
         }
         return false;
     }
 
-    template<class T> 
+    template<class T>
     bool ITypedInputParameter<T>::AcceptsInput(std::weak_ptr<IParameter> param) const
     {
         if(auto ptr = param.lock())
@@ -110,27 +108,27 @@ namespace mo
         return false;
     }
 
-    template<class T> 
+    template<class T>
     bool ITypedInputParameter<T>::AcceptsInput(IParameter* param) const
     {
         return param->GetTypeInfo() == GetTypeInfo();
     }
 
-    template<class T> 
+    template<class T>
     bool ITypedInputParameter<T>::AcceptsType(TypeInfo type) const
     {
         return type == GetTypeInfo();
     }
 
-    template<class T> 
+    template<class T>
     IParameter* ITypedInputParameter<T>::GetInputParam()
     {
         if(shared_input)
             return shared_input.get();
         return input;
     }
-    
-    template<class T> 
+
+    template<class T>
     T* ITypedInputParameter<T>::GetDataPtr(boost::optional<mo::time_t> ts,Context* ctx, size_t* fn)
     {
         if(input)
@@ -150,7 +148,7 @@ namespace mo
         return nullptr;
     }
 
-    template<class T> 
+    template<class T>
     bool ITypedInputParameter<T>::GetData(T& value, boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
     {
         if(input)
@@ -169,8 +167,8 @@ namespace mo
             return shared_input->GetData(value, fn, ctx, ts);
         return false;
     }
-    
-    template<class T> 
+
+    template<class T>
     T ITypedInputParameter<T>::GetData(boost::optional<mo::time_t> ts, Context* ctx, size_t* fn)
     {
         if(input)
@@ -191,26 +189,26 @@ namespace mo
         THROW(debug) << "Input not set for " << GetTreeName();
         return T();
     }
-	template<class T>
-	boost::optional<mo::time_t> ITypedInputParameter<T>::GetInputTimestamp()
-	{
-		if (input)
-			return input->GetTimestamp();
-		if (shared_input)
-			return shared_input->GetTimestamp();
-		THROW(debug) << "Input not set for " << GetTreeName();
-		return boost::optional<mo::time_t>();
-	}
+    template<class T>
+    boost::optional<mo::time_t> ITypedInputParameter<T>::GetInputTimestamp()
+    {
+        if (input)
+            return input->GetTimestamp();
+        if (shared_input)
+            return shared_input->GetTimestamp();
+        THROW(debug) << "Input not set for " << GetTreeName();
+        return boost::optional<mo::time_t>();
+    }
 
-	template<class T>
+    template<class T>
     size_t ITypedInputParameter<T>::GetInputFrameNumber()
-	{
-		if (input)
-			return input->GetFrameNumber();
-		if (shared_input)
-			return shared_input->GetFrameNumber();
-		THROW(debug) << "Input not set for " << GetTreeName();
-		return size_t(0);
+    {
+        if (input)
+            return input->GetFrameNumber();
+        if (shared_input)
+            return shared_input->GetFrameNumber();
+        THROW(debug) << "Input not set for " << GetTreeName();
+        return size_t(0);
     }
 
     template<class T>
@@ -219,7 +217,7 @@ namespace mo
         return input || shared_input;
     }
     // ---- protected functions
-    template<class T> 
+    template<class T>
     void ITypedInputParameter<T>::onInputDelete(IParameter const* param)
     {
         boost::recursive_mutex::scoped_lock lock(this->mtx());
@@ -227,9 +225,9 @@ namespace mo
         this->input = nullptr;
         this->OnUpdate(GetContext());
     }
-    
-    
-    template<class T> 
+
+
+    template<class T>
     void ITypedInputParameter<T>::onInputUpdate(Context* ctx, IParameter* param)
     {
         this->OnUpdate(ctx);

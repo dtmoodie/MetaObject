@@ -40,6 +40,7 @@ struct impl
         }
         void remove(void* obj)
         {
+            (void)obj;
             /*for (auto itr = queue.begin(); itr != queue.end(); )
             {
                 if(itr->obj == obj)
@@ -59,7 +60,7 @@ struct impl
         }
 
     private:
-        friend class QueueRegistery;
+        friend struct QueueRegistery;
         moodycamel::ConcurrentQueue<Event> queue;
         std::function<void(void)> callback;
         std::mutex mtx;
@@ -117,8 +118,10 @@ struct impl
 
     static impl* inst()
     {
-        static impl g_inst;
-        return &g_inst;        
+        static impl* g_inst = nullptr;
+        if(g_inst == nullptr)
+            g_inst = new impl();
+        return g_inst;
     }
     void register_notifier(const std::function<void(void)>& f, size_t id)
     {
@@ -216,12 +219,12 @@ struct impl
             }
         }*/
     }
-	size_t size(size_t id)
-	{
+    size_t size(size_t id)
+    {
         return QueueRegistery::Instance().GetQueue(id)->size();
         //std::lock_guard<std::mutex> lock(mtx);
         //return std::get<0>(thread_queues[id]).size();
-	}
+    }
     void Cleanup()
     {
         QueueRegistery::Instance().Clear();
@@ -229,7 +232,7 @@ struct impl
 };
 void ThreadSpecificQueue::Push(const std::function<void(void)>& f, size_t id, void* obj)
 {
-    
+
 #ifdef _DEBUG
     if(impl::inst()->_deleted_objects.find(obj) != impl::inst()->_deleted_objects.end())
     {
@@ -260,7 +263,7 @@ void ThreadSpecificQueue::RemoveFromQueue(void* obj)
 }
 size_t ThreadSpecificQueue::Size(size_t id)
 {
-	return impl::inst()->size(id);
+    return impl::inst()->size(id);
 }
 void ThreadSpecificQueue::Cleanup()
 {

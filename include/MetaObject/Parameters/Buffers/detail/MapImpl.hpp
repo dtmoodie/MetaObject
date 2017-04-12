@@ -5,8 +5,7 @@ namespace mo
     namespace Buffer
     {
         template<class T> Map<T>::Map(const std::string& name) :
-            ITypedInputParameter<T>(name),
-            ITypedParameter<T>(name, mo::Buffer_e)
+            ITypedInputParameter<T>(name)
         {
             this->SetFlags(Buffer_e);
         }
@@ -18,8 +17,6 @@ namespace mo
             auto itr = Search(ts);
             if (itr != _data_buffer.end())
             {
-                IParameter::_ts = itr->first.ts;
-                IParameter::_fn = itr->first.fn;
                 if (fn)
                     *fn = itr->first.fn;
                 return &(itr->second);
@@ -34,8 +31,6 @@ namespace mo
             auto itr = Search(fn);
             if (itr != _data_buffer.end())
             {
-                IParameter::_ts = itr->first.ts;
-                IParameter::_fn = itr->first.fn;
                 if (ts)
                     *ts = this->_ts;
                 return &(itr->second);
@@ -50,8 +45,6 @@ namespace mo
             auto itr = Search(ts);
             if (itr != _data_buffer.end())
             {
-                IParameter::_ts = itr->first.ts;
-                IParameter::_fn = itr->first.fn;
                 if (fn)
                     *fn = this->_fn;
                 value = (itr->second);
@@ -67,8 +60,6 @@ namespace mo
             auto itr = Search(fn);
             if (itr != _data_buffer.end())
             {
-                IParameter::_ts = itr->first.ts;
-                IParameter::_fn = itr->first.fn;
                 if (ts)
                     *ts = this->_ts;
                 value = (itr->second);
@@ -84,8 +75,6 @@ namespace mo
             auto itr = Search(ts);
             if (itr != _data_buffer.end())
             {
-                IParameter::_ts = itr->first.ts;
-                IParameter::_fn = itr->first.fn;
                 if (fn)
                     *fn = this->_fn;
                 return itr->second;
@@ -104,8 +93,6 @@ namespace mo
             auto itr = Search(fn);
             if (itr != _data_buffer.end())
             {
-                IParameter::_ts = itr->first.ts;
-                IParameter::_fn = itr->first.fn;
                 if (ts)
                     *ts = this->_ts;
                 return itr->second;
@@ -118,13 +105,14 @@ namespace mo
         }
 
         template<class T>
-        bool Map<T>::UpdateDataImpl(const T& data_, boost::optional<mo::time_t> ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs)
+        bool Map<T>::UpdateDataImpl(const T& data_, boost::optional<mo::time_t> ts,
+                                    Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs)
         {
-            {
-                boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-                _data_buffer[{ts,*fn}] = data_;
-                IParameter::_modified = true;
-            }
+
+            boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
+            _data_buffer[{ts,*fn}] = data_;
+            IParameter::_modified = true;
+            lock.unlock();
             this->Commit(ts, ctx, fn, cs);
             return true;
         }
@@ -217,9 +205,16 @@ namespace mo
         }
         template<class T> void Map<T>::onInputUpdate(Context* ctx, IParameter* param)
         {
+            boost::recursive_mutex::scoped_lock lock(this->input->mtx());
             T* data = this->input->GetDataPtr();
             if(data)
-                UpdateDataImpl(*data, this->input->GetTimestamp(), ctx, this->input->GetFrameNumber(), this->input->GetCoordinateSystem());
+            {
+                auto ts = this->input->GetTimestamp();
+                auto fn = this->input->GetFrameNumber();
+                auto cs = this->input->GetCoordinateSystem();
+                lock.unlock();
+                UpdateDataImpl(*data, ts, ctx, fn, cs);
+            }
         }
     }
 }
