@@ -28,7 +28,7 @@ template<int N> static void list_signal_info_(std::vector<mo::SignalInfo*>& info
 } \
 static void list_signal_info_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N_> dummy) \
 { \
-} 
+}
 
 #define SIGNAL_INFO_END(N) \
 static void GetSignalInfoStatic(std::vector<mo::SignalInfo*> & info) \
@@ -65,7 +65,7 @@ int init_signals_(bool firstInit, mo::_counter_<N_> dummy) \
 virtual int InitSignals(bool firstInit) \
 { \
     int count = _init_parent_signals(firstInit); \
-	return init_signals_(firstInit, mo::_counter_<N_-1>()) + count; \
+    return init_signals_(firstInit, mo::_counter_<N_-1>()) + count; \
 }
 
 // ---------------- SLOT INFO ------------
@@ -107,7 +107,7 @@ template<int N> static void list_parameter_info_(std::vector<mo::ParameterInfo*>
 } \
 static void list_parameter_info_(std::vector<mo::ParameterInfo*>& info, mo::_counter_<N_> dummy) \
 { \
-} 
+}
 
 
 #define PARAMETER_INFO_END(N) \
@@ -137,6 +137,7 @@ template<int N> void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
 } \
 void init_parameters_(bool firstInit, mo::_counter_<N_> dummy) \
 { \
+    (void)dummy; \
 } \
 template<int N> void _serialize_parameters(ISimpleSerializer* pSerializer, mo::_counter_<N> dummy) \
 { \
@@ -144,6 +145,8 @@ template<int N> void _serialize_parameters(ISimpleSerializer* pSerializer, mo::_
 } \
 void _serialize_parameters(ISimpleSerializer* pSerializer, mo::_counter_<N_> dummy) \
 { \
+    (void)dummy; \
+    (void)pSerializer; \
 } \
 template<class T, int N> void _load_parameters(T& ar, mo::_counter_<N> dummy) \
 { \
@@ -155,9 +158,13 @@ template<class T, int N> void _save_parameters(T& ar, mo::_counter_<N> dummy) co
 } \
 template<class T> void _load_parameters(T& ar, mo::_counter_<N_> dummy) \
 { \
+    (void)dummy; \
+    (void)ar; \
 } \
 template<class T> void _save_parameters(T& ar, mo::_counter_<N_> dummy) const \
 { \
+    (void)dummy; \
+    (void)ar; \
 }
 
 #define PARAMETER_END(N_) \
@@ -191,6 +198,8 @@ template<int N> void bind_slots_(bool firstInit, mo::_counter_<N> dummy) \
 } \
 void bind_slots_(bool firstInit, mo::_counter_<N_> dummy)  \
 {  \
+    (void)dummy; \
+    (void)firstInit; \
 }
 
 #define SLOT_END(N_) \
@@ -200,7 +209,7 @@ void BindSlots(bool firstInit) \
     bind_slots_(firstInit, mo::_counter_<N_-1>()); \
 }
 
-#define _HANDLE_PARENT_1(PARENT1) \
+#define HANDLE_PARENT_1(PARENT1) \
 void _init_parent_params(bool firstInit) \
 { \
     PARENT1::InitParameters(firstInit); \
@@ -239,7 +248,7 @@ int _init_parent_signals(bool firstInit) \
 }
 
 
-#define _HANDLE_PARENT_2(PARENT1, PARENT2) \
+#define HANDLE_PARENT_2(PARENT1, PARENT2) \
 void _init_parent_params(bool firstInit) \
 { \
     PARENT1::InitParameters(firstInit); \
@@ -287,13 +296,13 @@ int _init_parent_signals(bool firstInit) \
 
 
 #ifdef _MSC_VER
-#define _HANDLE_PARENT(...)  BOOST_PP_CAT(BOOST_PP_OVERLOAD(_HANDLE_PARENT_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY())
+#define HANDLE_PARENT(...)  BOOST_PP_CAT(BOOST_PP_OVERLOAD(_HANDLE_PARENT_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY())
 #else
-#define _HANDLE_PARENT(...)  BOOST_PP_OVERLOAD(_HANDLE_PARENT_, __VA_ARGS__)(__VA_ARGS__)
+#define HANDLE_PARENT(...)  BOOST_PP_OVERLOAD(HANDLE_PARENT_, __VA_ARGS__)(__VA_ARGS__)
 #endif
 
 
-#define _HANDLE_NO_PARENT \
+#define HANDLE_NO_PARENT \
 void _init_parent_params(bool firstInit){ } \
 void _serialize_parent_params(ISimpleSerializer* pSerializer) { } \
 template<class T> void _load_parent(T& ar) { } \
@@ -307,7 +316,7 @@ int _init_parent_signals(bool firstInit) {     return 0; }
 
 #define MO_BEGIN_1(CLASS_NAME, N_) \
 typedef CLASS_NAME THIS_CLASS;      \
-_HANDLE_NO_PARENT; \
+HANDLE_NO_PARENT; \
 SIGNAL_INFO_START(N_) \
 SIGNALS_START(N_) \
 SLOT_INFO_START(N_) \
@@ -318,7 +327,7 @@ static rcc::shared_ptr<CLASS_NAME> Create();
 
 #define MO_DERIVE_(N_, CLASS_NAME, ...) \
 typedef CLASS_NAME THIS_CLASS; \
-_HANDLE_PARENT(__VA_ARGS__); \
+HANDLE_PARENT(__VA_ARGS__); \
 SIGNAL_INFO_START(N_) \
 SIGNALS_START(N_) \
 SLOT_INFO_START(N_) \
@@ -337,7 +346,7 @@ PARAMETER_END(N)
 
 #define MO_ABSTRACT_(N_, CLASS_NAME, ...) \
 typedef CLASS_NAME THIS_CLASS; \
-_HANDLE_PARENT(__VA_ARGS__); \
+HANDLE_PARENT(__VA_ARGS__); \
 SIGNAL_INFO_START(N_) \
 SIGNALS_START(N_) \
 SLOT_INFO_START(N_) \
