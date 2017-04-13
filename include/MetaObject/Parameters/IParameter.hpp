@@ -58,6 +58,16 @@ namespace mo
     static const auto ns = nanosecond;
     static const auto us = microseconds;
     typedef boost::units::quantity<boost::units::si::time> time_t;
+    template<class AR> void load(AR& ar, mo::time_t& t)
+    {
+        double value;
+        ar(value);
+        t.from_value(value);
+    }
+    template<class AR> void save(AR& ar, const mo::time_t& t)
+    {
+        ar(t.value());
+    }
 
     namespace UI
     {

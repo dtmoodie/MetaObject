@@ -162,8 +162,8 @@ namespace mo
     typename std::enable_if<!std::is_base_of<kwargs::TaggedBase, T>::value, typename Tag::VoidType>::type
     GetKeyImpl(const T& arg, const Args&... args)
     {
-#if !defined(_MSC_VER) && !defined(__CUDA_ARCH__) && !defined(__CUDACC__)
-        static_assert(CountType<typename Tag::Type>(arg, args...) <= 1, "Cannot infer type when there are multiple variadic parameters with desired type");
+#ifdef __GNUC__
+        //static_assert(CountType<typename Tag::Type>(arg, args...) <= 1, "Cannot infer type when there are multiple variadic parameters with desired type");
 #endif
 
         return std::is_same<boost::optional<typename Tag::Type>, T>::value ||

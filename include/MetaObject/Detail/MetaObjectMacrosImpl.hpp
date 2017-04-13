@@ -137,6 +137,7 @@ template<int N> void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
 } \
 void init_parameters_(bool firstInit, mo::_counter_<N_> dummy) \
 { \
+    (void)firstInit; \
     (void)dummy; \
 } \
 template<int N> void _serialize_parameters(ISimpleSerializer* pSerializer, mo::_counter_<N> dummy) \
