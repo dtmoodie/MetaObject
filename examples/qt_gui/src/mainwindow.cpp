@@ -3,6 +3,8 @@
 #include "MetaObject/Parameters/UI/WidgetFactory.hpp"
 #include "MetaObject/Parameters/UI/Qt/IParameterProxy.hpp"
 #include "MetaObject/Parameters/UI/Qt/TParameterProxy.hpp"
+#include "MetaObject/Parameters/TypedParameterPtr.hpp"
+#include "MetaObject/Parameters/detail/TypedParameterPtrImpl.hpp"
 
 // The following lines are commented out to demonstrate user interface instantiation in a different translation unit
 // Since the instantiation library is included, instantiations of several types are registered with the full user

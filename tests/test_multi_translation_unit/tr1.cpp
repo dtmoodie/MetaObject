@@ -5,5 +5,6 @@
 #include "MetaObject/Parameters/Buffers/CircularBuffer.hpp"
 #include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
 #include "MetaObject/Parameters/Buffers/Map.hpp"
+#include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
 
-INSTANTIATE_META_PARAMETER(std::vector<std::string>);
+INSTANTIATE_META_PARAMETER(std::vector<std::string>)

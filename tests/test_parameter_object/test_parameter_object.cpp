@@ -15,7 +15,7 @@
 #include "MetaObject/Logging/CompileLogger.hpp"
 #include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
 #include "MetaObject/Detail/Allocator.hpp"
-
+#include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
 

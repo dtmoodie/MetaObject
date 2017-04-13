@@ -17,6 +17,7 @@
 #include "MetaObject/Parameters/IO/TextPolicy.hpp"
 #include "MetaObject/IO/Policy.hpp"
 #include "MetaObject/IO/memory.hpp"
+#include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
 #include "shared_ptr.hpp"
 #include "RuntimeObjectSystem.h"
 #include "shared_ptr.hpp"
