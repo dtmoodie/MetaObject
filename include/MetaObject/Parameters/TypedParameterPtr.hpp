@@ -15,7 +15,7 @@ namespace mo
      *  which is wrapped for reflection purposes by 'user_param'
      */
     template<typename T>
-    class TypedParameterPtr: virtual public ITypedParameter< T >
+    class MO_EXPORTS TypedParameterPtr: virtual public ITypedParameter< T >
     {
     public:
         /*!

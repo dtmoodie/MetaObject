@@ -8,7 +8,18 @@
 #include "MetaObject/Parameters/IO/CerealPolicy.hpp"
 #include "MetaObject/Parameters/IO/TextPolicy.hpp"
 #include "MetaObject/Parameters/Types.hpp"
+#ifdef MO_EXPORTS
+#undef MO_EXPORTS
+#endif
+#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && (defined MetaParameters_EXPORTS)
+#  define MO_EXPORTS __declspec(dllexport)
+#elif defined __GNUC__ && __GNUC__ >= 4
+#  define MO_EXPORTS __attribute__ ((visibility ("default")))
+#else
+#  define MO_EXPORTS
+#endif
 #include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
+
 #include <cereal/types/vector.hpp>
 #include <cereal/types/string.hpp>
 

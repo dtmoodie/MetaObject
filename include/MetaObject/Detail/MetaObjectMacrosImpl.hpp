@@ -305,7 +305,7 @@ int _init_parent_signals(bool firstInit) \
 
 
 #ifdef _MSC_VER
-#define HANDLE_PARENT(...)  BOOST_PP_CAT(BOOST_PP_OVERLOAD(_HANDLE_PARENT_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY())
+#define HANDLE_PARENT(...)  BOOST_PP_CAT(BOOST_PP_OVERLOAD(HANDLE_PARENT_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY())
 #else
 #define HANDLE_PARENT(...)  BOOST_PP_OVERLOAD(HANDLE_PARENT_, __VA_ARGS__)(__VA_ARGS__)
 #endif

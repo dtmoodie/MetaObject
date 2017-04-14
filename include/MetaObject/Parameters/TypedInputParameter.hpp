@@ -87,7 +87,7 @@ namespace mo
     // IE int* myVar;
     // auto typedParam = TypedInputParameterPtr(&myVar); // TypedInputParameter now updates myvar to point to whatever the
     // input variable is for typedParam.
-    template<typename T> class TypedInputParameterPtr : virtual public ITypedInputParameter<T>
+    template<typename T> class MO_EXPORTS TypedInputParameterPtr : virtual public ITypedInputParameter<T>
     {
     public:
         TypedInputParameterPtr(const std::string& name = "", const T** userVar_ = nullptr, Context* ctx = nullptr);
