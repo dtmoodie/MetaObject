@@ -28,6 +28,8 @@ template<int N> static void list_signal_info_(std::vector<mo::SignalInfo*>& info
 } \
 static void list_signal_info_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N_> dummy) \
 { \
+    (void)info; \
+    (void)dummy; \
 }
 
 #define SIGNAL_INFO_END(N) \
@@ -57,6 +59,8 @@ template<int N> int init_signals_(bool firstInit, mo::_counter_<N> dummy) \
 } \
 int init_signals_(bool firstInit, mo::_counter_<N_> dummy) \
 { \
+    (void)dummy; \
+    (void)firstInit; \
     return 0; \
 }
 
@@ -76,6 +80,8 @@ template<int N> static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_c
 } \
 static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N_> dummy) \
 { \
+    (void)info; \
+    (void)dummy; \
 }
 
 #define SLOT_INFO_END(N) \
@@ -107,6 +113,8 @@ template<int N> static void list_parameter_info_(std::vector<mo::ParameterInfo*>
 } \
 static void list_parameter_info_(std::vector<mo::ParameterInfo*>& info, mo::_counter_<N_> dummy) \
 { \
+    (void)info; \
+    (void)dummy; \
 }
 
 
