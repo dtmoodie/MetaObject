@@ -288,6 +288,7 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
 bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
 {
     LOG(info) << "Loading " << fullPluginPath;
+    boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
     void* handle = dlopen(fullPluginPath.c_str(), RTLD_NOW);
     // Fallback on old module
     if(handle == nullptr)
@@ -295,6 +296,9 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
         const char *dlsym_error = dlerror();
         if (dlsym_error) {
             LOG(warning)  << dlsym_error << '\n';
+            boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
+            _pimpl->plugins.push_back(fullPluginPath + " - failed (dlsym_error). In " +
+                                      boost::lexical_cast<std::string>((end - start).total_seconds()) + " seconds");
             return false;
         }
     }
@@ -312,11 +316,17 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
     const char *dlsym_error = dlerror();
     if (dlsym_error) {
         LOG(warning)  << dlsym_error << '\n';
+        boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
+        _pimpl->plugins.push_back(fullPluginPath + " - failed (dlsym_error). In " +
+                                  boost::lexical_cast<std::string>((end - start).total_seconds()) + " seconds");
         return false;
     }
     if (module == nullptr)
     {
         LOG(warning)  << "module == nullptr" << std::endl;
+        boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
+        _pimpl->plugins.push_back(fullPluginPath + " - failed (module == nullptr). In " +
+                                  boost::lexical_cast<std::string>((end - start).total_seconds()) + " seconds");
         return false;
     }
     IPerModuleInterface* interface = module();
@@ -337,7 +347,8 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
         interface->SetProjectIdForAllConstructors(id);
     }
     SetupObjectConstructors(interface);
-    _pimpl->plugins.push_back(fullPluginPath + " - success");
+    boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
+    _pimpl->plugins.push_back(fullPluginPath + " - success. In " + boost::lexical_cast<std::string>((end - start).total_seconds()) + " seconds");
     return true;
 }
 
