@@ -86,6 +86,10 @@ mo::TypedParameterPtr<type> name##_param; \
 OUTPUT_(type, name, init, __COUNTER__); \
 type name = init;
 
+#define SOURCE(type, name, init) \
+OUTPUT(type, name, init) \
+APPEND_FLAGS(name, mo::Source_e)
+
 #else
 #define PARAM(type, name, init)
 #define PROPERTY(type, name, init)
