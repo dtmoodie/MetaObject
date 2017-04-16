@@ -32,6 +32,10 @@ namespace mo
         {
             if (ts == this->_ts)
             {
+                if (fn_)
+                {
+                    *fn_ = IParameter::_fn;
+                }
                 return ptr;
             }
             else
@@ -47,6 +51,10 @@ namespace mo
                 {
                     if (this->CheckFlags(mo::Unstamped_e))
                     {
+                        if (fn_)
+                        {
+                            *fn_ = IParameter::_fn;
+                        }
                         return ptr;
                     }
                     else
