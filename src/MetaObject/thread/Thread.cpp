@@ -193,7 +193,7 @@ void Thread::Main()
                 lock.unlock();
                 mo::ThreadSpecificQueue::RunOnce();
             }
-            
+
             int delay = 0;
             if(_inner_loop->HasSlots() && _run)
             {
@@ -212,9 +212,9 @@ void Thread::Main()
                     _event_queue.back()();
                     _event_queue.pop();
                 }
-                _cv.wait_until(lock, time);
+                //_cv.wait_until(lock, time);
             }
-                
+
             if(!_run)
             {
                 _paused = true;
@@ -225,10 +225,10 @@ void Thread::Main()
 
         }catch(boost::thread_interrupted& e)
         {
-            
+
         }catch(...)
         {
-        
+
         }
     }
 }

@@ -17,12 +17,13 @@
     { \
         COMBINE(_slot_##NAME##_, N) = my_bind((RETURN(THIS_CLASS::*)(__VA_ARGS__))&THIS_CLASS::NAME, this, make_int_sequence<BOOST_PP_VARIADIC_SIZE(__VA_ARGS__)>{} ); \
         AddSlot(&COMBINE(_slot_##NAME##_, N), #NAME); \
-		bind_slots_(firstInit, --dummy); \
+        bind_slots_(firstInit, --dummy); \
     } \
     static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy) \
     { \
+        (void)dummy; \
         list_slots_(info, mo::_counter_<N-1>()); \
-        static mo::SlotInfo s_info{mo::TypeInfo(typeid(RETURN(__VA_ARGS__))), #NAME}; \
+        static mo::SlotInfo s_info{mo::TypeInfo(typeid(RETURN(__VA_ARGS__))), #NAME, "", ""}; \
         info.push_back(&s_info); \
     } \
     template<class Sig> mo::TypedSlot<RETURN(__VA_ARGS__)>* GetSlot_##NAME(typename std::enable_if<std::is_same<Sig, RETURN(__VA_ARGS__)>::value>::type* = 0) \
@@ -38,12 +39,13 @@
     { \
         COMBINE(_slot_##NAME##_, N) = std::bind((RETURN(THIS_CLASS::*)())&THIS_CLASS::NAME, this); \
         AddSlot(&COMBINE(_slot_##NAME##_, N), #NAME); \
-		bind_slots_(firstInit, --dummy); \
+        bind_slots_(firstInit, --dummy); \
     } \
     static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy) \
     { \
+        (void)dummy; \
         list_slots_(info, mo::_counter_<N-1>()); \
-        static mo::SlotInfo s_info{mo::TypeInfo(typeid(RETURN(void))), #NAME}; \
+        static mo::SlotInfo s_info{mo::TypeInfo(typeid(RETURN(void))), #NAME, "", ""}; \
         info.push_back(&s_info); \
     } \
     template<class Sig> mo::TypedSlot<RETURN()>* GetSlot_##NAME(typename std::enable_if<std::is_same<Sig, RETURN()>::value>::type* = 0) \
@@ -69,11 +71,13 @@
 #define DESCRIBE_SLOT_(NAME, DESCRIPTION, N) \
 std::string slot_description_by_name_(const std::string& name, mo::_counter_<N> dummy) \
 { \
+    (void)dummy; \
     if(name == #NAME) \
         return DESCRIPTION; \
 } \
 std::vector<slot_info> list_slots_(mo::_counter_<N> dummy) \
 { \
+    (void)dummy; \
     auto slot_info = list_slots_(mo::_counter_<N-1>()); \
     for(auto& info : slot_info) \
     { \
@@ -109,7 +113,7 @@ static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy
   #endif
   #define DESCRIBE_SLOT(NAME, DESCRIPTION) DESCRIBE_SLOT_(NAME, DESCRIPTION, __COUNTER__)
 #else
-  #define MO_SLOT(RET, ...) 
+  #define MO_SLOT(RET, ...)
   #define DESCRIBE_SLOT(NAME, DESCRIPTION)
 #endif
 #define PARAM_UPDATE_SLOT(NAME) MO_SLOT(void, on_##NAME##_modified, mo::Context*, mo::IParameter*)

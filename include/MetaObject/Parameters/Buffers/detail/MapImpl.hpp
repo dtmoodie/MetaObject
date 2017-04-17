@@ -113,7 +113,8 @@ namespace mo
             _data_buffer[{ts,*fn}] = data_;
             IParameter::_modified = true;
             lock.unlock();
-            this->Commit(ts, ctx, fn, cs);
+            //this->Commit(ts, ctx, fn, cs);
+            IParameter::_update_signal(ctx, this);
             return true;
         }
 

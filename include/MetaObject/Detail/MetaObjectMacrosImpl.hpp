@@ -312,15 +312,15 @@ int _init_parent_signals(bool firstInit) \
 
 
 #define HANDLE_NO_PARENT \
-void _init_parent_params(bool firstInit){ } \
-void _serialize_parent_params(ISimpleSerializer* pSerializer) { } \
-template<class T> void _load_parent(T& ar) { } \
-template<class T> void _save_parent(T& ar) const { } \
-void _bind_parent_slots(bool firstInit) { } \
-static void _list_parent_parameter_info(std::vector<mo::ParameterInfo*>& info) { } \
-static void _list_parent_signals(std::vector<mo::SignalInfo*>& info) { } \
-static void _list_parent_slots(std::vector<mo::SlotInfo*>& info) { } \
-int _init_parent_signals(bool firstInit) {     return 0; }
+void _init_parent_params(bool firstInit){ (void)firstInit; } \
+void _serialize_parent_params(ISimpleSerializer* pSerializer) { (void)pSerializer; } \
+template<class T> void _load_parent(T& ar) { (void)ar; } \
+template<class T> void _save_parent(T& ar) const { (void)ar;} \
+void _bind_parent_slots(bool firstInit) { (void)firstInit;} \
+static void _list_parent_parameter_info(std::vector<mo::ParameterInfo*>& info) { (void)info;} \
+static void _list_parent_signals(std::vector<mo::SignalInfo*>& info) { (void)info;} \
+static void _list_parent_slots(std::vector<mo::SlotInfo*>& info) { (void)info;} \
+int _init_parent_signals(bool firstInit) {(void)firstInit; return 0;}
 
 
 #define MO_BEGIN_1(CLASS_NAME, N_) \
