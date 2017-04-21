@@ -240,7 +240,8 @@ bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
     {
 
         MO_CUDA_ERROR_CHECK(cudaMallocPitch(&mat->data, &mat->step, elemSize * cols, rows),
-                            << " while allocating " << rows << ", " << cols);
+                            << " while allocating " << rows << ", " << cols << ". Elemsize: " << elemSize
+                            << " Total allocation: " << elemSize*cols*rows / (1024 * 1024) << " MB");
 
         this->memoryUsage += mat->step * rows;
         LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") "
