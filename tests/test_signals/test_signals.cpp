@@ -11,8 +11,8 @@
 #include "MetaObject/Parameters/TypedParameterPtr.hpp"
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 
-#include "RuntimeObjectSystem.h"
-#include "IObjectFactorySystem.h"
+#include "RuntimeObjectSystem/RuntimeObjectSystem.h"
+#include "RuntimeObjectSystem/IObjectFactorySystem.h"
 
 
 #ifdef _MSC_VER

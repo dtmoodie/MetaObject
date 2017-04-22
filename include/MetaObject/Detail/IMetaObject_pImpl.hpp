@@ -2,7 +2,7 @@
 #include "MetaObject/Detail/Export.hpp"
 #include "MetaObject/Detail/TypeInfo.h"
 #include "MetaObject/Signals/TypedSignal.hpp"
-#include "shared_ptr.hpp"
+#include "RuntimeObjectSystem/shared_ptr.hpp"
 #include <string>
 #include <memory>
 #include <map>

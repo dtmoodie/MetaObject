@@ -1,9 +1,9 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
 
-#include "RuntimeObjectSystem.h"
-#include "IObjectFactorySystem.h"
-#include "shared_ptr.hpp"
+#include "RuntimeObjectSystem/RuntimeObjectSystem.h"
+#include "RuntimeObjectSystem/IObjectFactorySystem.h"
+#include "RuntimeObjectSystem/shared_ptr.hpp"
 #include "obj.h"
 
 #define BOOST_TEST_DYN_LINK

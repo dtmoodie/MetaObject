@@ -1,7 +1,7 @@
 #pragma once
 #ifdef HAVE_BOOST_PYTHON
 #include "MetaObject/Detail/Export.hpp"
-#include "shared_ptr.hpp"
+#include "RuntimeObjectSystem/shared_ptr.hpp"
 #include <boost/python.hpp>
 
 #include <functional>

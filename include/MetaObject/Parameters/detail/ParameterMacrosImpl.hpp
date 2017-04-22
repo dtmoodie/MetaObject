@@ -2,7 +2,7 @@
 #include <MetaObject/Detail/HelperMacros.hpp>
 #include "MetaObject/Parameters/ParameterInfo.hpp"
 
-#include "ISimpleSerializer.h"
+#include "RuntimeObjectSystem/ISimpleSerializer.h"
 #include "cereal/cereal.hpp"
 
 #define PARAM_(type, name, init, N) \

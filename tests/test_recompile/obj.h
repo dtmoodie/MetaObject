@@ -11,8 +11,8 @@
 #include "MetaObject/Parameters/TypedParameterPtr.hpp"
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 
-#include "RuntimeInclude.h"
-#include "RuntimeSourceDependency.h"
+#include "RuntimeObjectSystem/RuntimeInclude.h"
+#include "RuntimeObjectSystem/RuntimeSourceDependency.h"
 RUNTIME_MODIFIABLE_INCLUDE 
 
 #ifdef HAVE_CUDA

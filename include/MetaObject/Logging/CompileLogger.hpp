@@ -1,7 +1,7 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
-#include "ICompilerLogger.h"
-#include "IRuntimeObjectSystem.h"
+#include "RuntimeCompiler/ICompilerLogger.h"
+#include "RuntimeObjectSystem/IRuntimeObjectSystem.h"
 #include <cstdarg>
 namespace mo
 {

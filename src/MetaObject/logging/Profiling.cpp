@@ -18,7 +18,7 @@
 #else
   #include "dlfcn.h"
 #endif
-#include "Remotery.h"
+
 
 using namespace mo;
 
@@ -39,7 +39,7 @@ pop_f nvtx_pop = nullptr;
 nvtx_name_thread_f nvtx_name_thread = nullptr;
 nvtx_name_stream_f nvtx_name_stream = nullptr;
 
-Remotery* rmt = nullptr;
+//Remotery* rmt = nullptr;
 
 rmt_push_cpu_f rmt_push_cpu = nullptr;
 rmt_pop_cpu_f rmt_pop_cpu = nullptr;
@@ -64,7 +64,7 @@ void mo::SetThreadName(const char* name)
 #ifdef RMT_BUILTIN
 void InitRemotery()
 {
-    if(rmt)
+    /*if(rmt)
         return;
     rmt_CreateGlobalInstance(&rmt);
     CUcontext ctx;
@@ -83,7 +83,7 @@ void InitRemotery()
     rmt_pop_cpu = &_rmt_EndCPUSample;
     rmt_push_gpu = &_rmt_BeginCUDASample;
     rmt_pop_gpu = &_rmt_EndCUDASample;
-    rmt_set_thread = &_rmt_SetCurrentThreadName;
+    rmt_set_thread = &_rmt_SetCurrentThreadName;*/
 }
 
 #else
@@ -182,10 +182,10 @@ void mo::PushCpu(const char* name, unsigned int* rmt_hash)
 {
     if (nvtx_push)
         (*nvtx_push)(name);
-    if (rmt && rmt_push_cpu)
+    /*if (rmt && rmt_push_cpu)
     {
         rmt_push_cpu(name, rmt_hash);
-    }
+    }*/
 }
 
 void mo::PopCpu()
@@ -194,10 +194,10 @@ void mo::PopCpu()
     {
         (*nvtx_pop)();
     }
-    if (rmt && rmt_pop_cpu)
+    /*if (rmt && rmt_pop_cpu)
     {
         rmt_pop_cpu();
-    }
+    }*/
 }
 void mo::SetStreamName(const char* name, cv::cuda::Stream& stream)
 {
@@ -218,10 +218,10 @@ scoped_profile::scoped_profile(const char* name, unsigned int* rmt_hash, unsigne
 #ifndef PROFILING_NONE
     if(nvtx_push)
         (*nvtx_push)(name);
-	if (rmt && rmt_push_cpu)
+	/*if (rmt && rmt_push_cpu)
 	{
         rmt_push_cpu(name, rmt_hash);
-	}
+	}*/
 #endif
 }
 
@@ -238,7 +238,7 @@ scoped_profile::scoped_profile(const char* name, const char* func, unsigned int*
     {
         (*nvtx_push)(str);
     }
-	if (rmt && rmt_push_cpu)
+	/*if (rmt && rmt_push_cpu)
 	{
         rmt_push_cpu(str, rmt_hash);
         if(stream && rmt_push_gpu)
@@ -246,7 +246,7 @@ scoped_profile::scoped_profile(const char* name, const char* func, unsigned int*
             rmt_push_gpu(str, rmt_cuda, cv::cuda::StreamAccessor::getStream(*stream));
             this->stream = stream;
         }
-	}
+	}*/
 #endif
 }
 
@@ -257,10 +257,10 @@ scoped_profile::~scoped_profile()
     {
         (*nvtx_pop)();
     }
-	if (rmt && rmt_pop_cpu)
+	/*if (rmt && rmt_pop_cpu)
 	{
         rmt_pop_cpu();
-	}
+	}*/
     if(stream && rmt_pop_gpu)
     {
         rmt_pop_gpu(cv::cuda::StreamAccessor::getStream(*stream));

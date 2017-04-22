@@ -31,13 +31,17 @@ if(WITH_PYTHON)
   find_package(PythonInterp QUIET)
   if(PythonLibs_FOUND AND PythonInterp_FOUND)
     if(WIN32)
-        find_package(Boost COMPONENTS python python3 python2)
+        find_package(Boost QUIET COMPONENTS python python3 python2)
         if(Boost_PYTHON_FOUND)
           set(HAVE_PYTHON ON)
           message("Building python bindings")
           list(APPEND link_libs "${Boost_PYTHON_LIBRARY_RELEASE};${PYTHON_LIBRARY}")
-          get_filename_component(_python_lib_dir "${PYTHON_LIBRARY}" DIRECTORY)
-          link_directories(${_python_lib_dir})
+          get_filename_component(_python_lib_dirs "${PYTHON_LIBRARY}" DIRECTORY)
+          foreach(dir ${_python_lib_dirs})
+            if(NOT ${dir} STREQUAL debug AND NOT ${dir} STREQUAL optimized)
+              link_directories(${dir})
+            endif()
+          endforeach()
           include_directories(${PYTHON_INCLUDE_DIR})
           add_definitions(-DHAVE_BOOST_PYTHON)
         endif()
@@ -147,22 +151,27 @@ if(WITH_CUDA)
 endif(WITH_CUDA)
 
 # ---------------------- rcc ---------------------------------
-SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-set(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${CMAKE_CURRENT_LIST_DIR}/include;${cereal_INCLUDE_DIRS}")
-set(RCC_LIBRARY_DIRS_DEBUG "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/Debug")
-set(RCC_LIBRARY_DIRS_RELWITHDEBINFO "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/RelWithDebInfo")
-if(MSVC)
-  set(RCC_COMPILE_FLAGS "/DBOOST_ALL_DYN_LINK")
-else()
-  set(RCC_COMPILE_FLAGS "-DBOOST_ALL_DYN_LINK")
-endif()
-ADD_SUBDIRECTORY("dependencies/rcc")
-include_directories(${RCC_INCLUDE_DIRS})
-set_target_properties(RuntimeCompiler PROPERTIES FOLDER Dependencies)
-set_target_properties(RuntimeObjectSystem PROPERTIES FOLDER Dependencies)
-SET(RCC_INCLUDE_DIRS "${RCC_INCLUDE_DIRS}" PARENT_SCOPE)
-set(RCC_PERMODULE_INTERFACE_SOURCE ${RCC_PERMODULE_INTERFACE_SOURCE} PARENT_SCOPE)
+find_package(RCC QUIET)
+if(RCC_FOUND)
+	message(STATUS "RCC found at: ${RCC_DIR} - ${RCC_INCLUDE_DIRS}")
+else(RCC_FOUND)
+	SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+	set(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${CMAKE_CURRENT_LIST_DIR}/include;${cereal_INCLUDE_DIRS}")
+	set(RCC_LIBRARY_DIRS_DEBUG "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/Debug")
+	set(RCC_LIBRARY_DIRS_RELWITHDEBINFO "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/RelWithDebInfo")
+	if(MSVC)
+	  set(RCC_COMPILE_FLAGS "/DBOOST_ALL_DYN_LINK")
+	else()
+	  set(RCC_COMPILE_FLAGS "-DBOOST_ALL_DYN_LINK")
+	endif()
+	ADD_SUBDIRECTORY("dependencies/rcc")
+	include_directories(${RCC_INCLUDE_DIRS})
+	set_target_properties(RuntimeCompiler PROPERTIES FOLDER Dependencies)
+	set_target_properties(RuntimeObjectSystem PROPERTIES FOLDER Dependencies)
+	set(RCC_PERMODULE_INTERFACE_SOURCE ${RCC_PERMODULE_INTERFACE_SOURCE} PARENT_SCOPE)
+endif(RCC_FOUND)
 
+# -------------------- Profiling ---------------------------------
 set(MO_PROFILING_MODE "BUILTIN" CACHE STRING "Set MetaObject profiling mode")
 set_property(CACHE MO_PROFILING_MODE PROPERTY STRINGS BUILTIN DYNAMIC NONE)
 
@@ -173,8 +182,8 @@ if(NVToolsExt)
 endif()
 if(${MO_PROFILING_MODE} STREQUAL "BUILTIN")
   add_definitions(-DRMT_BUILTIN)
-  list(APPEND link_libs Remotery)
-  include_directories("dependencies/Remotery/lib")
+  #list(APPEND link_libs Remotery)
+  #include_directories("dependencies/Remotery/lib")
 endif()
 if(${MO_PROFILING_MODE} STREQUAL "NONE")
   add_definitions(-DPROFILING_NONE)
@@ -270,10 +279,8 @@ if(${ZeroMQ_FOUND})
   add_definitions(-DHAVE_ZEROMQ)
 endif(${ZeroMQ_FOUND})
 
-
-
-add_subdirectory("dependencies/Remotery")
-set_target_properties(Remotery PROPERTIES FOLDER Dependencies)
+#add_subdirectory("dependencies/Remotery")
+#set_target_properties(Remotery PROPERTIES FOLDER Dependencies)
 GroupSources(include)
 GroupSources(src)
 cuda_add_library(MetaObject SHARED ${src} ${hdr} ${knl} src/MetaObject/precompiled.hpp)
@@ -283,18 +290,23 @@ if(NOT CUDA_CUDA_LIBRARY)
 endif(NOT CUDA_CUDA_LIBRARY)
 
 target_link_libraries(MetaObject
-  RuntimeObjectSystem
-  RuntimeCompiler
+  ${RCC_LIBRARIES}
   ${link_libs}
   ${OpenCV_LIBS}
   ${CUDA_CUDART_LIBRARY}
   ${CUDA_CUDA_LIBRARY}
 )
+
+target_include_directories(MetaObject 
+  PUBLIC 
+    $<BUILD_INTERFACE:${RCC_INCLUDE_DIRS}>
+)
+
+
 if(HAVE_PYTHON)
     target_link_libraries(MetaObject
         ${PYTHON_LIBRARY}
     )
-
 endif(HAVE_PYTHON)
 
 ocv_add_precompiled_header_to_target(MetaObject src/precompiled.hpp)
@@ -471,10 +483,24 @@ if(BUILD_EXAMPLES)
     ADD_SUBDIRECTORY("examples")
 endif()
 # ----------------------- install ----------------------------
+export(TARGETS MetaObject MetaParameters
+      FILE "${PROJECT_BINARY_DIR}/MetaObjectTargets.cmake")
+
+export(PACKAGE MetaObject)
+
+configure_file(MetaObjectConfig.cmake.in
+  "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake" @ONLY)
+
 install(TARGETS MetaObject MetaParameters
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
+)
+
+install(TARGETS MetaObject MetaParameters 
+        LIBRARY DESTINATION lib
+		RUNTIME DESTINATION bin
+        EXPORT MetaObjectTargets
 )
 
 install(DIRECTORY include/
@@ -487,4 +513,8 @@ install(DIRECTORY include/
         DESTINATION include
         FILES_MATCHING PATTERN "*.hpp"
 )
+install(FILES
+  "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake"
+  DESTINATION "${CMAKE_INSTALL_PREFIX}" COMPONENT dev)
 
+install(EXPORT MetaObjectTargets DESTINATION "${CMAKE_INSTALL_PREFIX}" COMPONENT dev)

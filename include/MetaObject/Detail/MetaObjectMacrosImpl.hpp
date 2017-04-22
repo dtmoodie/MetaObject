@@ -5,8 +5,8 @@
 #include "MetaObject/MetaObjectFactory.hpp"
 #include "MetaObject/Detail/Counter.hpp"
 #include <boost/preprocessor.hpp>
-#include <shared_ptr.hpp>
-#include "ObjectInterfacePerModule.h"
+#include <RuntimeObjectSystem/shared_ptr.hpp>
+#include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 #include <type_traits>
 #include <vector>
 #include <string>

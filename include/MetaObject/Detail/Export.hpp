@@ -19,7 +19,7 @@
 #endif
 
 #ifndef MetaObject_EXPORTS
-#include "RuntimeLinkLibrary.h"
+#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
   #ifdef WIN32
     #pragma comment(lib, "Advapi32.lib")
     #ifdef _DEBUG

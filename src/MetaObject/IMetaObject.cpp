@@ -15,8 +15,8 @@
 #include "MetaObject/Parameters/InputParameter.hpp"
 #include "MetaObject/Parameters/VariableManager.h"
 
-#include "ISimpleSerializer.h"
-#include "IObjectState.hpp"
+#include "RuntimeObjectSystem/ISimpleSerializer.h"
+#include "RuntimeObjectSystem/IObjectState.hpp"
 
 #include <boost/thread/recursive_mutex.hpp>
 

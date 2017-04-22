@@ -16,8 +16,8 @@
 #include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
 #include "MetaObject/Detail/Allocator.hpp"
 #include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
-#include "RuntimeObjectSystem.h"
-#include "IObjectFactorySystem.h"
+#include "RuntimeObjectSystem/RuntimeObjectSystem.h"
+#include "RuntimeObjectSystem/IObjectFactorySystem.h"
 
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>

@@ -1,6 +1,6 @@
 #include "MetaObject/MetaObjectFactory.hpp"
-#include "RuntimeObjectSystem.h"
-#include "IObjectFactorySystem.h"
+#include "RuntimeObjectSystem/RuntimeObjectSystem.h"
+#include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "MetaObject/Logging/CompileLogger.hpp"
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Logging/Log.hpp"

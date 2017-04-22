@@ -3,7 +3,7 @@
 #include "MetaObject/Detail/Export.hpp"
 #include "ISerializer.hpp"
 #include "MetaObject/Detail/TypeInfo.h"
-#include "shared_ptr.hpp"
+#include "RuntimeObjectSystem/shared_ptr.hpp"
 
 #include <functional>
 

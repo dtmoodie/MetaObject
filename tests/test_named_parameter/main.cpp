@@ -13,8 +13,8 @@
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "MetaObject/Parameters/Types.hpp"
 #include "MetaObject/Parameters/NamedParameter.hpp"
-#include "RuntimeObjectSystem.h"
-#include "IObjectFactorySystem.h"
+#include "RuntimeObjectSystem/RuntimeObjectSystem.h"
+#include "RuntimeObjectSystem/IObjectFactorySystem.h"
 
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>

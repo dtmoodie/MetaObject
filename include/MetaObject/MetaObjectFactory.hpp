@@ -1,6 +1,6 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
-#include "ObjectInterfacePerModule.h"
+#include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 #include <functional>
 #include <memory>
 struct SystemTable;

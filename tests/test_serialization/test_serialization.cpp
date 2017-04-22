@@ -18,10 +18,9 @@
 #include "MetaObject/IO/Policy.hpp"
 #include "MetaObject/IO/memory.hpp"
 #include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
-#include "shared_ptr.hpp"
-#include "RuntimeObjectSystem.h"
-#include "shared_ptr.hpp"
-#include "IObjectFactorySystem.h"
+#include "RuntimeObjectSystem/shared_ptr.hpp"
+#include "RuntimeObjectSystem/RuntimeObjectSystem.h"
+#include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "cereal/archives/xml.hpp"
 #include "cereal/archives/portable_binary.hpp"
 #include <fstream>

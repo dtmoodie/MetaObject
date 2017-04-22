@@ -13,8 +13,8 @@
 #include "MetaObject/Parameters/UI/Qt/POD.hpp"
 #include "MetaObject/Parameters/UI/Qt/TParameterProxy.hpp"
 
-#include "RuntimeObjectSystem.h"
-#include "IObjectFactorySystem.h"
+#include "RuntimeObjectSystem/RuntimeObjectSystem.h"
+#include "RuntimeObjectSystem/IObjectFactorySystem.h"
 
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>

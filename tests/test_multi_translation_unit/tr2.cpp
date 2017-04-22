@@ -15,8 +15,8 @@
 #include "MetaObject/Parameters/TypedInputParameter.hpp"
 #include "MetaObject/Logging/CompileLogger.hpp"
 #include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
-#include "RuntimeObjectSystem.h"
-#include "IObjectFactorySystem.h"
+#include "RuntimeObjectSystem/RuntimeObjectSystem.h"
+#include "RuntimeObjectSystem/IObjectFactorySystem.h"
 
 
 #ifdef _MSC_VER

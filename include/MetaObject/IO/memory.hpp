@@ -1,5 +1,5 @@
 #pragma once
-#include "shared_ptr.hpp"
+#include "RuntimeObjectSystem/shared_ptr.hpp"
 #include "Serializer.hpp"
 #include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
 #include <MetaObject/Logging/Log.hpp>
