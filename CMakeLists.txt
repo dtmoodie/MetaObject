@@ -329,7 +329,8 @@ add_library(MetaParameters SHARED ${instantiations_src})
 set_target_properties(MetaParameters PROPERTIES FOLDER Dependencies)
 target_link_libraries(MetaParameters MetaObject)
 if(Qt5_FOUND)
-  target_link_libraries(MetaParameters Qt5::Core Qt5::Gui Qt5::Widgets)
+  target_link_libraries(MetaParameters 
+	PRIVATE Qt5::Core Qt5::Gui Qt5::Widgets)
 endif()
 if(OpenCV_FOUND AND WITH_OPENCV)
   target_link_libraries(MetaParameters ${OpenCV_LIBS})
@@ -445,6 +446,8 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
     endif()
   endforeach()
 endif()
+
+# ---------------------- status message -----------------------------
 message(STATUS
     "-- MetaObject config\n"
     "  C++ flags \t${CMAKE_CXX_FLAGS}\n"
@@ -455,7 +458,9 @@ message(STATUS
     "  Python\t\t${HAVE_PYTHON}\n"
     "  Wt\t\t${Wt_FOUND}\n"
     "  ZeroMQ\t\t${ZeroMQ_FOUND}\n"
-    "  Tests\t\t${Boost_UNIT_TEST_FRAMEWORK_FOUND}")
+    "  Tests\t\t${Boost_UNIT_TEST_FRAMEWORK_FOUND}"
+)
+
 # ----------------------- examples ---------------------------
 if(BUILD_EXAMPLES)
     ADD_SUBDIRECTORY("examples")
@@ -465,6 +470,12 @@ export(TARGETS MetaObject MetaParameters
       FILE "${PROJECT_BINARY_DIR}/MetaObjectTargets.cmake")
 
 export(PACKAGE MetaObject)
+
+if(Qt5_FOUND)
+	set(MO_QT5 ON)
+else(Qt5_FOUND)
+	set(MO_QT5 OFF)
+endif(Qt5_FOUND)
 
 configure_file(MetaObjectConfig.cmake.in
   "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake" @ONLY)
