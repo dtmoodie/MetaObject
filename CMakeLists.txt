@@ -335,28 +335,6 @@ if(OpenCV_FOUND AND WITH_OPENCV)
   target_link_libraries(MetaParameters ${OpenCV_LIBS})
 endif()
 
-MACRO(SUBDIRLIST result curdir)
-  FILE(GLOB children RELATIVE ${curdir} ${curdir}/*)
-  SET(dirlist "")
-  FOREACH(child ${children})
-    IF(IS_DIRECTORY ${curdir}/${child})
-      LIST(APPEND dirlist ${child})
-    ENDIF()
-  ENDFOREACH()
-  SET(${result} ${dirlist})
-ENDMACRO()
-
-MACRO(APPEND_BIN_DIR ARG1 ARG2)
-  IF(EXISTS "${${ARG1}}" AND IS_DIRECTORY "${${ARG1}}")
-    LIST(APPEND ${ARG2} ${${ARG1}})
-  ELSE()
-    if(RCC_VERBOSE_CONFIG)
-      MESSAGE("${ARG1} : ${${ARG1}} is not a valid directory")
-    endif()
-  ENDIF()
-ENDMACRO(APPEND_BIN_DIR)
-
-
 FOREACH(dir ${BIN_DIRS})
   APPEND_BIN_DIR(${dir}_BIN_DIR_DBG PROJECT_BIN_DIRS_DEBUG)
   APPEND_BIN_DIR(${dir}_BIN_DIR_OPT PROJECT_BIN_DIRS_RELEASE)
@@ -498,8 +476,7 @@ install(TARGETS MetaObject MetaParameters
 )
 
 install(TARGETS MetaObject MetaParameters 
-        LIBRARY DESTINATION lib
-		RUNTIME DESTINATION bin
+        DESTINATION lib
         EXPORT MetaObjectTargets
 )
 
@@ -513,6 +490,9 @@ install(DIRECTORY include/
         DESTINATION include
         FILES_MATCHING PATTERN "*.hpp"
 )
+
+install(DIRECTORY cmake DESTINATION ./ FILES_MATCHING PATTERN "*.cmake")
+
 install(FILES
   "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake"
   DESTINATION "${CMAKE_INSTALL_PREFIX}" COMPONENT dev)

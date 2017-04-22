@@ -4,17 +4,21 @@
 #  MetaObject_LIBRARIES    - libraries to link against
  
 # Compute paths
-get_filename_component(MetaObject_CMAKE_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+get_filename_component(MetaObject_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
 # Our library dependencies (contains definitions for IMPORTED targets)
 if(NOT TARGET RuntimeCompiler AND NOT TARGET RuntimeObjectSystem)
   find_package(RCC REQUIRED)
 endif()
 
+include(${MetaObject_DIR}/cmake/CMakeMacros.cmake)
+include(${MetaObject_DIR}/cmake/Cuda.cmake)
+include(${MetaObject_DIR}/cmake/OpenCVPCHSupport.cmake)
+
 set(MetaObject_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_FILE}/include;${RCC_INCLUDE_DIRS}")
 if(NOT TARGET MetaObject AND NOT TARGET MetaParameter)
-  include("${MetaObject_CMAKE_DIR}/MetaObjectTargets.cmake")
+  include("${MetaObject_DIR}/MetaObjectTargets.cmake")
 endif()
  
 # These are IMPORTED targets created by FooBarTargets.cmake
-set(MetaObject_CMAKE_DIR_LIBRARIES MetaObject MetaParameter RuntimeCompiler RuntimeObjectSystem)
+set(MetaObject_LIBRARIES MetaObject MetaParameter RuntimeCompiler RuntimeObjectSystem)
