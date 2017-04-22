@@ -14,6 +14,7 @@ endif()
 include(${MetaObject_DIR}/cmake/CMakeMacros.cmake)
 include(${MetaObject_DIR}/cmake/Cuda.cmake)
 include(${MetaObject_DIR}/cmake/OpenCVPCHSupport.cmake)
+include(${MetaObject_DIR}/cmake/OpenCVParseHeader.cmake)
 
 set(MetaObject_INCLUDE_DIRS "${MetaObject_DIR}/include;${RCC_INCLUDE_DIRS}")
 if(NOT TARGET MetaObject AND NOT TARGET MetaParameter)
