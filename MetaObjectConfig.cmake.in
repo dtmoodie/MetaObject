@@ -8,14 +8,25 @@ get_filename_component(MetaObject_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
 set(MetaObject_WITH_QT5 "@MO_QT5@")
 set(MetaObject_WITH_WT "@MO_WT@")
-set(MetaObject_WITH_OPENCV "@MO_CV@")
+set(MetaObject_WITH_OPENCV "ON")
 
-if(${MetaObject_WITH_QT5})
+if(MetaObject_WITH_QT5)
 	find_package(Qt5 QUIET COMPONENTS Core Widgets Gui)
 	if(NOT Qt5_FOUND)
 		message("MetaObject was built against Qt5 but Qt5 was not found, this may not be an issue on some platforms if Qt5 is not used")
 	endif(NOT Qt5_FOUND)
-endif(${MetaObject_WITH_QT5})
+endif(MetaObject_WITH_QT5)
+
+if(MetaObject_WITH_WT)
+	find_package(Wt QUIET)
+	if(NOT Wt_FOUND)
+		message("MetaObject was built against Wt but Wt was not found, this may not be an issue on some platforms if Wt is not used")
+	endif()
+endif(MetaObject_WITH_WT)
+
+if(MetaObject_WITH_OPENCV)
+	find_package(OpenCV REQUIRED core cudaarithm)
+endif(MetaObject_WITH_OPENCV)
 
 # Our library dependencies (contains definitions for IMPORTED targets)
 if(NOT TARGET RuntimeCompiler AND NOT TARGET RuntimeObjectSystem)
@@ -32,5 +43,5 @@ if(NOT TARGET MetaObject AND NOT TARGET MetaParameter)
   include("${MetaObject_DIR}/MetaObjectTargets.cmake")
 endif()
  
-# These are IMPORTED targets created by FooBarTargets.cmake
+# These are IMPORTED targets created by MetaObjectTargets.cmake
 set(MetaObject_LIBRARIES MetaObject MetaParameter RuntimeCompiler RuntimeObjectSystem)
