@@ -495,6 +495,10 @@ install(DIRECTORY include/
         FILES_MATCHING PATTERN "*.h"
 )
 
+install(DIRECTORY dependencies/cereal/include/
+	DESTINATION include
+	FILES_MATCHING PATTERN "*.hpp"
+)
 
 install(DIRECTORY include/
         DESTINATION include
