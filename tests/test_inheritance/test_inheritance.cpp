@@ -83,13 +83,13 @@ void derived_signals::override_slot(int value)
     derived_count += 3*value;
 }
 
-struct base1: public TInterface<0, IMetaObject>
+struct base1: public TInterface<base1, IMetaObject>
 {
     MO_BEGIN(base1);
     MO_END;
 };
 
-struct derived1: public TInterface<1, base1>
+struct derived1: public TInterface<derived1, base1>
 {
     MO_DERIVE(derived1, base1);
     MO_END;

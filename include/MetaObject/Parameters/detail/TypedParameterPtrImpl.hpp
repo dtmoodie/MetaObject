@@ -199,8 +199,9 @@ namespace mo
             *ptr = data;
             lock.unlock();
             this->Commit(ts, ctx, fn, cs);
+            return true;
         }
-        return this;
+        return false;
     }
 
     template<typename T>

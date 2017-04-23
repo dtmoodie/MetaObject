@@ -3,7 +3,7 @@
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/MetaObjectFactory.hpp"
 #include "MetaObject/Logging/Log.hpp"
-#include "shared_ptr.hpp"
+#include "RuntimeObjectSystem/shared_ptr.hpp"
 
 
 #include <type_traits>

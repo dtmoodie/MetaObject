@@ -476,6 +476,12 @@ else(Qt5_FOUND)
 	set(MO_QT5 OFF)
 endif(Qt5_FOUND)
 
+if(Wt_FOUND)
+	set(MO_WT ON)
+else(Wt_FOUND)
+	set(MO_WT OFF)
+endif(Wt_FOUND)
+
 configure_file(MetaObjectConfig.cmake.in
   "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake" @ONLY)
 
@@ -499,6 +505,22 @@ install(DIRECTORY dependencies/cereal/include/
 	DESTINATION include
 	FILES_MATCHING PATTERN "*.hpp"
 )
+
+install(DIRECTORY dependencies/cereal/include/
+  DESTINATION include
+  FILES_MATCHING PATTERN "*.h"
+)
+
+if(WIN32)
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/Debug/
+        DESTINATION bin
+        FILES_MATCHING PATTERN "*d.pdb")
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/RelWithDebInfo/
+        DESTINATION bin
+        FILES_MATCHING PATTERN "*.pdb")
+endif(WIN32)
+
+install(DIRECTORY MetaParameters/ DESTINATION include/MetaObject FILES_MATCHING PATTERN "*.hpp")
 
 install(DIRECTORY include/
         DESTINATION include

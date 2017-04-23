@@ -36,7 +36,7 @@ namespace mo
  * \brief The ExampleInterface class contains one virtual member foo and the typedef InterfaceInfo
  *
  */
-class ExampleInterface: public TInterface<ctcrc32("ExampleInterface"), mo::IMetaObject>
+class ExampleInterface: public TInterface<ExampleInterface, mo::IMetaObject>
 {
 public:
     /*!

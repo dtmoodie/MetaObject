@@ -29,20 +29,34 @@ boost::shared_ptr<mo::MetaObjectFactory> GetObjectFactory()
     return boost::shared_ptr<mo::MetaObjectFactory>(mo::MetaObjectFactory::Instance(), NullDeleter());
 }
 
-template <typename T> T* get_pointer(rcc::shared_ptr<T> const& p) {
+template <typename T> T* get_pointer(rcc::shared_ptr<T>& p) {
     //notice the const_cast<> at this point
     //for some unknown reason, bp likes to have it like that
     return const_cast<T*>(p.Get());
 }
 
-namespace boost { namespace python {
+template<typename T> const T* get_pointer(const rcc::shared_ptr<T> & p)
+{
+    return const_cast<T*>(p.Get());
+}
+
+namespace boost { 
+    /*template <>
+    example_python_object const volatile * get_pointer<class example_python_object const volatile >(
+        class example_python_object const volatile *c)
+    {
+        return c;
+    }*/
+    namespace python {
 
     template <typename T> struct pointee<rcc::shared_ptr<T>> 
     {
         typedef T type;
     };
 
+
 } }
+
 
 BOOST_PYTHON_MODULE(MetaPython)
 {

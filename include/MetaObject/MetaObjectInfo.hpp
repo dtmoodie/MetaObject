@@ -87,6 +87,10 @@ namespace mo
         {
             return T::s_interfaceID;
         }
+        virtual std::string GetInterfaceName() const
+        {
+            return T::GetInterfaceName();
+        }
     private:
         DEFINE_HAS_STATIC_FUNCTION(HasTooltip, V::GetTooltipStatic, std::string(*)(void));
         DEFINE_HAS_STATIC_FUNCTION(HasDescription, V::GetDescriptionStatic, std::string(*)(void));
