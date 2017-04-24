@@ -29,7 +29,7 @@ namespace mo
                 }
                 prune();
                 if(fn)
-                *fn = _current_frame_number;
+                    *fn = _current_frame_number;
             }
 
             return result;
@@ -92,18 +92,32 @@ namespace mo
             prune();
             return result;
         }
-        template<class T> void StreamBuffer<T>::SetFrameBufferSize(size_t size)
+        
+        template<class T> void StreamBuffer<T>::SetFrameBufferCapacity(size_t size)
         {
-            if(_time_padding)
+            if (_time_padding)
                 _time_padding = boost::none;
             _frame_padding = size;
         }
-        template<class T> void StreamBuffer<T>::SetTimestampSize(mo::time_t time)
+        
+        template<class T> void StreamBuffer<T>::SetTimePaddingCapacity(mo::time_t time)
         {
-            if(_frame_padding)
+            if (_frame_padding)
                 _frame_padding = boost::none;
             _time_padding = time;
         }
+        
+        template<class T> boost::optional<size_t> StreamBuffer<T>::GetFrameBufferCapacity()
+        {
+            return _frame_padding;
+        }
+
+        template<class T> boost::optional<mo::time_t> StreamBuffer<T>::GetTimePaddingCapacity()
+        {
+            return _time_padding;
+        }
+
+        
         template<class T> void StreamBuffer<T>::prune()
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
@@ -173,6 +187,8 @@ namespace mo
             {
                 LOG_EVERY_N(debug, 100) << "Pushing to " << this->GetTreeName() << " waiting on read, current buffer size " << this->_data_buffer.size();
                 _cv.wait_for(lock, boost::chrono::milliseconds(2));
+                // Periodically emit an update signal in case a dirty flag was not set correctly and the read thread is just sleeping
+                IParameter::_update_signal(ctx, this);
             }
             if(fn)
                 IParameter::_fn = *fn;

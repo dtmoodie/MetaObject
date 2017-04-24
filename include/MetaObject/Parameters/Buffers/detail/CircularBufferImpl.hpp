@@ -186,16 +186,31 @@ namespace mo
             return false;
         }
 
-        template<class T> void CircularBuffer<T>::SetFrameBufferSize(size_t size)
+        template<class T> void CircularBuffer<T>::SetFrameBufferCapacity(size_t size)
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
             _data_buffer.set_capacity(size);
+        }
+        
+        template<class T> void CircularBuffer<T>::SetTimePaddingCapacity(mo::time_t time)
+        {
+            (void)time;
+        }
+        
+        template<class T> boost::optional<size_t> CircularBuffer<T>::GetFrameBufferCapacity()
+        {
+            return _data_buffer.capacity();
+        }
+        
+        template<class T> boost::optional<mo::time_t> CircularBuffer<T>::GetTimePaddingCapacity()
+        {
+            return {};
         }
 
         template<class T> size_t CircularBuffer<T>::GetSize()
         {
             boost::recursive_mutex::scoped_lock lock(IParameter::mtx());
-            return _data_buffer.capacity();
+            return _data_buffer.size();
         }
 
         template<class T> bool CircularBuffer<T>::GetTimestampRange(mo::time_t& start, mo::time_t& end)

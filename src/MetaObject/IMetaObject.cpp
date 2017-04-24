@@ -634,7 +634,7 @@ bool IMetaObject::ConnectInput(InputParameter* input,
     {
         // Check contexts to see if a buffer needs to be setup
         auto output_ctx = output->GetContext();
-        if(type_ & ForceBufferedConnection_e)
+        if(type_ & ForceBufferedConnection_e || input->CheckFlags(mo::RequestBuffered_e) || output->CheckFlags(mo::RequestBuffered_e))
         {
             type_ = ParameterTypeFlags(type_ & ~ForceBufferedConnection_e);
             auto buffer = Buffer::BufferFactory::CreateProxy(output, type_);

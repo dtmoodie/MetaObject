@@ -29,8 +29,11 @@ namespace mo
             bool GetData(T& value, size_t fn, Context* ctx = nullptr, boost::optional<mo::time_t>* ts = nullptr);
 
 
-            void SetFrameBufferSize(size_t size);
-            void SetTimestampSize(mo::time_t size);
+            virtual void SetFrameBufferCapacity(size_t size);
+            virtual void SetTimePaddingCapacity(mo::time_t time);
+            virtual boost::optional<size_t> GetFrameBufferCapacity();
+            virtual boost::optional<mo::time_t> GetTimePaddingCapacity();
+
             std::shared_ptr<IParameter> DeepCopy() const;
             virtual ParameterTypeFlags GetBufferType() const{ return StreamBuffer_e;}
         protected:

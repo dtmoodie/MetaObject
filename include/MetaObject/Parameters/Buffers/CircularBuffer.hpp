@@ -65,8 +65,11 @@ namespace mo
             bool Update(IParameter* other, Context* ctx = nullptr);
             std::shared_ptr<IParameter> DeepCopy() const;
 
-            void SetFrameBufferSize(size_t size);
-            void SetTimestampSize(mo::time_t size){}
+            virtual void SetFrameBufferCapacity(size_t size);
+            virtual void SetTimePaddingCapacity(mo::time_t time);
+            virtual boost::optional<size_t> GetFrameBufferCapacity();
+            virtual boost::optional<mo::time_t> GetTimePaddingCapacity();
+
             virtual size_t GetSize();
             bool GetTimestampRange(mo::time_t& start, mo::time_t& end);
             bool GetFrameNumberRange(size_t& start,size_t& end);

@@ -518,6 +518,14 @@ if(WIN32)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/RelWithDebInfo/
         DESTINATION bin
         FILES_MATCHING PATTERN "*.pdb")
+
+	install(DIRECTORY ${CMAKE_BINARY_DIR}/Debug/
+        DESTINATION lib
+        FILES_MATCHING PATTERN "*d.pdb")
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/RelWithDebInfo/
+        DESTINATION lib
+        FILES_MATCHING PATTERN "*.pdb")
+
 endif(WIN32)
 
 install(DIRECTORY MetaParameters/ DESTINATION include/MetaObject FILES_MATCHING PATTERN "*.hpp")

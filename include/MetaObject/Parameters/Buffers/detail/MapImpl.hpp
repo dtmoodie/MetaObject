@@ -113,7 +113,6 @@ namespace mo
             _data_buffer[{ts,*fn}] = data_;
             IParameter::_modified = true;
             lock.unlock();
-            //this->Commit(ts, ctx, fn, cs);
             IParameter::_update_signal(ctx, this);
             return true;
         }
@@ -136,13 +135,25 @@ namespace mo
             }
             return false;
         }
-        template<class T> void Map<T>::SetFrameBufferSize(size_t size)
-        {
 
+        template<class T> void Map<T>::SetFrameBufferCapacity(size_t size)
+        {
+        
         }
-        template<class T> void Map<T>::SetTimestampSize(mo::time_t size)
-        {
 
+        template<class T> void Map<T>::SetTimePaddingCapacity(mo::time_t time)
+        {
+        
+        }
+
+        template<class T> boost::optional<size_t> Map<T>::GetFrameBufferCapacity()
+        {
+            return{};
+        }
+
+        template<class T> boost::optional<mo::time_t> Map<T>::GetTimePaddingCapacity()
+        {
+            return {};
         }
 
         template<class T> size_t Map<T>::GetSize()
