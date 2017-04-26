@@ -9,18 +9,20 @@ set(link_libs "")
 
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_EXAMPLES "Build examples" ON)
+option(BUILD_DEPENDENCIES "Build dependencies within the AquilOS family" ON)
 option(WITH_QT "Enable QT support" ON)
 option(WITH_PYTHON "Enable Python bindings" ON)
 option(WITH_OPENCV "Enable OpenCV types" ON )
 option(WITH_CUDA "Enable CUDA recompilation" ON)
 option(WITH_WT "Enable WT support" ON)
 
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 include(cmake/OpenCVPCHSupport.cmake)
-set(include_dirs_ "")
+
 set(link_dirs_deb "")
 set(link_dirs_rel "")
 set(compile_flags "")
@@ -101,7 +103,7 @@ link_directories("${CMAKE_CURRENT_BINARY_DIR}")
 file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE knl "src/*.cu")
 file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp")
-include_directories("${CMAKE_CURRENT_LIST_DIR}/include")
+#include_directories("${CMAKE_CURRENT_LIST_DIR}/include")
 
 # ---------------------- External Dependencies ---------------------------------
 
@@ -129,7 +131,6 @@ find_package(Boost REQUIRED COMPONENTS ${Boost_required_components})
 
 # ---------------------- cereal ---------------------------------
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include")
-set(MetaObject_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include;${CMAKE_CURRENT_SOURCE_DIR}/MetaParameters" CACHE PATH "" FORCE)
 set(PROJECT_BIN_DIRS_RELWITHDEBINFO "")
 set(PROJECT_BIN_DIRS_RELEASE "")
 set(PROJECT_BIN_DIRS_DEBUG "")
@@ -151,25 +152,22 @@ if(WITH_CUDA)
 endif(WITH_CUDA)
 
 # ---------------------- rcc ---------------------------------
-find_package(RCC QUIET)
-if(RCC_FOUND)
-	message(STATUS "RCC found at: ${RCC_DIR} - ${RCC_INCLUDE_DIRS}")
-else(RCC_FOUND)
-	SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-	set(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${CMAKE_CURRENT_LIST_DIR}/include;${cereal_INCLUDE_DIRS}")
-	set(RCC_LIBRARY_DIRS_DEBUG "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/Debug")
-	set(RCC_LIBRARY_DIRS_RELWITHDEBINFO "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/RelWithDebInfo")
-	if(MSVC)
-	  set(RCC_COMPILE_FLAGS "/DBOOST_ALL_DYN_LINK")
-	else()
-	  set(RCC_COMPILE_FLAGS "-DBOOST_ALL_DYN_LINK")
-	endif()
-	ADD_SUBDIRECTORY("dependencies/rcc")
-	include_directories(${RCC_INCLUDE_DIRS})
-	set_target_properties(RuntimeCompiler PROPERTIES FOLDER Dependencies)
-	set_target_properties(RuntimeObjectSystem PROPERTIES FOLDER Dependencies)
-	set(RCC_PERMODULE_INTERFACE_SOURCE ${RCC_PERMODULE_INTERFACE_SOURCE} PARENT_SCOPE)
-endif(RCC_FOUND)
+if(NOT BUILD_DEPENDENCIES)
+  find_package(RCC REQUIRED)
+    message(STATUS "RCC found at: ${RCC_DIR} - ${RCC_INCLUDE_DIRS}")
+else(NOT BUILD_DEPENDENCIES)
+    if(MSVC)
+      set(RCC_COMPILE_FLAGS "/DBOOST_ALL_DYN_LINK")
+    else()
+      set(RCC_COMPILE_FLAGS "-DBOOST_ALL_DYN_LINK")
+    endif()
+    ADD_SUBDIRECTORY("dependencies/rcc")
+    include_directories(${RCC_INCLUDE_DIRS})
+    set_target_properties(RuntimeCompiler PROPERTIES FOLDER Dependencies)
+    set_target_properties(RuntimeObjectSystem PROPERTIES FOLDER Dependencies)
+    set(RCC_PERMODULE_INTERFACE_SOURCE ${RCC_PERMODULE_INTERFACE_SOURCE} PARENT_SCOPE)
+    set(RCC_LIBRARIES RuntimeObjectSystem RuntimeCompiler)
+endif(NOT BUILD_DEPENDENCIES)
 
 # -------------------- Profiling ---------------------------------
 set(MO_PROFILING_MODE "BUILTIN" CACHE STRING "Set MetaObject profiling mode")
@@ -177,13 +175,13 @@ set_property(CACHE MO_PROFILING_MODE PROPERTY STRINGS BUILTIN DYNAMIC NONE)
 
 find_package(NVToolsExt QUIET)
 if(NVToolsExt)
-  include_directories(${NV_TOOLS_EXT_INCLUDE_DIR})
-  add_definitions(-DHAVE_NVTX)
+    if(NV_TOOLS_EXT_INCLUDE_DIR)
+        include_directories(${NV_TOOLS_EXT_INCLUDE_DIR})
+    endif(NV_TOOLS_EXT_INCLUDE_DIR)
+    add_definitions(-DHAVE_NVTX)
 endif()
 if(${MO_PROFILING_MODE} STREQUAL "BUILTIN")
   add_definitions(-DRMT_BUILTIN)
-  #list(APPEND link_libs Remotery)
-  #include_directories("dependencies/Remotery/lib")
 endif()
 if(${MO_PROFILING_MODE} STREQUAL "NONE")
   add_definitions(-DPROFILING_NONE)
@@ -297,11 +295,13 @@ target_link_libraries(MetaObject
   ${CUDA_CUDA_LIBRARY}
 )
 
-target_include_directories(MetaObject 
-  PUBLIC 
-    $<BUILD_INTERFACE:${RCC_INCLUDE_DIRS}>
+target_include_directories(MetaObject
+  PUBLIC
+    $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>
+    $<INSTALL_INTERFACE:include>
 )
 
+set(MetaObject_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/include;${RCC_INCLUDE_DIRS};${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include;${CMAKE_CURRENT_SOURCE_DIR}/MetaParameters" CACHE PATH "")
 
 if(HAVE_PYTHON)
     target_link_libraries(MetaObject
@@ -415,6 +415,7 @@ WRITE_RCC_CONFIG("${target_include_dirs_}" "${LINK_DIRS_DEBUG}" "${LINK_DIRS_REL
 if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
   include(CTest)
   enable_testing()
+  INCLUDE_DIRECTORIES(${MetaObject_INCLUDE_DIRS})
   SUBDIRLIST(tests "${CMAKE_CURRENT_LIST_DIR}/tests")
   foreach(test ${tests})
     file(GLOB_RECURSE test_srcs "tests/${test}/*.cpp")
@@ -465,25 +466,28 @@ if(BUILD_EXAMPLES)
     ADD_SUBDIRECTORY("examples")
 endif()
 # ----------------------- install ----------------------------
+configure_file(MetaObjectConfig.cmake.in
+  "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake" @ONLY
+)
+
 export(TARGETS MetaObject MetaParameters
       FILE "${PROJECT_BINARY_DIR}/MetaObjectTargets.cmake")
+
+file(COPY "cmake" DESTINATION ${PROJECT_BINARY_DIR})
 
 export(PACKAGE MetaObject)
 
 if(Qt5_FOUND)
-	set(MO_QT5 ON)
+    set(MO_QT5 ON)
 else(Qt5_FOUND)
-	set(MO_QT5 OFF)
+    set(MO_QT5 OFF)
 endif(Qt5_FOUND)
 
 if(Wt_FOUND)
-	set(MO_WT ON)
+    set(MO_WT ON)
 else(Wt_FOUND)
-	set(MO_WT OFF)
+    set(MO_WT OFF)
 endif(Wt_FOUND)
-
-configure_file(MetaObjectConfig.cmake.in
-  "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake" @ONLY)
 
 install(TARGETS MetaObject MetaParameters
         RUNTIME DESTINATION bin
@@ -491,7 +495,7 @@ install(TARGETS MetaObject MetaParameters
         ARCHIVE DESTINATION lib
 )
 
-install(TARGETS MetaObject MetaParameters 
+install(TARGETS MetaObject MetaParameters
         DESTINATION lib
         EXPORT MetaObjectTargets
 )
@@ -502,8 +506,8 @@ install(DIRECTORY include/
 )
 
 install(DIRECTORY dependencies/cereal/include/
-	DESTINATION include
-	FILES_MATCHING PATTERN "*.hpp"
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.hpp"
 )
 
 install(DIRECTORY dependencies/cereal/include/
@@ -519,7 +523,7 @@ if(WIN32)
         DESTINATION bin
         FILES_MATCHING PATTERN "*.pdb")
 
-	install(DIRECTORY ${CMAKE_BINARY_DIR}/Debug/
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/Debug/
         DESTINATION lib
         FILES_MATCHING PATTERN "*d.pdb")
     install(DIRECTORY ${CMAKE_BINARY_DIR}/RelWithDebInfo/

@@ -2,7 +2,7 @@
 # It defines the following variables
 #  MetaObject_INCLUDE_DIRS - include directories for MetaObject
 #  MetaObject_LIBRARIES    - libraries to link against
- 
+
 # Compute paths
 get_filename_component(MetaObject_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
@@ -13,42 +13,46 @@ set(bin_dirs_ "")
 
 # Our library dependencies (contains definitions for IMPORTED targets)
 if(NOT TARGET RuntimeCompiler AND NOT TARGET RuntimeObjectSystem)
-  find_package(RCC REQUIRED)
+    find_package(RCC QUIET)
+    if(NOT RCC_FOUND)
+        set(MetaObject_FOUND OFF)
+        return()
+    endif(NOT RCC_FOUND)
 endif()
 
 if(MetaObject_WITH_QT5)
-	find_package(Qt5 QUIET COMPONENTS Core Widgets Gui)
-	if(Qt5_FOUND)
-		if(WIN32)
-			get_target_property(qt5_core_bin_ Qt5::Core IMPORTED_LOCATION_DEBUG)
-			get_filename_component(qt5_bin_dir_ "${qt5_core_bin_}" DIRECTORY)
-			list(APPEND bin_dirs_ ${qt5_bin_dir_})
-			rcc_find_path(Qt5_PLUGIN_PATH qwindows.dll PATHS ${qt5_bin_dir_}/../plugins/platforms)
-		endif(WIN32)
-	else(Qt5_FOUND)
-		message("MetaObject was built against Qt5 but Qt5 was not found, this may not be an issue on some platforms if Qt5 is not used")
-	endif(Qt5_FOUND)
+    find_package(Qt5 QUIET COMPONENTS Core Widgets Gui)
+    if(Qt5_FOUND)
+        if(WIN32)
+            get_target_property(qt5_core_bin_ Qt5::Core IMPORTED_LOCATION_DEBUG)
+            get_filename_component(qt5_bin_dir_ "${qt5_core_bin_}" DIRECTORY)
+            list(APPEND bin_dirs_ ${qt5_bin_dir_})
+            rcc_find_path(Qt5_PLUGIN_PATH qwindows.dll PATHS ${qt5_bin_dir_}/../plugins/platforms)
+        endif(WIN32)
+    else(Qt5_FOUND)
+        message("MetaObject was built against Qt5 but Qt5 was not found, this may not be an issue on some platforms if Qt5 is not used")
+    endif(Qt5_FOUND)
 endif(MetaObject_WITH_QT5)
 
 if(MetaObject_WITH_WT)
-	find_package(Wt QUIET)
-	if(Wt_FOUND)
-		find_path(Wt_BIN_DIR
-			NAMES wt.dll wtd.dll
-			PATHS ${Wt_DIR} "${Wt_INCLUDE_DIR}/../"
-			ENV ${Wt_DIR}
-			PATH PATH_SUFFIXES bin
-		)
-		if(Wt_BIN_DIR)
-			list(APPEND bin_dirs_ ${Wt_BIN_DIR})
-		endif(Wt_BIN_DIR)
-	else(Wt_FOUND)
-		message("MetaObject was built against Wt but Wt was not found, this may not be an issue on some platforms if Wt is not used")
-	endif()
+    find_package(Wt QUIET)
+    if(Wt_FOUND)
+        find_path(Wt_BIN_DIR
+            NAMES wt.dll wtd.dll
+            PATHS ${Wt_DIR} "${Wt_INCLUDE_DIR}/../"
+            ENV ${Wt_DIR}
+            PATH PATH_SUFFIXES bin
+        )
+        if(Wt_BIN_DIR)
+            list(APPEND bin_dirs_ ${Wt_BIN_DIR})
+        endif(Wt_BIN_DIR)
+    else(Wt_FOUND)
+        message("MetaObject was built against Wt but Wt was not found, this may not be an issue on some platforms if Wt is not used")
+    endif()
 endif(MetaObject_WITH_WT)
 
 if(MetaObject_WITH_OPENCV)
-	find_package(OpenCV REQUIRED core cudaarithm)
+    find_package(OpenCV REQUIRED core cudaarithm)
 endif(MetaObject_WITH_OPENCV)
 
 
@@ -62,7 +66,7 @@ set(MetaObject_INCLUDE_DIRS "${MetaObject_DIR}/include;${RCC_INCLUDE_DIRS};${Ope
 if(NOT TARGET MetaObject AND NOT TARGET MetaParameter)
   include("${MetaObject_DIR}/MetaObjectTargets.cmake")
 endif()
- 
+
 # These are IMPORTED targets created by MetaObjectTargets.cmake
 set(MetaObject_LIBRARIES MetaObject MetaParameter RuntimeCompiler RuntimeObjectSystem)
 
