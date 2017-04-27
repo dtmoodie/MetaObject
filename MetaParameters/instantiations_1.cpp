@@ -19,7 +19,7 @@
 #endif
 #include <cereal/types/string.hpp>
 #include <cereal/types/map.hpp>
-#include "MetaParameters.hpp"
+#include "MetaObject/MetaParameters.hpp"
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
 #endif

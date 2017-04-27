@@ -19,7 +19,7 @@
 #include "MetaObject/Parameters/TypedParameter.hpp"
 #include "MetaObject/Parameters/TypedParameterPtr.hpp"
 //#include "MetaObject/Parameters/RangedParameter.hpp"
-#include "MetaParameters.hpp"
+#include "MetaObject/MetaParameters.hpp"
 using namespace mo;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -136,6 +136,6 @@ void MainWindow::on_btnSerialize_clicked()
             Parameters::Persistence::cv::DeSerialize(&node, parameters[i].get());
         }
     }*/
-    
+
 }
 

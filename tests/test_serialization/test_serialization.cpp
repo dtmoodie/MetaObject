@@ -25,7 +25,7 @@
 #include "cereal/archives/portable_binary.hpp"
 #include <fstream>
 #include <istream>
-#include "MetaParameters.hpp"
+#include "MetaObject/MetaParameters.hpp"
 #ifdef HAVE_OPENCV
 #include <opencv2/core.hpp>
 #endif
@@ -109,8 +109,8 @@ BOOST_AUTO_TEST_CASE(serialize_manual_binary)
 BOOST_AUTO_TEST_CASE(serialize_by_policy_xml)
 {
     rcc::shared_ptr<serializable_object> obj = serializable_object::Create();
-	obj->test = 14;
-	obj->test2 = 13;
+    obj->test = 14;
+    obj->test2 = 13;
     {
         std::ofstream ofs("test2.xml");
         SerializerFactory::Serialize(obj, ofs, SerializerFactory::xml_e);
@@ -123,19 +123,19 @@ BOOST_AUTO_TEST_CASE(serialize_by_policy_xml)
 
 BOOST_AUTO_TEST_CASE(serialize_by_policy_binary)
 {
-	rcc::shared_ptr<serializable_object> obj = serializable_object::Create();
-	obj->test = 14;
-	obj->test2 = 13;
-	{
-		std::ofstream ofs("test2.bin", std::ios::binary);
+    rcc::shared_ptr<serializable_object> obj = serializable_object::Create();
+    obj->test = 14;
+    obj->test2 = 13;
+    {
+        std::ofstream ofs("test2.bin", std::ios::binary);
         SerializerFactory::Serialize(obj, ofs, SerializerFactory::Binary_e);
-	}
-	{
-		std::ifstream ifs("test2.bin", std::ios::binary);
+    }
+    {
+        std::ifstream ifs("test2.bin", std::ios::binary);
         SerializerFactory::DeSerialize(obj.Get(), ifs, SerializerFactory::Binary_e);
-		BOOST_REQUIRE_EQUAL(obj->test, 14);
-		BOOST_REQUIRE_EQUAL(obj->test2, 13);
-	}
+        BOOST_REQUIRE_EQUAL(obj->test, 14);
+        BOOST_REQUIRE_EQUAL(obj->test2, 13);
+    }
 }
 
 BOOST_AUTO_TEST_CASE(deserialize_to_new_object_xml)
@@ -143,46 +143,46 @@ BOOST_AUTO_TEST_CASE(deserialize_to_new_object_xml)
     std::ifstream ifs("test2.xml");
     auto obj = SerializerFactory::DeSerialize(ifs, SerializerFactory::xml_e);
     BOOST_REQUIRE(obj);
-	auto typed = obj.DynamicCast<serializable_object>();
-	BOOST_REQUIRE(typed);
-	BOOST_REQUIRE_EQUAL(typed->test, 14);
-	BOOST_REQUIRE_EQUAL(typed->test2, 13);
+    auto typed = obj.DynamicCast<serializable_object>();
+    BOOST_REQUIRE(typed);
+    BOOST_REQUIRE_EQUAL(typed->test, 14);
+    BOOST_REQUIRE_EQUAL(typed->test2, 13);
 }
 
 BOOST_AUTO_TEST_CASE(deserialize_to_new_object_binary)
 {
-	std::ifstream ifs("test2.bin", std::ios::binary);
+    std::ifstream ifs("test2.bin", std::ios::binary);
     auto obj = SerializerFactory::DeSerialize(ifs, SerializerFactory::Binary_e);
-	BOOST_REQUIRE(obj);
-	auto typed = obj.DynamicCast<serializable_object>();
-	BOOST_REQUIRE(typed);
+    BOOST_REQUIRE(obj);
+    auto typed = obj.DynamicCast<serializable_object>();
+    BOOST_REQUIRE(typed);
     BOOST_REQUIRE_EQUAL(typed->test, 14);
-	BOOST_REQUIRE_EQUAL(typed->test2, 13);
+    BOOST_REQUIRE_EQUAL(typed->test2, 13);
 }
 
 BOOST_AUTO_TEST_CASE(serialize_multi_by_policy_binary)
 {
-	rcc::shared_ptr<serializable_object> obj1 = serializable_object::Create();
-	rcc::shared_ptr<serializable_object> obj2 = serializable_object::Create();
-	obj1->test = 14;
-	obj1->test2 = 13;
-	obj2->test = 15;
-	obj2->test2 = 16;
+    rcc::shared_ptr<serializable_object> obj1 = serializable_object::Create();
+    rcc::shared_ptr<serializable_object> obj2 = serializable_object::Create();
+    obj1->test = 14;
+    obj1->test2 = 13;
+    obj2->test = 15;
+    obj2->test2 = 16;
 
-	{
-		std::ofstream ofs("test2.bin", std::ios::binary);
+    {
+        std::ofstream ofs("test2.bin", std::ios::binary);
         SerializerFactory::Serialize(obj1.Get(), ofs, SerializerFactory::Binary_e);
         SerializerFactory::Serialize(obj2.Get(), ofs, SerializerFactory::Binary_e);
-	}
-	{
-		std::ifstream ifs("test2.bin", std::ios::binary);
+    }
+    {
+        std::ifstream ifs("test2.bin", std::ios::binary);
         auto new_obj1 = rcc::shared_ptr<serializable_object>(SerializerFactory::DeSerialize(ifs, SerializerFactory::Binary_e));
         auto new_obj2 = rcc::shared_ptr<serializable_object>(SerializerFactory::DeSerialize(ifs, SerializerFactory::Binary_e));
-		BOOST_REQUIRE_EQUAL(new_obj1->test, 14);
-		BOOST_REQUIRE_EQUAL(new_obj1->test2, 13);
-		BOOST_REQUIRE_EQUAL(new_obj2->test, 15);
-		BOOST_REQUIRE_EQUAL(new_obj2->test2, 16);
-	}
+        BOOST_REQUIRE_EQUAL(new_obj1->test, 14);
+        BOOST_REQUIRE_EQUAL(new_obj1->test2, 13);
+        BOOST_REQUIRE_EQUAL(new_obj2->test, 15);
+        BOOST_REQUIRE_EQUAL(new_obj2->test2, 16);
+    }
 }
 
 

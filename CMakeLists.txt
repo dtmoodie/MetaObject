@@ -302,7 +302,7 @@ target_include_directories(MetaObject
 )
 
 set(MetaObject_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/include;${RCC_INCLUDE_DIRS};${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include;${CMAKE_CURRENT_SOURCE_DIR}/MetaParameters" CACHE PATH "")
-
+set(MetaObject_LIBRARIES "MetaObject;MetaParameters" CACHE STRING "")
 if(HAVE_PYTHON)
     target_link_libraries(MetaObject
         ${PYTHON_LIBRARY}
@@ -539,10 +539,10 @@ install(DIRECTORY include/
         FILES_MATCHING PATTERN "*.hpp"
 )
 
-install(DIRECTORY cmake DESTINATION ./ FILES_MATCHING PATTERN "*.cmake")
+install(DIRECTORY cmake DESTINATION share/MetaObject FILES_MATCHING PATTERN "*.cmake")
 
 install(FILES
   "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake"
-  DESTINATION "${CMAKE_INSTALL_PREFIX}" COMPONENT dev)
+  DESTINATION "${CMAKE_INSTALL_PREFIX}/share/MetaObject" COMPONENT dev)
 
-install(EXPORT MetaObjectTargets DESTINATION "${CMAKE_INSTALL_PREFIX}" COMPONENT dev)
+install(EXPORT MetaObjectTargets DESTINATION "${CMAKE_INSTALL_PREFIX}/share/MetaObject" COMPONENT dev)

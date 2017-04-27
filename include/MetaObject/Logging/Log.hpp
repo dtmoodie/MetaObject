@@ -5,7 +5,7 @@
 
 #include <boost/log/trivial.hpp>
 #ifndef WIN32
-#include "RuntimeLinkLibrary.h"
+#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 RUNTIME_COMPILER_LINKLIBRARY("-lboost_log")
 RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 #endif
@@ -91,7 +91,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 #define LOG(severity) BOOST_LOG_TRIVIAL(severity) << "[" << __FUNCTION__ << "] "
 #define DOIF(condition, expression, severity) if(condition) { LOG(severity) << #condition << " is true, thus performing " << #expression; expression;} else { LOG(severity) << #condition << " failed";}
 
-#define DOIF_LOG_PASS(condition, expression, severity) if(condition) { LOG(severity) << #condition << " is true, thus performing " << #expression; expression;} 
+#define DOIF_LOG_PASS(condition, expression, severity) if(condition) { LOG(severity) << #condition << " is true, thus performing " << #expression; expression;}
 #define DOIF_LOG_FAIL(condition, expression, severity) if(condition) { expression; } else { LOG(severity) << "Unable to perform " #expression " due to " #condition << " failed";}
 
 #define LOGIF_EQ(lhs, rhs, severity) if(lhs == rhs)  LOG(severity) << "if(" << #lhs << " == " << #rhs << ")" << "[" << lhs << " == " << rhs << "]";
@@ -164,20 +164,20 @@ namespace mo
         std::ostringstream log_stream_;
     };
 
-    class MO_EXPORTS ThrowOnDestroy_trace: public ThrowOnDestroy 
+    class MO_EXPORTS ThrowOnDestroy_trace: public ThrowOnDestroy
     {
     public:
         ThrowOnDestroy_trace(const char* function, const char* file, int line);
         ~ThrowOnDestroy_trace() MO_THROW_SPECIFIER;
     };
-    
-    class MO_EXPORTS ThrowOnDestroy_debug: public ThrowOnDestroy 
+
+    class MO_EXPORTS ThrowOnDestroy_debug: public ThrowOnDestroy
     {
     public:
         ThrowOnDestroy_debug(const char* function, const char* file, int line);
     };
 
-    class MO_EXPORTS ThrowOnDestroy_info: public ThrowOnDestroy 
+    class MO_EXPORTS ThrowOnDestroy_info: public ThrowOnDestroy
     {
     public:
         ThrowOnDestroy_info(const char* function, const char* file, int line);
@@ -214,7 +214,7 @@ namespace mo
     void MO_EXPORTS collect_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, const std::function<void(const std::string&)>& write);
     std::string MO_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut);
     std::string MO_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, std::stringstream& ss);
-    
+
 
     struct MO_EXPORTS IExceptionWithCallStackBase
     {
@@ -233,7 +233,7 @@ namespace mo
         ExceptionWithCallStack(const E& exc, const std::string& callstack) :
             E(exc), m_callStack(callstack)
         { }
-        
+
         virtual const char * CallStack() const override { return m_callStack.c_str(); }
 
     protected:
@@ -245,7 +245,7 @@ namespace mo
         ExceptionWithCallStack(const std::string& msg, const std::string& callstack) :
             std::string(msg), m_callStack(callstack)
         { }
-        
+
         virtual const char * CallStack() const override { return m_callStack.c_str(); }
 
     protected:
