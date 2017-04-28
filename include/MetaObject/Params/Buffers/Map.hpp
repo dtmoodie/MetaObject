@@ -84,7 +84,7 @@ namespace mo
             virtual ParamType getBufferType() const{ return Map_e;}
         protected:
             virtual bool updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
-            virtual void onInputUpdate(Context* ctx, IParam* param);
+            virtual void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
 			typename std::map<SequenceKey, Storage_t>::iterator search(OptionalTime_t ts);
 			typename std::map<SequenceKey, Storage_t>::iterator search(size_t fn);
 

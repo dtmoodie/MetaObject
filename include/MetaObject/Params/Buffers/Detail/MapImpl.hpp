@@ -36,14 +36,13 @@ namespace mo
             return false;
         }
 
-       
         template<class T>
         bool Map<T>::updateDataImpl(typename ITParam<T>::ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs){
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             _data_buffer[{ts,fn}] = data;
             IParam::_modified = true;
             lock.unlock();
-            _typed_update_signal(data, this, ts, ctx, fn, cs, mo::ValueUpdated_e);
+            _typed_update_signal(data, this,  ctx, ts, fn, cs, mo::InputUpdated_e);
             return true;
         }
 
@@ -64,8 +63,7 @@ namespace mo
             return _data_buffer.size();
         }
 
-        template<class T>
-        bool Map<T>::getTimestampRange(mo::Time_t& start, mo::Time_t& end)
+        template<class T> bool Map<T>::getTimestampRange(mo::Time_t& start, mo::Time_t& end)
         {
             if (_data_buffer.size())
             {
@@ -89,8 +87,8 @@ namespace mo
             }
             return false;
         }
-        template<class T>
-        typename std::map<SequenceKey, typename ITParam<T>::Storage_t>::iterator  Map<T>::search(OptionalTime_t ts)
+        
+        template<class T> typename std::map<SequenceKey, typename ITParam<T>::Storage_t>::iterator  Map<T>::search(OptionalTime_t ts)
         {
             if (_data_buffer.size() == 0)
                 return _data_buffer.end();
@@ -102,24 +100,20 @@ namespace mo
             }
             return _data_buffer.find(*ts);
         }
-        template<class T>
-        typename std::map<SequenceKey, typename ITParam<T>::Storage_t>::iterator Map<T>::search(size_t fn)
+        
+        template<class T> typename std::map<SequenceKey, typename ITParam<T>::Storage_t>::iterator Map<T>::search(size_t fn)
         {
             if (_data_buffer.size() == 0)
                 return _data_buffer.end();
             return _data_buffer.find(fn);
         }
         
-        template<class T> void Map<T>::onInputUpdate(Context* ctx, IParam* param){
-            mo::Mutex_t::scoped_lock lock(this->input->mtx());
-            StorageType_t data;
-            if(this->input->getData(data)){
-                auto ts = this->input->getTimestamp();
-                auto fn = this->input->getFrameNumber();
-                auto cs = this->input->GetCoordinateSystem();
-                lock.unlock();
-                updateDataImpl(*data, ts, ctx, fn, cs);
-            }
+        template<class T> void Map<T>::onInputUpdate(ConstStorageRef_t data, IParam* input, Context* ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags){
+            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            _data_buffer[{ts, fn}] = data;
+            IParam::_modified = true;
+            lock.unlock();
+            _typed_update_signal(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
         }
     }
 }

@@ -77,10 +77,10 @@ protected:
 // input variable is for TParam.
 template<typename T> class MO_EXPORTS TInputParamPtr : virtual public ITInputParam<T> {
 public:
-    TInputParamPtr(const std::string& name = "", const T** userVar_ = nullptr, Context* ctx = nullptr);
-    bool SetInput(std::shared_ptr<IParam> input);
-    bool SetInput(IParam* input);
-    void SetUserDataPtr(const T** user_var_);
+    TInputParamPtr(const std::string& name = "", Input_t* userVar_ = nullptr, Context* ctx = nullptr);
+    bool setInput(std::shared_ptr<IParam> input);
+    bool setInput(IParam* input);
+    void setUserDataPtr(Input_t* user_var_);
     bool getInput(OptionalTime_t ts, size_t* fn = nullptr);
     bool getInput(size_t fn, OptionalTime_t* ts = nullptr);
 
@@ -88,7 +88,8 @@ protected:
     virtual bool UpdateDataImpl(const T& data, OptionalTime_t ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs) {
         return true;
     }
-    const T** userVar; // Pointer to the user space pointer variable of type T
+    Input_t* _user_var; // Pointer to the user space pointer variable of type T
+    InputStorage_t _current_data;
     void updateUserVar();
     virtual void onInputUpdate(Context* ctx, IParam* param);
     virtual void onInputDelete(IParam const* param);

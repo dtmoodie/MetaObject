@@ -12,7 +12,8 @@ namespace mo
     template<class T>
     ITInputParam<T>::ITInputParam(const std::string& name, Context* ctx):
             _input(nullptr){
-        _update_slot = std::bind(&ITInputParam<T>::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
+        _update_slot = std::bind(&ITInputParam<T>::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2, 
+            std::placeholders::_3, std::placeholders::_4, std::placeholders::_5);
         _delete_slot = std::bind(&ITInputParam<T>::onInputDelete, this, std::placeholders::_1);
     }
 

@@ -205,7 +205,7 @@ namespace mo
         template<class T>
         void BlockingStreamBuffer<T>::prune()
         {
-            boost::unique_lock<boost::recursive_mutex> lock(IParam::mtx());
+            mo::Mutex_t::scoped_lock lock(IParam::mtx());
             StreamBuffer<T>::prune();
             auto itr = this->_data_buffer.begin();
             while(this->_data_buffer.size() >= _size)
