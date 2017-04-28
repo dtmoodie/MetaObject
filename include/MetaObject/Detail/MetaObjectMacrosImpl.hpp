@@ -11,298 +11,243 @@
 #include <vector>
 #include <string>
 
-
 struct ISimpleSerializer;
-namespace mo
-{
-    struct SignalInfo;
-    struct SlotInfo;
-    struct ParameterInfo;
+namespace mo {
+struct SignalInfo;
+struct SlotInfo;
+struct ParamInfo;
 }
 
 // ---------------- SIGNAL_INFO ------------
 #define SIGNAL_INFO_START(N_) \
-template<int N> static void list_signal_info_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N> dummy) \
-{ \
+template<int N> static void list_signal_info_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N> dummy){ \
     return list_signal_info_(info, --dummy); \
 } \
-static void list_signal_info_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N_> dummy) \
-{ \
+static void list_signal_info_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N_> dummy){ \
     (void)info; \
     (void)dummy; \
 }
 
 #define SIGNAL_INFO_END(N) \
-static void GetSignalInfoStatic(std::vector<mo::SignalInfo*> & info) \
-{ \
+static void getSignalInfoStatic(std::vector<mo::SignalInfo*> & info){ \
     list_signal_info_(info, mo::_counter_<N-1>()); \
     _list_parent_signals(info); \
     std::sort(info.begin(), info.end()); \
     info.erase(std::unique(info.begin(), info.end()), info.end()); \
 } \
-static std::vector<mo::SignalInfo*> GetSignalInfoStatic() \
-{ \
+static std::vector<mo::SignalInfo*> getSignalInfoStatic(){ \
     std::vector<mo::SignalInfo*> info; \
-    GetSignalInfoStatic(info); \
+    getSignalInfoStatic(info); \
     return info; \
 } \
-void GetSignalInfo(std::vector<mo::SignalInfo*> & info) const \
-{ \
-    GetSignalInfoStatic(info); \
+void getSignalInfo(std::vector<mo::SignalInfo*> & info) const{ \
+    getSignalInfoStatic(info); \
 }
 
 // ---------------- SIGNALS ------------
 #define SIGNALS_START(N_) \
-template<int N> int init_signals_(bool firstInit, mo::_counter_<N> dummy) \
-{ \
+template<int N> int init_signals_(bool firstInit, mo::_counter_<N> dummy){ \
     return init_signals_(firstInit, --dummy); \
 } \
-int init_signals_(bool firstInit, mo::_counter_<N_> dummy) \
-{ \
+int init_signals_(bool firstInit, mo::_counter_<N_> dummy){ \
     (void)dummy; \
     (void)firstInit; \
     return 0; \
 }
 
-
 #define SIGNALS_END(N_) \
-virtual int InitSignals(bool firstInit) \
-{ \
+virtual int InitSignals(bool firstInit){ \
     int count = _init_parent_signals(firstInit); \
     return init_signals_(firstInit, mo::_counter_<N_-1>()) + count; \
 }
 
 // ---------------- SLOT INFO ------------
 #define SLOT_INFO_START(N_) \
-template<int N> static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy) \
-{ \
+template<int N> static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy){ \
     return list_slots_(info, --dummy); \
 } \
-static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N_> dummy) \
-{ \
+static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N_> dummy){ \
     (void)info; \
     (void)dummy; \
 }
 
 #define SLOT_INFO_END(N) \
-static void GetSlotInfoStatic(std::vector<mo::SlotInfo*> & info) \
-{ \
+static void getSlotInfoStatic(std::vector<mo::SlotInfo*> & info){ \
     list_slots_(info, mo::_counter_<N-1>()); \
     _list_parent_slots(info); \
     std::sort(info.begin(), info.end()); \
     info.erase(std::unique(info.begin(), info.end()), info.end()); \
 } \
-static std::vector<mo::SlotInfo*> GetSlotInfoStatic() \
-{ \
+static std::vector<mo::SlotInfo*> getSlotInfoStatic(){ \
     std::vector<mo::SlotInfo*> info; \
-    GetSlotInfoStatic(info); \
+    getSlotInfoStatic(info); \
     return info; \
 } \
-void GetSlotInfo(std::vector<mo::SlotInfo*>& info) const \
-{ \
-    GetSlotInfoStatic(info); \
+void getSlotInfo(std::vector<mo::SlotInfo*>& info) const{ \
+    getSlotInfoStatic(info); \
 }
 
 
-// ---------------- PARAMETERS INFO ------------
+// ---------------- ParamS INFO ------------
 
-#define PARAMETER_INFO_START(N_) \
-template<int N> static void list_parameter_info_(std::vector<mo::ParameterInfo*>& info, mo::_counter_<N> dummy) \
-{ \
-    list_parameter_info_(info, --dummy); \
+#define PARAM_INFO_START(N_) \
+template<int N> static void list_Param_info_(std::vector<mo::ParamInfo*>& info, mo::_counter_<N> dummy){ \
+    list_Param_info_(info, --dummy); \
 } \
-static void list_parameter_info_(std::vector<mo::ParameterInfo*>& info, mo::_counter_<N_> dummy) \
-{ \
+static void list_Param_info_(std::vector<mo::ParamInfo*>& info, mo::_counter_<N_> dummy){ \
     (void)info; \
     (void)dummy; \
 }
 
 
-#define PARAMETER_INFO_END(N) \
-static void GetParameterInfoStatic(std::vector<mo::ParameterInfo*>& info) \
-{ \
-    list_parameter_info_(info, mo::_counter_<N-1>()); \
-    _list_parent_parameter_info(info); \
+#define PARAM_INFO_END(N) \
+static void getParamInfoStatic(std::vector<mo::ParamInfo*>& info){ \
+    list_Param_info_(info, mo::_counter_<N-1>()); \
+    _list_parent_Param_info(info); \
     std::sort(info.begin(), info.end()); \
     info.erase(std::unique(info.begin(), info.end()), info.end()); \
 } \
-static std::vector<mo::ParameterInfo*> GetParameterInfoStatic() \
-{ \
-    std::vector<mo::ParameterInfo*> info; \
-    GetParameterInfoStatic(info); \
+static std::vector<mo::ParamInfo*> getParamInfoStatic(){ \
+    std::vector<mo::ParamInfo*> info; \
+    getParamInfoStatic(info); \
     return info; \
 } \
-void GetParameterInfo(std::vector<mo::ParameterInfo*>& info) const \
-{ \
-    GetParameterInfoStatic(info); \
+void getParamInfo(std::vector<mo::ParamInfo*>& info) const{ \
+    getParamInfoStatic(info); \
 }
 
-// ---------------- PARAMETERS ------------
-#define PARAMETER_START(N_) \
-template<int N> void init_parameters_(bool firstInit, mo::_counter_<N> dummy) \
-{ \
-    init_parameters_(firstInit, --dummy); \
+// ---------------- ParamS ------------
+#define PARAM_START(N_) \
+template<int N> void init_Params_(bool firstInit, mo::_counter_<N> dummy){ \
+    init_Params_(firstInit, --dummy); \
 } \
-void init_parameters_(bool firstInit, mo::_counter_<N_> dummy) \
-{ \
+void init_Params_(bool firstInit, mo::_counter_<N_> dummy){ \
     (void)firstInit; \
     (void)dummy; \
 } \
-template<int N> void _serialize_parameters(ISimpleSerializer* pSerializer, mo::_counter_<N> dummy) \
-{ \
-    _serialize_parameters(pSerializer, --dummy); \
+template<int N> void _serialize_Params(ISimpleSerializer* pSerializer, mo::_counter_<N> dummy){ \
+    _serialize_Params(pSerializer, --dummy); \
 } \
-void _serialize_parameters(ISimpleSerializer* pSerializer, mo::_counter_<N_> dummy) \
-{ \
+void _serialize_Params(ISimpleSerializer* pSerializer, mo::_counter_<N_> dummy){ \
     (void)dummy; \
     (void)pSerializer; \
 } \
-template<class T, int N> void _load_parameters(T& ar, mo::_counter_<N> dummy) \
-{ \
-    _load_parameters<T>(ar, --dummy); \
+template<class T, int N> void _load_Params(T& ar, mo::_counter_<N> dummy){ \
+    _load_Params<T>(ar, --dummy); \
 } \
-template<class T, int N> void _save_parameters(T& ar, mo::_counter_<N> dummy) const \
-{ \
-    _save_parameters<T>(ar, --dummy); \
+template<class T, int N> void _save_Params(T& ar, mo::_counter_<N> dummy) const{ \
+    _save_Params<T>(ar, --dummy); \
 } \
-template<class T> void _load_parameters(T& ar, mo::_counter_<N_> dummy) \
-{ \
+template<class T> void _load_Params(T& ar, mo::_counter_<N_> dummy){ \
     (void)dummy; \
     (void)ar; \
 } \
-template<class T> void _save_parameters(T& ar, mo::_counter_<N_> dummy) const \
-{ \
+template<class T> void _save_Params(T& ar, mo::_counter_<N_> dummy) const{ \
     (void)dummy; \
     (void)ar; \
 }
 
-#define PARAMETER_END(N_) \
-void InitParameters(bool firstInit) \
-{ \
-    init_parameters_(firstInit, mo::_counter_<N_ - 1>()); \
+#define PARAM_END(N_) \
+void initParams(bool firstInit){ \
+    init_Params_(firstInit, mo::_counter_<N_ - 1>()); \
     _init_parent_params(firstInit); \
 } \
-void SerializeParameters(ISimpleSerializer* pSerializer) \
-{ \
-    _serialize_parameters(pSerializer, mo::_counter_<N_ - 1>()); \
+void serializeParams(ISimpleSerializer* pSerializer){ \
+    _serialize_Params(pSerializer, mo::_counter_<N_ - 1>()); \
     _serialize_parent_params(pSerializer); \
 } \
-template<class T> void load(T& ar) \
-{ \
-    _load_parameters<T>(ar, mo::_counter_<N_ -1>()); \
+template<class T> void load(T& ar){ \
+    _load_Params<T>(ar, mo::_counter_<N_ -1>()); \
     _load_parent<T>(ar); \
 } \
-template<class T> void save(T& ar) const \
-{ \
-    _save_parameters<T>(ar, mo::_counter_<N_ -1>()); \
+template<class T> void save(T& ar) const{ \
+    _save_Params<T>(ar, mo::_counter_<N_ -1>()); \
     _save_parent<T>(ar); \
 }
 
 
 // -------------- SLOTS -------------
 #define SLOT_START(N_) \
-template<int N> void bind_slots_(bool firstInit, mo::_counter_<N> dummy) \
-{ \
+template<int N> void bind_slots_(bool firstInit, mo::_counter_<N> dummy){ \
     bind_slots_(firstInit, --dummy); \
 } \
-void bind_slots_(bool firstInit, mo::_counter_<N_> dummy)  \
-{  \
+void bind_slots_(bool firstInit, mo::_counter_<N_> dummy){  \
     (void)dummy; \
     (void)firstInit; \
 }
 
 #define SLOT_END(N_) \
-void BindSlots(bool firstInit) \
-{ \
+void bindSlots(bool firstInit){ \
     _bind_parent_slots(firstInit); \
     bind_slots_(firstInit, mo::_counter_<N_-1>()); \
 }
 
 #define HANDLE_PARENT_1(PARENT1) \
-void _init_parent_params(bool firstInit) \
-{ \
-    PARENT1::InitParameters(firstInit); \
+void _init_parent_params(bool firstInit){ \
+    PARENT1::initParams(firstInit); \
 } \
-void _serialize_parent_params(ISimpleSerializer* pSerializer) \
-{ \
-    PARENT1::SerializeParameters(pSerializer); \
+void _serialize_parent_params(ISimpleSerializer* pSerializer){ \
+    PARENT1::serializeParams(pSerializer); \
 } \
-template<class T> void _load_parent(T& ar) \
-{ \
+template<class T> void _load_parent(T& ar){ \
     PARENT1::load(ar); \
 } \
-template<class T> void _save_parent(T& ar) const \
-{ \
+template<class T> void _save_parent(T& ar) const{ \
    PARENT1::save(ar); \
 } \
-void _bind_parent_slots(bool firstInit) \
-{ \
-    PARENT1::BindSlots(firstInit); \
+void _bind_parent_slots(bool firstInit){ \
+    PARENT1::bindSlots(firstInit); \
 } \
-static void _list_parent_parameter_info(std::vector<mo::ParameterInfo*>& info) \
-{ \
-    PARENT1::GetParameterInfoStatic(info); \
+static void _list_parent_Param_info(std::vector<mo::ParamInfo*>& info){ \
+    PARENT1::getParamInfoStatic(info); \
 } \
-static void _list_parent_signals(std::vector<mo::SignalInfo*>& info) \
-{ \
-    PARENT1::GetSignalInfoStatic(info); \
+static void _list_parent_signals(std::vector<mo::SignalInfo*>& info){ \
+    PARENT1::getSignalInfoStatic(info); \
 } \
-static void _list_parent_slots(std::vector<mo::SlotInfo*>& info) \
-{ \
-    PARENT1::GetSlotInfoStatic(info); \
+static void _list_parent_slots(std::vector<mo::SlotInfo*>& info){ \
+    PARENT1::getSlotInfoStatic(info); \
 } \
-int _init_parent_signals(bool firstInit) \
-{ \
+int _init_parent_signals(bool firstInit){ \
     return PARENT1::InitSignals(firstInit); \
 }
 
 
 #define HANDLE_PARENT_2(PARENT1, PARENT2) \
-void _init_parent_params(bool firstInit) \
-{ \
-    PARENT1::InitParameters(firstInit); \
-    PARENT2::InitParameters(firstInit); \
+void _init_parent_params(bool firstInit){ \
+    PARENT1::initParams(firstInit); \
+    PARENT2::initParams(firstInit); \
 } \
-void _serialize_parent_params(ISimpleSerializer* pSerializer) \
-{ \
-    PARENT1::SerializeParameters(pSerializer); \
-    PARENT2::SerializeParameters(pSerializer); \
+void _serialize_parent_params(ISimpleSerializer* pSerializer){ \
+    PARENT1::serializeParams(pSerializer); \
+    PARENT2::serializeParams(pSerializer); \
 } \
-template<class T> void _load_parent(T& ar) \
-{ \
+template<class T> void _load_parent(T& ar){ \
     PARENT1::load(ar); \
     PARENT2::load(ar); \
 } \
-template<class T> void _save_parent(T& ar) const \
-{ \
+template<class T> void _save_parent(T& ar) const{ \
    PARENT1::save(ar); \
    PARENT2::save(ar); \
 } \
-void _bind_parent_slots(bool firstInit) \
-{ \
-    PARENT1::BindSlots(firstInit); \
-    PARENT2::BindSlots(firstInit); \
+void _bind_parent_slots(bool firstInit){ \
+    PARENT1::bindSlots(firstInit); \
+    PARENT2::bindSlots(firstInit); \
 } \
-static void _list_parent_parameter_info(std::vector<mo::ParameterInfo*>& info) \
-{ \
-    PARENT1::GetParameterInfoStatic(info); \
-    PARENT2::GetParameterInfoStatic(info); \
+static void _list_parent_Param_info(std::vector<mo::ParamInfo*>& info){ \
+    PARENT1::getParamInfoStatic(info); \
+    PARENT2::getParamInfoStatic(info); \
 } \
-static void _list_parent_signals(std::vector<mo::SignalInfo*>& info) \
-{ \
-    PARENT1::GetSignalInfoStatic(info); \
-    PARENT2::GetSignalInfoStatic(info); \
+static void _list_parent_signals(std::vector<mo::SignalInfo*>& info){ \
+    PARENT1::getSignalInfoStatic(info); \
+    PARENT2::getSignalInfoStatic(info); \
 } \
-static void _list_parent_slots(std::vector<mo::SlotInfo*>& info) \
-{ \
-    PARENT1::GetSlotInfoStatic(info); \
-    PARENT2::GetSlotInfoStatic(info); \
+static void _list_parent_slots(std::vector<mo::SlotInfo*>& info){ \
+    PARENT1::getSlotInfoStatic(info); \
+    PARENT2::getSlotInfoStatic(info); \
 } \
-int _init_parent_signals(bool firstInit) \
-{ \
+int _init_parent_signals(bool firstInit){ \
     return PARENT1::InitSignals(firstInit) + PARENT2::InitSignals(firstInit);; \
 } \
-
 
 #ifdef _MSC_VER
 #define HANDLE_PARENT(...)  BOOST_PP_CAT(BOOST_PP_OVERLOAD(HANDLE_PARENT_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY())
@@ -310,18 +255,16 @@ int _init_parent_signals(bool firstInit) \
 #define HANDLE_PARENT(...)  BOOST_PP_OVERLOAD(HANDLE_PARENT_, __VA_ARGS__)(__VA_ARGS__)
 #endif
 
-
 #define HANDLE_NO_PARENT \
 void _init_parent_params(bool firstInit){ (void)firstInit; } \
 void _serialize_parent_params(ISimpleSerializer* pSerializer) { (void)pSerializer; } \
 template<class T> void _load_parent(T& ar) { (void)ar; } \
 template<class T> void _save_parent(T& ar) const { (void)ar;} \
 void _bind_parent_slots(bool firstInit) { (void)firstInit;} \
-static void _list_parent_parameter_info(std::vector<mo::ParameterInfo*>& info) { (void)info;} \
+static void _list_parent_Param_info(std::vector<mo::ParamInfo*>& info) { (void)info;} \
 static void _list_parent_signals(std::vector<mo::SignalInfo*>& info) { (void)info;} \
 static void _list_parent_slots(std::vector<mo::SlotInfo*>& info) { (void)info;} \
 int _init_parent_signals(bool firstInit) {(void)firstInit; return 0;}
-
 
 #define MO_BEGIN_1(CLASS_NAME, N_) \
 typedef CLASS_NAME THIS_CLASS;      \
@@ -329,9 +272,9 @@ HANDLE_NO_PARENT; \
 SIGNAL_INFO_START(N_) \
 SIGNALS_START(N_) \
 SLOT_INFO_START(N_) \
-PARAMETER_INFO_START(N_) \
+PARAM_INFO_START(N_) \
 SLOT_START(N_) \
-PARAMETER_START(N_) \
+PARAM_START(N_) \
 static rcc::shared_ptr<CLASS_NAME> Create();
 
 #define MO_DERIVE_(N_, CLASS_NAME, ...) \
@@ -340,18 +283,18 @@ HANDLE_PARENT(__VA_ARGS__); \
 SIGNAL_INFO_START(N_) \
 SIGNALS_START(N_) \
 SLOT_INFO_START(N_) \
-PARAMETER_INFO_START(N_) \
+Param_INFO_START(N_) \
 SLOT_START(N_)\
-PARAMETER_START(N_) \
+Param_START(N_) \
 static rcc::shared_ptr<CLASS_NAME> Create();
 
 #define MO_END_(N) \
 SIGNAL_INFO_END(N) \
 SLOT_INFO_END(N) \
-PARAMETER_INFO_END(N) \
+PARAM_INFO_END(N) \
 SIGNALS_END(N) \
 SLOT_END(N) \
-PARAMETER_END(N)
+PARAM_END(N)
 
 #define MO_ABSTRACT_(N_, CLASS_NAME, ...) \
 typedef CLASS_NAME THIS_CLASS; \
@@ -359,15 +302,14 @@ HANDLE_PARENT(__VA_ARGS__); \
 SIGNAL_INFO_START(N_) \
 SIGNALS_START(N_) \
 SLOT_INFO_START(N_) \
-PARAMETER_INFO_START(N_) \
+PARAM_INFO_START(N_) \
 SLOT_START(N_)\
-PARAMETER_START(N_)
+PARAM_START(N_)
 
 #define MO_REGISTER_OBJECT(TYPE) \
     static ::mo::MetaObjectInfo<TActual<TYPE>> TYPE##_info; \
     static ::mo::MetaObjectPolicy<TActual<TYPE>, __COUNTER__, void> TYPE##_policy; \
-    ::rcc::shared_ptr<TYPE> TYPE::Create() \
-    { \
+    ::rcc::shared_ptr<TYPE> TYPE::Create() { \
         auto obj = ::mo::MetaObjectFactory::Instance()->Create(#TYPE); \
         return ::rcc::shared_ptr<TYPE>(obj); \
     } \
@@ -375,10 +317,10 @@ PARAMETER_START(N_)
 
 #define MO_REGISTER_CLASS(TYPE) MO_REGISTER_OBJECT(TYPE)
 
-#else
+#else // __CUDACC__
 #define MO_REGISTER_OBJECT(TYPE)
 #define MO_REGISTER_CLASS(TYPE)
 #define MO_BEGIN_1(CLASS, N)
 #define MO_BEGIN_2(CLASS, PARENT, N)
 #define MO_END_(N)
-#endif
+#endif // __CUDACC__

@@ -20,28 +20,28 @@
 
 #ifndef MetaObject_EXPORTS
 #include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
-  #ifdef WIN32
-    #pragma comment(lib, "Advapi32.lib")
-    #ifdef _DEBUG
-      RUNTIME_COMPILER_LINKLIBRARY("MetaObjectd.lib")
-      RUNTIME_COMPILER_LINKLIBRARY("RuntimeCompilerd.lib")
-      RUNTIME_COMPILER_LINKLIBRARY("RuntimeObjectSystemd.lib")
-    #else
-      RUNTIME_COMPILER_LINKLIBRARY("MetaObject.lib")
-      RUNTIME_COMPILER_LINKLIBRARY("RuntimeCompiler.lib")
-      RUNTIME_COMPILER_LINKLIBRARY("RuntimeObjectSystem.lib")
-    #endif
-  #else // Unix
-    #ifdef NDEBUG
-      RUNTIME_COMPILER_LINKLIBRARY("-lMetaObject")
-      RUNTIME_COMPILER_LINKLIBRARY("-lRuntimeCompiler")
-      RUNTIME_COMPILER_LINKLIBRARY("-lRuntimeObjectSystem")
-    #else
-      RUNTIME_COMPILER_LINKLIBRARY("-lMetaObjectd")
-      RUNTIME_COMPILER_LINKLIBRARY("-lRuntimeCompilerd")
-      RUNTIME_COMPILER_LINKLIBRARY("-lRuntimeObjectSystemd")
-    #endif
-  #endif
+#ifdef WIN32
+#pragma comment(lib, "Advapi32.lib")
+#ifdef _DEBUG
+RUNTIME_COMPILER_LINKLIBRARY("MetaObjectd.lib")
+RUNTIME_COMPILER_LINKLIBRARY("RuntimeCompilerd.lib")
+RUNTIME_COMPILER_LINKLIBRARY("RuntimeObjectSystemd.lib")
+#else
+RUNTIME_COMPILER_LINKLIBRARY("MetaObject.lib")
+RUNTIME_COMPILER_LINKLIBRARY("RuntimeCompiler.lib")
+RUNTIME_COMPILER_LINKLIBRARY("RuntimeObjectSystem.lib")
+#endif
+#else // Unix
+#ifdef NDEBUG
+RUNTIME_COMPILER_LINKLIBRARY("-lMetaObject")
+RUNTIME_COMPILER_LINKLIBRARY("-lRuntimeCompiler")
+RUNTIME_COMPILER_LINKLIBRARY("-lRuntimeObjectSystem")
+#else
+RUNTIME_COMPILER_LINKLIBRARY("-lMetaObjectd")
+RUNTIME_COMPILER_LINKLIBRARY("-lRuntimeCompilerd")
+RUNTIME_COMPILER_LINKLIBRARY("-lRuntimeObjectSystemd")
+#endif
+#endif
 #endif
 
 #endif

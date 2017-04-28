@@ -25,17 +25,17 @@ namespace mo
         {
             MetaObjectInfoDatabase::Instance()->RegisterInfo(this);   
         }
-        static void GetParameterInfoStatic(std::vector<ParameterInfo*>& info)
+        static void getParamInfoStatic(std::vector<ParamInfo*>& info)
         {
-            T::GetParameterInfoStatic(info);
+            T::getParamInfoStatic(info);
         }
-        static void GetSignalInfoStatic(std::vector<SignalInfo*>& info)
+        static void getSignalInfoStatic(std::vector<SignalInfo*>& info)
         {
-            T::GetSignalInfoStatic(info);
+            T::getSignalInfoStatic(info);
         }
-        static void GetSlotInfoStatic(std::vector<SlotInfo*>& info)
+        static void getSlotInfoStatic(std::vector<SlotInfo*>& info)
         {
-            T::GetSlotInfoStatic(info);
+            T::getSlotInfoStatic(info);
         }
 		static std::string                 TooltipStatic()
         {
@@ -45,26 +45,26 @@ namespace mo
         {
             return _get_description_helper<T>();
         }
-        static TypeInfo                    GetTypeInfoStatic()
+        static TypeInfo                    getTypeInfoStatic()
         {
             return TypeInfo(typeid(typename T::BASE_CLASS));
         }
-        std::vector<ParameterInfo*>        GetParameterInfo() const
+        std::vector<ParamInfo*>        getParamInfo() const
         {
-            std::vector<ParameterInfo*> info;
-            GetParameterInfoStatic(info);
+            std::vector<ParamInfo*> info;
+            getParamInfoStatic(info);
             return info;
         }
-		std::vector<SignalInfo*>           GetSignalInfo() const
+		std::vector<SignalInfo*>           getSignalInfo() const
         {
             std::vector<SignalInfo*> info;
-            GetSignalInfoStatic(info);
+            getSignalInfoStatic(info);
             return info;
         }
-		std::vector<SlotInfo*>             GetSlotInfo() const
+		std::vector<SlotInfo*>             getSlotInfo() const
         {
             std::vector<SlotInfo*> info;
-            GetSlotInfoStatic(info);
+            getSlotInfoStatic(info);
             return info;
         }
 		std::string                        GetObjectTooltip() const
@@ -75,9 +75,9 @@ namespace mo
         {
             return DescriptionStatic();
         }
-        TypeInfo                           GetTypeInfo() const
+        TypeInfo                           getTypeInfo() const
         {
-            return GetTypeInfoStatic();
+            return getTypeInfoStatic();
         }
         std::string                        GetObjectName() const
         {

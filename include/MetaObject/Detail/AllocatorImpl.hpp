@@ -6,36 +6,27 @@
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/tss.hpp>
 #include <cuda_runtime.h>
-namespace mo
-{
-#define MO_CUDA_ERROR_CHECK(expr, msg) \
-{ \
+namespace mo {
+#define MO_CUDA_ERROR_CHECK(expr, msg){ \
     cudaError_t err = (expr); \
-    if(err != cudaSuccess) \
-    { \
+    if(err != cudaSuccess) { \
        THROW(warning)  << #expr << " failed " << cudaGetErrorString(err) << " " msg; \
     } \
 }
 
-unsigned char* alignMemory(unsigned char* ptr, int elemSize)
-{
+unsigned char* alignMemory(unsigned char* ptr, int elemSize) {
     int i;
-    for (i = 0; i < elemSize; ++i)
-    {
-        if (reinterpret_cast<size_t>(ptr + i) % elemSize == 0)
-        {
+    for (i = 0; i < elemSize; ++i) {
+        if (reinterpret_cast<size_t>(ptr + i) % elemSize == 0) {
             break;
         }
     }
     return ptr + i;  // Forces memory to be aligned to an element's byte boundary
 }
-int alignmentOffset(unsigned char* ptr, int elemSize)
-{
+int alignmentOffset(unsigned char* ptr, int elemSize) {
     int i;
-    for (i = 0; i < elemSize; ++i)
-    {
-        if (reinterpret_cast<size_t>(ptr + i) % elemSize == 0)
-        {
+    for (i = 0; i < elemSize; ++i) {
+        if (reinterpret_cast<size_t>(ptr + i) % elemSize == 0) {
             break;
         }
     }
@@ -44,19 +35,14 @@ int alignmentOffset(unsigned char* ptr, int elemSize)
 
 /// ==========================================================
 /// PitchedPolicy
-PitchedPolicy::PitchedPolicy()
-{
+PitchedPolicy::PitchedPolicy() {
     textureAlignment = cv::cuda::DeviceInfo(cv::cuda::getDevice()).textureAlignment();
 }
 
-void PitchedPolicy::SizeNeeded(int rows, int cols, int elemSize, size_t& sizeNeeded, size_t& stride)
-{
-    if (rows == 1 || cols == 1)
-    {
+void PitchedPolicy::SizeNeeded(int rows, int cols, int elemSize, size_t& sizeNeeded, size_t& stride) {
+    if (rows == 1 || cols == 1) {
         stride = cols*elemSize;
-    }
-    else
-    {
+    } else {
         if((cols*elemSize % textureAlignment) == 0)
             stride = cols*elemSize;
         else
@@ -67,8 +53,7 @@ void PitchedPolicy::SizeNeeded(int rows, int cols, int elemSize, size_t& sizeNee
 
 /// ==========================================================
 /// ContinuousPolicy
-void ContinuousPolicy::SizeNeeded(int rows, int cols, int elemSize, size_t& sizeNeeded, size_t& stride)
-{
+void ContinuousPolicy::SizeNeeded(int rows, int cols, int elemSize, size_t& sizeNeeded, size_t& stride) {
     stride = cols*elemSize;
     sizeNeeded = stride * rows;
 }
@@ -77,22 +62,18 @@ void ContinuousPolicy::SizeNeeded(int rows, int cols, int elemSize, size_t& size
 /// PoolPolicy
 template<typename PaddingPolicy>
 PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::PoolPolicy(size_t initialBlockSize):
-    _initial_block_size(initialBlockSize)
-{
+    _initial_block_size(initialBlockSize) {
     blocks.push_back(std::shared_ptr<GpuMemoryBlock>(new GpuMemoryBlock(_initial_block_size)));
 }
 
 template<typename PaddingPolicy>
-bool PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
-{
+bool PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize) {
     size_t sizeNeeded, stride;
     PaddingPolicy::SizeNeeded(rows, cols, elemSize, sizeNeeded, stride);
     unsigned char* ptr;
-    for (auto itr : blocks)
-    {
+    for (auto itr : blocks) {
         ptr = itr->allocate(sizeNeeded, elemSize);
-        if (ptr)
-        {
+        if (ptr) {
             mat->data = ptr;
             mat->step = stride;
             mat->refcount = (int*)cv::fastMalloc(sizeof(int));
@@ -108,10 +89,9 @@ bool PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(cv::cuda::GpuMat* mat
                          new GpuMemoryBlock(
                              std::max(_initial_block_size / 2, sizeNeeded))));
     LOG(trace) << "[GPU] Expanding memory pool by " <<
-                  std::max(_initial_block_size / 2, sizeNeeded) / (1024 * 1024)
+               std::max(_initial_block_size / 2, sizeNeeded) / (1024 * 1024)
                << " MB";
-    if (unsigned char* ptr = (*blocks.rbegin())->allocate(sizeNeeded, elemSize))
-    {
+    if (unsigned char* ptr = (*blocks.rbegin())->allocate(sizeNeeded, elemSize)) {
         mat->data = ptr;
         mat->step = stride;
         mat->refcount = (int*)cv::fastMalloc(sizeof(int));
@@ -126,12 +106,9 @@ bool PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(cv::cuda::GpuMat* mat
 }
 
 template<typename PaddingPolicy>
-void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(cv::cuda::GpuMat* mat)
-{
-    for (auto itr : blocks)
-    {
-        if (itr->deAllocate(mat->data))
-        {
+void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(cv::cuda::GpuMat* mat) {
+    for (auto itr : blocks) {
+        if (itr->deAllocate(mat->data)) {
             cv::fastFree(mat->refcount);
             memoryUsage -= mat->step*mat->rows;
             return;
@@ -141,14 +118,11 @@ void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(cv::cuda::GpuMat* mat)
 }
 
 template<typename PaddingPolicy>
-unsigned char* PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t sizeNeeded)
-{
+unsigned char* PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t sizeNeeded) {
     unsigned char* ptr;
-    for (auto itr : blocks)
-    {
+    for (auto itr : blocks) {
         ptr = itr->allocate(sizeNeeded, 1);
-        if (ptr)
-        {
+        if (ptr) {
             memoryUsage += sizeNeeded;
 
             return ptr;
@@ -159,8 +133,7 @@ unsigned char* PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t size
     LOG(trace) << "[GPU] Expanding memory pool by "
                << std::max(_initial_block_size / 2, sizeNeeded) / (1024 * 1024)
                << " MB";
-    if (unsigned char* ptr = (*blocks.rbegin())->allocate(sizeNeeded, 1))
-    {
+    if (unsigned char* ptr = (*blocks.rbegin())->allocate(sizeNeeded, 1)) {
         memoryUsage += sizeNeeded;
 
         return ptr;
@@ -169,20 +142,16 @@ unsigned char* PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t size
 }
 
 template<typename PaddingPolicy>
-void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char* ptr, size_t num_bytes)
-{
-    for (auto itr : blocks)
-    {
-        if (itr->deAllocate(ptr))
-        {
+void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char* ptr, size_t num_bytes) {
+    for (auto itr : blocks) {
+        if (itr->deAllocate(ptr)) {
             return;
         }
     }
 }
 
 template<typename PaddingPolicy>
-void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::Release()
-{
+void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::Release() {
     blocks.clear();
 }
 
@@ -190,8 +159,7 @@ void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::Release()
 /// ==========================================================
 /// StackPolicy
 template<typename PaddingPolicy>
-StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::StackPolicy()
-{
+StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::StackPolicy() {
 #ifdef _MSC_VER
     deallocateDelay = 1000;
 #else
@@ -201,25 +169,20 @@ StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::StackPolicy()
 
 template<typename PaddingPolicy>
 bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
-        cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
-{
+    cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize) {
     size_t sizeNeeded, stride;
 
     PaddingPolicy::SizeNeeded(rows, cols, elemSize, sizeNeeded, stride);
     typedef typename std::list<typename StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::FreeMemory>::iterator Itr;
     std::vector<std::pair<clock_t, Itr>> candidates;
     clock_t time = clock();
-    for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr)
-    {
-        if(itr->size == sizeNeeded)
-        {
+    for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr) {
+        if(itr->size == sizeNeeded) {
             candidates.emplace_back((time - itr->free_time), itr);
         }
     }
-    if(candidates.size())
-    {
-        auto best_candidate = std::max_element(candidates.begin(), candidates.end(), [](const std::pair<clock_t, Itr>& i1, const std::pair<clock_t, Itr>& i2)
-        {
+    if(candidates.size()) {
+        auto best_candidate = std::max_element(candidates.begin(), candidates.end(), [](const std::pair<clock_t, Itr>& i1, const std::pair<clock_t, Itr>& i2) {
             return i1.first < i2.first;
         });
         mat->data = best_candidate->second->ptr;
@@ -236,8 +199,7 @@ bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
         deallocateList.erase(best_candidate->second);
         return true;
     }
-    if (rows > 1 && cols > 1)
-    {
+    if (rows > 1 && cols > 1) {
 
         MO_CUDA_ERROR_CHECK(cudaMallocPitch(&mat->data, &mat->step, elemSize * cols, rows),
                             << " while allocating " << rows << ", " << cols << ". Elemsize: " << elemSize
@@ -248,9 +210,7 @@ bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
                    << mat->step * rows / (1024 * 1024) << " MB at "
                    << (void*)mat->data << ". Total usage: "
                    << memoryUsage / (1024 * 1024) << " MB";
-    }
-    else
-    {
+    } else {
         CV_CUDEV_SAFE_CALL(cudaMalloc(&mat->data, elemSize * cols * rows));
         this->memoryUsage += mat->step * rows;
         LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") "
@@ -264,8 +224,7 @@ bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
 }
 
 template<typename PaddingPolicy>
-void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(cv::cuda::GpuMat* mat)
-{
+void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(cv::cuda::GpuMat* mat) {
     //this->memoryUsage -= mat->rows*mat->step;
     LOG(trace) << "[GPU] Releasing mat of size (" << mat->rows << ","
                << mat->cols << ") " << (mat->dataend - mat->datastart)/(1024*1024) << " MB to the memory pool";
@@ -275,14 +234,11 @@ void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(cv::cuda::GpuMat* mat)
 }
 
 template<typename PaddingPolicy>
-unsigned char* StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t sizeNeeded)
-{
+unsigned char* StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t sizeNeeded) {
     unsigned char* ptr = nullptr;
     auto time = clock();
-    for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr)
-    {
-        if (itr->size == sizeNeeded)
-        {
+    for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ++itr) {
+        if (itr->size == sizeNeeded) {
             ptr = itr->ptr;
             this->memoryUsage += sizeNeeded;
             current_allocations[ptr] = sizeNeeded;
@@ -302,11 +258,9 @@ unsigned char* StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t siz
 }
 
 template<typename PaddingPolicy>
-void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char* ptr, size_t num_bytes)
-{
+void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char* ptr, size_t num_bytes) {
     auto itr = current_allocations.find(ptr);
-    if(itr != current_allocations.end())
-    {
+    if(itr != current_allocations.end()) {
         current_allocations.erase(itr);
         deallocateList.emplace_back(ptr, clock(), current_allocations[ptr]);
     }
@@ -315,31 +269,25 @@ void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char* ptr
 }
 
 template<typename PaddingPolicy>
-void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::clear()
-{
+void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::clear() {
     auto time = clock();
-    for (auto itr = deallocateList.begin(); itr != deallocateList.end(); )
-    {
-        if((time - itr->free_time) > deallocateDelay)
-        {
+    for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ) {
+        if((time - itr->free_time) > deallocateDelay) {
             memoryUsage -= itr->size;
             LOG(trace) << "[GPU] Deallocating block of size " << itr->size /(1024*1024)
                        << "MB. Which was stale for " << (time - itr->free_time) * 1000 / CLOCKS_PER_SEC << " ms at "
                        << (void*)itr->ptr;
             CV_CUDEV_SAFE_CALL(cudaFree(itr->ptr));
             itr = deallocateList.erase(itr);
-        }else
-        {
+        } else {
             ++itr;
         }
     }
 }
 
 template<typename PaddingPolicy>
-void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::Release()
-{
-    for(auto& itr : deallocateList)
-    {
+void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::Release() {
+    for(auto& itr : deallocateList) {
         CV_CUDEV_SAFE_CALL(cudaFree(itr.ptr));
     }
     deallocateList.clear();
@@ -349,20 +297,16 @@ void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::Release()
 /// NonCachingPolicy
 template<typename PaddingPolicy>
 bool NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
-        cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
-{
+    cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize) {
     size_t size_needed, stride;
     PaddingPolicy::SizeNeeded(rows, cols, elemSize, size_needed, stride);
-    if (rows > 1 && cols > 1)
-    {
+    if (rows > 1 && cols > 1) {
         CV_CUDEV_SAFE_CALL(cudaMallocPitch(&mat->data, &mat->step, elemSize * cols, rows));
         memoryUsage += mat->step*rows;
         LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") "
                    << mat->step * rows / (1024 * 1024) << " MB. Total usage: "
                    << memoryUsage / (1024 * 1024) << " MB";
-    }
-    else
-    {
+    } else {
         CV_CUDEV_SAFE_CALL(cudaMalloc(&mat->data, elemSize * cols * rows));
         memoryUsage += elemSize*cols*rows;
         LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") "
@@ -375,15 +319,13 @@ bool NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
 }
 
 template<typename PaddingPolicy>
-void NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(cv::cuda::GpuMat* mat)
-{
+void NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(cv::cuda::GpuMat* mat) {
     CV_CUDEV_SAFE_CALL(cudaFree(mat->data));
     cv::fastFree(mat->refcount);
 }
 
 template<typename PaddingPolicy>
-unsigned char* NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t num_bytes)
-{
+unsigned char* NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t num_bytes) {
     unsigned char* ptr = nullptr;
     CV_CUDEV_SAFE_CALL(cudaMalloc(&ptr, num_bytes));
     memoryUsage += num_bytes;
@@ -391,8 +333,7 @@ unsigned char* NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_
 }
 
 template<typename PaddingPolicy>
-void NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char* ptr, size_t num_bytes)
-{
+void NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char* ptr, size_t num_bytes) {
     CV_CUDEV_SAFE_CALL(cudaFree(ptr));
 }
 
@@ -400,62 +341,53 @@ void NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char
 /// LockPolicy
 template<class Allocator>
 bool LockPolicyImpl<Allocator, cv::cuda::GpuMat>::allocate(
-        cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
-{
+    cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize) {
     boost::mutex::scoped_lock lock(mtx);
     return Allocator::allocate(mat, rows, cols, elemSize);
 }
 
 template<class Allocator>
-void LockPolicyImpl<Allocator, cv::cuda::GpuMat>::free(cv::cuda::GpuMat* mat)
-{
+void LockPolicyImpl<Allocator, cv::cuda::GpuMat>::free(cv::cuda::GpuMat* mat) {
     boost::mutex::scoped_lock lock(mtx);
     return Allocator::free(mat);
 }
 
 template<class Allocator>
-unsigned char* LockPolicyImpl<Allocator, cv::cuda::GpuMat>::allocate(size_t num_bytes)
-{
+unsigned char* LockPolicyImpl<Allocator, cv::cuda::GpuMat>::allocate(size_t num_bytes) {
     boost::mutex::scoped_lock lock(mtx);
     return Allocator::allocate(num_bytes);
 }
 
 template<class Allocator>
-void LockPolicyImpl<Allocator, cv::cuda::GpuMat>::deallocate(unsigned char* ptr, size_t num_bytes)
-{
+void LockPolicyImpl<Allocator, cv::cuda::GpuMat>::deallocate(unsigned char* ptr, size_t num_bytes) {
     boost::mutex::scoped_lock lock(mtx);
     return Allocator::deallocate(ptr, num_bytes);
 }
 
 template<class Allocator>
 cv::UMatData* LockPolicyImpl<Allocator, cv::Mat>::allocate(int dims, const int* sizes, int type,
-    void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
-{
+        void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const {
     return Allocator::allocate(dims, sizes, type, data, step, flags, usageFlags);
 }
 
 template<class Allocator>
 bool LockPolicyImpl<Allocator, cv::Mat>::allocate(cv::UMatData* data, int accessflags,
-                                                  cv::UMatUsageFlags usageFlags) const
-{
+        cv::UMatUsageFlags usageFlags) const {
     return Allocator::allocate(data, accessflags, usageFlags);
 }
 
 template<class Allocator>
-void LockPolicyImpl<Allocator, cv::Mat>::deallocate(cv::UMatData* data) const
-{
+void LockPolicyImpl<Allocator, cv::Mat>::deallocate(cv::UMatData* data) const {
     return Allocator::deallocate(data);
 }
 template<class Allocator>
-unsigned char* LockPolicyImpl<Allocator, cv::Mat>::allocate(size_t num_bytes)
-{
+unsigned char* LockPolicyImpl<Allocator, cv::Mat>::allocate(size_t num_bytes) {
     boost::mutex::scoped_lock lock(mtx);
     return Allocator::allocate(num_bytes);
 }
 
 template<class Allocator>
-void LockPolicyImpl<Allocator, cv::Mat>::deallocate(unsigned char* ptr, size_t num_bytes)
-{
+void LockPolicyImpl<Allocator, cv::Mat>::deallocate(unsigned char* ptr, size_t num_bytes) {
     boost::mutex::scoped_lock lock(mtx);
     return Allocator::deallocate(ptr, num_bytes);
 }
@@ -465,49 +397,41 @@ void LockPolicyImpl<Allocator, cv::Mat>::deallocate(unsigned char* ptr, size_t n
 
 
 template<class Allocator>
-RefCountPolicyImpl<Allocator, cv::Mat>::~RefCountPolicyImpl()
-{
+RefCountPolicyImpl<Allocator, cv::Mat>::~RefCountPolicyImpl() {
     CV_Assert(ref_count == 0);
 }
 template<class Allocator>
 cv::UMatData* RefCountPolicyImpl<Allocator, cv::Mat>::allocate(int dims, const int* sizes, int type,
-    void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
-{
+        void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const {
     auto ret = Allocator::allocate(dims, sizes, type, data, step, flags, usageFlags);
-    if(ret)
-    {
+    if(ret) {
         //++ref_count;
         return ret;
     }
     return nullptr;
 }
 template<class Allocator>
-bool RefCountPolicyImpl<Allocator, cv::Mat>::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const
-{
-    if(Allocator::allocate(data, accessflags, usageFlags))
-    {
+bool RefCountPolicyImpl<Allocator, cv::Mat>::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const {
+    if(Allocator::allocate(data, accessflags, usageFlags)) {
         //++ref_count;
         return true;
     }
     return false;
 }
 template<class Allocator>
-void RefCountPolicyImpl<Allocator, cv::Mat>::deallocate(cv::UMatData* data) const
-{
+void RefCountPolicyImpl<Allocator, cv::Mat>::deallocate(cv::UMatData* data) const {
     Allocator::deallocate(data);
     //--ref_count;
 }
 
 template<class Allocator>
-unsigned char* RefCountPolicyImpl<Allocator, cv::Mat>::allocate(size_t num_bytes)
-{
+unsigned char* RefCountPolicyImpl<Allocator, cv::Mat>::allocate(size_t num_bytes) {
     ++ref_count;
     return Allocator::allocate(num_bytes);
 }
 
 template<class Allocator>
-void RefCountPolicyImpl<Allocator, cv::Mat>::deallocate(unsigned char* ptr, size_t num_bytes)
-{
+void RefCountPolicyImpl<Allocator, cv::Mat>::deallocate(unsigned char* ptr, size_t num_bytes) {
     --ref_count;
     Allocator::deallocate(ptr, num_bytes);
 }
@@ -515,43 +439,35 @@ void RefCountPolicyImpl<Allocator, cv::Mat>::deallocate(unsigned char* ptr, size
 /// GpuMat implementation
 
 template<class Allocator>
-RefCountPolicyImpl<Allocator, cv::cuda::GpuMat>::~RefCountPolicyImpl()
-{
+RefCountPolicyImpl<Allocator, cv::cuda::GpuMat>::~RefCountPolicyImpl() {
     //CV_Assert(ref_count == 0 && "Warning, trying to delete allocator while cv::cuda::GpuMat's still reference it");
-    if(ref_count != 0)
-    {
+    if(ref_count != 0) {
         LOG(warning) << "Trying to delete allocator while cv::cuda::GpuMat's still reference it";
     }
 }
 template<class Allocator>
-bool RefCountPolicyImpl<Allocator,cv::cuda::GpuMat>::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
-{
-    if(Allocator::allocate(mat, rows, cols, elemSize))
-    {
+bool RefCountPolicyImpl<Allocator,cv::cuda::GpuMat>::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize) {
+    if(Allocator::allocate(mat, rows, cols, elemSize)) {
         ++ref_count;
         return true;
     }
     return false;
 }
 template<class Allocator>
-void RefCountPolicyImpl<Allocator,cv::cuda::GpuMat>::free(cv::cuda::GpuMat* mat)
-{
+void RefCountPolicyImpl<Allocator,cv::cuda::GpuMat>::free(cv::cuda::GpuMat* mat) {
     Allocator::free(mat);
     --ref_count;
 }
 template<class Allocator>
-unsigned char* RefCountPolicyImpl<Allocator,cv::cuda::GpuMat>::allocate(size_t num_bytes)
-{
-    if(auto ptr = Allocator::allocate(num_bytes))
-    {
+unsigned char* RefCountPolicyImpl<Allocator,cv::cuda::GpuMat>::allocate(size_t num_bytes) {
+    if(auto ptr = Allocator::allocate(num_bytes)) {
         ++ref_count;
         return ptr;
     }
     return nullptr;
 }
 template<class Allocator>
-void RefCountPolicyImpl<Allocator,cv::cuda::GpuMat>::deallocate(unsigned char* ptr, size_t num_bytes)
-{
+void RefCountPolicyImpl<Allocator,cv::cuda::GpuMat>::deallocate(unsigned char* ptr, size_t num_bytes) {
     Allocator::deallocate(ptr, num_bytes);
     --ref_count;
 }
@@ -563,10 +479,8 @@ void RefCountPolicyImpl<Allocator,cv::cuda::GpuMat>::deallocate(unsigned char* p
 
 template<class Allocator>
 bool ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::allocate(
-        cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
-{
-    if(Allocator::allocate(mat, rows, cols, elemSize))
-    {
+    cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize) {
+    if(Allocator::allocate(mat, rows, cols, elemSize)) {
         scopeOwnership[mat->data] = GetScopeName();
         scopedAllocationSize[GetScopeName()] += mat->step * mat->rows;
         return true;
@@ -575,22 +489,18 @@ bool ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::allocate(
 }
 
 template<class Allocator>
-void ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::free(cv::cuda::GpuMat* mat)
-{
+void ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::free(cv::cuda::GpuMat* mat) {
     Allocator::free(mat);
     auto itr = scopeOwnership.find(mat->data);
-    if (itr != scopeOwnership.end())
-    {
+    if (itr != scopeOwnership.end()) {
         scopedAllocationSize[itr->second] -= mat->rows * mat->step;
     }
 
 }
 
 template<class Allocator>
-unsigned char* ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::allocate(size_t num_bytes)
-{
-    if(auto ptr = Allocator::allocate(num_bytes))
-    {
+unsigned char* ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::allocate(size_t num_bytes) {
+    if(auto ptr = Allocator::allocate(num_bytes)) {
         scopeOwnership[ptr] = GetScopeName();
         scopedAllocationSize[GetScopeName()] += num_bytes;
         return ptr;
@@ -599,225 +509,181 @@ unsigned char* ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::allocate(size_t nu
 }
 
 template<class Allocator>
-void ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::deallocate(unsigned char* ptr, size_t num_bytes)
-{
+void ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::deallocate(unsigned char* ptr, size_t num_bytes) {
     Allocator::free(ptr);
     auto itr = scopeOwnership.find(ptr);
-    if (itr != scopeOwnership.end())
-    {
+    if (itr != scopeOwnership.end()) {
         scopedAllocationSize[itr->second] -= this->current_allocations[ptr];
     }
 }
 
 template<class SmallAllocator, class LargeAllocator>
 CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::CombinedPolicyImpl(size_t threshold_)
-    : threshold(threshold_)
-{
+    : threshold(threshold_) {
 
 }
 
 template<class SmallAllocator, class LargeAllocator>
 bool CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::allocate(
-        cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
-{
-    if(rows*cols*elemSize < threshold)
-    {
+    cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize) {
+    if(rows*cols*elemSize < threshold) {
         return SmallAllocator::allocate(mat, rows, cols, elemSize);
-    }else
-    {
+    } else {
         return LargeAllocator::allocate(mat, rows, cols, elemSize);
     }
 }
 
 template<class SmallAllocator, class LargeAllocator>
-void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::free(cv::cuda::GpuMat* mat)
-{
-    if(mat->rows * mat->cols * mat->elemSize() < threshold)
-    {
+void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::free(cv::cuda::GpuMat* mat) {
+    if(mat->rows * mat->cols * mat->elemSize() < threshold) {
         SmallAllocator::free(mat);
 
-    }else
-    {
+    } else {
         LargeAllocator::free(mat);
     }
 }
 
 template<class SmallAllocator, class LargeAllocator>
-unsigned char* CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::allocate(size_t num_bytes)
-{
+unsigned char* CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::allocate(size_t num_bytes) {
     return SmallAllocator::allocate(num_bytes);
 }
 
 template<class SmallAllocator, class LargeAllocator>
-void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::deallocate(unsigned char* ptr, size_t num_bytes)
-{
+void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::deallocate(unsigned char* ptr, size_t num_bytes) {
     return SmallAllocator::deallocate(ptr, num_bytes);
 }
 
 template<class SmallAllocator, class LargeAllocator>
-void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::Release()
-{
+void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::Release() {
     SmallAllocator::Release();
     LargeAllocator::Release();
 }
 
 template<class SmallAllocator, class LargeAllocator>
 CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::CombinedPolicyImpl(size_t threshold_):
-    threshold(threshold_)
-{
+    threshold(threshold_) {
 
 }
 
 template<class SmallAllocator, class LargeAllocator>
 cv::UMatData* CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::allocate(
-                            int dims, const int* sizes, int type,
-                            void* data, size_t* step, int flags,
-                            cv::UMatUsageFlags usageFlags) const
-{
+    int dims, const int* sizes, int type,
+    void* data, size_t* step, int flags,
+    cv::UMatUsageFlags usageFlags) const {
     size_t total = CV_ELEM_SIZE(type);
-    for (int i = dims - 1; i >= 0; i--)
-    {
-        if (step)
-        {
-            if (data && step[i] != CV_AUTOSTEP)
-            {
+    for (int i = dims - 1; i >= 0; i--) {
+        if (step) {
+            if (data && step[i] != CV_AUTOSTEP) {
                 CV_Assert(total <= step[i]);
                 total = step[i];
-            }
-            else
-            {
+            } else {
                 step[i] = total;
             }
         }
 
         total *= sizes[i];
     }
-    if(total < threshold)
-    {
+    if(total < threshold) {
         return SmallAllocator::allocate(dims, sizes, type, data, step, flags, usageFlags);
-    }else
-    {
+    } else {
         return LargeAllocator::allocate(dims, sizes, type, data, step, flags, usageFlags);
     }
 }
 
 template<class SmallAllocator, class LargeAllocator>
 bool CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::allocate(
-                    cv::UMatData* data, int accessflags,
-                    cv::UMatUsageFlags usageFlags) const
-{
+    cv::UMatData* data, int accessflags,
+    cv::UMatUsageFlags usageFlags) const {
     return (data != NULL);
 }
 
 template<class SmallAllocator, class LargeAllocator>
-void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::deallocate(cv::UMatData* data) const
-{
-    if(data->size < threshold)
-    {
+void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::deallocate(cv::UMatData* data) const {
+    if(data->size < threshold) {
         SmallAllocator::deallocate(data);
-    }else
-    {
+    } else {
         LargeAllocator::deallocate(data);
     }
 }
 
 template<class SmallAllocator, class LargeAllocator>
-unsigned char* CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::allocate(size_t num_bytes)
-{
-    if(num_bytes < threshold)
-    {
+unsigned char* CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::allocate(size_t num_bytes) {
+    if(num_bytes < threshold) {
         return SmallAllocator::allocate(num_bytes);
-    }else
-    {
+    } else {
         return LargeAllocator::allocate(num_bytes);
     }
 }
 
 template<class SmallAllocator, class LargeAllocator>
-void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::deallocate(unsigned char* ptr, size_t num_bytes)
-{
-    if(num_bytes < threshold)
-    {
+void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::deallocate(unsigned char* ptr, size_t num_bytes) {
+    if(num_bytes < threshold) {
         return SmallAllocator::deallocate(ptr, num_bytes);
-    }else
-    {
+    } else {
         return LargeAllocator::deallocate(ptr, num_bytes);
     }
 }
 
 template<class SmallAllocator, class LargeAllocator>
-void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::Release()
-{
+void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::Release() {
     SmallAllocator::Release();
     LargeAllocator::Release();
 }
 
 template<class SmallAllocator, class LargeAllocator>
 CombinedPolicy<SmallAllocator, LargeAllocator>::CombinedPolicy(size_t threshold)
-    :CombinedPolicyImpl<SmallAllocator, LargeAllocator, typename LargeAllocator::MatType>(threshold)
-{
+    :CombinedPolicyImpl<SmallAllocator, LargeAllocator, typename LargeAllocator::MatType>(threshold) {
 
 }
 
 template<class CPUAllocator, class GPUAllocator>
 class ConcreteAllocator
-        : virtual public GPUAllocator
-        , virtual public CPUAllocator
-        , virtual public mo::Allocator
-{
+    : virtual public GPUAllocator
+    , virtual public CPUAllocator
+    , virtual public mo::Allocator {
 public:
     // GpuMat allocate
-    bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
-    {
+    bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize) {
         return GPUAllocator::allocate(mat, rows, cols, elemSize);
     }
 
-    void free(cv::cuda::GpuMat* mat)
-    {
+    void free(cv::cuda::GpuMat* mat) {
         return GPUAllocator::free(mat);
     }
 
     // Thrust allocate
-    unsigned char* allocateGpu(size_t num_bytes)
-    {
+    unsigned char* allocateGpu(size_t num_bytes) {
         return GPUAllocator::allocate(num_bytes);
     }
 
-    void deallocateGpu(unsigned char* ptr, size_t num_bytes)
-    {
+    void deallocateGpu(unsigned char* ptr, size_t num_bytes) {
         return GPUAllocator::deallocate(ptr, num_bytes);
     }
 
-    unsigned char* allocateCpu(size_t num_bytes)
-    {
+    unsigned char* allocateCpu(size_t num_bytes) {
         return CPUAllocator::allocate(num_bytes);
     }
 
-    void deallocateCpu(unsigned char* ptr, size_t num_bytes)
-    {
+    void deallocateCpu(unsigned char* ptr, size_t num_bytes) {
         CPUAllocator::deallocate(ptr, num_bytes);
     }
 
     // CPU allocate
     cv::UMatData* allocate(int dims, const int* sizes, int type,
-        void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
-    {
+                           void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const {
         return CPUAllocator::allocate(dims, sizes, type, data,
                                       step, flags, usageFlags);
     }
 
-    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const
-    {
+    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const {
         return CPUAllocator::allocate(data, accessflags, usageFlags);
     }
 
-    void deallocate(cv::UMatData* data) const
-    {
+    void deallocate(cv::UMatData* data) const {
         CPUAllocator::deallocate(data);
     }
 
-    void Release()
-    {
+    void Release() {
         CPUAllocator::Release();
         GPUAllocator::Release();
     }

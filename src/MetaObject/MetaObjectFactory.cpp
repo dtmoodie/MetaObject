@@ -4,8 +4,8 @@
 #include "MetaObject/Logging/CompileLogger.hpp"
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Logging/Log.hpp"
-#include "MetaObject/Signals/TypedSignal.hpp"
-#include "MetaObject/Signals/TypedSlot.hpp"
+#include "MetaObject/Signals/TSignal.hpp"
+#include "MetaObject/Signals/TSlot.hpp"
 
 #include <boost/filesystem.hpp>
 #include <boost/date_time.hpp>
@@ -20,7 +20,7 @@ struct MetaObjectFactory::impl
     RuntimeObjectSystem obj_system;
     CompileLogger logger;
     std::vector<std::string> plugins;
-    TypedSignal<void(void)> on_constructor_added;
+    TSignal<void(void)> on_constructor_added;
 };
 
 MetaObjectFactory::MetaObjectFactory(SystemTable* table)
@@ -388,7 +388,7 @@ void MetaObjectFactory::SetCompileCallback(std::function<void(const std::string,
 {
        
 }
-std::shared_ptr<Connection> MetaObjectFactory::ConnectConstructorAdded(TypedSlot<void(void)>* slot)
+std::shared_ptr<Connection> MetaObjectFactory::connectConstructorAdded(TSlot<void(void)>* slot)
 {
-    return _pimpl->on_constructor_added.Connect(slot);
+    return _pimpl->on_constructor_added.connect(slot);
 }

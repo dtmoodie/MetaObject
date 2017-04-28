@@ -18,54 +18,54 @@ ZeroMQContext* ZeroMQContext::Instance()
     return &g_inst;
 }
 
-struct ParameterPublisher::impl
+struct ParamPublisher::impl
 {
-    std::shared_ptr<IParameter> shared_input;
-    IParameter* input;
+    std::shared_ptr<IParam> shared_input;
+    IParam* input;
 };
 
-ParameterPublisher::ParameterPublisher()
+ParamPublisher::ParamPublisher()
 {
     _pimpl = new impl();
 }
 
-ParameterPublisher::~ParameterPublisher()
+ParamPublisher::~ParamPublisher()
 {
     delete _pimpl;
 }
 
-bool ParameterPublisher::GetInput(mo::time_t ts)
+bool ParamPublisher::getInput(mo::Time_t ts)
 {
     return false;
 }
 
 // This gets a pointer to the variable that feeds into this input
-IParameter* ParameterPublisher::GetInputParam()
+IParam* ParamPublisher::getInputParam()
 {
     return nullptr;
 }
 
 // Set input and setup callbacks
-bool ParameterPublisher::SetInput(std::shared_ptr<IParameter> param)
+bool ParamPublisher::SetInput(std::shared_ptr<IParam> param)
 {
     return false;
 }
 
-bool ParameterPublisher::SetInput(IParameter* param)
+bool ParamPublisher::SetInput(IParam* param)
 {
     return false;
 }
 
 // Check for correct serialization routines, etc
-bool ParameterPublisher::AcceptsInput(std::weak_ptr<IParameter> param) const
+bool ParamPublisher::AcceptsInput(std::weak_ptr<IParam> param) const
 {
     return false;
 }
-bool ParameterPublisher::AcceptsInput(IParameter* param) const
+bool ParamPublisher::AcceptsInput(IParam* param) const
 {
     return false;
 }
-bool ParameterPublisher::AcceptsType(TypeInfo type) const
+bool ParamPublisher::AcceptsType(TypeInfo type) const
 {
     return false;
 }
@@ -82,53 +82,53 @@ ZeroMQContext* ZeroMQContext::Instance()
     return nullptr;
 }
 
-struct ParameterPublisher::impl
+struct ParamPublisher::impl
 {
     
 };
 
-ParameterPublisher::ParameterPublisher()
+ParamPublisher::ParamPublisher()
 {
     
 }
 
-ParameterPublisher::~ParameterPublisher()
+ParamPublisher::~ParamPublisher()
 {
     delete _pimpl;
 }
 
-bool ParameterPublisher::GetInput(mo::time_t ts)
+bool ParamPublisher::getInput(const OptionalTime_t& time)
 {
     return false;
 }
 
 // This gets a pointer to the variable that feeds into this input
-IParameter* ParameterPublisher::GetInputParam()
+IParam* ParamPublisher::getInputParam()
 {
     return nullptr;
 }
 
 // Set input and setup callbacks
-bool ParameterPublisher::SetInput(std::shared_ptr<IParameter> param)
+bool ParamPublisher::SetInput(std::shared_ptr<IParam> param)
 {
     return false;
 }
 
-bool ParameterPublisher::SetInput(IParameter* param)
+bool ParamPublisher::SetInput(IParam* param)
 {
     return false;
 }
 
 // Check for correct serialization routines, etc
-bool ParameterPublisher::AcceptsInput(std::weak_ptr<IParameter> param) const
+bool ParamPublisher::AcceptsInput(std::weak_ptr<IParam> param) const
 {
     return false;
 }
-bool ParameterPublisher::AcceptsInput(IParameter* param) const
+bool ParamPublisher::AcceptsInput(IParam* param) const
 {
     return false;
 }
-bool ParameterPublisher::AcceptsType(TypeInfo type) const
+bool ParamPublisher::AcceptsType(TypeInfo type) const
 {
     return false;
 }

@@ -5,19 +5,19 @@
 
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Detail/IMetaObjectImpl.hpp"
-#include "MetaObject/Signals/TypedSignal.hpp"
+#include "MetaObject/Signals/TSignal.hpp"
 #include "MetaObject/Detail/Counter.hpp"
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
 #include "MetaObject/Signals/detail/SlotMacros.hpp"
-#include "MetaObject/Parameters/ParameterMacros.hpp"
-#include "MetaObject/Parameters/TypedParameterPtr.hpp"
-#include "MetaObject/Parameters/TypedInputParameter.hpp"
-#include "MetaObject/Parameters/TypedParameter.hpp"
-#include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
-#include "MetaObject/Parameters/IO/Policy.hpp"
-#include "MetaObject/Parameters/VariableManager.h"
-#include "MetaObject/Parameters/ParameterServer.hpp"
+#include "MetaObject/Params/ParamMacros.hpp"
+#include "MetaObject/Params/TParamPtr.hpp"
+#include "MetaObject/Params/TInputParam.hpp"
+#include "MetaObject/Params/TParam.hpp"
+#include "MetaObject/Params/IO/SerializationFunctionRegistry.hpp"
+#include "MetaObject/Params/IO/Policy.hpp"
+#include "MetaObject/Params/VariableManager.h"
+#include "MetaObject/Params/ParamServer.hpp"
 #include "cereal/archives/portable_binary.hpp"
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
@@ -39,9 +39,9 @@ using namespace mo;
 BOOST_AUTO_TEST_CASE(server)
 {
     VariableManager mgr;
-    TypedParameter<int> param("test");
-    mgr.AddParameter(&param);
-    auto inst = ParameterServer::Instance();
+    TParam<int> param("test");
+    mgr.AddParam(&param);
+    auto inst = ParamServer::Instance();
     inst->Bind("tcp://*:5566");
     inst->Publish(&mgr, ":test");
     std::this_thread::sleep_for(std::chrono::seconds(100));
@@ -52,19 +52,19 @@ BOOST_AUTO_TEST_CASE(server)
     std::string topic_name = "update_topic";
     zmq::message_t topic(topic_name.size());
 
-    TypedParameter<int> parameter;
-    parameter.UpdateData(0);
-    auto serialize_func = SerializationFunctionRegistry::Instance()->GetBinarySerializationFunction(parameter.GetTypeInfo());
+    TParam<int> Param;
+    Param.UpdateData(0);
+    auto serialize_func = SerializationFunctionRegistry::Instance()->GetBinarySerializationFunction(Param.GetTypeInfo());
     BOOST_REQUIRE(serialize_func);
     int count = 0;
     while(1)
     {
-        parameter.UpdateData(count, count);
+        Param.UpdateData(count, count);
         socket.send(topic, ZMQ_SNDMORE);
         std::stringstream oss;
         {
             cereal::BinaryOutputArchive ar(oss);
-            serialize_func(&parameter, ar);
+            serialize_func(&Param, ar);
         }
         std::string msg = oss.str();
         zmq::message_t msg_(msg.c_str(), msg.size());

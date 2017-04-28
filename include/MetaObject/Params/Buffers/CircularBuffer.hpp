@@ -1,0 +1,102 @@
+/*
+Copyright (c) 2015 Daniel Moodie.
+All rights reserved.
+
+Redistribution and use in source and binary forms are permitted
+provided that the above copyright notice and this paragraph are
+duplicated in all such forms and that any documentation,
+advertising materials, and other materials related to such
+distribution and use acknowledge that the software was developed
+by the Daniel Moodie. The name of
+Daniel Moodie may not be used to endorse or promote products derived
+from this software without specific prior written permission.
+THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
+IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
+
+https://github.com/dtmoodie/Params
+*/
+#pragma once
+
+#include "MetaObject/Params/ITParam.hpp"
+#include "MetaObject/Params/ParamConstructor.hpp"
+#include "MetaObject/Params/ITInputParam.hpp"
+#include "IBuffer.hpp"
+#include "BufferConstructor.hpp"
+#include <boost/circular_buffer.hpp>
+
+namespace mo
+{
+
+
+    namespace Buffer
+    {
+        template<class T>
+        class CircularBuffer: public IBuffer, public ITInputParam<T>
+        {
+            static ParamConstructor<CircularBuffer<T>> _circular_buffer_Param_constructor;
+            static BufferConstructor<CircularBuffer<T>> _circular_buffer_constructor;
+            boost::circular_buffer<State<T>> _data_buffer;
+        public:
+            typedef T ValueType;
+            static const ParamType Type = CircularBuffer_e;
+
+            CircularBuffer(T&& init, const std::string& name = "",
+                OptionalTime_t ts = {},
+                ParamType type = Buffer_e);
+
+            CircularBuffer(const std::string& name = "",
+                OptionalTime_t ts = {},
+                ParamType type = Buffer_e);
+
+            T*   GetDataPtr(OptionalTime_t ts = OptionalTime_t(),
+                                    Context* ctx = nullptr, size_t* fn_ = nullptr);
+            T*   GetDataPtr(size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
+
+            T    GetData(OptionalTime_t ts = OptionalTime_t(),
+                                 Context* ctx = nullptr, size_t* fn = nullptr);
+            T    GetData(size_t fn, Context* ctx = nullptr, OptionalTime_t* ts = nullptr);
+
+            bool GetData(T& value, OptionalTime_t ts = OptionalTime_t(),
+                                 Context* ctx = nullptr, size_t* fn = nullptr);
+            bool GetData(T& value, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts = nullptr);
+
+
+            bool Update(IParam* other, Context* ctx = nullptr);
+            std::shared_ptr<IParam> DeepCopy() const;
+
+            virtual void SetFrameBufferCapacity(size_t size);
+            virtual void SetTimePaddingCapacity(mo::Time_t time);
+            virtual boost::optional<size_t> GetFrameBufferCapacity();
+            virtual OptionalTime_t GetTimePaddingCapacity();
+
+            virtual size_t GetSize();
+            bool getTimestampRange(mo::Time_t& start, mo::Time_t& end);
+            bool getFrameNumberRange(size_t& start,size_t& end);
+            
+            void onInputUpdate(Context* ctx, IParam* param);
+            virtual ParamType GetBufferType() const{ return CircularBuffer_e;}
+        protected:
+            bool UpdateDataImpl(const T& data, OptionalTime_t ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs);
+
+        };
+    }
+    
+    #define MO_METAParam_INSTANCE_CBUFFER_(N) \
+    template<class T> struct MetaParam<T, N>: public MetaParam<T, N-1, void> \
+    { \
+        static ParamConstructor<Buffer::CircularBuffer<T>> _circular_buffer_Param_constructor; \
+        static BufferConstructor<Buffer::CircularBuffer<T>> _circular_buffer_constructor;  \
+        MetaParam<T, N>(const char* name): \
+            MetaParam<T, N-1>(name) \
+        { \
+            (void)&_circular_buffer_constructor; \
+            (void)&_circular_buffer_Param_constructor; \
+        } \
+    }; \
+    template<class T> ParamConstructor<Buffer::CircularBuffer<T>> MetaParam<T, N>::_circular_buffer_Param_constructor; \
+    template<class T> BufferConstructor<Buffer::CircularBuffer<T>> MetaParam<T, N>::_circular_buffer_constructor;
+    
+    MO_METAParam_INSTANCE_CBUFFER_(__COUNTER__)
+}
+#include "detail/CircularBufferImpl.hpp"

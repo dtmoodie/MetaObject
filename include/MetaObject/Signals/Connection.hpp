@@ -8,12 +8,12 @@ namespace mo
 	class ISignalRelay;
 	class IMetaObject;
 
-	// A connection is only valid for as long as the underlying slot is valid
+	// A Connection is only valid for as long as the underlying slot is valid
     class MO_EXPORTS Connection
     {
     public:
         virtual ~Connection();
-		virtual bool Disconnect() = 0;
+		virtual bool disconnect() = 0;
     };
 
 	class MO_EXPORTS SlotConnection : public Connection
@@ -21,7 +21,7 @@ namespace mo
 	public:
 		SlotConnection(ISlot* slot, std::shared_ptr<ISignalRelay> relay);
         virtual ~SlotConnection();
-		virtual bool Disconnect();
+		virtual bool disconnect();
 	protected:
 		ISlot* _slot;
 		std::weak_ptr<ISignalRelay> _relay;
@@ -32,7 +32,7 @@ namespace mo
     public:
 		ClassConnection(ISlot* slot, std::shared_ptr<ISignalRelay> relay, IMetaObject* obj);
 		~ClassConnection();
-		virtual bool Disconnect();
+		virtual bool disconnect();
 	protected:
 		IMetaObject* _obj;
     };
@@ -41,7 +41,7 @@ namespace mo
 	{
 	public:
 		SignalConnection(ISignal* signal, std::shared_ptr<ISignalRelay> relay);
-		bool Disconnect();
+		bool disconnect();
 	protected:
 		ISignal* _signal;
 		std::weak_ptr<ISignalRelay> _relay;

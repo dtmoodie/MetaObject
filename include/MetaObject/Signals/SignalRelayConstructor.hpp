@@ -1,6 +1,6 @@
 #pragma once
 #include "MetaObject/Signals/RelayFactory.hpp"
-#include "MetaObject/Detail/TypeInfo.h"
+#include "MetaObject/Detail/TypeInfo.hpp"
 namespace mo
 {
     template<class Sig> class SignalRelayConstructor
@@ -11,7 +11,7 @@ namespace mo
             RelayFactory::Instance()->RegisterCreator(
                 []()->ISignalRelay*
             {
-                return new TypedSignalRelay<Sig>();
+                return new TSignalRelay<Sig>();
             }, TypeInfo(typeid(Sig)));
         }
     };

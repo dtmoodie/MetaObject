@@ -42,7 +42,7 @@ struct Throw_debug: public std::exception
         msg.str(std::string());
         msg << file << ":" << line << " " << error << " in function [" << function << "]";
         if(collect_callstack)
-            callstack = print_callstack(1,true);
+            callstack = printCallstack(1,true);
         return *this;
     }
 

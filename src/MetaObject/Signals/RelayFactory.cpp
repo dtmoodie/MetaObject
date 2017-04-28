@@ -1,5 +1,5 @@
 #include "MetaObject/Signals/RelayFactory.hpp"
-#include "MetaObject/Detail/TypeInfo.h"
+#include "MetaObject/Detail/TypeInfo.hpp"
 #include <map>
 
 using namespace mo;

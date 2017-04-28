@@ -5,22 +5,18 @@
 #include <set>
 #include <map>
 using namespace mo;
-struct impl
-{
+struct impl {
 #ifdef _DEBUG
     std::set<void*> _deleted_objects;
 
 #endif
-    struct Event
-    {
+    struct Event {
         std::function<void(void)> function;
         void* obj;
     };
     struct QueueRegistery;
-    struct EventQueue
-    {
-        void push(const Event& ev)
-        {
+    struct EventQueue {
+        void push(const Event& ev) {
             //queue.push(ev);
             queue.enqueue(ev);
             if(queue.size_approx() > 100)
@@ -29,17 +25,14 @@ struct impl
             if(callback)
                 callback();
         }
-        bool pop(Event& ev)
-        {
+        bool pop(Event& ev) {
             return queue.try_dequeue(ev);
         }
-        void setCallback(const std::function<void(void)>& cb)
-        {
+        void setCallback(const std::function<void(void)>& cb) {
             std::lock_guard<std::mutex> lock(mtx);
             callback = cb;
         }
-        void remove(void* obj)
-        {
+        void remove(void* obj) {
             (void)obj;
             /*for (auto itr = queue.begin(); itr != queue.end(); )
             {
@@ -54,8 +47,7 @@ struct impl
                 }
             }*/
         }
-        size_t size()
-        {
+        size_t size() {
             return queue.size_approx();
         }
 
@@ -66,37 +58,29 @@ struct impl
         std::mutex mtx;
     };
 
-    struct QueueRegistery
-    {
-        static QueueRegistery& Instance()
-        {
+    struct QueueRegistery {
+        static QueueRegistery& Instance() {
             static QueueRegistery* g_inst = nullptr;
             if(g_inst == nullptr)
                 g_inst = new QueueRegistery();
             return *g_inst;
         }
 
-        EventQueue* GetQueue(size_t thread)
-        {
+        EventQueue* GetQueue(size_t thread) {
             std::unique_lock<std::mutex> lock;
             return &queues[thread];
         }
-        void RemoveFromQueue(void* obj)
-        {
+        void RemoveFromQueue(void* obj) {
             std::unique_lock<std::mutex> lock(mtx);
-            for(auto& queue : queues)
-            {
+            for(auto& queue : queues) {
                 queue.second.remove(obj);
             }
         }
-        void Clear()
-        {
+        void clear() {
             std::unique_lock<std::mutex> lock(mtx);
             Event ev;
-            for(auto& itr : queues)
-            {
-                while(itr.second.pop(ev))
-                {
+            for(auto& itr : queues) {
+                while(itr.second.pop(ev)) {
 
                 }
             }
@@ -116,21 +100,17 @@ struct impl
     std::mutex mtx;*/
 
 
-    static impl* inst()
-    {
+    static impl* inst() {
         static impl* g_inst = nullptr;
         if(g_inst == nullptr)
             g_inst = new impl();
         return g_inst;
     }
-    void register_notifier(const std::function<void(void)>& f, size_t id)
-    {
+    void register_notifier(const std::function<void(void)>& f, size_t id) {
         QueueRegistery::Instance().GetQueue(id)->setCallback(f);
     }
-    void push(const std::function<void(void)>& f, size_t id, void* obj)
-    {
-        if(GetThisThread() == id)
-        {
+    void push(const std::function<void(void)>& f, size_t id, void* obj) {
+        if(GetThisThread() == id) {
             f();
             return;
         }
@@ -147,13 +127,11 @@ struct impl
         if (std::get<1>(*queue))
             std::get<1>(*queue)();*/
     }
-    int run(size_t id)
-    {
+    int run(size_t id) {
         auto queue = QueueRegistery::Instance().GetQueue(id);
         Event ev;
         int count = 0;
-        while(queue->pop(ev))
-        {
+        while(queue->pop(ev)) {
             ev.function();
             ++count;
         }
@@ -174,12 +152,10 @@ struct impl
             lock.lock();
         }*/
     }
-    bool run_once(size_t id)
-    {
+    bool run_once(size_t id) {
         auto queue = QueueRegistery::Instance().GetQueue(id);
         Event ev;
-        if(queue->pop(ev))
-        {
+        if(queue->pop(ev)) {
             ev.function();
             return true;
         }
@@ -198,8 +174,7 @@ struct impl
             lock.lock();
         }*/
     }
-    void remove_from_queue(void* obj)
-    {
+    void remove_from_queue(void* obj) {
         QueueRegistery::Instance().RemoveFromQueue(obj);
         /*std::lock_guard<std::mutex> lock(mtx);
         for (auto& queue: thread_queues)
@@ -219,53 +194,43 @@ struct impl
             }
         }*/
     }
-    size_t size(size_t id)
-    {
+    size_t size(size_t id) {
         return QueueRegistery::Instance().GetQueue(id)->size();
         //std::lock_guard<std::mutex> lock(mtx);
         //return std::get<0>(thread_queues[id]).size();
     }
-    void Cleanup()
-    {
-        QueueRegistery::Instance().Clear();
+    void Cleanup() {
+        QueueRegistery::Instance().clear();
     }
 };
-void ThreadSpecificQueue::Push(const std::function<void(void)>& f, size_t id, void* obj)
-{
+void ThreadSpecificQueue::Push(const std::function<void(void)>& f, size_t id, void* obj) {
 
 #ifdef _DEBUG
-    if(impl::inst()->_deleted_objects.find(obj) != impl::inst()->_deleted_objects.end())
-    {
+    if(impl::inst()->_deleted_objects.find(obj) != impl::inst()->_deleted_objects.end()) {
         LOG(trace) << "Pushing function onto queue from deleted object";
         //return;
     }
 #endif
     impl::inst()->push(f, id, obj);
 }
-int ThreadSpecificQueue::Run(size_t id)
-{
+int ThreadSpecificQueue::Run(size_t id) {
     return impl::inst()->run(id);
 }
-void ThreadSpecificQueue::RegisterNotifier(const std::function<void(void)>& f, size_t id)
-{
+void ThreadSpecificQueue::RegisterNotifier(const std::function<void(void)>& f, size_t id) {
     impl::inst()->register_notifier(f, id);
 }
-bool ThreadSpecificQueue::RunOnce(size_t id)
-{
+bool ThreadSpecificQueue::RunOnce(size_t id) {
     return impl::inst()->run_once(id);
 }
-void ThreadSpecificQueue::RemoveFromQueue(void* obj)
-{
+void ThreadSpecificQueue::RemoveFromQueue(void* obj) {
     impl::inst()->remove_from_queue(obj);
 #ifdef _DEBUG
     impl::inst()->_deleted_objects.insert(obj);
 #endif
 }
-size_t ThreadSpecificQueue::Size(size_t id)
-{
+size_t ThreadSpecificQueue::Size(size_t id) {
     return impl::inst()->size(id);
 }
-void ThreadSpecificQueue::Cleanup()
-{
+void ThreadSpecificQueue::Cleanup() {
     impl::inst()->Cleanup();
 }

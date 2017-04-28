@@ -1,4 +1,4 @@
-#include "MetaObject/Detail/MemoryBlock.h"
+#include "MetaObject/Detail/MemoryBlock.hpp"
 #include "MetaObject/Detail/AllocatorImpl.hpp"
 #include <algorithm>
 #include <vector>
@@ -10,78 +10,63 @@ using namespace mo;
 
 
 
-void GPUMemory::_allocate(unsigned char** ptr, size_t size)
-{
+void GPUMemory::_allocate(unsigned char** ptr, size_t size) {
     CV_CUDEV_SAFE_CALL(cudaMalloc(ptr, size));
 }
-void GPUMemory::_deallocate(unsigned char* ptr)
-{
+void GPUMemory::_deallocate(unsigned char* ptr) {
     CV_CUDEV_SAFE_CALL(cudaFree(ptr));
 }
 
-void CPUMemory::_allocate(unsigned char** ptr, size_t size)
-{
+void CPUMemory::_allocate(unsigned char** ptr, size_t size) {
     CV_CUDEV_SAFE_CALL(cudaMallocHost(ptr, size));
 }
 
-void CPUMemory::_deallocate(unsigned char* ptr)
-{
+void CPUMemory::_deallocate(unsigned char* ptr) {
     CV_CUDEV_SAFE_CALL(cudaFreeHost(ptr));
 }
 
 template<class XPU>
 MemoryBlock<XPU>::MemoryBlock(size_t size_):
-    size(size_)
-{
+    size(size_) {
     XPU::_allocate(&begin, size);
     end = begin + size;
 }
 
 template<class XPU>
-MemoryBlock<XPU>::~MemoryBlock()
-{
+MemoryBlock<XPU>::~MemoryBlock() {
     XPU::_deallocate(begin);
 }
 
 template<class XPU>
-unsigned char* MemoryBlock<XPU>::allocate(size_t size_, size_t elemSize_)
-{
+unsigned char* MemoryBlock<XPU>::allocate(size_t size_, size_t elemSize_) {
     if (size_ > size)
         return nullptr;
     std::vector<std::pair<size_t, unsigned char*>> candidates;
     unsigned char* prevEnd = begin;
-    if (allocatedBlocks.size())
-    {
-        for (auto itr : allocatedBlocks)
-        {
-            if (static_cast<size_t>(itr.first - prevEnd) > size_)
-            {
+    if (allocatedBlocks.size()) {
+        for (auto itr : allocatedBlocks) {
+            if (static_cast<size_t>(itr.first - prevEnd) > size_) {
                 auto alignment = alignmentOffset(prevEnd, elemSize_);
-                if (static_cast<size_t>(itr.first - prevEnd + alignment) >= size_)
-                {
+                if (static_cast<size_t>(itr.first - prevEnd + alignment) >= size_) {
                     candidates.push_back(std::make_pair(size_t(itr.first - prevEnd + alignment), prevEnd + alignment));
                 }
             }
             prevEnd = itr.second;
         }
     }
-    if (static_cast<size_t>(end - prevEnd) >= size_)
-    {
+    if (static_cast<size_t>(end - prevEnd) >= size_) {
         auto alignment = alignmentOffset(prevEnd, elemSize_);
-        if (static_cast<size_t>(end - prevEnd + alignment) >= size_)
-        {
+        if (static_cast<size_t>(end - prevEnd + alignment) >= size_) {
             candidates.push_back(std::make_pair(size_t(end - prevEnd + alignment), prevEnd + alignment));
         }
     }
     // Find the smallest chunk of memory that fits our requirement, helps reduce fragmentation.
     auto min = std::min_element(candidates.begin(), candidates.end(),
-                    [](const std::pair<size_t, unsigned char*>& first, const std::pair<size_t, unsigned char*>& second)
-                    {
-                        return first.first < second.first;
-                    });
+    [](const std::pair<size_t, unsigned char*>& first, const std::pair<size_t, unsigned char*>& second) {
+        return first.first < second.first;
+    });
 
-    if (min != candidates.end() && min->first > size_)
-    {
+    if (min != candidates.end() && min->first > size_) {
         allocatedBlocks[min->second] = (unsigned char*)(min->second + size_);
         return min->second;
     }
@@ -89,13 +74,11 @@ unsigned char* MemoryBlock<XPU>::allocate(size_t size_, size_t elemSize_)
 }
 
 template<class XPU>
-bool MemoryBlock<XPU>::deAllocate(unsigned char* ptr)
-{
+bool MemoryBlock<XPU>::deAllocate(unsigned char* ptr) {
     if (ptr < begin || ptr > end)
         return false;
     auto itr = allocatedBlocks.find(ptr);
-    if (itr != allocatedBlocks.end())
-    {
+    if (itr != allocatedBlocks.end()) {
         allocatedBlocks.erase(itr);
         return true;
     }
@@ -103,20 +86,17 @@ bool MemoryBlock<XPU>::deAllocate(unsigned char* ptr)
 }
 
 template<class XPU>
-unsigned char* MemoryBlock<XPU>::Begin() const
-{
+unsigned char* MemoryBlock<XPU>::Begin() const {
     return begin;
 }
 
 template<class XPU>
-unsigned char* MemoryBlock<XPU>::End() const
-{
+unsigned char* MemoryBlock<XPU>::End() const {
     return end;
 }
 
 template<class XPU>
-size_t MemoryBlock<XPU>::Size() const
-{
+size_t MemoryBlock<XPU>::Size() const {
     return size;
 }
 

@@ -1,7 +1,7 @@
 #include "MetaObject/Thread/Thread.hpp"
-#include "MetaObject/Signals/TypedSignalRelay.hpp"
+#include "MetaObject/Signals/TSignalRelay.hpp"
 #include "MetaObject/Context.hpp"
-#include "MetaObject/Signals/TypedSlot.hpp"
+#include "MetaObject/Signals/TSlot.hpp"
 #include "MetaObject/Thread/BoostThread.h"
 #include "MetaObject/Thread/ThreadRegistry.hpp"
 #include "MetaObject/Logging/Profiling.hpp"
@@ -51,15 +51,15 @@ void Thread::SetStartCallback(const std::function<void(void)>& f)
 {
     _on_start = f;
 }
-std::shared_ptr<Connection> Thread::SetInnerLoop(TypedSlot<int(void)>* slot)
+std::shared_ptr<Connection> Thread::SetInnerLoop(TSlot<int(void)>* slot)
 {
-    return slot->Connect(_inner_loop);
+    return slot->connect(_inner_loop);
 }
 ThreadPool* Thread::GetPool() const
 {
     return _pool;
 }
-Context* Thread::GetContext()
+Context* Thread::getContext()
 {
     boost::unique_lock<boost::recursive_timed_mutex> lock(_mtx);
     if(!_ctx)
@@ -73,7 +73,7 @@ Thread::Thread()
 {
     _pool = nullptr;
     _ctx = nullptr;
-    _inner_loop.reset(new mo::TypedSignalRelay<int(void)>());
+    _inner_loop.reset(new mo::TSignalRelay<int(void)>());
     _quit = false;
     _thread = boost::thread(&Thread::Main, this);
     _paused = false;
@@ -81,7 +81,7 @@ Thread::Thread()
 }
 Thread::Thread(ThreadPool* pool)
 {
-    _inner_loop.reset(new mo::TypedSignalRelay<int(void)>());
+    _inner_loop.reset(new mo::TSignalRelay<int(void)>());
     _pool = pool;
     _ctx = nullptr;
     _quit = false;
@@ -239,7 +239,7 @@ void Thread::Main()
     (void)allocator_deleter;
     mo::Context ctx;
     {
-        boost::recursive_mutex::scoped_lock lock(_mtx);
+        mo::Mutex_t::scoped_lock lock(_mtx);
         _ctx = &ctx;
         lock.unlock();
         _cv.notify_all();
@@ -253,7 +253,7 @@ void Thread::Main()
     {
         try
         {
-            boost::recursive_mutex::scoped_lock lock(_mtx);
+            mo::Mutex_t::scoped_lock lock(_mtx);
             PROFILE_RANGE(events);
             while (_work_queue.size())
             {
@@ -312,7 +312,7 @@ void Thread::Main()
                 {
                     PROFILE_RANGE(events);
                     _paused = true;
-                    boost::recursive_mutex::scoped_lock lock(_mtx);
+                    mo::Mutex_t::scoped_lock lock(_mtx);
                     HandleEvents(10);
                     _cv.wait_for(lock, boost::chrono::milliseconds(10));
                     {

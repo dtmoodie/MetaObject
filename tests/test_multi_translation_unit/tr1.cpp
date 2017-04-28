@@ -1,10 +1,10 @@
-#include "MetaObject/Parameters/MetaParameter.hpp"
-#include "MetaObject/Parameters/UI/Qt/OpenCV.hpp"
-#include "MetaObject/Parameters/UI/Qt/Containers.hpp"
-#include "MetaObject/Parameters/UI/Qt/TParameterProxy.hpp"
-#include "MetaObject/Parameters/Buffers/CircularBuffer.hpp"
-#include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
-#include "MetaObject/Parameters/Buffers/Map.hpp"
-#include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
+#include "MetaObject/Params/MetaParam.hpp"
+#include "MetaObject/Params/UI/Qt/OpenCV.hpp"
+#include "MetaObject/Params/UI/Qt/Containers.hpp"
+#include "MetaObject/Params/UI/Qt/TParamProxy.hpp"
+#include "MetaObject/Params/Buffers/CircularBuffer.hpp"
+#include "MetaObject/Params/Buffers/StreamBuffer.hpp"
+#include "MetaObject/Params/Buffers/Map.hpp"
+#include "MetaObject/Params/detail/MetaParamsDetail.hpp"
 
-INSTANTIATE_META_PARAMETER(std::vector<std::string>)
+INSTANTIATE_META_Param(std::vector<std::string>)

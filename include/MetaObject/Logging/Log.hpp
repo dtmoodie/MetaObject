@@ -17,11 +17,11 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 #endif
 
 #ifdef _WIN32
-  #define NOMINMAX
-  #pragma comment(lib, "Dbghelp.lib")
+#define NOMINMAX
+#pragma comment(lib, "Dbghelp.lib")
 #else
-  #include <execinfo.h>
-  #include <cxxabi.h>
+#include <execinfo.h>
+#include <cxxabi.h>
 #endif
 
 #ifdef LOG
@@ -76,7 +76,6 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 #undef DISCARD_MESSAGE
 #endif
 
-
 #define DISCARD_MESSAGE true ? (void)0 : mo::LogMessageVoidify() & mo::eat_message().stream()
 
 #define LOG_EVERY_N(severity, n) \
@@ -91,7 +90,7 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 #define LOG(severity) BOOST_LOG_TRIVIAL(severity) << "[" << __FUNCTION__ << "] "
 #define DOIF(condition, expression, severity) if(condition) { LOG(severity) << #condition << " is true, thus performing " << #expression; expression;} else { LOG(severity) << #condition << " failed";}
 
-#define DOIF_LOG_PASS(condition, expression, severity) if(condition) { LOG(severity) << #condition << " is true, thus performing " << #expression; expression;} 
+#define DOIF_LOG_PASS(condition, expression, severity) if(condition) { LOG(severity) << #condition << " is true, thus performing " << #expression; expression;}
 #define DOIF_LOG_FAIL(condition, expression, severity) if(condition) { expression; } else { LOG(severity) << "Unable to perform " #expression " due to " #condition << " failed";}
 
 #define LOGIF_EQ(lhs, rhs, severity) if(lhs == rhs)  LOG(severity) << "if(" << #lhs << " == " << #rhs << ")" << "[" << lhs << " == " << rhs << "]";
@@ -149,106 +148,150 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 #define MO_THROW_SPECIFIER
 #endif
 
-namespace mo
-{
-    MO_EXPORTS void InitLogging();
+namespace mo {
+
+MO_EXPORTS void InitLogging();
+
+void MO_EXPORTS collectCallstack(size_t skipLevels, bool makeFunctionNamesStandOut, const std::function<void(const std::string&)>& write);
+std::string MO_EXPORTS printCallstack(size_t skipLevels, bool makeFunctionNamesStandOut);
+std::string MO_EXPORTS printCallstack(size_t skipLevels, bool makeFunctionNamesStandOut, std::stringstream& ss);
 
 
-    class MO_EXPORTS ThrowOnDestroy {
-    public:
-        ThrowOnDestroy(const char* function, const char* file, int line);
-        std::ostringstream &stream();
-        ~ThrowOnDestroy() MO_THROW_SPECIFIER;
+struct ICallstackException{
+    virtual ~ICallstackException();
+    virtual std::string callstack();
+};
 
-    protected:
-        std::ostringstream log_stream_;
-    };
+// This class creates a message to be logged with 
+template<class Exc, boost::log::BOOST_LOG_VERSION_NAMESPACE::trivial::severity_level Severity>
+struct CallstackSeverityException: virtual public Exc, virtual public ICallstackException{
+    template<class... Args>
+    CallstackSeverityException(Args... args):
+        Exc(std::forward(args)...): msg(s_msg_buffer){}
 
-    class MO_EXPORTS ThrowOnDestroy_trace: public ThrowOnDestroy 
-    {
-    public:
-        ThrowOnDestroy_trace(const char* function, const char* file, int line);
-        ~ThrowOnDestroy_trace() MO_THROW_SPECIFIER;
-    };
-    
-    class MO_EXPORTS ThrowOnDestroy_debug: public ThrowOnDestroy 
-    {
-    public:
-        ThrowOnDestroy_debug(const char* function, const char* file, int line);
-    };
+    const char* what() const noexcept{
+        return msg.str().c_str();
+    }
 
-    class MO_EXPORTS ThrowOnDestroy_info: public ThrowOnDestroy 
-    {
-    public:
-        ThrowOnDestroy_info(const char* function, const char* file, int line);
-        ~ThrowOnDestroy_info() MO_THROW_SPECIFIER;
-    };
+    std::string callstack(){
+        return callstack;
+    }
 
-    class MO_EXPORTS ThrowOnDestroy_warning: public ThrowOnDestroy
-    {
-    public:
-        ThrowOnDestroy_warning(const char* function, const char* file, int line);
-        ~ThrowOnDestroy_warning() MO_THROW_SPECIFIER;
-    };
-
-    class MO_EXPORTS EatMessage
-    {
-    public:
-        EatMessage(){}
-        std::stringstream &stream(){return eat;}
-    private:
-        std::stringstream eat;
-        EatMessage(const EatMessage&);
-        void operator=(const EatMessage&);
-    };
-
-    class MO_EXPORTS LogMessageVoidify
-    {
-    public:
-        LogMessageVoidify() { }
-        // This has to be an operator with a precedence lower than << but
-        // higher than ?:
-        void operator&(std::ostream&) { }
-    };
-
-    void MO_EXPORTS collect_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, const std::function<void(const std::string&)>& write);
-    std::string MO_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut);
-    std::string MO_EXPORTS print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, std::stringstream& ss);
-    
-
-    struct MO_EXPORTS IExceptionWithCallStackBase
-    {
-        virtual const char * CallStack() const = 0;
-        virtual ~IExceptionWithCallStackBase();
-    };
-
-    // Exception wrapper to include native call stack string
-    template <class E>
-    class ExceptionWithCallStack : public E, public IExceptionWithCallStackBase
-    {
-    public:
-        ExceptionWithCallStack(const std::string& msg, const std::string& callstack) :
-            E(msg), m_callStack(callstack)
-        { }
-        ExceptionWithCallStack(const E& exc, const std::string& callstack) :
-            E(exc), m_callStack(callstack)
-        { }
+    CallstackSeverityException& operator()(int error, const char* file, int line, const char* function){
+        msg.str(std::string());
+        msg << file << ":" << line << " " << error << " in function [" << function << "]";
         
-        virtual const char * CallStack() const override { return m_callStack.c_str(); }
+        callstack = print_callstack(1, true);
+        return *this;
+    }
 
-    protected:
-        std::string m_callStack;
-    };
-    template<> class ExceptionWithCallStack<std::string>: public std::string, public IExceptionWithCallStackBase
-    {
-         public:
-        ExceptionWithCallStack(const std::string& msg, const std::string& callstack) :
-            std::string(msg), m_callStack(callstack)
-        { }
-        
-        virtual const char * CallStack() const override { return m_callStack.c_str(); }
+    template<class T>
+    CallstackSeverityException& operator<<(const T& value){
+        msg << value;
+        return *this;
+    }
 
-    protected:
-        std::string m_callStack;
-    };
+protected:
+    std::stringstream& _msg;
+    std::string _callstack;
+    static thread_local std::stringstream s_msg_buffer;
+    static thread_local CallstackSeverityException<Exc, Severity> s_instance;
+};
+template<class Exc, boost::log::BOOST_LOG_VERSION_NAMESPACE::trivial::severity_level Severity>
+thread_local CallstackSeverityException<Exc, Severity> CallstackSeverityException<Exc, Severity>::s_instance;
+
+template<class Exc, boost::log::BOOST_LOG_VERSION_NAMESPACE::trivial::severity_level Severity>
+thread_local std::stringstream CallstackSeverityException<Exc, Severity>::s_msg_buffer;
+
+
+class MO_EXPORTS ThrowOnDestroy {
+public:
+    ThrowOnDestroy(const char* function, const char* file, int line);
+    std::ostringstream &stream();
+    ~ThrowOnDestroy() MO_THROW_SPECIFIER;
+
+protected:
+    std::ostringstream log_stream_;
+};
+
+class MO_EXPORTS ThrowOnDestroy_trace: public ThrowOnDestroy {
+public:
+    ThrowOnDestroy_trace(const char* function, const char* file, int line);
+    ~ThrowOnDestroy_trace() MO_THROW_SPECIFIER;
+};
+
+class MO_EXPORTS ThrowOnDestroy_debug: public ThrowOnDestroy {
+public:
+    ThrowOnDestroy_debug(const char* function, const char* file, int line);
+};
+
+class MO_EXPORTS ThrowOnDestroy_info: public ThrowOnDestroy {
+public:
+    ThrowOnDestroy_info(const char* function, const char* file, int line);
+    ~ThrowOnDestroy_info() MO_THROW_SPECIFIER;
+};
+
+class MO_EXPORTS ThrowOnDestroy_warning: public ThrowOnDestroy {
+public:
+    ThrowOnDestroy_warning(const char* function, const char* file, int line);
+    ~ThrowOnDestroy_warning() MO_THROW_SPECIFIER;
+};
+
+class MO_EXPORTS EatMessage {
+public:
+    EatMessage() {}
+    std::stringstream &stream() {
+        return eat;
+    }
+private:
+    std::stringstream eat;
+    EatMessage(const EatMessage&);
+    void operator=(const EatMessage&);
+};
+
+class MO_EXPORTS LogMessageVoidify {
+public:
+    LogMessageVoidify() { }
+    // This has to be an operator with a precedence lower than << but
+    // higher than ?:
+    void operator&(std::ostream&) { }
+};
+
+
+struct MO_EXPORTS IExceptionWithCallStackBase {
+    virtual const char * CallStack() const = 0;
+    virtual ~IExceptionWithCallStackBase();
+};
+
+// Exception wrapper to include native call stack string
+template <class E>
+class ExceptionWithCallStack : public E, public IExceptionWithCallStackBase {
+public:
+    ExceptionWithCallStack(const std::string& msg, const std::string& callstack) :
+        E(msg), m_callStack(callstack){ }
+
+    ExceptionWithCallStack(const E& exc, const std::string& callstack) :
+        E(exc), m_callStack(callstack){ }
+
+    virtual const char * CallStack() const override {
+        return m_callStack.c_str();
+    }
+
+protected:
+    std::string m_callStack;
+};
+
+template<> class ExceptionWithCallStack<std::string>: public std::string, public IExceptionWithCallStackBase {
+public:
+    ExceptionWithCallStack(const std::string& msg, const std::string& callstack) :
+        std::string(msg), m_callStack(callstack)
+    { }
+
+    virtual const char * CallStack() const override {
+        return m_callStack.c_str();
+    }
+
+protected:
+    std::string m_callStack;
+};
 }

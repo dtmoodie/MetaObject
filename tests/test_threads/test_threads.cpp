@@ -1,11 +1,11 @@
 #include "MetaObject/Thread/ThreadHandle.hpp"
 #include "MetaObject/Thread/ThreadPool.hpp"
-#include "MetaObject/Signals/TypedSlot.hpp"
+#include "MetaObject/Signals/TSlot.hpp"
 
 int main()
 {
     int call_count = 0;
-    mo::TypedSlot<int(void)> inner_loop(
+    mo::TSlot<int(void)> inner_loop(
         std::bind([&call_count]()->int
     {
         ++call_count;

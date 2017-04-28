@@ -1,24 +1,24 @@
-#include "MetaObject/Parameters/MetaParameter.hpp"
-#include "MetaObject/Parameters/UI/Qt/OpenCV.hpp"
-#include "MetaObject/Parameters/UI/Qt/Containers.hpp"
-#include "MetaObject/Parameters/UI/Qt/TParameterProxy.hpp"
-#include "MetaObject/Parameters/Buffers/CircularBuffer.hpp"
-#include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
-#include "MetaObject/Parameters/Buffers/Map.hpp"
-#include "MetaObject/Parameters/IO/CerealPolicy.hpp"
-#include "MetaObject/Parameters/IO/TextPolicy.hpp"
-#include "MetaObject/Parameters/Types.hpp"
+#include "MetaObject/Params/MetaParam.hpp"
+#include "MetaObject/Params/UI/Qt/OpenCV.hpp"
+#include "MetaObject/Params/UI/Qt/Containers.hpp"
+#include "MetaObject/Params/UI/Qt/TParamProxy.hpp"
+#include "MetaObject/Params/Buffers/CircularBuffer.hpp"
+#include "MetaObject/Params/Buffers/StreamBuffer.hpp"
+#include "MetaObject/Params/Buffers/Map.hpp"
+#include "MetaObject/Params/IO/CerealPolicy.hpp"
+#include "MetaObject/Params/IO/TextPolicy.hpp"
+#include "MetaObject/Params/Types.hpp"
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
 #endif
-#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && (defined MetaParameters_EXPORTS)
+#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && (defined MetaParams_EXPORTS)
 #  define MO_EXPORTS __declspec(dllexport)
 #elif defined __GNUC__ && __GNUC__ >= 4
 #  define MO_EXPORTS __attribute__ ((visibility ("default")))
 #else
 #  define MO_EXPORTS
 #endif
-#include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
+#include "MetaObject/Params/detail/MetaParamsDetail.hpp"
 
 #include <cereal/types/vector.hpp>
 #include <cereal/types/string.hpp>
@@ -33,9 +33,9 @@ namespace mo
             namespace imp
             {
 
-            template<> bool DeSerialize<EnumParameter>(ITypedParameter<EnumParameter>* param, std::stringstream& ss)
+            template<> bool DeSerialize<EnumParam>(ITParam<EnumParam>* param, std::stringstream& ss)
             {
-                EnumParameter* ptr = param->GetDataPtr();
+                EnumParam* ptr = param->GetDataPtr();
                 if(ptr)
                 {
                     ptr->values.clear();
@@ -61,9 +61,9 @@ namespace mo
                 return false;
             }
 
-            template<> bool Serialize<EnumParameter>(ITypedParameter<EnumParameter>* param, std::stringstream& ss)
+            template<> bool Serialize<EnumParam>(ITParam<EnumParam>* param, std::stringstream& ss)
             {
-                EnumParameter* ptr = param->GetDataPtr();
+                EnumParam* ptr = param->GetDataPtr();
                 if (ptr)
                 {
                     ss << ptr->enumerations.size();
@@ -97,13 +97,13 @@ namespace cereal
         std::string path = m.string();
         ar(path);
     }
-    template<class Archive> void load(Archive& ar, mo::WriteFile& m)
+    template<class Archive> void load(Archive& ar, mo::Writypedefile& m)
     {
         std::string path;
         ar(path);
         m = path;
     }
-    template<class Archive> void save(Archive& ar, mo::WriteFile const& m)
+    template<class Archive> void save(Archive& ar, mo::Writypedefile const& m)
     {
         std::string path = m.string();
         ar(path);
@@ -132,12 +132,12 @@ namespace cereal
     }
 }
 using namespace mo;
-template<class AR> void EnumParameter::serialize(AR& ar)
+template<class AR> void EnumParam::serialize(AR& ar)
 {
     ar(CEREAL_NVP(enumerations), CEREAL_NVP(values), CEREAL_NVP(currentSelection));
 }
-INSTANTIATE_META_PARAMETER(ReadFile);
-INSTANTIATE_META_PARAMETER(WriteFile);
-INSTANTIATE_META_PARAMETER(ReadDirectory);
-INSTANTIATE_META_PARAMETER(WriteDirectory);
-INSTANTIATE_META_PARAMETER(EnumParameter);
+INSTANTIATE_META_Param(ReadFile);
+INSTANTIATE_META_Param(Writypedefile);
+INSTANTIATE_META_Param(ReadDirectory);
+INSTANTIATE_META_Param(WriteDirectory);
+INSTANTIATE_META_Param(EnumParam);

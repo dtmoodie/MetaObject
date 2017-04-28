@@ -19,13 +19,13 @@ SlotConnection::SlotConnection(ISlot* slot, std::shared_ptr<ISignalRelay> relay)
 }
 SlotConnection::~SlotConnection()
 {
-    //Disconnect();
+    //disconnect();
 }
-bool SlotConnection::Disconnect()
+bool SlotConnection::disconnect()
 {
 	if (_slot)
 	{
-		return _slot->Disconnect(_relay);
+		return _slot->disconnect(_relay);
 	}
 	return false;
 }
@@ -38,12 +38,12 @@ ClassConnection::ClassConnection(ISlot* slot, std::shared_ptr<ISignalRelay> rela
 
 ClassConnection::~ClassConnection()
 {
-    Disconnect();	
+    disconnect();	
 }
 
-bool ClassConnection::Disconnect()
+bool ClassConnection::disconnect()
 {
-	if (SlotConnection::Disconnect())
+	if (SlotConnection::disconnect())
 	{
 		ThreadSpecificQueue::RemoveFromQueue(_obj);
 		return true;
@@ -56,11 +56,11 @@ SignalConnection::SignalConnection(ISignal* signal, std::shared_ptr<ISignalRelay
 {
 
 }
-bool SignalConnection::Disconnect()
+bool SignalConnection::disconnect()
 {
 	if (_signal)
 	{
-		return _signal->Disconnect(_relay);
+		return _signal->disconnect(_relay);
 	}
     return false;
 }

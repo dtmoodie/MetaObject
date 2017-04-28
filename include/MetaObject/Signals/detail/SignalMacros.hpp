@@ -7,7 +7,7 @@
 
 #include "MetaObject/Signals/SignalInfo.hpp"
 #include "MetaObject/Detail/HelperMacros.hpp"
-#include "MetaObject/Signals/TypedSignal.hpp"
+#include "MetaObject/Signals/TSignal.hpp"
 #include "MetaObject/Detail/Counter.hpp"
 #include <vector>
 
@@ -69,10 +69,10 @@ inline ret sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg5
 #define INIT_SIGNALS_(N, C, RETURN, NAME, ...) \
 int init_signals_(bool firstInit, mo::_counter_<C> dummy) \
 { \
-    AddSignal(&COMBINE(_sig_##NAME##_, N), #NAME); \
+    addSignal(&COMBINE(_sig_##NAME##_, N), #NAME); \
     return init_signals_(firstInit, --dummy) + 1; \
 } \
-template<class Sig> mo::TypedSignal<RETURN(__VA_ARGS__)>* GetSignal_##NAME(typename std::enable_if<std::is_same<Sig, RETURN(__VA_ARGS__)>::value>::type* = 0) \
+template<class Sig> mo::TSignal<RETURN(__VA_ARGS__)>* getSignal_##NAME(typename std::enable_if<std::is_same<Sig, RETURN(__VA_ARGS__)>::value>::type* = 0) \
 { \
     return &COMBINE(_sig_##NAME##_, N); \
 } \
@@ -91,7 +91,7 @@ static void list_signal_info_(std::vector<mo::SignalInfo*>& output, mo::_counter
 #endif
 
 #define MO_SIGNAL_(N, RETURN, NAME, ...) \
-mo::TypedSignal<RETURN(__VA_ARGS__)> COMBINE(_sig_##NAME##_,N); \
+mo::TSignal<RETURN(__VA_ARGS__)> COMBINE(_sig_##NAME##_,N); \
 SIGNAL_CALL(N, NAME, RETURN, ##__VA_ARGS__) \
 INIT_SIGNALS_(N, __COUNTER__, RETURN, NAME, __VA_ARGS__)
 

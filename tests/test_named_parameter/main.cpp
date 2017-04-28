@@ -3,23 +3,23 @@
 #define _VARIADIC_MAX  10
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Detail/IMetaObjectImpl.hpp"
-#include "MetaObject/Signals/TypedSignal.hpp"
+#include "MetaObject/Signals/TSignal.hpp"
 #include "MetaObject/Detail/Counter.hpp"
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
 #include "MetaObject/Signals/detail/SlotMacros.hpp"
-#include "MetaObject/Parameters//ParameterMacros.hpp"
-#include "MetaObject/Parameters/TypedParameterPtr.hpp"
-#include "MetaObject/Parameters/TypedInputParameter.hpp"
-#include "MetaObject/Parameters/Types.hpp"
-#include "MetaObject/Parameters/NamedParameter.hpp"
+#include "MetaObject/Params//ParamMacros.hpp"
+#include "MetaObject/Params/TParamPtr.hpp"
+#include "MetaObject/Params/TInputParam.hpp"
+#include "MetaObject/Params/Types.hpp"
+#include "MetaObject/Params/NamedParam.hpp"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>
 #else
-#define BOOST_TEST_MODULE "parameter"
+#define BOOST_TEST_MODULE "Param"
 #include <boost/test/included/unit_test.hpp>
 #endif
 
@@ -64,7 +64,7 @@ void keywordFunction(const Args&... args)
 }
 
 
-BOOST_AUTO_TEST_CASE(named_parameter)
+BOOST_AUTO_TEST_CASE(named_Param)
 {
     size_t fn = 100;
     PrintConstruct pc;

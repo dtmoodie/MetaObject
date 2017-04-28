@@ -5,17 +5,17 @@
 
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Detail/IMetaObjectImpl.hpp"
-#include "MetaObject/Signals/TypedSignal.hpp"
+#include "MetaObject/Signals/TSignal.hpp"
 #include "MetaObject/Detail/Counter.hpp"
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
 #include "MetaObject/Signals/detail/SlotMacros.hpp"
-#include "MetaObject/Parameters/ParameterMacros.hpp"
-#include "MetaObject/Parameters/TypedParameterPtr.hpp"
-#include "MetaObject/Parameters/TypedInputParameter.hpp"
-#include "MetaObject/Parameters/TypedParameter.hpp"
-#include "MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp"
-#include "MetaObject/Parameters/ParameterClient.hpp"
+#include "MetaObject/Params/ParamMacros.hpp"
+#include "MetaObject/Params/TParamPtr.hpp"
+#include "MetaObject/Params/TInputParam.hpp"
+#include "MetaObject/Params/TParam.hpp"
+#include "MetaObject/Params/IO/SerializationFunctionRegistry.hpp"
+#include "MetaObject/Params/ParamClient.hpp"
 #include "cereal/archives/portable_binary.hpp"
 #include "RuntimeObjectSystem.h"
 #include "IObjectFactorySystem.h"
@@ -35,7 +35,7 @@ using namespace mo;
 
 BOOST_AUTO_TEST_CASE(client)
 {
-    auto inst = ParameterClient::Instance();
+    auto inst = ParamClient::Instance();
     inst->Connect("tcp://localhost:5566");
     
 
@@ -47,9 +47,9 @@ BOOST_AUTO_TEST_CASE(client)
     const char* topic = "update_topic";
     socket.setsockopt(ZMQ_SUBSCRIBE, topic, strlen(topic));
     zmq::message_t msg;
-    TypedParameter<int> parameter;
-    parameter.UpdateData(0);
-    auto deserialization_func = SerializationFunctionRegistry::Instance()->GetBinaryDeSerializationFunction(parameter.GetTypeInfo());
+    TParam<int> Param;
+    Param.UpdateData(0);
+    auto deserialization_func = SerializationFunctionRegistry::Instance()->GetBinaryDeSerializationFunction(Param.GetTypeInfo());
     int count = 0;
     while(1)
     {
@@ -57,9 +57,9 @@ BOOST_AUTO_TEST_CASE(client)
         {
             std::istringstream iss(static_cast<char*>(msg.data()));
             cereal::BinaryInputArchive ar(iss);
-            deserialization_func(&parameter, ar);
-            mo::time_t ts = parameter.GetTimestamp();
-            int value = parameter.GetData();
+            deserialization_func(&Param, ar);
+            mo::time_t ts = Param.GetTimestamp();
+            int value = Param.GetData();
             BOOST_REQUIRE_EQUAL(ts, value);
             ++count;
             if(count > 100)

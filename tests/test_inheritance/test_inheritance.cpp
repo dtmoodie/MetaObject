@@ -4,9 +4,9 @@
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
 #include "MetaObject/Signals/detail/SlotMacros.hpp"
 
-#include "MetaObject/Parameters/ParameterMacros.hpp"
-#include "MetaObject/Parameters/TypedInputParameter.hpp"
-#include "MetaObject/Parameters/ParameterInfo.hpp"
+#include "MetaObject/Params/ParamMacros.hpp"
+#include "MetaObject/Params/TInputParam.hpp"
+#include "MetaObject/Params/ParamInfo.hpp"
 
 #include "MetaObject/MetaObjectFactory.hpp"
 
@@ -33,9 +33,9 @@ struct base: public IMetaObject
     int base_count = 0;
 };
 
-struct derived_parameter: virtual public base
+struct derived_Param: virtual public base
 {
-    MO_DERIVE(derived_parameter, base);
+    MO_DERIVE(derived_Param, base);
         PARAM(int, derived_param, 10);
     MO_END;
 };
@@ -59,9 +59,9 @@ struct derived_signals: virtual public base
     void override_slot(int value);
     int derived_count = 0;
 };
-struct multi_derive: virtual public derived_parameter, virtual public derived_signals
+struct multi_derive: virtual public derived_Param, virtual public derived_signals
 {
-    MO_DERIVE(multi_derive, derived_parameter, derived_signals)
+    MO_DERIVE(multi_derive, derived_Param, derived_signals)
 
     MO_END;
 };
@@ -96,7 +96,7 @@ struct derived1: public TInterface<derived1, base1>
 };
 
 MO_REGISTER_OBJECT(derived_signals);
-MO_REGISTER_OBJECT(derived_parameter);
+MO_REGISTER_OBJECT(derived_Param);
 MO_REGISTER_OBJECT(derived1);
 MO_REGISTER_OBJECT(multi_derive);
 
@@ -112,17 +112,17 @@ BOOST_AUTO_TEST_CASE(object_print)
     info->Print();
 }
 
-BOOST_AUTO_TEST_CASE(parameter_static)
+BOOST_AUTO_TEST_CASE(Param_static)
 {
-    auto param_info = derived_parameter::GetParameterInfoStatic();
+    auto param_info = derived_Param::GetParamInfoStatic();
     if(param_info.size() == 1)
     {
         if(param_info[0]->name == "derived_param")
         {
-            std::cout << "missing base parameter \"base_param\"\n";
+            std::cout << "missing base Param \"base_param\"\n";
         }else
         {
-            std::cout << "missing derived parameter \"derived_param\"\n";
+            std::cout << "missing derived Param \"derived_param\"\n";
         }
     }
     BOOST_REQUIRE_EQUAL(param_info.size(), 2);
@@ -140,14 +140,14 @@ BOOST_AUTO_TEST_CASE(slots_static)
     BOOST_REQUIRE_EQUAL(slot_info.size(), 3);
 }
 
-BOOST_AUTO_TEST_CASE(parameter_dynamic)
+BOOST_AUTO_TEST_CASE(Param_dynamic)
 {
-    auto derived_obj = derived_parameter::Create();
+    auto derived_obj = derived_Param::Create();
     BOOST_REQUIRE_EQUAL(derived_obj->base_param, 5);
     BOOST_REQUIRE_EQUAL(derived_obj->derived_param, 10);
     derived_obj->base_param = 10;
     derived_obj->derived_param = 100;
-    derived_obj->InitParameters(true);
+    derived_obj->InitParams(true);
     BOOST_REQUIRE_EQUAL(derived_obj->base_param, 5);
     BOOST_REQUIRE_EQUAL(derived_obj->derived_param, 10);
 }
@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(parameter_dynamic)
 BOOST_AUTO_TEST_CASE(call_base_slot)
 {
     auto derived_obj = derived_signals::Create();
-    TypedSignal<void(int)> sig;
+    TSignal<void(int)> sig;
     derived_obj->ConnectByName("base_slot", &sig);
     BOOST_REQUIRE_EQUAL(derived_obj->base_count, 0);
     sig(100);
@@ -166,7 +166,7 @@ BOOST_AUTO_TEST_CASE(call_base_slot)
 BOOST_AUTO_TEST_CASE(call_derived_slot)
 {
     auto derived_obj = derived_signals::Create();
-    TypedSignal<void(int)> sig;
+    TSignal<void(int)> sig;
     derived_obj->ConnectByName("derived_slot", &sig);
     BOOST_REQUIRE_EQUAL(derived_obj->derived_count, 0);
     sig(100);
@@ -176,7 +176,7 @@ BOOST_AUTO_TEST_CASE(call_derived_slot)
 BOOST_AUTO_TEST_CASE(call_overloaded_slot)
 {
     auto derived_obj = derived_signals::Create();
-    TypedSignal<void(int)> sig;
+    TSignal<void(int)> sig;
     derived_obj->ConnectByName("override_slot", &sig);
     BOOST_REQUIRE_EQUAL(derived_obj->derived_count, 0);
     sig(100);

@@ -64,12 +64,12 @@ BOOST_AUTO_TEST_CASE(test_obj_swap)
     auto state = constructor->GetState(obj->GetPerTypeId());
     BOOST_REQUIRE(state);
     auto ptr = state->GetSharedPtr();
-    rcc::shared_ptr<test_meta_object_signals> typed_ptr(ptr);
-    BOOST_REQUIRE(!typed_ptr.empty());
+    rcc::shared_ptr<test_meta_object_signals> T_ptr(ptr);
+    BOOST_REQUIRE(!T_ptr.empty());
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
-    BOOST_REQUIRE(!typed_ptr.empty());
+    BOOST_REQUIRE(!T_ptr.empty());
     std::vector<SignalInfo*> signals;
-    typed_ptr->GetSignalInfo(signals);
+    T_ptr->GetSignalInfo(signals);
     BOOST_REQUIRE_EQUAL(signals.size(), 2);
 }
 
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(test_reconnect_signals)
     BOOST_REQUIRE_EQUAL(slots->call_count, 10);
 }
 
-BOOST_AUTO_TEST_CASE(test_input_output_parameter)
+BOOST_AUTO_TEST_CASE(test_input_output_Param)
 {
 	auto output = rcc::shared_ptr<test_meta_object_output>::Create();
 	auto input = rcc::shared_ptr<test_meta_object_input>::Create();
@@ -197,9 +197,9 @@ BOOST_AUTO_TEST_CASE(test_input_output_parameter)
 	BOOST_REQUIRE_EQUAL(*input->test_input, 10);
 }
 
-BOOST_AUTO_TEST_CASE(test_parameter_persistence_recompile)
+BOOST_AUTO_TEST_CASE(test_Param_persistence_recompile)
 {
-    auto obj = test_meta_object_parameters::Create();
+    auto obj = test_meta_object_Params::Create();
     BOOST_REQUIRE_EQUAL(obj->test, 5);
     obj->test = 10;
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
@@ -210,8 +210,8 @@ BOOST_AUTO_TEST_CASE(test_parameter_persistence_recompile)
 
 BOOST_AUTO_TEST_CASE(test_multiple_objects)
 {
-    auto obj1 = rcc::shared_ptr<test_meta_object_parameters>::Create();
-    auto obj2 = rcc::shared_ptr<test_meta_object_parameters>::Create();
+    auto obj1 = rcc::shared_ptr<test_meta_object_Params>::Create();
+    auto obj2 = rcc::shared_ptr<test_meta_object_Params>::Create();
     obj1->test = 1;
     obj2->test = 2;
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);

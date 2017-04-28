@@ -47,11 +47,11 @@ ThreadHandle& ThreadHandle::operator=(const ThreadHandle& other)
     increment();
     return *this;
 }
-Context* ThreadHandle::GetContext()
+Context* ThreadHandle::getContext()
 {
     if(_thread)
     {
-        return _thread->GetContext();
+        return _thread->getContext();
     }
     return nullptr;
 }
@@ -99,7 +99,7 @@ void ThreadHandle::SetStartCallback(const std::function<void(void)>& f)
     }
 }
 
-std::shared_ptr<Connection> ThreadHandle::SetInnerLoop(TypedSlot<int(void)>* slot)
+std::shared_ptr<Connection> ThreadHandle::SetInnerLoop(TSlot<int(void)>* slot)
 {
     if(_thread)
     {
@@ -155,9 +155,9 @@ void ThreadHandle::SetThreadName(const std::string& name)
         if(_thread->IsOnThread())
         {
             mo::SetThreadName(name.c_str());
-            mo::SetStreamName(name.c_str(), _thread->GetContext()->GetStream());
+            mo::SetStreamName(name.c_str(), _thread->getContext()->GetStream());
             _thread->_name = name;
-            _thread->GetContext()->SetName(name);
+            _thread->getContext()->setName(name);
         }else
         {
             Thread* thread = _thread;
@@ -165,9 +165,9 @@ void ThreadHandle::SetThreadName(const std::string& name)
             _thread->PushEventQueue([name_, thread, this]()
             {
                 mo::SetThreadName(name_.c_str());
-                mo::SetStreamName(name_.c_str(), thread->GetContext()->GetStream());
+                mo::SetStreamName(name_.c_str(), thread->getContext()->GetStream());
                 _thread->_name = name_;
-                _thread->GetContext()->SetName(name_);
+                _thread->getContext()->setName(name_);
             });
         }
     }

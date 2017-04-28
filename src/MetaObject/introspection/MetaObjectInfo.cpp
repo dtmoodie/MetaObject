@@ -1,6 +1,6 @@
 #include "MetaObject/IMetaObjectInfo.hpp"
-#include "MetaObject/Parameters/ParameterInfo.hpp"
-#include "MetaObject/Parameters/Demangle.hpp"
+#include "MetaObject/Params/ParamInfo.hpp"
+#include "MetaObject/Params/Demangle.hpp"
 #include "MetaObject/Signals/SignalInfo.hpp"
 #include "MetaObject/Signals/SlotInfo.hpp"
 
@@ -27,10 +27,10 @@ std::string IMetaObjectInfo::Print() const
     auto help = GetObjectHelp();
     if(help.size())
         ss << "    " << help << "\n";
-    auto params = GetParameterInfo();
+    auto params = getParamInfo();
     if(params.size())
     {
-        ss << "----------- Parameters ------------- \n";
+        ss << "----------- Params ------------- \n";
         int longest_name = 0;
         for(auto& slot : params)
             longest_name = std::max<int>(longest_name, slot->name.size());
@@ -56,7 +56,7 @@ std::string IMetaObjectInfo::Print() const
                 ss << "    " << param->initial_value << "\n";
         }
     }
-    auto sigs = GetSignalInfo();
+    auto sigs = getSignalInfo();
     if(sigs.size())
     {
         ss << "\n----------- Signals ---------------- \n";
@@ -77,7 +77,7 @@ std::string IMetaObjectInfo::Print() const
         }
     }
     
-    auto my_slots = GetSlotInfo();
+    auto my_slots = getSlotInfo();
     if(my_slots .size())
     {
         ss << "\n----------- Slots ---------------- \n";

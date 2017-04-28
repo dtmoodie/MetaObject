@@ -1,6 +1,6 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
-#include "MetaObject/Detail/TypeInfo.h"
+#include "MetaObject/Detail/TypeInfo.hpp"
 #include "MetaObject/Thread/ThreadRegistry.hpp"
 #include <memory>
 
@@ -21,19 +21,19 @@ namespace mo
     class MO_EXPORTS ISignal
     {
     public:
-        virtual TypeInfo GetSignature() const = 0;
-        virtual std::shared_ptr<Connection> Connect(ISlot* slot) = 0;
-        virtual std::shared_ptr<Connection> Connect(std::shared_ptr<ISignalRelay>& relay) = 0;
-        virtual bool Disconnect() = 0;
-        virtual bool Disconnect(ISlot* slot) = 0;
-        virtual bool Disconnect(std::weak_ptr<ISignalRelay> relay) = 0;
+        virtual TypeInfo getSignature() const = 0;
+        virtual std::shared_ptr<Connection> connect(ISlot* slot) = 0;
+        virtual std::shared_ptr<Connection> connect(std::shared_ptr<ISignalRelay>& relay) = 0;
+        virtual bool disconnect() = 0;
+        virtual bool disconnect(ISlot* slot) = 0;
+        virtual bool disconnect(std::weak_ptr<ISignalRelay> relay) = 0;
 
-        IMetaObject* GetParent() const;
-        const Context* GetContext() const;
-        void SetContext(Context* ctx);
+        IMetaObject* getParent() const;
+        const Context* getContext() const;
+        void setContext(Context* ctx);
     protected:
         friend class IMetaObject;
-        void SetParent(IMetaObject* parent);
+        void setParent(IMetaObject* parent);
         IMetaObject* _parent = nullptr;
         Context* _ctx = nullptr;
     };

@@ -2,27 +2,27 @@
 #include "MetaObject/IMetaObject.hpp"
 using namespace mo;
 
-const Context* ISignal::GetContext() const
+const Context* ISignal::getContext() const
 {
     if(_ctx)
         return _ctx;
     if(_parent)
     {
-        return _parent->GetContext();
+        return _parent->getContext();
     }
     return nullptr;
 }
-void ISignal::SetContext(Context* ctx)
+void ISignal::setContext(Context* ctx)
 {
     _ctx = ctx;
 }
 
-IMetaObject* ISignal::GetParent() const
+IMetaObject* ISignal::getParent() const
 {
     return _parent;
 }
 
-void ISignal::SetParent(IMetaObject* parent)
+void ISignal::setParent(IMetaObject* parent)
 {
     _parent = parent;
 }

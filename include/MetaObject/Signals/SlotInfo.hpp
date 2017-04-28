@@ -1,6 +1,6 @@
 #pragma once
 #include "MetaObject/Detail/Export.hpp"
-#include "MetaObject/Detail/TypeInfo.h"
+#include "MetaObject/Detail/TypeInfo.hpp"
 namespace mo
 {
     struct MO_EXPORTS SlotInfo

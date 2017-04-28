@@ -14,7 +14,7 @@ namespace mo
         Context(const std::string& name = "");
 
         ~Context();
-        void SetName(const std::string& name);
+        void setName(const std::string& name);
         cv::cuda::Stream&      GetStream();
         void                  SetStream(cv::cuda::Stream stream);
 

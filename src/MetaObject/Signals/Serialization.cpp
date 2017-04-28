@@ -1,6 +1,6 @@
 #include <MetaObject/Signals/Serialization.hpp>
 #include <MetaObject/Signals/ISlot.hpp>
-#include <MetaObject/Detail/TypeInfo.h>
+#include <MetaObject/Detail/TypeInfo.hpp>
 #include <map>
 
 using namespace mo;
@@ -29,7 +29,7 @@ SignalSerializationFactory* SignalSerializationFactory::Instance()
 
 SignalSerializationFactory::call_function_f SignalSerializationFactory::GetTextFunction(ISlot* slot)
 {
-    auto itr = _pimpl->_registry.find(slot->GetSignature());
+    auto itr = _pimpl->_registry.find(slot->getSignature());
     if (itr != _pimpl->_registry.end())
     {
         return itr->second.call;
@@ -39,7 +39,7 @@ SignalSerializationFactory::call_function_f SignalSerializationFactory::GetTextF
 
 ISignalCaller* SignalSerializationFactory::GetTextFunctor(ISlot* slot)
 {
-    auto itr = _pimpl->_registry.find(slot->GetSignature());
+    auto itr = _pimpl->_registry.find(slot->getSignature());
     if(itr != _pimpl->_registry.end())
     {
         return itr->second.caller_constructor(slot);
@@ -52,5 +52,5 @@ void SignalSerializationFactory::SetTextFunctions(ISlot* slot,
     signal_caller_constructor_f caller_constructor,
     signal_sink_constructor_f sink_constructor)
 {
-    _pimpl->_registry[slot->GetSignature()] = {function, caller_constructor, sink_constructor};
+    _pimpl->_registry[slot->getSignature()] = {function, caller_constructor, sink_constructor};
 }

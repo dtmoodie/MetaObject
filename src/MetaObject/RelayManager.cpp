@@ -36,134 +36,134 @@ void RelayManager::SetInstance(RelayManager* inst)
 	g_inst = inst;
 }
 
-std::shared_ptr<Connection> RelayManager::Connect(ISlot* slot, const std::string& name, IMetaObject* obj)
+std::shared_ptr<Connection> RelayManager::connect(ISlot* slot, const std::string& name, IMetaObject* obj)
 {
-	auto& relay = GetRelay(slot->GetSignature(), name);
-	return slot->Connect(relay);
+	auto& relay = GetRelay(slot->getSignature(), name);
+	return slot->connect(relay);
 }
 
-std::shared_ptr<Connection> RelayManager::Connect(ISignal* signal, const std::string& name, IMetaObject* obj)
+std::shared_ptr<Connection> RelayManager::connect(ISignal* signal, const std::string& name, IMetaObject* obj)
 {
-	auto& relay = GetRelay(signal->GetSignature(), name);
-	return signal->Connect(relay);
+	auto& relay = GetRelay(signal->getSignature(), name);
+	return signal->connect(relay);
 }
 
-void RelayManager::ConnectSignal(IMetaObject* obj, const std::string& signal_name)
+void RelayManager::connectSignal(IMetaObject* obj, const std::string& signal_name)
 {
-    auto signals = obj->GetSignals(signal_name);
+    auto signals = obj->getSignals(signal_name);
     for(auto signal : signals)
     {
-        auto connection = Connect(signal, signal_name, obj);
-        if(connection)
+        auto Connection = connect(signal, signal_name, obj);
+        if(Connection)
         {
-            obj->AddConnection(connection, signal_name, signal_name, signal->GetSignature(), nullptr);
+            obj->addConnection(Connection, signal_name, signal_name, signal->getSignature(), nullptr);
         }
     }
 }
 
-void RelayManager::ConnectSlot(IMetaObject* obj, const std::string& slot_name)
+void RelayManager::connectSlot(IMetaObject* obj, const std::string& slot_name)
 {
-    auto slots = obj->GetSlots(slot_name);
+    auto slots = obj->getSlots(slot_name);
     for (auto slot : slots)
     {
-        auto connection = Connect(slot, slot_name, obj);
-        if (connection)
+        auto Connection = connect(slot, slot_name, obj);
+        if (Connection)
         {
-            obj->AddConnection(connection, slot_name, slot_name, slot->GetSignature(), nullptr);
+            obj->addConnection(Connection, slot_name, slot_name, slot->getSignature(), nullptr);
         }
     }
 }
 
-bool RelayManager::ConnectSignal(IMetaObject* obj, const std::string& name, const TypeInfo& type)
+bool RelayManager::connectSignal(IMetaObject* obj, const std::string& name, const TypeInfo& type)
 {
-	auto signal = obj->GetSignal(name, type);
+	auto signal = obj->getSignal(name, type);
 	if (signal)
 	{
-		auto connection = Connect(signal, name, obj);
-		if (connection)
+		auto Connection = connect(signal, name, obj);
+		if (Connection)
 		{
-			obj->AddConnection(connection, name, "", signal->GetSignature());
+			obj->addConnection(Connection, name, "", signal->getSignature());
 			return true;
 		}
 	}
 	return false;
 }
-bool RelayManager::ConnectSlot(IMetaObject* obj, const std::string& name, const TypeInfo& type)
+bool RelayManager::connectSlot(IMetaObject* obj, const std::string& name, const TypeInfo& type)
 {
-	auto slot = obj->GetSlot(name, type);
+	auto slot = obj->getSlot(name, type);
 	if (slot)
 	{
-		auto connection = Connect(slot, name, obj);
-		if (connection)
+		auto Connection = connect(slot, name, obj);
+		if (Connection)
 		{
-			obj->AddConnection(connection, "", name, type, nullptr);
+			obj->addConnection(Connection, "", name, type, nullptr);
 		}
 	}
 	return false;
 }
 
-int RelayManager::ConnectSignals(IMetaObject* obj, const std::string& name)
+int RelayManager::connectSignals(IMetaObject* obj, const std::string& name)
 {
 	int count = 0;
-	auto signals = obj->GetSignals(name);
+	auto signals = obj->getSignals(name);
 	for (auto signal : signals)
 	{
-		count += Connect(signal, name, obj) ? 1 : 0;
+		count += connect(signal, name, obj) ? 1 : 0;
 	}
 	return count;
 }
 
-int RelayManager::ConnectSignals(IMetaObject* obj, const TypeInfo& type)
+int RelayManager::connectSignals(IMetaObject* obj, const TypeInfo& type)
 {
 	int count = 0;
-	auto signals = obj->GetSignals(type);
+	auto signals = obj->getSignals(type);
 	for (auto signal : signals)
 	{
-		count += Connect(signal.first, signal.second, obj) ? 1 : 0;
+		count += connect(signal.first, signal.second, obj) ? 1 : 0;
 	}
 	return count;
 }
 
-int RelayManager::ConnectSignals(IMetaObject* obj)
+int RelayManager::connectSignals(IMetaObject* obj)
 {
 	int count = 0;
-	auto signals = obj->GetSignals();
+	auto signals = obj->getSignals();
 	for (auto signal : signals)
 	{
-		count += Connect(signal.first, signal.second, obj) ? 1 : 0;
+		count += connect(signal.first, signal.second, obj) ? 1 : 0;
 	}
 	return count;
 }
 
-int RelayManager::ConnectSlots(IMetaObject* obj, const std::string& name)
+int RelayManager::connectSlots(IMetaObject* obj, const std::string& name)
 {
 	int count = 0;
-	auto slots = obj->GetSlots(name);
+	auto slots = obj->getSlots(name);
 	for (auto& slot : slots)
 	{
-		count += Connect(slot, name, obj) ? 1 : 0;
+		count += connect(slot, name, obj) ? 1 : 0;
 	}
 	return count;
 }
 
-int RelayManager::ConnectSlots(IMetaObject* obj, const TypeInfo& type)
+int RelayManager::connectSlots(IMetaObject* obj, const TypeInfo& type)
 {
 	int count = 0;
-    auto all_slots = obj->GetSlots(type);
+    auto all_slots = obj->getSlots(type);
     for (auto& slot : all_slots)
 	{
-		count += Connect(slot.first, slot.second, obj) ? 1 : 0;
+		count += connect(slot.first, slot.second, obj) ? 1 : 0;
 	}
 	return count;
 }
 
-int RelayManager::ConnectSlots(IMetaObject* obj)
+int RelayManager::connectSlots(IMetaObject* obj)
 {
 	int count = 0;
-    auto all_slots = obj->GetSlots();
+    auto all_slots = obj->getSlots();
     for (auto& slot : all_slots )
 	{
-		count += Connect(slot.first, slot.second, obj) ? 1 : 0;
+		count += connect(slot.first, slot.second, obj) ? 1 : 0;
 	}
 	return count;
 }

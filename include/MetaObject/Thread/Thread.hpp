@@ -1,6 +1,6 @@
 #pragma once
 #include <MetaObject/Detail/Export.hpp>
-#include <MetaObject/Signals/TypedSignalRelay.hpp>
+#include <MetaObject/Signals/TSignalRelay.hpp>
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
@@ -28,9 +28,9 @@ namespace mo
         void SetExitCallback(const std::function<void(void)>& f);
         void SetStartCallback(const std::function<void(void)>& f);
         //void SetInnerLoop(const std::function<int(void)>& f);
-        std::shared_ptr<Connection> SetInnerLoop(TypedSlot<int(void)>* slot);
+        std::shared_ptr<Connection> SetInnerLoop(TSlot<int(void)>* slot);
         ThreadPool* GetPool() const;
-        Context* GetContext();
+        Context* getContext();
     protected:
         friend class ThreadPool;
         friend class ThreadHandle;
@@ -45,7 +45,7 @@ namespace mo
         Thread(const Thread&)            = delete;
 
         boost::thread                        _thread;
-        std::shared_ptr<mo::TypedSignalRelay<int(void)>> _inner_loop;
+        std::shared_ptr<mo::TSignalRelay<int(void)>> _inner_loop;
 
         std::function<void(void)>             _on_start;
         std::function<void(void)>             _on_exit;

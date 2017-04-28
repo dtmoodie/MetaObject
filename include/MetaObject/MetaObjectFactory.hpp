@@ -10,7 +10,7 @@ struct IObjectConstructor;
 namespace mo
 {
     class IMetaObject;
-    template<class Sig> class TypedSlot;
+    template<class Sig> class TSlot;
     class Connection;
     class MO_EXPORTS MetaObjectFactory
     {
@@ -49,7 +49,7 @@ namespace mo
 		bool IsCompileComplete();
 		bool SwapObjects();
         void SetCompileCallback(std::function<void(const std::string, int)>& f);
-        std::shared_ptr<Connection> ConnectConstructorAdded(TypedSlot<void(void)>* slot);
+        std::shared_ptr<Connection> connectConstructorAdded(TSlot<void(void)>* slot);
 		template<class T>
 		std::vector<IObjectConstructor*> GetConstructors()
 		{

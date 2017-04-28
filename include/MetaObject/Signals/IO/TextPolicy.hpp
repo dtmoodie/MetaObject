@@ -1,17 +1,17 @@
 #pragma once
-#include <MetaObject/Signals/TypedSlot.hpp>
-#include <MetaObject/Signals/TypedSignalRelay.hpp>
+#include <MetaObject/Signals/TSlot.hpp>
+#include <MetaObject/Signals/TSignalRelay.hpp>
 #include <MetaObject/Signals/Serialization.hpp>
 namespace mo
 {
     template<int ...S, class R, class ... T>
-    void call_signal(seq<S...>, std::tuple<T...>& params, mo::TypedSlot<R(T...)>* sig)
+    void call_signal(seq<S...>, std::tuple<T...>& params, mo::TSlot<R(T...)>* sig)
     {
         (*sig)(std::get<S>(params)...);
     }
     
     template<int ... S, class R, class ... T>
-    void call_signal(seq<S...>, std::tuple<T...>& params, mo::TypedSignalRelay<R(T...)>* relay)
+    void call_signal(seq<S...>, std::tuple<T...>& params, mo::TSignalRelay<R(T...)>* relay)
     {
         (*relay)(std::get<S>(params)...);
     }
@@ -66,7 +66,7 @@ namespace mo
         }
     };
 
-    // Specialization for a signal accepting only one parameter
+    // Specialization for a signal accepting only one Param
     template<> class MO_EXPORTS TupleSerializer<0, std::string>
     {
     public:
@@ -81,14 +81,14 @@ namespace mo
     public:
         static ISignalCaller* Create(ISlot* slot)
         {
-            auto typed = dynamic_cast<TypedSlot<R(T...)>*>(slot);
+            auto typed = dynamic_cast<TSlot<R(T...)>*>(slot);
             if(typed)
             {
                 return new TextSlotCaller<R(T...)>(slot);
             }
         }
 
-        TextSlotCaller(TypedSlot<R(T...)>* slot)
+        TextSlotCaller(TSlot<R(T...)>* slot)
         {
             _slot = slot;
         }
@@ -100,28 +100,28 @@ namespace mo
         }
 
     private:
-        TypedSlot<R(T...)>* _slot;
+        TSlot<R(T...)>* _slot;
     };
 
     template<class T> class TextSlotSink;
 
-    template<class R, class ... T> class TextSlotSink: virtual public ISignalSink, virtual public TypedSlot<R(T...)>
+    template<class R, class ... T> class TextSlotSink: virtual public ISignalSink, virtual public TSlot<R(T...)>
     {
     public:
         static ISignalSink* Create(std::shared_ptr<ISignalRelay> relay, std::ostream& stream)
         {
-            auto typed = std::dynamic_pointer_cast<TypedSignalRelay<R(T...)>*>(relay);
+            auto typed = std::dynamic_pointer_cast<TSignalRelay<R(T...)>*>(relay);
             if(typed)
             {
                 return new TextSlotSink<T>(typed, stream);
             }
         }
 
-        TextSlotSink(std::shared_ptr<TypedSignalRelay<R(T...)>> relay, std::ostream& stream):
+        TextSlotSink(std::shared_ptr<TSignalRelay<R(T...)>> relay, std::ostream& stream):
             _stream(stream),
             _relay(relay)
         {
-            relay->Connect(this);
+            relay->connect(this);
         }
         
         ~TextSlotSink()
@@ -129,7 +129,7 @@ namespace mo
             
         }
     private:
-        std::shared_ptr<TypedSignalRelay<R(T...)>> _relay;
+        std::shared_ptr<TSignalRelay<R(T...)>> _relay;
         std::ostream& _stream;
     };
 }

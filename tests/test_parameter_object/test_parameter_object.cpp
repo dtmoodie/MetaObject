@@ -1,28 +1,28 @@
 #define BOOST_TEST_MAIN
-#include "MetaObject/Parameters/MetaParameter.hpp"
-#include "MetaObject/Parameters/Buffers/CircularBuffer.hpp"
-#include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
-#include "MetaObject/Parameters/Buffers/Map.hpp"
+#include "MetaObject/Params/MetaParam.hpp"
+#include "MetaObject/Params/Buffers/CircularBuffer.hpp"
+#include "MetaObject/Params/Buffers/StreamBuffer.hpp"
+#include "MetaObject/Params/Buffers/Map.hpp"
 #include "MetaObject/IMetaObject.hpp"
-#include "MetaObject/Signals/TypedSignal.hpp"
+#include "MetaObject/Signals/TSignal.hpp"
 #include "MetaObject/Detail/Counter.hpp"
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
 #include "MetaObject/Signals/detail/SlotMacros.hpp"
-#include "MetaObject/Parameters//ParameterMacros.hpp"
-#include "MetaObject/Parameters/TypedParameterPtr.hpp"
-#include "MetaObject/Parameters/TypedInputParameter.hpp"
+#include "MetaObject/Params//ParamMacros.hpp"
+#include "MetaObject/Params/TParamPtr.hpp"
+#include "MetaObject/Params/TInputParam.hpp"
 #include "MetaObject/Logging/CompileLogger.hpp"
-#include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
+#include "MetaObject/Params/Buffers/BufferFactory.hpp"
 #include "MetaObject/Detail/Allocator.hpp"
-#include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
+#include "MetaObject/Params/detail/MetaParamsDetail.hpp"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>
 #else
-#define BOOST_TEST_MODULE "parameter_object"
+#define BOOST_TEST_MODULE "Param_object"
 #include <boost/test/included/unit_test.hpp>
 #endif
 
@@ -31,13 +31,13 @@
 #include <fstream>
 using namespace mo;
 
-INSTANTIATE_META_PARAMETER(int);
+INSTANTIATE_META_Param(int);
 
 
 
-struct output_parametered_object: public IMetaObject
+struct output_Paramed_object: public IMetaObject
 {
-    MO_BEGIN(output_parametered_object)
+    MO_BEGIN(output_Paramed_object)
         OUTPUT(int, test_output, 0);
         OUTPUT(double, test_double, 0.0);
     MO_END;
@@ -47,24 +47,24 @@ struct output_parametered_object: public IMetaObject
     }
 };
 
-struct input_parametered_object: public IMetaObject
+struct input_Paramed_object: public IMetaObject
 {
-    MO_BEGIN(input_parametered_object)
+    MO_BEGIN(input_Paramed_object)
         INPUT(int, test_input, nullptr)
     MO_END;
 };
 
-MO_REGISTER_OBJECT(input_parametered_object)
-MO_REGISTER_OBJECT(output_parametered_object)
+MO_REGISTER_OBJECT(input_Paramed_object)
+MO_REGISTER_OBJECT(output_Paramed_object)
 
 
 BuildCallback* cb = nullptr;
-BOOST_AUTO_TEST_CASE(input_parameter_manual)
+BOOST_AUTO_TEST_CASE(input_Param_manual)
 {
     MetaObjectFactory::Instance()->GetObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
     cb = new BuildCallback();
-    auto input = input_parametered_object::Create();
-    auto output = output_parametered_object::Create();
+    auto input = input_Paramed_object::Create();
+    auto output = output_Paramed_object::Create();
     input->test_input_param.SetInput(&output->test_output_param);
     BOOST_REQUIRE(input->test_input);
     BOOST_REQUIRE_EQUAL(input->test_input, &output->test_output);
@@ -73,17 +73,17 @@ BOOST_AUTO_TEST_CASE(input_parameter_manual)
 
 
 
-BOOST_AUTO_TEST_CASE(input_parameter_programatic)
+BOOST_AUTO_TEST_CASE(input_Param_programatic)
 {
-    auto input = input_parametered_object::Create();
-    auto input_ = input->GetParameterOptional("test_input");
+    auto input = input_Paramed_object::Create();
+    auto input_ = input->GetParamOptional("test_input");
 
-    auto output = output_parametered_object::Create();
-    auto output_ = output->GetParameterOptional("test_output");
+    auto output = output_Paramed_object::Create();
+    auto output_ = output->GetParamOptional("test_output");
     
     BOOST_REQUIRE(input_);
     BOOST_REQUIRE(output_);
-    auto input_param = dynamic_cast<InputParameter*>(input_);
+    auto input_param = dynamic_cast<InputParam*>(input_);
     BOOST_REQUIRE(input_param);
     BOOST_REQUIRE(input_param->SetInput(output_));
     BOOST_REQUIRE(input->test_input);
@@ -93,15 +93,15 @@ BOOST_AUTO_TEST_CASE(input_parameter_programatic)
 
 BOOST_AUTO_TEST_CASE(buffered_input)
 {
-    auto input = input_parametered_object::Create();
-    auto input_ = input->GetParameterOptional("test_input");
+    auto input = input_Paramed_object::Create();
+    auto input_ = input->GetParamOptional("test_input");
 
-    auto output = output_parametered_object::Create();
-    auto output_ = output->GetParameterOptional("test_output");
+    auto output = output_Paramed_object::Create();
+    auto output_ = output->GetParamOptional("test_output");
 
     BOOST_REQUIRE(input_);
     BOOST_REQUIRE(output_);
-    auto input_param = dynamic_cast<InputParameter*>(input_);
+    auto input_param = dynamic_cast<InputParam*>(input_);
 
     auto cbuffer = Buffer::BufferFactory::CreateProxy(output_, CircularBuffer_e);
     BOOST_REQUIRE(cbuffer);
@@ -118,15 +118,15 @@ BOOST_AUTO_TEST_CASE(buffered_input)
 
 BOOST_AUTO_TEST_CASE(threaded_buffered_input)
 {
-    auto input = input_parametered_object::Create();
-    auto input_ = input->GetParameterOptional("test_input");
+    auto input = input_Paramed_object::Create();
+    auto input_ = input->GetParamOptional("test_input");
 
-    auto output = output_parametered_object::Create();
-    auto output_ = output->GetParameterOptional("test_output");
+    auto output = output_Paramed_object::Create();
+    auto output_ = output->GetParamOptional("test_output");
 
     BOOST_REQUIRE(input_);
     BOOST_REQUIRE(output_);
-    auto input_param = dynamic_cast<InputParameter*>(input_);
+    auto input_param = dynamic_cast<InputParam*>(input_);
 
     auto cbuffer = Buffer::BufferFactory::CreateProxy(output_, CircularBuffer_e);
     BOOST_REQUIRE(cbuffer);
@@ -159,16 +159,16 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
 BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
 {
     mo::Context ctx;
-    auto input = input_parametered_object::Create();
-    auto input_ = input->GetParameterOptional("test_input");
+    auto input = input_Paramed_object::Create();
+    auto input_ = input->GetParamOptional("test_input");
 
-    auto output = output_parametered_object::Create();
+    auto output = output_Paramed_object::Create();
     output->SetContext(&ctx);
-    auto output_ = output->GetParameterOptional("test_output");
+    auto output_ = output->GetParamOptional("test_output");
 
     BOOST_REQUIRE(input_);
     BOOST_REQUIRE(output_);
-    auto input_param = dynamic_cast<InputParameter*>(input_);
+    auto input_param = dynamic_cast<InputParam*>(input_);
 
     auto buffer = Buffer::BufferFactory::CreateProxy(output_, StreamBuffer_e);
     BOOST_REQUIRE(buffer);

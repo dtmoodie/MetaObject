@@ -5,18 +5,18 @@
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/facilities/empty.hpp>
 #endif
-#include "MetaObject/Signals/TypedSlot.hpp"
+#include "MetaObject/Signals/TSlot.hpp"
 #include "MetaObject/Detail/Counter.hpp"
 #include "MetaObject/Signals/SlotInfo.hpp"
 
 // -------------------------------------------------------------------------------------------
 #define SLOT__(NAME, N, RETURN, ...)\
     virtual RETURN NAME(__VA_ARGS__); \
-    mo::TypedSlot<RETURN(__VA_ARGS__)> COMBINE(_slot_##NAME##_, N); \
+    mo::TSlot<RETURN(__VA_ARGS__)> COMBINE(_slot_##NAME##_, N); \
     void bind_slots_(bool firstInit, mo::_counter_<N> dummy) \
     { \
         COMBINE(_slot_##NAME##_, N) = my_bind((RETURN(THIS_CLASS::*)(__VA_ARGS__))&THIS_CLASS::NAME, this, make_int_sequence<BOOST_PP_VARIADIC_SIZE(__VA_ARGS__)>{} ); \
-        AddSlot(&COMBINE(_slot_##NAME##_, N), #NAME); \
+        addSlot(&COMBINE(_slot_##NAME##_, N), #NAME); \
         bind_slots_(firstInit, --dummy); \
     } \
     static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy) \
@@ -26,7 +26,7 @@
         static mo::SlotInfo s_info{mo::TypeInfo(typeid(RETURN(__VA_ARGS__))), #NAME, "", ""}; \
         info.push_back(&s_info); \
     } \
-    template<class Sig> mo::TypedSlot<RETURN(__VA_ARGS__)>* GetSlot_##NAME(typename std::enable_if<std::is_same<Sig, RETURN(__VA_ARGS__)>::value>::type* = 0) \
+    template<class Sig> mo::TSlot<RETURN(__VA_ARGS__)>* getSlot_##NAME(typename std::enable_if<std::is_same<Sig, RETURN(__VA_ARGS__)>::value>::type* = 0) \
     { \
         return &COMBINE(_slot_##NAME##_,N); \
     }
@@ -34,11 +34,11 @@
 
 #define SLOT_1(RETURN, N, NAME) \
     virtual RETURN NAME(); \
-    mo::TypedSlot<RETURN(void)> COMBINE(_slot_##NAME##_, N); \
+    mo::TSlot<RETURN(void)> COMBINE(_slot_##NAME##_, N); \
     void bind_slots_(bool firstInit, mo::_counter_<N> dummy) \
     { \
         COMBINE(_slot_##NAME##_, N) = std::bind((RETURN(THIS_CLASS::*)())&THIS_CLASS::NAME, this); \
-        AddSlot(&COMBINE(_slot_##NAME##_, N), #NAME); \
+        addSlot(&COMBINE(_slot_##NAME##_, N), #NAME); \
         bind_slots_(firstInit, --dummy); \
     } \
     static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy) \
@@ -48,7 +48,7 @@
         static mo::SlotInfo s_info{mo::TypeInfo(typeid(RETURN(void))), #NAME, "", ""}; \
         info.push_back(&s_info); \
     } \
-    template<class Sig> mo::TypedSlot<RETURN()>* GetSlot_##NAME(typename std::enable_if<std::is_same<Sig, RETURN()>::value>::type* = 0) \
+    template<class Sig> mo::TSlot<RETURN()>* getSlot_##NAME(typename std::enable_if<std::is_same<Sig, RETURN()>::value>::type* = 0) \
     { \
         return &COMBINE(_slot_##NAME##_,N); \
     }
@@ -116,5 +116,5 @@ static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy
   #define MO_SLOT(RET, ...)
   #define DESCRIBE_SLOT(NAME, DESCRIPTION)
 #endif
-#define PARAM_UPDATE_SLOT(NAME) MO_SLOT(void, on_##NAME##_modified, mo::Context*, mo::IParameter*)
+#define PARAM_UPDATE_SLOT(NAME) MO_SLOT(void, on_##NAME##_modified, mo::Context*, mo::IParam*)
 #define SLOT_TOOLTIP(name, tooltip) SLOT_TOOLTIP_(name, tooltip, __COUNTER__)

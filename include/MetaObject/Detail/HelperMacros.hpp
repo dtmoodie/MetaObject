@@ -41,8 +41,7 @@
 */
 #define DEFINE_HAS_STATIC_FUNCTION(traitsName, funcName, signature)            \
     template <typename U>                                                      \
-    class traitsName                                                           \
-    {                                                                          \
+    class traitsName{                                                          \
     private:                                                                   \
         template<typename V, V> struct helper;                                 \
         template<typename V>                                                   \
@@ -56,12 +55,9 @@
 template<typename T> class Detect_##X {                                             \
     struct Fallback { int X; };                                                     \
     struct Derived : T, Fallback { };                                               \
-                                                                                    \
     template<typename U, U> struct Check;                                           \
-                                                                                    \
     typedef char ArrayOfOne[1];                                                     \
     typedef char ArrayOfTwo[2];                                                     \
-                                                                                    \
     template<typename U> static ArrayOfOne & func(Check<int Fallback::*, &U::X> *); \
     template<typename U> static ArrayOfTwo & func(...);                             \
   public:                                                                           \
@@ -69,24 +65,19 @@ template<typename T> class Detect_##X {                                         
     enum { value = sizeof(func<Derived>(0)) == 2 };                                 \
 };
 
-namespace mo
-{
-    template<class T>
-    struct Void
-    {
-        typedef void type;
-    };
+namespace mo {
+template<class T>
+struct Void {
+    typedef void type;
+};
 }
 
-
-#define DEFINE_TYPEDEF_DETECTOR(TYPEDEF_NAME)                                       \
-template<class T, class U = void>                                               \
-struct has_##TYPEDEF_NAME                                                       \
-{                                                                               \
-    enum { value = 0 };                                                         \
-};                                                                              \
-template<class T>                                                               \
-struct has_##TYPEDEF_NAME<T, typename mo::Void<typename T::PARENT_CLASS>::type >\
-{                                                                               \
-    enum { value = 1 };                                                         \
+#define DEFINE_typedef_DETECTOR(typedef_NAME)                                    \
+template<class T, class U = void>                                                \
+struct has_##typedef_NAME {                                                      \
+    enum { value = 0 };                                                          \
+};                                                                               \
+template<class T>                                                                \
+struct has_##typedef_NAME<T, typename mo::Void<typename T::PARENT_CLASS>::type >{\
+    enum { value = 1 };                                                          \
 };

@@ -237,18 +237,18 @@ static inline wcstring utf16(const std::wstring& p)
         }
     }
 
-    std::string mo::print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut)
+    std::string mo::printCallstack(size_t skipLevels, bool makeFunctionNamesStandOut)
     {
         std::stringstream ss;
         
-        return print_callstack(skipLevels, makeFunctionNamesStandOut, ss);
+        return printCallstack(skipLevels, makeFunctionNamesStandOut, ss);
     }
-    std::string mo::print_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, std::stringstream& ss)
+    std::string mo::printCallstack(size_t skipLevels, bool makeFunctionNamesStandOut, std::stringstream& ss)
     {
-        collect_callstack(skipLevels, makeFunctionNamesStandOut, [&ss](const std::string& str) {ss << str; });
+        collectCallstack(skipLevels, makeFunctionNamesStandOut, [&ss](const std::string& str) {ss << str; });
         return ss.str();
     }
-    void mo::collect_callstack(size_t skipLevels, bool makeFunctionNamesStandOut, const std::function<void(const std::string&)>& write)
+    void mo::collectCallstack(size_t skipLevels, bool makeFunctionNamesStandOut, const std::function<void(const std::string&)>& write)
     {
 
 
@@ -394,7 +394,7 @@ std::ostringstream &mo::ThrowOnDestroy::stream()
 mo::ThrowOnDestroy::~ThrowOnDestroy() MO_THROW_SPECIFIER
 {
     std::stringstream ss;
-    LOG(debug) << "Exception at" << mo::print_callstack(0, true, ss) << log_stream_.str();
+    LOG(debug) << "Exception at" << mo::printCallstack(0, true, ss) << log_stream_.str();
     if(!_currently_throwing_exception)
     {
         _currently_throwing_exception = true;
@@ -406,7 +406,7 @@ mo::ThrowOnDestroy_trace::ThrowOnDestroy_trace(const char* function, const char*
 mo::ThrowOnDestroy_trace::~ThrowOnDestroy_trace() MO_THROW_SPECIFIER
 {
     std::stringstream ss;
-    LOG(trace) << "Exception at" << mo::print_callstack(0, true, ss) << log_stream_.str();
+    LOG(trace) << "Exception at" << mo::printCallstack(0, true, ss) << log_stream_.str();
     if(!_currently_throwing_exception)
     {
         _currently_throwing_exception = true;
@@ -425,7 +425,7 @@ mo::ThrowOnDestroy_info::ThrowOnDestroy_info(const char* function, const char* f
 mo::ThrowOnDestroy_info::~ThrowOnDestroy_info() MO_THROW_SPECIFIER
 {
     std::stringstream ss;
-    LOG(info) << "Exception at" << mo::print_callstack(0, true, ss) << log_stream_.str();
+    LOG(info) << "Exception at" << mo::printCallstack(0, true, ss) << log_stream_.str();
     if (!_currently_throwing_exception)
     {
         _currently_throwing_exception = true;
@@ -436,7 +436,7 @@ mo::ThrowOnDestroy_warning::ThrowOnDestroy_warning(const char* function, const c
 mo::ThrowOnDestroy_warning::~ThrowOnDestroy_warning() MO_THROW_SPECIFIER
 {
     std::stringstream ss;
-    LOG(warning) << "Exception at" << mo::print_callstack(0, true, ss) << log_stream_.str();
+    LOG(warning) << "Exception at" << mo::printCallstack(0, true, ss) << log_stream_.str();
     if (!_currently_throwing_exception)
     {
         _currently_throwing_exception = true;

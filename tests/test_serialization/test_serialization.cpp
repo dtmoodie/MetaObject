@@ -1,23 +1,23 @@
 #define BOOST_TEST_MAIN
-#include <MetaObject/Parameters/IO/SerializationFunctionRegistry.hpp>
-#include <MetaObject/Parameters/IO/TextPolicy.hpp>
-#include <MetaObject/Parameters/Types.hpp>
-#include "MetaObject/Parameters/MetaParameter.hpp"
+#include <MetaObject/Params/IO/SerializationFactory.hpp>
+#include <MetaObject/Params/IO/TextPolicy.hpp>
+#include <MetaObject/Params/Types.hpp>
+#include "MetaObject/Params/MetaParam.hpp"
 #include "MetaObject/IMetaObject.hpp"
-#include "MetaObject/Signals/TypedSignal.hpp"
+#include "MetaObject/Signals/TSignal.hpp"
 #include "MetaObject/Detail/Counter.hpp"
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
 #include "MetaObject/Signals/detail/SlotMacros.hpp"
-#include "MetaObject/Parameters//ParameterMacros.hpp"
-#include "MetaObject/Parameters/TypedParameterPtr.hpp"
-#include "MetaObject/Parameters/TypedInputParameter.hpp"
+#include "MetaObject/Params//ParamMacros.hpp"
+#include "MetaObject/Params/TParamPtr.hpp"
+#include "MetaObject/Params/TInputParam.hpp"
 #include "MetaObject/Logging/CompileLogger.hpp"
-#include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
-#include "MetaObject/Parameters/IO/TextPolicy.hpp"
+#include "MetaObject/Params/Buffers/BufferFactory.hpp"
+#include "MetaObject/Params/IO/TextPolicy.hpp"
 #include "MetaObject/IO/Policy.hpp"
 #include "MetaObject/IO/memory.hpp"
-#include "MetaObject/Parameters/detail/MetaParametersDetail.hpp"
+#include "MetaObject/Params/detail/MetaParamsImpl.hpp"
 #include "RuntimeObjectSystem/shared_ptr.hpp"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
@@ -25,7 +25,7 @@
 #include "cereal/archives/portable_binary.hpp"
 #include <fstream>
 #include <istream>
-#include "MetaParameters.hpp"
+#include "MetaParams.hpp"
 #ifdef HAVE_OPENCV
 #include <opencv2/core.hpp>
 #endif
@@ -66,7 +66,7 @@ BOOST_AUTO_TEST_CASE(test_serialization)
 BOOST_AUTO_TEST_CASE(serialize_manual_xml)
 {
     cb = new BuildCallback();
-    mo::MetaParameters::initialize();
+    mo::MetaParams::initialize();
     MetaObjectFactory::Instance()->GetObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
     rcc::shared_ptr<serializable_object> obj = serializable_object::Create();
     {
@@ -143,10 +143,10 @@ BOOST_AUTO_TEST_CASE(deserialize_to_new_object_xml)
     std::ifstream ifs("test2.xml");
     auto obj = SerializerFactory::DeSerialize(ifs, SerializerFactory::xml_e);
     BOOST_REQUIRE(obj);
-	auto typed = obj.DynamicCast<serializable_object>();
-	BOOST_REQUIRE(typed);
-	BOOST_REQUIRE_EQUAL(typed->test, 14);
-	BOOST_REQUIRE_EQUAL(typed->test2, 13);
+	auto T = obj.DynamicCast<serializable_object>();
+	BOOST_REQUIRE(T);
+	BOOST_REQUIRE_EQUAL(T->test, 14);
+	BOOST_REQUIRE_EQUAL(T->test2, 13);
 }
 
 BOOST_AUTO_TEST_CASE(deserialize_to_new_object_binary)
@@ -154,10 +154,10 @@ BOOST_AUTO_TEST_CASE(deserialize_to_new_object_binary)
 	std::ifstream ifs("test2.bin", std::ios::binary);
     auto obj = SerializerFactory::DeSerialize(ifs, SerializerFactory::Binary_e);
 	BOOST_REQUIRE(obj);
-	auto typed = obj.DynamicCast<serializable_object>();
-	BOOST_REQUIRE(typed);
-    BOOST_REQUIRE_EQUAL(typed->test, 14);
-	BOOST_REQUIRE_EQUAL(typed->test2, 13);
+	auto T = obj.DynamicCast<serializable_object>();
+	BOOST_REQUIRE(T);
+    BOOST_REQUIRE_EQUAL(T->test, 14);
+	BOOST_REQUIRE_EQUAL(T->test2, 13);
 }
 
 BOOST_AUTO_TEST_CASE(serialize_multi_by_policy_binary)
@@ -186,12 +186,12 @@ BOOST_AUTO_TEST_CASE(serialize_multi_by_policy_binary)
 }
 
 
-INSTANTIATE_META_PARAMETER(mo::ReadFile);
-INSTANTIATE_META_PARAMETER(std::vector<int>);
+INSTANTIATE_META_Param(mo::ReadFile);
+INSTANTIATE_META_Param(std::vector<int>);
 BOOST_AUTO_TEST_CASE(deserialize_text_path)
 {
     mo::ReadFile data;
-    mo::TypedParameterPtr<mo::ReadFile> param;
+    mo::TParamPtr<mo::ReadFile> param;
     param.UpdatePtr(&data);
     auto deserialization_function = mo::SerializationFunctionRegistry::Instance()->GetTextDeSerializationFunction(param.GetTypeInfo());
     BOOST_REQUIRE(deserialization_function);
@@ -204,7 +204,7 @@ BOOST_AUTO_TEST_CASE(deserialize_text_path)
 BOOST_AUTO_TEST_CASE(serialize_text_vector)
 {
     std::vector<int> data = {0, 1, 2, 3, 4, 5, 6, 7};
-    mo::TypedParameterPtr<std::vector<int>> param;
+    mo::TParamPtr<std::vector<int>> param;
     param.UpdatePtr(&data);
     auto serialization_function = mo::SerializationFunctionRegistry::Instance()->GetTextSerializationFunction(param.GetTypeInfo());
     BOOST_REQUIRE(serialization_function);
@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE(serialize_text_vector)
 BOOST_AUTO_TEST_CASE(deserialize_text_vector)
 {
     std::vector<int> data;
-    mo::TypedParameterPtr<std::vector<int>> param;
+    mo::TParamPtr<std::vector<int>> param;
     param.UpdatePtr(&data);
     auto deserialization_function = mo::SerializationFunctionRegistry::Instance()->GetTextDeSerializationFunction(param.GetTypeInfo());
     BOOST_REQUIRE(deserialization_function);

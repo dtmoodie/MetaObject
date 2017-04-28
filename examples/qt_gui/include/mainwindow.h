@@ -8,12 +8,12 @@
 #endif
 namespace mo
 {
-    class IParameter;
+    class IParam;
     namespace UI
     {
         namespace qt
         {
-            class IParameterProxy;
+            class IParamProxy;
         }
     }
 }
@@ -34,8 +34,8 @@ public:
     void on_btnSerialize_clicked();
 private:
     Ui::MainWindow *ui;
-    std::vector<std::shared_ptr<mo::UI::qt::IParameterProxy>> proxies;
-    std::vector<std::shared_ptr<mo::IParameter>> parameters;
+    std::vector<std::shared_ptr<mo::UI::qt::IParamProxy>> proxies;
+    std::vector<std::shared_ptr<mo::IParam>> Params;
 #ifdef HAVE_OPENCV
     std::vector<cv::Point2f> testRefVec;
     std::vector<cv::Scalar> testRefScalar;

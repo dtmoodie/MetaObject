@@ -1,88 +1,88 @@
-#include "MetaObject/Parameters/VariableManager.h"
-#include "MetaObject/Parameters/IParameter.hpp"
-#include "MetaObject/Parameters/InputParameter.hpp"
+#include "MetaObject/Params/VariableManager.hpp"
+#include "MetaObject/Params/IParam.hpp"
+#include "MetaObject/Params/InputParam.hpp"
 #include "MetaObject/Logging/Log.hpp"
-#include "MetaObject/Signals/TypedSlot.hpp"
-#include "MetaObject/Signals/TypedSignalRelay.hpp"
+#include "MetaObject/Signals/TSlot.hpp"
+#include "MetaObject/Signals/TSignalRelay.hpp"
 #include <map>
 using namespace mo;
 struct VariableManager::impl
 {
-    std::map<std::string, IParameter*> _parameters;
-    //std::map<std::string, std::shared_ptr<Connection>> _delete_connections;
-	TypedSlot<void(IParameter*)> delete_slot;
+    std::map<std::string, IParam*> _Params;
+    //std::map<std::string, std::shared_ptr<Connection>> _delete_Connections;
+	TSlot<void(IParam*)> delete_slot;
 };
 VariableManager::VariableManager()
 {
     pimpl = new impl();
-	pimpl->delete_slot = std::bind(&VariableManager::RemoveParameter, this, std::placeholders::_1);
+	pimpl->delete_slot = std::bind(&VariableManager::RemoveParam, this, std::placeholders::_1);
 }
 VariableManager::~VariableManager()
 {
     delete pimpl;
 }
-void VariableManager::AddParameter(IParameter* param)
+void VariableManager::addParam(IParam* param)
 {
-    pimpl->_parameters[param->GetTreeName()] = param;
-    param->RegisterDeleteNotifier(&pimpl->delete_slot);
+    pimpl->_Params[param->getTreeName()] = param;
+    param->registerDeleteNotifier(&pimpl->delete_slot);
 }
-void VariableManager::RemoveParameter(IParameter* param)
+void VariableManager::RemoveParam(IParam* param)
 {
-    pimpl->_parameters.erase(param->GetTreeName());
+    pimpl->_Params.erase(param->getTreeName());
 }
-std::vector<IParameter*> VariableManager::GetOutputParameters(TypeInfo type)
+std::vector<IParam*> VariableManager::getOutputParams(TypeInfo type)
 {
-    std::vector<IParameter*> valid_outputs;
-    for(auto itr = pimpl->_parameters.begin(); itr != pimpl->_parameters.end(); ++itr)
+    std::vector<IParam*> valid_outputs;
+    for(auto itr = pimpl->_Params.begin(); itr != pimpl->_Params.end(); ++itr)
     {
-        if(itr->second->GetTypeInfo() == type && itr->second->CheckFlags(Output_e))
+        if(itr->second->getTypeInfo() == type && itr->second->checkFlags(Output_e))
         {
             valid_outputs.push_back(itr->second);
         }   
     }
     return valid_outputs;
 }
-std::vector<IParameter*> VariableManager::GetAllParmaeters()
+std::vector<IParam*> VariableManager::GetAllParmaeters()
 {
-    std::vector<IParameter*> output;
-    for(auto& itr : pimpl->_parameters)
+    std::vector<IParam*> output;
+    for(auto& itr : pimpl->_Params)
     {
         output.push_back(itr.second);
     }
     return output;
 }
-std::vector<IParameter*> VariableManager::GetAllOutputParameters()
+std::vector<IParam*> VariableManager::GetAllOutputParams()
 {
-    std::vector<IParameter*> output;
-    for(auto& itr : pimpl->_parameters)
+    std::vector<IParam*> output;
+    for(auto& itr : pimpl->_Params)
     {
-        if(itr.second->CheckFlags(Output_e))
+        if(itr.second->checkFlags(Output_e))
         {
             output.push_back(itr.second);
         }
     }
     return output;    
 }
-IParameter* VariableManager::GetParameter(std::string name)
+IParam* VariableManager::getParam(std::string name)
 {
-    auto itr = pimpl->_parameters.find(name);
-    if(itr != pimpl->_parameters.end())
+    auto itr = pimpl->_Params.find(name);
+    if(itr != pimpl->_Params.end())
     {
         return itr->second;
     }
     return nullptr;
 }
 
-IParameter* VariableManager::GetOutputParameter(std::string name)
+IParam* VariableManager::getOutputParam(std::string name)
 {
-    auto itr = pimpl->_parameters.find(name);
-    if(itr != pimpl->_parameters.end())
+    auto itr = pimpl->_Params.find(name);
+    if(itr != pimpl->_Params.end())
     {
         return itr->second;
     }
     // Check if the passed in value is the item specific name
-    std::vector<IParameter*> potentials;
-    for(auto& itr : pimpl->_parameters)
+    std::vector<IParam*> potentials;
+    for(auto& itr : pimpl->_Params)
     {
         if(itr.first.find(name) != std::string::npos)
         {
@@ -95,16 +95,16 @@ IParameter* VariableManager::GetOutputParameter(std::string name)
         {
             std::stringstream ss;
             for(auto potential : potentials)
-                ss << potential->GetTreeName() << "\n";
+                ss << potential->getTreeName() << "\n";
             LOG(debug) << "Warning ambiguous name \"" << name << "\" passed in, multiple potential matches\n " << ss.str();
         }
         return potentials[0];
     }
-    LOG(debug) << "Unable to find parameter named " << name;
+    LOG(debug) << "Unable to find Param named " << name;
     return nullptr;
 }
-void VariableManager::LinkParameters(IParameter* output, IParameter* input)
+void VariableManager::LinkParams(IParam* output, IParam* input)
 {
-    if(auto input_param = dynamic_cast<InputParameter*>(input))
+    if(auto input_param = dynamic_cast<InputParam*>(input))
         input_param->SetInput(output);
 }

@@ -2,8 +2,8 @@
 #include "MetaObjectMacrosImpl.hpp"
 
 
-/* 
-   These two macros (MO_BEGIN kept for backwards compatibility) are used to define an 
+/*
+   These two macros (MO_BEGIN kept for backwards compatibility) are used to define an
    interface base class.
 */
 #define MO_BEGIN(CLASS_NAME) MO_BEGIN_1(CLASS_NAME, __COUNTER__)

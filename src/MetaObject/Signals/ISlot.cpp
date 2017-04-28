@@ -13,7 +13,7 @@ ISlot::~ISlot()
     }
 }
 
-void ISlot::SetParent(IMetaObject* parent)
+void ISlot::setParent(IMetaObject* parent)
 {
     _parent = parent;
 }
@@ -22,17 +22,17 @@ IMetaObject* ISlot::GetParent() const
 {
     return _parent;
 }
-const Context* ISlot::GetContext() const
+const Context* ISlot::getContext() const
 {
     if(_ctx)
         return _ctx;
     if(_parent)
     {
-        return _parent->GetContext();
+        return _parent->getContext();
     }
     return nullptr;
 }
-void ISlot::SetContext(Context* ctx)
+void ISlot::setContext(Context* ctx)
 {
     _ctx = ctx;
 }

@@ -1,189 +1,162 @@
 #pragma once
 #include <IObject.h>
 #include "MetaObject/Detail/Export.hpp"
-#include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
-#include "MetaObject/Parameters/IParameter.hpp"
+#include "MetaObject/Detail/Enums.hpp"
+#include "MetaObject/Detail/Forward.hpp"
+#include "MetaObject/Detail/Time.hpp"
 #include <memory>
 
-namespace boost
-{
-    class recursive_mutex;
-}
+namespace mo {
 
-namespace mo
-{
-    class Context;
-    class RelayManager;
-    class ISignal;
-    class ICallback;
-    class ISlot;
-    template<class T> class TypedSlot;
-    class Connection;
-	class TypeInfo;
-    class IVariableManager;
-    class IMetaObjectInfo;
-    
-    class IParameter;
-    class InputParameter;
-    template<class T> class ITypedParameter;
-    template<class T> class ITypedInputParameter;
+/*
+  The IMetaObject interface class defines interfaces for introspection and serialization
+  A IMetaObject derivative should use the IMetaObject macros for defining Params, signals,
+  and slots.
+  Params - Outputs, Inputs, Control, and State.
+   - Outputs Params are shared with other IMetaObjects
+   - Inputs Params are read from other IMetaObjects
+   - Control Params are user set settings
+   - State Params are used status introspection
+ Signals
+  - functions that are called by an IMetaObject that invoke all connected slots
+  - must have void return type
+  - must handle asynchronous operation
+ Slots
+  - functions that are called when a signal is invoked
+  - must have void return type
+  - should be called on the thread of the owning context
+  - Slots with a return value can only have a 1 to 1 mapping, thus the Connection of a signal
+    to a slot with a return will only call the most recent slot that was connected to it.
+*/
+class MO_EXPORTS IMetaObject: public IObject {
+public:
+    typedef IMetaObject Interface;
+    typedef IMetaObjectInfo InterfaceInfo;
+    static int  connect(IMetaObject* sender, const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name);
+    static bool connect(IMetaObject* sender, const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name, const TypeInfo& signature);
+    template<class T>
+    static bool connect(IMetaObject* sender, const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name);
 
-    struct ParameterInfo;
-    struct SignalInfo;
-    struct SlotInfo;
-    struct CallbackInfo;
-	class ParameterOwner {};
-    /*
-      The IMetaObject interface class defines interfaces for introspection and serialization
-      A IMetaObject derivative should use the IMetaObject macros for defining parameters, signals, 
-      and slots.
-      parameters - Outputs, Inputs, Control, and State.
-       - Outputs parameters are shared with other IMetaObjects
-       - Inputs parameters are read from other IMetaObjects
-       - Control parameters are user set settings
-       - State parameters are used status introspection
-     Signals
-      - functions that are called by an IMetaObject that invoke all connected slots
-      - must have void return type
-      - must handle asynchronous operation
-     Slots
-      - functions that are called when a signal is invoked
-      - must have void return type
-      - should be called on the thread of the owning context
-      - Slots with a return value can only have a 1 to 1 mapping, thus the connection of a signal
-        to a slot with a return will only call the most recent slot that was connected to it.
-    */
-	
+    IMetaObject();
+    virtual ~IMetaObject();
 
-    class MO_EXPORTS IMetaObject: public IObject, public ParameterOwner
-    {
-    public:
-        typedef IMetaObject Interface;
-        typedef IMetaObjectInfo InterfaceInfo;
-		static int  Connect(IMetaObject* sender, const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name);
-		static bool Connect(IMetaObject* sender, const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name, const TypeInfo& signature);
-        template<class T> 
-        static bool Connect(IMetaObject* sender, const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name);
+    // Setup
+    virtual void     setContext(Context* ctx, bool overwrite = false);
+    virtual Context* getContext() const;
+    virtual int      setupSignals(RelayManager* mgr);
+    virtual int      setupVariableManager(IVariableManager* mgr);
+    virtual int      removeVariableManager(IVariableManager* mgr);
+    virtual void     bindSlots(bool firstInit) = 0;
+    virtual void     Init(bool firstInit); // inherited from RCC
+    virtual void     initCustom(bool firstInit);
+    virtual void     initParams(bool firstInit) = 0;
+    virtual int      initSignals(bool firstInit) = 0;
 
-        IMetaObject();
-        virtual ~IMetaObject();
-        
-        // Setup
-        virtual void  SetContext(Context* ctx, bool overwrite = false);
-        virtual Context* GetContext() const;
-        virtual int   SetupSignals(RelayManager* mgr);
-        virtual int   SetupVariableManager(IVariableManager* mgr);
-        virtual int   RemoveVariableManager(IVariableManager* mgr);
-        virtual void  BindSlots(bool firstInit) = 0;
-        virtual void  Init(bool firstInit);
-        virtual void  InitCustom(bool firstInit);
-        virtual void  InitParameters(bool firstInit) = 0;
-		virtual int   InitSignals(bool firstInit) = 0;
-		
-        virtual void  Serialize(ISimpleSerializer *pSerializer);
-		virtual void  SerializeConnections(ISimpleSerializer* pSerializer);
-        virtual void  SerializeParameters(ISimpleSerializer* pSerializer);
+    virtual void     Serialize(ISimpleSerializer *pSerializer); // Inherit from RCC's IObject
+    virtual void     serializeConnections(ISimpleSerializer* pSerializer);
+    virtual void     serializeParams(ISimpleSerializer* pSerializer);
 
-        // ------- Introspection
-        // Get vector of info objects for each corresponding introspection class
-        // optional name parameter can be used to get information for corresponding exact matches
-        virtual void                        GetParameterInfo(std::vector<ParameterInfo*>& info) const = 0;
-                std::vector<ParameterInfo*> GetParameterInfo(const std::string& name_filter) const;
-                std::vector<ParameterInfo*> GetParameterInfo() const;
+    // ------- Introspection
+    // Get vector of info objects for each corresponding introspection class
+    // optional name Param can be used to get information for corresponding exact matches
+    virtual void   getParamInfo(ParamInfoVec_t& info) const = 0;
+    ParamInfoVec_t getParamInfo(const std::string& name_filter) const;
+    ParamInfoVec_t getParamInfo() const;
 
-        virtual void                        GetSignalInfo(std::vector<SignalInfo*>& info) const = 0;
-                std::vector<SignalInfo*>    GetSignalInfo(const std::string& name_filter) const;
-                std::vector<SignalInfo*>    GetSignalInfo() const;
-        
-        virtual void                        GetSlotInfo(std::vector<SlotInfo*>& info) const = 0;
-                std::vector<SlotInfo*>      GetSlotInfo(const std::string& name_filter) const;
-                std::vector<SlotInfo*>      GetSlotInfo() const;
+    virtual void    getSignalInfo(SignalInfoVec_t& info) const = 0;
+    SignalInfoVec_t getSignalInfo(const std::string& name_filter) const;
+    SignalInfoVec_t getSignalInfo() const;
 
-        // -------- Signals / slots
-        // If this class emits a signal by the given name, then the input sig will be added to the list of signals
-        // that will be called when the signal is emitted.
-        virtual bool ConnectByName(const std::string& signal_name, ISlot* slot);
-		virtual bool ConnectByName(const std::string& slot_name, ISignal* signal);
+    virtual void  getSlotInfo(SlotInfoVec_t& info) const = 0;
+    SlotInfoVec_t getSlotInfo(const std::string& name_filter) const;
+    SlotInfoVec_t getSlotInfo() const;
 
-        // Be careful to only call this once for each mgr object
-        // This will call GetSignal<>(name) on the input mgr object and add the obtained signal
-        // To the list of signals that is called whenever sig_{name} is emitted
-        virtual int  ConnectByName(const std::string& name, RelayManager* mgr);
-		virtual int  ConnectByName(const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name);
-		virtual bool ConnectByName(const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name, const TypeInfo& signature);
+    // -------- Signals / slots
+    // If this class emits a signal by the given name, then the input sig will be added to the list of signals
+    // that will be called when the signal is emitted.
+    virtual bool connectByName(const std::string& signal_name, ISlot* slot);
+    virtual bool connectByName(const std::string& slot_name, ISignal* signal);
+
+    // Be careful to only call this once for each mgr object
+    // This will call getSignal<>(name) on the input mgr object and add the obtained signal
+    // To the list of signals that is called whenever sig_{name} is emitted
+    virtual int  connectByName(const std::string& name, RelayManager* mgr);
+    virtual int  connectByName(const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name);
+    virtual bool connectByName(const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name, const TypeInfo& signature);
 
 
-        // Be careful to only call once for each mgr object
-        // This will call mgr->GetSignal<>() for each declared signal
-        virtual int  ConnectAll(RelayManager* mgr);
+    // Be careful to only call once for each mgr object
+    // This will call mgr->getSignal<>() for each declared signal
+    virtual int  connectAll(RelayManager* mgr);
 
-        virtual std::vector<std::pair<ISignal*, std::string>>  GetSignals() const;
-        virtual std::vector<ISignal*>                          GetSignals(const std::string& name) const;
-        virtual std::vector<std::pair<ISignal*, std::string>>  GetSignals(const TypeInfo& type) const;
-		virtual ISignal*                                       GetSignal(const std::string& name, const TypeInfo& type) const;
+    virtual std::vector<std::pair<ISignal*, std::string>>  getSignals() const;
+    virtual std::vector<ISignal*>                          getSignals(const std::string& name) const;
+    virtual std::vector<std::pair<ISignal*, std::string>>  getSignals(const TypeInfo& type) const;
+    virtual ISignal*                                       getSignal(const std::string& name, const TypeInfo& type) const;
 
-        virtual std::vector<std::pair<ISlot*, std::string>>    GetSlots() const;
-        virtual std::vector<ISlot*>                            GetSlots(const std::string& name) const;
-        virtual std::vector<std::pair<ISlot*, std::string>>    GetSlots(const TypeInfo& signature) const;
-        virtual ISlot*                                         GetSlot(const std::string& name, const TypeInfo& signature) const;
-        template<class T> TypedSlot<T>*                        GetSlot(const std::string& name) const;
-    
-        virtual int  DisconnectByName(const std::string& name);
-        virtual bool Disconnect(ISignal* sig);
-        virtual int  Disconnect(IMetaObject* obj);
+    virtual std::vector<std::pair<ISlot*, std::string>>    getSlots() const;
+    virtual std::vector<ISlot*>                            getSlots(const std::string& name) const;
+    virtual std::vector<std::pair<ISlot*, std::string>>    getSlots(const TypeInfo& signature) const;
+    virtual ISlot*                                         getSlot(const std::string& name, const TypeInfo& signature) const;
+    template<class T> 
+    TSlot<T>*                                              getSlot(const std::string& name) const;
 
-        // Parameters
-        virtual std::vector<IParameter*> GetDisplayParameters() const;
-        
-        virtual std::vector<InputParameter*>           GetInputs(const std::string& name_filter = "") const;
-        virtual std::vector<InputParameter*>           GetInputs(const TypeInfo& type_filter, const std::string& name_filter = "") const;
-        template<class T> std::vector<InputParameter*> GetInputs(const std::string& name_filter = "") const;
+    virtual int  disconnectByName(const std::string& name);
+    virtual bool disconnect(ISignal* sig);
+    virtual int  disconnect(IMetaObject* obj);
 
-        virtual InputParameter*                        GetInput(const std::string& name) const;
-        template<class T> ITypedInputParameter<T>*     GetInput(const std::string& name);
+    // Params
+    virtual ParamVec_t getDisplayParams() const;
 
-        virtual std::vector<IParameter*>               GetOutputs(const std::string& name_filter = "") const;
-        virtual std::vector<IParameter*>               GetOutputs(const TypeInfo& type_filter, const std::string& name_filter = "") const;
-        template<class T> std::vector<IParameter*>     GetOutputs(const std::string& name_filter = "") const;
+    virtual std::vector<InputParam*>           getInputs(const std::string& name_filter = "") const;
+    virtual std::vector<InputParam*>           getInputs(const TypeInfo& type_filter, const std::string& name_filter = "") const;
+    template<class T> std::vector<InputParam*> getInputs(const std::string& name_filter = "") const;
 
-        virtual IParameter*                            GetOutput(const std::string& name) const;
-        template<class T> ITypedParameter<T>*          GetOutput(const std::string& name) const;
+    virtual InputParam*                        getInput(const std::string& name) const;
+    template<class T> ITInputParam<T>*         getInput(const std::string& name);
+
+    virtual ParamVec_t                         getOutputs(const std::string& name_filter = "") const;
+    virtual ParamVec_t                         getOutputs(const TypeInfo& type_filter, const std::string& name_filter = "") const;
+    //template<class T> std::vector<ITParam<T>*> getOutputs(const std::string& name_filter = "") const;
+
+    virtual IParam*                            getOutput(const std::string& name) const;
+    template<class T> ITParam<T>*              getOutput(const std::string& name) const;
 
 
-        virtual IParameter*      GetParameter(const std::string& name) const;
-        virtual IParameter*      GetParameterOptional(const std::string& name) const;
-        virtual std::vector<IParameter*> GetParameters(const std::string& filter = "") const;
-        virtual std::vector<IParameter*> GetParameters(const TypeInfo& filter) const;
+    virtual IParam*              getParam(const std::string& name) const;
+    virtual IParam*              getParamOptional(const std::string& name) const;
+    virtual std::vector<IParam*> getParams(const std::string& filter = "") const;
+    virtual std::vector<IParam*> getParams(const TypeInfo& filter) const;
 
-        template<class T> T                   GetParameterValue(const std::string& name, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr) const;
-        template<class T> ITypedParameter<T>* GetParameter(const std::string& name) const;
-        template<class T> ITypedParameter<T>* GetParameterOptional(const std::string& name) const;
-        
-        // Connects an input parameter to an output parameter
-        bool ConnectInput(const std::string& input_name, IMetaObject* output_object, IParameter* output_param, ParameterTypeFlags type = StreamBuffer_e);
-        bool ConnectInput(InputParameter* input, IMetaObject* output_object, IParameter* output_param, ParameterTypeFlags type = StreamBuffer_e);
-        static bool ConnectInput(IMetaObject* output_object, IParameter* output_parameter, 
-	                             IMetaObject* input_object, InputParameter* input_param, ParameterTypeFlags type = StreamBuffer_e);
-    protected:
-		friend class RelayManager;
-		
-        virtual IParameter* AddParameter(std::shared_ptr<IParameter> param);
-        virtual IParameter* AddParameter(IParameter* param);
+    template<class T> T           getParamValue(const std::string& name, mo::Time_t ts = -1 * mo::second, Context* ctx = nullptr) const;
+    template<class T> ITParam<T>* getParam(const std::string& name) const;
+    template<class T> ITParam<T>* getParamOptional(const std::string& name) const;
 
-        template<class T> ITypedParameter<T>* UpdateParameter(const std::string& name, T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
-        template<class T> ITypedParameter<T>* UpdateParameter(const std::string& name, const T& value, mo::time_t ts = -1 * mo::second, Context* ctx = nullptr);
-        template<class T> ITypedParameter<T>* UpdateParameterPtr(const std::string& name, T& ptr);
+    // connects an input Param to an output Param
+    bool connectInput(const std::string& input_name, IMetaObject* output_object, IParam* output_param, ParamType type = StreamBuffer_e);
+    bool connectInput(InputParam* input, IMetaObject* output_object, IParam* output_param, ParamType type = StreamBuffer_e);
+    static bool connectInput(IMetaObject* output_object, IParam* output_Param,
+                             IMetaObject* input_object, InputParam* input_param, ParamType type = StreamBuffer_e);
+protected:
+    virtual IParam* addParam(std::shared_ptr<IParam> param);
+    virtual IParam* addParam(IParam* param);
 
-        void AddSignal(ISignal* signal, const std::string& name);
-        void AddSlot(ISlot* slot, const std::string& name);
-        void SetParameterRoot(const std::string& root);
-		void AddConnection(std::shared_ptr<Connection>& connection, const std::string& signal_name, const std::string& slot_name, const TypeInfo& signature, IMetaObject* obj = nullptr);
-        virtual void onParameterUpdate(Context* ctx, IParameter* param);
-        struct	impl;
+    template<class T> ITParam<T>* updateParam(const std::string& name, T& value, const OptionalTime_t ts = -1 * mo::second, Context* ctx = nullptr);
+    template<class T> ITParam<T>* updateParam(const std::string& name, const T& value, mo::Time_t ts = -1 * mo::second, Context* ctx = nullptr);
+    template<class T> ITParam<T>* updateParamPtr(const std::string& name, T& ptr);
 
-        impl*			_pimpl;
-		Context*        _ctx;
-		RelayManager*  _sig_manager;
-        boost::recursive_mutex* _mtx;
-    };
+    void addSignal(ISignal* signal, const std::string& name);
+    void addSlot(ISlot* slot, const std::string& name);
+    void setParamRoot(const std::string& root);
+    void addConnection(std::shared_ptr<Connection>& Connection, const std::string& signal_name, const std::string& slot_name, const TypeInfo& signature, IMetaObject* obj = nullptr);
+    virtual void onParamUpdate(IParam*, Context*, OptionalTime_t, size_t, UpdateFlags);
+
+    friend class RelayManager;
+    struct	impl;
+
+    impl*         _pimpl;
+    Context*      _ctx;
+    RelayManager* _sig_manager;
+    Mutex_t*      _mtx;
+};
 }

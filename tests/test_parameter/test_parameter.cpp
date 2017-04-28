@@ -3,22 +3,22 @@
 
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Detail/IMetaObjectImpl.hpp"
-#include "MetaObject/Signals/TypedSignal.hpp"
+#include "MetaObject/Signals/TSignal.hpp"
 #include "MetaObject/Detail/Counter.hpp"
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
 #include "MetaObject/Signals/detail/SlotMacros.hpp"
-#include "MetaObject/Parameters//ParameterMacros.hpp"
-#include "MetaObject/Parameters/TypedParameterPtr.hpp"
-#include "MetaObject/Parameters/TypedInputParameter.hpp"
-#include "MetaObject/Parameters/Types.hpp"
+#include "MetaObject/Params//ParamMacros.hpp"
+#include "MetaObject/Params/TParamPtr.hpp"
+#include "MetaObject/Params/TInputParam.hpp"
+#include "MetaObject/Params/Types.hpp"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include <boost/any.hpp>
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>
 #else
-#define BOOST_TEST_MODULE "parameter"
+#define BOOST_TEST_MODULE "Param"
 #include <boost/test/included/unit_test.hpp>
 #endif
 
@@ -26,9 +26,9 @@
 
 using namespace mo;
 
-struct parametered_object: public IMetaObject
+struct Paramed_object: public IMetaObject
 {
-    MO_BEGIN(parametered_object);
+    MO_BEGIN(Paramed_object);
         PARAM(int, int_value, 0);
         PARAM(float, float_value, 0);
         PARAM(double, double_value, 0);
@@ -38,32 +38,32 @@ struct parametered_object: public IMetaObject
     MO_END;
     void update(int value)
     {
-        this->UpdateParameter<int>("int_value", value);
+        this->UpdateParam<int>("int_value", value);
     }
 };
 
-struct ParameterUpdateToken
+struct ParamUpdateToken
 {
-    ParameterUpdateToken(mo::IParameter& param):
+    ParamUpdateToken(mo::IParam& param):
         _param(param)
     {
     }
-    ~ParameterUpdateToken()
+    ~ParamUpdateToken()
     {
         //if(_timestamp_changed)
             
     }
-    ParameterUpdateToken& operator()(mo::Context* ctx)
+    ParamUpdateToken& operator()(mo::Context* ctx)
     {
         _ctx = ctx;
         return *this;
     }
-    ParameterUpdateToken& operator()(long long fn)
+    ParamUpdateToken& operator()(long long fn)
     {
         _frame_number = fn;
         return *this;
     }
-    ParameterUpdateToken& operator()(mo::time_t time)
+    ParamUpdateToken& operator()(mo::time_t time)
     {
         _timestamp = time;
         _timestamp_changed = true;
@@ -73,7 +73,7 @@ struct ParameterUpdateToken
     mo::time_t _timestamp;
     mo::Context* _ctx = nullptr;
     bool _timestamp_changed;
-    mo::IParameter& _param;
+    mo::IParam& _param;
 };
 
 template<class T> struct TagType
@@ -112,13 +112,13 @@ void func(const T& data, Args... args)
 }
 
 
-MO_REGISTER_OBJECT(parametered_object)
+MO_REGISTER_OBJECT(Paramed_object)
 
-BOOST_AUTO_TEST_CASE(wrapped_parameter)
+BOOST_AUTO_TEST_CASE(wrapped_Param)
 {
     func(10, ::tag::_test_timestamp = mo::time_t(-1 * mo::second));
 	int value = 10;
-	TypedParameterPtr<int> param("Test wrapped param", &value);
+	TParamPtr<int> param("Test wrapped param", &value);
 
 	BOOST_CHECK_EQUAL(param.GetData(), 10);
 	param.UpdateData(5);
@@ -129,7 +129,7 @@ BOOST_AUTO_TEST_CASE(wrapped_parameter)
 	value = 11;
 	BOOST_CHECK_EQUAL(param.GetData(), 11);
 	bool update_handler_called = false;
-	TypedSlot<void(Context*, IParameter*)> slot([&param, &update_handler_called](Context* ctx, IParameter* param_in)
+	TSlot<void(Context*, IParam*)> slot([&param, &update_handler_called](Context* ctx, IParam* param_in)
 	{
 		update_handler_called = param_in == &param;
 	});
@@ -141,21 +141,21 @@ BOOST_AUTO_TEST_CASE(wrapped_parameter)
 
 BOOST_AUTO_TEST_CASE(enum_params)
 {
-    mo::EnumParameter enum_param = {{"test", 5}};
+    mo::EnumParam enum_param = {{"test", 5}};
     
 }
 
-BOOST_AUTO_TEST_CASE(input_parameter)
+BOOST_AUTO_TEST_CASE(input_Param)
 {
 	int value = 10;
-	TypedParameterPtr<int> param("Test wrapped param", &value);
-    ITypedInputParameter<int> input_param;
+	TParamPtr<int> param("Test wrapped param", &value);
+    ITInputParam<int> input_param;
 	BOOST_REQUIRE(input_param.SetInput(&param));
 	BOOST_REQUIRE_EQUAL(input_param.GetData(), value);
 	
 	bool update_handler_called = false;
-	TypedSlot<void(Context*, IParameter*)> slot(
-		[&update_handler_called](Context*, IParameter*)
+	TSlot<void(Context*, IParam*)> slot(
+		[&update_handler_called](Context*, IParam*)
 	{
 		update_handler_called = true;
 	});
@@ -165,16 +165,16 @@ BOOST_AUTO_TEST_CASE(input_parameter)
 	BOOST_REQUIRE_EQUAL(update_handler_called, true);
 }
 
-BOOST_AUTO_TEST_CASE(access_parameter)
+BOOST_AUTO_TEST_CASE(access_Param)
 {
     MetaObjectFactory::Instance()->RegisterTranslationUnit();
 
-    auto obj = rcc::shared_ptr<parametered_object>::Create();
-    obj->GetParameter<int>("int_value");
-    obj->GetParameter<double>("double_value");
-    BOOST_REQUIRE_EQUAL(obj->GetParameterValue<int>("int_value"), 0);
+    auto obj = rcc::shared_ptr<Paramed_object>::Create();
+    obj->GetParam<int>("int_value");
+    obj->GetParam<double>("double_value");
+    BOOST_REQUIRE_EQUAL(obj->GetParamValue<int>("int_value"), 0);
     obj->update(10);
-    BOOST_REQUIRE_EQUAL(obj->GetParameterValue<int>("int_value"), 10);
+    BOOST_REQUIRE_EQUAL(obj->GetParamValue<int>("int_value"), 10);
 
 }
 

@@ -1,15 +1,15 @@
 #define BOOST_TEST_MAIN
 
 #include "MetaObject/IMetaObject.hpp"
-#include "MetaObject/Signals/TypedSignal.hpp"
+#include "MetaObject/Signals/TSignal.hpp"
 #include "MetaObject/Signals/RelayManager.hpp"
 #include "MetaObject/Detail/Counter.hpp"
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
 #include "MetaObject/Signals/detail/SlotMacros.hpp"
-#include "MetaObject/Parameters//ParameterMacros.hpp"
-#include "MetaObject/Parameters/TypedParameterPtr.hpp"
-#include "MetaObject/Parameters/TypedInputParameter.hpp"
+#include "MetaObject/Params//ParamMacros.hpp"
+#include "MetaObject/Params/TParamPtr.hpp"
+#include "MetaObject/Params/TInputParam.hpp"
 
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
@@ -28,9 +28,9 @@ using namespace mo;
 
 BOOST_AUTO_TEST_CASE(signals)
 {
-	TypedSignal<int(int)> signal;
+	TSignal<int(int)> signal;
 	{
-		TypedSlot<int(int)> slot([](int val)
+		TSlot<int(int)> slot([](int val)
 		{
 			return val * 2;
 		});
@@ -46,7 +46,7 @@ BOOST_AUTO_TEST_CASE(threaded_signal)
     mo::Context ctx;
     mo::Context thread_ctx;
 
-    TypedSlot<void(int)> slot = TypedSlot<void(int)>(std::bind(
+    TSlot<void(int)> slot = TSlot<void(int)>(std::bind(
         [&thread_ctx](int value)->void
         {
             BOOST_REQUIRE_EQUAL(thread_ctx.thread_id, mo::GetThisThread());
@@ -55,7 +55,7 @@ BOOST_AUTO_TEST_CASE(threaded_signal)
 
     slot.SetContext(&thread_ctx);
 
-    TypedSignal<void(int)> signal;
+    TSignal<void(int)> signal;
     auto connection = slot.Connect(&signal);
 
     boost::thread thread = boost::thread([&thread_ctx]()->void

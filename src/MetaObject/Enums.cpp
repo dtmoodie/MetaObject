@@ -1,24 +1,29 @@
 #include "MetaObject/Detail/Enums.hpp"
 #include "MetaObject/Logging/Log.hpp"
 using namespace mo;
-std::string mo::ParameteTypeToString(ParameterType type)
-{
-    switch(type)
-    {
-    case None_e: return "None";
-    case Input_e: return "Input";
-    case Output_e: return "Output";
-    case State_e: return "State";
-    case Control_e: return "Control";
-    case Buffer_e: return "Buffer";
-    case Optional_e: return "Optional";
-    case Desynced_e: return "";
+std::string mo::paramFlagsToString(ParamFlags type) {
+    switch(type) {
+    case None_e:
+        return "None";
+    case Input_e:
+        return "Input";
+    case Output_e:
+        return "Output";
+    case State_e:
+        return "State";
+    case Control_e:
+        return "Control";
+    case Buffer_e:
+        return "Buffer";
+    case Optional_e:
+        return "Optional";
+    case Desynced_e:
+        return "";
     }
     return "";
 }
 
-ParameterType mo::StringToParameteType(const std::string& str)
-{
+ParamFlags mo::stringToParamFlags(const std::string& str) {
     if(str == "None")
         return None_e;
     else if(str == "Input")
@@ -37,27 +42,33 @@ ParameterType mo::StringToParameteType(const std::string& str)
     return None_e;
 }
 
-std::string mo::ParameterTypeFlagsToString(ParameterTypeFlags flags)
-{
-    switch(flags)
-    {
-    case TypedParameter_e: return "Typed";
-    case CircularBuffer_e: return "circularbuffer";
-    case ConstMap_e: return "constmap";
-    case Map_e: return "map";
-    case StreamBuffer_e: return "StreamBuffer";
-    case BlockingStreamBuffer_e: return "BlockingStreamBuffer";
-    case NNStreamBuffer_e: return "NNStreamBuffer";
-    case Queue_e: return "Queue";
-    case ForceBufferedConnection_e: return "";
+std::string mo::paramTypeToString(ParamType flags) {
+    switch(flags) {
+    case TParam_e:
+        return "T";
+    case CircularBuffer_e:
+        return "circularbuffer";
+    case ConstMap_e:
+        return "constmap";
+    case Map_e:
+        return "map";
+    case StreamBuffer_e:
+        return "StreamBuffer";
+    case BlockingStreamBuffer_e:
+        return "BlockingStreamBuffer";
+    case NNStreamBuffer_e:
+        return "NNStreamBuffer";
+    case Queue_e:
+        return "Queue";
+    case ForceBufferedConnection_e:
+        return "";
     }
     return "";
 }
 
-ParameterTypeFlags mo::StringToParameterTypeFlags(const std::string& str)
-{
-    if(str == "Typed")
-        return TypedParameter_e;
+ParamType mo::stringToParamType(const std::string& str) {
+    if(str == "T")
+        return TParam_e;
     else if(str == "circularbuffer")
         return CircularBuffer_e;
     else if(str == "constmap")
@@ -71,5 +82,5 @@ ParameterTypeFlags mo::StringToParameterTypeFlags(const std::string& str)
     else if(str == "NNStreamBuffer")
         return NNStreamBuffer_e;
     THROW(debug) << "Invalid string " << str;
-    return TypedParameter_e;
+    return TParam_e;
 }

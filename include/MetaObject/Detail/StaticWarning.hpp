@@ -10,12 +10,11 @@
 #define PP_CAT(x,y) PP_CAT1(x,y)
 #define PP_CAT1(x,y) x##y
 
-namespace detail
-{
-    struct true_type {};
-    struct false_type {};
-    template <int test> struct converter : public true_type {};
-    template <> struct converter<0> : public false_type {};
+namespace detail {
+struct true_type {};
+struct false_type {};
+template <int test> struct converter : public true_type {};
+template <> struct converter<0> : public false_type {};
 }
 
 #define STATIC_WARNING(cond, msg) \
@@ -27,7 +26,7 @@ struct PP_CAT(static_warning,__LINE__) { \
 
 // Note: using STATIC_WARNING_TEMPLATE changes the meaning of a program in a small way.
 // It introduces a member/variable declaration.  This means at least one byte of space
-// in each structure/class instantiation.  STATIC_WARNING should be preferred in any 
+// in each structure/class instantiation.  STATIC_WARNING should be preferred in any
 // non-template situation.
 //  'token' must be a program-wide unique identifier.
 #define STATIC_WARNING_TEMPLATE(token, cond, msg) \
