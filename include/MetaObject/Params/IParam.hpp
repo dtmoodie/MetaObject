@@ -106,7 +106,7 @@ public:
     ICoordinateSystem*  getCoordinateSystem() const; // Get the coordinate system of this Param
 
     void subscribe(); // Subscribe to this Param as an output
-    void snsubscribe(); // unsubscribe to this Param as an output
+    void unsubscribe(); // unsubscribe to this Param as an output
     bool hasSubscriptions() const; // Determine if there are any input Params using this Param as an output
     
     virtual const TypeInfo&     getTypeInfo() const = 0; // Implemented in concrete type

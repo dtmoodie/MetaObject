@@ -12,7 +12,7 @@ namespace mo
 	}
 
 	template<typename T> 
-    bool TParam<T>::getData(StorageType_t& value, OptionalTime_t ts, Context* ctx, size_t* fn)
+    bool TParam<T>::getData(Storage_t& value, OptionalTime_t ts, Context* ctx, size_t* fn)
 	{
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if (!ts)
@@ -33,7 +33,7 @@ namespace mo
 	}
 
     template<typename T>
-    bool TParam<T>::getData(StorageType_t& value, size_t fn, Context* ctx, OptionalTime_t* ts)
+    bool TParam<T>::getData(Storage_t& value, size_t fn, Context* ctx, OptionalTime_t* ts)
     {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if (this->_fn == fn)

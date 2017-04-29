@@ -85,14 +85,12 @@ public:
     bool getInput(size_t fn, OptionalTime_t* ts = nullptr);
 
 protected:
-    virtual bool UpdateDataImpl(const T& data, OptionalTime_t ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs) {
+    virtual bool updateDataImpl(const T& data, OptionalTime_t ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs) {
         return true;
     }
     Input_t* _user_var; // Pointer to the user space pointer variable of type T
     InputStorage_t _current_data;
-    void updateUserVar();
-    virtual void onInputUpdate(Context* ctx, IParam* param);
-    virtual void onInputDelete(IParam const* param);
+    virtual void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
 };
 }
 #include "MetaObject/Params/detail/TInputParamImpl.hpp"

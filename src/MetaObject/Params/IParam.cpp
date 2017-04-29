@@ -201,7 +201,7 @@ void IParam::subscribe(){
     ++_subscribers;
 }
 
-void IParam::snsubscribe(){
+void IParam::unsubscribe(){
     
     mo::Mutex_t::scoped_lock lock(mtx());
     --_subscribers;

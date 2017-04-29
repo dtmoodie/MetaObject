@@ -27,27 +27,17 @@ public:
                       T* ptr_ = nullptr,
                       ParamFlags type = Control_e,
                       bool ownsData_ = false);
-
     ~TParamPtr();
 
-    T*   GetDataPtr(OptionalTime_t ts = OptionalTime_t(), Context* ctx = nullptr, size_t* fn_ = nullptr);
-    T*   GetDataPtr(size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
-    T    GetData(OptionalTime_t ts = OptionalTime_t(), Context* ctx = nullptr, size_t* fn = nullptr);
-    T    GetData(size_t fn, Context* ctx = nullptr, OptionalTime_t* ts = nullptr);
-    bool GetData(T& value, OptionalTime_t ts = OptionalTime_t(), Context* ctx = nullptr, size_t* fn = nullptr);
-    bool GetData(T& value, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts = nullptr);
+    virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
+        Context* ctx = nullptr, size_t* fn_ = nullptr);
 
-    /*virtual ITParam<T>* UpdateData(const T& data,
-                                           mo::Time_t ts = -1 * mo::second,
-                                           Context* ctx = nullptr,
-                                           size_t fn = std::numeric_limits<size_t>::max(),
-                                           ICoordinateSystem* cs = nullptr);*/
+    virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 
-    virtual bool Update(IParam* other);
-    virtual std::shared_ptr<IParam> DeepCopy() const;
-    ITParam<T>* UpdatePtr(T* ptr, bool ownsData_ = false);
+    ITParam<T>* updatePtr(T* ptr, bool ownsData_ = false);
 protected:
-    virtual bool UpdateDataImpl(const T& data, OptionalTime_t ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs);
+    virtual bool updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
+    //virtual bool updateDataImpl(const T& data, OptionalTime_t ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs);
     T* ptr;
     bool ownsData;
     static MetaParam<T, 100> _meta_Param;

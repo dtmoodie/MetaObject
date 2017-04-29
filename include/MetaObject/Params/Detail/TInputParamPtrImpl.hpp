@@ -67,91 +67,67 @@ namespace mo
     }
 
     template<typename T>
-    void TInputParamPtr<T>::onInputUpdate(Context* ctx, IParam* param){
-        if(this->input)
-        {
-            mo::Mutex_t::scoped_lock lock(this->input->mtx());
-            //this->commit(this->input->getTimestamp(), ctx, this->input->getFrameNumber(), this->input->GetCoordinateSystem());
-            this->_update_signal(ctx, this);
-            if((ctx && this->_ctx && ctx->thread_id == this->_ctx->thread_id) || (ctx == nullptr &&  this->_ctx == nullptr))
-            {
-                if(_user_var)
-                    *_user_var = this->input->GetDataPtr();
-            }
-        }else if(this->shared_input)
-        {
-            mo::Mutex_t::scoped_lock lock(this->shared_input->mtx());
-            //this->commit(this->shared_input->getTimestamp(), ctx, this->shared_input->getFrameNumber(), this->shared_input->GetCoordinateSystem());
-            this->_update_signal(ctx, this);
-            if((ctx && this->_ctx && ctx->thread_id == this->_ctx->thread_id) || ((ctx == nullptr) &&  (this->_ctx == nullptr)))
-            {
-                if(_user_var)
-                    *_user_var = this->shared_input->GetDataPtr();
+    void TInputParamPtr<T>::onInputUpdate(ConstStorageRef_t data, IParam* param, Context* ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags fg){
+        if(ctx == this->_ctx){
+            _current_data = data;
+            this->_ts = ts;
+            this->_fn = fn;
+            if(_user_var){
+                *_user_var = &(*_current_data);
             }
         }
     }
 
     template<typename T>
-    bool TInputParamPtr<T>::getInput(OptionalTime_t ts, size_t* fn_)
-    {
+    bool TInputParamPtr<T>::getInput(OptionalTime_t ts, size_t* fn_){
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
-        if(_user_var)
-        {
-            if(this->shared_input)
-            {
-                size_t fn;
-                *_user_var = this->shared_input->GetDataPtr(ts, this->_ctx, &fn);
-                if(*_user_var != nullptr)
-                {
-                    this->_ts = ts;
-                    if(fn_)
-                        *fn_ = fn;
-                    this->_fn = fn;
-                    return true;
+        if(_user_var){
+            size_t fn;
+            Storage_t data;
+            if(this->_shared_input){
+                if(!this->_shared_input->getData(data, ts, this->_ctx, &fn)){
+                    return false;
                 }
             }
-            if(this->input)
+            if(this->_input)
             {
-                size_t fn;
-                *_user_var = this->input->GetDataPtr(ts, this->_ctx, &fn);
-                if(*_user_var != nullptr)
-                {
-                    this->_ts = ts;
-                    if(fn_)
-                        *fn_ = fn;
-                    this->_fn = fn;
-                    return true;
+                if (!this->_input->getData(data, ts, this->_ctx, &fn)) {
+                    return false;
                 }
             }
+            _current_data = data;
+            *_user_var = &(*_current_data);
+            if (fn_)
+                *fn_ = fn;
+            return true;
         }
         return false;
     }
 
     template<typename T>
-    bool TInputParamPtr<T>::getInput(size_t fn, OptionalTime_t* ts_)
-    {
+    bool TInputParamPtr<T>::getInput(size_t fn, OptionalTime_t* ts_){
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         OptionalTime_t ts;
-        if(_user_var)
-        {
-            if(this->shared_input)
-            {
-                *_user_var = this->shared_input->GetDataPtr(fn, this->_ctx, &ts);
-                if(*_user_var != nullptr)
-                {
-                    if(ts_)
+        if(_user_var){
+            if(this->_shared_input){
+                Storage_t data;
+                if(this->_shared_input->getData(data, fn, this->_ctx, &ts)){
+                    _current_data = data;
+                    
+                    *_user_var = &(*_current_data);
+                    if (ts_)
                         *ts_ = ts;
                     this->_ts = ts;
                     this->_fn = fn;
                     return true;
                 }
             }
-            if(this->input)
-            {
-                *userVar = this->input->GetDataPtr(fn, this->_ctx, &ts);
-                if(*userVar != nullptr)
-                {
-                    if(ts_)
+            if(this->_input){
+                Storage_t data;
+                if(this->_input->getData(data, fn, this->_ctx, &ts)){
+                    _current_data = data;
+                    *_user_var = &(*_current_data);
+                    if (ts_)
                         *ts_ = ts;
                     this->_ts = ts;
                     this->_fn = fn;
@@ -162,12 +138,5 @@ namespace mo
         return false;
     }
 
-    template<typename T>
-    void TInputParamPtr<T>::onInputDelete(IParam const* param)
-    {
-        mo::Mutex_t::scoped_lock lock(IParam::mtx());
-        this->shared_input.reset();
-        this->input = nullptr;
-    }
 }
 #endif

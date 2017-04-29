@@ -66,6 +66,7 @@ namespace mo
         {
         public:
             static const ParamType Type = Map_e;
+            typedef T ValueType;
 
             Map(const std::string& name = "");
 
