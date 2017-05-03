@@ -26,7 +26,7 @@ void VariableManager::addParam(IParam* param)
     pimpl->_Params[param->getTreeName()] = param;
     param->registerDeleteNotifier(&pimpl->delete_slot);
 }
-void VariableManager::RemoveParam(IParam* param)
+void VariableManager::removeParam(IParam* param)
 {
     pimpl->_Params.erase(param->getTreeName());
 }
@@ -42,7 +42,7 @@ std::vector<IParam*> VariableManager::getOutputParams(TypeInfo type)
     }
     return valid_outputs;
 }
-std::vector<IParam*> VariableManager::GetAllParmaeters()
+std::vector<IParam*> VariableManager::getAllParmaeters()
 {
     std::vector<IParam*> output;
     for(auto& itr : pimpl->_Params)
@@ -51,7 +51,7 @@ std::vector<IParam*> VariableManager::GetAllParmaeters()
     }
     return output;
 }
-std::vector<IParam*> VariableManager::GetAllOutputParams()
+std::vector<IParam*> VariableManager::getAllOutputParams()
 {
     std::vector<IParam*> output;
     for(auto& itr : pimpl->_Params)
@@ -103,8 +103,8 @@ IParam* VariableManager::getOutputParam(std::string name)
     LOG(debug) << "Unable to find Param named " << name;
     return nullptr;
 }
-void VariableManager::LinkParams(IParam* output, IParam* input)
+void VariableManager::linkParams(IParam* output, IParam* input)
 {
     if(auto input_param = dynamic_cast<InputParam*>(input))
-        input_param->SetInput(output);
+        input_param->setInput(output);
 }

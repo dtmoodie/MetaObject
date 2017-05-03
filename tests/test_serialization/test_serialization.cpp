@@ -192,7 +192,7 @@ BOOST_AUTO_TEST_CASE(deserialize_text_path)
 {
     mo::ReadFile data;
     mo::TParamPtr<mo::ReadFile> param;
-    param.UpdatePtr(&data);
+    param.updatePtr(&data);
     auto deserialization_function = mo::SerializationFunctionRegistry::Instance()->GetTextDeSerializationFunction(param.GetTypeInfo());
     BOOST_REQUIRE(deserialization_function);
     std::stringstream ss;
@@ -205,8 +205,8 @@ BOOST_AUTO_TEST_CASE(serialize_text_vector)
 {
     std::vector<int> data = {0, 1, 2, 3, 4, 5, 6, 7};
     mo::TParamPtr<std::vector<int>> param;
-    param.UpdatePtr(&data);
-    auto serialization_function = mo::SerializationFunctionRegistry::Instance()->GetTextSerializationFunction(param.GetTypeInfo());
+    param.updatePtr(&data);
+    auto serialization_function = mo::SerializationFactory::Instance()->GetTextSerializationFunction(param.getTypeInfo());
     BOOST_REQUIRE(serialization_function);
     std::stringstream ss;
     serialization_function(&param,ss);
@@ -219,8 +219,8 @@ BOOST_AUTO_TEST_CASE(deserialize_text_vector)
 {
     std::vector<int> data;
     mo::TParamPtr<std::vector<int>> param;
-    param.UpdatePtr(&data);
-    auto deserialization_function = mo::SerializationFunctionRegistry::Instance()->GetTextDeSerializationFunction(param.GetTypeInfo());
+    param.updatePtr(&data);
+    auto deserialization_function = mo::SerializationFactory::Instance()->GetTextDeSerializationFunction(param.getTypeInfo());
     BOOST_REQUIRE(deserialization_function);
     std::stringstream ss;
     ss << "[0, 1, 2, 3, 4, 5, 6, 7]";

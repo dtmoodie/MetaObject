@@ -22,7 +22,7 @@ namespace mo
         {
             return (*_typed_relay)(this, args...);
         }
-        THROW(debug) << "Not connected to a signal relay";
+        THROW(debug) << "Not Connected to a signal relay";
         return R();
     }
 
@@ -34,7 +34,7 @@ namespace mo
         {
             return (*_typed_relay)(ctx, args...);
         }
-        THROW(debug) << "Not connected to a signal relay";
+        THROW(debug) << "Not Connected to a signal relay";
         return R();
     }
 
@@ -81,7 +81,7 @@ namespace mo
 
 
     template<class R, class...T>
-    bool TSignal<R(T...)>::disconnect()
+    bool TSignal<R(T...)>::disConnect()
     {
         std::lock_guard<std::recursive_mutex> lock(mtx);
         if (_typed_relay)
@@ -93,7 +93,7 @@ namespace mo
     }
 
     template<class R, class...T>
-    bool TSignal<R(T...)>::disconnect(ISlot* slot)
+    bool TSignal<R(T...)>::disConnect(ISlot* slot)
     {
         std::lock_guard<std::recursive_mutex> lock(mtx);
         if (_typed_relay)
@@ -108,7 +108,7 @@ namespace mo
     }
 
     template<class R, class...T>
-    bool TSignal<R(T...)>::disconnect(std::weak_ptr<ISignalRelay> relay_)
+    bool TSignal<R(T...)>::disConnect(std::weak_ptr<ISignalRelay> relay_)
     {
         std::lock_guard<std::recursive_mutex> lock(mtx);
         auto relay = relay_.lock();
@@ -196,7 +196,7 @@ namespace mo
 
 
     template<class...T>
-    bool TSignal<void(T...)>::disconnect()
+    bool TSignal<void(T...)>::disConnect()
     {
         std::lock_guard<std::recursive_mutex> lock(mtx);
         if (_typed_relays.size())
@@ -208,7 +208,7 @@ namespace mo
     }
 
     template<class...T>
-    bool TSignal<void(T...)>::disconnect(ISlot* slot_)
+    bool TSignal<void(T...)>::disConnect(ISlot* slot_)
     {
         std::lock_guard<std::recursive_mutex> lock(mtx);
         for (auto relay = _typed_relays.begin(); relay != _typed_relays.end(); ++relay)
@@ -226,7 +226,7 @@ namespace mo
     }
 
     template<class...T>
-    bool TSignal<void(T...)>::disconnect(std::weak_ptr<ISignalRelay> relay_)
+    bool TSignal<void(T...)>::disConnect(std::weak_ptr<ISignalRelay> relay_)
     {
         std::lock_guard<std::recursive_mutex> lock(mtx);
         auto relay = relay_.lock();

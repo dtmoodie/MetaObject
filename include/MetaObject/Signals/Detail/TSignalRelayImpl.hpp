@@ -105,14 +105,14 @@ namespace mo
     }
 
     template<class...T>
-    bool TSignalRelay<void(T...)>::disconnect(ISlot* slot)
+    bool TSignalRelay<void(T...)>::disConnect(ISlot* slot)
     {
         std::lock_guard<std::mutex> lock(mtx);
         return _slots.erase(static_cast<TSlot<void(T...)>*>(slot)) > 0;
     }
 
     template<class...T>
-    bool TSignalRelay<void(T...)>::disconnect(ISignal* signal)
+    bool TSignalRelay<void(T...)>::disConnect(ISignal* signal)
     {
         return false; // Currently not storing signal information to cache the Connection types
     }
@@ -143,7 +143,7 @@ namespace mo
         {
             return (*_slot)(args...);
         }
-        THROW(debug) << "Slot not connected";
+        THROW(debug) << "Slot not Connected";
         return R();
     }
 
@@ -153,7 +153,7 @@ namespace mo
         std::lock_guard<std::mutex> lock(mtx);
         if(_slot)
             return (*_slot)(args...);
-        THROW(debug) << "Slot not connected";
+        THROW(debug) << "Slot not Connected";
         return R();
     }
     template<class R, class... T>
@@ -162,7 +162,7 @@ namespace mo
         std::lock_guard<std::mutex> lock(mtx);
         if (_slot && *_slot)
             return (*_slot)(args...);
-        THROW(debug) << "Slot not connected";
+        THROW(debug) << "Slot not Connected";
         return R();
     }
     template<class R, class...T>
@@ -199,7 +199,7 @@ namespace mo
     }
 
     template<class R, class...T>
-    bool TSignalRelay<R(T...)>::disconnect(ISlot* slot)
+    bool TSignalRelay<R(T...)>::disConnect(ISlot* slot)
     {
         std::lock_guard<std::mutex> lock(mtx);
         if (_slot == slot)
@@ -211,7 +211,7 @@ namespace mo
     }
 
     template<class R, class...T>
-    bool TSignalRelay<R(T...)>::disconnect(ISignal* signal)
+    bool TSignalRelay<R(T...)>::disConnect(ISignal* signal)
     {
         return false;
     }

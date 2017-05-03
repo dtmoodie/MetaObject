@@ -36,7 +36,7 @@ using namespace mo;
 BOOST_AUTO_TEST_CASE(client)
 {
     auto inst = ParamClient::Instance();
-    inst->Connect("tcp://localhost:5566");
+    inst->connect("tcp://localhost:5566");
     
 
 

@@ -26,8 +26,8 @@ namespace mo
 		bool connect(TSlot<void(T...)>* slot);
 		bool connect(TSignal<void(T...)>* sig);
 
-		bool disconnect(ISlot* slot);
-		bool disconnect(ISignal* signal);
+		bool disConnect(ISlot* slot);
+		bool disConnect(ISignal* signal);
 		
 		std::set<TSlot<void(T...)>*> _slots;
         std::mutex mtx;
@@ -52,8 +52,8 @@ namespace mo
 		bool connect(TSlot<R(T...)>* slot);
 		bool connect(TSignal<R(T...)>* sig);
 
-		bool disconnect(ISlot* slot);
-		bool disconnect(ISignal* signal);
+		bool disConnect(ISlot* slot);
+		bool disConnect(ISignal* signal);
 		
 		TSlot<R(T...)>* _slot;
         std::mutex mtx;

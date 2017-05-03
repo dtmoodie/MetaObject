@@ -14,7 +14,7 @@ int main()
     {
         mo::ThreadHandle handle = mo::ThreadPool::Instance()->RequestThread();
         mo::ThreadHandle handle2 = handle;
-        auto connection = handle.SetInnerLoop(&inner_loop);
+        auto Connection = handle.SetInnerLoop(&inner_loop);
         handle.Start();
         boost::this_thread::sleep_for(boost::chrono::seconds(10));
         handle.Stop();

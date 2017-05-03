@@ -162,12 +162,12 @@ BOOST_AUTO_TEST_CASE(test_creation_function)
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
 }
 
-BOOST_AUTO_TEST_CASE(test_reconnect_signals)
+BOOST_AUTO_TEST_CASE(test_reConnect_signals)
 {
     auto signals = test_meta_object_signals::Create();
     auto slots = test_meta_object_slots::Create();
     //auto state = signals->GetConstructor()->GetState(signals->GetPerTypeId());
-    IMetaObject::Connect(signals.Get(), "test_int", slots.Get(), "test_int");
+    IMetaObject::connect(signals.Get(), "test_int", slots.Get(), "test_int");
     int value  = 5;
     signals->sig_test_int(value);
     BOOST_REQUIRE_EQUAL(slots->call_count, value);

@@ -2,48 +2,23 @@
 
 #include "StreamBuffer.hpp"
 
-namespace mo
-{
-    namespace Buffer
-    {
-        template<class T> class MO_EXPORTS NNStreamBuffer: public StreamBuffer<T>
-        {
+namespace mo{
+    namespace Buffer{
+        template<class T> class MO_EXPORTS NNStreamBuffer: public StreamBuffer<T>{
         public:
-            typedef T ValueType;
             static const ParamType Type = NNStreamBuffer_e;
-
+            typedef T ValueType;
+            
             NNStreamBuffer(const std::string& name = "");
 
-            T*   GetDataPtr(OptionalTime_t ts = OptionalTime_t(),
-                            Context* ctx = nullptr, 
-							size_t* fn_ = nullptr);
+            virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
+                Context* ctx = nullptr, size_t* fn_ = nullptr);
+            virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 
-            T*   GetDataPtr(size_t fn, 
-				            Context* ctx = nullptr, 
-				            OptionalTime_t* ts_ = nullptr);
-
-            T    GetData(OptionalTime_t ts = OptionalTime_t(),
-                         Context* ctx = nullptr, 
-				         size_t* fn = nullptr);
-
-            T    GetData(size_t fn, 
-				         Context* ctx = nullptr, 
-				         OptionalTime_t* ts = nullptr);
-
-            bool GetData(T& value, 
-				         OptionalTime_t ts = OptionalTime_t(),
-                         Context* ctx = nullptr, 
-				         size_t* fn = nullptr);
-
-            bool GetData(T& value, 
-				         size_t fn, 
-				         Context* ctx = nullptr, 
-				         OptionalTime_t* ts = nullptr);
-
-            virtual ParamType GetBufferType() const{ return NNStreamBuffer_e;}
+            virtual ParamType getBufferType() const{ return NNStreamBuffer_e;}
         protected:
-			typename std::map<SequenceKey, T>::iterator Search(OptionalTime_t ts);
-			typename std::map<SequenceKey, T>::iterator Search(size_t fn);
+			typename std::map<SequenceKey, Storage_t>::iterator search(OptionalTime_t ts);
+			typename std::map<SequenceKey, Storage_t>::iterator search(size_t fn);
         };
     }
 

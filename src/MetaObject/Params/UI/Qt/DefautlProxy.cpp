@@ -8,21 +8,21 @@ using namespace mo::UI::qt;
 DefaultProxy::DefaultProxy(IParam* param)
 {
     delete_slot = std::bind(&DefaultProxy::onParamDelete, this, std::placeholders::_1);
-    update_slot = std::bind(&DefaultProxy::onParamUpdate, this, std::placeholders::_1, std::placeholders::_2);
-    Param = param;
+    update_slot = std::bind(&DefaultProxy::onParamUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
+    param = param;
     param->registerUpdateNotifier(&update_slot);
     param->registerDeleteNotifier(&delete_slot);
 }
-bool DefaultProxy::SetParam(IParam* param)
+bool DefaultProxy::setParam(IParam* param)
 {
-    Param = param;
+    param = param;
     param->registerUpdateNotifier(&update_slot);
     param->registerDeleteNotifier(&delete_slot);
     return true;
 }
-bool DefaultProxy::CheckParam(IParam* param)
+bool DefaultProxy::checkParam(IParam* param)
 {    
-    return param == Param;
+    return param == param;
 }
 #ifdef HAVE_QT5
 #include <qgridlayout.h>
@@ -48,12 +48,12 @@ void DefaultProxy::onUiUpdate()
 {
 }
 
-void DefaultProxy::onParamUpdate(Context* ctx, IParam* param)
+void DefaultProxy::onParamUpdate(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags)
 {
 
 }
 
 void DefaultProxy::onParamDelete(IParam const* param)
 {
-    Param = nullptr;
+    param = nullptr;
 }

@@ -25,45 +25,30 @@ https://github.com/dtmoodie/Params
 #include "IBuffer.hpp"
 #include <map>
 
-namespace mo
-{
+namespace mo{
     class Context;
-    namespace Buffer
-    {
-        struct SequenceKey
-        {
-            SequenceKey(OptionalTime_t ts, size_t fn):
-                ts(ts), fn(fn){}
-            SequenceKey(mo::Time_t ts):
-                ts(ts), fn(0){}
-            SequenceKey(size_t fn):
-                fn(fn){}
+    namespace Buffer{
+        struct SequenceKey{
+            SequenceKey(OptionalTime_t ts, size_t fn):ts(ts), fn(fn){}
+            SequenceKey(mo::Time_t ts):ts(ts), fn(0){}
+            SequenceKey(size_t fn):fn(fn){}
             OptionalTime_t ts;
             size_t fn;
         };
-        inline std::ostream& operator<<(std::ostream& os, const SequenceKey& key)
-        {
-          if(key.ts)
-              os << *key.ts << " ";
-          if(key.fn != std::numeric_limits<size_t>::max())
-              os << key.fn;
+        inline std::ostream& operator<<(std::ostream& os, const SequenceKey& key){
+          if(key.ts)os << *key.ts << " ";
+          if(key.fn != std::numeric_limits<size_t>::max()) os << key.fn;
           return os;
         }
 
-        inline bool operator<(const SequenceKey& lhs, const SequenceKey& rhs)
-        {
-            if(lhs.ts && rhs.ts)
-            {
-                return *lhs.ts < *rhs.ts;
-            }else
-            {
-                return lhs.fn < rhs.fn;
-            }
+        inline bool operator<(const SequenceKey& lhs, const SequenceKey& rhs){
+            if(lhs.ts && rhs.ts) return *lhs.ts < *rhs.ts;
+            else return lhs.fn < rhs.fn;
+            
         }
 
         template<typename T>
-        class Map: public ITInputParam<T>, public IBuffer
-        {
+        class Map: public ITInputParam<T>, public IBuffer{
         public:
             static const ParamType Type = Map_e;
             typedef T ValueType;
@@ -94,13 +79,11 @@ namespace mo
     }
 
 #define MO_METAParam_INSTANCE_MAP_(N) \
-    template<class T> struct MetaParam<T, N, void>: public MetaParam<T, N-1, void> \
-    { \
+    template<class T> struct MetaParam<T, N, void>: public MetaParam<T, N-1, void>{ \
         static ParamConstructor<Buffer::Map<T>> _map_param_constructor; \
         static BufferConstructor<Buffer::Map<T>> _map_constructor;  \
         MetaParam<T, N>(const char* name): \
-            MetaParam<T, N-1>(name) \
-        { \
+            MetaParam<T, N-1>(name){ \
             (void)&_map_param_constructor; \
             (void)&_map_constructor; \
         } \

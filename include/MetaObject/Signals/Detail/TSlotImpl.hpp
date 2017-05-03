@@ -93,14 +93,14 @@ namespace mo
 	}
 
 	template<class R, class...T>
-	bool TSlot<R(T...)>::disconnect(std::weak_ptr<ISignalRelay> relay_)
+	bool TSlot<R(T...)>::disConnect(std::weak_ptr<ISignalRelay> relay_)
 	{
 		auto relay = relay_.lock();
 		for (auto itr = _relays.begin(); itr != _relays.end(); ++itr)
 		{
 			if ((*itr) == relay)
 			{
-				(*itr)->disconnect(this);
+				(*itr)->disConnect(this);
 				_relays.erase(itr);
 				return true;
 			}
@@ -112,7 +112,7 @@ namespace mo
     {
         for (auto& relay : _relays)
         {
-            relay->disconnect(this);
+            relay->disConnect(this);
         }
     }
 

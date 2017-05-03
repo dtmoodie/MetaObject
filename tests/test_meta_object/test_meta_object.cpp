@@ -169,7 +169,7 @@ BOOST_AUTO_TEST_CASE(test_meta_object_dynamic_access)
     {
         input_Param += value;
     }, std::placeholders::_1)));
-    auto connection = mgr.Connect(slot.get(), "test_int");
+    auto Connection = mgr.connect(slot.get(), "test_int");
     T->sig_test_int(call_value);
     BOOST_REQUIRE_EQUAL(input_Param, 5);
     T->sig_test_int(call_value);
@@ -230,7 +230,7 @@ BOOST_AUTO_TEST_CASE(inter_object_T)
 	slot_object->SetupSignals(&mgr);
 	slot_object->Init(true);
 
-	BOOST_REQUIRE(IMetaObject::Connect(signal_object, "test_void", slot_object, "test_void", TypeInfo(typeid(void(void)))));
+	BOOST_REQUIRE(IMetaObject::connect(signal_object, "test_void", slot_object, "test_void", TypeInfo(typeid(void(void)))));
 	signal_object->sig_test_void();
 	BOOST_REQUIRE_EQUAL(slot_object->slot_called, 1);
     delete obj;
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(inter_object_named)
 	slot_object->SetupSignals(&mgr);
 	slot_object->Init(true);
 
-	BOOST_REQUIRE_EQUAL(IMetaObject::Connect(signal_object, "test_void", slot_object, "test_void"), 1);
+	BOOST_REQUIRE_EQUAL(IMetaObject::connect(signal_object, "test_void", slot_object, "test_void"), 1);
 	signal_object->sig_test_void();
 	BOOST_REQUIRE_EQUAL(slot_object->slot_called, 1);
     delete obj;
@@ -270,8 +270,8 @@ BOOST_AUTO_TEST_CASE(rest)
 		TSignal<int(void)> signal;
 		auto slot = meta_obj->GetSlot("test_int", TypeInfo(typeid(int(void))));
 		BOOST_REQUIRE(slot);
-		auto connection = slot->Connect(&signal);
-		BOOST_REQUIRE(connection);
+		auto Connection = slot->connect(&signal);
+		BOOST_REQUIRE(Connection);
 		BOOST_REQUIRE_EQUAL(signal(), 5);
         delete obj;
     }

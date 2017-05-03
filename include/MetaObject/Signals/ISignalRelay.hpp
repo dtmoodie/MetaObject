@@ -20,9 +20,9 @@ namespace mo
 		template<class T> friend class TSignal;
 		template<class T> friend class TSlot;
 		virtual bool connect(ISlot* slot) = 0;
-		virtual bool disconnect(ISlot* slot) = 0;
+		virtual bool disConnect(ISlot* slot) = 0;
 
 		virtual bool connect(ISignal* signal) = 0;
-		virtual bool disconnect(ISignal* signal) = 0;
+		virtual bool disConnect(ISignal* signal) = 0;
 	};
 }

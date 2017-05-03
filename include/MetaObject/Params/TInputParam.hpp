@@ -21,42 +21,15 @@ https://github.com/dtmoodie/Params
 
 
 namespace mo {
-template<typename T> class TInputParamCopy : virtual public ITInputParam<T> {
+/*template<typename T> class TInputParamCopy : virtual public ITInputParam<T> {
 public:
     TInputParamCopy(const std::string& name, T* userVar_,
                             ParamType type = Control_e) {
         this->input = nullptr;
     }
 
-    T* GetDataPtr(mo::Time_t ts = -1 * mo::second, Context* ctx = nullptr) {
-        return userVar;
-    }
-    bool GetData(T& value, mo::Time_t ts = -1 * mo::second, Context* ctx = nullptr) {
-        if (userVar) {
-            value = *userVar;
-            return true;
-        }
-        return false;
-    }
-    T GetData(mo::Time_t ts = -1 * mo::second, Context* ctx = nullptr) {
-        if(this->input)
-            return this->input->GetData(ts, ctx);
-        if(this->shared_input)
-            return this->shared_input->GetData(ts, ctx);
-        return false;
-    }
-    void UpdateData(T& data_, mo::Time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr) {
-        if(userVar)
-            *userVar = data_;
-    }
-    void UpdateData(const T& data_, mo::Time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr) {
-        if(userVar)
-            *userVar = data_;
-    }
-    void UpdateData(T* data_, mo::Time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr) {
-        if(userVar )
-            *userVar = *data_;
-    }
+    
+    
 protected:
     T* userVar; // Pointer to the user space variable of type T
 
@@ -69,7 +42,7 @@ protected:
         this->input = nullptr;
         IParam::OnUpdate(nullptr);
     }
-};
+};*/
 
 // Meant to reference a pointer variable in user space, and to update that variable whenever
 // IE int* myVar;
@@ -85,7 +58,7 @@ public:
     bool getInput(size_t fn, OptionalTime_t* ts = nullptr);
 
 protected:
-    virtual bool updateDataImpl(const T& data, OptionalTime_t ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs) {
+    virtual bool updateDataImpl(ConstStorageRef_t, OptionalTime_t, Context*, size_t, ICoordinateSystem*) {
         return true;
     }
     Input_t* _user_var; // Pointer to the user space pointer variable of type T
@@ -94,4 +67,3 @@ protected:
 };
 }
 #include "MetaObject/Params/detail/TInputParamImpl.hpp"
-//#include "MetaObject/Params/detail/TInputParamPtrImpl.hpp"

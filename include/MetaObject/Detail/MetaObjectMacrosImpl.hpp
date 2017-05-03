@@ -56,7 +56,7 @@ int init_signals_(bool firstInit, mo::_counter_<N_> dummy){ \
 }
 
 #define SIGNALS_END(N_) \
-virtual int InitSignals(bool firstInit){ \
+virtual int initSignals(bool firstInit){ \
     int count = _init_parent_signals(firstInit); \
     return init_signals_(firstInit, mo::_counter_<N_-1>()) + count; \
 }
@@ -86,7 +86,6 @@ static std::vector<mo::SlotInfo*> getSlotInfoStatic(){ \
 void getSlotInfo(std::vector<mo::SlotInfo*>& info) const{ \
     getSlotInfoStatic(info); \
 }
-
 
 // ---------------- ParamS INFO ------------
 
@@ -121,8 +120,14 @@ void getParamInfo(std::vector<mo::ParamInfo*>& info) const{ \
 template<int N> void init_Params_(bool firstInit, mo::_counter_<N> dummy){ \
     init_Params_(firstInit, --dummy); \
 } \
-void init_Params_(bool firstInit, mo::_counter_<N_> dummy){ \
+void init_Params(bool firstInit, mo::_counter_<N_> dummy){ \
     (void)firstInit; \
+    (void)dummy; \
+} \
+template<int N> void _init_outputs(mo::_counter_<N> dummy){ \
+    init_outputs_(--dummy); \
+} \
+void _init_outputs(mo::_counter_<N_> dummy){ \
     (void)dummy; \
 } \
 template<int N> void _serialize_Params(ISimpleSerializer* pSerializer, mo::_counter_<N> dummy){ \
@@ -156,6 +161,10 @@ void serializeParams(ISimpleSerializer* pSerializer){ \
     _serialize_Params(pSerializer, mo::_counter_<N_ - 1>()); \
     _serialize_parent_params(pSerializer); \
 } \
+void initOutputs(){\
+    _init_outputs(mo::_counter_<N_ - 1>()); \
+    _init_parent_outputs(); \
+} \
 template<class T> void load(T& ar){ \
     _load_Params<T>(ar, mo::_counter_<N_ -1>()); \
     _load_parent<T>(ar); \
@@ -186,6 +195,9 @@ void bindSlots(bool firstInit){ \
 void _init_parent_params(bool firstInit){ \
     PARENT1::initParams(firstInit); \
 } \
+void _init_parent_outputs(){ \
+    PARENT1::initOutputs(); \
+} \
 void _serialize_parent_params(ISimpleSerializer* pSerializer){ \
     PARENT1::serializeParams(pSerializer); \
 } \
@@ -208,14 +220,17 @@ static void _list_parent_slots(std::vector<mo::SlotInfo*>& info){ \
     PARENT1::getSlotInfoStatic(info); \
 } \
 int _init_parent_signals(bool firstInit){ \
-    return PARENT1::InitSignals(firstInit); \
+    return PARENT1::initSignals(firstInit); \
 }
-
 
 #define HANDLE_PARENT_2(PARENT1, PARENT2) \
 void _init_parent_params(bool firstInit){ \
     PARENT1::initParams(firstInit); \
     PARENT2::initParams(firstInit); \
+} \
+void _init_parent_outputs(){ \
+    PARENT1::initOutputs(); \
+    PARENT2::initOutputs(); \
 } \
 void _serialize_parent_params(ISimpleSerializer* pSerializer){ \
     PARENT1::serializeParams(pSerializer); \
@@ -246,7 +261,7 @@ static void _list_parent_slots(std::vector<mo::SlotInfo*>& info){ \
     PARENT2::getSlotInfoStatic(info); \
 } \
 int _init_parent_signals(bool firstInit){ \
-    return PARENT1::InitSignals(firstInit) + PARENT2::InitSignals(firstInit);; \
+    return PARENT1::initSignals(firstInit) + PARENT2::initSignals(firstInit);; \
 } \
 
 #ifdef _MSC_VER
@@ -257,6 +272,7 @@ int _init_parent_signals(bool firstInit){ \
 
 #define HANDLE_NO_PARENT \
 void _init_parent_params(bool firstInit){ (void)firstInit; } \
+void _init_parent_outputs() {} \
 void _serialize_parent_params(ISimpleSerializer* pSerializer) { (void)pSerializer; } \
 template<class T> void _load_parent(T& ar) { (void)ar; } \
 template<class T> void _save_parent(T& ar) const { (void)ar;} \

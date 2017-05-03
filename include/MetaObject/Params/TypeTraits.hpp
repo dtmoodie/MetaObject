@@ -24,8 +24,9 @@ template<class Type> struct ParamTraits<Type, typename std::enable_if<std::is_po
     typedef const Type* Input_t;
 
     template<class...Args>
-    static void reset(Storage_t& input_storage, Args...args) {
+    static Type& reset(Storage_t& input_storage, Args...args) {
         input_storage = Type(std::forward(args)...);
+        return input_storage;
     }
 
     template<class...Args>
@@ -50,8 +51,9 @@ template<class Type> struct ParamTraits<Type, typename std::enable_if<std::is_po
     typedef const Type* Input_t;
 
     template<class...Args>
-    static void reset(Storage_t& input_storage, Args...args) {
+    static Type& reset(Storage_t& input_storage, Args...args) {
         input_storage = Type(std::forward(args)...);
+        return input_storage
     }
 
     template<class...Args>
@@ -75,8 +77,9 @@ template<class Type> struct ParamTraits<Type, typename std::enable_if<!std::is_p
     typedef const Type* Input_t;
 
     template<class...Args>
-    static void reset(Storage_t& input_storage, Args...args) {
+    static Type& reset(Storage_t& input_storage, Args...args) {
         input_storage.reset(new Type(std::forward(args)...));
+        return *input_storage;
     }
 
     template<class...Args>

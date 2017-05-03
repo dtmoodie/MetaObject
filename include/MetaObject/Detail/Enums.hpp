@@ -37,7 +37,8 @@ enum UpdateFlags{
     ValueUpdated_e,
     InputSet_e,
     InputCleared_e,
-    InputUpdated_e
+    InputUpdated_e,
+    BufferUpdated_e
 };
 MO_EXPORTS std::string paramFlagsToString(ParamFlags flags);
 MO_EXPORTS ParamFlags stringToParamFlags(const std::string& str);

@@ -150,7 +150,7 @@ BOOST_AUTO_TEST_CASE(input_Param)
 	int value = 10;
 	TParamPtr<int> param("Test wrapped param", &value);
     ITInputParam<int> input_param;
-	BOOST_REQUIRE(input_param.SetInput(&param));
+	BOOST_REQUIRE(input_param.setInput(&param));
 	BOOST_REQUIRE_EQUAL(input_param.GetData(), value);
 	
 	bool update_handler_called = false;

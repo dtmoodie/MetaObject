@@ -24,9 +24,9 @@ namespace mo
 		std::shared_ptr<Connection> connect(std::shared_ptr<ISignalRelay>& relay);
 		std::shared_ptr<Connection> connect(std::shared_ptr<TSignalRelay<void(T...)>>& relay);
 
-		bool disconnect();
-		bool disconnect(ISlot* slot);
-		bool disconnect(std::weak_ptr<ISignalRelay> relay);
+		bool disConnect();
+		bool disConnect(ISlot* slot);
+		bool disConnect(std::weak_ptr<ISignalRelay> relay);
 	protected:
         std::recursive_mutex mtx;
 		std::vector<std::shared_ptr<TSignalRelay<void(T...)>>> _typed_relays;
@@ -44,9 +44,9 @@ namespace mo
 		std::shared_ptr<Connection> connect(std::shared_ptr<ISignalRelay>& relay);
 		std::shared_ptr<Connection> connect(std::shared_ptr<TSignalRelay<R(T...)>>& relay);
 
-		bool disconnect();
-		bool disconnect(ISlot* slot);
-		bool disconnect(std::weak_ptr<ISignalRelay> relay);
+		bool disConnect();
+		bool disConnect(ISlot* slot);
+		bool disConnect(std::weak_ptr<ISignalRelay> relay);
 	protected:
         std::recursive_mutex mtx;
 		std::shared_ptr<TSignalRelay<R(T...)>> _typed_relay;

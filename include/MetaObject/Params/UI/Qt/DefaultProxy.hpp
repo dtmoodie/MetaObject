@@ -18,15 +18,15 @@ namespace mo
             {
             public:
                 DefaultProxy(IParam* param);
-                virtual bool CheckParam(IParam* param);
-                bool SetParam(IParam* param);
+                virtual bool checkParam(IParam* param);
+                bool setParam(IParam* param);
                 QWidget* getParamWidget(QWidget* parent);
             protected:
-                IParam* Param;
+                IParam* param;
                 TSlot<void(IParam const*)> delete_slot;
                 UpdateSlot_t update_slot;
                 virtual void onUiUpdate();
-                virtual void onParamUpdate(Context*, IParam*);
+                virtual void onParamUpdate(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
                 virtual void onParamDelete(IParam const*);
             };
         }

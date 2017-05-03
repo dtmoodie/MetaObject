@@ -46,12 +46,12 @@ IParam* ParamPublisher::getInputParam()
 }
 
 // Set input and setup callbacks
-bool ParamPublisher::SetInput(std::shared_ptr<IParam> param)
+bool ParamPublisher::setInput(std::shared_ptr<IParam> param)
 {
     return false;
 }
 
-bool ParamPublisher::SetInput(IParam* param)
+bool ParamPublisher::setInput(IParam* param)
 {
     return false;
 }
@@ -109,12 +109,12 @@ IParam* ParamPublisher::getInputParam()
 }
 
 // Set input and setup callbacks
-bool ParamPublisher::SetInput(std::shared_ptr<IParam> param)
+bool ParamPublisher::setInput(std::shared_ptr<IParam> param)
 {
     return false;
 }
 
-bool ParamPublisher::SetInput(IParam* param)
+bool ParamPublisher::setInput(IParam* param)
 {
     return false;
 }

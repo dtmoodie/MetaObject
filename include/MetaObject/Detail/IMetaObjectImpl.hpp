@@ -61,9 +61,9 @@ ITParam<T>* IMetaObject::UpdateParamPtr(const std::string& name, T& ptr) {
 }
 
 /*template<class Sig>
-bool IMetaObject::connectCallback(const std::string& callback_name, const std::string& slot_name, IMetaObject* slot_owner, bool force_queue)
+bool IMetaObject::ConnectCallback(const std::string& callback_name, const std::string& slot_name, IMetaObject* slot_owner, bool force_queue)
 {
-    connectCallback(TInfo(typeid(Sig)), callback_name, slot_name, slot_owner, force_queue);
+    ConnectCallback(TInfo(typeid(Sig)), callback_name, slot_name, slot_owner, force_queue);
 }*/
 template<class T>
 TSlot<T>* IMetaObject::getSlot(const std::string& name) const {

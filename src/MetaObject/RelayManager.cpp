@@ -48,7 +48,7 @@ std::shared_ptr<Connection> RelayManager::connect(ISignal* signal, const std::st
 	return signal->connect(relay);
 }
 
-void RelayManager::connectSignal(IMetaObject* obj, const std::string& signal_name)
+void RelayManager::ConnectSignal(IMetaObject* obj, const std::string& signal_name)
 {
     auto signals = obj->getSignals(signal_name);
     for(auto signal : signals)
@@ -61,7 +61,7 @@ void RelayManager::connectSignal(IMetaObject* obj, const std::string& signal_nam
     }
 }
 
-void RelayManager::connectSlot(IMetaObject* obj, const std::string& slot_name)
+void RelayManager::ConnectSlot(IMetaObject* obj, const std::string& slot_name)
 {
     auto slots = obj->getSlots(slot_name);
     for (auto slot : slots)
@@ -74,7 +74,7 @@ void RelayManager::connectSlot(IMetaObject* obj, const std::string& slot_name)
     }
 }
 
-bool RelayManager::connectSignal(IMetaObject* obj, const std::string& name, const TypeInfo& type)
+bool RelayManager::ConnectSignal(IMetaObject* obj, const std::string& name, const TypeInfo& type)
 {
 	auto signal = obj->getSignal(name, type);
 	if (signal)
@@ -88,7 +88,7 @@ bool RelayManager::connectSignal(IMetaObject* obj, const std::string& name, cons
 	}
 	return false;
 }
-bool RelayManager::connectSlot(IMetaObject* obj, const std::string& name, const TypeInfo& type)
+bool RelayManager::ConnectSlot(IMetaObject* obj, const std::string& name, const TypeInfo& type)
 {
 	auto slot = obj->getSlot(name, type);
 	if (slot)
@@ -102,7 +102,7 @@ bool RelayManager::connectSlot(IMetaObject* obj, const std::string& name, const 
 	return false;
 }
 
-int RelayManager::connectSignals(IMetaObject* obj, const std::string& name)
+int RelayManager::ConnectSignals(IMetaObject* obj, const std::string& name)
 {
 	int count = 0;
 	auto signals = obj->getSignals(name);
@@ -113,7 +113,7 @@ int RelayManager::connectSignals(IMetaObject* obj, const std::string& name)
 	return count;
 }
 
-int RelayManager::connectSignals(IMetaObject* obj, const TypeInfo& type)
+int RelayManager::ConnectSignals(IMetaObject* obj, const TypeInfo& type)
 {
 	int count = 0;
 	auto signals = obj->getSignals(type);
@@ -124,7 +124,7 @@ int RelayManager::connectSignals(IMetaObject* obj, const TypeInfo& type)
 	return count;
 }
 
-int RelayManager::connectSignals(IMetaObject* obj)
+int RelayManager::ConnectSignals(IMetaObject* obj)
 {
 	int count = 0;
 	auto signals = obj->getSignals();
@@ -135,7 +135,7 @@ int RelayManager::connectSignals(IMetaObject* obj)
 	return count;
 }
 
-int RelayManager::connectSlots(IMetaObject* obj, const std::string& name)
+int RelayManager::ConnectSlots(IMetaObject* obj, const std::string& name)
 {
 	int count = 0;
 	auto slots = obj->getSlots(name);
@@ -146,7 +146,7 @@ int RelayManager::connectSlots(IMetaObject* obj, const std::string& name)
 	return count;
 }
 
-int RelayManager::connectSlots(IMetaObject* obj, const TypeInfo& type)
+int RelayManager::ConnectSlots(IMetaObject* obj, const TypeInfo& type)
 {
 	int count = 0;
     auto all_slots = obj->getSlots(type);
@@ -157,7 +157,7 @@ int RelayManager::connectSlots(IMetaObject* obj, const TypeInfo& type)
 	return count;
 }
 
-int RelayManager::connectSlots(IMetaObject* obj)
+int RelayManager::ConnectSlots(IMetaObject* obj)
 {
 	int count = 0;
     auto all_slots = obj->getSlots();

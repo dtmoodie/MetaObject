@@ -49,7 +49,7 @@ namespace mo
 		bool IsCompileComplete();
 		bool SwapObjects();
         void SetCompileCallback(std::function<void(const std::string, int)>& f);
-        std::shared_ptr<Connection> connectConstructorAdded(TSlot<void(void)>* slot);
+        std::shared_ptr<Connection> ConnectConstructorAdded(TSlot<void(void)>* slot);
 		template<class T>
 		std::vector<IObjectConstructor*> GetConstructors()
 		{

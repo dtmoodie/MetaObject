@@ -37,10 +37,44 @@ public:
     ITParam<T>* updatePtr(T* ptr, bool ownsData_ = false);
 protected:
     virtual bool updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
-    //virtual bool updateDataImpl(const T& data, OptionalTime_t ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs);
     T* ptr;
     bool ownsData;
     static MetaParam<T, 100> _meta_Param;
 };
+
+template<typename T>
+class MO_EXPORTS TParamOutput: virtual public ITParam< T >{
+public:
+    virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
+        Context* ctx = nullptr, size_t* fn_ = nullptr){
+        if(!ts || ts == this->_ts){
+            data = this->data;
+            return true;
+        }
+        return false;
+    }
+
+    virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr){
+        if(fn == this->_fn){
+            data = this->data;
+            return true;
+        }
+        return false;
+    }
+
+    template<typename... Args>
+    T& reset(Args... args){
+        return ParamTraits<T, void>::reset(data, std::forward(args)...);
+    }
+protected:
+    virtual bool updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs){
+        mo::Mutex_t::scoped_lock lock(IParam::mtx());
+        this->data = data
+        lock.unlock();
+        this->emitUpdate(ts, ctx, fn, cs);
+    }
+private:
+    Storage_t data;
+};
+
 }
-//#include "detail/TParamPtrImpl.hpp"

@@ -64,7 +64,7 @@ IMetaObject::IMetaObject() {
     _pimpl = new impl();
     _ctx = nullptr;
     _sig_manager = nullptr;
-    _pimpl->_slot_param_updated = std::bind(&IMetaObject::onParamUpdate, this, std::placeholders::_1, std::placeholders::_2);
+    _pimpl->_slot_param_updated = std::bind(&IMetaObject::onParamUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
 }
 
 
@@ -106,18 +106,18 @@ void IMetaObject::Init(bool firstInit) {
                     output = obj->getOutput(param_Connection.output_Param);
                     if (output == nullptr) {
                         LOG(info) << "Unable to find " << param_Connection.output_Param << " in "
-                                  << obj->GetTypeName() << " unable to reconnect " << param_Connection.input_Param
+                                  << obj->GetTypeName() << " unable to reConnect " << param_Connection.input_Param
                                   << " from object " << this->GetTypeName();
                         continue;
                     }
                 }
                 auto input = this->getInput(param_Connection.input_Param);
                 if (input) {
-                    if(this->connectInput(input, obj.Get(), output, param_Connection.Connection_type)) {
-                        LOG(debug) << "Reconnected " << GetTypeName() << ":" << param_Connection.input_Param
+                    if(this->ConnectInput(input, obj.Get(), output, param_Connection.Connection_type)) {
+                        LOG(debug) << "ReConnected " << GetTypeName() << ":" << param_Connection.input_Param
                                    << " to " << obj->GetTypeName() << ":" << param_Connection.output_Param;
                     } else {
-                        LOG(info) << "Reconnect FAILED " << GetTypeName() << ":" << param_Connection.input_Param
+                        LOG(info) << "ReConnect FAILED " << GetTypeName() << ":" << param_Connection.input_Param
                                   << " to " << obj->GetTypeName() << ":" << param_Connection.output_Param;
                     }
                 } else {
@@ -253,24 +253,24 @@ void IMetaObject::setContext(Context* ctx, bool overwrite) {
     }
 }
 
-int IMetaObject::disconnectByName(const std::string& name) {
+int IMetaObject::disConnectByName(const std::string& name) {
     auto my_signals = this->getSignals(name);
     int count = 0;
     for(auto& sig : my_signals) {
-        count += sig->disconnect() ? 1 : 0;
+        count += sig->disConnect() ? 1 : 0;
     }
     return count;
 }
 
-bool IMetaObject::disconnect(ISignal* sig) {
+bool IMetaObject::disConnect(ISignal* sig) {
     return false;
 }
 
-int IMetaObject::disconnect(IMetaObject* obj) {
+int IMetaObject::disConnect(IMetaObject* obj) {
     auto obj_signals = obj->getSignals();
     int count = 0;
     for(auto signal : obj_signals) {
-        count += disconnect(signal.first) ? 1 : 0;
+        count += disConnect(signal.first) ? 1 : 0;
     }
     return count;
 }
@@ -474,13 +474,13 @@ std::vector<IParam*> IMetaObject::getOutputs(const TypeInfo& type_filter, const 
     }
     return output;
 }
-bool IMetaObject::connectInput(const std::string& input_name,
+bool IMetaObject::ConnectInput(const std::string& input_name,
                                IMetaObject* output_object,
                                IParam* output,
                                ParamType type_) {
     auto input = getInput(input_name);
     if(input && output)
-        return connectInput(input, output_object, output, type_);
+        return ConnectInput(input, output_object, output, type_);
 
     auto inputs = getInputs();
     auto print_inputs = [inputs]()->std::string {
@@ -497,7 +497,7 @@ bool IMetaObject::connectInput(const std::string& input_name,
     return false;
 }
 
-bool IMetaObject::connectInput(InputParam* input,
+bool IMetaObject::ConnectInput(InputParam* input,
                                IMetaObject* output_object,
                                IParam* output,
                                ParamType type_) {
@@ -506,7 +506,7 @@ bool IMetaObject::connectInput(InputParam* input,
         return false;
     }
 
-    if(input && input->AcceptsInput(output)) {
+    if(input && input->acceptsInput(output)) {
         // Check contexts to see if a buffer needs to be setup
         auto output_ctx = output->getContext();
         if(type_ & ForceBufferedConnection_e || input->checkFlags(mo::RequestBuffered_e) || output->checkFlags(mo::RequestBuffered_e)) {
@@ -519,7 +519,7 @@ bool IMetaObject::connectInput(InputParam* input,
             }
             std::string buffer_type = paramTypeToString(type_);
             buffer->setName(output->getTreeName() + " " + buffer_type + " buffer for " + input->getTreeName());
-            if(input->SetInput(buffer)) {
+            if(input->setInput(buffer)) {
                 _pimpl->_param_Connections.emplace_back(output_object, output->getName(), input->getName(), type_);
                 return true;
             } else {
@@ -535,7 +535,7 @@ bool IMetaObject::connectInput(InputParam* input,
                 auto buffer = Buffer::BufferFactory::CreateProxy(output, type_);
                 if(buffer) {
                     buffer->setName(output->getTreeName() + " buffer for " + input->getTreeName());
-                    if(input->SetInput(buffer)) {
+                    if(input->setInput(buffer)) {
                         _pimpl->_param_Connections.emplace_back(output_object, output->getName(), input->getName(), type_);
                         return true;
                     } else {
@@ -549,7 +549,7 @@ bool IMetaObject::connectInput(InputParam* input,
                     LOG(debug) << "No buffer of desired type found for type " << Demangle::TypeToName(output->getTypeInfo());
                 }
             } else {
-                if(input->SetInput(output)) {
+                if(input->setInput(output)) {
                     _pimpl->_param_Connections.emplace_back(output_object, output->getName(), input->getName(), type_);
                     return true;
                 } else {
@@ -561,7 +561,7 @@ bool IMetaObject::connectInput(InputParam* input,
                 }
             }
         } else {
-            if(input->SetInput(output)) {
+            if(input->setInput(output)) {
                 _pimpl->_param_Connections.emplace_back(output_object, output->getName(), input->getName(), type_);
                 return true;
             } else {
@@ -579,10 +579,10 @@ bool IMetaObject::connectInput(InputParam* input,
     return false;
 }
 
-bool IMetaObject::connectInput(IMetaObject* out_obj, IParam* out_param,
+bool IMetaObject::ConnectInput(IMetaObject* out_obj, IParam* out_param,
                                IMetaObject* in_obj, InputParam* in_param,
                                ParamType type) {
-    return in_obj->connectInput(in_param, out_obj, out_param, type);
+    return in_obj->ConnectInput(in_param, out_obj, out_param, type);
 }
 IParam* IMetaObject::addParam(std::shared_ptr<IParam> param) {
     param->setMtx(_mtx);
@@ -723,7 +723,7 @@ ISlot* IMetaObject::getSlot(const std::string& name, const TypeInfo& signature) 
     return nullptr;
 }
 
-bool IMetaObject::connectByName(const std::string& name, ISlot* slot) {
+bool IMetaObject::ConnectByName(const std::string& name, ISlot* slot) {
     auto signal = getSignal(name, slot->getSignature());
     if (signal) {
         auto Connection = signal->connect(slot);
@@ -734,7 +734,7 @@ bool IMetaObject::connectByName(const std::string& name, ISlot* slot) {
     }
     return false;
 }
-bool IMetaObject::connectByName(const std::string& name, ISignal* signal) {
+bool IMetaObject::ConnectByName(const std::string& name, ISignal* signal) {
     auto slot = getSlot(name, signal->getSignature());
     if (slot) {
         auto Connection = slot->connect(signal);
@@ -746,12 +746,12 @@ bool IMetaObject::connectByName(const std::string& name, ISignal* signal) {
     return false;
 }
 
-int IMetaObject::connectByName(const std::string& name, RelayManager* mgr) {
+int IMetaObject::ConnectByName(const std::string& name, RelayManager* mgr) {
 
     return 0;
 }
 
-int  IMetaObject::connectByName(const std::string& signal_name,
+int  IMetaObject::ConnectByName(const std::string& signal_name,
                                 IMetaObject* receiver,
                                 const std::string& slot_name) {
     int count = 0;
@@ -773,7 +773,7 @@ int  IMetaObject::connectByName(const std::string& signal_name,
     return count;
 }
 
-bool IMetaObject::connectByName(const std::string& signal_name,
+bool IMetaObject::ConnectByName(const std::string& signal_name,
                                 IMetaObject* receiver,
                                 const std::string& slot_name,
                                 const TypeInfo& signature) {
@@ -789,11 +789,11 @@ bool IMetaObject::connectByName(const std::string& signal_name,
     return false;
 }
 
-int IMetaObject::connectAll(RelayManager* mgr) {
+int IMetaObject::ConnectAll(RelayManager* mgr) {
     auto my_signals = getSignalInfo();
     int count = 0;
     for(auto& signal : my_signals) {
-        count += connectByName(signal->name, mgr);
+        count += ConnectByName(signal->name, mgr);
     }
     return count;
 }
@@ -870,7 +870,7 @@ void IMetaObject::addConnection(std::shared_ptr<Connection>& Connection,
     info.signature = signature;
     _pimpl->_Connections.push_back(info);
 }
-void IMetaObject::onParamUpdate(IParam* param, Context*, OptionalTime_t, size_t, UpdateFlags) {
+void IMetaObject::onParamUpdate(IParam* param, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags) {
     this->_pimpl->_sig_param_updated(this, param);
 }
 } // namespace mo

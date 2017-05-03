@@ -51,7 +51,7 @@ namespace mo
                     }
                     _app->requestUpdate();
                 }
-                void SetInputSelectionCallback(const std::function<void(const Wt::WString&)>& cb)
+                void setInputSelectionCallback(const std::function<void(const Wt::WString&)>& cb)
                 {
                     onInputSelected = cb;
                 }

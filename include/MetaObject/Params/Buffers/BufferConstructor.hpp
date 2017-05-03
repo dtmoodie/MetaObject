@@ -17,7 +17,7 @@ namespace mo
         static IParam* create(IParam* input)
         {
             T* ptr = new T();
-            if(ptr->SetInput(input))
+            if(ptr->setInput(input))
             {
                 return ptr;
             }

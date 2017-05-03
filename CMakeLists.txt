@@ -129,7 +129,7 @@ find_package(Boost REQUIRED COMPONENTS ${Boost_required_components})
 
 # ---------------------- cereal ---------------------------------
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include")
-set(MetaObject_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include;${CMAKE_CURRENT_SOURCE_DIR}/MetaParams" CACHE PATH "" FORCE)
+set(MetaObject_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include;${CMAKE_CURRENT_SOURCE_DIR}/MetaParameters" CACHE PATH "" FORCE)
 set(PROJECT_BIN_DIRS_RELWITHDEBINFO "")
 set(PROJECT_BIN_DIRS_RELEASE "")
 set(PROJECT_BIN_DIRS_DEBUG "")
@@ -323,16 +323,16 @@ endif()
 
 
 # -------------------- instantiations --------------------------
-file(GLOB_RECURSE instantiations_src "MetaParams/*")
-include_directories("MetaParams")
-add_library(MetaParams SHARED ${instantiations_src})
-set_target_properties(MetaParams PROPERTIES FOLDER Dependencies)
-target_link_libraries(MetaParams MetaObject)
+file(GLOB_RECURSE instantiations_src "MetaParameters/*")
+include_directories("MetaParameters")
+add_library(MetaParameters SHARED ${instantiations_src})
+set_target_properties(MetaParameters PROPERTIES FOLDER Dependencies)
+target_link_libraries(MetaParameters MetaObject)
 if(Qt5_FOUND)
-  target_link_libraries(MetaParams Qt5::Core Qt5::Gui Qt5::Widgets)
+  target_link_libraries(MetaParameters Qt5::Core Qt5::Gui Qt5::Widgets)
 endif()
 if(OpenCV_FOUND AND WITH_OPENCV)
-  target_link_libraries(MetaParams ${OpenCV_LIBS})
+  target_link_libraries(MetaParameters ${OpenCV_LIBS})
 endif()
 
 FOREACH(dir ${BIN_DIRS})
@@ -431,7 +431,8 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
         MetaObject
         ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
         ${link_libs}
-        MetaParams)
+        MetaParameters
+    )
 
     if(OpenCV_FOUND)
       TARGET_LINK_LIBRARIES(${test} ${OpenCV_LIBS})
@@ -465,7 +466,7 @@ if(BUILD_EXAMPLES)
     ADD_SUBDIRECTORY("examples")
 endif()
 # ----------------------- install ----------------------------
-export(TARGETS MetaObject MetaParams
+export(TARGETS MetaObject MetaParameters
       FILE "${PROJECT_BINARY_DIR}/MetaObjectTargets.cmake")
 
 export(PACKAGE MetaObject)
@@ -485,13 +486,13 @@ endif(Wt_FOUND)
 configure_file(MetaObjectConfig.cmake.in
   "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake" @ONLY)
 
-install(TARGETS MetaObject MetaParams
+install(TARGETS MetaObject MetaParameters
         RUNTIME DESTINATION bin
         LIBRARY DESTINATION lib
         ARCHIVE DESTINATION lib
 )
 
-install(TARGETS MetaObject MetaParams 
+install(TARGETS MetaObject MetaParameters 
         DESTINATION lib
         EXPORT MetaObjectTargets
 )
@@ -528,7 +529,7 @@ if(WIN32)
 
 endif(WIN32)
 
-install(DIRECTORY MetaParams/ DESTINATION include/MetaObject FILES_MATCHING PATTERN "*.hpp")
+install(DIRECTORY MetaParameters/ DESTINATION include/MetaObject FILES_MATCHING PATTERN "*.hpp")
 
 install(DIRECTORY include/
         DESTINATION include

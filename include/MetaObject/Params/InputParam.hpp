@@ -40,18 +40,17 @@ public:
     // This gets a pointer to the variable that feeds into this input
     virtual IParam* getInputParam() = 0;
 
-    virtual bool SetInput(std::shared_ptr<IParam> param) = 0;
-    virtual bool SetInput(IParam* param = nullptr) = 0;
+    virtual bool setInput(std::shared_ptr<IParam> param) = 0;
+    virtual bool setInput(IParam* param = nullptr) = 0;
 
     virtual OptionalTime_t getInputTimestamp() = 0;
     virtual size_t getInputFrameNumber() = 0;
-    virtual bool IsInputSet() const = 0;
+    virtual bool isInputSet() const = 0;
 
-    virtual bool AcceptsInput(std::weak_ptr<IParam> param) const = 0;
-    virtual bool AcceptsInput(IParam* param) const = 0;
-    virtual bool AcceptsType(TypeInfo type) const = 0;
+    virtual bool acceptsInput(IParam* param) const = 0;
+    virtual bool acceptsType(const TypeInfo& type) const = 0;
 
-    void SetQualifier(std::function<bool(std::weak_ptr<IParam>)> f) {
+    void setQualifier(std::function<bool(std::weak_ptr<IParam>)> f) {
         qualifier = f;
     }
 protected:

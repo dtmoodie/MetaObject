@@ -11,15 +11,15 @@ public:
     VariableManager();
     ~VariableManager();
     virtual void addParam(IParam* param);
-    virtual void RemoveParam(IParam* param);
+    virtual void removeParam(IParam* param);
 
     virtual std::vector<IParam*> getOutputParams(TypeInfo type);
-    virtual std::vector<IParam*> GetAllParmaeters();
-    virtual std::vector<IParam*> GetAllOutputParams();
+    virtual std::vector<IParam*> getAllParmaeters();
+    virtual std::vector<IParam*> getAllOutputParams();
 
     virtual IParam* getOutputParam(std::string name);
     virtual IParam* getParam(std::string name);
-    virtual void LinkParams(IParam* output, IParam* input);
+    virtual void linkParams(IParam* output, IParam* input);
 
 private:
     struct impl;

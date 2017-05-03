@@ -23,8 +23,8 @@ namespace mo
                 virtual ~IParamProxy();
                 
                 virtual QWidget* getParamWidget(QWidget* parent) = 0;
-                virtual bool CheckParam(IParam* param) = 0;
-                virtual bool SetParam(IParam* param) = 0;
+                virtual bool checkParam(IParam* param) = 0;
+                virtual bool setParam(IParam* param) = 0;
             };
         }
     }

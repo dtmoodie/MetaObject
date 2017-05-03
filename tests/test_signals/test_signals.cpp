@@ -34,7 +34,7 @@ BOOST_AUTO_TEST_CASE(signals)
 		{
 			return val * 2;
 		});
-		signal.Connect(&slot);
+		signal.connect(&slot);
 
 		BOOST_CHECK_EQUAL(signal(4), 8);
 	}
@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(threaded_signal)
     slot.SetContext(&thread_ctx);
 
     TSignal<void(int)> signal;
-    auto connection = slot.Connect(&signal);
+    auto Connection = slot.connect(&signal);
 
     boost::thread thread = boost::thread([&thread_ctx]()->void
     {

@@ -17,7 +17,7 @@ namespace mo
     template<typename T>
     bool TInputParamPtr<T>::setInput(std::shared_ptr<IParam> param){
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
-        if(ITInputParam<T>::SetInput(param)){
+        if(ITInputParam<T>::setInput(param)){
             if(_user_var){
                 Storage_t data;
                 if(this->_input)
@@ -41,7 +41,7 @@ namespace mo
     template<typename T>
     bool TInputParamPtr<T>::setInput(IParam* param){
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
-        if(ITInputParam<T>::SetInput(param)){
+        if(ITInputParam<T>::setInput(param)){
             if(_user_var){
                 Storage_t data;
                 if(this->_input)

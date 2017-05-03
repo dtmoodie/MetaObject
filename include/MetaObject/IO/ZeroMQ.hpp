@@ -31,8 +31,8 @@ public:
     virtual IParam* getInputParam() = 0;
 
     // Set input and setup callbacks
-    virtual bool SetInput(std::shared_ptr<IParam> param) = 0;
-    virtual bool SetInput(IParam* param = nullptr) = 0;
+    virtual bool setInput(std::shared_ptr<IParam> param) = 0;
+    virtual bool setInput(IParam* param = nullptr) = 0;
 
     // Check for correct serialization routines, etc
     virtual bool AcceptsInput(std::weak_ptr<IParam> param) const = 0;

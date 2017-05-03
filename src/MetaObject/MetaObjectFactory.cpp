@@ -388,7 +388,7 @@ void MetaObjectFactory::SetCompileCallback(std::function<void(const std::string,
 {
        
 }
-std::shared_ptr<Connection> MetaObjectFactory::connectConstructorAdded(TSlot<void(void)>* slot)
+std::shared_ptr<Connection> MetaObjectFactory::ConnectConstructorAdded(TSlot<void(void)>* slot)
 {
     return _pimpl->on_constructor_added.connect(slot);
 }

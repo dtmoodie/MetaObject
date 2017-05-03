@@ -27,18 +27,18 @@ namespace mo
 		
 		std::shared_ptr<Connection> connect(ISlot* slot, const std::string& name, IMetaObject* obj = nullptr);
 		std::shared_ptr<Connection> connect(ISignal* signal, const std::string& name, IMetaObject* obj = nullptr);
-        void connectSignal(IMetaObject* obj, const std::string& signal_name);
-        void connectSlot(IMetaObject* obj, const std::string& slot_name);
+        void ConnectSignal(IMetaObject* obj, const std::string& signal_name);
+        void ConnectSlot(IMetaObject* obj, const std::string& slot_name);
 
-		bool connectSignal(IMetaObject* obj, const std::string& name, const TypeInfo& type);
-		int  connectSignals(IMetaObject* obj, const std::string& name);
-		int  connectSignals(IMetaObject* obj, const TypeInfo& type);
-		int  connectSignals(IMetaObject* obj);
+		bool ConnectSignal(IMetaObject* obj, const std::string& name, const TypeInfo& type);
+		int  ConnectSignals(IMetaObject* obj, const std::string& name);
+		int  ConnectSignals(IMetaObject* obj, const TypeInfo& type);
+		int  ConnectSignals(IMetaObject* obj);
 
-		bool connectSlot(IMetaObject* obj, const std::string& name, const TypeInfo& type);
-		int  connectSlots(IMetaObject* obj, const std::string& name);
-		int  connectSlots(IMetaObject* obj, const TypeInfo& type);
-		int  connectSlots(IMetaObject* obj);
+		bool ConnectSlot(IMetaObject* obj, const std::string& name, const TypeInfo& type);
+		int  ConnectSlots(IMetaObject* obj, const std::string& name);
+		int  ConnectSlots(IMetaObject* obj, const TypeInfo& type);
+		int  ConnectSlots(IMetaObject* obj);
 
         
         std::vector<std::shared_ptr<ISignalRelay>> GetRelays(const std::string& name);

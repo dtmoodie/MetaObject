@@ -19,7 +19,7 @@ class Context;
 class MO_EXPORTS IBinarySerializer {
 public:
     virtual ~IBinarySerializer() {}
-    virtual void SetInput(IParam* input) = 0;
+    virtual void setInput(IParam* input) = 0;
 };
 
 class MO_EXPORTS IXmlSerializer {

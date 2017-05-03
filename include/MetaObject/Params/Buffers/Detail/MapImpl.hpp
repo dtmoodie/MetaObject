@@ -19,6 +19,8 @@ namespace mo
             if (itr != _data_buffer.end()){
                 if (fn_) *fn_ = itr->first.fn;
                 data = (itr->second);
+                this->_ts = itr->first.ts;
+                this->_fn = itr->first.fn;
                 return true;
             }
             return false;
@@ -31,6 +33,8 @@ namespace mo
             if (itr != _data_buffer.end()){
                 if (ts) *ts = itr->first.ts;
                 value = (itr->second);
+                this->_ts = itr->first.ts;
+                this->_fn = itr->first.fn;
                 return true;
             }
             return false;
@@ -42,7 +46,8 @@ namespace mo
             _data_buffer[{ts,fn}] = data;
             IParam::_modified = true;
             lock.unlock();
-            _typed_update_signal(data, this,  ctx, ts, fn, cs, mo::InputUpdated_e);
+            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            _typed_update_signal(data, this,  ctx, ts, fn, cs, mo::BufferUpdated_e);
             return true;
         }
 
@@ -88,12 +93,10 @@ namespace mo
             return false;
         }
         
-        template<class T> typename std::map<SequenceKey, typename ITParam<T>::Storage_t>::iterator  Map<T>::search(OptionalTime_t ts)
-        {
+        template<class T> typename std::map<SequenceKey, typename ITParam<T>::Storage_t>::iterator  Map<T>::search(OptionalTime_t ts){
             if (_data_buffer.size() == 0)
                 return _data_buffer.end();
-            if (!ts)
-            {
+            if (!ts){
                 if(_data_buffer.size())
                     return _data_buffer.rbegin().base();
                 return _data_buffer.end();
@@ -101,8 +104,7 @@ namespace mo
             return _data_buffer.find(*ts);
         }
         
-        template<class T> typename std::map<SequenceKey, typename ITParam<T>::Storage_t>::iterator Map<T>::search(size_t fn)
-        {
+        template<class T> typename std::map<SequenceKey, typename ITParam<T>::Storage_t>::iterator Map<T>::search(size_t fn){
             if (_data_buffer.size() == 0)
                 return _data_buffer.end();
             return _data_buffer.find(fn);
@@ -113,6 +115,7 @@ namespace mo
             _data_buffer[{ts, fn}] = data;
             IParam::_modified = true;
             lock.unlock();
+            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
             _typed_update_signal(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
         }
     }

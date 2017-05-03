@@ -32,69 +32,56 @@ namespace mo
     namespace Buffer
     {
         template<class T>
-        class CircularBuffer: public IBuffer, public ITInputParam<T>
-        {
-            static ParamConstructor<CircularBuffer<T>> _circular_buffer_Param_constructor;
+        class CircularBuffer: public IBuffer, public ITInputParam<T>{
+            static ParamConstructor<CircularBuffer<T>> _circular_buffer_param_constructor;
             static BufferConstructor<CircularBuffer<T>> _circular_buffer_constructor;
-            boost::circular_buffer<State<T>> _data_buffer;
+            boost::circular_buffer<State<Storage_t>> _data_buffer;
         public:
             typedef T ValueType;
             static const ParamType Type = CircularBuffer_e;
 
             CircularBuffer(T&& init, const std::string& name = "",
                 OptionalTime_t ts = {},
-                ParamType type = Buffer_e);
+                ParamFlags type = Buffer_e);
 
             CircularBuffer(const std::string& name = "",
                 OptionalTime_t ts = {},
-                ParamType type = Buffer_e);
+                ParamFlags type = Buffer_e);
 
-            T*   GetDataPtr(OptionalTime_t ts = OptionalTime_t(),
-                                    Context* ctx = nullptr, size_t* fn_ = nullptr);
-            T*   GetDataPtr(size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
+            virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
+                Context* ctx = nullptr, size_t* fn_ = nullptr);
 
-            T    GetData(OptionalTime_t ts = OptionalTime_t(),
-                                 Context* ctx = nullptr, size_t* fn = nullptr);
-            T    GetData(size_t fn, Context* ctx = nullptr, OptionalTime_t* ts = nullptr);
+            virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 
-            bool GetData(T& value, OptionalTime_t ts = OptionalTime_t(),
-                                 Context* ctx = nullptr, size_t* fn = nullptr);
-            bool GetData(T& value, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts = nullptr);
+            virtual void setFrameBufferCapacity(size_t size);
+            virtual void setTimePaddingCapacity(mo::Time_t time);
+            virtual boost::optional<size_t> getFrameBufferCapacity();
+            virtual OptionalTime_t getTimePaddingCapacity();
 
-
-            bool Update(IParam* other, Context* ctx = nullptr);
-            std::shared_ptr<IParam> DeepCopy() const;
-
-            virtual void SetFrameBufferCapacity(size_t size);
-            virtual void SetTimePaddingCapacity(mo::Time_t time);
-            virtual boost::optional<size_t> GetFrameBufferCapacity();
-            virtual OptionalTime_t GetTimePaddingCapacity();
-
-            virtual size_t GetSize();
+            virtual size_t getSize();
             bool getTimestampRange(mo::Time_t& start, mo::Time_t& end);
             bool getFrameNumberRange(size_t& start,size_t& end);
             
-            void onInputUpdate(Context* ctx, IParam* param);
-            virtual ParamType GetBufferType() const{ return CircularBuffer_e;}
+            void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+            virtual ParamType getBufferType() const{ return CircularBuffer_e;}
         protected:
-            bool UpdateDataImpl(const T& data, OptionalTime_t ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs);
-
+            bool updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
         };
     }
     
     #define MO_METAParam_INSTANCE_CBUFFER_(N) \
     template<class T> struct MetaParam<T, N>: public MetaParam<T, N-1, void> \
     { \
-        static ParamConstructor<Buffer::CircularBuffer<T>> _circular_buffer_Param_constructor; \
+        static ParamConstructor<Buffer::CircularBuffer<T>> _circular_buffer_param_constructor; \
         static BufferConstructor<Buffer::CircularBuffer<T>> _circular_buffer_constructor;  \
         MetaParam<T, N>(const char* name): \
             MetaParam<T, N-1>(name) \
         { \
             (void)&_circular_buffer_constructor; \
-            (void)&_circular_buffer_Param_constructor; \
+            (void)&_circular_buffer_param_constructor; \
         } \
     }; \
-    template<class T> ParamConstructor<Buffer::CircularBuffer<T>> MetaParam<T, N>::_circular_buffer_Param_constructor; \
+    template<class T> ParamConstructor<Buffer::CircularBuffer<T>> MetaParam<T, N>::_circular_buffer_param_constructor; \
     template<class T> BufferConstructor<Buffer::CircularBuffer<T>> MetaParam<T, N>::_circular_buffer_constructor;
     
     MO_METAParam_INSTANCE_CBUFFER_(__COUNTER__)

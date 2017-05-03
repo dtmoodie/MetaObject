@@ -18,7 +18,7 @@ namespace mo {
    - Control Params are user set settings
    - State Params are used status introspection
  Signals
-  - functions that are called by an IMetaObject that invoke all connected slots
+  - functions that are called by an IMetaObject that invoke all Connected slots
   - must have void return type
   - must handle asynchronous operation
  Slots
@@ -26,7 +26,7 @@ namespace mo {
   - must have void return type
   - should be called on the thread of the owning context
   - Slots with a return value can only have a 1 to 1 mapping, thus the Connection of a signal
-    to a slot with a return will only call the most recent slot that was connected to it.
+    to a slot with a return will only call the most recent slot that was Connected to it.
 */
 class MO_EXPORTS IMetaObject: public IObject {
 public:
@@ -51,6 +51,7 @@ public:
     virtual void     initCustom(bool firstInit);
     virtual void     initParams(bool firstInit) = 0;
     virtual int      initSignals(bool firstInit) = 0;
+    virtual void     initOutputs() = 0;
 
     virtual void     Serialize(ISimpleSerializer *pSerializer); // Inherit from RCC's IObject
     virtual void     serializeConnections(ISimpleSerializer* pSerializer);
@@ -74,20 +75,20 @@ public:
     // -------- Signals / slots
     // If this class emits a signal by the given name, then the input sig will be added to the list of signals
     // that will be called when the signal is emitted.
-    virtual bool connectByName(const std::string& signal_name, ISlot* slot);
-    virtual bool connectByName(const std::string& slot_name, ISignal* signal);
+    virtual bool ConnectByName(const std::string& signal_name, ISlot* slot);
+    virtual bool ConnectByName(const std::string& slot_name, ISignal* signal);
 
     // Be careful to only call this once for each mgr object
     // This will call getSignal<>(name) on the input mgr object and add the obtained signal
     // To the list of signals that is called whenever sig_{name} is emitted
-    virtual int  connectByName(const std::string& name, RelayManager* mgr);
-    virtual int  connectByName(const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name);
-    virtual bool connectByName(const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name, const TypeInfo& signature);
+    virtual int  ConnectByName(const std::string& name, RelayManager* mgr);
+    virtual int  ConnectByName(const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name);
+    virtual bool ConnectByName(const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name, const TypeInfo& signature);
 
 
     // Be careful to only call once for each mgr object
     // This will call mgr->getSignal<>() for each declared signal
-    virtual int  connectAll(RelayManager* mgr);
+    virtual int  ConnectAll(RelayManager* mgr);
 
     virtual std::vector<std::pair<ISignal*, std::string>>  getSignals() const;
     virtual std::vector<ISignal*>                          getSignals(const std::string& name) const;
@@ -101,9 +102,9 @@ public:
     template<class T> 
     TSlot<T>*                                              getSlot(const std::string& name) const;
 
-    virtual int  disconnectByName(const std::string& name);
-    virtual bool disconnect(ISignal* sig);
-    virtual int  disconnect(IMetaObject* obj);
+    virtual int  disConnectByName(const std::string& name);
+    virtual bool disConnect(ISignal* sig);
+    virtual int  disConnect(IMetaObject* obj);
 
     // Params
     virtual ParamVec_t getDisplayParams() const;
@@ -132,10 +133,10 @@ public:
     template<class T> ITParam<T>* getParam(const std::string& name) const;
     template<class T> ITParam<T>* getParamOptional(const std::string& name) const;
 
-    // connects an input Param to an output Param
-    bool connectInput(const std::string& input_name, IMetaObject* output_object, IParam* output_param, ParamType type = StreamBuffer_e);
-    bool connectInput(InputParam* input, IMetaObject* output_object, IParam* output_param, ParamType type = StreamBuffer_e);
-    static bool connectInput(IMetaObject* output_object, IParam* output_Param,
+    // Connects an input Param to an output Param
+    bool ConnectInput(const std::string& input_name, IMetaObject* output_object, IParam* output_param, ParamType type = StreamBuffer_e);
+    bool ConnectInput(InputParam* input, IMetaObject* output_object, IParam* output_param, ParamType type = StreamBuffer_e);
+    static bool ConnectInput(IMetaObject* output_object, IParam* output_Param,
                              IMetaObject* input_object, InputParam* input_param, ParamType type = StreamBuffer_e);
 protected:
     virtual IParam* addParam(std::shared_ptr<IParam> param);
@@ -149,7 +150,7 @@ protected:
     void addSlot(ISlot* slot, const std::string& name);
     void setParamRoot(const std::string& root);
     void addConnection(std::shared_ptr<Connection>& Connection, const std::string& signal_name, const std::string& slot_name, const TypeInfo& signature, IMetaObject* obj = nullptr);
-    virtual void onParamUpdate(IParam*, Context*, OptionalTime_t, size_t, UpdateFlags);
+    virtual void onParamUpdate(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
 
     friend class RelayManager;
     struct	impl;

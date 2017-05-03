@@ -65,7 +65,7 @@ BOOST_AUTO_TEST_CASE(input_Param_manual)
     cb = new BuildCallback();
     auto input = input_Paramed_object::Create();
     auto output = output_Paramed_object::Create();
-    input->test_input_param.SetInput(&output->test_output_param);
+    input->test_input_param.setInput(&output->test_output_param);
     BOOST_REQUIRE(input->test_input);
     BOOST_REQUIRE_EQUAL(input->test_input, &output->test_output);
     BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);    
@@ -85,7 +85,7 @@ BOOST_AUTO_TEST_CASE(input_Param_programatic)
     BOOST_REQUIRE(output_);
     auto input_param = dynamic_cast<InputParam*>(input_);
     BOOST_REQUIRE(input_param);
-    BOOST_REQUIRE(input_param->SetInput(output_));
+    BOOST_REQUIRE(input_param->setInput(output_));
     BOOST_REQUIRE(input->test_input);
     BOOST_REQUIRE_EQUAL(input->test_input, &output->test_output);
     BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
@@ -105,7 +105,7 @@ BOOST_AUTO_TEST_CASE(buffered_input)
 
     auto cbuffer = Buffer::BufferFactory::CreateProxy(output_, CircularBuffer_e);
     BOOST_REQUIRE(cbuffer);
-    BOOST_REQUIRE(input_param->SetInput(cbuffer));
+    BOOST_REQUIRE(input_param->setInput(cbuffer));
     output->test_output_param.UpdateData(0, 0);
     for(int i = 1; i < 100000; ++i)
     {
@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
 
     auto cbuffer = Buffer::BufferFactory::CreateProxy(output_, CircularBuffer_e);
     BOOST_REQUIRE(cbuffer);
-    BOOST_REQUIRE(input_param->SetInput(cbuffer));
+    BOOST_REQUIRE(input_param->setInput(cbuffer));
     output->test_output_param.UpdateData(0, 0);
     bool quit = false;
     std::thread background_thread(
@@ -172,7 +172,7 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
 
     auto buffer = Buffer::BufferFactory::CreateProxy(output_, StreamBuffer_e);
     BOOST_REQUIRE(buffer);
-    BOOST_REQUIRE(input_param->SetInput(buffer));
+    BOOST_REQUIRE(input_param->setInput(buffer));
     output->test_output_param.UpdateData(0, 0);
     volatile bool started = false;
     volatile int count = 0;

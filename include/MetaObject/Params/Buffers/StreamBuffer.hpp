@@ -8,56 +8,43 @@ namespace mo
 {
     namespace Buffer
     {
-        template<class T> class MO_EXPORTS StreamBuffer: public Map<T>
-        {
+        template<class T> class MO_EXPORTS StreamBuffer: public Map<T>{
         public:
             typedef T ValueType;
             static const ParamType Type = StreamBuffer_e;
 
             StreamBuffer(const std::string& name = "");
 
-            T*   GetDataPtr(OptionalTime_t ts = OptionalTime_t(),
-                                    Context* ctx = nullptr, size_t* fn_ = nullptr);
-            T*   GetDataPtr(size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
+            virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
+                Context* ctx = nullptr, size_t* fn_ = nullptr);
+            virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 
-            T    GetData(OptionalTime_t ts = OptionalTime_t(),
-                                 Context* ctx = nullptr, size_t* fn = nullptr);
-            T    GetData(size_t fn, Context* ctx = nullptr, OptionalTime_t* ts = nullptr);
+            virtual void setFrameBufferCapacity(size_t size);
+            virtual void setTimePaddingCapacity(mo::Time_t time);
+            virtual boost::optional<size_t> getFrameBufferCapacity();
+            virtual OptionalTime_t getTimePaddingCapacity();
 
-            bool GetData(T& value, OptionalTime_t ts = OptionalTime_t(),
-                                 Context* ctx = nullptr, size_t* fn = nullptr);
-            bool GetData(T& value, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts = nullptr);
-
-
-            virtual void SetFrameBufferCapacity(size_t size);
-            virtual void SetTimePaddingCapacity(mo::Time_t time);
-            virtual boost::optional<size_t> GetFrameBufferCapacity();
-            virtual OptionalTime_t GetTimePaddingCapacity();
-
-            std::shared_ptr<IParam> DeepCopy() const;
             virtual ParamType GetBufferType() const{ return StreamBuffer_e;}
         protected:
-            //bool UpdateDataImpl(const T& data, OptionalTime_t ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs);
             virtual void prune();
-            OptionalTime_t _current_timestamp;
-            size_t _current_frame_number;
-            OptionalTime_t _time_padding;
+            OptionalTime_t          _current_timestamp;
+            size_t                  _current_frame_number;
+            OptionalTime_t          _time_padding;
             boost::optional<size_t> _frame_padding;
         };
 
-        template<class T> class MO_EXPORTS BlockingStreamBuffer : public StreamBuffer<T>
-        {
+        template<class T> class MO_EXPORTS BlockingStreamBuffer : public StreamBuffer<T>{
         public:
             typedef T ValueType;
             static const ParamType Type = BlockingStreamBuffer_e;
 
             BlockingStreamBuffer(const std::string& name = "");
 
-            virtual ParamType GetBufferType() const{ return BlockingStreamBuffer_e;}
+            virtual ParamType getBufferType() const{ return BlockingStreamBuffer_e;}
         protected:
-            bool UpdateDataImpl(const T& data, OptionalTime_t ts, Context* ctx, boost::optional<size_t> fn, ICoordinateSystem* cs);
+            bool updateDataImpl(const T& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
             virtual void prune();
-            long long _size;
+            size_t _size;
             boost::condition_variable_any _cv;
         };
     }

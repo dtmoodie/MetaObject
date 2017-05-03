@@ -13,10 +13,10 @@ namespace mo
     class ISignalRelay;
     class IMetaObject;
     // Signals are simply relays for function calls
-    // When a void return callback is connected to a signal, any call of that callback will
-    // be sent to any slot that is connected to the signal.
-    // The connecting callback has contextual information that is used by the signal to determine
-    // How to relay the function call to any connected slots.
+    // When a void return callback is Connected to a signal, any call of that callback will
+    // be sent to any slot that is Connected to the signal.
+    // The Connecting callback has contextual information that is used by the signal to determine
+    // How to relay the function call to any Connected slots.
     // Slots are receivers of signals and callbacks.
     class MO_EXPORTS ISignal
     {
@@ -24,9 +24,9 @@ namespace mo
         virtual TypeInfo getSignature() const = 0;
         virtual std::shared_ptr<Connection> connect(ISlot* slot) = 0;
         virtual std::shared_ptr<Connection> connect(std::shared_ptr<ISignalRelay>& relay) = 0;
-        virtual bool disconnect() = 0;
-        virtual bool disconnect(ISlot* slot) = 0;
-        virtual bool disconnect(std::weak_ptr<ISignalRelay> relay) = 0;
+        virtual bool disConnect() = 0;
+        virtual bool disConnect(ISlot* slot) = 0;
+        virtual bool disConnect(std::weak_ptr<ISignalRelay> relay) = 0;
 
         IMetaObject* getParent() const;
         const Context* getContext() const;

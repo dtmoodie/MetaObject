@@ -5,10 +5,10 @@
 #include "detail/ParamMacrosImpl.hpp"
 #include "MetaObject/Detail/HelperMacros.hpp"
 
-#define PARAM(type, name, init) \
-mo::TParamPtr<type> name##_param; \
-type name = init; \
-PARAM_(type, name, init, __COUNTER__)
+#define PARAM(type_, name, init) \
+mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param; \
+mo::argument_type<void(type_)>::type name = init; \
+PARAM_(type_, name, init, __COUNTER__)
 
 
 #define ENUM_PARAM(name, ...) \
@@ -19,9 +19,9 @@ ENUM_PARAM_(__COUNTER__, name, __VA_ARGS__)
 
 #define RANGED_PARAM(type, name, init, min, max)
 
-#define INPUT(type, name, init) \
+#define INPUT(type_, name, init) \
 const type* name = init; \
-mo::TInputParamPtr<type> name##_param; \
+mo::TInputParamPtr<mo::argument_type<void(type_)>::type> name##_param; \
 void init_Params_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
 { \
     name##_param.setMtx(_mtx); \
@@ -32,7 +32,7 @@ void init_Params_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
 } \
 static void list_Param_info_(std::vector<mo::ParamInfo*>& info, mo::_counter_<__COUNTER__> dummy) \
 { \
-    static mo::ParamInfo s_info(mo::TypeInfo(typeid(type)), \
+    static mo::ParamInfo s_info(mo::TypeInfo(typeid(mo::argument_type<void(type_)>::type)), \
                               #name, "", "", mo::Input_e, #init); \
     info.push_back(&s_info); \
     list_Param_info_(info, --dummy); \
@@ -50,41 +50,41 @@ void init_Params_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
 }
 
 
-#define PROPERTY(type, name, init) \
-type name; \
+#define PROPERTY(type_, name, init) \
+mo::argument_type<void(type_)>::type name; \
 void init_Params_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
 { \
     if(firstInit) \
         name = init; \
     init_Params_(firstInit, --dummy); \
 } \
-mo::TParamPtr<type> name##_param; \
+mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param; \
 SERIALIZE_(name, __COUNTER__)
 
-#define PERSISTENT_(type, name, N) \
-mo::TParamPtr<type> name##_param; \
+#define PERSISTENT_(type_, name, N) \
+mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param; \
 INIT_(name, N) \
 LOAD_SAVE_(name, N)
 
-#define PERSISTENT(type, name) \
-type name; \
+#define PERSISTENT(type_, name) \
+mo::argument_type<void(type_)>::type name; \
 PERSISTENT_(type, name, __COUNTER__)
 
 #define INIT(name, init) INIT_(name, init, __COUNTER__)
 
-#define STATUS(type, name, init)\
-mo::TParamPtr<type> name##_param; \
-type name = init; \
+#define STATUS(type_, name, init)\
+mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param; \
+mo::argument_type<void(type_)>::type name = init; \
 STATUS_(type, name, init, __COUNTER__)
 
 #define TOOLTIP(name, TOOLTIP) TOOLTIP_(name, TOOLTIP, __COUNTER__)
 
 #define DESCRIPTION(name, DESCRIPTION)
 
-#define OUTPUT(type, name, init) \
-mo::TParamPtr<type> name##_param; \
-OUTPUT_(type, name, init, __COUNTER__); \
-type name = init;
+#define OUTPUT(type_, name, init) \
+mo::TParamOutput<mo::argument_type<void(type_)>::type> name##_param; \
+OUTPUT_(type_, name, init, __COUNTER__); \
+mo::argument_type<void(type_)>::type& name = name##_param.reset(init);
 
 #define SOURCE(type, name, init) \
 OUTPUT(type, name, init) \

@@ -13,7 +13,7 @@ namespace mo
     {
     public:
         virtual ~Connection();
-		virtual bool disconnect() = 0;
+		virtual bool disConnect() = 0;
     };
 
 	class MO_EXPORTS SlotConnection : public Connection
@@ -21,7 +21,7 @@ namespace mo
 	public:
 		SlotConnection(ISlot* slot, std::shared_ptr<ISignalRelay> relay);
         virtual ~SlotConnection();
-		virtual bool disconnect();
+		virtual bool disConnect();
 	protected:
 		ISlot* _slot;
 		std::weak_ptr<ISignalRelay> _relay;
@@ -32,7 +32,7 @@ namespace mo
     public:
 		ClassConnection(ISlot* slot, std::shared_ptr<ISignalRelay> relay, IMetaObject* obj);
 		~ClassConnection();
-		virtual bool disconnect();
+		virtual bool disConnect();
 	protected:
 		IMetaObject* _obj;
     };
@@ -41,7 +41,7 @@ namespace mo
 	{
 	public:
 		SignalConnection(ISignal* signal, std::shared_ptr<ISignalRelay> relay);
-		bool disconnect();
+		bool disConnect();
 	protected:
 		ISignal* _signal;
 		std::weak_ptr<ISignalRelay> _relay;

@@ -37,7 +37,7 @@ protected:
     std::shared_ptr<ITParam<T>> _shared_input;
     ITParam<T>*                 _input;
 private:
-    UpdateSlot_t               _update_slot;
+    TUpdateSlot_t              _update_slot;
     TSlot<void(IParam const*)> _delete_slot;
     bool setInputImpl(IParam* param);
 };

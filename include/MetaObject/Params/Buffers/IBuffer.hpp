@@ -9,10 +9,10 @@ namespace mo
         {
         public:
             virtual ~IBuffer() {}
-            virtual void SetFrameBufferCapacity(size_t size) = 0;
-            virtual void SetTimePaddingCapacity(mo::Time_t time) = 0;
-            virtual boost::optional<size_t> GetFrameBufferCapacity() = 0;
-            virtual OptionalTime_t GetTimePaddingCapacity() = 0;
+            virtual void setFrameBufferCapacity(size_t size) = 0;
+            virtual void setTimePaddingCapacity(mo::Time_t time) = 0;
+            virtual boost::optional<size_t> getFrameBufferCapacity() = 0;
+            virtual OptionalTime_t getTimePaddingCapacity() = 0;
 
             // These are not const accessors because I may need to lock a mutex inside of them.
             virtual size_t getSize() = 0;
