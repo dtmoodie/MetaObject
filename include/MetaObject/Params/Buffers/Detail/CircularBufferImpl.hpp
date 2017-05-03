@@ -118,10 +118,8 @@ namespace mo
 
         template<class T> void  CircularBuffer<T>::onInputUpdate(ConstStorageRef_t data, IParam*, Context* ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags fg){
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
-            if (ts)
-                _data_buffer.push_back(State<T>(*ts, fn, ctx, cs, data));
-            else
-                _data_buffer.push_back(State<T>(fn, ctx, cs, data));
+            if (ts) _data_buffer.push_back(State<T>(*ts, fn, ctx, cs, data));
+            else _data_buffer.push_back(State<T>(fn, ctx, cs, data));
             this->_modified = true;
             lock.unlock();
             _typed_update_signal(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);

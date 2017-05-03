@@ -19,7 +19,7 @@
 #endif
 #include <cereal/types/string.hpp>
 #include <cereal/types/map.hpp>
-#include "MetaParams.hpp"
+#include "MetaParameters.hpp"
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
 #endif
@@ -30,7 +30,7 @@
 #else
 #  define MO_EXPORTS
 #endif
-#include "MetaObject/Params/detail/MetaParamsDetail.hpp"
+#include "MetaObject/Params/detail/MetaParamImpl.hpp"
 
 INSTANTIATE_META_Param(bool);
 INSTANTIATE_META_Param(int);

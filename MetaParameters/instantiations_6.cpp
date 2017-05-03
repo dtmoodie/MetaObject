@@ -18,32 +18,24 @@
 #else
 #  define MO_EXPORTS
 #endif
-#include "MetaObject/Params/detail/MetaParamsDetail.hpp"
+#include "MetaObject/Params/detail/MetaParamImpl.hpp"
 
 #include <cereal/types/vector.hpp>
 #include <cereal/types/string.hpp>
 
+namespace mo{
+    namespace IO{
+        namespace Text{
+            namespace imp{
 
-namespace mo
-{
-    namespace IO
-    {
-        namespace Text
-        {
-            namespace imp
-            {
-
-            template<> bool DeSerialize<EnumParam>(ITParam<EnumParam>* param, std::stringstream& ss)
-            {
-                EnumParam* ptr = param->GetDataPtr();
-                if(ptr)
-                {
+            template<> bool DeSerialize<EnumParam>(ITParam<EnumParam>* param, std::stringstream& ss){
+                ParamTraits<EnumParam>::Storage_t ptr;
+                if(param->getData(ptr)){
                     ptr->values.clear();
                     ptr->enumerations.clear();
                     std::string size;
                     std::getline(ss, size, '[');
-                    if (size.size())
-                    {
+                    if (size.size()){
                         size_t size_ = boost::lexical_cast<size_t>(size);
                         ptr->values.reserve(size_);
                         ptr->enumerations.reserve(size_);
@@ -51,8 +43,7 @@ namespace mo
                     std::string enumeration;
                     int value;
                     char ch;
-                    while( ss >> enumeration >> ch >> value)
-                    {
+                    while( ss >> enumeration >> ch >> value){
                         ptr->addEnum(value, enumeration);
                         ss >> ch;
                     }
@@ -61,15 +52,12 @@ namespace mo
                 return false;
             }
 
-            template<> bool Serialize<EnumParam>(ITParam<EnumParam>* param, std::stringstream& ss)
-            {
-                EnumParam* ptr = param->GetDataPtr();
-                if (ptr)
-                {
+            template<> bool Serialize<EnumParam>(ITParam<EnumParam>* param, std::stringstream& ss){
+                ParamTraits<EnumParam>::Storage_t ptr;
+                if(param->getData(ptr)){
                     ss << ptr->enumerations.size();
                     ss << "[";
-                    for(int i = 0; i < ptr->enumerations.size(); ++i)
-                    {
+                    for(int i = 0; i < ptr->enumerations.size(); ++i){
                         if(i != 0)
                             ss << ", ";
                         ss << ptr->enumerations[i] << ":" << ptr->values[i];
@@ -84,56 +72,46 @@ namespace mo
     } // namespace IO
 } // namespace mo
 
-namespace cereal
-{
-    template<class Archive> void load(Archive& ar, mo::ReadFile& m)
-    {
+namespace cereal{
+    template<class Archive> void load(Archive& ar, mo::ReadFile& m){
         std::string path;
         ar(path);
         m = path;
     }
-    template<class Archive> void save(Archive& ar, mo::ReadFile const & m)
-    {
+    template<class Archive> void save(Archive& ar, mo::ReadFile const & m){
         std::string path = m.string();
         ar(path);
     }
-    template<class Archive> void load(Archive& ar, mo::Writypedefile& m)
-    {
+    template<class Archive> void load(Archive& ar, mo::Writypedefile& m){
         std::string path;
         ar(path);
         m = path;
     }
-    template<class Archive> void save(Archive& ar, mo::Writypedefile const& m)
-    {
+    template<class Archive> void save(Archive& ar, mo::Writypedefile const& m){
         std::string path = m.string();
         ar(path);
     }
-    template<class Archive> void load(Archive& ar, mo::ReadDirectory& m)
-    {
+    template<class Archive> void load(Archive& ar, mo::ReadDirectory& m){
         std::string path;
         ar(path);
         m = mo::ReadDirectory(path);
     }
-    template<class Archive> void save(Archive& ar, mo::ReadDirectory const& m)
-    {
+    template<class Archive> void save(Archive& ar, mo::ReadDirectory const& m){
         std::string path = m.string();
         ar(path);
     }
-    template<class Archive> void load(Archive& ar, mo::WriteDirectory& m)
-    {
+    template<class Archive> void load(Archive& ar, mo::WriteDirectory& m){
         std::string path;
         ar(path);
         m = path;
     }
-    template<class Archive> void save(Archive& ar, mo::WriteDirectory const& m)
-    {
+    template<class Archive> void save(Archive& ar, mo::WriteDirectory const& m){
         std::string path = m.string();
         ar(path);
     }
 }
 using namespace mo;
-template<class AR> void EnumParam::serialize(AR& ar)
-{
+template<class AR> void EnumParam::serialize(AR& ar){
     ar(CEREAL_NVP(enumerations), CEREAL_NVP(values), CEREAL_NVP(currentSelection));
 }
 INSTANTIATE_META_Param(ReadFile);
