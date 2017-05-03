@@ -29,7 +29,7 @@ void THandler<std::function<void(void)>, void>::onUiUpdate(QObject* sender)
             {
                 onUpdate();
                 if(_listener)
-                    _listener->OnUpdate(this);
+                    _listener->onUpdate(this);
             }
         }
     }

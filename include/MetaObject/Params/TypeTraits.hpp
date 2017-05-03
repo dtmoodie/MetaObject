@@ -10,8 +10,8 @@ template<class T1, class T2> struct LargerSize{
 
 template<class Type> struct ParamTraits<Type, typename std::enable_if<std::is_pod<Type>::value && LargerSize<Type, void*>::value>::type> {
     enum {
-        REQUIRES_GPU_SYNC = 0
-        HAS_TRIVIAL_MOVE = 1,
+        REQUIRES_GPU_SYNC = 0,
+        HAS_TRIVIAL_MOVE = 1
     };
 
     // What is stored in buffers / Params
@@ -53,7 +53,7 @@ template<class Type> struct ParamTraits<Type, typename std::enable_if<std::is_po
     template<class...Args>
     static Type& reset(Storage_t& input_storage, Args...args) {
         input_storage = Type(std::forward(args)...);
-        return input_storage
+        return input_storage;
     }
 
     template<class...Args>

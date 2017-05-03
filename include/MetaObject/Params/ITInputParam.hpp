@@ -10,6 +10,14 @@ namespace mo {
 template<class T>
 class ITInputParam: virtual public ITParam<T>, virtual public InputParam {
 public:
+    typedef typename ParamTraits<T>::Storage_t Storage_t;
+    typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
+    typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
+    typedef typename ParamTraits<T>::Input_t Input_t;
+    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+    typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
+    typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
+
     ITInputParam(const std::string& name = "",  Context* ctx = nullptr);
     ~ITInputParam();
     bool setInput(std::shared_ptr<IParam> input);
@@ -42,4 +50,4 @@ private:
     bool setInputImpl(IParam* param);
 };
 }
-#include "detail/ITInputParamImpl.hpp"
+#include "Detail/ITInputParamImpl.hpp"

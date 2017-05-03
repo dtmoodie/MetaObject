@@ -35,8 +35,8 @@ QWidget* DefaultProxy::getParamWidget(QWidget* parent)
     QWidget* output = new QWidget(parent);
 
     QGridLayout* layout = new QGridLayout(output);
-    QLabel* nameLbl = new QLabel(QString::fromStdString(Param->getName()), output);
-    nameLbl->setToolTip(QString::fromStdString(Param->getTypeInfo().name()));
+    QLabel* nameLbl = new QLabel(QString::fromStdString(param->getName()), output);
+    nameLbl->setToolTip(QString::fromStdString(param->getTypeInfo().name()));
     layout->addWidget(nameLbl, 0, 0);
     output->setLayout(layout);
     return output;

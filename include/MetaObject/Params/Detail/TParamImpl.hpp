@@ -12,12 +12,12 @@ namespace mo
 	}
 
 	template<typename T> 
-    bool TParam<T>::getData(Storage_t& value, OptionalTime_t ts, Context* ctx, size_t* fn)
+    bool TParam<T>::getData(Storage_t& value, const OptionalTime_t& ts, Context* ctx, size_t* fn)
 	{
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if (!ts)
         {
-            value = data;
+            value = _data;
             return true;
         }else
         {

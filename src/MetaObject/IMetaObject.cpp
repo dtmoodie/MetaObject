@@ -93,68 +93,68 @@ void IMetaObject::Init(bool firstInit) {
     }
 
     if(firstInit == false) {
-        auto Connections_copy = _pimpl->_param_Connections;
-        _pimpl->_param_Connections.clear();
-        for (auto& param_Connection : Connections_copy) {
-            rcc::shared_ptr<IMetaObject> obj(param_Connection.output_object);
+        auto connections_copy = _pimpl->_param_connections;
+        _pimpl->_param_connections.clear();
+        for (auto& param_connection : connections_copy) {
+            rcc::shared_ptr<IMetaObject> obj(param_connection.output_object);
             if (obj) {
-                auto output = obj->getOutput(param_Connection.output_Param);
+                auto output = obj->getOutput(param_connection.output_param);
                 if (output == nullptr) {
-                    LOG(debug) << "Unable to find " << param_Connection.output_Param
+                    LOG(debug) << "Unable to find " << param_connection.output_param
                                << " in " << obj->GetTypeName() << " reinitializing";
                     obj->initParams(firstInit);
-                    output = obj->getOutput(param_Connection.output_Param);
+                    output = obj->getOutput(param_connection.output_param);
                     if (output == nullptr) {
-                        LOG(info) << "Unable to find " << param_Connection.output_Param << " in "
-                                  << obj->GetTypeName() << " unable to reConnect " << param_Connection.input_Param
+                        LOG(info) << "Unable to find " << param_connection.output_param << " in "
+                                  << obj->GetTypeName() << " unable to reConnect " << param_connection.input_param
                                   << " from object " << this->GetTypeName();
                         continue;
                     }
                 }
-                auto input = this->getInput(param_Connection.input_Param);
+                auto input = this->getInput(param_connection.input_param);
                 if (input) {
-                    if(this->ConnectInput(input, obj.Get(), output, param_Connection.Connection_type)) {
-                        LOG(debug) << "ReConnected " << GetTypeName() << ":" << param_Connection.input_Param
-                                   << " to " << obj->GetTypeName() << ":" << param_Connection.output_Param;
+                    if(this->ConnectInput(input, obj.Get(), output, param_connection.connection_type)) {
+                        LOG(debug) << "ReConnected " << GetTypeName() << ":" << param_connection.input_param
+                                   << " to " << obj->GetTypeName() << ":" << param_connection.output_param;
                     } else {
-                        LOG(info) << "ReConnect FAILED " << GetTypeName() << ":" << param_Connection.input_Param
-                                  << " to " << obj->GetTypeName() << ":" << param_Connection.output_Param;
+                        LOG(info) << "ReConnect FAILED " << GetTypeName() << ":" << param_connection.input_param
+                                  << " to " << obj->GetTypeName() << ":" << param_connection.output_param;
                     }
                 } else {
                     LOG(debug) << "Unable to find input Param "
-                               << param_Connection.input_Param
+                               << param_connection.input_param
                                << " in object " << this->GetTypeName();
                 }
             } else {
                 LOG(debug) << "Output object no longer exists for input ["
-                           << param_Connection.input_Param
+                           << param_connection.input_param
                            << "] expected output name ["
-                           << param_Connection.output_Param << "]";
+                           << param_connection.output_param << "]";
             }
         }
         // Rebuild Connections
-        for(auto& Connection : _pimpl->_Connections) {
-            if(!Connection.obj.empty()) {
-                auto signal = this->getSignal(Connection.signal_name, Connection.signature);
-                auto slot = Connection.obj->getSlot(Connection.slot_name, Connection.signature);
+        for(auto& connection : _pimpl->_connections) {
+            if(!connection.obj.empty()) {
+                auto signal = this->getSignal(connection.signal_name, connection.signature);
+                auto slot = connection.obj->getSlot(connection.slot_name, connection.signature);
                 if(signal == nullptr) {
-                    LOG(debug) << "Unable to find signal with name \"" << Connection.signal_name
-                               << "\" and signature: " << Connection.signature.name()
+                    LOG(debug) << "Unable to find signal with name \"" << connection.signal_name
+                               << "\" and signature: " << connection.signature.name()
                                << " in new object of type " << this->GetTypeName();
                 }
                 if(slot == nullptr) {
-                    Connection.obj->bindSlots(firstInit);
-                    slot = Connection.obj->getSlot(Connection.slot_name, Connection.signature);
+                    connection.obj->bindSlots(firstInit);
+                    slot = connection.obj->getSlot(connection.slot_name, connection.signature);
                     if(slot == nullptr) {
-                        LOG(debug) << "Unable to find slot with name \"" << Connection.slot_name
-                                   << "\" and signature: " << Connection.signature.name()
-                                   << " in new object of type " << Connection.obj->GetTypeName();
+                        LOG(debug) << "Unable to find slot with name \"" << connection.slot_name
+                                   << "\" and signature: " << connection.signature.name()
+                                   << " in new object of type " << connection.obj->GetTypeName();
                     }
                 }
                 if(signal && slot) {
-                    auto Connection_ = slot->connect(signal);
-                    if (Connection_) {
-                        Connection.Connection = Connection_;
+                    auto connection_ = slot->connect(signal);
+                    if (connection_) {
+                        connection.connection = connection_;
                     }
                 }
             }
@@ -171,10 +171,10 @@ int IMetaObject::setupSignals(RelayManager* manager) {
     for(auto& my_slots : _pimpl->_slots) {
         for(auto& slot : my_slots.second) {
             ConnectionInfo info;
-            info.Connection = manager->connect(slot.second, my_slots.first, this);
+            info.connection = manager->connect(slot.second, my_slots.first, this);
             info.slot_name = my_slots.first;
             info.signature = slot.first;
-            _pimpl->_Connections.push_back(info);
+            _pimpl->_connections.push_back(info);
             ++count;
         }
     }
@@ -185,8 +185,8 @@ int IMetaObject::setupSignals(RelayManager* manager) {
             ConnectionInfo info;
             info.signal_name = my_signals.first;
             info.signature = signal.first;
-            info.Connection = Connection;
-            _pimpl->_Connections.push_back(info);
+            info.connection = Connection;
+            _pimpl->_connections.push_back(info);
             ++count;
         }
     }
@@ -200,11 +200,11 @@ int IMetaObject::setupVariableManager(IVariableManager* manager) {
     }
     _pimpl->_variable_manager = manager;
     int count = 0;
-    for(auto& param : _pimpl->_implicit_Params) {
+    for(auto& param : _pimpl->_implicit_params) {
         manager->addParam(param.second.get());
         ++count;
     }
-    for(auto& param : _pimpl->_Params) {
+    for(auto& param : _pimpl->_params) {
         manager->addParam(param.second);
         ++count;
     }
@@ -213,11 +213,11 @@ int IMetaObject::setupVariableManager(IVariableManager* manager) {
 
 int IMetaObject::removeVariableManager(IVariableManager* mgr) {
     int count = 0;
-    for (auto& param : _pimpl->_implicit_Params) {
+    for (auto& param : _pimpl->_implicit_params) {
         mgr->RemoveParam(param.second.get());
         ++count;
     }
-    for (auto& param : _pimpl->_Params) {
+    for (auto& param : _pimpl->_params) {
         mgr->RemoveParam(param.second);
         ++count;
     }
@@ -231,8 +231,8 @@ void IMetaObject::Serialize(ISimpleSerializer *pSerializer) {
 }
 
 void IMetaObject::serializeConnections(ISimpleSerializer* pSerializer) {
-    SERIALIZE(_pimpl->_Connections);
-    SERIALIZE(_pimpl->_param_Connections);
+    SERIALIZE(_pimpl->_connections);
+    SERIALIZE(_pimpl->_param_connections);
     SERIALIZE(_ctx);
     SERIALIZE(_sig_manager);
 }
@@ -245,10 +245,10 @@ void IMetaObject::setContext(Context* ctx, bool overwrite) {
     if(ctx == nullptr)
         LOG(info) << "Setting context to nullptr";
     _ctx = ctx;
-    for(auto& param : _pimpl->_implicit_Params) {
+    for(auto& param : _pimpl->_implicit_params) {
         param.second->setContext(ctx);
     }
-    for(auto& param : _pimpl->_Params) {
+    for(auto& param : _pimpl->_params) {
         param.second->setContext(ctx);
     }
 }
@@ -278,22 +278,22 @@ int IMetaObject::disConnect(IMetaObject* obj) {
 
 std::vector<IParam*> IMetaObject::getDisplayParams() const {
     std::vector<IParam*> output;
-    for(auto& param : _pimpl->_Params) {
+    for(auto& param : _pimpl->_params) {
         output.push_back(param.second);
     }
-    for(auto& param : _pimpl->_implicit_Params) {
+    for(auto& param : _pimpl->_implicit_params) {
         output.push_back(param.second.get());
     }
     return output;
 }
 
 IParam* IMetaObject::getParam(const std::string& name) const {
-    auto itr = _pimpl->_Params.find(name);
-    if(itr != _pimpl->_Params.end()) {
+    auto itr = _pimpl->_params.find(name);
+    if(itr != _pimpl->_params.end()) {
         return itr->second;
     }
-    auto itr2 = _pimpl->_implicit_Params.find(name);
-    if(itr2 != _pimpl->_implicit_Params.end()) {
+    auto itr2 = _pimpl->_implicit_params.find(name);
+    if(itr2 != _pimpl->_implicit_params.end()) {
         return itr2->second.get();
     }
     THROW(debug) << "Param with name \"" << name << "\" not found";
@@ -301,7 +301,7 @@ IParam* IMetaObject::getParam(const std::string& name) const {
 }
 std::vector<IParam*> IMetaObject::getParams(const std::string& filter) const {
     std::vector<IParam*> output;
-    for(auto& itr : _pimpl->_Params) {
+    for(auto& itr : _pimpl->_params) {
         if(filter.size()) {
             if(itr.first.find(filter) != std::string::npos)
                 output.push_back(itr.second);
@@ -309,7 +309,7 @@ std::vector<IParam*> IMetaObject::getParams(const std::string& filter) const {
             output.push_back(itr.second);
         }
     }
-    for(auto& itr : _pimpl->_implicit_Params) {
+    for(auto& itr : _pimpl->_implicit_params) {
         if (filter.size()) {
             if (itr.first.find(filter) != std::string::npos)
                 output.push_back(itr.second.get());
@@ -322,12 +322,12 @@ std::vector<IParam*> IMetaObject::getParams(const std::string& filter) const {
 
 std::vector<IParam*> IMetaObject::getParams(const TypeInfo& filter) const {
     std::vector<IParam*> output;
-    for (auto& itr : _pimpl->_Params) {
+    for (auto& itr : _pimpl->_params) {
         if(itr.second->getTypeInfo() == filter)
             output.push_back(itr.second);
 
     }
-    for (auto& itr : _pimpl->_implicit_Params) {
+    for (auto& itr : _pimpl->_implicit_params) {
         if(itr.second->getTypeInfo() == filter)
             output.push_back(itr.second.get());
     }
@@ -335,12 +335,12 @@ std::vector<IParam*> IMetaObject::getParams(const TypeInfo& filter) const {
 }
 
 IParam* IMetaObject::getParamOptional(const std::string& name) const {
-    auto itr = _pimpl->_Params.find(name);
-    if(itr != _pimpl->_Params.end()) {
+    auto itr = _pimpl->_params.find(name);
+    if(itr != _pimpl->_params.end()) {
         return itr->second;
     }
-    auto itr2 = _pimpl->_implicit_Params.find(name);
-    if(itr2 != _pimpl->_implicit_Params.end()) {
+    auto itr2 = _pimpl->_implicit_params.find(name);
+    if(itr2 != _pimpl->_implicit_params.end()) {
         return itr2->second.get();
     }
     LOG(trace) << "Param with name \"" << name << "\" not found";
@@ -375,7 +375,7 @@ std::vector<InputParam*> IMetaObject::getInputs(const std::string& name_filter) 
 
 std::vector<InputParam*> IMetaObject::getInputs(const TypeInfo& type_filter, const std::string& name_filter) const {
     std::vector<InputParam*> output;
-    for(auto param : _pimpl->_Params) {
+    for(auto param : _pimpl->_params) {
         if(param.second->checkFlags(Input_e)) {
             if(param.second->getTypeInfo() == type_filter) {
                 if(name_filter.size()) {
@@ -389,7 +389,7 @@ std::vector<InputParam*> IMetaObject::getInputs(const TypeInfo& type_filter, con
             }
         }
     }
-    for(auto param : _pimpl->_implicit_Params) {
+    for(auto param : _pimpl->_implicit_params) {
         if(param.second->checkFlags(Input_e)) {
             if(param.second->getTypeInfo() == type_filter) {
                 if(name_filter.size()) {
@@ -407,19 +407,19 @@ std::vector<InputParam*> IMetaObject::getInputs(const TypeInfo& type_filter, con
 }
 
 IParam* IMetaObject::getOutput(const std::string& name) const {
-    auto itr = _pimpl->_Params.find(name);
-    if(itr != _pimpl->_Params.end()) {
+    auto itr = _pimpl->_params.find(name);
+    if(itr != _pimpl->_params.end()) {
         return itr->second;
     }
-    auto itr2 = _pimpl->_implicit_Params.find(name);
-    if(itr2 != _pimpl->_implicit_Params.end()) {
+    auto itr2 = _pimpl->_implicit_params.find(name);
+    if(itr2 != _pimpl->_implicit_params.end()) {
         return itr2->second.get();
     }
     return nullptr;
 }
 std::vector<IParam*> IMetaObject::getOutputs(const std::string& name_filter) const {
     std::vector<IParam*> output;
-    for(auto param : _pimpl->_Params) {
+    for(auto param : _pimpl->_params) {
         if(param.second->checkFlags(Output_e)) {
             if(name_filter.size()) {
                 if(param.first.find(name_filter) != std::string::npos) {
@@ -430,7 +430,7 @@ std::vector<IParam*> IMetaObject::getOutputs(const std::string& name_filter) con
             }
         }
     }
-    for(auto param : _pimpl->_implicit_Params) {
+    for(auto param : _pimpl->_implicit_params) {
         if(param.second->checkFlags(Output_e)) {
             if(name_filter.size()) {
                 if(param.first.find(name_filter) != std::string::npos) {
@@ -446,7 +446,7 @@ std::vector<IParam*> IMetaObject::getOutputs(const std::string& name_filter) con
 
 std::vector<IParam*> IMetaObject::getOutputs(const TypeInfo& type_filter, const std::string& name_filter) const {
     std::vector<IParam*> output;
-    for(auto param : _pimpl->_Params) {
+    for(auto param : _pimpl->_params) {
         if(param.second->checkFlags(Output_e)) {
             if(name_filter.size()) {
                 if(name_filter.find(param.first) != std::string::npos) {
@@ -459,7 +459,7 @@ std::vector<IParam*> IMetaObject::getOutputs(const TypeInfo& type_filter, const 
             }
         }
     }
-    for(auto param : _pimpl->_implicit_Params) {
+    for(auto param : _pimpl->_implicit_params) {
         if(param.second->checkFlags(Output_e)) {
             if(name_filter.size()) {
                 if(name_filter.find(param.first) != std::string::npos) {
@@ -520,7 +520,7 @@ bool IMetaObject::ConnectInput(InputParam* input,
             std::string buffer_type = paramTypeToString(type_);
             buffer->setName(output->getTreeName() + " " + buffer_type + " buffer for " + input->getTreeName());
             if(input->setInput(buffer)) {
-                _pimpl->_param_Connections.emplace_back(output_object, output->getName(), input->getName(), type_);
+                _pimpl->_param_connections.emplace_back(output_object, output->getName(), input->getName(), type_);
                 return true;
             } else {
                 LOG(debug) << "Failed to connect output " << output->getName()
@@ -536,7 +536,7 @@ bool IMetaObject::ConnectInput(InputParam* input,
                 if(buffer) {
                     buffer->setName(output->getTreeName() + " buffer for " + input->getTreeName());
                     if(input->setInput(buffer)) {
-                        _pimpl->_param_Connections.emplace_back(output_object, output->getName(), input->getName(), type_);
+                        _pimpl->_param_connections.emplace_back(output_object, output->getName(), input->getName(), type_);
                         return true;
                     } else {
                         LOG(debug) << "Failed to connect output " << output->getName()
@@ -550,7 +550,7 @@ bool IMetaObject::ConnectInput(InputParam* input,
                 }
             } else {
                 if(input->setInput(output)) {
-                    _pimpl->_param_Connections.emplace_back(output_object, output->getName(), input->getName(), type_);
+                    _pimpl->_param_connections.emplace_back(output_object, output->getName(), input->getName(), type_);
                     return true;
                 } else {
                     LOG(debug) << "Failed to connect output " << output->getName()
@@ -562,7 +562,7 @@ bool IMetaObject::ConnectInput(InputParam* input,
             }
         } else {
             if(input->setInput(output)) {
-                _pimpl->_param_Connections.emplace_back(output_object, output->getName(), input->getName(), type_);
+                _pimpl->_param_connections.emplace_back(output_object, output->getName(), input->getName(), type_);
                 return true;
             } else {
                 LOG(debug) << "Failed to connect output " << output->getName()
@@ -588,14 +588,14 @@ IParam* IMetaObject::addParam(std::shared_ptr<IParam> param) {
     param->setMtx(_mtx);
     param->setContext(_ctx);
 #ifdef _DEBUG
-    for(auto& param_ : _pimpl->_Params) {
+    for(auto& param_ : _pimpl->_params) {
         if(param_.second == param.get()) {
             LOG(debug) << "Trying to add a Param a second time";
             return param.get();
         }
     }
 #endif
-    _pimpl->_implicit_Params[param->getName()] = param;
+    _pimpl->_implicit_params[param->getName()] = param;
     if(param->checkFlags(Input_e)) {
         _pimpl->_input_Params[param->getName()] = dynamic_cast<InputParam*>(param.get());
     }
@@ -608,14 +608,14 @@ IParam* IMetaObject::addParam(IParam* param) {
     param->setMtx(_mtx);
     param->setContext(_ctx);
 #ifdef _DEBUG
-    for(auto& param_ : _pimpl->_Params) {
+    for(auto& param_ : _pimpl->_params) {
         if(param_.second == param) {
             LOG(debug) << "Trying to add a Param a second time";
             return param;
         }
     }
 #endif
-    _pimpl->_Params[param->getName()] = param;
+    _pimpl->_params[param->getName()] = param;
     if(param->checkFlags(Input_e)) {
         _pimpl->_input_Params[param->getName()] = dynamic_cast<InputParam*>(param);
     }
@@ -627,10 +627,10 @@ IParam* IMetaObject::addParam(IParam* param) {
 }
 
 void IMetaObject::setParamRoot(const std::string& root) {
-    for(auto& param : _pimpl->_Params) {
+    for(auto& param : _pimpl->_params) {
         param.second->setTreeRoot(root);
     }
-    for(auto& param : _pimpl->_implicit_Params) {
+    for(auto& param : _pimpl->_implicit_params) {
         param.second->setTreeRoot(root);
     }
 }
@@ -863,12 +863,12 @@ void IMetaObject::addConnection(std::shared_ptr<Connection>& Connection,
                                 const TypeInfo& signature,
                                 IMetaObject* obj) {
     ConnectionInfo info;
-    info.Connection = Connection;
+    info.connection = Connection;
     info.obj = rcc::weak_ptr<IMetaObject>(obj);
     info.signal_name = signal_name;
     info.slot_name = slot_name;
     info.signature = signature;
-    _pimpl->_Connections.push_back(info);
+    _pimpl->_connections.push_back(info);
 }
 void IMetaObject::onParamUpdate(IParam* param, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags) {
     this->_pimpl->_sig_param_updated(this, param);

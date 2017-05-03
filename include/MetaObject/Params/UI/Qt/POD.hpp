@@ -115,7 +115,7 @@ namespace mo
                     if (onUpdate)
                         onUpdate();
                     if(_listener)
-                        _listener->OnUpdate(this);
+                        _listener->onUpdate(this);
                 }
                 virtual void SetData(T* data_)
                 {
@@ -197,7 +197,7 @@ namespace mo
                     if (onUpdate)
                         onUpdate();
                     if(_listener)
-                        _listener->OnUpdate(this);
+                        _listener->onUpdate(this);
                 }
                 virtual void SetData(T* data_)
                 {

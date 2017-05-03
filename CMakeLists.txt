@@ -8,6 +8,7 @@ list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 set(link_libs "")
 
 option(BUILD_TESTS "Build tests" ON)
+option(BUILD_DEPENDENCIES "Build dependencies" ON)
 option(BUILD_EXAMPLES "Build examples" ON)
 option(WITH_QT "Enable QT support" ON)
 option(WITH_PYTHON "Enable Python bindings" ON)
@@ -151,24 +152,26 @@ if(WITH_CUDA)
 endif(WITH_CUDA)
 
 # ---------------------- rcc ---------------------------------
-find_package(RCC QUIET)
+if(NOT BUILD_DEPENDENCIES)
+    find_package(RCC QUIET)
+endif()
 if(RCC_FOUND)
-	message(STATUS "RCC found at: ${RCC_DIR} - ${RCC_INCLUDE_DIRS}")
+    message(STATUS "RCC found at: ${RCC_DIR} - ${RCC_INCLUDE_DIRS}")
 else(RCC_FOUND)
-	SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-	set(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${CMAKE_CURRENT_LIST_DIR}/include;${cereal_INCLUDE_DIRS}")
-	set(RCC_LIBRARY_DIRS_DEBUG "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/Debug")
-	set(RCC_LIBRARY_DIRS_RELWITHDEBINFO "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/RelWithDebInfo")
-	if(MSVC)
-	  set(RCC_COMPILE_FLAGS "/DBOOST_ALL_DYN_LINK")
-	else()
-	  set(RCC_COMPILE_FLAGS "-DBOOST_ALL_DYN_LINK")
-	endif()
-	ADD_SUBDIRECTORY("dependencies/rcc")
-	include_directories(${RCC_INCLUDE_DIRS})
-	set_target_properties(RuntimeCompiler PROPERTIES FOLDER Dependencies)
-	set_target_properties(RuntimeObjectSystem PROPERTIES FOLDER Dependencies)
-	set(RCC_PERMODULE_INTERFACE_SOURCE ${RCC_PERMODULE_INTERFACE_SOURCE} PARENT_SCOPE)
+    SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
+    set(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${CMAKE_CURRENT_LIST_DIR}/include;${cereal_INCLUDE_DIRS}")
+    set(RCC_LIBRARY_DIRS_DEBUG "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/Debug")
+    set(RCC_LIBRARY_DIRS_RELWITHDEBINFO "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/RelWithDebInfo")
+    if(MSVC)
+      set(RCC_COMPILE_FLAGS "/DBOOST_ALL_DYN_LINK")
+    else()
+      set(RCC_COMPILE_FLAGS "-DBOOST_ALL_DYN_LINK")
+    endif()
+    ADD_SUBDIRECTORY("dependencies/rcc")
+    include_directories(${RCC_INCLUDE_DIRS})
+    set_target_properties(RuntimeCompiler PROPERTIES FOLDER Dependencies)
+    set_target_properties(RuntimeObjectSystem PROPERTIES FOLDER Dependencies)
+    set(RCC_PERMODULE_INTERFACE_SOURCE ${RCC_PERMODULE_INTERFACE_SOURCE} PARENT_SCOPE)
 endif(RCC_FOUND)
 
 # -------------------- Profiling ---------------------------------
@@ -301,8 +304,9 @@ target_include_directories(MetaObject
   PUBLIC 
     $<BUILD_INTERFACE:${RCC_INCLUDE_DIRS}>
 )
-
-
+if(NOT MSVC)
+target_compile_options(MetaObject PUBLIC --std=c++11)
+endif()
 if(HAVE_PYTHON)
     target_link_libraries(MetaObject
         ${PYTHON_LIBRARY}

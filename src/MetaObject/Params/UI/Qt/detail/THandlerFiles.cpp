@@ -42,7 +42,7 @@ void THandler<WriteDirectory, void>::onUiUpdate(QObject* sender)
         if(onUpdate)
             onUpdate();
         if(_listener)
-            _listener->OnUpdate(this);
+            _listener->onUpdate(this);
     }                    
 }
 
@@ -106,7 +106,7 @@ void THandler<ReadDirectory, void>::onUiUpdate(QObject* sender)
         if(onUpdate)
             onUpdate();
         if(_listener)
-            _listener->OnUpdate(this);
+            _listener->onUpdate(this);
     }                    
 }
 
@@ -171,7 +171,7 @@ void THandler<ReadFile, void>::onUiUpdate(QObject* sender)
         if(onUpdate)
             onUpdate();
         if(_listener)
-            _listener->OnUpdate(this);
+            _listener->onUpdate(this);
     }                    
 }
 
@@ -234,7 +234,7 @@ void THandler<Writypedefile, void>::onUiUpdate(QObject* sender)
         if(onUpdate)
             onUpdate();
         if(_listener)
-            _listener->OnUpdate(this);
+            _listener->onUpdate(this);
     }                    
 }
 

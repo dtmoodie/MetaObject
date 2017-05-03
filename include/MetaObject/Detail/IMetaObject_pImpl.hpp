@@ -25,23 +25,23 @@ struct MO_EXPORTS ConnectionInfo {
         slot_name = info.slot_name;
         signature = info.signature;
         obj = info.obj;
-        Connection = info.Connection;
+        connection = info.connection;
     }
     std::string signal_name;
     std::string slot_name;
     TypeInfo signature;
     rcc::weak_ptr<IMetaObject> obj;
-    std::shared_ptr<Connection> Connection;
+    std::shared_ptr<Connection> connection;
 };
 
 struct MO_EXPORTS ParamConnectionInfo {
     ParamConnectionInfo(const rcc::weak_ptr<IMetaObject>& obj, const std::string& output, const std::string& input, ParamType type) :
-        output_object(obj), output_Param(output), input_Param(input), Connection_type(type) {
+        output_object(obj), output_param(output), input_param(input), connection_type(type) {
     }
     rcc::weak_ptr<IMetaObject> output_object;
-    std::string output_Param;
-    std::string input_Param;
-    ParamType Connection_type;
+    std::string output_param;
+    std::string input_param;
+    ParamType connection_type;
 };
 
 struct MO_EXPORTS IMetaObject::impl {
@@ -53,11 +53,11 @@ struct MO_EXPORTS IMetaObject::impl {
     std::map<std::string, std::map<TypeInfo, ISignal*>> _signals;
     std::map<std::string, std::map<TypeInfo, ISlot*>>   _slots;
 
-    std::map<std::string, IParam*>				    _Params; // statically defined in object
+    std::map<std::string, IParam*>				    _params; // statically defined in object
 
-    std::map<std::string, std::shared_ptr<IParam>>  _implicit_Params; // Can be changed at runtime
-    std::list<ConnectionInfo> _Connections;
-    std::list<ParamConnectionInfo> _param_Connections;
+    std::map<std::string, std::shared_ptr<IParam>>  _implicit_params; // Can be changed at runtime
+    std::list<ConnectionInfo> _connections;
+    std::list<ParamConnectionInfo> _param_connections;
 
     TSignal<void(IMetaObject*, IParam*)>  _sig_param_updated;
     TSignal<void(IMetaObject*, IParam*)>  _sig_param_added;

@@ -51,9 +51,9 @@ namespace mo
                     _handler1.onUiUpdate(sender);
                     _handler2.onUiUpdate(sender);
                     if(_listener)
-                        _listener->OnUpdate(this);
+                        _listener->onUpdate(this);
                 }
-                virtual void SetData(std::pair<T1, T1>* data_)
+                virtual void setData(std::pair<T1, T1>* data_)
                 {
                     pairData = data_;
                     if(data_)
@@ -62,27 +62,27 @@ namespace mo
                         _handler2.SetData(&data_->second);
                     }
                 }
-                std::pair<T1, T1>* GetData()
+                std::pair<T1, T1>* getData()
                 {
                     return pairData;
                 }
-                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
+                virtual std::vector<QWidget*> getUiWidgets(QWidget* parent)
                 {
-                    auto out1 = _handler1.GetUiWidgets(parent);
-                    auto out2 = _handler2.GetUiWidgets(parent);
+                    auto out1 = _handler1.getUiWidgets(parent);
+                    auto out2 = _handler2.getUiWidgets(parent);
                     out2.insert(out2.end(), out1.begin(), out1.end());
                     return out2;
                 }
-                virtual void SetParamMtx(boost::recursive_mutex* mtx)
+                virtual void setParamMtx(boost::recursive_mutex* mtx)
                 {
-                    IHandler::SetParamMtx(mtx);
-                    _handler1.SetParamMtx(mtx);
-                    _handler2.SetParamMtx(mtx);
+                    IHandler::setParamMtx(mtx);
+                    _handler1.setParamMtx(mtx);
+                    _handler2.setParamMtx(mtx);
                 }
-                virtual void SetUpdateListener(UiUpdateListener* listener)
+                virtual void setUpdateListener(UiUpdateListener* listener)
                 {
-                    _handler1.SetUpdateListener(listener);
-                    _handler2.SetUpdateListener(listener);
+                    _handler1.setUpdateListener(listener);
+                    _handler2.setUpdateListener(listener);
                 }
             };
 
@@ -112,15 +112,15 @@ namespace mo
                     THandler<T1>::SetData(&data_->first);
                     THandler<T2>::SetData(&data_->second);
                 }
-                std::pair<T1, T2>* GetData()
+                std::pair<T1, T2>* getData()
                 {
                     return pairData;
                 }
-                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
+                virtual std::vector<QWidget*> getUiWidgets(QWidget* parent)
                 {
                     
-                    auto output = THandler<T1>::GetUiWidgets(parent);
-                    auto out2 = THandler<T2>::GetUiWidgets(parent);
+                    auto output = THandler<T1>::getUiWidgets(parent);
+                    auto out2 = THandler<T2>::getUiWidgets(parent);
                     output.insert(output.end(), out2.begin(), out2.end());
                     return output;
                 }
@@ -140,65 +140,54 @@ namespace mo
                 THandler(): 
                     index(new QSpinBox()), 
                     vectorData(nullptr), 
-                    _currently_updating(false) 
-                {
-                    THandler<T>::SetUpdateListener(this);
+                    _currently_updating(false){
+                    THandler<T>::setUpdateListener(this);
                 }
-                void UpdateUi( std::vector<T>* data)
-                {
-                    if (data && data->size())
-                    {
+
+                void updateUi( std::vector<T>* data){
+                    if (data && data->size()){
                         mo::Mutex_t::scoped_lock lock(*IHandler::getParamMtx());
                         _currently_updating = true;
                         index->setMaximum(data->size());
                         if(index->value() < data->size())
-                            THandler<T>::UpdateUi(&(*data)[index->value()]);
+                            THandler<T>::updateUi(&(*data)[index->value()]);
                         else
-                            THandler<T>::UpdateUi(&_appendData);
+                            THandler<T>::updateUi(&_appendData);
                         _currently_updating = false;
                     }
                 }
 
-                void onUiUpdate(QObject* sender, int idx = 0)
-                {
+                void onUiUpdate(QObject* sender, int idx = 0){
                     if(_currently_updating || !IHandler::getParamMtx())
                         return;
-                    if (sender == index && vectorData )
-                    {
-                        if(vectorData->size() && idx < vectorData->size())
-                        {
+                    if (sender == index && vectorData ){
+                        if(vectorData->size() && idx < vectorData->size()){
                             mo::Mutex_t::scoped_lock lock(*IHandler::getParamMtx());
-                            THandler<T>::SetData(&(*vectorData)[idx]);
+                            THandler<T>::setData(&(*vectorData)[idx]);
                             THandler<T>::onUiUpdate(sender);
-                        }else
-                        {
-                            THandler<T>::SetData(&_appendData);
+                        }else{
+                            THandler<T>::setData(&_appendData);
                             THandler<T>::onUiUpdate(sender);
                         }   
                     }
                 }
                 
-                void SetData(std::vector<T>* data_)
-                {
+                void setData(std::vector<T>* data_){
                     vectorData = data_;
-                    if (vectorData)
-                    {
-                        if (data_->size())
-                        {
+                    if (vectorData){
+                        if (data_->size()){
                             if (index && index->value() < vectorData->size())
-                                THandler<T>::SetData(&(*vectorData)[index->value()]);
+                                THandler<T>::setData(&(*vectorData)[index->value()]);
                         }
                     }
                 }
                 
-                std::vector<T>* GetData()
-                {
+                std::vector<T>* getData(){
                     return vectorData;
                 }
                 
-                std::vector<QWidget*> GetUiWidgets(QWidget* parent)
-                {
-                    auto output = THandler<T>::GetUiWidgets(parent);
+                std::vector<QWidget*> getUiWidgets(QWidget* parent){
+                    auto output = THandler<T>::getUiWidgets(parent);
                     index->setParent(parent);
                     index->setMinimum(0);
                     IHandler::proxy->connect(index, SIGNAL(valueChanged(int)), IHandler::proxy, SLOT(on_update(int)));
@@ -206,12 +195,10 @@ namespace mo
                     return output;
                 }
                 
-                void OnUpdate(IHandler* handler)
-                {
-                    if(THandler<T>::GetData() == &_appendData && vectorData)
-                    {
+                void onUpdate(IHandler* handler){
+                    if(THandler<T>::getData() == &_appendData && vectorData){
                         vectorData->push_back(_appendData);
-                        THandler<T>::SetData(&vectorData->back());
+                        THandler<T>::setData(&vectorData->back());
                         index->setMaximum(vectorData->size());
                     }
                 }

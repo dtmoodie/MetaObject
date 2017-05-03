@@ -6,6 +6,13 @@ namespace mo{
     namespace Buffer{
         template<class T> class MO_EXPORTS NNStreamBuffer: public StreamBuffer<T>{
         public:
+            typedef typename ParamTraits<T>::Storage_t Storage_t;
+            typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
+            typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
+            typedef typename ParamTraits<T>::Input_t Input_t;
+            typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+            typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
+            typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
             static const ParamType Type = NNStreamBuffer_e;
             typedef T ValueType;
             
@@ -39,4 +46,4 @@ namespace mo{
 
     MO_METAParam_INSTANCE_NNBUFFER_(__COUNTER__)
 }
-#include "detail/NNStreamBufferImpl.hpp"
+#include "Detail/NNStreamBufferImpl.hpp"

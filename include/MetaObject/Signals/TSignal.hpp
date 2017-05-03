@@ -52,4 +52,4 @@ namespace mo
 		std::shared_ptr<TSignalRelay<R(T...)>> _typed_relay;
     };
 }
-#include "detail/TSignalImpl.hpp"
+#include "Detail/TSignalImpl.hpp"

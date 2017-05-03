@@ -33,4 +33,4 @@ namespace mo
 		
     };
 }
-#include "detail/TSlotImpl.hpp"
+#include "Detail/TSlotImpl.hpp"

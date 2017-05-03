@@ -32,21 +32,21 @@ namespace mo
                 THandler(): _currently_updating(false), _data(nullptr)
                 {}
 
-                virtual void UpdateUi( ::cv::Rect_<T>* data)
+                virtual void updateUi( ::cv::Rect_<T>* data)
                 {
                     _currently_updating = true;
                     if(data)
                     {
-                        _x_handler.UpdateUi(&data->x);
-                        _y_handler.UpdateUi(&data->y);
-                        _width_handler.UpdateUi(&data->width);
-                        _height_handler.UpdateUi(&data->height);
+                        _x_handler.updateUi(&data->x);
+                        _y_handler.updateUi(&data->y);
+                        _width_handler.updateUi(&data->width);
+                        _height_handler.updateUi(&data->height);
                     }else
                     {
-                        _x_handler.UpdateUi(nullptr);
-                        _y_handler.UpdateUi(nullptr);
-                        _width_handler.UpdateUi(nullptr);
-                        _height_handler.UpdateUi(nullptr);
+                        _x_handler.updateUi(nullptr);
+                        _y_handler.updateUi(nullptr);
+                        _width_handler.updateUi(nullptr);
+                        _height_handler.updateUi(nullptr);
                     }
                     _currently_updating = false;
                 }
@@ -60,30 +60,30 @@ namespace mo
                     _width_handler.onUiUpdate(sender);
                     _height_handler.onUiUpdate(sender);
                     if(_listener)
-                        _listener->OnUpdate(this);
+                        _listener->onUpdate(this);
                 }
-                virtual void SetData(::cv::Rect_<T>* data_)
+                virtual void setData(::cv::Rect_<T>* data_)
                 {
                     _data = data_;
                     if(data_)
                     {
-                        _x_handler.SetData(&data_->x);
-                        _y_handler.SetData(&data_->y);
-                        _width_handler.SetData(&data_->width);
-                        _height_handler.SetData(&data_->height);
+                        _x_handler.setData(&data_->x);
+                        _y_handler.setData(&data_->y);
+                        _width_handler.setData(&data_->width);
+                        _height_handler.setData(&data_->height);
                     }
                 }
                 cv::Rect_<T>* GetData()
                 {
                     return _data;;
                 }
-                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
+                virtual std::vector<QWidget*> getUiWidgets(QWidget* parent)
                 {
                     std::vector<QWidget*> output;
-                    auto out1 = _x_handler.GetUiWidgets(parent);
-                    auto out2 = _y_handler.GetUiWidgets(parent);
-                    auto out3 = _width_handler.GetUiWidgets(parent);
-                    auto out4 = _height_handler.GetUiWidgets(parent);
+                    auto out1 = _x_handler.getUiWidgets(parent);
+                    auto out2 = _y_handler.getUiWidgets(parent);
+                    auto out3 = _width_handler.getUiWidgets(parent);
+                    auto out4 = _height_handler.getUiWidgets(parent);
                     output.insert(output.end(), out1.begin(), out1.end());
                     output.insert(output.end(), out2.begin(), out2.end());
                     output.insert(output.end(), out3.begin(), out3.end());
@@ -91,20 +91,20 @@ namespace mo
 
                     return output;
                 }
-                virtual void SetParamMtx(boost::recursive_mutex** mtx)
+                virtual void setParamMtx(boost::recursive_mutex** mtx)
                 {
-                    IHandler::SetParamMtx(mtx);
-                    _x_handler.SetParamMtx(mtx);
-                    _y_handler.SetParamMtx(mtx);
-                    _width_handler.SetParamMtx(mtx);
-                    _height_handler.SetParamMtx(mtx);
+                    IHandler::setParamMtx(mtx);
+                    _x_handler.setParamMtx(mtx);
+                    _y_handler.setParamMtx(mtx);
+                    _width_handler.setParamMtx(mtx);
+                    _height_handler.setParamMtx(mtx);
                 }
-                virtual void SetUpdateListener(UiUpdateListener* listener)
+                virtual void setUpdateListener(UiUpdateListener* listener)
                 {
-                    _x_handler.SetUpdateListener(listener);
-                    _y_handler.SetUpdateListener(listener);
-                    _width_handler.SetUpdateListener(listener);
-                    _height_handler.SetUpdateListener(listener);
+                    _x_handler.setUpdateListener(listener);
+                    _y_handler.setUpdateListener(listener);
+                    _width_handler.setUpdateListener(listener);
+                    _height_handler.setUpdateListener(listener);
                 }
             };
             
@@ -263,7 +263,7 @@ namespace mo
                             if(typeid(T) == typeid(unsigned int))
                                 (*matData)(row, col) = (T)items[row* COL + col]->data(Qt::EditRole).toUInt();
                             if(_listener)
-                                _listener->OnUpdate(this);
+                                _listener->onUpdate(this);
                         }
                     }
                     else if (row == -1 && col == -1)
@@ -271,7 +271,7 @@ namespace mo
                         if (matData)
                             UpdateUi(matData);
                         if(_listener)
-                                _listener->OnUpdate(this);
+                                _listener->onUpdate(this);
                     }
 
                 }
@@ -366,7 +366,7 @@ namespace mo
                         ptData->y = (T)second->data(Qt::EditRole).toUInt();
                     }
                     if(_listener)
-                        _listener->OnUpdate(this);
+                        _listener->onUpdate(this);
                 }
                 virtual void SetData(::cv::Point_<T>* data_)
                 {
@@ -470,7 +470,7 @@ namespace mo
                         ptData->z = (T)third->data(Qt::EditRole).toUInt();
                     }
                     if(_listener)
-                        _listener->OnUpdate(this);
+                        _listener->onUpdate(this);
                 }
                 virtual void SetData(::cv::Point3_<T>* data_)
                 {

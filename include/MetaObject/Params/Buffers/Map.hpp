@@ -52,6 +52,13 @@ namespace mo{
         public:
             static const ParamType Type = Map_e;
             typedef T ValueType;
+            typedef typename ParamTraits<T>::Storage_t Storage_t;
+            typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
+            typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
+            typedef typename ParamTraits<T>::Input_t Input_t;
+            typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+            typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
+            typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
 
             Map(const std::string& name = "");
 
@@ -93,4 +100,4 @@ namespace mo{
 
     MO_METAParam_INSTANCE_MAP_(__COUNTER__)
 }
-#include "detail/MapImpl.hpp"
+#include "Detail/MapImpl.hpp"

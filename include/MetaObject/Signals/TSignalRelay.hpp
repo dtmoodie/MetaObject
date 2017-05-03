@@ -59,4 +59,4 @@ namespace mo
         std::mutex mtx;
 	};
 }
-#include "detail/TSignalRelayImpl.hpp"
+#include "Detail/TSignalRelayImpl.hpp"

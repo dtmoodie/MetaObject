@@ -44,13 +44,13 @@ namespace mo
         if(ITInputParam<T>::setInput(param)){
             if(_user_var){
                 Storage_t data;
-                if(this->_input)
-                    if(_input->getData(data)){
+                if(ITInputParam<T>::_input)
+                    if(ITInputParam<T>::_input->getData(data)){
                         _current_data = data;
                         *_user_var = &(*_current_data);
                     }
-                if(this->_shared_input)
-                    if(_shared_input->getData(data)){
+                if(ITInputParam<T>::_shared_input)
+                    if(ITInputParam<T>::_shared_input->getData(data)){
                         _current_data = data;
                         *_user_var = &(*_current_data);
                     }
@@ -68,7 +68,7 @@ namespace mo
 
     template<typename T>
     void TInputParamPtr<T>::onInputUpdate(ConstStorageRef_t data, IParam* param, Context* ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags fg){
-        if(ctx == this->_ctx){
+        if(ctx && this->_ctx && ctx->thread_id == this->_ctx->thread_id){
             _current_data = data;
             this->_ts = ts;
             this->_fn = fn;
@@ -84,14 +84,14 @@ namespace mo
         if(_user_var){
             size_t fn;
             Storage_t data;
-            if(this->_shared_input){
-                if(!this->_shared_input->getData(data, ts, this->_ctx, &fn)){
+            if(ITInputParam<T>::_shared_input){
+                if(!ITInputParam<T>::_shared_input->getData(data, ts, this->_ctx, &fn)){
                     return false;
                 }
             }
-            if(this->_input)
+            if(ITInputParam<T>::_input)
             {
-                if (!this->_input->getData(data, ts, this->_ctx, &fn)) {
+                if (!ITInputParam<T>::_input->getData(data, ts, this->_ctx, &fn)) {
                     return false;
                 }
             }
@@ -109,9 +109,9 @@ namespace mo
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         OptionalTime_t ts;
         if(_user_var){
-            if(this->_shared_input){
+            if(ITInputParam<T>::_shared_input){
                 Storage_t data;
-                if(this->_shared_input->getData(data, fn, this->_ctx, &ts)){
+                if(ITInputParam<T>::_shared_input->getData(data, fn, this->_ctx, &ts)){
                     _current_data = data;
                     
                     *_user_var = &(*_current_data);
@@ -122,7 +122,7 @@ namespace mo
                     return true;
                 }
             }
-            if(this->_input){
+            if(ITInputParam<T>::_input){
                 Storage_t data;
                 if(this->_input->getData(data, fn, this->_ctx, &ts)){
                     _current_data = data;
@@ -137,6 +137,5 @@ namespace mo
         }
         return false;
     }
-
 }
 #endif

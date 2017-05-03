@@ -44,7 +44,7 @@ void THandler<EnumParam, void>::onUiUpdate(QObject* sender, int idx)
         if (onUpdate)
             onUpdate();
         if(_listener)
-            _listener->OnUpdate(this);
+            _listener->onUpdate(this);
         _updating = false;
     }
 }

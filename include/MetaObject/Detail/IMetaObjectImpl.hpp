@@ -2,15 +2,16 @@
 #include "MetaObject/Logging/Log.hpp"
 #include "MetaObject/Detail/TypeInfo.hpp"
 #include "MetaObject/Params/ITParam.hpp"
+#include "MetaObject/Params/TParam.hpp"
 namespace mo {
 class IMetaObject;
 
 template<class T>
 ITParam<T>* IMetaObject::getParam(const std::string& name) const {
     IParam* param = getParam(name);
-    ITParam<T>* T = dynamic_cast<ITParam<T>*>(param);
-    if(T) {
-        return T;
+    ITParam<T>* typed = dynamic_cast<ITParam<T>*>(param);
+    if(typed) {
+        return typed;
     }
     THROW(debug) << "Param \"" << name << "\" not convertable to type " << TypeInfo(typeid(T)).name();
     return nullptr;
@@ -23,12 +24,12 @@ T IMetaObject::getParamValue(const std::string& name, mo::Time_t ts, Context* ct
 template<class T>
 ITParam<T>* IMetaObject::getParamOptional(const std::string& name) const {
     auto param = getParamOptional(name);
-    ITParam<T>* T = dynamic_cast<ITParam<T>*>(param);
-    return T;
+    ITParam<T>* typed = dynamic_cast<ITParam<T>*>(param);
+    return typed;
 }
 
 template<class T>
-ITParam<T>* IMetaObject::UpdateParam(const std::string& name, T& value, mo::Time_t  ts, Context* ctx) {
+ITParam<T>* IMetaObject::updateParam(const std::string& name, T& value, const OptionalTime_t& ts, Context* ctx) {
     if(ctx == nullptr)
         ctx = _ctx;
     auto param = getParamOptional<T>(name);
@@ -42,7 +43,7 @@ ITParam<T>* IMetaObject::UpdateParam(const std::string& name, T& value, mo::Time
     }
 }
 template<class T>
-ITParam<T>* IMetaObject::UpdateParam(const std::string& name, const T& value, mo::Time_t ts, Context* ctx) {
+ITParam<T>* IMetaObject::updateParam(const std::string& name, const T& value, const OptionalTime_t& ts, Context* ctx) {
     if (ctx == nullptr)
         ctx = _ctx;
     auto param = getParamOptional<T>(name);
@@ -56,23 +57,14 @@ ITParam<T>* IMetaObject::UpdateParam(const std::string& name, const T& value, mo
     }
 }
 template<class T>
-ITParam<T>* IMetaObject::UpdateParamPtr(const std::string& name, T& ptr) {
+ITParam<T>* IMetaObject::updateParamPtr(const std::string& name, T& ptr) {
     return nullptr;
 }
 
-/*template<class Sig>
-bool IMetaObject::ConnectCallback(const std::string& callback_name, const std::string& slot_name, IMetaObject* slot_owner, bool force_queue)
-{
-    ConnectCallback(TInfo(typeid(Sig)), callback_name, slot_name, slot_owner, force_queue);
-}*/
 template<class T>
 TSlot<T>* IMetaObject::getSlot(const std::string& name) const {
     return dynamic_cast<TSlot<T>*>(this->getSlot(name, TypeInfo(typeid(T))));
 }
-/*template<class T>
-std::vector<IParam*> IMetaObject::getOutputs(const std::string& name_filter) const {
-    return getOutputs(TypeInfo(typeid(T)), name_filter);
-}*/
 
 template<class T>
 std::vector<InputParam*> IMetaObject::getInputs(const std::string& name_filter) const {

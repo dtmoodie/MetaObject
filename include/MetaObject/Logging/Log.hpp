@@ -5,7 +5,7 @@
 
 #include <boost/log/trivial.hpp>
 #ifndef WIN32
-#include "RuntimeLinkLibrary.h"
+#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
 RUNTIME_COMPILER_LINKLIBRARY("-lboost_log")
 RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 #endif
@@ -167,10 +167,10 @@ template<class Exc, boost::log::BOOST_LOG_VERSION_NAMESPACE::trivial::severity_l
 struct CallstackSeverityException: virtual public Exc, virtual public ICallstackException{
     template<class... Args>
     CallstackSeverityException(Args... args):
-        Exc(std::forward(args)...): msg(s_msg_buffer){}
+        Exc(std::forward(args)...), _msg(s_msg_buffer){}
 
     const char* what() const noexcept{
-        return msg.str().c_str();
+        return _msg.str().c_str();
     }
 
     std::string callstack(){
@@ -178,16 +178,16 @@ struct CallstackSeverityException: virtual public Exc, virtual public ICallstack
     }
 
     CallstackSeverityException& operator()(int error, const char* file, int line, const char* function){
-        msg.str(std::string());
-        msg << file << ":" << line << " " << error << " in function [" << function << "]";
+        _msg.str(std::string());
+        _msg << file << ":" << line << " " << error << " in function [" << function << "]";
         
-        callstack = print_callstack(1, true);
+        callstack = printCallstack(1, true);
         return *this;
     }
 
     template<class T>
     CallstackSeverityException& operator<<(const T& value){
-        msg << value;
+        _msg << value;
         return *this;
     }
 

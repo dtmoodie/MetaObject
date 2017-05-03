@@ -1,7 +1,7 @@
 #pragma once
 #include <MetaObject/IMetaObject.hpp>
 #include "MetaObject/Detail/Export.hpp"
-#include "RuntimeObjectSystem\ISimpleSerializer.h"
+#include "RuntimeObjectSystem/ISimpleSerializer.h"
 #include "MetaObject/Detail/TypeInfo.hpp"
 #include "RuntimeObjectSystem/shared_ptr.hpp"
 

@@ -142,8 +142,8 @@ protected:
     virtual IParam* addParam(std::shared_ptr<IParam> param);
     virtual IParam* addParam(IParam* param);
 
-    template<class T> ITParam<T>* updateParam(const std::string& name, T& value, const OptionalTime_t ts = -1 * mo::second, Context* ctx = nullptr);
-    template<class T> ITParam<T>* updateParam(const std::string& name, const T& value, mo::Time_t ts = -1 * mo::second, Context* ctx = nullptr);
+    template<class T> ITParam<T>* updateParam(const std::string& name, T& value, const OptionalTime_t& ts = OptionalTime_t(), Context* ctx = nullptr);
+    template<class T> ITParam<T>* updateParam(const std::string& name, const T& value, const OptionalTime_t& ts = OptionalTime_t(), Context* ctx = nullptr);
     template<class T> ITParam<T>* updateParamPtr(const std::string& name, T& ptr);
 
     void addSignal(ISignal* signal, const std::string& name);

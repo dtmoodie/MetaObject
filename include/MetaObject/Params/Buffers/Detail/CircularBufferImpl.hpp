@@ -10,7 +10,7 @@ namespace mo
             ITParam<T>(name, mo::Buffer_e)
         {
             (void)&_circular_buffer_constructor;
-            (void)&_circular_buffer_Param_constructor;
+            (void)&_circular_buffer_param_constructor;
             _data_buffer.set_capacity(10);
             _data_buffer.push_back(State<T>(ts, init));
         }
@@ -66,7 +66,7 @@ namespace mo
 					_data_buffer.push_back(State<T>(fn, ctx, cs, data_));
 				this->_modified = true;
 			}
-            _typed_update_signal(data_, this, ctx, ts, fn, cs, mo::InputUpdated_e);
+            ITParam<T>::_typed_update_signal(data_, this, ctx, ts, fn, cs, mo::InputUpdated_e);
             return true;
         }
 
@@ -122,7 +122,7 @@ namespace mo
             else _data_buffer.push_back(State<T>(fn, ctx, cs, data));
             this->_modified = true;
             lock.unlock();
-            _typed_update_signal(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
+            ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
         }
         template<typename T> ParamConstructor<CircularBuffer<T>> CircularBuffer<T>::_circular_buffer_param_constructor;
         template<typename T> BufferConstructor<CircularBuffer<T>> CircularBuffer<T>::_circular_buffer_constructor;

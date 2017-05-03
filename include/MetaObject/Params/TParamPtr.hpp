@@ -16,6 +16,14 @@ namespace mo {
 template<typename T>
 class MO_EXPORTS TParamPtr: virtual public ITParam< T > {
 public:
+    typedef typename ParamTraits<T>::Storage_t Storage_t;
+    typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
+    typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
+    typedef typename ParamTraits<T>::Input_t Input_t;
+    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+    typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
+    typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
+
     /*!
      * \brief TParamPtr default constructor
      * \param name of the Param
@@ -45,6 +53,14 @@ protected:
 template<typename T>
 class MO_EXPORTS TParamOutput: virtual public ITParam< T >{
 public:
+    typedef typename ParamTraits<T>::Storage_t Storage_t;
+    typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
+    typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
+    typedef typename ParamTraits<T>::Input_t Input_t;
+    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+    typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
+    typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
+
     virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
         Context* ctx = nullptr, size_t* fn_ = nullptr){
         if(!ts || ts == this->_ts){
@@ -69,7 +85,7 @@ public:
 protected:
     virtual bool updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs){
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
-        this->data = data
+        this->data = data;
         lock.unlock();
         this->emitUpdate(ts, ctx, fn, cs);
     }

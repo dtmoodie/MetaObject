@@ -35,7 +35,7 @@ void THandler<std::string, void>::onUiUpdate(QObject* sender)
         if (onUpdate)
             onUpdate();
         if(_listener)
-            _listener->OnUpdate(this);
+            _listener->onUpdate(this);
     }
 }
 void THandler<std::string, void>::SetData(std::string* data_)

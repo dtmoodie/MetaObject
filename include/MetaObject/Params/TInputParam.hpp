@@ -50,6 +50,14 @@ protected:
 // input variable is for TParam.
 template<typename T> class MO_EXPORTS TInputParamPtr : virtual public ITInputParam<T> {
 public:
+    typedef typename ParamTraits<T>::Storage_t Storage_t;
+    typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
+    typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
+    typedef typename ParamTraits<T>::Input_t Input_t;
+    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+    typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
+    typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
+
     TInputParamPtr(const std::string& name = "", Input_t* userVar_ = nullptr, Context* ctx = nullptr);
     bool setInput(std::shared_ptr<IParam> input);
     bool setInput(IParam* input);
@@ -66,4 +74,4 @@ protected:
     virtual void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
 };
 }
-#include "MetaObject/Params/detail/TInputParamImpl.hpp"
+#include "MetaObject/Params/Detail/TInputParamImpl.hpp"

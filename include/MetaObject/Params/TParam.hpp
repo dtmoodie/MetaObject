@@ -24,6 +24,11 @@ namespace mo {
 template<typename T>
 class MO_EXPORTS TParam : virtual public ITParam<T> {
 public:
+    typedef typename ParamTraits<T>::Storage_t Storage_t;
+    typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
+    typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
+    typedef typename ParamTraits<T>::Input_t Input_t;
+
     static const ParamType Type = TParam_e;
     TParam();
 
@@ -40,4 +45,4 @@ private:
     static MetaParam<T, 100> _meta_param;
 };
 }
-#include "detail/TParamImpl.hpp"
+#include "Detail/TParamImpl.hpp"

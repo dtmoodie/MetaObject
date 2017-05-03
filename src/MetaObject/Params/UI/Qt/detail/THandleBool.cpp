@@ -38,7 +38,7 @@ void THandler<bool,void>::onUiUpdate(QObject* sender, int val)
             if (onUpdate)
                 onUpdate();
             if(_listener)
-                _listener->OnUpdate(this);
+                _listener->onUpdate(this);
         }                            
     }
 }

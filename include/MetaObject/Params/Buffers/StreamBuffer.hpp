@@ -11,6 +11,13 @@ namespace mo
         template<class T> class MO_EXPORTS StreamBuffer: public Map<T>{
         public:
             typedef T ValueType;
+            typedef typename ParamTraits<T>::Storage_t Storage_t;
+            typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
+            typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
+            typedef typename ParamTraits<T>::Input_t Input_t;
+            typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+            typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
+            typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
             static const ParamType Type = StreamBuffer_e;
 
             StreamBuffer(const std::string& name = "");
@@ -71,4 +78,4 @@ namespace mo
     template<class T> ParamConstructor<Buffer::BlockingStreamBuffer<T>> MetaParam<T, N>::_blocking_stream_buffer_Param_constructor;
     MO_METAParam_INSTANCE_SBUFFER_(__COUNTER__)
 }
-#include "detail/StreamBufferImpl.hpp"
+#include "Detail/StreamBufferImpl.hpp"

@@ -34,10 +34,10 @@ template<class T> struct Policy {
 
     template<class AR>
     static bool Serialize(IParam* param, AR& ar) {
-        ITParam<T>* T = dynamic_cast<ITParam<T>*>(param);
-        if(T == nullptr)
+        ITParam<T>* typed = dynamic_cast<ITParam<T>*>(param);
+        if(typed == nullptr)
             return false;
-        T* ptr = T->GetDataPtr();
+        T* ptr = typed->GetDataPtr();
         if (ptr == nullptr)
             return false;
         ar(cereal::make_nvp(param->getName(), *ptr));
@@ -45,10 +45,10 @@ template<class T> struct Policy {
     }
     template<class AR>
     static bool DeSerialize(IParam* param, AR& ar) {
-        ITParam<T>* T = dynamic_cast<ITParam<T>*>(param);
-        if (T == nullptr)
+        ITParam<T>* typed = dynamic_cast<ITParam<T>*>(param);
+        if (typed == nullptr)
             return false;
-        T* ptr = T->GetDataPtr();
+        T* ptr = typed->GetDataPtr();
         if (ptr == nullptr)
             return false;
         auto nvp = cereal::make_optional_nvp(param->getName(), *ptr, *ptr);
@@ -59,7 +59,7 @@ template<class T> struct Policy {
         }
 
         if(nvp.success) {
-            T->commit();
+            typed->commit();
             return true;
         }
         return false;

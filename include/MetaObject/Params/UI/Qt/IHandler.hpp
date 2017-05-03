@@ -15,7 +15,7 @@ namespace mo{
             class SignalProxy;
             class IHandler;
             struct MO_EXPORTS UiUpdateListener{
-                virtual void OnUpdate(IHandler* handler) = 0;
+                virtual void onUpdate(IHandler* handler) = 0;
             };
             // *****************************************************************************
             //                                IHandler

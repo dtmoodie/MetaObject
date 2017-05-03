@@ -14,7 +14,7 @@ NNStreamBuffer<T>::NNStreamBuffer(const std::string& name):
 }
 
 template<class T>
-typename std::map<SequenceKey, typename ITParam<T>::Storage_t>::iterator NNStreamBuffer<T>::search(OptionalTime_t ts){
+typename std::map<SequenceKey, typename NNStreamBuffer<T>::Storage_t>::iterator NNStreamBuffer<T>::search(OptionalTime_t ts){
 	if (!ts){ // default timestamp passed in, get newest value
 		if (this->_data_buffer.size())
 			return this->_data_buffer.rbegin().base();
@@ -39,7 +39,7 @@ typename std::map<SequenceKey, typename ITParam<T>::Storage_t>::iterator NNStrea
 	return this->_data_buffer.end();
 }
 template<class T>
-typename std::map<SequenceKey, typename ITParam<T>::Storage_t>::iterator NNStreamBuffer<T>::search(size_t fn){
+typename std::map<SequenceKey, typename NNStreamBuffer<T>::Storage_t>::iterator NNStreamBuffer<T>::search(size_t fn){
 	auto upper = this->_data_buffer.upper_bound(fn);
 	auto lower = this->_data_buffer.lower_bound(fn);
 	if (upper != this->_data_buffer.end() && lower != this->_data_buffer.end()){
