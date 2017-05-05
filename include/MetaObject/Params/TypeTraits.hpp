@@ -2,6 +2,7 @@
 #include <boost/optional.hpp>
 #include <type_traits>
 #include <memory>
+#include <MetaObject/Logging/Log.hpp>
 namespace mo {
 template<class Type, class Enable = void> struct ParamTraits {};
 template<class T1, class T2> struct LargerSize{
@@ -37,6 +38,12 @@ template<class Type> struct ParamTraits<Type, typename std::enable_if<std::is_po
     static void nullify(InputStorage_t& input_storage) {
         input_storage.reset();
     }
+    static inline Type& getMutable(Storage_t& value){
+        return value;
+    }
+    static inline const Type& get(ConstStorageRef_t value){
+        return value;
+    }
 };
 
 template<class Type> struct ParamTraits<Type, typename std::enable_if<std::is_pod<Type>::value && !LargerSize<Type, void*>::value>::type> {
@@ -51,8 +58,8 @@ template<class Type> struct ParamTraits<Type, typename std::enable_if<std::is_po
     typedef const Type* Input_t;
 
     template<class...Args>
-    static Type& reset(Storage_t& input_storage, Args...args) {
-        input_storage = Type(std::forward(args)...);
+    static Type& reset(Storage_t& input_storage, Args&&...args) {
+        input_storage = Type(std::forward<Args>(args)...);
         return input_storage;
     }
 
@@ -63,6 +70,12 @@ template<class Type> struct ParamTraits<Type, typename std::enable_if<std::is_po
     template<class...Args>
     static void nullify(InputStorage_t& input_storage) {
         input_storage.reset();
+    }
+    static inline Type& getMutable(Storage_t& value){
+        return value;
+    }
+    static inline const Type& get(ConstStorageRef_t value){
+        return value;
     }
 };
 
@@ -77,8 +90,8 @@ template<class Type> struct ParamTraits<Type, typename std::enable_if<!std::is_p
     typedef const Type* Input_t;
 
     template<class...Args>
-    static Type& reset(Storage_t& input_storage, Args...args) {
-        input_storage.reset(new Type(std::forward(args)...));
+    static Type& reset(Storage_t& input_storage, Args&&...args) {
+        input_storage.reset(new Type(std::forward<Args>(args)...));
         return *input_storage;
     }
 
@@ -89,6 +102,14 @@ template<class Type> struct ParamTraits<Type, typename std::enable_if<!std::is_p
     template<class...Args>
     static void nullify(InputStorage_t& input_storage) {
         input_storage.reset();
+    }
+    static inline Type& getMutable(Storage_t& value){
+        MO_ASSERT(value);
+        return *value;
+    }
+    static inline const Type& get(ConstStorageRef_t value){
+        MO_ASSERT(value);
+        return *value;
     }
 };
 }

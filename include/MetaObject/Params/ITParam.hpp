@@ -19,6 +19,8 @@ https://github.com/dtmoodie/Params
 */
 #include "IParam.hpp"
 #include "TypeTraits.hpp"
+#include <boost/thread/mutex.hpp>
+#include <boost/thread/lock_guard.hpp>
 namespace mo {
 template<class T>
 struct Stamped {
@@ -89,6 +91,57 @@ struct State: public Stamped<T> {
     ICoordinateSystem* cs;
 };
 
+template<typename T> class ITParam;
+
+// Guarantees write safe access to underlying data
+template<typename T> class MO_EXPORTS AccessToken{
+    AccessToken(ITParam<T>& param, typename ParamTraits<T>::Storage_t& data):
+        lock(param.mtx()), _param(param), _data(ParamTraits<T>::getMutable(data)){
+
+    }
+    ~AccessToken(){
+        if(valid)
+            _param.emitUpdate(ts, _ctx, fn);
+    }
+
+    T& operator()(){
+        valid = true;
+        return _data;
+    }
+
+    AccessToken<T>& operator()(const OptionalTime_t& ts_){
+        ts(ts_);
+        return *this;
+    }
+
+    AccessToken<T>& operator()(const boost::optional<size_t>& fn_){
+        fn(fn_);
+        return *this;
+    }
+
+    AccessToken<T>& operator()(Context* ctx){
+        _ctx = ctx;
+        return *this;
+    }
+
+    void setValid(bool value){
+        valid = value;
+    }
+
+    bool getValid() const{
+        return valid;
+    }
+
+private:
+    boost::lock_guard<mo::Mutex_t> lock;
+    ITParam<T>& _param;
+    T& _data;
+    OptionalTime_t ts;
+    boost::optional<size_t> fn;
+    Context* _ctx = nullptr;
+    bool valid = false;
+};
+
 template<typename T>
 class MO_EXPORTS ITParam : virtual public IParam {
 public:
@@ -109,6 +162,8 @@ public:
 
     virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr) = 0;
 
+    virtual AccessToken<T> access() = 0;
+
     template<class... Args>
     ITParam<T>* updateData(ConstStorageRef_t data, const Args&... args);
 
@@ -119,6 +174,7 @@ public:
     std::shared_ptr<Connection>         registerUpdateNotifier(TUpdateSlot_t* f);
     std::shared_ptr<Connection>         registerUpdateNotifier(std::shared_ptr<TSignalRelay<TUpdateSig_t>>& relay);
 protected:
+    friend class AccessToken<T>;
     virtual bool updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs) = 0;
     TSignal<TUpdateSig_t> _typed_update_signal;
 private:

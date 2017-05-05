@@ -37,10 +37,8 @@ template<class T> struct Policy {
         ITParam<T>* typed = dynamic_cast<ITParam<T>*>(param);
         if(typed == nullptr)
             return false;
-        T* ptr = typed->GetDataPtr();
-        if (ptr == nullptr)
-            return false;
-        ar(cereal::make_nvp(param->getName(), *ptr));
+        auto token = typed->access();
+        ar(cereal::make_nvp(param->getName(), token()));
         return true;
     }
     template<class AR>
@@ -48,20 +46,19 @@ template<class T> struct Policy {
         ITParam<T>* typed = dynamic_cast<ITParam<T>*>(param);
         if (typed == nullptr)
             return false;
-        T* ptr = typed->GetDataPtr();
-        if (ptr == nullptr)
-            return false;
-        auto nvp = cereal::make_optional_nvp(param->getName(), *ptr, *ptr);
+        AccessToken<T> token = typed->access();
+        auto nvp = cereal::make_optional_nvp(param->getName(), token(), token());
         try {
             ar(nvp);
         } catch(...) {
+            token.setValid(false);
             return false;
         }
 
         if(nvp.success) {
-            typed->commit();
             return true;
         }
+        token.setValid(false);
         return false;
     }
 

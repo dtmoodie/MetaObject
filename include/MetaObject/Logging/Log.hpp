@@ -98,6 +98,8 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 
 #define ASSERT_OP(op, lhs, rhs) if(!(lhs op rhs)) mo::ThrowOnDestroy(__FUNCTION__, __FILE__, __LINE__).stream() << "[" << #lhs << " " << #op << " " << #rhs << "] - Failed (" << lhs << " " <<  #op << " " << rhs << ")"
 
+#define MO_ASSERT(exp) if( !(exp) ) mo::ThrowOnDestroy(__FUNCTION__, __FILE__, __LINE__).stream() << "[" << #exp << "] failed!"
+
 #define ASSERT_EQ(lhs, rhs)  ASSERT_OP(==, lhs, rhs)
 #define ASSERT_NE(lhs, rhs)  ASSERT_OP(!=, lhs, rhs)
 #define ASSERT_LE(lhs, rhs)  ASSERT_OP(<=, lhs, rhs)

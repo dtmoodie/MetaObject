@@ -208,9 +208,9 @@ template<typename T> bool DeSerialize(ITParam<std::vector<T>>* param, std::strin
 
 
 template<typename T> bool WrapSerialize(IParam* param, std::stringstream& ss) {
-    ITParam<T>* T = dynamic_cast<ITParam<T>*>(param);
-    if (T) {
-        if(imp::Serialize(T, ss)) {
+    ITParam<T>* typed = dynamic_cast<ITParam<T>*>(param);
+    if (typed) {
+        if(imp::Serialize(typed, ss)) {
             return true;
         }
     }
@@ -218,10 +218,10 @@ template<typename T> bool WrapSerialize(IParam* param, std::stringstream& ss) {
 }
 
 template<typename T> bool WrapDeSerialize(IParam* param, std::stringstream& ss) {
-    ITParam<T>* T = dynamic_cast<ITParam<T>*>(param);
-    if (T) {
-        if(imp::DeSerialize(T, ss)) {
-            T->commit();
+    ITParam<T>* typed = dynamic_cast<ITParam<T>*>(param);
+    if (typed) {
+        if(imp::DeSerialize(typed, ss)) {
+            typed->emitUpdate();
             return true;
         }
     }

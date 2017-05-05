@@ -30,12 +30,13 @@ namespace mo
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if(!ts){
             if(ptr){
-                value = *ptr;
+                ParamTraits<T>::reset(value, *ptr);
+                //value = *ptr;
                 return true;
             }
         }else{
             if(this->_ts && *(this->_ts) == *ts && ptr){
-                value = *ptr;
+                ParamTraits<T>::reset(value, *ptr);
                 return true;
             }
         }
@@ -46,9 +47,8 @@ namespace mo
     bool TParamPtr<T>::getData(Storage_t& value, size_t fn, Context* ctx, OptionalTime_t* ts){
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if(fn == this->_fn && ptr){
-            value = *ptr;
-            if(ts)
-                *ts = this->_ts;
+            ParamTraits<T>::reset(value, *ptr);
+            if(ts) *ts = this->_ts;
             return true;
         }
         return false;
@@ -58,7 +58,7 @@ namespace mo
     bool TParamPtr<T>::updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs){
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if(ptr){
-            *ptr = data;
+            *ptr = ParamTraits<T>::get(data);
             lock.unlock();
             this->emitUpdate(ts, ctx, fn, cs);
             return true;
