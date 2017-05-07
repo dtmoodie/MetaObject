@@ -19,21 +19,20 @@ https://github.com/dtmoodie/Params
 */
 #include "IParam.hpp"
 #include "TypeTraits.hpp"
-#include <boost/thread/mutex.hpp>
-#include <boost/thread/lock_guard.hpp>
+
 namespace mo {
 template<class T>
 struct Stamped {
-    Stamped(typename ParamTraits<T>::ConstStorageRef_t data):
+    Stamped(typename ParamTraits<T>::Storage_t& data):
         data(data), fn(0) {}
 
-    Stamped(mo::Time_t ts, typename ParamTraits<T>::ConstStorageRef_t data):
+    explicit Stamped(mo::Time_t ts, typename const ParamTraits<T>::Storage_t& data):
         ts(ts), data(data) {}
 
-    Stamped(size_t fn, typename ParamTraits<T>::ConstStorageRef_t data):
+    explicit Stamped(size_t fn, typename const ParamTraits<T>::Storage_t& data):
         fn(fn), data(data) {}
 
-    Stamped(mo::Time_t ts, size_t fn, typename ParamTraits<T>::ConstStorageRef_t data):
+    explicit Stamped(mo::Time_t ts, size_t fn, typename const ParamTraits<T>::Storage_t& data):
         ts(ts), fn(fn), data(data) {}
 
     template<class...U>
@@ -58,32 +57,32 @@ struct Stamped {
 // The state struct is used to save a snapshot of the state of a Param at a point in time
 template<class T>
 struct State: public Stamped<T> {
-    State(mo::Time_t ts, size_t fn, Context* ctx, ICoordinateSystem* cs, typename ParamTraits<T>::ConstStorageRef_t init):
+    State(mo::Time_t ts, size_t fn, Context* ctx, ICoordinateSystem* cs, typename const ParamTraits<T>::Storage_t& init):
         Stamped<T>(ts, fn, init),
         ctx(ctx),
         cs(cs) {}
 
-    State(mo::Time_t ts, size_t fn, Context* ctx, typename ParamTraits<T>::ConstStorageRef_t init):
+    State(mo::Time_t ts, size_t fn, Context* ctx, typename const ParamTraits<T>::Storage_t& init):
         Stamped<T>(ts, fn, init),
         ctx(ctx),
         cs(nullptr) {}
 
-    State(size_t fn, Context* ctx, ICoordinateSystem* cs, typename ParamTraits<T>::ConstStorageRef_t init):
+    State(size_t fn, Context* ctx, ICoordinateSystem* cs, typename const ParamTraits<T>::Storage_t& init):
         Stamped<T>(fn, init),
         ctx(ctx),
         cs(cs) {}
 
-    State(mo::Time_t ts, size_t fn, typename ParamTraits<T>::ConstStorageRef_t init):
+    State(mo::Time_t ts, size_t fn, typename const ParamTraits<T>::Storage_t& init):
         Stamped<T>(ts, fn, init),
         ctx(nullptr),
         cs(nullptr) {}
 
-    State(mo::Time_t ts, typename ParamTraits<T>::ConstStorageRef_t init):
+    State(mo::Time_t ts, typename const ParamTraits<T>::Storage_t& init):
         Stamped<T>(ts, init),
         ctx(nullptr),
         cs(nullptr) {}
 
-    State(typename ParamTraits<T>::ConstStorageRef_t init):
+    State(typename const ParamTraits<T>::Storage_t& init):
         Stamped<T>(init),
         ctx(nullptr),
         cs(nullptr) {}
@@ -92,55 +91,7 @@ struct State: public Stamped<T> {
 };
 
 template<typename T> class ITParam;
-
-// Guarantees write safe access to underlying data
-template<typename T> class MO_EXPORTS AccessToken{
-    AccessToken(ITParam<T>& param, typename ParamTraits<T>::Storage_t& data):
-        lock(param.mtx()), _param(param), _data(ParamTraits<T>::getMutable(data)){
-
-    }
-    ~AccessToken(){
-        if(valid)
-            _param.emitUpdate(ts, _ctx, fn);
-    }
-
-    T& operator()(){
-        valid = true;
-        return _data;
-    }
-
-    AccessToken<T>& operator()(const OptionalTime_t& ts_){
-        ts(ts_);
-        return *this;
-    }
-
-    AccessToken<T>& operator()(const boost::optional<size_t>& fn_){
-        fn(fn_);
-        return *this;
-    }
-
-    AccessToken<T>& operator()(Context* ctx){
-        _ctx = ctx;
-        return *this;
-    }
-
-    void setValid(bool value){
-        valid = value;
-    }
-
-    bool getValid() const{
-        return valid;
-    }
-
-private:
-    boost::lock_guard<mo::Mutex_t> lock;
-    ITParam<T>& _param;
-    T& _data;
-    OptionalTime_t ts;
-    boost::optional<size_t> fn;
-    Context* _ctx = nullptr;
-    bool valid = false;
-};
+template<typename T> class AccessToken;
 
 template<typename T>
 class MO_EXPORTS ITParam : virtual public IParam {
@@ -161,8 +112,6 @@ public:
                          Context* ctx = nullptr, size_t* fn_ = nullptr) = 0;
 
     virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr) = 0;
-
-    virtual AccessToken<T> access() = 0;
 
     template<class... Args>
     ITParam<T>* updateData(ConstStorageRef_t data, const Args&... args);

@@ -114,7 +114,7 @@ BOOST_AUTO_TEST_CASE(object_print)
 
 BOOST_AUTO_TEST_CASE(Param_static)
 {
-    auto param_info = derived_Param::GetParamInfoStatic();
+    auto param_info = derived_Param::getParamInfoStatic();
     if(param_info.size() == 1)
     {
         if(param_info[0]->name == "derived_param")
@@ -130,13 +130,13 @@ BOOST_AUTO_TEST_CASE(Param_static)
 
 BOOST_AUTO_TEST_CASE(signals_static)
 {
-    auto signal_info = derived_signals::GetSignalInfoStatic();
+    auto signal_info = derived_signals::getSignalInfoStatic();
     BOOST_REQUIRE_EQUAL(signal_info.size(), 2);
 }
 
 BOOST_AUTO_TEST_CASE(slots_static)
 {
-    auto slot_info = derived_signals::GetSlotInfoStatic();
+    auto slot_info = derived_signals::getSlotInfoStatic();
     BOOST_REQUIRE_EQUAL(slot_info.size(), 3);
 }
 
@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(Param_dynamic)
     BOOST_REQUIRE_EQUAL(derived_obj->derived_param, 10);
     derived_obj->base_param = 10;
     derived_obj->derived_param = 100;
-    derived_obj->InitParams(true);
+    derived_obj->initParams(true);
     BOOST_REQUIRE_EQUAL(derived_obj->base_param, 5);
     BOOST_REQUIRE_EQUAL(derived_obj->derived_param, 10);
 }

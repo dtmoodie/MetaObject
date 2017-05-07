@@ -1,5 +1,5 @@
 #pragma once
-#include "ITParam.hpp"
+#include "ITAccessibleParam.hpp"
 #include "MetaParam.hpp"
 namespace mo {
 /*! The TParamPtr class is a concrete implementation of ITParam
@@ -14,7 +14,7 @@ namespace mo {
  *  which is wrapped for reflection purposes by 'user_param'
  */
 template<typename T>
-class MO_EXPORTS TParamPtr: virtual public ITParam< T > {
+class MO_EXPORTS TParamPtr: virtual public ITAccessibleParam< T > {
 public:
     typedef typename ParamTraits<T>::Storage_t Storage_t;
     typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
@@ -41,6 +41,8 @@ public:
         Context* ctx = nullptr, size_t* fn_ = nullptr);
 
     virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
+    
+    virtual AccessToken<T> access();
 
     ITParam<T>* updatePtr(T* ptr, bool ownsData_ = false);
 protected:
@@ -51,7 +53,7 @@ protected:
 };
 
 template<typename T>
-class MO_EXPORTS TParamOutput: virtual public ITParam< T >{
+class MO_EXPORTS TParamOutput: virtual public ITAccessibleParam< T >{
 public:
     typedef typename ParamTraits<T>::Storage_t Storage_t;
     typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
@@ -61,34 +63,21 @@ public:
     typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
     typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
 
-    virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
-        Context* ctx = nullptr, size_t* fn_ = nullptr){
-        if(!ts || ts == this->_ts){
-            data = this->data;
-            return true;
-        }
-        return false;
-    }
+    TParamOutput(): IParam(mo::tag::_param_flags = mo::ParamFlags::Output_e ){}
 
-    virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr){
-        if(fn == this->_fn){
-            data = this->data;
-            return true;
-        }
-        return false;
-    }
+    virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
+        Context* ctx = nullptr, size_t* fn_ = nullptr);
+
+    virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
+
+    virtual AccessToken<T> access();
 
     template<typename... Args>
     T& reset(Args... args){
-        return ParamTraits<T, void>::reset(data, std::forward(args)...);
+        return ParamTraits<T, void>::reset(data, std::forward<Args>(args)...);
     }
 protected:
-    virtual bool updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs){
-        mo::Mutex_t::scoped_lock lock(IParam::mtx());
-        this->data = data;
-        lock.unlock();
-        this->emitUpdate(ts, ctx, fn, cs);
-    }
+    virtual bool updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
 private:
     Storage_t data;
 };

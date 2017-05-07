@@ -12,7 +12,7 @@ void test_meta_object_slots::test_int(int value)
 
 MO_REGISTER_OBJECT(test_meta_object_signals);
 MO_REGISTER_OBJECT(test_meta_object_slots);
-MO_REGISTER_OBJECT(test_meta_object_Params);
+MO_REGISTER_OBJECT(test_meta_object_parameters);
 MO_REGISTER_OBJECT(test_meta_object_output);
 MO_REGISTER_OBJECT(test_meta_object_input);
 #ifdef HAVE_CUDA

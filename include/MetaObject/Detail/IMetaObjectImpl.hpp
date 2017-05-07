@@ -19,7 +19,9 @@ ITParam<T>* IMetaObject::getParam(const std::string& name) const {
 
 template<class T>
 T IMetaObject::getParamValue(const std::string& name, mo::Time_t ts, Context* ctx) const {
-    return getParam<T>(name)->GetData(ts, ctx);
+    T data;
+    MO_ASSERT(getParam<T>(name)->getData(data, ts, ctx));
+    return data;
 }
 template<class T>
 ITParam<T>* IMetaObject::getParamOptional(const std::string& name) const {
@@ -34,10 +36,10 @@ ITParam<T>* IMetaObject::updateParam(const std::string& name, T& value, const Op
         ctx = _ctx;
     auto param = getParamOptional<T>(name);
     if(param) {
-        param->UpdateData(value, ts, ctx);
+        param->updateData(value, ts, ctx);
         return param;
     } else {
-        std::shared_ptr<ITParam<T>> new_param(new TParam<T>(name, value));
+        std::shared_ptr<TParam<T>> new_param(new TParam<T>(name, value));
         addParam(new_param);
         return new_param.get();
     }

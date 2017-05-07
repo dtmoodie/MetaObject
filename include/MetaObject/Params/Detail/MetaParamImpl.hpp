@@ -7,4 +7,5 @@
 #define INSTANTIATE_META_Param(TYPE) \
 static mo::MetaParam<TYPE, __COUNTER__> COMBINE(g_meta_Param, __LINE__)(#TYPE); \
 template class mo::TInputParamPtr<TYPE>; \
-template class mo::TParamPtr<TYPE>;
+template class mo::TParamPtr<TYPE>; \
+template class mo::TParamOutput<TYPE>;

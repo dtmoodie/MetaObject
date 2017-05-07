@@ -20,17 +20,17 @@ struct ParamInfo;
 
 // ---------------- SIGNAL_INFO ------------
 #define SIGNAL_INFO_START(N_) \
-template<int N> static void list_signal_info_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N> dummy){ \
-    return list_signal_info_(info, --dummy); \
+template<int N> static void _list_signal_info(std::vector<mo::SignalInfo*>& info, mo::_counter_<N> dummy){ \
+    return _list_signal_info(info, --dummy); \
 } \
-static void list_signal_info_(std::vector<mo::SignalInfo*>& info, mo::_counter_<N_> dummy){ \
+static void _list_signal_info(std::vector<mo::SignalInfo*>& info, mo::_counter_<N_> dummy){ \
     (void)info; \
     (void)dummy; \
 }
 
 #define SIGNAL_INFO_END(N) \
 static void getSignalInfoStatic(std::vector<mo::SignalInfo*> & info){ \
-    list_signal_info_(info, mo::_counter_<N-1>()); \
+    _list_signal_info(info, mo::_counter_<N-1>()); \
     _list_parent_signals(info); \
     std::sort(info.begin(), info.end()); \
     info.erase(std::unique(info.begin(), info.end()), info.end()); \
@@ -46,10 +46,10 @@ void getSignalInfo(std::vector<mo::SignalInfo*> & info) const{ \
 
 // ---------------- SIGNALS ------------
 #define SIGNALS_START(N_) \
-template<int N> int init_signals_(bool firstInit, mo::_counter_<N> dummy){ \
-    return init_signals_(firstInit, --dummy); \
+template<int N> int _init_signals(bool firstInit, mo::_counter_<N> dummy){ \
+    return _init_signals(firstInit, --dummy); \
 } \
-int init_signals_(bool firstInit, mo::_counter_<N_> dummy){ \
+int _init_signals(bool firstInit, mo::_counter_<N_> dummy){ \
     (void)dummy; \
     (void)firstInit; \
     return 0; \
@@ -58,22 +58,22 @@ int init_signals_(bool firstInit, mo::_counter_<N_> dummy){ \
 #define SIGNALS_END(N_) \
 virtual int initSignals(bool firstInit){ \
     int count = _init_parent_signals(firstInit); \
-    return init_signals_(firstInit, mo::_counter_<N_-1>()) + count; \
+    return _init_signals(firstInit, mo::_counter_<N_-1>()) + count; \
 }
 
 // ---------------- SLOT INFO ------------
 #define SLOT_INFO_START(N_) \
-template<int N> static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy){ \
-    return list_slots_(info, --dummy); \
+template<int N> static void _list_slots(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy){ \
+    return _list_slots(info, --dummy); \
 } \
-static void list_slots_(std::vector<mo::SlotInfo*>& info, mo::_counter_<N_> dummy){ \
+static void _list_slots(std::vector<mo::SlotInfo*>& info, mo::_counter_<N_> dummy){ \
     (void)info; \
     (void)dummy; \
 }
 
 #define SLOT_INFO_END(N) \
 static void getSlotInfoStatic(std::vector<mo::SlotInfo*> & info){ \
-    list_slots_(info, mo::_counter_<N-1>()); \
+    _list_slots(info, mo::_counter_<N-1>()); \
     _list_parent_slots(info); \
     std::sort(info.begin(), info.end()); \
     info.erase(std::unique(info.begin(), info.end()), info.end()); \
@@ -90,10 +90,10 @@ void getSlotInfo(std::vector<mo::SlotInfo*>& info) const{ \
 // ---------------- ParamS INFO ------------
 
 #define PARAM_INFO_START(N_) \
-template<int N> static void list_Param_info_(std::vector<mo::ParamInfo*>& info, mo::_counter_<N> dummy){ \
-    list_Param_info_(info, --dummy); \
+template<int N> static void _list_param_info(std::vector<mo::ParamInfo*>& info, mo::_counter_<N> dummy){ \
+    _list_param_info(info, --dummy); \
 } \
-static void list_Param_info_(std::vector<mo::ParamInfo*>& info, mo::_counter_<N_> dummy){ \
+static void _list_param_info(std::vector<mo::ParamInfo*>& info, mo::_counter_<N_> dummy){ \
     (void)info; \
     (void)dummy; \
 }
@@ -101,8 +101,8 @@ static void list_Param_info_(std::vector<mo::ParamInfo*>& info, mo::_counter_<N_
 
 #define PARAM_INFO_END(N) \
 static void getParamInfoStatic(std::vector<mo::ParamInfo*>& info){ \
-    list_Param_info_(info, mo::_counter_<N-1>()); \
-    _list_parent_Param_info(info); \
+    _list_param_info(info, mo::_counter_<N-1>()); \
+    _list_parent_param_info(info); \
     std::sort(info.begin(), info.end()); \
     info.erase(std::unique(info.begin(), info.end()), info.end()); \
 } \
@@ -115,50 +115,50 @@ void getParamInfo(std::vector<mo::ParamInfo*>& info) const{ \
     getParamInfoStatic(info); \
 }
 
-// ---------------- ParamS ------------
+// ---------------- Params ------------
 #define PARAM_START(N_) \
-template<int N> void init_Params_(bool firstInit, mo::_counter_<N> dummy){ \
-    init_Params_(firstInit, --dummy); \
+template<int N> void _init_params(bool firstInit, mo::_counter_<N> dummy){ \
+    _init_params(firstInit, --dummy); \
 } \
-void init_Params(bool firstInit, mo::_counter_<N_> dummy){ \
+void _init_params(bool firstInit, mo::_counter_<N_> dummy){ \
     (void)firstInit; \
     (void)dummy; \
 } \
 template<int N> void _init_outputs(mo::_counter_<N> dummy){ \
-    init_outputs_(--dummy); \
+    _init_outputs(--dummy); \
 } \
 void _init_outputs(mo::_counter_<N_> dummy){ \
     (void)dummy; \
 } \
-template<int N> void _serialize_Params(ISimpleSerializer* pSerializer, mo::_counter_<N> dummy){ \
-    _serialize_Params(pSerializer, --dummy); \
+template<int N> void _serialize_params(ISimpleSerializer* pSerializer, mo::_counter_<N> dummy){ \
+    _serialize_params(pSerializer, --dummy); \
 } \
-void _serialize_Params(ISimpleSerializer* pSerializer, mo::_counter_<N_> dummy){ \
+void _serialize_params(ISimpleSerializer* pSerializer, mo::_counter_<N_> dummy){ \
     (void)dummy; \
     (void)pSerializer; \
 } \
-template<class T, int N> void _load_Params(T& ar, mo::_counter_<N> dummy){ \
-    _load_Params<T>(ar, --dummy); \
+template<class T, int N> void _load_params(T& ar, mo::_counter_<N> dummy){ \
+    _load_params<T>(ar, --dummy); \
 } \
-template<class T, int N> void _save_Params(T& ar, mo::_counter_<N> dummy) const{ \
-    _save_Params<T>(ar, --dummy); \
+template<class T, int N> void _save_params(T& ar, mo::_counter_<N> dummy) const{ \
+    _save_params<T>(ar, --dummy); \
 } \
-template<class T> void _load_Params(T& ar, mo::_counter_<N_> dummy){ \
+template<class T> void _load_params(T& ar, mo::_counter_<N_> dummy){ \
     (void)dummy; \
     (void)ar; \
 } \
-template<class T> void _save_Params(T& ar, mo::_counter_<N_> dummy) const{ \
+template<class T> void _save_params(T& ar, mo::_counter_<N_> dummy) const{ \
     (void)dummy; \
     (void)ar; \
 }
 
 #define PARAM_END(N_) \
 void initParams(bool firstInit){ \
-    init_Params_(firstInit, mo::_counter_<N_ - 1>()); \
+    _init_params(firstInit, mo::_counter_<N_ - 1>()); \
     _init_parent_params(firstInit); \
 } \
 void serializeParams(ISimpleSerializer* pSerializer){ \
-    _serialize_Params(pSerializer, mo::_counter_<N_ - 1>()); \
+    _serialize_params(pSerializer, mo::_counter_<N_ - 1>()); \
     _serialize_parent_params(pSerializer); \
 } \
 void initOutputs(){\
@@ -166,21 +166,21 @@ void initOutputs(){\
     _init_parent_outputs(); \
 } \
 template<class T> void load(T& ar){ \
-    _load_Params<T>(ar, mo::_counter_<N_ -1>()); \
+    _load_params<T>(ar, mo::_counter_<N_ -1>()); \
     _load_parent<T>(ar); \
 } \
 template<class T> void save(T& ar) const{ \
-    _save_Params<T>(ar, mo::_counter_<N_ -1>()); \
+    _save_params<T>(ar, mo::_counter_<N_ -1>()); \
     _save_parent<T>(ar); \
 }
 
 
 // -------------- SLOTS -------------
 #define SLOT_START(N_) \
-template<int N> void bind_slots_(bool firstInit, mo::_counter_<N> dummy){ \
-    bind_slots_(firstInit, --dummy); \
+template<int N> void _bind_slots(bool firstInit, mo::_counter_<N> dummy){ \
+    _bind_slots(firstInit, --dummy); \
 } \
-void bind_slots_(bool firstInit, mo::_counter_<N_> dummy){  \
+void _bind_slots(bool firstInit, mo::_counter_<N_> dummy){  \
     (void)dummy; \
     (void)firstInit; \
 }
@@ -188,7 +188,7 @@ void bind_slots_(bool firstInit, mo::_counter_<N_> dummy){  \
 #define SLOT_END(N_) \
 void bindSlots(bool firstInit){ \
     _bind_parent_slots(firstInit); \
-    bind_slots_(firstInit, mo::_counter_<N_-1>()); \
+    _bind_slots(firstInit, mo::_counter_<N_-1>()); \
 }
 
 #define HANDLE_PARENT_1(PARENT1) \
@@ -210,7 +210,7 @@ template<class T> void _save_parent(T& ar) const{ \
 void _bind_parent_slots(bool firstInit){ \
     PARENT1::bindSlots(firstInit); \
 } \
-static void _list_parent_Param_info(std::vector<mo::ParamInfo*>& info){ \
+static void _list_parent_param_info(std::vector<mo::ParamInfo*>& info){ \
     PARENT1::getParamInfoStatic(info); \
 } \
 static void _list_parent_signals(std::vector<mo::SignalInfo*>& info){ \
@@ -248,7 +248,7 @@ void _bind_parent_slots(bool firstInit){ \
     PARENT1::bindSlots(firstInit); \
     PARENT2::bindSlots(firstInit); \
 } \
-static void _list_parent_Param_info(std::vector<mo::ParamInfo*>& info){ \
+static void _list_parent_param_info(std::vector<mo::ParamInfo*>& info){ \
     PARENT1::getParamInfoStatic(info); \
     PARENT2::getParamInfoStatic(info); \
 } \
@@ -262,7 +262,7 @@ static void _list_parent_slots(std::vector<mo::SlotInfo*>& info){ \
 } \
 int _init_parent_signals(bool firstInit){ \
     return PARENT1::initSignals(firstInit) + PARENT2::initSignals(firstInit);; \
-} \
+}
 
 #ifdef _MSC_VER
 #define HANDLE_PARENT(...)  BOOST_PP_CAT(BOOST_PP_OVERLOAD(HANDLE_PARENT_, __VA_ARGS__)(__VA_ARGS__), BOOST_PP_EMPTY())
@@ -277,7 +277,7 @@ void _serialize_parent_params(ISimpleSerializer* pSerializer) { (void)pSerialize
 template<class T> void _load_parent(T& ar) { (void)ar; } \
 template<class T> void _save_parent(T& ar) const { (void)ar;} \
 void _bind_parent_slots(bool firstInit) { (void)firstInit;} \
-static void _list_parent_Param_info(std::vector<mo::ParamInfo*>& info) { (void)info;} \
+static void _list_parent_param_info(std::vector<mo::ParamInfo*>& info) { (void)info;} \
 static void _list_parent_signals(std::vector<mo::SignalInfo*>& info) { (void)info;} \
 static void _list_parent_slots(std::vector<mo::SlotInfo*>& info) { (void)info;} \
 int _init_parent_signals(bool firstInit) {(void)firstInit; return 0;}
@@ -299,9 +299,9 @@ HANDLE_PARENT(__VA_ARGS__); \
 SIGNAL_INFO_START(N_) \
 SIGNALS_START(N_) \
 SLOT_INFO_START(N_) \
-Param_INFO_START(N_) \
+PARAM_INFO_START(N_) \
 SLOT_START(N_)\
-Param_START(N_) \
+PARAM_START(N_) \
 static rcc::shared_ptr<CLASS_NAME> Create();
 
 #define MO_END_(N) \

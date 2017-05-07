@@ -17,7 +17,7 @@
 #include "MetaObject/Params/IO/TextPolicy.hpp"
 #include "MetaObject/IO/Policy.hpp"
 #include "MetaObject/IO/memory.hpp"
-#include "MetaObject/Params/detail/MetaParamsImpl.hpp"
+#include "MetaObject/Params/Detail/MetaParamImpl.hpp"
 #include "RuntimeObjectSystem/shared_ptr.hpp"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
@@ -25,7 +25,7 @@
 #include "cereal/archives/portable_binary.hpp"
 #include <fstream>
 #include <istream>
-#include "MetaParams.hpp"
+#include <MetaParameters.hpp>
 #ifdef HAVE_OPENCV
 #include <opencv2/core.hpp>
 #endif
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(deserialize_text_path)
     mo::ReadFile data;
     mo::TParamPtr<mo::ReadFile> param;
     param.updatePtr(&data);
-    auto deserialization_function = mo::SerializationFunctionRegistry::Instance()->GetTextDeSerializationFunction(param.GetTypeInfo());
+    auto deserialization_function = mo::SerializationFactory::Instance()->GetTextDeSerializationFunction(param.getTypeInfo());
     BOOST_REQUIRE(deserialization_function);
     std::stringstream ss;
     ss << "/asdf/asdf/asdf/test.txt";

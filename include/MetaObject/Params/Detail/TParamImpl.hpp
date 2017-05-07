@@ -1,5 +1,6 @@
 #pragma once
 #include "MetaObject/Logging/Log.hpp"
+#include "MetaObject/Params/AccessToken.hpp"
 namespace mo
 {
 	template<typename T> 
@@ -44,6 +45,11 @@ namespace mo
             return true;
         }
         return false;
+    }
+
+    template<typename T>
+    AccessToken<T> TParam<T>::access(){
+        return AccessToken<T>(*this, _data);
     }
 
     template<typename T>

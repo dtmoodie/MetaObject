@@ -176,14 +176,14 @@ struct CallstackSeverityException: virtual public Exc, virtual public ICallstack
     }
 
     std::string callstack(){
-        return callstack;
+        return _callstack;
     }
 
     CallstackSeverityException& operator()(int error, const char* file, int line, const char* function){
         _msg.str(std::string());
         _msg << file << ":" << line << " " << error << " in function [" << function << "]";
         
-        callstack = printCallstack(1, true);
+        _callstack = printCallstack(1, true);
         return *this;
     }
 

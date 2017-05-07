@@ -17,6 +17,7 @@ template<class Type> struct ParamTraits<Type, typename std::enable_if<std::is_po
 
     // What is stored in buffers / Params
     typedef Type Storage_t;
+    typedef Type ConstStorage_t;
     // what is passed around within a thread
     typedef Type ConstStorageRef_t;
     // The type stored by TInputParam's
@@ -53,6 +54,7 @@ template<class Type> struct ParamTraits<Type, typename std::enable_if<std::is_po
     };
 
     typedef Type Storage_t;
+    typedef Type ConstStorage_t;
     typedef const Type& ConstStorageRef_t;
     typedef boost::optional<Type> InputStorage_t;
     typedef const Type* Input_t;
@@ -85,7 +87,8 @@ template<class Type> struct ParamTraits<Type, typename std::enable_if<!std::is_p
         HAS_TRIVIAL_MOVE = 0
     };
     typedef std::shared_ptr<Type> Storage_t;
-    typedef const std::shared_ptr<const Type>& ConstStorageRef_t;
+    typedef std::shared_ptr<const Type> ConstStorage_t;
+    typedef const std::shared_ptr<Type>& ConstStorageRef_t;
     typedef std::shared_ptr<const Type> InputStorage_t;
     typedef const Type* Input_t;
 

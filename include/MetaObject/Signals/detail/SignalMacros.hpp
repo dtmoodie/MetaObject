@@ -67,19 +67,19 @@ inline ret sig_##name(ARG1& arg1, ARG2& arg2, ARG3& arg3, ARG4& arg4, ARG5& arg5
 }
 
 #define INIT_SIGNALS_(N, C, RETURN, NAME, ...) \
-int init_signals_(bool firstInit, mo::_counter_<C> dummy) \
+int _init_signals(bool firstInit, mo::_counter_<C> dummy) \
 { \
     addSignal(&COMBINE(_sig_##NAME##_, N), #NAME); \
-    return init_signals_(firstInit, --dummy) + 1; \
+    return _init_signals(firstInit, --dummy) + 1; \
 } \
 template<class Sig> mo::TSignal<RETURN(__VA_ARGS__)>* getSignal_##NAME(typename std::enable_if<std::is_same<Sig, RETURN(__VA_ARGS__)>::value>::type* = 0) \
 { \
     return &COMBINE(_sig_##NAME##_, N); \
 } \
-static void list_signal_info_(std::vector<mo::SignalInfo*>& output, mo::_counter_<C> dummy) \
+static void _list_signal_info(std::vector<mo::SignalInfo*>& output, mo::_counter_<C> dummy) \
 { \
     static mo::SignalInfo info{mo::TypeInfo(typeid(RETURN(__VA_ARGS__))), std::string(#NAME), "", ""}; \
-    list_signal_info_(output, --dummy); \
+    _list_signal_info(output, --dummy); \
     output.push_back(&info); \
 }
 
@@ -98,9 +98,9 @@ INIT_SIGNALS_(N, __COUNTER__, RETURN, NAME, __VA_ARGS__)
 
 
 #define DESCRIBE_SIGNAL_(NAME, DESCRIPTION, N) \
-std::vector<slot_info> list_signals_(mo::_counter_<N> dummy) \
+std::vector<slot_info> _list_signals(mo::_counter_<N> dummy) \
 { \
-    auto signal_info = list_signals_(mo::_counter_<N-1>()); \
+    auto signal_info = _list_signals(mo::_counter_<N-1>()); \
     for(auto& info : signal_info) \
     { \
         if(info.name == #NAME) \

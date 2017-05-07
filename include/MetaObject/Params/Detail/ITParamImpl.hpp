@@ -27,7 +27,7 @@ namespace mo{
         const mo::Time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...);
         auto ctx = GetKeywordInputDefault<tag::context>(Context::GetDefaultThreadContext(), args...);
         auto cs = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...);
-        UpdateDataImpl(data, ts ? *ts : OptionalTime_t(), ctx, fn, cs);
+        updateDataImpl(data, ts ? *ts : OptionalTime_t(), ctx, fn, cs);
         return this;
     }
 

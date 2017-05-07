@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(test_obj_swap)
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
     BOOST_REQUIRE(!T_ptr.empty());
     std::vector<SignalInfo*> signals;
-    T_ptr->GetSignalInfo(signals);
+    T_ptr->getSignalInfo(signals);
     BOOST_REQUIRE_EQUAL(signals.size(), 2);
 }
 
@@ -181,9 +181,9 @@ BOOST_AUTO_TEST_CASE(test_input_output_Param)
 {
 	auto output = rcc::shared_ptr<test_meta_object_output>::Create();
 	auto input = rcc::shared_ptr<test_meta_object_input>::Create();
-	auto output_param = output->GetOutput("test_output");
+	auto output_param = output->getOutput("test_output");
 	BOOST_REQUIRE(output_param);
-	auto input_param = input->GetInput("test_input");
+	auto input_param = input->getInput("test_input");
 	BOOST_REQUIRE(input_param);
 
 	BOOST_REQUIRE(IMetaObject::ConnectInput(output.Get(), output_param, input.Get(), input_param));
@@ -199,7 +199,7 @@ BOOST_AUTO_TEST_CASE(test_input_output_Param)
 
 BOOST_AUTO_TEST_CASE(test_Param_persistence_recompile)
 {
-    auto obj = test_meta_object_Params::Create();
+    auto obj = test_meta_object_parameters::Create();
     BOOST_REQUIRE_EQUAL(obj->test, 5);
     obj->test = 10;
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
@@ -210,8 +210,8 @@ BOOST_AUTO_TEST_CASE(test_Param_persistence_recompile)
 
 BOOST_AUTO_TEST_CASE(test_multiple_objects)
 {
-    auto obj1 = rcc::shared_ptr<test_meta_object_Params>::Create();
-    auto obj2 = rcc::shared_ptr<test_meta_object_Params>::Create();
+    auto obj1 = rcc::shared_ptr<test_meta_object_parameters>::Create();
+    auto obj2 = rcc::shared_ptr<test_meta_object_parameters>::Create();
     obj1->test = 1;
     obj2->test = 2;
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::Instance()->GetObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);

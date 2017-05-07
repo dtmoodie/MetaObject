@@ -3,13 +3,13 @@
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
 #include "MetaObject/Signals/detail/SlotMacros.hpp"
 #include "MetaObject/IMetaObject.hpp"
-#include "MetaObject/Signals/TypedSignal.hpp"
+#include "MetaObject/Signals/TSignal.hpp"
 #include "MetaObject/Detail/Counter.hpp"
 #include "MetaObject/Detail/MetaObjectMacros.hpp"
-#include "MetaObject/Parameters/ParameterMacros.hpp"
+#include "MetaObject/Params/ParamMacros.hpp"
 
-#include "MetaObject/Parameters/TypedParameterPtr.hpp"
-#include "MetaObject/Parameters/TypedInputParameter.hpp"
+#include "MetaObject/Params/TParamPtr.hpp"
+#include "MetaObject/Params/TInputParam.hpp"
 
 #include "RuntimeObjectSystem/RuntimeInclude.h"
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"

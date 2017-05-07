@@ -17,12 +17,12 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/Params
 */
 #pragma once
-#include "ITParam.hpp"
+#include "ITAccessibleParam.hpp"
 #include "ParamConstructor.hpp"
 #include "MetaObject/Params/MetaParam.hpp"
 namespace mo {
 template<typename T>
-class MO_EXPORTS TParam : virtual public ITParam<T> {
+class MO_EXPORTS TParam : virtual public ITAccessibleParam<T> {
 public:
     typedef typename ParamTraits<T>::Storage_t Storage_t;
     typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
@@ -30,13 +30,14 @@ public:
     typedef typename ParamTraits<T>::Input_t Input_t;
 
     static const ParamType Type = TParam_e;
+    TParam(const std::string& name, const T& value): IParam(name){ParamTraits<T>::reset(_data, value);}
     TParam();
 
     virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
         Context* ctx = nullptr, size_t* fn_ = nullptr);
 
     virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
-
+    virtual AccessToken<T> access();
 protected:
     virtual bool updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
     Storage_t _data;

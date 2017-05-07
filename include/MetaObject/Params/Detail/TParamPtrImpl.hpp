@@ -2,6 +2,7 @@
 #ifndef __CUDACC__
 #include "MetaObject/Logging/Log.hpp"
 #include <boost/thread/recursive_mutex.hpp>
+#include <MetaObject/Params/AccessToken.hpp>
 namespace mo
 {
     template<typename T> class TParamPtr;
@@ -53,6 +54,12 @@ namespace mo
         }
         return false;
     }
+    
+    template<typename T>
+    AccessToken<T> TParamPtr<T>::access() { 
+        MO_ASSERT(ptr);
+        return AccessToken<T>(*this, *ptr);
+    }
 
     template<typename T>
     bool TParamPtr<T>::updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs){
@@ -77,5 +84,37 @@ namespace mo
 
     template<typename T>
     MetaParam<T, 100, void> TParamPtr<T>::_meta_Param;
+
+    template<typename T>
+    bool TParamOutput<T>::getData(Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_) {
+        if (!ts || ts == this->_ts) {
+            data = this->data;
+            return true;
+        }
+        return false;
+    }
+
+    template<typename T>
+    bool TParamOutput<T>::getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr) {
+        if (fn == this->_fn) {
+            data = this->data;
+            return true;
+        }
+        return false;
+    }
+
+    template<typename T>
+    AccessToken<T> TParamOutput<T>::access() {
+        return AccessToken<T>(*this, data);
+    }
+
+    template<typename T>
+    bool TParamOutput<T>::updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs) {
+        mo::Mutex_t::scoped_lock lock(IParam::mtx());
+        this->data = data;
+        lock.unlock();
+        this->emitUpdate(ts, ctx, fn, cs);
+        return true;
+    }
 }
 #endif

@@ -4,7 +4,7 @@
 
 struct printable: public mo::IMetaObject
 {
-	virtual void print();
 	MO_BEGIN(printable)
 	MO_END;
+    virtual void print();
 };

@@ -11,7 +11,7 @@
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
 #endif
-#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && (defined MetaParams_EXPORTS)
+#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && (defined MetaParameters_EXPORTS)
 #  define MO_EXPORTS __declspec(dllexport)
 #elif defined __GNUC__ && __GNUC__ >= 4
 #  define MO_EXPORTS __attribute__ ((visibility ("default")))
@@ -24,52 +24,47 @@
 #include <cereal/types/string.hpp>
 
 namespace mo{
-    namespace IO{
-        namespace Text{
-            namespace imp{
+namespace IO{
+namespace Text{
+namespace imp{
 
-            template<> bool DeSerialize<EnumParam>(ITParam<EnumParam>* param, std::stringstream& ss){
-                ParamTraits<EnumParam>::Storage_t ptr;
-                if(param->getData(ptr)){
-                    ptr->values.clear();
-                    ptr->enumerations.clear();
-                    std::string size;
-                    std::getline(ss, size, '[');
-                    if (size.size()){
-                        size_t size_ = boost::lexical_cast<size_t>(size);
-                        ptr->values.reserve(size_);
-                        ptr->enumerations.reserve(size_);
-                    }
-                    std::string enumeration;
-                    int value;
-                    char ch;
-                    while( ss >> enumeration >> ch >> value){
-                        ptr->addEnum(value, enumeration);
-                        ss >> ch;
-                    }
-                    return true;
-                }
-                return false;
-            }
+bool DeSerialize(ITAccessibleParam<EnumParam>* param, std::stringstream& ss){
+    auto token = param->access();
+    token().values.clear();
+    (token)().enumerations.clear();
+    std::string size;
+    std::getline(ss, size, '[');
+    if (size.size()){
+        size_t size_ = boost::lexical_cast<size_t>(size);
+        (token)().values.reserve(size_);
+        (token)().enumerations.reserve(size_);
+    }
+    std::string enumeration;
+    int value;
+    char ch;
+    while( ss >> enumeration >> ch >> value){
+        (token)().addEnum(value, enumeration);
+        ss >> ch;
+    }
+    return true;
+}
 
-            template<> bool Serialize<EnumParam>(ITParam<EnumParam>* param, std::stringstream& ss){
-                ParamTraits<EnumParam>::Storage_t ptr;
-                if(param->getData(ptr)){
-                    ss << ptr->enumerations.size();
-                    ss << "[";
-                    for(int i = 0; i < ptr->enumerations.size(); ++i){
-                        if(i != 0)
-                            ss << ", ";
-                        ss << ptr->enumerations[i] << ":" << ptr->values[i];
-                    }
-                    ss << "]";
-                    return true;
-                }
-                return false;
-            }
-            }
-        } // namespace Text
-    } // namespace IO
+bool Serialize(ITAccessibleParam<EnumParam>* param, std::stringstream& ss){
+    auto token = param->access();            
+    (token)().enumerations.size();
+    ss << "[";
+    for(int i = 0; i < (token)().enumerations.size(); ++i){
+        if(i != 0)
+            ss << ", ";
+        ss << (token)().enumerations[i] << ":" << (token)().values[i];
+    }
+    ss << "]";
+    return true;
+}
+
+}
+} // namespace Text
+} // namespace IO
 } // namespace mo
 
 namespace cereal{

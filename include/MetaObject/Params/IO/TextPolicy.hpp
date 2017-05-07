@@ -1,5 +1,5 @@
 #pragma once
-#include <MetaObject/Params/IParam.hpp>
+#include <MetaObject/Params/ITAccessibleParam.hpp>
 #include <MetaObject/Params/MetaParam.hpp>
 #include "SerializationFactory.hpp"
 #include <boost/lexical_cast.hpp>
@@ -10,10 +10,10 @@ template<class T> class ITParam;
 namespace IO {
 namespace Text {
 namespace imp {
-inline int textSize(const std::string& str) {
+inline size_t textSize(const std::string& str) {
     return str.size();
 }
-inline int textSize(int value) {
+inline size_t textSize(int value) {
     int sign = 0;
     if(value < 0)
         sign = 1;
@@ -66,7 +66,7 @@ auto Serialize_imp(std::ostream& os, std::vector<T> const& obj, int)->decltype(o
     os << "size = " << obj.size();
     os << '\n';
 
-    int max_size = 0;
+    size_t max_size = 0;
     for(const auto& item : obj) {
         max_size = std::max(max_size, textSize(item));
     }
@@ -143,72 +143,58 @@ Serialize_imp(std::ostream& os, std::map<T1, T2> const& obj, int) {
 
 
 template<typename T>
-bool Serialize(ITParam<T>* param, std::stringstream& ss) {
-    T* ptr = param->GetDataPtr();
-    if (ptr) {
-        Serialize_imp(ss, *ptr, 0);
-        //ss << *ptr;
-        return true;
-    }
-    return false;
+bool Serialize(ITAccessibleParam<T>* param, std::stringstream& ss) {
+    auto token = param->access();
+    Serialize_imp(ss, (token)(), 0);
+    return true;
 }
 
 template<typename T>
-bool DeSerialize(ITParam<T>* param, std::stringstream& ss) {
-    T* ptr = param->GetDataPtr();
-    if (ptr) {
-        //ss >> *ptr;
-        DeSerialize_imp(ss, *ptr, 0);
-        return true;
-    }
-    return false;
+bool DeSerialize(ITAccessibleParam<T>* param, std::stringstream& ss) {
+    auto token = param->access();
+    DeSerialize_imp(ss, (token)(), 0);
+    return true;
 }
-template<typename T> bool Serialize(ITParam<std::vector<T>>* param, std::stringstream& ss) {
-    std::vector<T>* ptr = param->GetDataPtr();
-    if (ptr) {
-        Serialize_imp(ss, *ptr, 0);
-        return true;
-    }
-    return false;
+template<typename T> bool Serialize(ITAccessibleParam<std::vector<T>>* param, std::stringstream& ss) {
+    auto token = param->access();
+    Serialize_imp(ss, (token)(), 0);
+    return true;
 }
-template<typename T> bool DeSerialize(ITParam<std::vector<T>>* param, std::stringstream& ss) {
-    std::vector<T>* ptr = param->GetDataPtr();
-    if (ptr) {
-        auto pos = ss.str().find('=');
-        if(pos != std::string::npos) {
-            std::string str;
-            std::getline(ss, str, '=');
-            size_t index = boost::lexical_cast<size_t>(str);
-            std::getline(ss, str);
-            T value = boost::lexical_cast<T>(str);
-            if(index >= ptr->size()) {
-                ptr->resize(index + 1);
-            }
-            (*ptr)[index] = value;
-            return true;
-        } else {
-            ptr->clear();
-            std::string size;
-            std::getline(ss, size, '[');
-            if (size.size()) {
-                ptr->reserve(boost::lexical_cast<size_t>(size));
-            }
-            T value;
-            char ch; // For flushing the ','
-            while (ss >> value) {
-                ss >> ch;
-                ptr->push_back(value);
-            }
+template<typename T> bool DeSerialize(ITAccessibleParam<std::vector<T>>* param, std::stringstream& ss) {
+    auto token = param->access();
+    auto pos = ss.str().find('=');
+    if(pos != std::string::npos) {
+        std::string str;
+        std::getline(ss, str, '=');
+        size_t index = boost::lexical_cast<size_t>(str);
+        std::getline(ss, str);
+        T value = boost::lexical_cast<T>(str);
+        if(index >= (token)().size()) {
+            (token)().resize(index + 1);
         }
+        (token)()[index] = value;
         return true;
+    } else {
+        (token)().clear();
+        std::string size;
+        std::getline(ss, size, '[');
+        if (size.size()) {
+            (token)().reserve(boost::lexical_cast<size_t>(size));
+        }
+        T value;
+        char ch; // For flushing the ','
+        while (ss >> value) {
+            ss >> ch;
+            (token)().push_back(value);
+        }    
     }
-    return false;
+    return true;
 }
 }
 
 
 template<typename T> bool WrapSerialize(IParam* param, std::stringstream& ss) {
-    ITParam<T>* typed = dynamic_cast<ITParam<T>*>(param);
+    auto typed = dynamic_cast<ITAccessibleParam<T>*>(param);
     if (typed) {
         if(imp::Serialize(typed, ss)) {
             return true;
@@ -218,7 +204,7 @@ template<typename T> bool WrapSerialize(IParam* param, std::stringstream& ss) {
 }
 
 template<typename T> bool WrapDeSerialize(IParam* param, std::stringstream& ss) {
-    ITParam<T>* typed = dynamic_cast<ITParam<T>*>(param);
+    auto typed = dynamic_cast<ITAccessibleParam<T>*>(param);
     if (typed) {
         if(imp::DeSerialize(typed, ss)) {
             typed->emitUpdate();

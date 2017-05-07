@@ -1,7 +1,7 @@
 #pragma once
 #include <MetaObject/Params/IParam.hpp>
 #include "SerializationFactory.hpp"
-#include <MetaObject/Params/ITParam.hpp>
+#include <MetaObject/Params/ITAccessibleParam.hpp>
 
 #include <cereal/cereal.hpp>
 #include <cereal/archives/binary.hpp>
@@ -34,20 +34,20 @@ template<class T> struct Policy {
 
     template<class AR>
     static bool Serialize(IParam* param, AR& ar) {
-        ITParam<T>* typed = dynamic_cast<ITParam<T>*>(param);
+        auto typed = dynamic_cast<ITAccessibleParam<T>*>(param);
         if(typed == nullptr)
             return false;
         auto token = typed->access();
-        ar(cereal::make_nvp(param->getName(), token()));
+        ar(cereal::make_nvp(param->getName(), (token)()));
         return true;
     }
     template<class AR>
     static bool DeSerialize(IParam* param, AR& ar) {
-        ITParam<T>* typed = dynamic_cast<ITParam<T>*>(param);
+        auto typed = dynamic_cast<ITAccessibleParam<T>*>(param);
         if (typed == nullptr)
             return false;
-        AccessToken<T> token = typed->access();
-        auto nvp = cereal::make_optional_nvp(param->getName(), token(), token());
+        auto token = typed->access();
+        auto nvp = cereal::make_optional_nvp(param->getName(), (token)(), (token)());
         try {
             ar(nvp);
         } catch(...) {

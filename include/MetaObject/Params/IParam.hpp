@@ -54,9 +54,9 @@ MO_KEYWORD_INPUT(timestamp, mo::Time_t)
 MO_KEYWORD_INPUT(frame_number, size_t)
 MO_KEYWORD_INPUT(coordinate_system, ICoordinateSystem*)
 MO_KEYWORD_INPUT(context, Context*)
-MO_KEYWORD_INPUT(Param_name, std::string)
+MO_KEYWORD_INPUT(param_name, std::string)
 MO_KEYWORD_INPUT(tree_root, std::string)
-MO_KEYWORD_INPUT(Param_flags, ParamFlags)
+MO_KEYWORD_INPUT(param_flags, ParamFlags)
 
 typedef void(UpdateSig_t)(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags); // Sig for signature not signal
 typedef TSlot<UpdateSig_t>            UpdateSlot_t;
@@ -74,13 +74,13 @@ public:
 
     template<class...Args>
     IParam(const Args&... args) {
-        _name      = GetKeywordInputDefault<tag::Param_name>("unnamed", args...);
+        _name      = GetKeywordInputDefault<tag::param_name>("unnamed", args...);
         if(const mo::Time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...))
             _ts = *ts;
         _fn        = GetKeywordInputDefault<tag::frame_number>(-1, args...);
         _ctx       = GetKeywordInputDefault<tag::context>(nullptr, args...);
         _cs        = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...);
-        _flags     = GetKeywordInputDefault<tag::Param_flags>(mo::Control_e, args...);
+        _flags     = GetKeywordInputDefault<tag::param_flags>(mo::Control_e, args...);
         _tree_root = GetKeywordInputDefault<tag::tree_root>("", args...);
     }
     IParam(const std::string& name_   = "",

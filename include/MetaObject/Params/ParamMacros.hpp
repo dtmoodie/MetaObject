@@ -20,22 +20,22 @@ ENUM_PARAM_(__COUNTER__, name, __VA_ARGS__)
 #define RANGED_PARAM(type, name, init, min, max)
 
 #define INPUT(type_, name, init) \
-const type* name = init; \
+const mo::argument_type<void(type_)>::type* name = init; \
 mo::TInputParamPtr<mo::argument_type<void(type_)>::type> name##_param; \
-void init_Params_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
+void _init_params(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
 { \
     name##_param.setMtx(_mtx); \
-    name##_param.SetUserDataPtr(&name); \
+    name##_param.setUserDataPtr(&name); \
     name##_param.setName(#name); \
     addParam(&name##_param); \
-    init_Params_(firstInit, --dummy); \
+    _init_params(firstInit, --dummy); \
 } \
-static void list_Param_info_(std::vector<mo::ParamInfo*>& info, mo::_counter_<__COUNTER__> dummy) \
+static void _list_param_info(std::vector<mo::ParamInfo*>& info, mo::_counter_<__COUNTER__> dummy) \
 { \
     static mo::ParamInfo s_info(mo::TypeInfo(typeid(mo::argument_type<void(type_)>::type)), \
                               #name, "", "", mo::Input_e, #init); \
     info.push_back(&s_info); \
-    list_Param_info_(info, --dummy); \
+    _list_param_info(info, --dummy); \
 }
 
 #define OPTIONAL_INPUT(type, name, init) \
@@ -43,20 +43,20 @@ INPUT(type, name, init); \
 APPEND_FLAGS(name, mo::Optional_e);
 
 #define APPEND_FLAGS(name, flags) \
-void init_Params_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
+void _init_params(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
 { \
-    init_Params_(firstInit, --dummy); \
+    _init_params(firstInit, --dummy); \
     name##_param.AppendFlags(flags); \
 }
 
 
 #define PROPERTY(type_, name, init) \
 mo::argument_type<void(type_)>::type name; \
-void init_Params_(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
+void _init_params(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
 { \
     if(firstInit) \
         name = init; \
-    init_Params_(firstInit, --dummy); \
+    _init_params(firstInit, --dummy); \
 } \
 mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param; \
 SERIALIZE_(name, __COUNTER__)

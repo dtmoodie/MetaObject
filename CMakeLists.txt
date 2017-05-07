@@ -298,6 +298,7 @@ target_link_libraries(MetaObject
   ${OpenCV_LIBS}
   ${CUDA_CUDART_LIBRARY}
   ${CUDA_CUDA_LIBRARY}
+  RuntimeObjectSystem
 )
 
 target_include_directories(MetaObject 
@@ -433,9 +434,9 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
     endif()
     TARGET_LINK_LIBRARIES(${test}
         MetaObject
+        MetaParameters
         ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
         ${link_libs}
-        MetaParameters
     )
 
     if(OpenCV_FOUND)

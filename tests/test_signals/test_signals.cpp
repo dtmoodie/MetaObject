@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(threaded_signal)
             BOOST_REQUIRE_EQUAL(5, value);
         }, std::placeholders::_1));
 
-    slot.SetContext(&thread_ctx);
+    slot.setContext(&thread_ctx);
 
     TSignal<void(int)> signal;
     auto Connection = slot.connect(&signal);

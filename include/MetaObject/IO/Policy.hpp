@@ -16,27 +16,27 @@ template<class T> struct SerializationPolicyImpl {
         SerializerFactory::RegisterDeSerializationFunctionXML(T::GetTypeNameStatic(), std::bind(&SerializationPolicyImpl<T>::DeSerializeXml, std::placeholders::_1, std::placeholders::_2));
     }
     static void SerializeBinary(const IMetaObject* obj, cereal::BinaryOutputArchive& ar) {
-        const T* T = static_cast<const T*>(obj);
-        if(T) {
-            ar(*T);
+        const T* typed = static_cast<const T*>(obj);
+        if(typed) {
+            ar(*typed);
         }
     }
     static void DeSerializeBinary(IMetaObject* obj, cereal::BinaryInputArchive& ar) {
-        T* T = static_cast<T*>(obj);
-        if (T) {
-            ar(*T);
+        T* typed = static_cast<T*>(obj);
+        if (typed) {
+            ar(*typed);
         }
     }
     static void SerializeXml(const IMetaObject* obj, cereal::XMLOutputArchive& ar) {
-        const T* T = static_cast<const T*>(obj);
-        if (T) {
-            ar(*T);
+        const T* typed = static_cast<const T*>(obj);
+        if (typed) {
+            ar(*typed);
         }
     }
     static void DeSerializeXml(IMetaObject* obj, cereal::XMLInputArchive& ar) {
-        T* T = static_cast<T*>(obj);
-        if (T) {
-            ar(*T);
+        T* typed = static_cast<T*>(obj);
+        if (typed) {
+            ar(*typed);
         }
     }
 };
