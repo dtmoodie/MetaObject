@@ -129,7 +129,7 @@ public:
     virtual std::vector<IParam*> getParams(const std::string& filter = "") const;
     virtual std::vector<IParam*> getParams(const TypeInfo& filter) const;
 
-    template<class T> T           getParamValue(const std::string& name, mo::Time_t ts = -1 * mo::second, Context* ctx = nullptr) const;
+    template<class T> T           getParamValue(const std::string& name, const OptionalTime_t& ts = OptionalTime_t(), Context* ctx = nullptr) const;
     template<class T> ITParam<T>* getParam(const std::string& name) const;
     template<class T> ITParam<T>* getParamOptional(const std::string& name) const;
 

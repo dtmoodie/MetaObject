@@ -68,6 +68,11 @@ namespace mo
 
     template<typename T>
     void TInputParamPtr<T>::onInputUpdate(ConstStorageRef_t data, IParam* param, Context* ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags fg){
+        if(fg == mo::BufferUpdated_e && param->checkFlags(mo::Buffer_e)){
+            ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            emitUpdate(ts, ctx, fn, cs, fg);
+            return;
+        }
         if(ctx && this->_ctx && ctx->thread_id == this->_ctx->thread_id){
             _current_data = data;
             this->_ts = ts;

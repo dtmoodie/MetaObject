@@ -54,6 +54,26 @@ namespace mo
         }
         return false;
     }
+
+    template<typename T>
+    IParam* TParamPtr<T>::emitUpdate(const OptionalTime_t&         ts_,
+        Context*                       ctx_,
+        const boost::optional<size_t>& fn_,
+        ICoordinateSystem*             cs_,
+        UpdateFlags                    flags_){
+        IParam::emitUpdate(ts_, ctx_, fn_, cs_, flags_);
+        if(ptr)
+            ITParam<T>::_typed_update_signal(ParamTraits<T>::copy(*ptr), this, ctx_, ts_, this->_fn, cs_, flags_);
+        return this;
+    }
+
+    template<typename T>
+    IParam* TParamPtr<T>::emitUpdate(const IParam& other){
+        IParam::emitUpdate(other);
+        if (ptr)
+            ITParam<T>::_typed_update_signal(ParamTraits<T>::copy(*ptr), this, other.getContext(), other.getTimestamp(), other.getFrameNumber(), other.getCoordinateSystem(), mo::ValueUpdated_e);
+        return this;
+    }
     
     template<typename T>
     AccessToken<T> TParamPtr<T>::access() { 
@@ -68,6 +88,7 @@ namespace mo
             *ptr = ParamTraits<T>::get(data);
             lock.unlock();
             this->emitUpdate(ts, ctx, fn, cs);
+            ITParam::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::ValueUpdated_e);
             return true;
         }
         return false;
@@ -115,6 +136,24 @@ namespace mo
         lock.unlock();
         this->emitUpdate(ts, ctx, fn, cs);
         return true;
+    }
+
+    template<typename T>
+    IParam* TParamOutput<T>::emitUpdate(const OptionalTime_t&         ts_,
+        Context*                       ctx_,
+        const boost::optional<size_t>& fn_,
+        ICoordinateSystem*             cs_,
+        UpdateFlags                    flags_) {
+        IParam::emitUpdate(ts_, ctx_, fn_, cs_, flags_);
+        ITParam<T>::_typed_update_signal(data, this, ctx_, ts_, this->_fn, cs_, flags_);
+        return this;
+    }
+
+    template<typename T>
+    IParam* TParamOutput<T>::emitUpdate(const IParam& other) {
+        IParam::emitUpdate(other);
+        ITParam<T>::_typed_update_signal(data, this, other.getContext(), other.getTimestamp(), other.getFrameNumber(), other.getCoordinateSystem(), mo::ValueUpdated_e);
+        return this;
     }
 }
 #endif

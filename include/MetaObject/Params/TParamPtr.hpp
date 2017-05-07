@@ -42,6 +42,14 @@ public:
 
     virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
     
+    virtual IParam* emitUpdate(const OptionalTime_t&  ts_    = OptionalTime_t(),
+        Context*                                      ctx_   = Context::GetDefaultThreadContext(),
+        const boost::optional<size_t>&                fn_    = boost::optional<size_t>(),
+        ICoordinateSystem*                            cs_    = nullptr,
+        UpdateFlags                                   flags_ = ValueUpdated_e);
+
+    virtual IParam* emitUpdate(const IParam& other);
+
     virtual AccessToken<T> access();
 
     ITParam<T>* updatePtr(T* ptr, bool ownsData_ = false);
@@ -71,6 +79,14 @@ public:
     virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 
     virtual AccessToken<T> access();
+
+    virtual IParam* emitUpdate(const OptionalTime_t&   ts_ = OptionalTime_t(),
+        Context*                                       ctx_ = Context::GetDefaultThreadContext(),
+        const boost::optional<size_t>&                 fn_ = boost::optional<size_t>(),
+        ICoordinateSystem*                             cs_ = nullptr,
+        UpdateFlags                                    flags_ = ValueUpdated_e);
+
+    virtual IParam* emitUpdate(const IParam& other);
 
     template<typename... Args>
     T& reset(Args... args){

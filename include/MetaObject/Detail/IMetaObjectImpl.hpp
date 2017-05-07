@@ -18,7 +18,7 @@ ITParam<T>* IMetaObject::getParam(const std::string& name) const {
 }
 
 template<class T>
-T IMetaObject::getParamValue(const std::string& name, mo::Time_t ts, Context* ctx) const {
+T IMetaObject::getParamValue(const std::string& name, const OptionalTime_t& ts, Context* ctx) const {
     T data;
     MO_ASSERT(getParam<T>(name)->getData(data, ts, ctx));
     return data;

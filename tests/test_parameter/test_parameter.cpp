@@ -42,40 +42,6 @@ struct Paramed_object: public IMetaObject
     }
 };
 
-struct ParamUpdateToken
-{
-    ParamUpdateToken(mo::IParam& param):
-        _param(param)
-    {
-    }
-    ~ParamUpdateToken()
-    {
-        //if(_timestamp_changed)
-            
-    }
-    ParamUpdateToken& operator()(mo::Context* ctx)
-    {
-        _ctx = ctx;
-        return *this;
-    }
-    ParamUpdateToken& operator()(long long fn)
-    {
-        _frame_number = fn;
-        return *this;
-    }
-    ParamUpdateToken& operator()(mo::Time_t time)
-    {
-        _timestamp = time;
-        _timestamp_changed = true;
-        return *this;
-    }
-    long long _frame_number = -1;
-    mo::Time_t _timestamp;
-    mo::Context* _ctx = nullptr;
-    bool _timestamp_changed;
-    mo::IParam& _param;
-};
-
 template<class T> struct TagType
 {
 
@@ -133,24 +99,23 @@ BOOST_AUTO_TEST_CASE(wrapped_Param)
     BOOST_REQUIRE(param.getData(data));
 	BOOST_CHECK_EQUAL(data, 11);
 	bool update_handler_called = false;
-	TSlot<void(Context*, IParam*)> slot([&param, &update_handler_called](Context* ctx, IParam* param_in)
-	{
+	TSlot<void(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags)> 
+        slot([&param, &update_handler_called](IParam* param_in, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags){
 		update_handler_called = param_in == &param;
 	});
-	param.registerUpdateNotifier(&slot);
+	auto connection = param.registerUpdateNotifier(&slot);
+    BOOST_REQUIRE(connection);
 	param.updateData(5);
 	BOOST_REQUIRE_EQUAL(update_handler_called, true);
 }
 
 
-BOOST_AUTO_TEST_CASE(enum_params)
-{
+BOOST_AUTO_TEST_CASE(enum_params){
     mo::EnumParam enum_param = {{"test", 5}};
     
 }
 
-BOOST_AUTO_TEST_CASE(input_Param)
-{
+BOOST_AUTO_TEST_CASE(input_param){
 	int value = 10;
 	TParamPtr<int> param("Test wrapped param", &value);
     ITInputParam<int> input_param;
@@ -160,13 +125,12 @@ BOOST_AUTO_TEST_CASE(input_Param)
 	BOOST_REQUIRE_EQUAL(data, value);
 	
 	bool update_handler_called = false;
-	TSlot<void(Context*, IParam*)> slot(
-		[&update_handler_called](Context*, IParam*)
-	{
+    TSlot<void(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags)> 
+        slot([&update_handler_called](IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags){
 		update_handler_called = true;
 	});
-
-	BOOST_REQUIRE(input_param.registerUpdateNotifier(&slot));
+    auto connection = input_param.registerUpdateNotifier(&slot);
+	BOOST_REQUIRE(connection);
 	param.updateData(5);
 	BOOST_REQUIRE_EQUAL(update_handler_called, true);
 }

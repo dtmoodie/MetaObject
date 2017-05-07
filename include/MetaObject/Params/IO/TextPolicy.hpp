@@ -5,24 +5,45 @@
 #include <boost/lexical_cast.hpp>
 #include <map>
 #include <iomanip>
+#include <type_traits>
+
 namespace mo {
 template<class T> class ITParam;
 namespace IO {
 namespace Text {
 namespace imp {
+template<class T> 
+constexpr bool is_numeric_v = (std::is_floating_point<T>::value || std::is_integral<T>::value);
+
 inline size_t textSize(const std::string& str) {
     return str.size();
 }
-inline size_t textSize(int value) {
+
+template<class T>
+size_t textSize(T value, typename std::enable_if<is_numeric_v<T> && std::is_signed<T>::value, void>::type* dummy = 0) {
     int sign = 0;
     if(value < 0)
         sign = 1;
-    value = abs(value);
+    value = std::abs<T>(value);
     if(value > 1000)
         return 4 + sign;
     if(value > 100)
         return 3 + sign;
     if(value > 10)
+        return 2 + sign;
+    return 1 + sign;
+}
+
+template<class T>
+size_t textSize(T value, typename std::enable_if<is_numeric_v<T> && !std::is_signed<T>::value, void>::type* dummy = 0) {
+    int sign = 0;
+    if (value < 0)
+        sign = 1;
+    if (value > 1000)
+        return 4 + sign;
+    if (value > 100)
+        return 3 + sign;
+    if (value > 10)
         return 2 + sign;
     return 1 + sign;
 }
@@ -78,8 +99,8 @@ auto Serialize_imp(std::ostream& os, std::vector<T> const& obj, int)->decltype(o
         while( i < obj.size() && col_count < 6) { // col
             os << std::setw(3) << std::setfill('0') << i;
             os << '=';
-            int size = textSize(obj[i]);
-            for(int j = size; j < max_size; ++j)
+            size_t size = textSize(obj[i]);
+            for(size_t j = size; j < max_size; ++j)
                 os << ' ';
             os << obj[i] << ' ';
             ++col_count;

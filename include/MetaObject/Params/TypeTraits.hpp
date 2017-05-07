@@ -25,6 +25,10 @@ template<class Type> struct ParamTraits<Type, typename std::enable_if<std::is_po
     // What is used as an input to an object
     typedef const Type* Input_t;
 
+    static inline Storage_t copy(const Type& value) {
+        return value;
+    }
+
     template<class...Args>
     static Type& reset(Storage_t& input_storage, Args...args) {
         input_storage = Type(std::forward(args)...);
@@ -59,6 +63,10 @@ template<class Type> struct ParamTraits<Type, typename std::enable_if<std::is_po
     typedef boost::optional<Type> InputStorage_t;
     typedef const Type* Input_t;
 
+
+    static inline Storage_t copy(const Type& value){
+        return value;
+    }
     template<class...Args>
     static Type& reset(Storage_t& input_storage, Args&&...args) {
         input_storage = Type(std::forward<Args>(args)...);
@@ -91,6 +99,10 @@ template<class Type> struct ParamTraits<Type, typename std::enable_if<!std::is_p
     typedef const std::shared_ptr<Type>& ConstStorageRef_t;
     typedef std::shared_ptr<const Type> InputStorage_t;
     typedef const Type* Input_t;
+
+    static inline Storage_t copy(const Type& value) {
+        return Storage_t(new Type(value));
+    }
 
     template<class...Args>
     static Type& reset(Storage_t& input_storage, Args&&...args) {
