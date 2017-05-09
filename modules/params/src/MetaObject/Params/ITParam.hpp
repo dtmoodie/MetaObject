@@ -26,13 +26,13 @@ struct Stamped {
     Stamped(typename ParamTraits<T>::Storage_t& data):
         data(data), fn(0) {}
 
-    explicit Stamped(mo::Time_t ts, typename const ParamTraits<T>::Storage_t& data):
+    explicit Stamped(mo::Time_t ts, const typename ParamTraits<T>::Storage_t& data):
         ts(ts), data(data) {}
 
-    explicit Stamped(size_t fn, typename const ParamTraits<T>::Storage_t& data):
+    explicit Stamped(size_t fn, const typename ParamTraits<T>::Storage_t& data):
         fn(fn), data(data) {}
 
-    explicit Stamped(mo::Time_t ts, size_t fn, typename const ParamTraits<T>::Storage_t& data):
+    explicit Stamped(mo::Time_t ts, size_t fn, const typename ParamTraits<T>::Storage_t& data):
         ts(ts), fn(fn), data(data) {}
 
     template<class...U>
@@ -57,32 +57,32 @@ struct Stamped {
 // The state struct is used to save a snapshot of the state of a Param at a point in time
 template<class T>
 struct State: public Stamped<T> {
-    State(mo::Time_t ts, size_t fn, Context* ctx, ICoordinateSystem* cs, typename const ParamTraits<T>::Storage_t& init):
+    State(mo::Time_t ts, size_t fn, Context* ctx, ICoordinateSystem* cs, const typename ParamTraits<T>::Storage_t& init):
         Stamped<T>(ts, fn, init),
         ctx(ctx),
         cs(cs) {}
 
-    State(mo::Time_t ts, size_t fn, Context* ctx, typename const ParamTraits<T>::Storage_t& init):
+    State(mo::Time_t ts, size_t fn, Context* ctx, const typename ParamTraits<T>::Storage_t& init):
         Stamped<T>(ts, fn, init),
         ctx(ctx),
         cs(nullptr) {}
 
-    State(size_t fn, Context* ctx, ICoordinateSystem* cs, typename const ParamTraits<T>::Storage_t& init):
+    State(size_t fn, Context* ctx, ICoordinateSystem* cs, const typename ParamTraits<T>::Storage_t& init):
         Stamped<T>(fn, init),
         ctx(ctx),
         cs(cs) {}
 
-    State(mo::Time_t ts, size_t fn, typename const ParamTraits<T>::Storage_t& init):
+    State(mo::Time_t ts, size_t fn, const typename ParamTraits<T>::Storage_t& init):
         Stamped<T>(ts, fn, init),
         ctx(nullptr),
         cs(nullptr) {}
 
-    State(mo::Time_t ts, typename const ParamTraits<T>::Storage_t& init):
+    State(mo::Time_t ts, const typename ParamTraits<T>::Storage_t& init):
         Stamped<T>(ts, init),
         ctx(nullptr),
         cs(nullptr) {}
 
-    State(typename const ParamTraits<T>::Storage_t& init):
+    State(const typename ParamTraits<T>::Storage_t& init):
         Stamped<T>(init),
         ctx(nullptr),
         cs(nullptr) {}

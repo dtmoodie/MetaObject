@@ -86,11 +86,11 @@ namespace mo
             template<typename T> 
             ParamProxy<T>::ParamProxy(IParam* param)
             {
-                SetParam(param);
+                setParam(param);
             }
             
             template<typename T> 
-            bool ParamProxy<T>::CheckParam(IParam* param)
+            bool ParamProxy<T>::checkParam(IParam* param)
             {
                 return param == Param;
             }
@@ -123,13 +123,13 @@ namespace mo
                     {
                         QWidget::setTabOrder(widgets[i], widgets[i - 1]);
                     }
-                    paramHandler.UpdateUi(Param->GetDataPtr());
+                    paramHandler.updateUi(Param->GetDataPtr());
                 }
                 return output;
             }
 
             template<typename T> 
-            bool ParamProxy<T>::SetParam(IParam* param)
+            bool ParamProxy<T>::setParam(IParam* param)
             {
                 if(param->getTypeInfo() != TypeInfo(typeid(T)))
                     return false;
@@ -138,8 +138,8 @@ namespace mo
                 {
                     Param = TParam;
                     Param->mtx();
-                    paramHandler.SetParamMtx(&Param->_mtx);
-                    paramHandler.SetData(Param->GetDataPtr());
+                    paramHandler.setParamMtx(&Param->_mtx);
+                    paramHandler.setData(Param->GetDataPtr());
                     paramHandler.IHandler::GetOnUpdate() = std::bind(&ParamProxy<T>::onUiUpdate, this);
                     //Connection = Param->update_signal.connect(std::bind(&ParamProxy<T>::onParamUpdate, this, std::placeholders::_1), Signals::GUI, true, this);
                     //delete_Connection = Param->delete_signal.connect(std::bind(&ParamProxy<T>::onParamDelete, this));

@@ -1,7 +1,7 @@
 
 #define BOOST_TEST_MAIN
-#include "MetaObject/Signals/detail/SignalMacros.hpp"
-#include "MetaObject/Signals/detail/SlotMacros.hpp"
+#include "MetaObject/Signals/Detail/SignalMacros.hpp"
+#include "MetaObject/Signals/Detail/SlotMacros.hpp"
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Signals/RelayManager.hpp"
 #include "MetaObject/Signals/TSignal.hpp"

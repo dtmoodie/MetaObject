@@ -2,7 +2,7 @@
 #ifndef __CUDACC__
 #include "MetaObject/Params/TParamPtr.hpp"
 #include "MetaObject/Params/TInputParam.hpp"
-#include "detail/ParamMacrosImpl.hpp"
+#include "MetaObject/Params/Detail/ParamMacrosImpl.hpp"
 #include "MetaObject/Detail/HelperMacros.hpp"
 
 #define PARAM(type_, name, init) \

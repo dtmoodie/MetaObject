@@ -2,7 +2,7 @@
 
 #include "MetaObject/Detail/Export.hpp"
 #include "MetaObject/Logging/LogHelperMacros.hpp"
-
+#include <functional>
 #include <boost/log/trivial.hpp>
 #ifndef WIN32
 #include "RuntimeObjectSystem/RuntimeLinkLibrary.h"

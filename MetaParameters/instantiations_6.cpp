@@ -18,7 +18,7 @@
 #else
 #  define MO_EXPORTS
 #endif
-#include "MetaObject/Params/detail/MetaParamImpl.hpp"
+#include "MetaObject/Params/Detail/MetaParamImpl.hpp"
 
 #include <cereal/types/vector.hpp>
 #include <cereal/types/string.hpp>

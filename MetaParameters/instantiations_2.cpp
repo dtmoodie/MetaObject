@@ -19,7 +19,7 @@
 #else
 #  define MO_EXPORTS
 #endif
-#include "MetaObject/Params/detail/MetaParamImpl.hpp"
+#include "MetaObject/Params/Detail/MetaParamImpl.hpp"
 INSTANTIATE_META_Param(std::vector<int>);
 INSTANTIATE_META_Param(std::vector<unsigned short>);
 INSTANTIATE_META_Param(std::vector<unsigned int>);

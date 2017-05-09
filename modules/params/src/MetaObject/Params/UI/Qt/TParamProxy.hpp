@@ -30,8 +30,8 @@ namespace mo
                 ~ParamProxy();
                 
                 QWidget* getParamWidget(QWidget* parent);
-                bool CheckParam(IParam* param);
-                bool SetParam(IParam* param);
+                bool checkParam(IParam* param);
+                bool setParam(IParam* param);
             protected:
                 void onParamUpdate(Context* ctx, IParam* param);
                 void onParamDelete(IParam const* param);

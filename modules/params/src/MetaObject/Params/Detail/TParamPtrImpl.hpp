@@ -88,7 +88,7 @@ namespace mo
             *ptr = ParamTraits<T>::get(data);
             lock.unlock();
             this->emitUpdate(ts, ctx, fn, cs);
-            ITParam::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::ValueUpdated_e);
+            ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::ValueUpdated_e);
             return true;
         }
         return false;
@@ -116,7 +116,7 @@ namespace mo
     }
 
     template<typename T>
-    bool TParamOutput<T>::getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr) {
+    bool TParamOutput<T>::getData(Storage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_) {
         if (fn == this->_fn) {
             data = this->data;
             return true;

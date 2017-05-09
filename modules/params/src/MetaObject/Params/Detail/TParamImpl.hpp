@@ -3,6 +3,9 @@
 #include "MetaObject/Params/AccessToken.hpp"
 namespace mo
 {
+    template<class T> class TParam;
+    template<class T, int N, typename Enable> class MetaParam;
+
 	template<typename T> 
     TParam<T>::TParam() :
 		ITParam<T>(), _data(),
@@ -57,7 +60,7 @@ namespace mo
         _data = data;
         this->_fn = fn;
         this->_ts = ts;
-        _typed_update_signal(data, this, ctx, ts, this->_fn, cs, ValueUpdated_e);
+        ITParam<T>::_typed_update_signal(data, this, ctx, ts, this->_fn, cs, ValueUpdated_e);
         return true;
 	}
 	

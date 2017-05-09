@@ -183,7 +183,7 @@ IParam* IParam::emitUpdate(const IParam& other){
 Mutex_t& IParam::mtx(){
     if(_mtx == nullptr){
         _mtx = new boost::recursive_timed_mutex();
-        _flags = ParamFlags(_flags | 1 << OwnsMutex_e);
+        _flags = ParamFlags(_flags | OwnsMutex_e);
     }
     return *_mtx;
 }
@@ -191,7 +191,7 @@ Mutex_t& IParam::mtx(){
 void IParam::setMtx(boost::recursive_timed_mutex* mtx_){
     if(_mtx && checkFlags(OwnsMutex_e)){
         delete _mtx;
-        _flags = ParamFlags(_flags & (1 << OwnsMutex_e));
+        _flags = ParamFlags(_flags & OwnsMutex_e);
     }
     _mtx = mtx_;
 }

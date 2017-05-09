@@ -21,7 +21,7 @@
 #else
 #  define MO_EXPORTS
 #endif
-#include "MetaObject/Params/detail/MetaParamImpl.hpp"
+#include "MetaObject/Params/Detail/MetaParamImpl.hpp"
 INSTANTIATE_META_Param(cv::Point2f);
 INSTANTIATE_META_Param(cv::Point2d);
 INSTANTIATE_META_Param(cv::Point3d);
