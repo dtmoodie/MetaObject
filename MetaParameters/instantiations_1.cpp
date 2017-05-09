@@ -7,7 +7,7 @@
 #include "MetaObject/Params/Buffers/Map.hpp"
 #include "MetaObject/Params/IO/CerealPolicy.hpp"
 #include "MetaObject/Params/IO/TextPolicy.hpp"
-
+#include "MetaObject/MetaParameters.hpp"
 #ifdef emit
 #undef emit
 #endif
@@ -19,7 +19,7 @@
 #endif
 #include <cereal/types/string.hpp>
 #include <cereal/types/map.hpp>
-#include "MetaParameters.hpp"
+
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
 #endif

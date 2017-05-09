@@ -10,18 +10,20 @@ set(link_libs "")
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_DEPENDENCIES "Build dependencies" ON)
 option(BUILD_EXAMPLES "Build examples" ON)
+option(BUILD_DEPENDENCIES "Build dependencies within the AquilOS family" ON)
 option(WITH_QT "Enable QT support" ON)
 option(WITH_PYTHON "Enable Python bindings" ON)
 option(WITH_OPENCV "Enable OpenCV types" ON )
 option(WITH_CUDA "Enable CUDA recompilation" ON)
 option(WITH_WT "Enable WT support" ON)
 
+
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 include(cmake/OpenCVPCHSupport.cmake)
-set(include_dirs_ "")
+
 set(link_dirs_deb "")
 set(link_dirs_rel "")
 set(compile_flags "")
@@ -102,7 +104,7 @@ link_directories("${CMAKE_CURRENT_BINARY_DIR}")
 file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE knl "src/*.cu")
 file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp")
-include_directories("${CMAKE_CURRENT_LIST_DIR}/include")
+#include_directories("${CMAKE_CURRENT_LIST_DIR}/include")
 
 # ---------------------- External Dependencies ---------------------------------
 
@@ -133,7 +135,6 @@ find_package(Boost REQUIRED COMPONENTS ${Boost_required_components})
 
 # ---------------------- cereal ---------------------------------
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include")
-set(MetaObject_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include;${CMAKE_CURRENT_SOURCE_DIR}/MetaParameters" CACHE PATH "" FORCE)
 set(PROJECT_BIN_DIRS_RELWITHDEBINFO "")
 set(PROJECT_BIN_DIRS_RELEASE "")
 set(PROJECT_BIN_DIRS_DEBUG "")
@@ -183,8 +184,10 @@ set_property(CACHE MO_PROFILING_MODE PROPERTY STRINGS BUILTIN DYNAMIC NONE)
 
 find_package(NVToolsExt QUIET)
 if(NVToolsExt)
-  include_directories(${NV_TOOLS_EXT_INCLUDE_DIR})
-  add_definitions(-DHAVE_NVTX)
+    if(NV_TOOLS_EXT_INCLUDE_DIR)
+        include_directories(${NV_TOOLS_EXT_INCLUDE_DIR})
+    endif(NV_TOOLS_EXT_INCLUDE_DIR)
+    add_definitions(-DHAVE_NVTX)
 endif()
 if(${MO_PROFILING_MODE} STREQUAL "BUILTIN")
   add_definitions(-DRMT_BUILTIN)
@@ -294,9 +297,9 @@ endif(NOT CUDA_CUDA_LIBRARY)
 
 # -------------------- instantiations --------------------------
 file(GLOB_RECURSE instantiations_src "MetaParameters/*")
-include_directories("MetaParameters")
 add_library(MetaParameters SHARED ${instantiations_src})
 set_target_properties(MetaParameters PROPERTIES FOLDER Dependencies)
+target_include_directories(MetaParameters PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
 if(Qt5_FOUND)
   target_link_libraries(MetaParameters Qt5::Core Qt5::Gui Qt5::Widgets)
 endif()
@@ -459,26 +462,41 @@ endif()
 export(TARGETS MetaParameters
       FILE "${PROJECT_BINARY_DIR}/MetaObjectTargets.cmake")
 
+file(COPY "cmake" DESTINATION ${PROJECT_BINARY_DIR})
+
 export(PACKAGE MetaObject)
 
 if(Qt5_FOUND)
-	set(MO_QT5 ON)
+    set(MO_QT5 ON)
 else(Qt5_FOUND)
-	set(MO_QT5 OFF)
+    set(MO_QT5 OFF)
 endif(Qt5_FOUND)
 
 if(Wt_FOUND)
-	set(MO_WT ON)
+    set(MO_WT ON)
 else(Wt_FOUND)
-	set(MO_WT OFF)
+    set(MO_WT OFF)
 endif(Wt_FOUND)
 
-configure_file(MetaObjectConfig.cmake.in
-  "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake" @ONLY)
+install(TARGETS MetaParameters
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+)
+
+install(TARGETS MetaParameters
+        DESTINATION lib
+        EXPORT MetaObjectTargets
+)
+
+install(DIRECTORY include/
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.h"
+)
 
 install(DIRECTORY dependencies/cereal/include/
-	DESTINATION include
-	FILES_MATCHING PATTERN "*.hpp"
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.hpp"
 )
 
 install(DIRECTORY dependencies/cereal/include/
@@ -494,7 +512,7 @@ if(WIN32)
         DESTINATION bin
         FILES_MATCHING PATTERN "*.pdb")
 
-	install(DIRECTORY ${CMAKE_BINARY_DIR}/Debug/
+    install(DIRECTORY ${CMAKE_BINARY_DIR}/Debug/
         DESTINATION lib
         FILES_MATCHING PATTERN "*d.pdb")
     install(DIRECTORY ${CMAKE_BINARY_DIR}/RelWithDebInfo/
@@ -506,8 +524,10 @@ endif(WIN32)
 install(DIRECTORY MetaParameters/ DESTINATION include/MetaObject FILES_MATCHING PATTERN "*.hpp")
 
 
-install(DIRECTORY cmake DESTINATION ./ FILES_MATCHING PATTERN "*.cmake")
+install(DIRECTORY cmake DESTINATION share/MetaObject FILES_MATCHING PATTERN "*.cmake")
 
 install(FILES
   "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake"
-  DESTINATION "${CMAKE_INSTALL_PREFIX}" COMPONENT dev)
+  DESTINATION "${CMAKE_INSTALL_PREFIX}/share/MetaObject" COMPONENT dev)
+
+install(EXPORT MetaObjectTargets DESTINATION "${CMAKE_INSTALL_PREFIX}/share/MetaObject" COMPONENT dev)

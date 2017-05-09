@@ -136,6 +136,6 @@ void MainWindow::on_btnSerialize_clicked()
             Params::Persistence::cv::DeSerialize(&node, Params[i].get());
         }
     }*/
-    
+
 }
 

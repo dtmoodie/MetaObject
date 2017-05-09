@@ -18,6 +18,7 @@
 #include "MetaObject/Serialization/Policy.hpp"
 #include "MetaObject/Serialization/memory.hpp"
 #include "MetaObject/Params/Detail/MetaParamImpl.hpp"
+#include "MetaObject/MetaParameters.hpp"
 #include "RuntimeObjectSystem/shared_ptr.hpp"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
@@ -25,7 +26,7 @@
 #include "cereal/archives/portable_binary.hpp"
 #include <fstream>
 #include <istream>
-#include <MetaParameters.hpp>
+
 #ifdef HAVE_OPENCV
 #include <opencv2/core.hpp>
 #endif
