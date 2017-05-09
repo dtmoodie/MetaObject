@@ -1,4 +1,4 @@
-#include "MetaObject/Params/MetaParam.hpp"
+#include <MetaObject/Params/MetaParam.hpp>
 #include "MetaObject/Params/UI/Qt/OpenCV.hpp"
 #include "MetaObject/Params/UI/Qt/Containers.hpp"
 #include "MetaObject/Params/UI/Qt/TParamProxy.hpp"
@@ -77,12 +77,12 @@ namespace cereal{
         std::string path = m.string();
         ar(path);
     }
-    template<class Archive> void load(Archive& ar, mo::Writypedefile& m){
+    template<class Archive> void load(Archive& ar, mo::WriteFile& m){
         std::string path;
         ar(path);
         m = path;
     }
-    template<class Archive> void save(Archive& ar, mo::Writypedefile const& m){
+    template<class Archive> void save(Archive& ar, mo::WriteFile const& m){
         std::string path = m.string();
         ar(path);
     }
@@ -110,7 +110,7 @@ template<class AR> void EnumParam::serialize(AR& ar){
     ar(CEREAL_NVP(enumerations), CEREAL_NVP(values), CEREAL_NVP(currentSelection));
 }
 INSTANTIATE_META_Param(ReadFile);
-INSTANTIATE_META_Param(Writypedefile);
+INSTANTIATE_META_Param(WriteFile);
 INSTANTIATE_META_Param(ReadDirectory);
 INSTANTIATE_META_Param(WriteDirectory);
 INSTANTIATE_META_Param(EnumParam);

@@ -2,7 +2,7 @@
 add_library(MetaPython SHARED "MetaPython.cpp")
 
 target_link_libraries(MetaPython 
-    MetaObject 
+    ${MetaObject_LIBRARIES}
     ${Boost_PYTHON3_LIBRARY_DEBUG} 
     ${Boost_PYTHON3_LIBRARY_RELEASE}
     ${PYTHON_LIBRARY})

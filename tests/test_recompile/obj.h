@@ -1,7 +1,6 @@
 #pragma once
-
-#include "MetaObject/Signals/detail/SignalMacros.hpp"
-#include "MetaObject/Signals/detail/SlotMacros.hpp"
+#include "MetaObject/Signals/Detail/SignalMacros.hpp"
+#include "MetaObject/Signals/Detail/SlotMacros.hpp"
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/Signals/TSignal.hpp"
 #include "MetaObject/Detail/Counter.hpp"

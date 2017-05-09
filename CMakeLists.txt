@@ -107,7 +107,10 @@ include_directories("${CMAKE_CURRENT_LIST_DIR}/include")
 # ---------------------- External Dependencies ---------------------------------
 
 # ---------------------- Boost ---------------------------------
-set(Boost_required_components system thread log log_setup unit_test_framework)
+set(Boost_required_components system thread log log_setup)
+if(BUILD_TESTS)
+list(APPEND Boost_required_components unit_test_framework)
+endif()
 set(Boost_USE_STATIC_LIBS        OFF)
 set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME     OFF)
@@ -185,8 +188,6 @@ if(NVToolsExt)
 endif()
 if(${MO_PROFILING_MODE} STREQUAL "BUILTIN")
   add_definitions(-DRMT_BUILTIN)
-  #list(APPEND link_libs Remotery)
-  #include_directories("dependencies/Remotery/lib")
 endif()
 if(${MO_PROFILING_MODE} STREQUAL "NONE")
   add_definitions(-DPROFILING_NONE)
@@ -284,60 +285,23 @@ endif(${ZeroMQ_FOUND})
 
 #add_subdirectory("dependencies/Remotery")
 #set_target_properties(Remotery PROPERTIES FOLDER Dependencies)
-GroupSources(include)
-GroupSources(src)
-cuda_add_library(MetaObject SHARED ${src} ${hdr} ${knl} src/MetaObject/precompiled.hpp)
+#GroupSources(include)
+#GroupSources(src)
 
 if(NOT CUDA_CUDA_LIBRARY)
     set(CUDA_CUDA_LIBRARY "/usr/local/nvidia/lib64/libcuda.so")
 endif(NOT CUDA_CUDA_LIBRARY)
-
-target_link_libraries(MetaObject
-  ${RCC_LIBRARIES}
-  ${link_libs}
-  ${OpenCV_LIBS}
-  ${CUDA_CUDART_LIBRARY}
-  ${CUDA_CUDA_LIBRARY}
-  RuntimeObjectSystem
-)
-
-target_include_directories(MetaObject 
-  PUBLIC 
-    $<BUILD_INTERFACE:${RCC_INCLUDE_DIRS}>
-)
-if(NOT MSVC)
-target_compile_options(MetaObject PUBLIC --std=c++11)
-endif()
-if(HAVE_PYTHON)
-    target_link_libraries(MetaObject
-        ${PYTHON_LIBRARY}
-    )
-endif(HAVE_PYTHON)
-
-ocv_add_precompiled_header_to_target(MetaObject src/precompiled.hpp)
-
-if(RCC_VERBOSE_CONFIG)
-  message(STATUS "MetaObject compile flags\n"
-                 "  CXX flags: ${CMAKE_CXX_FLAGS}\n"
-                 "  CXX flags Release: ${CMAKE_CXX_FLAGS_RELEASE}\n"
-                 "  CXX flags Debug: ${CMAKE_CXX_FLAGS_DEBUG}\n"
-                 "  CUDA flags: ${CUDA_NVCC_FLAGS}\n"
-                 "  CUDA flags Release: ${CUDA_NVCC_FLAGS_RELEASE}\n"
-                 "  CUDA flags Debug: ${CUDA_NVCC_FLAGS_DEBUG}\n")
-endif()
-
 
 # -------------------- instantiations --------------------------
 file(GLOB_RECURSE instantiations_src "MetaParameters/*")
 include_directories("MetaParameters")
 add_library(MetaParameters SHARED ${instantiations_src})
 set_target_properties(MetaParameters PROPERTIES FOLDER Dependencies)
-target_link_libraries(MetaParameters MetaObject)
 if(Qt5_FOUND)
   target_link_libraries(MetaParameters Qt5::Core Qt5::Gui Qt5::Widgets)
 endif()
 if(OpenCV_FOUND AND WITH_OPENCV)
-  target_link_libraries(MetaParameters ${OpenCV_LIBS})
+  target_link_libraries(MetaParameters ${OpenCV_LIBS} ${MetaObject_LIBRARIES})
 endif()
 
 FOREACH(dir ${BIN_DIRS})
@@ -377,8 +341,6 @@ list(REMOVE_DUPLICATES PROJECT_BIN_DIRS_DEBUG)
 list(REMOVE_DUPLICATES PROJECT_BIN_DIRS_RELEASE)
 list(REMOVE_DUPLICATES PROJECT_BIN_DIRS_RELWITHDEBINFO)
 
-get_target_property(target_include_dirs_ MetaObject INCLUDE_DIRECTORIES)
-get_target_property(target_link_libs_    MetaObject LINK_LIBRARIES)
 set(LINK_DIRS_RELEASE "")
 set(LINK_DIRS_DEBUG "")
 
@@ -410,47 +372,70 @@ if(MSVC)
     list(APPEND LINK_DIRS_RELEASE "${CMAKE_BINARY_DIR}/Release")
     list(APPEND LINK_DIRS_DEBUG "${CMAKE_BINARY_DIR}/Debug")
 endif()
-LIST(REMOVE_DUPLICATES target_include_dirs_)
-LIST(REMOVE_DUPLICATES LINK_DIRS_RELEASE)
-LIST(REMOVE_DUPLICATES LINK_DIRS_DEBUG)
 
 WRITE_RCC_CONFIG("${target_include_dirs_}" "${LINK_DIRS_DEBUG}" "${LINK_DIRS_RELEASE}" "")
 
-# ----------------------- tests -----------------------------------
-if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
-  include(CTest)
-  enable_testing()
-  SUBDIRLIST(tests "${CMAKE_CURRENT_LIST_DIR}/tests")
-  foreach(test ${tests})
-    file(GLOB_RECURSE test_srcs "tests/${test}/*.cpp")
-    IF(CUDA_FOUND)
-      file(GLOB_RECURSE test_knl "tests/${test}/*.cu")
-    ENDIF()
-    LIST(LENGTH test_knl num_knl)
-    IF(${num_knl} GREATER 0)
-      cuda_add_executable(${test} ${test_srcs} ${test_knl})
+# ---------------------- modules ------------------------------------
+set(metaobject_modules "" CACHE INTERNAL "" FORCE)
+function(metaobject_declare_module)
+	set(oneValueArgs NAME)
+	set(multiValueArgs SRC DEPENDS FLAGS)
+	cmake_parse_arguments(metaobject_declare_module "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+    if(${metaobject_declare_module_SRC})
+        cuda_add_library(metaobject_${metaobject_declare_module_NAME} ${${metaobject_declare_module_SRC}})
     else()
-      add_executable(${test} ${test_srcs})
+        file(GLOB_RECURSE src "src/*.cpp" "src/*.h" "src/*.cu" "src/*.hpp")
+        cuda_add_library(metaobject_${metaobject_declare_module_NAME} ${src})
     endif()
-    TARGET_LINK_LIBRARIES(${test}
-        MetaObject
-        MetaParameters
-        ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-        ${link_libs}
+	set(metaobject_modules "${metaobject_modules};metaobject_${metaobject_declare_module_NAME}" CACHE INTERNAL "" FORCE)
+    
+	if(metaobject_declare_module_DEPENDS)
+        rcc_link_lib(metaobject_${metaobject_declare_module_NAME} ${metaobject_declare_module_DEPENDS})
+    endif()
+	
+    target_include_directories(metaobject_${metaobject_declare_module_NAME}
+        PUBLIC
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
+            $<INSTALL_INTERFACE:include>
     )
 
-    if(OpenCV_FOUND)
-      TARGET_LINK_LIBRARIES(${test} ${OpenCV_LIBS})
+    if(metaobject_declare_module_FLAGS)
+        target_compile_options(metaobject_${metaobject_declare_module_NAME} PUBLIC ${metaobject_declare_module_FLAGS})
     endif()
-    ADD_DEPENDENCIES(${test} MetaObject)
-    set_target_properties(${test} PROPERTIES FOLDER Tests/MetaObject)
-    add_test(NAME ${test} COMMAND $<TARGET_FILE:${test}>)
-    if(MSVC)
-      CONFIGURE_FILE("tests/Test.vcxproj.user.in" ${CMAKE_BINARY_DIR}/${test}.vcxproj.user @ONLY)
-      CONFIGURE_FILE("tests/Test.vcxproj.user.in" ${CMAKE_CURRENT_BINARY_DIR}/${test}.vcxproj.user @ONLY)
-    endif()
-  endforeach()
-endif()
+
+    export(TARGETS metaobject_${metaobject_declare_module_NAME}
+        FILE "${PROJECT_BINARY_DIR}/MetaObjectTargets-${metaobject_declare_module_NAME}.cmake"
+    )
+    install(TARGETS metaobject_${metaobject_declare_module_NAME}
+        RUNTIME DESTINATION bin
+        LIBRARY DESTINATION lib
+        ARCHIVE DESTINATION lib
+    )
+    install(TARGETS metaobject_${metaobject_declare_module_NAME}
+        DESTINATION lib
+        EXPORT metaobject_${metaobject_declare_module_NAME}Targets
+    )
+    install(DIRECTORY src/
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.h"
+    )
+
+    install(DIRECTORY src/
+        DESTINATION include
+        FILES_MATCHING PATTERN "*.hpp"
+    )
+	install(EXPORT metaobject_${metaobject_declare_module_NAME}Targets DESTINATION "${CMAKE_INSTALL_PREFIX}/share/MetaObject" COMPONENT dev)
+endfunction()
+
+SUBDIRLIST(modules "${CMAKE_CURRENT_LIST_DIR}/modules")
+foreach( module ${modules})
+    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/modules/${module})
+endforeach()
+set(MetaObject_LIBRARIES "${metaobject_modules}" CACHE STRING "" FORCE)
+
+if(BUILD_TESTS)
+	add_subdirectory(tests)
+endif(BUILD_TESTS)
 
 # ---------------------- status message -----------------------------
 message(STATUS
@@ -471,7 +456,7 @@ if(BUILD_EXAMPLES)
     ADD_SUBDIRECTORY("examples")
 endif()
 # ----------------------- install ----------------------------
-export(TARGETS MetaObject MetaParameters
+export(TARGETS MetaParameters
       FILE "${PROJECT_BINARY_DIR}/MetaObjectTargets.cmake")
 
 export(PACKAGE MetaObject)
@@ -490,22 +475,6 @@ endif(Wt_FOUND)
 
 configure_file(MetaObjectConfig.cmake.in
   "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake" @ONLY)
-
-install(TARGETS MetaObject MetaParameters
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-)
-
-install(TARGETS MetaObject MetaParameters 
-        DESTINATION lib
-        EXPORT MetaObjectTargets
-)
-
-install(DIRECTORY include/
-        DESTINATION include
-        FILES_MATCHING PATTERN "*.h"
-)
 
 install(DIRECTORY dependencies/cereal/include/
 	DESTINATION include
@@ -536,15 +505,9 @@ endif(WIN32)
 
 install(DIRECTORY MetaParameters/ DESTINATION include/MetaObject FILES_MATCHING PATTERN "*.hpp")
 
-install(DIRECTORY include/
-        DESTINATION include
-        FILES_MATCHING PATTERN "*.hpp"
-)
 
 install(DIRECTORY cmake DESTINATION ./ FILES_MATCHING PATTERN "*.cmake")
 
 install(FILES
   "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake"
   DESTINATION "${CMAKE_INSTALL_PREFIX}" COMPONENT dev)
-
-install(EXPORT MetaObjectTargets DESTINATION "${CMAKE_INSTALL_PREFIX}" COMPONENT dev)
