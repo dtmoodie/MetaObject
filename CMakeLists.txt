@@ -105,7 +105,9 @@ file(GLOB_RECURSE knl "src/*.cu")
 file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp")
 #include_directories("${CMAKE_CURRENT_LIST_DIR}/include")
 
+# ------------------------------------------------------------------------------
 # ---------------------- External Dependencies ---------------------------------
+# ------------------------------------------------------------------------------
 
 # ---------------------- Boost ---------------------------------
 set(Boost_required_components system thread log log_setup)
@@ -138,7 +140,7 @@ set(PROJECT_BIN_DIRS_RELWITHDEBINFO "")
 set(PROJECT_BIN_DIRS_RELEASE "")
 set(PROJECT_BIN_DIRS_DEBUG "")
 
-# CUDA
+# --------------------- cuda -------------------------------------
 if(WITH_CUDA)
   FIND_PACKAGE(CUDA REQUIRED)
   include("cmake/Cuda.cmake")
@@ -153,6 +155,9 @@ if(WITH_CUDA)
     endif(NOT WIN32)
   ENDIF(${CUDA_FOUND})
 endif(WITH_CUDA)
+if(NOT CUDA_CUDA_LIBRARY AND UNIX)
+    set(CUDA_CUDA_LIBRARY "/usr/local/nvidia/lib64/libcuda.so")
+endif(NOT CUDA_CUDA_LIBRARY AND UNIX)
 
 # ---------------------- rcc ---------------------------------
 if(NOT BUILD_DEPENDENCIES)
@@ -174,7 +179,6 @@ else(RCC_FOUND)
     include_directories(${RCC_INCLUDE_DIRS})
     set_target_properties(RuntimeCompiler PROPERTIES FOLDER Dependencies)
     set_target_properties(RuntimeObjectSystem PROPERTIES FOLDER Dependencies)
-    set(RCC_PERMODULE_INTERFACE_SOURCE ${RCC_PERMODULE_INTERFACE_SOURCE} PARENT_SCOPE)
 endif(RCC_FOUND)
 
 # -------------------- Profiling ---------------------------------
@@ -197,8 +201,11 @@ endif()
 
 add_definitions(-DRMT_USE_CUDA)
 
+# ------------------------------------------------------------------------------
 # ---------------------- Optional dependencies ------------------
-# Qt5
+# ------------------------------------------------------------------------------
+
+# ------------------------- QT5 ----------------------------------------------
 if(WITH_QT)
   find_package(Qt5 QUIET COMPONENTS Core Widgets Gui)
   if(Qt5_FOUND)
@@ -223,7 +230,7 @@ if(WITH_QT)
   endif()
 endif()
 
-# WT
+# ----------------------------WT ---------------------------------------------
 if(WITH_WT)
 find_package(Wt QUIET)
   if(Wt_FOUND)
@@ -240,7 +247,8 @@ find_package(Wt QUIET)
       NAMES wt.dll wtd.dll
       PATHS ${Wt_DIR} "${Wt_INCLUDE_DIR}/../"
       ENV ${Wt_DIR}
-      PATH PATH_SUFFIXES bin)
+      PATH PATH_SUFFIXES bin
+	)
 
     if(Wt_BIN_DIR)
       set(Wt_BIN_DIR_DBG ${Wt_BIN_DIR} CACHE PATH "" FORCE)
@@ -252,13 +260,12 @@ find_package(Wt QUIET)
   endif(Wt_FOUND)
 endif(WITH_WT)
 
-# OpenCV
+# -------------------------------- OpenCV -----------------------------------------
 if(WITH_OPENCV)
   find_package(OpenCV QUIET COMPONENTS core cudaarithm)
   if(OpenCV_FOUND)
     add_definitions(-DHAVE_OPENCV)
     include_directories(${OpenCV_INCLUDE_DIRS})
-
     if(WIN32)
         set(bin_dirs_ "${BIN_DIRS};OpenCV")
         list(REMOVE_DUPLICATES bin_dirs_)
@@ -272,11 +279,10 @@ if(WITH_OPENCV)
         list(APPEND PROJECT_BIN_DIRS_RELEASE ${dll_path})
         list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO ${dll_path})
     endif()
-
   endif()
 endif(WITH_OPENCV)
 
-# ZeroMQ
+# ----------------------- ZeroMQ ------------------------------------------
 find_package(ZeroMQ QUIET)
 if(${ZeroMQ_FOUND})
   include_directories(${ZeroMQ_INCLUDE_DIR})
@@ -284,15 +290,6 @@ if(${ZeroMQ_FOUND})
   list(APPEND link_libs "optimized;${ZeroMQ_LIBRARY_RELEASE};debug;${ZeroMQ_LIBRARY_DEBUG}")
   add_definitions(-DHAVE_ZEROMQ)
 endif(${ZeroMQ_FOUND})
-
-#add_subdirectory("dependencies/Remotery")
-#set_target_properties(Remotery PROPERTIES FOLDER Dependencies)
-#GroupSources(include)
-#GroupSources(src)
-
-if(NOT CUDA_CUDA_LIBRARY)
-    set(CUDA_CUDA_LIBRARY "/usr/local/nvidia/lib64/libcuda.so")
-endif(NOT CUDA_CUDA_LIBRARY)
 
 FOREACH(dir ${BIN_DIRS})
   APPEND_BIN_DIR(${dir}_BIN_DIR_DBG PROJECT_BIN_DIRS_DEBUG)
@@ -367,10 +364,25 @@ WRITE_RCC_CONFIG("${target_include_dirs_}" "${LINK_DIRS_DEBUG}" "${LINK_DIRS_REL
 
 # ---------------------- modules ------------------------------------
 set(metaobject_modules "" CACHE INTERNAL "" FORCE)
+macro(GroupSources basedir curdir tab)
+message("${tab}${basedir} - ${curdir}")
+file(GLOB children RELATIVE "${basedir}/${curdir}" "${basedir}/${curdir}/*")
+    foreach(child ${children})
+		message("${tab}  ${child}")
+        if(IS_DIRECTORY ${basedir}/${curdir}/${child})
+            GroupSources("${basedir}" ${curdir}/${child} "${tab}  ")
+        else()
+            string(REPLACE "/" "\\" groupname ${curdir})
+            source_group(${groupname} FILES ${basedir}/${curdir}/${child})
+        endif()
+   endforeach()
+endmacro()
+
 function(metaobject_declare_module)
 	set(oneValueArgs NAME)
 	set(multiValueArgs SRC DEPENDS FLAGS)
 	cmake_parse_arguments(metaobject_declare_module "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+	GroupSources("${CMAKE_CURRENT_LIST_DIR}/src/MetaObject/" "/" " ")
     if(${metaobject_declare_module_SRC})
         cuda_add_library(metaobject_${metaobject_declare_module_NAME} ${${metaobject_declare_module_SRC}})
     else()
@@ -427,21 +439,6 @@ foreach( module ${modules})
 endforeach()
 set(MetaObject_LIBRARIES "${metaobject_modules}" CACHE STRING "" FORCE)
 
-# -------------------- instantiations --------------------------
-file(GLOB_RECURSE instantiations_src "MetaParameters/*")
-add_library(MetaParameters SHARED ${instantiations_src})
-set_target_properties(MetaParameters PROPERTIES FOLDER Dependencies)
-target_include_directories(MetaParameters PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/include>)
-if(Qt5_FOUND)
-  target_link_libraries(MetaParameters Qt5::Core Qt5::Gui Qt5::Widgets)
-endif()
-if(OpenCV_FOUND AND WITH_OPENCV)
-  target_link_libraries(MetaParameters ${OpenCV_LIBS} ${MetaObject_LIBRARIES})
-endif()
-if(UNIX)
-    set_property(TARGET MetaParameters PROPERTY CXX_STANDARD 14)
-endif()
-
 # -------------------- tests ----------------------------------
 if(BUILD_TESTS)
 	add_subdirectory(tests)
@@ -466,9 +463,6 @@ if(BUILD_EXAMPLES)
     ADD_SUBDIRECTORY("examples")
 endif()
 # ----------------------- install ----------------------------
-export(TARGETS MetaParameters
-      FILE "${PROJECT_BINARY_DIR}/MetaObjectTargets.cmake")
-
 file(COPY "cmake" DESTINATION ${PROJECT_BINARY_DIR})
 
 export(PACKAGE MetaObject)
@@ -484,22 +478,6 @@ if(Wt_FOUND)
 else(Wt_FOUND)
     set(MO_WT OFF)
 endif(Wt_FOUND)
-
-install(TARGETS MetaParameters
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-)
-
-install(TARGETS MetaParameters
-        DESTINATION lib
-        EXPORT MetaObjectTargets
-)
-
-install(DIRECTORY include/
-        DESTINATION include
-        FILES_MATCHING PATTERN "*.h"
-)
 
 install(DIRECTORY dependencies/cereal/include/
     DESTINATION include
@@ -528,13 +506,8 @@ if(WIN32)
 
 endif(WIN32)
 
-install(DIRECTORY MetaParameters/ DESTINATION include/MetaObject FILES_MATCHING PATTERN "*.hpp")
-
-
 install(DIRECTORY cmake DESTINATION share/MetaObject FILES_MATCHING PATTERN "*.cmake")
 
 install(FILES
   "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake"
   DESTINATION "${CMAKE_INSTALL_PREFIX}/share/MetaObject" COMPONENT dev)
-
-install(EXPORT MetaObjectTargets DESTINATION "${CMAKE_INSTALL_PREFIX}/share/MetaObject" COMPONENT dev)
