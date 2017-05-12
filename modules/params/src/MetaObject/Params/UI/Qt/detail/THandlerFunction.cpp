@@ -7,52 +7,24 @@ using namespace mo;
 using namespace mo::UI;
 using namespace mo::UI::qt;
 
-THandler<std::function<void(void)>, void>::THandler() : 
-    funcData(nullptr), 
-    btn(nullptr) 
+THandler<std::function<void(void)>, void>::THandler(IParamProxy& parent) :
+    btn(nullptr),
+    UiUpdateHandler(parent)
 {}
 
-void THandler<std::function<void(void)>, void>::UpdateUi(std::function<void(void)>* data)
-{
-    funcData = data;
+void THandler<std::function<void(void)>, void>::updateUi(const std::function<void(void)>& data){
+    
 }
 
-void THandler<std::function<void(void)>, void>::onUiUpdate(QObject* sender)
-{
-    if (sender == btn && IHandler::getParamMtx())
-    {
-        mo::Mutex_t::scoped_lock lock(*IHandler::getParamMtx());
-        if (funcData)
-        {
-            (*funcData)();
-            if (onUpdate)
-            {
-                onUpdate();
-                if(_listener)
-                    _listener->onUpdate(this);
-            }
-        }
-    }
+void THandler<std::function<void(void)>, void>::updateParam(std::function<void(void)>& data) {
+    data();
 }
 
-void THandler<std::function<void(void)>, void>::SetData(std::function<void(void)>* data_)
-{
-    funcData = data_;
-}
-
-std::function<void(void)>* THandler<std::function<void(void)>, void>::GetData()
-{
-    return funcData;
-}
-
-std::vector<QWidget*> THandler<std::function<void(void)>, void>::GetUiWidgets(QWidget* parent)
-{
+std::vector<QWidget*> THandler<std::function<void(void)>, void>::getUiWidgets(QWidget* parent){
     std::vector<QWidget*> output;
-    if (btn == nullptr)
-    {
+    if (btn == nullptr){
         btn = new QPushButton(parent);
     }
-
     btn->connect(btn, SIGNAL(clicked()), proxy, SLOT(on_update()));
     output.push_back(btn);
     return output;

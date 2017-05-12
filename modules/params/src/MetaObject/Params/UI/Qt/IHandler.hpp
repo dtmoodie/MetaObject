@@ -21,13 +21,8 @@ namespace mo{
             //                                IHandler
             // *****************************************************************************
             class MO_EXPORTS IHandler{
-            private:
-                Mutex_t** paramMtx;
-            protected:
-                UiUpdateListener* _listener;
-                SignalProxy* proxy;
-                std::function<void(void)> onUpdate;
             public:
+                static const bool UI_UPDATE_REQUIRED = false;
                 IHandler();
                 virtual ~IHandler();
                 virtual void onUiUpdate(QObject* sender);
@@ -36,13 +31,12 @@ namespace mo{
                 virtual void onUiUpdate(QObject* sender, bool val);
                 virtual void onUiUpdate(QObject* sender, QString val);
                 virtual void onUiUpdate(QObject* sender, int row, int col);
-                virtual void setUpdateListener(UiUpdateListener* listener);
                 
                 virtual std::function<void(void)>& getOnUpdate();
                 virtual std::vector<QWidget*> getUiWidgets(QWidget* parent);
-                virtual void setParamMtx(Mutex_t** mtx);
-                virtual Mutex_t* getParamMtx();
-                static bool uiUpdateRequired();
+            protected:
+                SignalProxy* proxy;
+                std::function<void(void)> onUpdate;
             };
         }
     }

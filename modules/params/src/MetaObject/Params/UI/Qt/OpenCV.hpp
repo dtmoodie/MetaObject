@@ -19,66 +19,41 @@ namespace mo
             // **********************************************************************************
             // *************************** cv::Rect *********************************************
             // **********************************************************************************
-            template<typename T> class THandler<typename ::cv::Rect_<T>, void> : public UiUpdateHandler
-            {
+            template<typename T> class THandler<typename ::cv::Rect_<T>, void> : public UiUpdateHandler{
                 bool _currently_updating;
                 THandler<T> _x_handler;
                 THandler<T> _y_handler;
                 THandler<T> _width_handler;
                 THandler<T> _height_handler;
-                cv::Rect_<T>* _data;
+                IParamProxy& _parent;
             public:
                 static const bool IS_DEFAULT = false;
-                THandler(): _currently_updating(false), _data(nullptr)
-                {}
+                THandler(IParamProxy& parent): _currently_updating(false), _x_handler(parent), _y_handler(parent), 
+                    _width_handler(parent), _height_handler(parent), _parent(parent){}
 
-                virtual void updateUi( ::cv::Rect_<T>* data)
-                {
+                virtual void updateUi( const ::cv::Rect_<T>& data){
                     _currently_updating = true;
-                    if(data)
-                    {
-                        _x_handler.updateUi(&data->x);
-                        _y_handler.updateUi(&data->y);
-                        _width_handler.updateUi(&data->width);
-                        _height_handler.updateUi(&data->height);
-                    }else
-                    {
-                        _x_handler.updateUi(nullptr);
-                        _y_handler.updateUi(nullptr);
-                        _width_handler.updateUi(nullptr);
-                        _height_handler.updateUi(nullptr);
-                    }
+                    _x_handler.updateUi(data.x);
+                    _y_handler.updateUi(data.y);
+                    _width_handler.updateUi(data.width);
+                    _height_handler.updateUi(data.height);
                     _currently_updating = false;
                 }
-                virtual void onUiUpdate(QObject* sender)
-                {
-                    if(_currently_updating || !IHandler::getParamMtx())
+
+                void onUiUpdate(QObject* sender) { _parent.onUiUpdate(sender); }
+
+                void updateParam(T& data) {
+                    if(_currently_updating)
                         return;
-                    mo::Mutex_t::scoped_lock lock(*IHandler::getParamMtx());
-                    _x_handler.onUiUpdate(sender);
-                    _y_handler.onUiUpdate(sender);
-                    _width_handler.onUiUpdate(sender);
-                    _height_handler.onUiUpdate(sender);
-                    if(_listener)
-                        _listener->onUpdate(this);
+                    _currently_updating = true;
+                    _x_handler.updateParam(sender);
+                    _y_handler.updateParam(sender);
+                    _width_handler.updateParam(sender);
+                    _height_handler.updateParam(sender);
+                    _currently_updating = false;
                 }
-                virtual void setData(::cv::Rect_<T>* data_)
-                {
-                    _data = data_;
-                    if(data_)
-                    {
-                        _x_handler.setData(&data_->x);
-                        _y_handler.setData(&data_->y);
-                        _width_handler.setData(&data_->width);
-                        _height_handler.setData(&data_->height);
-                    }
-                }
-                cv::Rect_<T>* GetData()
-                {
-                    return _data;;
-                }
-                virtual std::vector<QWidget*> getUiWidgets(QWidget* parent)
-                {
+
+                virtual std::vector<QWidget*> getUiWidgets(QWidget* parent){
                     std::vector<QWidget*> output;
                     auto out1 = _x_handler.getUiWidgets(parent);
                     auto out2 = _y_handler.getUiWidgets(parent);
@@ -88,23 +63,7 @@ namespace mo
                     output.insert(output.end(), out2.begin(), out2.end());
                     output.insert(output.end(), out3.begin(), out3.end());
                     output.insert(output.end(), out4.begin(), out4.end());
-
                     return output;
-                }
-                virtual void setParamMtx(boost::recursive_mutex** mtx)
-                {
-                    IHandler::setParamMtx(mtx);
-                    _x_handler.setParamMtx(mtx);
-                    _y_handler.setParamMtx(mtx);
-                    _width_handler.setParamMtx(mtx);
-                    _height_handler.setParamMtx(mtx);
-                }
-                virtual void setUpdateListener(UiUpdateListener* listener)
-                {
-                    _x_handler.setUpdateListener(listener);
-                    _y_handler.setUpdateListener(listener);
-                    _width_handler.setUpdateListener(listener);
-                    _height_handler.setUpdateListener(listener);
                 }
             };
             
@@ -112,28 +71,24 @@ namespace mo
             // *************************** cv::Range *********************************************
             // **********************************************************************************
 
-            template<> class THandler<cv::Range, void> : public UiUpdateHandler
-            {
+            template<> class THandler<cv::Range, void> : public IHandler{
                 THandler<int> _start_handler;
                 THandler<int> _end_handler;
-                cv::Range* _data;
+                IParamProxy& _parent;
                 bool _currently_updating;
             public:
                 static const bool IS_DEFAULT = false;
-                THandler() : 
-                    _data(nullptr), 
-                    _currently_updating(false) 
-                {}
+                THandler(IParamProxy& parent) :
+                    _currently_updating(false),
+                    _start_handler(parent),
+                    _end_handler(parent),
+                    _parent(parent){}
 
-                virtual void UpdateUi( cv::Range* data)
-                {
-                    if(data)
-                    {
-                        _currently_updating = true;
-                        _start_handler.UpdateUi(&data->start);
-                        _end_handler.UpdateUi(&data->end);
-                        _currently_updating = false;
-                    }
+                virtual void updateUi( const cv::Range& data){
+                    _currently_updating = true;
+                    _start_handler.updateUi(data.start);
+                    _end_handler.updateUi(data.end);
+                    _currently_updating = false;
                 }
                 virtual void onUiUpdate(QObject* sender, int val)
                 {
@@ -142,22 +97,7 @@ namespace mo
                     _start_handler.onUiUpdate(sender);
                     _end_handler.onUiUpdate(sender);
                 }
-                virtual void SetData(cv::Range* data_)
-                {    
-                    if(IHandler::getParamMtx())
-                    {
-                        if(data_)
-                        {
-                            _data = data_;
-                            _start_handler.SetData(&_data->start);
-                            _end_handler.SetData(&_data->end);
-                        }
-                    }
-                }
-                cv::Range* GetData()
-                {
-                    return _data;
-                }
+                
                 virtual std::vector < QWidget*> GetUiWidgets(QWidget* parent_)
                 {
                     std::vector<QWidget*> output;

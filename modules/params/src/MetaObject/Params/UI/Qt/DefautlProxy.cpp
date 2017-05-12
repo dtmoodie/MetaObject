@@ -20,7 +20,7 @@ bool DefaultProxy::setParam(IParam* param)
     param->registerDeleteNotifier(&delete_slot);
     return true;
 }
-bool DefaultProxy::checkParam(IParam* param)
+bool DefaultProxy::checkParam(IParam* param) const
 {    
     return param == param;
 }
@@ -44,7 +44,7 @@ QWidget* DefaultProxy::getParamWidget(QWidget* parent)
 	return nullptr;
 }
 
-void DefaultProxy::onUiUpdate()
+void DefaultProxy::onUiUpdate(QObject* source)
 {
 }
 

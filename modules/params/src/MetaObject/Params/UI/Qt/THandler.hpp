@@ -1,9 +1,10 @@
 #pragma once
 #ifdef HAVE_QT5
 #include "IHandler.hpp"
+#include "IParamProxy.hpp"
 #include "MetaObject/Logging/Log.hpp"
 #include "MetaObject/Params/Demangle.hpp"
-#include "MetaObject/Params/UI/Qt/IHandler.hpp"
+
 class QWidget;
 class QObject;
 namespace mo
@@ -16,35 +17,29 @@ namespace mo
             //                                Unspecialized handler
             // *****************************************************************************
             template<typename T, typename Enable = void>
-            class THandler : public IHandler
-            {
-                T* currentData;
-                
+            class THandler : public IHandler{
+                IParamProxy& _parent;
             public:
-                THandler():
-                    currentData(nullptr)
-                {
+                THandler(IParamProxy& parent):
+                    _parent(parent){
                     LOG(debug) << "Creating handler for default unspecialized Param " << Demangle::TypeToName(typeid(T));
                 }
-                virtual void UpdateUi( T* data){}
-                virtual void onUiUpdate(QObject* sender){}
-                virtual void SetData(T* data)
-                {
-                    currentData = data;
-                }
-                T* GetData()
-                {
-                    return currentData;
-                }
-                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
-                {
+
+                // Update user interface from parameter update
+                void updateUi(const T& data){}
+
+                // update raw data from user interface
+                void updateParam(T& data){}
+
+                // notify parent ParamProxy of the update, param proxy will lock parameter and call updateParam
+                void onUiUpdate(QObject* sender){ _parent.onUiUpdate(sender); }
+                
+                virtual std::vector<QWidget*> getUiWidgets(QWidget* parent){
                     LOG(debug) << "Creating widget for default unspecialized Param " << Demangle::TypeToName(typeid(T));
                     return std::vector<QWidget*>();
                 }
-                static bool UiUpdateRequired()
-                {
-                    return false;
-                }
+                
+                static const bool UI_UPDATE_REQUIRED = false;
                 static const bool IS_DEFAULT = true;
             };
         }

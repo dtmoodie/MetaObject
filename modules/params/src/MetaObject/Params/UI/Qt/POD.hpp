@@ -8,8 +8,6 @@
 #include <qcombobox.h>
 #include <qspinbox.h>
 
-#include <boost/thread/recursive_mutex.hpp>
-
 class QLineEdit;
 class QCheckBox;
 class QPushButton;
@@ -24,62 +22,47 @@ namespace mo
     {
         namespace qt
         {
-            
-
             // **********************************************************************************
             // *************************** Bool ************************************************
             // **********************************************************************************
-            template<> class MO_EXPORTS THandler<bool, void> : public UiUpdateHandler
-            {
+            template<> class MO_EXPORTS THandler<bool, void> : public UiUpdateHandler {
                 QCheckBox* chkBox;
-                bool* boolData;
-                bool _currently_updating;
             public:
-                static const bool IS_DEFAULT = false;
-                THandler();
-                virtual void UpdateUi( bool* data);
-                virtual void onUiUpdate(QObject* sender, int val);
-                virtual void SetData(bool* data_);
-                bool* GetData();
-                virtual std::vector < QWidget*> GetUiWidgets(QWidget* parent_);
-                static bool UiUpdateRequired();
+                THandler(IParamProxy& parent);
+                void updateUi(const bool& data);
+                void updateParam(bool& data);
+                virtual std::vector < QWidget*> getUiWidgets(QWidget* parent_);
+                static bool uiUpdateRequired();
             };
 
             // **********************************************************************************
             // *************************** std::string ******************************************
             // **********************************************************************************
 
-            template<> class MO_EXPORTS THandler<std::string, void> : public UiUpdateHandler
-            {
-                std::string* strData;
+            template<> class MO_EXPORTS THandler<std::string, void> : public UiUpdateHandler {
                 QLineEdit* lineEdit;
-                bool _currently_updating = false;
             public:
-                static const bool IS_DEFAULT = false;
-                THandler();
-                virtual void UpdateUi( std::string* data);
-                virtual void onUiUpdate(QObject* sender);
-                virtual void SetData(std::string* data_);
-                std::string* GetData();
-                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent);
+                THandler(IParamProxy& parent);
+                void updateUi(const std::string& data);
+                void updateParam(std::string& data);
+                void onUiUpdate(QObject* sender);
+                
+                virtual std::vector<QWidget*> getUiWidgets(QWidget* parent);
             };
 
             // **********************************************************************************
             // *************************** std::function<void(void)> **************************
             // **********************************************************************************
 
-            template<> class MO_EXPORTS THandler<std::function<void(void)>, void> : public UiUpdateHandler
-            {
+            template<> class MO_EXPORTS THandler<std::function<void(void)>, void> : public UiUpdateHandler {
                 std::function<void(void)>* funcData;
                 QPushButton* btn;
             public:
-                static const bool IS_DEFAULT = false;
-                THandler();
-                void UpdateUi(std::function<void(void)>* data);
+                THandler(IParamProxy& parent);
+                void updateUi(const std::function<void(void)>& data);
+                void updateParam(std::function<void(void)>& data);
                 virtual void onUiUpdate(QObject* sender);
-                virtual void SetData(std::function<void(void)>* data_);
-                std::function<void(void)>* GetData();
-                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent);
+                virtual std::vector<QWidget*> getUiWidgets(QWidget* parent);
             };
 
             // **********************************************************************************
@@ -87,68 +70,28 @@ namespace mo
             // **********************************************************************************
 
             template<typename T>
-            class THandler<T, typename std::enable_if<std::is_floating_point<T>::value, void>::type> : public UiUpdateHandler
-            {
-                T* floatData;
+            class THandler<T, typename std::enable_if<std::is_floating_point<T>::value, void>::type> : public UiUpdateHandler {
                 QDoubleSpinBox* box;
-                bool _currently_updating;
             public:
-                static const bool IS_DEFAULT = false;
-                typedef T min_max_type;
-                THandler() : box(nullptr), floatData(nullptr), _currently_updating(false) {}
-                virtual void UpdateUi( T* data)
-                {
-                    if(data)
-                    {
-                        _currently_updating = true;
-                        box->setValue(*data);
-                        _currently_updating = false;
-                    }                    
+                THandler(IParamProxy& parent) : box(nullptr), UiUpdateHandler(parent){}
+                
+                void updateUi(const T& data) { 
+                    _updating = true;
+                    box->setValue(data); 
+                    _updating = false;
                 }
-                virtual void onUiUpdate(QObject* sender, double val = 0)
-                {
-                    if(_currently_updating || !IHandler::getParamMtx())
-                        return;
-                    mo::Mutex_t::scoped_lock lock(*IHandler::getParamMtx());
-                    if (sender == box && floatData)
-                        *floatData = box->value();
-                    if (onUpdate)
-                        onUpdate();
-                    if(_listener)
-                        _listener->onUpdate(this);
-                }
-                virtual void SetData(T* data_)
-                {
-                    mo::Mutex_t::scoped_lock lock(*IHandler::getParamMtx());
-                    floatData = data_;
-                    if (box)
-                    {
-                        _currently_updating = true;
-                        box->setValue(*floatData);
-                        _currently_updating = false;
-                    }
-                        
-                }
-                T* GetData()
-                {
-                    return floatData;
-                }
-                void SetMinMax(T min, T max)
-                {
-                    box->setMinimum(min);
-                    box->setMaximum(max);
-                }
-                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
-                {    
+                
+                void updateParam(T& data) { data = box->value();}
+                
+                std::vector<QWidget*> getUiWidgets(QWidget* parent){    
                     std::vector<QWidget*> output;
-                    if (box == nullptr)
-                    {
+                    _parent_widget = parent;
+                    if (box == nullptr){
                         box = new QDoubleSpinBox(parent);
                         box->setMaximumWidth(100);
                         box->setMinimum(std::numeric_limits<T>::min());
                         box->setMaximum(std::numeric_limits<T>::max());
                     }
-
                     box->connect(box, SIGNAL(valueChanged(double)), proxy, SLOT(on_update(double)));
                     output.push_back(box);
                     return output;
@@ -160,69 +103,24 @@ namespace mo
             // **********************************************************************************
 
             template<typename T>
-            class THandler<T, typename std::enable_if<std::is_integral<T>::value, void>::type> : public UiUpdateHandler
-            {
-                T* intData;
+            class THandler<T, typename std::enable_if<std::is_integral<T>::value, void>::type> : public UiUpdateHandler {
                 QSpinBox* box;
-                bool _currently_updating;
             public:
-                static const bool IS_DEFAULT = false;
-                typedef T min_max_type;
-                THandler() : box(nullptr), intData(nullptr), _currently_updating(false){}
-                virtual void UpdateUi( T* data)
-                {
-                    if(data)
-                    {
-                        _currently_updating = true;
-                        mo::Mutex_t::scoped_lock lock(*IHandler::getParamMtx());
-                        box->setValue(*data);
-                        _currently_updating = false;
-                    }                    
+                THandler(IParamProxy& parent) : 
+                    box(nullptr), UiUpdateHandler(parent){}
+
+                void updateUi(const T& data){
+                    _currently_updating = true;
+                    box->setValue(data);
+                    _currently_updating = false;
                 }
-                virtual void onUiUpdate(QObject* sender, int val = -1)
-                {
-                    if(_currently_updating || !IHandler::getParamMtx())
-                        return;
-                    mo::Mutex_t::scoped_lock lock(*IHandler::getParamMtx());
-                    if (sender == box && intData)
-                    {
-                        if(val == -1)
-                        {
-                            *intData = box->value();
-                        }else
-                        {
-                            *intData = val;
-                        }
-                    }
-                    if (onUpdate)
-                        onUpdate();
-                    if(_listener)
-                        _listener->onUpdate(this);
+                void updateParam(T& data){
+                    data = box->value();
                 }
-                virtual void SetData(T* data_)
-                {
-                    intData = data_;
-                    if (box)
-                    {
-                        _currently_updating = true;
-                        box->setValue(*intData);
-                        _currently_updating = false;
-                    }                        
-                }
-                T* GetData()
-                {
-                    return intData;
-                }
-                void SetMinMax(T min_, T max_)
-                {
-                    box->setMinimum(min_);
-                    box->setMaximum(max_);
-                }
-                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent)
-                {
+                std::vector<QWidget*> getUiWidgets(QWidget* parent){
                     std::vector<QWidget*> output;
-                    if (box == nullptr)
-                    {
+                    _parent_widget = parent;
+                    if (box == nullptr){
                         box = new QSpinBox(parent);
                         box->setMaximumWidth(100);
                         if (std::numeric_limits<T>::max() > std::numeric_limits<int>::max())
@@ -231,11 +129,6 @@ namespace mo
                             box->setMinimum(std::numeric_limits<T>::max());
 
                         box->setMinimum(std::numeric_limits<T>::min());
-
-                        if (intData)
-                            box->setValue(*intData);
-                        else
-                            box->setValue(0);
                     }
 
                     box->connect(box, SIGNAL(valueChanged(int)), proxy, SLOT(on_update(int)));
@@ -247,85 +140,59 @@ namespace mo
             // **********************************************************************************
             // *************************** Enums ************************************************
             // **********************************************************************************
-            template<> class MO_EXPORTS THandler<EnumParam, void> : public UiUpdateHandler
-            {
+            template<> class MO_EXPORTS THandler<EnumParam, void> : public UiUpdateHandler {
                 QComboBox* enumCombo;
-                EnumParam* enumData;
                 bool _updating;
             public:
-                static const bool IS_DEFAULT = false;
-                THandler();
-                ~THandler();
-                virtual void UpdateUi( EnumParam* data);
+                THandler(IParamProxy& parent);
+                void updateUi( const EnumParam& data);
+                void updateParam(EnumParam& data);
                 virtual void onUiUpdate(QObject* sender, int idx);
-                virtual void SetData(EnumParam* data_);
-                EnumParam*  GetData();
-                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent);
+                
+                std::vector<QWidget*> getUiWidgets(QWidget* parent);
             };
 
             // **********************************************************************************
             // *************************** Files ************************************************
             // **********************************************************************************
 
-            template<> class MO_EXPORTS THandler<WriteDirectory, void> : public UiUpdateHandler
-            {
+            template<> class MO_EXPORTS THandler<WriteDirectory, void> : public UiUpdateHandler {
                 QPushButton* btn;
                 QWidget* parent;
-                WriteDirectory* fileData;
-                bool _currently_updating;
             public:
-                static const bool IS_DEFAULT = false;
-                THandler();
-                virtual void UpdateUi( WriteDirectory* data);
-                virtual void onUiUpdate(QObject* sender);
-                virtual void SetData(WriteDirectory* data_);
-                WriteDirectory* GetData();
-                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent_);
+                THandler(IParamProxy& parent);
+                void updateUi(const WriteDirectory& data);
+                void updateParam(WriteDirectory& data);
+                void onUiUpdate(QObject* sender);
+                std::vector<QWidget*> getUiWidgets(QWidget* parent_);
             };
-            template<> class MO_EXPORTS THandler<ReadDirectory, void> : public UiUpdateHandler
-            {
+            template<> class MO_EXPORTS THandler<ReadDirectory, void> : public UiUpdateHandler {
                 QPushButton* btn;
                 QWidget* parent;
-                ReadDirectory* fileData;
-                bool _currently_updating;
             public:
-                static const bool IS_DEFAULT = false;
-                THandler();
-                virtual void UpdateUi( ReadDirectory* data);
+                THandler(IParamProxy& parent);
+                void updateUi(const ReadDirectory& data);
+                void updateParam(ReadDirectory& data);
                 virtual void onUiUpdate(QObject* sender);
-                virtual void SetData(ReadDirectory* data_);
-                ReadDirectory* GetData();
-                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent_);
+                std::vector<QWidget*> getUiWidgets(QWidget* parent_);
             };
-            template<> class MO_EXPORTS THandler<WriteFile, void> : public UiUpdateHandler
-            {
+            template<> class MO_EXPORTS THandler<WriteFile, void> : public UiUpdateHandler {
                 QPushButton* btn;
-                QWidget* parent;
-                WriteFile* fileData;
-                bool _currently_updating;
             public:
-                static const bool IS_DEFAULT = false;
-                THandler();
-                virtual void UpdateUi( WriteFile* data);
-                virtual void onUiUpdate(QObject* sender);
-                virtual void SetData(WriteFile* data_);
-                WriteFile* GetData();
-                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent_);
+                THandler(IParamProxy& parent);
+                void updateUi( const WriteFile& data);
+                void updateParam(WriteFile& data);
+                void onUiUpdate(QObject* sender);
+                std::vector<QWidget*> getUiWidgets(QWidget* parent_);
             };
-            template<> class MO_EXPORTS THandler<ReadFile, void> : public UiUpdateHandler
-            {
+            template<> class MO_EXPORTS THandler<ReadFile, void> : public UiUpdateHandler {
                 QPushButton* btn;
-                QWidget* parent;
-                ReadFile* fileData;
-                bool _currently_updating;
             public:
-                static const bool IS_DEFAULT = false;
-                THandler();
-                virtual void UpdateUi( ReadFile* data);
-                virtual void onUiUpdate(QObject* sender);
-                virtual void SetData(ReadFile* data_);
-                ReadFile* GetData();
-                virtual std::vector<QWidget*> GetUiWidgets(QWidget* parent_);
+                THandler(IParamProxy& parent);
+                void updateUi(const ReadFile& data);
+                void updateParam(ReadFile& data);
+                void onUiUpdate(QObject* sender);
+                std::vector<QWidget*> getUiWidgets(QWidget* parent_);
             };
         }
     }

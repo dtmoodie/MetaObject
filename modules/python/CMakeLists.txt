@@ -1,1 +1,1 @@
-metaobject_declare_module(NAME python)
+metaobject_declare_module(NAME python DEPENDS metaobject_core)

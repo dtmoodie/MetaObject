@@ -8,60 +8,24 @@ using namespace mo;
 using namespace mo::UI;
 using namespace mo::UI::qt;
 
-THandler<bool,void>::THandler():
-    chkBox(nullptr),
-    boolData(nullptr),
-    _currently_updating(false)
-{
+THandler<bool,void>::THandler(IParamProxy& parent):
+    UiUpdateHandler(parent), chkBox(nullptr){
 }
 
-void THandler<bool,void>::UpdateUi( bool* data)
-{
-    if(data)
-    {
-        _currently_updating = true;
-        chkBox->setChecked(*data);
-        _currently_updating = false;
-    }
+void THandler<bool,void>::updateUi( const bool& data){
+    _updating= true;
+    chkBox->setChecked(data);
+    _updating = false;
 }
 
-void THandler<bool,void>::onUiUpdate(QObject* sender, int val)
-{
-    if(_currently_updating)
-        return;
-    if (sender == chkBox && IHandler::getParamMtx())
-    {
-        mo::Mutex_t::scoped_lock lock(*IHandler::getParamMtx());
-        if (boolData)
-        {
-            *boolData = chkBox->isChecked();
-            if (onUpdate)
-                onUpdate();
-            if(_listener)
-                _listener->onUpdate(this);
-        }                            
-    }
+
+void THandler<bool, void>::updateParam(bool& data){
+    data = chkBox->isChecked();
 }
 
-void THandler<bool,void>::SetData(bool* data_)
-{    
-    if(IHandler::getParamMtx())
-    {
-        mo::Mutex_t::scoped_lock lock(*IHandler::getParamMtx());
-        boolData = data_;
-        if (chkBox)
-            UpdateUi(data_);
-    }
-}
-
-bool* THandler<bool,void>::GetData()
-{
-    return boolData;
-}
-
-std::vector < QWidget*> THandler<bool,void>::GetUiWidgets(QWidget* parent_)
-{
+std::vector < QWidget*> THandler<bool,void>::getUiWidgets(QWidget* parent_){
     std::vector<QWidget*> output;
+    _parent_widget = parent_;
     if (chkBox == nullptr)
         chkBox = new QCheckBox(parent_);
     chkBox->connect(chkBox, SIGNAL(stateChanged(int)), IHandler::proxy, SLOT(on_update(int)));
@@ -69,8 +33,4 @@ std::vector < QWidget*> THandler<bool,void>::GetUiWidgets(QWidget* parent_)
     return output;
 }
 
-bool THandler<bool,void>::UiUpdateRequired()
-{
-    return false;
-}
 #endif

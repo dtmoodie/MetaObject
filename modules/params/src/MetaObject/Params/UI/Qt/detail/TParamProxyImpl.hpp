@@ -13,50 +13,18 @@ namespace mo
     namespace UI
     {
         namespace qt
-        {
-            template <typename T>
-            class has_minmax
-            {
-                typedef char one;
-                typedef long two;
-
-                template <typename C> static one test(decltype(&C::SetMinMax));
-                template <typename C> static two test(...);
-
-            public:
-                enum { value = sizeof(test<T>(0)) == sizeof(char) };
-            };
-
+        {            
             template<typename T> 
-            void SetMinMax(typename std::enable_if<has_minmax<THandler<T>>::value, THandler<T>>::type& handler, ITParam<T>* param)
-            {
-                /*auto rangedParam = dynamic_cast<ITRangedParam<T>*>(param);
-                if (rangedParam)
-                {
-                    typename Handler<T>::min_max_type min, max;
-                    rangedParam->GetRange(min, max);
-                    handler.SetMinMax(min, max);
-                }*/
+            ParamProxy<T>::~ParamProxy(){
+                
             }
 
             template<typename T> 
-            void SetMinMax(typename std::enable_if<!has_minmax<THandler<T>>::value, THandler<T>>::type& handler, ITParam<T>* param)
-            {
-
-            }
-            
-            template<typename T> 
-            ParamProxy<T>::~ParamProxy()
-            {
-                //InvalidCallbacks::invalidate((void*)&paramHandler);
-            }
-
-            template<typename T> 
-            void ParamProxy<T>::onUiUpdate()
-            {
+            void ParamProxy<T>::onUiUpdate(){
+                param->access
                 //TODO Notify Param of update on the processing thread.
-                Param->_modified = true;
-                Param->OnUpdate(nullptr);
+                //Param->_modified = true;
+                //Param->OnUpdate(nullptr);
             }
             
             // Guaranteed to be called on the GUI thread thanks to the signal Connection configuration

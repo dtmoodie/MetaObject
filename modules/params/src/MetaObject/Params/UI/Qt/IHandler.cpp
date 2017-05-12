@@ -5,9 +5,7 @@
 using namespace mo::UI::qt;
 
 IHandler::IHandler() : 
-    paramMtx(nullptr), 
-    proxy(new SignalProxy(this)), 
-    _listener(nullptr) {
+    proxy(new SignalProxy(this)) {
 }
 
 IHandler::~IHandler(){
@@ -20,9 +18,6 @@ void IHandler::onUiUpdate(QObject* sender, int val) {}
 void IHandler::onUiUpdate(QObject* sender, bool val) {}
 void IHandler::onUiUpdate(QObject* sender, QString val) {}
 void IHandler::onUiUpdate(QObject* sender, int row, int col) {}
-void IHandler::setUpdateListener(UiUpdateListener* listener){
-    _listener = listener;
-}
 
 std::function<void(void)>& IHandler::getOnUpdate(){
     return onUpdate;
@@ -30,16 +25,5 @@ std::function<void(void)>& IHandler::getOnUpdate(){
 std::vector<QWidget*> IHandler::getUiWidgets(QWidget* parent){
     return std::vector<QWidget*>();
 }
-void IHandler::setParamMtx(mo::Mutex_t** mtx){
-    paramMtx = mtx;
-}
-mo::Mutex_t* IHandler::getParamMtx(){
-    if(paramMtx)
-        return *paramMtx;
-    return nullptr;
-}
 
-bool IHandler::uiUpdateRequired(){
-    return false;
-}
 #endif
