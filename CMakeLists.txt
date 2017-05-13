@@ -17,7 +17,6 @@ option(WITH_OPENCV "Enable OpenCV types" ON )
 option(WITH_CUDA "Enable CUDA recompilation" ON)
 option(WITH_WT "Enable WT support" ON)
 
-
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -103,7 +102,6 @@ link_directories("${CMAKE_CURRENT_BINARY_DIR}")
 file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE knl "src/*.cu")
 file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp")
-#include_directories("${CMAKE_CURRENT_LIST_DIR}/include")
 
 # ------------------------------------------------------------------------------
 # ---------------------- External Dependencies ---------------------------------
@@ -365,10 +363,8 @@ WRITE_RCC_CONFIG("${target_include_dirs_}" "${LINK_DIRS_DEBUG}" "${LINK_DIRS_REL
 # ---------------------- modules ------------------------------------
 set(metaobject_modules "" CACHE INTERNAL "" FORCE)
 macro(GroupSources basedir curdir tab)
-message("${tab}${basedir} - ${curdir}")
 file(GLOB children RELATIVE "${basedir}/${curdir}" "${basedir}/${curdir}/*")
     foreach(child ${children})
-		message("${tab}  ${child}")
         if(IS_DIRECTORY ${basedir}/${curdir}/${child})
             GroupSources("${basedir}" ${curdir}/${child} "${tab}  ")
         else()
@@ -404,7 +400,7 @@ function(metaobject_declare_module)
             $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
             $<INSTALL_INTERFACE:include>
     )
-
+	set_target_properties(metaobject_${metaobject_declare_module_NAME} PROPERTIES FOLDER Modules)
     if(metaobject_declare_module_FLAGS)
         target_compile_options(metaobject_${metaobject_declare_module_NAME} PUBLIC ${metaobject_declare_module_FLAGS})
     endif()
