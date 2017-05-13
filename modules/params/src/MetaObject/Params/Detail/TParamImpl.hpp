@@ -4,7 +4,7 @@
 namespace mo
 {
     template<class T> class TParam;
-    template<class T, int N, typename Enable> class MetaParam;
+    template<class T, int N, typename Enable> struct MetaParam;
 
 	template<typename T> 
     TParam<T>::TParam() :

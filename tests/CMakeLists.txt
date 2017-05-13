@@ -18,8 +18,8 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
 
         TARGET_LINK_LIBRARIES(${test}
             ${MetaObject_LIBRARIES}
-            MetaParameters
             ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+            metaobject_params
         )
 
         if(OpenCV_FOUND)
