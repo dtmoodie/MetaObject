@@ -19,7 +19,7 @@
 #include "MetaObject/Params/TParam.hpp"
 #include "MetaObject/Params/TParamPtr.hpp"
 //#include "MetaObject/Params/RangedParam.hpp"
-#include "MetaParams.hpp"
+#include <MetaObject/MetaParameters.hpp>
 using namespace mo;
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent),
@@ -38,23 +38,26 @@ MainWindow::MainWindow(QWidget *parent) :
     }
     {
         auto param = new mo::TParam<std::vector<int>>("vector int");
-        param->GetDataPtr()->push_back(15);
-        param->GetDataPtr()->push_back(14);
-        param->GetDataPtr()->push_back(13);
-        param->GetDataPtr()->push_back(12);
-        param->GetDataPtr()->push_back(11);
+        auto token = param->access();
+        token().push_back(15);
+        token().push_back(14);
+        token().push_back(13);
+        token().push_back(12);
+        token().push_back(11);
         Params.push_back(std::shared_ptr<IParam>(param));
     }
     {
 #ifdef HAVE_OPENCV
         auto param = new mo::TParam<cv::Point3f>("Point3f");
-        param->GetDataPtr()->z = 15;
+        auto token = param->access();
+        token().z = 15;
         Params.push_back(std::shared_ptr<IParam>(param));
 #endif
     }
     {
         auto param = new TParam<std::vector<std::pair<std::string, std::string>>>("Vector std::pair<std::string, std::string>");
-        param->GetDataPtr()->push_back(std::pair<std::string, std::string>("asdf", "1234"));
+        auto token = param->access();
+        token().push_back(std::pair<std::string, std::string>("asdf", "1234"));
         Params.push_back(std::shared_ptr<IParam>(param));
     }
     {
@@ -67,7 +70,7 @@ MainWindow::MainWindow(QWidget *parent) :
         testRefVec.push_back(cv::Point2f(8, 1));
         testRefVec.push_back(cv::Point2f(9, 1));
         testRefVec.push_back(cv::Point2f(10, 1));
-        param->OnUpdate(nullptr);
+        param->emitUpdate();
         Params.push_back(param);
     }
     {
@@ -82,13 +85,14 @@ MainWindow::MainWindow(QWidget *parent) :
         testRefScalar.push_back(cv::Scalar(6));
         testRefScalar.push_back(cv::Scalar::all(7));
         testRefScalar.push_back(cv::Scalar(8));
-        param->OnUpdate(nullptr);
+        param->emitUpdate();
         Params.push_back(param);
 #endif
     }
     {
         auto param = new TParam<int>("int");
-        *param->GetDataPtr() = 10;
+        auto token = param->access();
+        token() = 10;
         Params.push_back(std::shared_ptr<IParam>(param));
     }
 #ifdef HAVE_OPENCV
@@ -109,7 +113,7 @@ MainWindow::MainWindow(QWidget *parent) :
     for (int i = 0; i < Params.size(); ++i)
     {
         auto proxy = mo::UI::qt::WidgetFactory::Instance()->CreateProxy(Params[i].get());
-        ui->widgetLayout->addWidget(proxy->GetParamWidget(this));
+        ui->widgetLayout->addWidget(proxy->getParamWidget(this));
         proxies.push_back(proxy);
     }
 }

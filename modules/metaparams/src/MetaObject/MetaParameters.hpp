@@ -11,9 +11,9 @@
 #ifdef _MSC_VER
   #ifndef MetaParameters_EXPORTS
     #ifdef _DEBUG
-      #pragma comment(lib, "MetaParametersd.lib")
+      #pragma comment(lib, "metaobject_metaparamsd.lib")
     #else
-      #pragma comment(lib, "MetaParameters.lib")
+      #pragma comment(lib, "metaobject_metaparams.lib")
     #endif
   #endif
 #endif

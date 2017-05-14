@@ -38,7 +38,8 @@ namespace mo
                     LOG(debug) << "Creating widget for default unspecialized Param " << Demangle::TypeToName(typeid(T));
                     return std::vector<QWidget*>();
                 }
-                
+                inline void setUpdating(bool val = true) { }
+                inline bool getUpdating() const { return false; }
                 static const bool UI_UPDATE_REQUIRED = false;
                 static const bool IS_DEFAULT = true;
             };

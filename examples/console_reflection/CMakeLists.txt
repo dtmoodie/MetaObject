@@ -2,7 +2,7 @@ file(GLOB src "*.cpp")
 file(GLOB hdr "*.hpp")
 
 add_executable(console_reflection ${hdr} ${src})
-target_link_libraries(console_reflection ${MetaObject_LIBRARIES} MetaParameters)
+target_link_libraries(console_reflection ${MetaObject_LIBRARIES})
 set_property(TARGET console_reflection  PROPERTY CXX_STANDARD 14)
 set_target_properties(console_reflection PROPERTIES FOLDER examples)
 if(MSVC)

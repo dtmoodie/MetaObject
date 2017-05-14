@@ -1,2 +1,2 @@
-metaobject_declare_module(NAME core DEPENDS metaobject_thread metaobject_params metaobject_serialization RuntimeObjectSystem RuntimeCompiler)
+metaobject_declare_module(NAME core DEPENDS metaobject_thread metaobject_params metaobject_serialization RuntimeObjectSystem RuntimeCompiler ${OpenCV_LIBS})
 target_include_directories(metaobject_core PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>)

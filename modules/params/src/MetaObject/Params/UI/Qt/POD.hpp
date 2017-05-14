@@ -110,9 +110,7 @@ namespace mo
                     box(nullptr), UiUpdateHandler(parent){}
 
                 void updateUi(const T& data){
-                    _currently_updating = true;
                     box->setValue(data);
-                    _currently_updating = false;
                 }
                 void updateParam(T& data){
                     data = box->value();

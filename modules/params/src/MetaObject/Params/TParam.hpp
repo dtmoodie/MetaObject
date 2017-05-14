@@ -31,6 +31,7 @@ public:
 
     static const ParamType Type = TParam_e;
     TParam(const std::string& name, const T& value): IParam(name){ParamTraits<T>::reset(_data, value);}
+    TParam(const std::string& name) : IParam(name) { }
     TParam();
 
     virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),

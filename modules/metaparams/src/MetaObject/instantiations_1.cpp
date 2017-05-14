@@ -7,7 +7,7 @@
 #include "MetaObject/Params/Buffers/Map.hpp"
 #include "MetaObject/Params/IO/CerealPolicy.hpp"
 #include "MetaObject/Params/IO/TextPolicy.hpp"
-#include "MetaObject/MetaParameters.hpp"
+
 #ifdef emit
 #undef emit
 #endif
@@ -19,11 +19,12 @@
 #endif
 #include <cereal/types/string.hpp>
 #include <cereal/types/map.hpp>
+#include "MetaParameters.hpp"
 
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
 #endif
-#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && (defined MetaParameters_EXPORTS)
+#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__)
 #  define MO_EXPORTS __declspec(dllexport)
 #elif defined __GNUC__ && __GNUC__ >= 4
 #  define MO_EXPORTS __attribute__ ((visibility ("default")))

@@ -27,7 +27,6 @@ namespace qt
     // **********************************************************************************  
     template<typename T> class ParamProxy : public IParamProxy{
     public:
-        static const bool IS_DEFAULT = THandler<T>::IS_DEFAULT;
         ParamProxy(IParam* param):
             _param_handler(*this){
             setParam(param);
@@ -40,7 +39,7 @@ namespace qt
             QWidget* output = new QWidget(parent);
             auto widgets = _param_handler.getUiWidgets(output);
             QGridLayout* layout = new QGridLayout(output);
-            if (param->getTypeInfo() == TypeInfo(typeid(std::function<void(void)>))){
+            if (_param->getTypeInfo() == TypeInfo(typeid(std::function<void(void)>))){
                 dynamic_cast<QPushButton*>(widgets[0])->setText(QString::fromStdString(_param->getName()));
                 layout->addWidget(widgets[0], 0, 0);
             }else{
@@ -65,15 +64,19 @@ namespace qt
         }
 
         bool checkParam(IParam* param) const{
-            return param == this->param;
+            return param == this->_param;
         }
 
         bool setParam(IParam* param){
-            this->param = param;
-            auto token = param->access();
-            _param_handler.setUpdating(true);
-            _param_handler.updateUi(token());
-            _param_handler.setUpdating(false);
+            this->_param = dynamic_cast<ITAccessibleParam<T>*>(param);
+            if(this->_param){
+                auto token = this->_param->access();
+                _param_handler.setUpdating(true);
+                _param_handler.updateUi(token());
+                _param_handler.setUpdating(false);
+                return true;
+            }
+            return false;
         }
     protected:
         void onParamUpdate(typename ParamTraits<T>::ConstStorageRef_t data, IParam* param, Context* ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags fg){
