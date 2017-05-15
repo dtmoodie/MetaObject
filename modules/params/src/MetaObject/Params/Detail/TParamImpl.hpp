@@ -1,6 +1,6 @@
 #pragma once
-#include "MetaObject/Logging/Log.hpp"
-#include "MetaObject/Params/AccessToken.hpp"
+#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/params/AccessToken.hpp"
 namespace mo
 {
     template<class T> class TParam;

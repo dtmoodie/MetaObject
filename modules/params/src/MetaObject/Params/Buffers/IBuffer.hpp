@@ -1,6 +1,6 @@
 #pragma once
-#include "MetaObject/Detail/Export.hpp"
-#include "MetaObject/Detail/Enums.hpp"
+#include "MetaObject/detail/Export.hpp"
+#include "MetaObject/core/detail/Enums.hpp"
 namespace mo
 {
     namespace Buffer

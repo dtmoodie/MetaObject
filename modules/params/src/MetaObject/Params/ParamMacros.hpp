@@ -1,9 +1,9 @@
 #pragma once
 #ifndef __CUDACC__
-#include "MetaObject/Params/TParamPtr.hpp"
-#include "MetaObject/Params/TInputParam.hpp"
-#include "MetaObject/Params/Detail/ParamMacrosImpl.hpp"
-#include "MetaObject/Detail/HelperMacros.hpp"
+#include "MetaObject/params/TParamPtr.hpp"
+#include "MetaObject/params/TInputParam.hpp"
+#include "MetaObject/params/detail/ParamMacrosImpl.hpp"
+#include "MetaObject/detail/HelperMacros.hpp"
 
 #define PARAM(type_, name, init) \
 mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param; \

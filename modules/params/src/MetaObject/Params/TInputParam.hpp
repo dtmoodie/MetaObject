@@ -74,4 +74,4 @@ protected:
     virtual void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
 };
 }
-#include "MetaObject/Params/Detail/TInputParamImpl.hpp"
+#include "MetaObject/params/detail/TInputParamImpl.hpp"

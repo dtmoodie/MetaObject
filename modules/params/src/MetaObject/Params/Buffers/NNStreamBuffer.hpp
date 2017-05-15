@@ -47,4 +47,4 @@ namespace mo{
 
     MO_METAParam_INSTANCE_NNBUFFER_(__COUNTER__)
 }
-#include "Detail/NNStreamBufferImpl.hpp"
+#include "detail/NNStreamBufferImpl.hpp"

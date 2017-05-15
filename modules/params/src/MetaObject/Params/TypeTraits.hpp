@@ -2,7 +2,7 @@
 #include <boost/optional.hpp>
 #include <type_traits>
 #include <memory>
-#include <MetaObject/Logging/Log.hpp>
+#include <MetaObject/logging/Log.hpp>
 namespace mo {
 template<class Type, class Enable = void> struct ParamTraits {};
 template<class T1, class T2> struct LargerSize{

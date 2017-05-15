@@ -1,6 +1,6 @@
 #include "MetaObject/Thread/ThreadHandle.hpp"
 #include "MetaObject/Thread/ThreadPool.hpp"
-#include "MetaObject/Signals/TSlot.hpp"
+#include "MetaObject/signals/TSlot.hpp"
 
 int main()
 {

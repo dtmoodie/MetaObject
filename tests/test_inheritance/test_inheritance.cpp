@@ -1,12 +1,12 @@
 #define BOOST_TEST_MAIN
 #include "MetaObject/IMetaObject.hpp"
-#include "MetaObject/Detail/MetaObjectMacros.hpp"
-#include "MetaObject/Signals/Detail/SignalMacros.hpp"
-#include "MetaObject/Signals/Detail/SlotMacros.hpp"
+#include "MetaObject/detail/MetaObjectMacros.hpp"
+#include "MetaObject/signals/detail/SignalMacros.hpp"
+#include "MetaObject/signals/detail/SlotMacros.hpp"
 
-#include "MetaObject/Params/ParamMacros.hpp"
-#include "MetaObject/Params/TInputParam.hpp"
-#include "MetaObject/Params/ParamInfo.hpp"
+#include "MetaObject/params/ParamMacros.hpp"
+#include "MetaObject/params/TInputParam.hpp"
+#include "MetaObject/params/ParamInfo.hpp"
 
 #include "MetaObject/MetaObjectFactory.hpp"
 

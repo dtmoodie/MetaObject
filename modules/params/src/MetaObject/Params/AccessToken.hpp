@@ -1,6 +1,6 @@
 #pragma once
 #include "TypeTraits.hpp"
-#include "MetaObject/Params/IParam.hpp"
+#include "MetaObject/params/IParam.hpp"
 namespace boost{
     template<typename T> class lock_guard;
 }

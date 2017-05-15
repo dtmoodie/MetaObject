@@ -1,5 +1,5 @@
-#include "MetaObject/Params/Buffers/Buffers.hpp"
-#include "MetaObject/Params/MetaParam.hpp"
-#include "MetaObject/Params/Detail/MetaParamImpl.hpp"
+#include "MetaObject/params/Buffers/Buffers.hpp"
+#include "MetaObject/params/MetaParam.hpp"
+#include "MetaObject/params/detail/MetaParamImpl.hpp"
 
 INSTANTIATE_META_Param(int)

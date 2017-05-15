@@ -1,6 +1,6 @@
 #pragma once
-#include "MetaObject/Detail/Export.hpp"
-#include "MetaObject/Params/InputParam.hpp"
+#include "MetaObject/detail/Export.hpp"
+#include "MetaObject/params/InputParam.hpp"
 
 namespace mo {
 class ParamServer;

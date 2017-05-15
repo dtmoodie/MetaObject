@@ -1,1 +1,1 @@
-metaobject_declare_module(NAME serialization DEPENDS metaobject_params metaobject_core)
+metaobject_declare_module(NAME serialization DEPENDS metaobject_core metaobject_params metaobject_object)

@@ -5,8 +5,8 @@
 #include "MetaObject/Params/Buffers/CircularBuffer.hpp"
 #include "MetaObject/Params/Buffers/StreamBuffer.hpp"
 #include "MetaObject/Params/Buffers/Map.hpp"
-#include "MetaObject/Params/IO/CerealPolicy.hpp"
-#include "MetaObject/Params/IO/TextPolicy.hpp"
+#include "MetaObject/serialization/CerealPolicy.hpp"
+#include "MetaObject/serialization/TextPolicy.hpp"
 #include "MetaObject/Params/Types.hpp"
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
@@ -18,7 +18,7 @@
 #else
 #  define MO_EXPORTS
 #endif
-#include "MetaObject/Params/Detail/MetaParamImpl.hpp"
+#include "MetaObject/Params/detail/MetaParamImpl.hpp"
 
 #include <cereal/types/vector.hpp>
 #include <cereal/types/string.hpp>

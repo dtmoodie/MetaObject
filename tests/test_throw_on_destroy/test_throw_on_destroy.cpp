@@ -2,7 +2,7 @@
 #define BOOST_TEST_MAIN
 
 
-#include "MetaObject/Logging/Log.hpp"
+#include "MetaObject/logging/Log.hpp"
 
 
 #ifdef _MSC_VER

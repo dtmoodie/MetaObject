@@ -1,6 +1,6 @@
 #define BOOST_TEST_MAIN
 
-#include "MetaObject/Logging/Log.hpp"
+#include "MetaObject/logging/Log.hpp"
 #include <boost/thread.hpp>
 
 #ifdef _MSC_VER

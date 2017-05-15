@@ -130,4 +130,4 @@ private:
     static const TypeInfo _type_info;
 };
 }
-#include "Detail/ITParamImpl.hpp"
+#include "detail/ITParamImpl.hpp"

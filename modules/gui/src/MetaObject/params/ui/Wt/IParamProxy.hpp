@@ -1,0 +1,264 @@
+#pragma once
+#include <MetaObject/params/MetaParam.hpp>
+#include <MetaObject/params/UI/WidgetFactory.hpp>
+#include <MetaObject/params/UI/WT.hpp>
+#include <MetaObject/signals/TSlot.hpp>
+#include <MetaObject/params/Demangle.hpp>
+#include <MetaObject/params/IParam.hpp>
+
+#include <Wt/WContainerWidget>
+#include <Wt/WText>
+
+#include <boost/thread/recursive_mutex.hpp>
+namespace Wt
+{
+namespace Chart
+{
+class WAbstractChart;
+}
+}
+namespace mo
+{
+class IParam;
+namespace UI
+{
+namespace wt
+{
+    class MainApplication;
+    class MO_EXPORTS IParamProxy : public Wt::WContainerWidget
+    {
+    public:
+        IParamProxy(IParam* param_, MainApplication* app_,
+            WContainerWidget *parent_ = 0);
+        virtual ~IParamProxy();
+        virtual void SetTooltip(const std::string& tip) = 0;
+    protected:
+        template<class T, class E> friend class TDataProxy;
+        virtual void onParamUpdate(mo::Context* ctx, mo::IParam* param) = 0;
+        virtual void onUiUpdate() = 0;
+        mo::TSlot<void(mo::Context*, mo::IParam*)> _onUpdateSlot;
+        std::shared_ptr<mo::Connection>  _onUpdateConnection;
+        MainApplication* _app;
+    };
+
+    class MO_EXPORTS IPlotProxy: public Wt::WContainerWidget
+    {
+    public:
+        IPlotProxy(IParam* param_, MainApplication* app_,
+            WContainerWidget *parent_ = 0);
+
+        virtual ~IPlotProxy();
+        virtual Wt::Chart::WAbstractChart* GetPlot(){return nullptr;}
+    protected:
+        template<class T, class E> friend class TDataProxy;
+        virtual void onParamUpdate(mo::Context* ctx, mo::IParam* param) = 0;
+        virtual void onUiUpdate() = 0;
+        mo::TSlot<void(mo::Context*, mo::IParam*)> _onUpdateSlot;
+        std::shared_ptr<mo::Connection>  _onUpdateConnection;
+        MainApplication* _app;
+    };
+
+    template<class T, class Enable = void>
+    class TDataProxy
+    {
+    public:
+        static const bool IS_DEFAULT = true;
+        TDataProxy(){}
+        void CreateUi(IParamProxy* proxy, T* data, bool read_only){}
+        void UpdateUi(const T& data){}
+        void onUiUpdate(T& data){}
+        void SetTooltip(const std::string& tooltip){}
+    };
+
+
+
+    template<class T, typename Enable = void>
+    class TParamProxy : public IParamProxy
+    {
+    public:
+        static const bool IS_DEFAULT = TDataProxy<T, void>::IS_DEFAULT;
+
+        TParamProxy(ITParam<T>* param_, MainApplication* app_,
+                        WContainerWidget *parent_ = 0):
+            IParamProxy(param_, app_, parent_),
+            _param(param_),
+            _data_proxy()
+        {
+            mo::Mutex_t::scoped_lock param_lock(_param->mtx());
+            T* ptr = param_->GetDataPtr();
+            if(ptr)
+            {
+                _data_proxy.CreateUi(this, ptr, param_->checkFlags(State_e));
+            }
+        }
+        void SetTooltip(const std::string& tip)
+        {
+            _data_proxy.SetTooltip(tip);
+        }
+    protected:
+        void onParamUpdate(mo::Context* ctx, mo::IParam* param)
+        {
+            mo::Mutex_t::scoped_lock param_lock(_param->mtx());
+            T* ptr = _param->GetDataPtr();
+            if(ptr)
+            {
+                _app->getUpdateLock();
+                _data_proxy.UpdateUi(*ptr);
+                _app->requestUpdate();
+            }
+        }
+        void onUiUpdate()
+        {
+            mo::Mutex_t::scoped_lock param_lock(_param->mtx());
+            T* ptr = _param->GetDataPtr();
+            if(ptr)
+            {
+                _data_proxy.onUiUpdate(*ptr);
+                _param->commit();
+            }
+        }
+        mo::ITParam<T>* _param;
+        TDataProxy<T, void> _data_proxy;
+    };
+
+    template<class T, typename Enable = void>
+    class TPlotDataProxy
+    {
+    public:
+        static const bool IS_DEFAULT = true;
+        TPlotDataProxy(){}
+        void CreateUi(Wt::WContainerWidget* container, T* data, bool read_only, const std::string& name = ""){}
+        void UpdateUi(const T& data, mo::Time_t ts){}
+        void onUiUpdate(T& data){}
+    };
+
+    template<class T, typename Enable = void>
+    class TPlotProxy : public IPlotProxy
+    {
+    public:
+        static const bool IS_DEFAULT = TPlotDataProxy<T, void>::IS_DEFAULT;
+
+        TPlotProxy(ITParam<T>* param_, MainApplication* app_,
+                        WContainerWidget *parent_ = 0):
+            IPlotProxy(param_, app_, parent_),
+            _param(param_)
+        {
+            mo::Mutex_t::scoped_lock param_lock(_param->mtx());
+            T* ptr = param_->GetDataPtr();
+            if(ptr)
+            {
+
+                if(IPlotProxy* parent = dynamic_cast<IPlotProxy*>(parent_))
+                {
+                    _data_proxy.CreateUi(parent, ptr, param_->checkFlags(State_e), param_->getTreeName());
+                }else
+                {
+                    _data_proxy.CreateUi(this, ptr, param_->checkFlags(State_e), param_->getTreeName());
+                }
+            }
+        }
+    protected:
+        void onParamUpdate(mo::Context* ctx, mo::IParam* param)
+        {
+            mo::Mutex_t::scoped_lock param_lock(_param->mtx());
+            T* ptr = _param->GetDataPtr();
+            if(ptr)
+            {
+                _app->getUpdateLock();
+                // TODO FIX ME
+                _data_proxy.UpdateUi(*ptr, *_param->getTimestamp());
+                _app->requestUpdate();
+            }
+        }
+        void onUiUpdate()
+        {
+            mo::Mutex_t::scoped_lock param_lock(_param->mtx());
+            T* ptr = _param->GetDataPtr();
+            if(ptr)
+            {
+                _data_proxy.onUiUpdate(*ptr);
+                _param->commit();
+            }
+        }
+        mo::ITParam<T>* _param;
+        TPlotDataProxy<T, void> _data_proxy;
+    };
+
+    template<class T> struct WidgetConstructor
+    {
+
+        WidgetConstructor()
+        {
+            if(!TParamProxy<T, void>::IS_DEFAULT)
+                WidgetFactory::Instance()->RegisterConstructor(TypeInfo(typeid(T)),
+                        std::bind(WidgetConstructor<T>::CreateWidget, std::placeholders::_1,
+                                  std::placeholders::_2, std::placeholders::_3));
+        }
+        static IParamProxy* CreateWidget(IParam* param, MainApplication* app, Wt::WContainerWidget* container)
+        {
+            if (param->getTypeInfo() == TypeInfo(typeid(T)))
+            {
+                auto typed = dynamic_cast<ITParam<T>*>(param);
+                if (typed)
+                {
+                     return new TParamProxy<T, void>(typed, app, container);
+                }
+            }
+            return nullptr;
+        }
+    };
+    template<class T> struct PlotConstructor
+    {
+        PlotConstructor()
+        {
+            if(!TParamProxy<T, void>::IS_DEFAULT)
+                WidgetFactory::Instance()->RegisterConstructor(TypeInfo(typeid(T)),
+                        std::bind(&PlotConstructor<T>::CreatePlot, std::placeholders::_1,
+                                  std::placeholders::_2, std::placeholders::_3));
+        }
+        static IPlotProxy* CreatePlot(IParam* param, MainApplication* app, Wt::WContainerWidget* container)
+        {
+            if (param->getTypeInfo() == TypeInfo(typeid(T)))
+            {
+                auto typed = dynamic_cast<ITParam<T>*>(param);
+                if (typed)
+                {
+                    return new TPlotProxy<T, void>(typed, app, container);
+                }
+            }
+            return nullptr;
+        }
+    };
+
+}
+}
+#define MO_UI_WT_PARAMTERPROXY_METAParam(N) \
+template<class T> \
+struct MetaParam<T, N, typename std::enable_if<!mo::UI::wt::TParamProxy<T>::IS_DEFAULT>::type> : public MetaParam<T, N - 1, void> \
+{ \
+    static UI::wt::WidgetConstructor<T> _Param_proxy_constructor; \
+    MetaParam(const char* name): \
+        MetaParam<T, N-1, void>(name) \
+    { \
+        (void)&_Param_proxy_constructor; \
+    } \
+}; \
+template<class T> UI::wt::WidgetConstructor<T> MetaParam<T,N, typename std::enable_if<!mo::UI::wt::TParamProxy<T>::IS_DEFAULT>::type>::_Param_proxy_constructor;
+
+MO_UI_WT_PARAMTERPROXY_METAParam(__COUNTER__)
+
+#define MO_UI_WT_PLOTPROXY_METAParam(N) \
+template<class T> \
+struct MetaParam<T, N, typename std::enable_if<!mo::UI::wt::TPlotProxy<T>::IS_DEFAULT>::type> : public MetaParam<T, N - 1, void> \
+{ \
+    static UI::wt::PlotConstructor<T> _Param_plot_constructor; \
+    MetaParam(const char* name): \
+        MetaParam<T, N-1, void>(name) \
+    { \
+        (void)&_Param_plot_constructor; \
+    } \
+}; \
+template<class T> UI::wt::PlotConstructor<T> MetaParam<T,N, typename std::enable_if<!mo::UI::wt::TPlotProxy<T>::IS_DEFAULT>::type>::_Param_plot_constructor;
+
+MO_UI_WT_PLOTPROXY_METAParam(__COUNTER__)
+}

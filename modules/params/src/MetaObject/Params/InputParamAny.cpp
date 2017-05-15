@@ -1,4 +1,4 @@
-#include "MetaObject/Params/InputParamAny.hpp"
+#include "MetaObject/params/InputParamAny.hpp"
 using namespace mo;
 
 InputParamAny::InputParamAny(const std::string& name):

@@ -1,6 +1,6 @@
 #pragma once
-#include "MetaObject/Detail/Export.hpp"
-#include "MetaObject/Detail/TypeInfo.hpp"
+#include "MetaObject/detail/Export.hpp"
+#include "MetaObject/detail/TypeInfo.hpp"
 #include "BufferFactory.hpp"
 
 namespace mo

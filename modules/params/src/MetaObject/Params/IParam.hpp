@@ -17,13 +17,13 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/MetaObject
 */
 #pragma once
-#include "MetaObject/Detail/Export.hpp"
-#include "MetaObject/Detail/Enums.hpp"
-#include "MetaObject/Detail/Time.hpp"
-#include "MetaObject/Detail/Forward.hpp"
-#include "MetaObject/Signals/TSignal.hpp"
-#include "MetaObject/Params/NamedParam.hpp"
-#include "MetaObject/Context.hpp"
+#include "MetaObject/detail/Export.hpp"
+#include "MetaObject/core/detail/Enums.hpp"
+#include "MetaObject/core/detail/Time.hpp"
+#include "MetaObject/core/detail/Forward.hpp"
+#include "MetaObject/signals/TSignal.hpp"
+#include "MetaObject/params/NamedParam.hpp"
+#include "MetaObject/core/Context.hpp"
 
 #if BOOST_VERSION > 105400
 #include <boost/core/noncopyable.hpp>

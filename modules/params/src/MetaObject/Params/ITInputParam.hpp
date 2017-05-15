@@ -50,4 +50,4 @@ private:
     bool setInputImpl(IParam* param);
 };
 }
-#include "Detail/ITInputParamImpl.hpp"
+#include "detail/ITInputParamImpl.hpp"

@@ -1,4 +1,4 @@
-#include "MetaObject/Params/AccessToken.hpp"
+#include "MetaObject/params/AccessToken.hpp"
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/lock_guard.hpp>
 #include <boost/thread/recursive_mutex.hpp>

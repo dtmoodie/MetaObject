@@ -1,2 +1,5 @@
 file(GLOB_RECURSE src "src/*.cpp" "src/*.hpp" "src/*.h" "src/*.cu")
-metaobject_declare_module(NAME metaparams SRC src DEPENDS metaobject_core metaobject_params)
+metaobject_declare_module(NAME metaparams SRC src DEPENDS metaobject_params metaobject_serialization)
+IF(TARGET metaobject_gui)
+  TARGET_LINK_LIBRARIES(metaobject_metaparams metaobject_gui)
+ENDIF()

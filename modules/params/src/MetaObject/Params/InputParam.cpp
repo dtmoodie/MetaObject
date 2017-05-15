@@ -1,4 +1,4 @@
-#include "MetaObject/Params/InputParam.hpp"
+#include "MetaObject/params/InputParam.hpp"
 using namespace mo;
 
 InputParam::InputParam():

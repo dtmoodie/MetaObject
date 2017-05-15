@@ -1,6 +1,6 @@
 #pragma once
-#include <MetaObject/Detail/HelperMacros.hpp>
-#include "MetaObject/Params/ParamInfo.hpp"
+#include <MetaObject/detail/HelperMacros.hpp>
+#include "MetaObject/params/ParamInfo.hpp"
 
 #include "RuntimeObjectSystem/ISimpleSerializer.h"
 #include "cereal/cereal.hpp"

@@ -1,7 +1,7 @@
 #pragma once
-#include "MetaObject/Detail/Export.hpp"
-#include "MetaObject/Detail/Enums.hpp"
-#include "MetaObject/Detail/TypeInfo.hpp"
+#include "MetaObject/detail/Export.hpp"
+#include "MetaObject/core/detail/Enums.hpp"
+#include "MetaObject/detail/TypeInfo.hpp"
 #include <functional>
 #include <memory>
 namespace mo

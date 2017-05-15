@@ -1,5 +1,5 @@
 #pragma once
-#include <MetaObject/Logging/Log.hpp>
+#include <MetaObject/logging/Log.hpp>
 #include <boost/chrono.hpp>
 namespace mo{
     namespace Buffer{

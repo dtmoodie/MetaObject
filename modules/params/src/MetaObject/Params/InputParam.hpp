@@ -17,9 +17,9 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/Params
 */
 #pragma once
-#include "MetaObject/Detail/TypeInfo.hpp"
-#include "MetaObject/Detail/Export.hpp"
-#include "MetaObject/Params/IParam.hpp"
+#include "MetaObject/detail/TypeInfo.hpp"
+#include "MetaObject/detail/Export.hpp"
+#include "MetaObject/params/IParam.hpp"
 #include <functional>
 #include <string>
 #include <memory>

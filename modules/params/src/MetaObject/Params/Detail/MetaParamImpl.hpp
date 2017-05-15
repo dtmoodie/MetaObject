@@ -1,8 +1,8 @@
 #pragma once
-#include "MetaObject/Params/TInputParam.hpp"
-#include "MetaObject/Params/TParamPtr.hpp"
-#include "MetaObject/Params/Detail/TInputParamPtrImpl.hpp"
-#include "MetaObject/Params/Detail/TParamPtrImpl.hpp"
+#include "MetaObject/params/TInputParam.hpp"
+#include "MetaObject/params/TParamPtr.hpp"
+#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
+#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 
 #define INSTANTIATE_META_Param(TYPE) \
 static mo::MetaParam<TYPE, __COUNTER__> COMBINE(g_meta_Param, __LINE__)(#TYPE); \

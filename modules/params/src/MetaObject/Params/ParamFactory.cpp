@@ -1,6 +1,6 @@
-#include "MetaObject/Params/ParamFactory.hpp"
-#include "MetaObject/Logging/Log.hpp"
-#include "MetaObject/Params/IParam.hpp"
+#include "MetaObject/params/ParamFactory.hpp"
+#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/params/IParam.hpp"
 #include <map>
 
 using namespace mo;

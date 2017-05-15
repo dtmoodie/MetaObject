@@ -1,6 +1,6 @@
 #pragma once
 #include "ParamFactory.hpp"
-#include "MetaObject/Detail/Enums.hpp"
+#include "MetaObject/core/detail/Enums.hpp"
 namespace mo {
 template<class T> class ParamConstructor {
 public:

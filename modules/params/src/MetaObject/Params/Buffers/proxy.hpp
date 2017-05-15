@@ -1,5 +1,5 @@
 #pragma once
-#include "MetaObject/Params/ITParam.hpp"
+#include "MetaObject/params/ITParam.hpp"
 namespace mo
 {
     template<typename T> class ITParam;

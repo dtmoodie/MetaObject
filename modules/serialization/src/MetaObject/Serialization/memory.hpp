@@ -1,8 +1,8 @@
 #pragma once
 #include "RuntimeObjectSystem/shared_ptr.hpp"
 #include "Serializer.hpp"
-#include "MetaObject/Params/IO/SerializationFactory.hpp"
-#include <MetaObject/Logging/Log.hpp>
+#include "MetaObject/params/IO/SerializationFactory.hpp"
+#include <MetaObject/logging/Log.hpp>
 #include <cereal/cereal.hpp>
 #include <cereal/archives/binary.hpp>
 #include <cereal/archives/json.hpp>

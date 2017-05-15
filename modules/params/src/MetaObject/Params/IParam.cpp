@@ -16,10 +16,10 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 https://github.com/dtmoodie/Params
 */
-#include "MetaObject/Params/IParam.hpp"
-#include "MetaObject/Signals/TSignal.hpp"
-#include "MetaObject/Signals/TSlot.hpp"
-#include "MetaObject/Signals/TSignalRelay.hpp"
+#include "MetaObject/params/IParam.hpp"
+#include "MetaObject/signals/TSignal.hpp"
+#include "MetaObject/signals/TSlot.hpp"
+#include "MetaObject/signals/TSignalRelay.hpp"
 #include <algorithm>
 #include <boost/thread/recursive_mutex.hpp>
 

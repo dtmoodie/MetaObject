@@ -1,7 +1,7 @@
 #include "obj.hpp"
 
 #include <MetaObject/MetaObjectFactory.hpp>
-#include <MetaObject/Logging/Log.hpp>
+#include <MetaObject/logging/Log.hpp>
 #include <boost/thread.hpp>
 int main()
 {

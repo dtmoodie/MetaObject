@@ -1,8 +1,8 @@
 #pragma once
 
-#include "MetaObject/Params/IVariableManager.hpp"
-#include "MetaObject/Signals/Connection.hpp"
-#include "MetaObject/Detail/Export.hpp"
+#include "MetaObject/params/IVariableManager.hpp"
+#include "MetaObject/signals/Connection.hpp"
+#include "MetaObject/detail/Export.hpp"
 
 namespace mo {
 class IParam;

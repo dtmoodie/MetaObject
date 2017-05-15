@@ -18,9 +18,9 @@ https://github.com/dtmoodie/Params
 */
 #pragma once
 
-#include "MetaObject/Params/ITInputParam.hpp"
-#include "MetaObject/Params/ParamConstructor.hpp"
-#include "MetaObject/Params/MetaParam.hpp"
+#include "MetaObject/params/ITInputParam.hpp"
+#include "MetaObject/params/ParamConstructor.hpp"
+#include "MetaObject/params/MetaParam.hpp"
 #include "BufferConstructor.hpp"
 #include "IBuffer.hpp"
 #include <map>
@@ -101,4 +101,4 @@ namespace mo{
 
     MO_METAParam_INSTANCE_MAP_(__COUNTER__)
 }
-#include "Detail/MapImpl.hpp"
+#include "detail/MapImpl.hpp"

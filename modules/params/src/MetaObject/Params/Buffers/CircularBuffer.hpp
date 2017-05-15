@@ -18,9 +18,9 @@ https://github.com/dtmoodie/Params
 */
 #pragma once
 
-#include "MetaObject/Params/ITParam.hpp"
-#include "MetaObject/Params/ParamConstructor.hpp"
-#include "MetaObject/Params/ITInputParam.hpp"
+#include "MetaObject/params/ITParam.hpp"
+#include "MetaObject/params/ParamConstructor.hpp"
+#include "MetaObject/params/ITInputParam.hpp"
 #include "IBuffer.hpp"
 #include "BufferConstructor.hpp"
 #include <boost/circular_buffer.hpp>
@@ -90,4 +90,4 @@ template<class T> BufferConstructor<Buffer::CircularBuffer<T>> MetaParam<T, N>::
     
 MO_METAParam_INSTANCE_CBUFFER_(__COUNTER__)
 }
-#include "Detail/CircularBufferImpl.hpp"
+#include "detail/CircularBufferImpl.hpp"

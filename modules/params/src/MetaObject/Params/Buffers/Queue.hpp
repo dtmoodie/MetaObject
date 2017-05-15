@@ -1,8 +1,8 @@
 #pragma once
-#include "MetaObject/Detail/ConcurrentQueue.hpp"
-#include "MetaObject/Params/ITInputParam.hpp"
-#include "MetaObject/Params/ParamConstructor.hpp"
-#include "MetaObject/Params/MetaParam.hpp"
+#include "MetaObject/detail/ConcurrentQueue.hpp"
+#include "MetaObject/params/ITInputParam.hpp"
+#include "MetaObject/params/ParamConstructor.hpp"
+#include "MetaObject/params/MetaParam.hpp"
 #include "BufferConstructor.hpp"
 #include "IBuffer.hpp"
 

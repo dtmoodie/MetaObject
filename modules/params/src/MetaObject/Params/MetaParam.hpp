@@ -1,6 +1,6 @@
 #pragma once
-#include "MetaObject/Detail/HelperMacros.hpp"
-#include "MetaObject/Params/Demangle.hpp"
+#include "MetaObject/core/detail/HelperMacros.hpp"
+#include "MetaObject/core/Demangle.hpp"
 
 namespace mo {
 template<class T, int N, typename Enable = void> struct MetaParam: public MetaParam<T, N-1, void> {

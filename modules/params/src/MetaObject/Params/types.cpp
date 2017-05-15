@@ -1,4 +1,4 @@
-#include <MetaObject/Params/Types.hpp>
+#include <MetaObject/params/Types.hpp>
 using namespace mo;
 
 ReadFile::ReadFile(const std::string& str) : 

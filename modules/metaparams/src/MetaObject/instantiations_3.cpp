@@ -1,15 +1,15 @@
 #ifdef HAVE_OPENCV
-#include "MetaObject/Params/MetaParam.hpp"
-#include "MetaObject/Params/UI/Qt/OpenCV.hpp"
-#include "MetaObject/Params/UI/Qt/Containers.hpp"
-#include "MetaObject/Params/UI/Qt/TParamProxy.hpp"
-#include "MetaObject/Params/Buffers/CircularBuffer.hpp"
-#include "MetaObject/Params/Buffers/StreamBuffer.hpp"
-#include "MetaObject/Params/Buffers/Map.hpp"
-#include "MetaObject/Params/IO/CerealPolicy.hpp"
-#include "MetaObject/Params/IO/TextPolicy.hpp"
+#include "MetaObject/params/MetaParam.hpp"
+#include "MetaObject/params/ui/Qt/OpenCV.hpp"
+#include "MetaObject/params/ui/Qt/Containers.hpp"
+#include "MetaObject/params/ui/Qt/TParamProxy.hpp"
+#include "MetaObject/params/buffers/CircularBuffer.hpp"
+#include "MetaObject/params/buffers/StreamBuffer.hpp"
+#include "MetaObject/params/buffers/Map.hpp"
+#include "MetaObject/serialization/CerealPolicy.hpp"
+#include "MetaObject/serialization/TextPolicy.hpp"
 #include <boost/lexical_cast.hpp>
-#include "MetaObject/Params/IO/cvSpecializations.hpp"
+#include "MetaObject/serialization/cvSpecializations.hpp"
 #include "cereal/types/vector.hpp"
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
@@ -21,7 +21,7 @@
 #else
 #  define MO_EXPORTS
 #endif
-#include "MetaObject/Params/Detail/MetaParamImpl.hpp"
+#include "MetaObject/params/detail/MetaParamImpl.hpp"
 INSTANTIATE_META_Param(cv::Point2f);
 INSTANTIATE_META_Param(cv::Point2d);
 INSTANTIATE_META_Param(cv::Point3d);

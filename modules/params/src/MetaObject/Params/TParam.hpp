@@ -19,7 +19,7 @@ https://github.com/dtmoodie/Params
 #pragma once
 #include "ITAccessibleParam.hpp"
 #include "ParamConstructor.hpp"
-#include "MetaObject/Params/MetaParam.hpp"
+#include "MetaObject/params/MetaParam.hpp"
 namespace mo {
 template<typename T>
 class MO_EXPORTS TParam : virtual public ITAccessibleParam<T> {
@@ -47,4 +47,4 @@ private:
     static MetaParam<T, 100> _meta_param;
 };
 }
-#include "Detail/TParamImpl.hpp"
+#include "detail/TParamImpl.hpp"

@@ -1,7 +1,7 @@
 #define BOOST_TEST_MAIN
-#include "MetaObject/Detail/Allocator.hpp"
-#include "MetaObject/Detail/AllocatorImpl.hpp"
-#include "MetaObject/Logging/Profiling.hpp"
+#include "MetaObject/detail/Allocator.hpp"
+#include "MetaObject/detail/AllocatorImpl.hpp"
+#include "MetaObject/logging/Profiling.hpp"
 
 #include <boost/log/core.hpp>
 #include <boost/log/trivial.hpp>

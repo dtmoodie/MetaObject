@@ -1,6 +1,6 @@
 #pragma once
-#include "MetaObject/Detail/Export.hpp"
-#include "MetaObject/Params/ITInputParam.hpp"
+#include "MetaObject/detail/Export.hpp"
+#include "MetaObject/params/ITInputParam.hpp"
 #include "Map.hpp"
 #include "IBuffer.hpp"
 #include <boost/thread/condition_variable.hpp>
@@ -79,4 +79,4 @@ namespace mo
     template<class T> ParamConstructor<Buffer::BlockingStreamBuffer<T>> MetaParam<T, N>::_blocking_stream_buffer_Param_constructor;
     MO_METAParam_INSTANCE_SBUFFER_(__COUNTER__)
 }
-#include "Detail/StreamBufferImpl.hpp"
+#include "detail/StreamBufferImpl.hpp"

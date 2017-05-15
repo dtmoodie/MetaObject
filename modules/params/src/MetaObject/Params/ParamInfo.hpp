@@ -1,6 +1,6 @@
 #pragma once
-#include "MetaObject/Params/IParam.hpp"
-#include "MetaObject/Detail/TypeInfo.hpp"
+#include "MetaObject/params/IParam.hpp"
+#include "MetaObject/detail/TypeInfo.hpp"
 #include <string>
 
 namespace mo {

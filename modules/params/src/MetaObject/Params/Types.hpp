@@ -17,7 +17,7 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/Params
 */
 #pragma once
-#include <MetaObject/Detail/Export.hpp>
+#include <MetaObject/detail/Export.hpp>
 #include <vector>
 #include <string>
 #include <boost/filesystem/path.hpp>

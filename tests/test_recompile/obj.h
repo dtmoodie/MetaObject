@@ -1,14 +1,14 @@
 #pragma once
-#include "MetaObject/Signals/Detail/SignalMacros.hpp"
-#include "MetaObject/Signals/Detail/SlotMacros.hpp"
+#include "MetaObject/signals/detail/SignalMacros.hpp"
+#include "MetaObject/signals/detail/SlotMacros.hpp"
 #include "MetaObject/IMetaObject.hpp"
-#include "MetaObject/Signals/TSignal.hpp"
-#include "MetaObject/Detail/Counter.hpp"
-#include "MetaObject/Detail/MetaObjectMacros.hpp"
-#include "MetaObject/Params/ParamMacros.hpp"
+#include "MetaObject/signals/TSignal.hpp"
+#include "MetaObject/detail/Counter.hpp"
+#include "MetaObject/detail/MetaObjectMacros.hpp"
+#include "MetaObject/params/ParamMacros.hpp"
 
-#include "MetaObject/Params/TParamPtr.hpp"
-#include "MetaObject/Params/TInputParam.hpp"
+#include "MetaObject/params/TParamPtr.hpp"
+#include "MetaObject/params/TInputParam.hpp"
 
 #include "RuntimeObjectSystem/RuntimeInclude.h"
 #include "RuntimeObjectSystem/RuntimeSourceDependency.h"

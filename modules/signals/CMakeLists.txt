@@ -1,2 +1,0 @@
-metaobject_declare_module(NAME signals DEPENDS metaobject_core metaobject_logging metaobject_thread)
-target_include_directories(metaobject_signals PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>)

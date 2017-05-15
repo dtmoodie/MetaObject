@@ -1,7 +1,7 @@
 #pragma once
 #ifndef __CUDACC__
 #include <boost/thread/recursive_mutex.hpp>
-#include "MetaObject/Params/MetaParam.hpp"
+#include "MetaObject/params/MetaParam.hpp"
 namespace mo
 {
     template<typename T> class TInputParamPtr;
