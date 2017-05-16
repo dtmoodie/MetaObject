@@ -1,13 +1,15 @@
-#include <MetaObject/Params/MetaParam.hpp>
-#include "MetaObject/Params/UI/Qt/OpenCV.hpp"
-#include "MetaObject/Params/UI/Qt/Containers.hpp"
-#include "MetaObject/Params/UI/Qt/TParamProxy.hpp"
-#include "MetaObject/Params/Buffers/CircularBuffer.hpp"
-#include "MetaObject/Params/Buffers/StreamBuffer.hpp"
-#include "MetaObject/Params/Buffers/Map.hpp"
+#include <MetaObject/params/MetaParam.hpp>
+#ifdef HAVE_QT
+#include "MetaObject/params/ui/Qt/OpenCV.hpp"
+#include "MetaObject/params/ui/Qt/Containers.hpp"
+#include "MetaObject/params/ui/Qt/TParamProxy.hpp"
+#endif
+#include "MetaObject/params/buffers/CircularBuffer.hpp"
+#include "MetaObject/params/buffers/StreamBuffer.hpp"
+#include "MetaObject/params/buffers/Map.hpp"
 #include "MetaObject/serialization/CerealPolicy.hpp"
 #include "MetaObject/serialization/TextPolicy.hpp"
-#include "MetaObject/Params/Types.hpp"
+#include "MetaObject/params/Types.hpp"
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
 #endif
@@ -18,7 +20,7 @@
 #else
 #  define MO_EXPORTS
 #endif
-#include "MetaObject/Params/detail/MetaParamImpl.hpp"
+#include "MetaObject/params/detail/MetaParamImpl.hpp"
 
 #include <cereal/types/vector.hpp>
 #include <cereal/types/string.hpp>
@@ -50,7 +52,7 @@ bool DeSerialize(ITAccessibleParam<EnumParam>* param, std::stringstream& ss){
 }
 
 bool Serialize(ITAccessibleParam<EnumParam>* param, std::stringstream& ss){
-    auto token = param->access();            
+    auto token = param->access();
     (token)().enumerations.size();
     ss << "[";
     for(int i = 0; i < (token)().enumerations.size(); ++i){

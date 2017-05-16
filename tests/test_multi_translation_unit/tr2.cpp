@@ -1,9 +1,9 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
 #include "MetaObject/params/MetaParam.hpp"
-#include "MetaObject/params/Buffers/CircularBuffer.hpp"
-#include "MetaObject/params/Buffers/StreamBuffer.hpp"
-#include "MetaObject/params/Buffers/Map.hpp"
+#include "MetaObject/params/buffers/CircularBuffer.hpp"
+#include "MetaObject/params/buffers/StreamBuffer.hpp"
+#include "MetaObject/params/buffers/Map.hpp"
 #include "MetaObject/IMetaObject.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/detail/Counter.hpp"
@@ -14,7 +14,7 @@
 #include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/logging/CompileLogger.hpp"
-#include "MetaObject/params/Buffers/BufferFactory.hpp"
+#include "MetaObject/params/buffers/BufferFactory.hpp"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 

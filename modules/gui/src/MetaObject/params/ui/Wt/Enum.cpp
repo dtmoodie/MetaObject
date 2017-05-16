@@ -1,5 +1,5 @@
 #ifdef HAVE_WT
-#include <MetaObject/params/UI/Wt/Enum.hpp>
+#include <MetaObject/params/ui/Wt/Enum.hpp>
 using namespace mo::UI::wt;
 using namespace mo;
 

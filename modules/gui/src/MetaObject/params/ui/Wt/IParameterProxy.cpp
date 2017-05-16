@@ -1,5 +1,5 @@
 #ifdef HAVE_WT
-#include <MetaObject/params/UI/Wt/IParamProxy.hpp>
+#include <MetaObject/params/ui/Wt/IParamProxy.hpp>
 #include <MetaObject/params/IParam.hpp>
 
 using namespace mo::UI::wt;

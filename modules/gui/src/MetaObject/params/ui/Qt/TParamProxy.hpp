@@ -1,7 +1,7 @@
 #pragma once
 #ifdef HAVE_QT5
 #include "MetaObject/detail/TypeInfo.hpp"
-#include "MetaObject/params/UI/WidgetFactory.hpp"
+#include "MetaObject/params/ui/WidgetFactory.hpp"
 #include "MetaObject/params/ITAccessibleParam.hpp"
 #include "IParamProxy.hpp"
 #include "THandler.hpp"
@@ -24,7 +24,7 @@ namespace qt
 {
     // **********************************************************************************
     // *************************** ParamProxy ***************************************
-    // **********************************************************************************  
+    // **********************************************************************************
     template<typename T> class ParamProxy : public IParamProxy{
     public:
         ParamProxy(IParam* param):
@@ -32,9 +32,9 @@ namespace qt
             setParam(param);
         }
         ~ParamProxy(){
-        
+
         }
-                
+
         QWidget* getParamWidget(QWidget* parent){
             QWidget* output = new QWidget(parent);
             auto widgets = _param_handler.getUiWidgets(output);
@@ -81,7 +81,7 @@ namespace qt
     protected:
         void onParamUpdate(typename ParamTraits<T>::ConstStorageRef_t data, IParam* param, Context* ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags fg){
             if(param == this->param){
-                param_handler.updateUi(ParamTraits<T>::get(data));
+                _param_handler.updateUi(ParamTraits<T>::get(data));
             }
         }
 

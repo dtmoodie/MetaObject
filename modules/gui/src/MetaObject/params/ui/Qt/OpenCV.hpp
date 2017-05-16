@@ -26,8 +26,8 @@ namespace mo
                 THandler<T> _height_handler;
             public:
                 static const bool IS_DEFAULT = false;
-                THandler(IParamProxy& parent): UiUpdateHandler(parent), _x_handler(parent), _y_handler(parent), 
-                    _width_handler(parent), _height_handler(parent), _parent(parent){}
+                THandler(IParamProxy& parent): UiUpdateHandler(parent), _x_handler(parent), _y_handler(parent),
+                    _width_handler(parent), _height_handler(parent){}
 
                 virtual void updateUi( const ::cv::Rect_<T>& data){
                     _x_handler.updateUi(data.x);
@@ -58,7 +58,7 @@ namespace mo
                     return output;
                 }
             };
-            
+
             // **********************************************************************************
             // *************************** cv::Range *********************************************
             // **********************************************************************************
@@ -80,7 +80,7 @@ namespace mo
                     _start_handler.updateParam(data.start);
                     _end_handler.updateParam(data.end);
                 }
-                
+
                 std::vector < QWidget*> getUiWidgets(QWidget* parent_){
                     std::vector<QWidget*> output;
                     auto out1 = _start_handler.getUiWidgets(parent_);
@@ -123,14 +123,14 @@ namespace mo
                     }
                     proxy->connect(table, SIGNAL(cellChanged(int, int)), proxy, SLOT(on_update(int, int)));
                 }
-                
+
                 void updateUi(const ::cv::Matx<T, ROW, COL>& data){
                     for (int i = 0; i < ROW; ++i){
                         for (int j = 0; j < COL; ++j){
                             items[i*COL + j]->setToolTip(QString::number((data)(i,j)));
                             items[i*COL + j]->setData(Qt::EditRole, (data)(i, j));
                         }
-                    }                
+                    }
                 }
                 void updateParam(::cv::Matx<T, ROW, COL>& data){
                     for(int row = 0; row < ROW; ++row){
@@ -165,7 +165,7 @@ namespace mo
                 QTableWidgetItem* second;
                 ::cv::Point_<T>* ptData;
             public:
-                THandler(IParamProxy& parent):UiUpdateHandler(parent), ptData(nullptr), _currently_updating(false){
+                THandler(IParamProxy& parent):UiUpdateHandler(parent), ptData(nullptr){
                     table = new QTableWidget();
                     first = new QTableWidgetItem();
                     second = new QTableWidgetItem();
@@ -190,7 +190,7 @@ namespace mo
                         table->setItem(0, 0, first);
                         table->setItem(0, 1, second);
                         table->update();
-                    }                    
+                    }
                 }
                 void updateParam(::cv::Point_<T>& data){
                     if (typeid(T) == typeid(double)){
@@ -254,7 +254,7 @@ namespace mo
                         third->setToolTip(QString::number(data.z));
                         table->setItem(0, 0, first);
                         table->setItem(0, 1, second);
-                        table->setItem(0, 2, third); 
+                        table->setItem(0, 2, third);
                 }
                 void updateParam(::cv::Point3_<T>& data){
                     if (typeid(T) == typeid(double)){
@@ -278,7 +278,7 @@ namespace mo
                         data.z = (T)third->data(Qt::EditRole).toUInt();
                     }
                 }
-                
+
                 std::vector<QWidget*> getUiWidgets(QWidget* parent){
                     std::vector<QWidget*> output;
                     output.push_back(table);

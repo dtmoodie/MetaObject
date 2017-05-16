@@ -1,5 +1,5 @@
 #include <cstddef>
-#include "MetaObject/Thread/BoostThread.hpp"
+#include "MetaObject/thread/BoostThread.hpp"
 
 #include "boost/thread.hpp"
 

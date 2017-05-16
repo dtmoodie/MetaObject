@@ -1,8 +1,8 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "MetaObject/params/UI/WidgetFactory.hpp"
-#include "MetaObject/params/UI/Qt/IParamProxy.hpp"
-#include "MetaObject/params/UI/Qt/TParamProxy.hpp"
+#include "MetaObject/params/ui/WidgetFactory.hpp"
+#include "MetaObject/params/ui/Qt/IParamProxy.hpp"
+#include "MetaObject/params/ui/Qt/TParamProxy.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
 
@@ -10,11 +10,11 @@
 // Since the instantiation library is included, instantiations of several types are registered with the full user
 // interface code for those types.  Thus the following are not needed for those types.  However, not all types are
 // included, so a few of the Params will use the default met Param
-//#include "MetaObject/params/UI/Qt/POD.hpp"
+//#include "MetaObject/params/ui/Qt/POD.hpp"
 #ifdef HAVE_OPENCV
-//#include "MetaObject/params/UI/Qt/OpenCV.hpp"
+//#include "MetaObject/params/ui/Qt/OpenCV.hpp"
 #endif
-//#include "MetaObject/params/UI/Qt/Containers.hpp"
+//#include "MetaObject/params/ui/Qt/Containers.hpp"
 
 #include "MetaObject/params/TParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"

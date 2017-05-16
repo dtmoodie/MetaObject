@@ -1,9 +1,9 @@
-#include "MetaObject/Thread/Thread.hpp"
+#include "MetaObject/thread/Thread.hpp"
 #include "MetaObject/signals/TSignalRelay.hpp"
 #include "MetaObject/core/Context.hpp"
 #include "MetaObject/signals/TSlot.hpp"
-#include "MetaObject/Thread/BoostThread.hpp"
-#include "MetaObject/Thread/ThreadRegistry.hpp"
+#include "MetaObject/thread/BoostThread.hpp"
+#include "MetaObject/thread/ThreadRegistry.hpp"
 #include "MetaObject/logging/Profiling.hpp"
 #include "MetaObject/core/detail/Allocator.hpp"
 

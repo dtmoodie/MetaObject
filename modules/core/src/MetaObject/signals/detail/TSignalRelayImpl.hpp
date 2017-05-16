@@ -1,6 +1,6 @@
 #pragma once
 #include <MetaObject/core/Context.hpp>
-#include "MetaObject/Thread/InterThread.hpp"
+#include "MetaObject/thread/InterThread.hpp"
 #include "MetaObject/logging/Log.hpp"
 #include "MetaObject/signals/Connection.hpp"
 namespace mo

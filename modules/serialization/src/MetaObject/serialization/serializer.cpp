@@ -1,4 +1,4 @@
-#include "MetaObject/Serialization/Serializer.hpp"
+#include "MetaObject/serialization/Serializer.hpp"
 #include <MetaObject/object/IMetaObject.hpp>
 #include "MetaObject/logging/Log.hpp"
 #include "MetaObject/object/MetaObjectFactory.hpp"

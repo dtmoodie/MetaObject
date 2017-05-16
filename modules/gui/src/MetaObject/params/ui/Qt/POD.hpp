@@ -3,7 +3,7 @@
 #include "MetaObject/detail/Export.hpp"
 #include "THandler.hpp"
 #include "UiUpdateHandler.hpp"
-#include "MetaObject/params/UI/Qt/SignalProxy.hpp"
+#include "MetaObject/params/ui/Qt/SignalProxy.hpp"
 
 #include <qcombobox.h>
 #include <qspinbox.h>

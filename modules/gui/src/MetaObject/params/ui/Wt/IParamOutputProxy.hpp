@@ -1,5 +1,5 @@
 #pragma once
-#include <MetaObject/params/UI/WT.hpp>
+#include <MetaObject/params/ui/WT.hpp>
 #include <Wt/WContainerWidget>
 
 

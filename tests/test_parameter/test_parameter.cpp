@@ -1,11 +1,11 @@
 
 #define BOOST_TEST_MAIN
 
-#include "MetaObject/IMetaObject.hpp"
-#include "MetaObject/detail/IMetaObjectImpl.hpp"
+#include "MetaObject/object/IMetaObject.hpp"
+#include "MetaObject/object/detail/IMetaObjectImpl.hpp"
 #include "MetaObject/signals/TSignal.hpp"
-#include "MetaObject/detail/Counter.hpp"
-#include "MetaObject/detail/MetaObjectMacros.hpp"
+#include "MetaObject/core/detail/Counter.hpp"
+#include "MetaObject/object/detail/MetaObjectMacros.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
 #include "MetaObject/params//ParamMacros.hpp"
@@ -83,56 +83,56 @@ MO_REGISTER_OBJECT(Paramed_object)
 BOOST_AUTO_TEST_CASE(wrapped_Param)
 {
     func(10, ::tag::_test_timestamp = mo::Time_t(-1 * mo::second));
-	int value = 10;
-	TParamPtr<int> param("Test wrapped param", &value);
+    int value = 10;
+    TParamPtr<int> param("Test wrapped param", &value);
     ParamTraits<int>::Storage_t data;
-	BOOST_REQUIRE(param.getData(data));
-    BOOST_REQUIRE_EQUAL(data, 10);
-	param.updateData(5);
     BOOST_REQUIRE(param.getData(data));
-	BOOST_CHECK_EQUAL(data, 5);
+    BOOST_REQUIRE_EQUAL(data, 10);
+    param.updateData(5);
+    BOOST_REQUIRE(param.getData(data));
+    BOOST_CHECK_EQUAL(data, 5);
     param.updateData(10, mo::tag::_timestamp = mo::Time_t(1 * mo::second));
     BOOST_REQUIRE(param.getData(data));
     BOOST_CHECK_EQUAL(data, 10);
     BOOST_CHECK_EQUAL(*param.getTimestamp(), mo::Time_t(1 * mo::second));
-	value = 11;
+    value = 11;
     BOOST_REQUIRE(param.getData(data));
-	BOOST_CHECK_EQUAL(data, 11);
-	bool update_handler_called = false;
-	TSlot<void(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags)> 
+    BOOST_CHECK_EQUAL(data, 11);
+    bool update_handler_called = false;
+    TSlot<void(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags)>
         slot([&param, &update_handler_called](IParam* param_in, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags){
-		update_handler_called = param_in == &param;
-	});
-	auto connection = param.registerUpdateNotifier(&slot);
+        update_handler_called = param_in == &param;
+    });
+    auto connection = param.registerUpdateNotifier(&slot);
     BOOST_REQUIRE(connection);
-	param.updateData(5);
-	BOOST_REQUIRE_EQUAL(update_handler_called, true);
+    param.updateData(5);
+    BOOST_REQUIRE_EQUAL(update_handler_called, true);
 }
 
 
 BOOST_AUTO_TEST_CASE(enum_params){
     mo::EnumParam enum_param = {{"test", 5}};
-    
+
 }
 
 BOOST_AUTO_TEST_CASE(input_param){
-	int value = 10;
-	TParamPtr<int> param("Test wrapped param", &value);
+    int value = 10;
+    TParamPtr<int> param("Test wrapped param", &value);
     ITInputParam<int> input_param;
     ParamTraits<int>::Storage_t data;
-	BOOST_REQUIRE(input_param.setInput(&param));
+    BOOST_REQUIRE(input_param.setInput(&param));
     input_param.getData(data);
-	BOOST_REQUIRE_EQUAL(data, value);
-	
-	bool update_handler_called = false;
-    TSlot<void(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags)> 
+    BOOST_REQUIRE_EQUAL(data, value);
+
+    bool update_handler_called = false;
+    TSlot<void(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags)>
         slot([&update_handler_called](IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags){
-		update_handler_called = true;
-	});
+        update_handler_called = true;
+    });
     auto connection = input_param.registerUpdateNotifier(&slot);
-	BOOST_REQUIRE(connection);
-	param.updateData(5);
-	BOOST_REQUIRE_EQUAL(update_handler_called, true);
+    BOOST_REQUIRE(connection);
+    param.updateData(5);
+    BOOST_REQUIRE_EQUAL(update_handler_called, true);
 }
 
 BOOST_AUTO_TEST_CASE(access_Param)

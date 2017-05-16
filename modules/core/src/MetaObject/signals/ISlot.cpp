@@ -1,5 +1,5 @@
 #include "MetaObject/signals/ISlot.hpp"
-#include "MetaObject/Thread/InterThread.hpp"
+#include "MetaObject/thread/InterThread.hpp"
 #include "MetaObject/signals/ISignalRelay.hpp"
 
 using namespace mo;

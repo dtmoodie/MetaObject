@@ -1,7 +1,7 @@
 #pragma once
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
-#include "MetaObject/Thread/ThreadRegistry.hpp"
+#include "MetaObject/thread/ThreadRegistry.hpp"
 #include <memory>
 
 namespace mo

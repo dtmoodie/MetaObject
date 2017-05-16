@@ -6,7 +6,7 @@
 #include <boost/preprocessor/facilities/empty.hpp>
 #endif
 #include "MetaObject/signals/TSlot.hpp"
-#include "MetaObject/detail/Counter.hpp"
+#include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/signals/SlotInfo.hpp"
 
 // -------------------------------------------------------------------------------------------

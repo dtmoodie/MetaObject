@@ -17,8 +17,8 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/Params
 */
 
-#include "MetaObject/params/UI/WidgetFactory.hpp"
-#include "MetaObject/params/UI/Qt/DefaultProxy.hpp"
+#include "MetaObject/params/ui/WidgetFactory.hpp"
+#include "MetaObject/params/ui/Qt/DefaultProxy.hpp"
 #include "MetaObject/logging/Log.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
 #include "MetaObject/params/IParam.hpp"
@@ -51,7 +51,7 @@ void WidgetFactory::RegisterConstructor(const TypeInfo& type, WidgetFactory::Han
     if(itr == _pimpl->registry.end())
     {
         _pimpl->registry[type] = f;
-    }   
+    }
 }
 std::string print_types(std::map<TypeInfo, WidgetFactory::HandlerConstructor_f>& registry)
 {
@@ -70,10 +70,10 @@ std::shared_ptr<IParamProxy> WidgetFactory::CreateProxy(IParam* param)
     auto itr = _pimpl->registry.find(param->getTypeInfo());
     if (itr == _pimpl->registry.end())
     {
-        LOG(debug) << "No Widget Factory registered for type " << typeName 
-            << " unable to make widget for Param: " << treeName 
+        LOG(debug) << "No Widget Factory registered for type " << typeName
+            << " unable to make widget for Param: " << treeName
             << ".  Known types: " << print_types(_pimpl->registry);
-            
+
         return std::shared_ptr<IParamProxy>(new DefaultProxy(param));
     }
     LOG(trace) << "Creating handler for " << typeName << " " << treeName;

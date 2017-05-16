@@ -1,4 +1,4 @@
-#include "MetaObject/Thread/InterThread.hpp"
+#include "MetaObject/thread/InterThread.hpp"
 #include "MetaObject/core/detail/ConcurrentQueue.hpp"
 #include "MetaObject/logging/Log.hpp"
 #include <mutex>

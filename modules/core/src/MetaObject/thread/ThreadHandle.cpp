@@ -1,6 +1,6 @@
-#include "MetaObject/Thread/ThreadHandle.hpp"
-#include "MetaObject/Thread/ThreadPool.hpp"
-#include "MetaObject/Thread/Thread.hpp"
+#include "MetaObject/thread/ThreadHandle.hpp"
+#include "MetaObject/thread/ThreadPool.hpp"
+#include "MetaObject/thread/Thread.hpp"
 #include "MetaObject/logging/Profiling.hpp"
 using namespace mo;
 ThreadHandle::ThreadHandle(Thread* thread, int* ref_count)

@@ -1,5 +1,5 @@
 
-#include "MetaObject/params/UI/Qt/DefaultProxy.hpp"
+#include "MetaObject/params/ui/Qt/DefaultProxy.hpp"
 #include "MetaObject/params/IParam.hpp"
 
 using namespace mo;

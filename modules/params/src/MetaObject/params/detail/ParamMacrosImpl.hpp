@@ -1,5 +1,5 @@
 #pragma once
-#include <MetaObject/detail/HelperMacros.hpp>
+#include <MetaObject/core/detail/HelperMacros.hpp>
 #include "MetaObject/params/ParamInfo.hpp"
 
 #include "RuntimeObjectSystem/ISimpleSerializer.h"
@@ -149,7 +149,7 @@ SERIALIZE_(name, N)
 void _serialize_params(ISimpleSerializer* pSerializer, mo::_counter_<N> dummy){ \
     SERIALIZE(name); \
     _serialize_params(pSerializer, --dummy); \
-} 
+}
 
 #define INPUT_PARAM_(type_, name, init, N) \
 void _init_params(bool firstInit, mo::_counter_<N> dummy){ \

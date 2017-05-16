@@ -1,5 +1,5 @@
-#include "MetaObject/Thread/ThreadHandle.hpp"
-#include "MetaObject/Thread/ThreadPool.hpp"
+#include "MetaObject/thread/ThreadHandle.hpp"
+#include "MetaObject/thread/ThreadPool.hpp"
 #include "MetaObject/signals/TSlot.hpp"
 
 int main()

@@ -1,5 +1,5 @@
 #ifdef HAVE_WT
-#include <MetaObject/params/UI/Wt/String.hpp>
+#include <MetaObject/params/ui/Wt/String.hpp>
 using namespace mo::UI::wt;
 using namespace mo;
 
@@ -13,7 +13,7 @@ void TDataProxy<std::string, void>::SetTooltip(const std::string& tp)
 
 }
 
-void TDataProxy<std::string, void>::CreateUi(IParamProxy* proxy, std::string* data, bool read_only)
+void TDataProxy<std::string, void>::CreateUi(IParamProxy* proxy, std::string& data, bool read_only)
 {
     if(_line_edit)
     {
@@ -22,10 +22,7 @@ void TDataProxy<std::string, void>::CreateUi(IParamProxy* proxy, std::string* da
     }
     _line_edit = new Wt::WLineEdit(proxy);
     _line_edit->setReadOnly(read_only);
-    if(data)
-    {
-        _line_edit->setText(*data);
-    }
+    _line_edit->setText(data);
     _line_edit->enterPressed().connect(proxy, &IParamProxy::onUiUpdate);
 }
 

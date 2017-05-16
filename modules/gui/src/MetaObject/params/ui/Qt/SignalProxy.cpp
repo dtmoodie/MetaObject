@@ -1,6 +1,6 @@
 #ifdef HAVE_QT5
-#include "MetaObject/params/UI/Qt/SignalProxy.hpp"
-#include "MetaObject/params/UI/Qt/IHandler.hpp"
+#include "MetaObject/params/ui/Qt/SignalProxy.hpp"
+#include "MetaObject/params/ui/Qt/IHandler.hpp"
 
 using namespace mo::UI::qt;
 

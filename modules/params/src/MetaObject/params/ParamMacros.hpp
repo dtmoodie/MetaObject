@@ -3,7 +3,7 @@
 #include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/detail/ParamMacrosImpl.hpp"
-#include "MetaObject/detail/HelperMacros.hpp"
+#include "MetaObject/core/detail/HelperMacros.hpp"
 
 #define PARAM(type_, name, init) \
 mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param; \

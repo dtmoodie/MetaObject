@@ -1,6 +1,6 @@
 #include "MetaObject/logging/Profiling.hpp"
 #include "MetaObject/logging/Log.hpp"
-#include "MetaObject/Thread/ThreadRegistry.hpp"
+#include "MetaObject/thread/ThreadRegistry.hpp"
 #include <string>
 #include <sstream>
 #ifdef HAVE_NVTX

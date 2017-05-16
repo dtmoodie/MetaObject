@@ -10,8 +10,8 @@
 #include "MetaObject/params//ParamMacros.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/TInputParam.hpp"
-#include "MetaObject/params/UI/Qt/POD.hpp"
-#include "MetaObject/params/UI/Qt/TParamProxy.hpp"
+#include "MetaObject/params/ui/Qt/POD.hpp"
+#include "MetaObject/params/ui/Qt/TParamProxy.hpp"
 
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"

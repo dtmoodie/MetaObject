@@ -1,10 +1,10 @@
 #pragma once
 #include <MetaObject/params/MetaParam.hpp>
-#include <MetaObject/params/UI/WidgetFactory.hpp>
-#include <MetaObject/params/UI/WT.hpp>
+#include <MetaObject/params/ui/WidgetFactory.hpp>
+#include <MetaObject/params/ui/WT.hpp>
 #include <MetaObject/signals/TSlot.hpp>
-#include <MetaObject/params/Demangle.hpp>
-#include <MetaObject/params/IParam.hpp>
+#include <MetaObject/core/Demangle.hpp>
+#include <MetaObject/params/ITAccessibleParam.hpp>
 
 #include <Wt/WContainerWidget>
 #include <Wt/WText>
@@ -64,7 +64,7 @@ namespace wt
     public:
         static const bool IS_DEFAULT = true;
         TDataProxy(){}
-        void CreateUi(IParamProxy* proxy, T* data, bool read_only){}
+        void CreateUi(IParamProxy* proxy, T& data, bool read_only){}
         void UpdateUi(const T& data){}
         void onUiUpdate(T& data){}
         void SetTooltip(const std::string& tooltip){}
@@ -78,18 +78,14 @@ namespace wt
     public:
         static const bool IS_DEFAULT = TDataProxy<T, void>::IS_DEFAULT;
 
-        TParamProxy(ITParam<T>* param_, MainApplication* app_,
+        TParamProxy(ITAccessibleParam<T>* param_, MainApplication* app_,
                         WContainerWidget *parent_ = 0):
             IParamProxy(param_, app_, parent_),
             _param(param_),
             _data_proxy()
         {
-            mo::Mutex_t::scoped_lock param_lock(_param->mtx());
-            T* ptr = param_->GetDataPtr();
-            if(ptr)
-            {
-                _data_proxy.CreateUi(this, ptr, param_->checkFlags(State_e));
-            }
+            auto token = param_->access();
+            _data_proxy.CreateUi(this, token(), param_->checkFlags(State_e));
         }
         void SetTooltip(const std::string& tip)
         {
@@ -98,26 +94,17 @@ namespace wt
     protected:
         void onParamUpdate(mo::Context* ctx, mo::IParam* param)
         {
-            mo::Mutex_t::scoped_lock param_lock(_param->mtx());
-            T* ptr = _param->GetDataPtr();
-            if(ptr)
-            {
-                _app->getUpdateLock();
-                _data_proxy.UpdateUi(*ptr);
-                _app->requestUpdate();
-            }
+            auto token = _param->access();
+            _app->getUpdateLock();
+            _data_proxy.UpdateUi(token());
+            _app->requestUpdate();
         }
         void onUiUpdate()
         {
-            mo::Mutex_t::scoped_lock param_lock(_param->mtx());
-            T* ptr = _param->GetDataPtr();
-            if(ptr)
-            {
-                _data_proxy.onUiUpdate(*ptr);
-                _param->commit();
-            }
+            auto token = _param->access();
+            _data_proxy.onUiUpdate(token());
         }
-        mo::ITParam<T>* _param;
+        mo::ITAccessibleParam<T>* _param;
         TDataProxy<T, void> _data_proxy;
     };
 
@@ -127,7 +114,7 @@ namespace wt
     public:
         static const bool IS_DEFAULT = true;
         TPlotDataProxy(){}
-        void CreateUi(Wt::WContainerWidget* container, T* data, bool read_only, const std::string& name = ""){}
+        void CreateUi(Wt::WContainerWidget* container, T& data, bool read_only, const std::string& name = ""){}
         void UpdateUi(const T& data, mo::Time_t ts){}
         void onUiUpdate(T& data){}
     };
@@ -138,49 +125,36 @@ namespace wt
     public:
         static const bool IS_DEFAULT = TPlotDataProxy<T, void>::IS_DEFAULT;
 
-        TPlotProxy(ITParam<T>* param_, MainApplication* app_,
+        TPlotProxy(ITAccessibleParam<T>* param_, MainApplication* app_,
                         WContainerWidget *parent_ = 0):
             IPlotProxy(param_, app_, parent_),
             _param(param_)
         {
-            mo::Mutex_t::scoped_lock param_lock(_param->mtx());
-            T* ptr = param_->GetDataPtr();
-            if(ptr)
+            auto token = param_->access();
+            if(IPlotProxy* parent = dynamic_cast<IPlotProxy*>(parent_))
             {
-
-                if(IPlotProxy* parent = dynamic_cast<IPlotProxy*>(parent_))
-                {
-                    _data_proxy.CreateUi(parent, ptr, param_->checkFlags(State_e), param_->getTreeName());
-                }else
-                {
-                    _data_proxy.CreateUi(this, ptr, param_->checkFlags(State_e), param_->getTreeName());
-                }
+                _data_proxy.CreateUi(parent, token(), param_->checkFlags(State_e), param_->getTreeName());
+            }else
+            {
+                _data_proxy.CreateUi(this, token(), param_->checkFlags(State_e), param_->getTreeName());
             }
         }
     protected:
         void onParamUpdate(mo::Context* ctx, mo::IParam* param)
         {
-            mo::Mutex_t::scoped_lock param_lock(_param->mtx());
-            T* ptr = _param->GetDataPtr();
-            if(ptr)
-            {
-                _app->getUpdateLock();
-                // TODO FIX ME
-                _data_proxy.UpdateUi(*ptr, *_param->getTimestamp());
-                _app->requestUpdate();
-            }
+            auto token = _param->access();
+            _app->getUpdateLock();
+            // TODO FIX ME
+            _data_proxy.UpdateUi(token(), *_param->getTimestamp());
+            _app->requestUpdate();
         }
         void onUiUpdate()
         {
-            mo::Mutex_t::scoped_lock param_lock(_param->mtx());
-            T* ptr = _param->GetDataPtr();
-            if(ptr)
-            {
-                _data_proxy.onUiUpdate(*ptr);
-                _param->commit();
-            }
+            auto token = _param->access();
+            _data_proxy.onUiUpdate(token());
+
         }
-        mo::ITParam<T>* _param;
+        mo::ITAccessibleParam<T>* _param;
         TPlotDataProxy<T, void> _data_proxy;
     };
 
@@ -198,7 +172,7 @@ namespace wt
         {
             if (param->getTypeInfo() == TypeInfo(typeid(T)))
             {
-                auto typed = dynamic_cast<ITParam<T>*>(param);
+                auto typed = dynamic_cast<ITAccessibleParam<T>*>(param);
                 if (typed)
                 {
                      return new TParamProxy<T, void>(typed, app, container);
@@ -220,7 +194,7 @@ namespace wt
         {
             if (param->getTypeInfo() == TypeInfo(typeid(T)))
             {
-                auto typed = dynamic_cast<ITParam<T>*>(param);
+                auto typed = dynamic_cast<ITAccessibleParam<T>*>(param);
                 if (typed)
                 {
                     return new TPlotProxy<T, void>(typed, app, container);

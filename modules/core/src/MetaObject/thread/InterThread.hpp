@@ -1,6 +1,6 @@
 #pragma once
 #include "MetaObject/detail/Export.hpp"
-#include "MetaObject/Thread/ThreadRegistry.hpp"
+#include "MetaObject/thread/ThreadRegistry.hpp"
 
 #include <functional>
 

@@ -26,15 +26,12 @@ namespace wt
         {
 
         }
-        void CreateUi(IParamProxy* proxy, T* data, bool read_only)
+        void CreateUi(IParamProxy* proxy, T& data, bool read_only)
         {
             _spin_box = new Wt::WSpinBox(proxy);
             _spin_box->setReadOnly(read_only);
-            if(data)
-            {
-                _spin_box->setValue(*data);
-                _spin_box->changed().connect(proxy, &IParamProxy::onUiUpdate);
-            }
+            _spin_box->setValue(data);
+            _spin_box->changed().connect(proxy, &IParamProxy::onUiUpdate);
         }
         void UpdateUi(const T& data)
         {
@@ -58,15 +55,12 @@ namespace wt
         {
 
         }
-        void CreateUi(IParamProxy* proxy, T* data, bool read_only)
+        void CreateUi(IParamProxy* proxy, T& data, bool read_only)
         {
             _spin_box = new Wt::WDoubleSpinBox(proxy);
             _spin_box->setReadOnly(read_only);
-            if(data)
-            {
-                _spin_box->setValue(*data);
-                _spin_box->changed().connect(proxy, &IParamProxy::onUiUpdate);
-            }
+            _spin_box->setValue(data);
+            _spin_box->changed().connect(proxy, &IParamProxy::onUiUpdate);
         }
         void UpdateUi(const T& data)
         {
@@ -96,7 +90,7 @@ namespace wt
             _data_history.set_capacity(1000);
 
         }
-        void CreateUi(Wt::WContainerWidget* container, T* data, bool read_only, const std::string& name = "")
+        void CreateUi(Wt::WContainerWidget* container, T& data, bool read_only, const std::string& name = "")
         {
             IPlotProxy* proxy = dynamic_cast<IPlotProxy*>(container);
 
@@ -154,7 +148,7 @@ namespace wt
     public:
         static const bool IS_DEFAULT = false;
         TDataProxy();
-        void CreateUi(IParamProxy* proxy, bool* data, bool read_only);
+        void CreateUi(IParamProxy* proxy, bool& data, bool read_only);
         void UpdateUi(const bool& data);
         void onUiUpdate(bool& data);
         void SetTooltip(const std::string& tooltip);

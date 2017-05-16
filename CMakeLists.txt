@@ -209,7 +209,7 @@ if(WITH_QT)
   if(Qt5_FOUND)
     set(AUTOMOC OFF)
     add_definitions(-DHAVE_QT5)
-    #QT5_WRAP_CPP(MOC "${CMAKE_CURRENT_LIST_DIR}/include/MetaObject/params/UI/Qt/SignalProxy.hpp")
+    #QT5_WRAP_CPP(MOC "${CMAKE_CURRENT_LIST_DIR}/include/MetaObject/params/ui/Qt/SignalProxy.hpp")
     list(APPEND src ${MOC})
     INCLUDE_DIRECTORIES(${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS})
     list(APPEND link_libs Qt5::Core Qt5::Widgets Qt5::Gui)
@@ -232,15 +232,6 @@ endif()
 if(WITH_WT)
 find_package(Wt QUIET)
   if(Wt_FOUND)
-    add_definitions(-DHAVE_WT)
-    include_directories(${Wt_INCLUDE_DIR})
-    list(APPEND link_libs
-      debug;${Wt_HTTP_DEBUG_LIBRARY}
-      debug;${Wt_DEBUG_LIBRARY}
-      optimized;${Wt_LIBRARY}
-      optimized;${Wt_HTTP_LIBRARY}
-    )
-
     find_path(Wt_BIN_DIR
       NAMES wt.dll wtd.dll
       PATHS ${Wt_DIR} "${Wt_INCLUDE_DIR}/../"
@@ -389,15 +380,19 @@ function(metaobject_declare_module)
             add_library(metaobject_${metaobject_declare_module_NAME} SHARED ${src})
         endif()
     endif()
+
     set(metaobject_modules "${metaobject_modules};metaobject_${metaobject_declare_module_NAME}" CACHE INTERNAL "" FORCE)
+
     target_compile_definitions(metaobject_${metaobject_declare_module_NAME} PRIVATE -DMetaObject_EXPORTS)
+
     if(metaobject_declare_module_DEPENDS)
         rcc_link_lib(metaobject_${metaobject_declare_module_NAME} ${metaobject_declare_module_DEPENDS})
     endif()
 
     set_property(TARGET metaobject_${metaobject_declare_module_NAME} PROPERTY CXX_STANDARD 14)
+
     if(UNIX)
-        target_compile_options(metaobject_${metaobject_declare_module_NAME} PUBLIC "-fPIC")
+        target_compile_options(metaobject_${metaobject_declare_module_NAME} PUBLIC "-fPIC;-Wl,--no-undefined")
     endif()
     target_include_directories(metaobject_${metaobject_declare_module_NAME}
         PUBLIC

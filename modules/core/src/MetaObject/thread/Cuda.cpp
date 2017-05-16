@@ -1,4 +1,4 @@
-#include <MetaObject/Thread/Cuda.hpp>
+#include <MetaObject/thread/Cuda.hpp>
 
 thread_local bool is_cuda_thread = false;
 namespace mo

@@ -1,6 +1,6 @@
 #ifdef HAVE_QT5
-#include "MetaObject/params/UI/Qt/POD.hpp"
-#include "MetaObject/params/UI/Qt/SignalProxy.hpp"
+#include "MetaObject/params/ui/Qt/POD.hpp"
+#include "MetaObject/params/ui/Qt/SignalProxy.hpp"
 #include <boost/thread/recursive_mutex.hpp>
 #include "qcheckbox.h"
 

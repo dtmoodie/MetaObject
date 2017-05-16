@@ -1,9 +1,9 @@
 #pragma once
 #ifndef __CUDACC__
-#include "MetaObject/MetaObjectInfo.hpp"
-#include "MetaObject/MetaObjectPolicy.hpp"
-#include "MetaObject/MetaObjectFactory.hpp"
-#include "MetaObject/detail/Counter.hpp"
+#include "MetaObject/object/MetaObjectInfo.hpp"
+#include "MetaObject/object/MetaObjectPolicy.hpp"
+#include "MetaObject/object/MetaObjectFactory.hpp"
+#include "MetaObject/core/detail/Counter.hpp"
 #include <boost/preprocessor.hpp>
 #include <RuntimeObjectSystem/shared_ptr.hpp>
 #include "RuntimeObjectSystem/ObjectInterfacePerModule.h"

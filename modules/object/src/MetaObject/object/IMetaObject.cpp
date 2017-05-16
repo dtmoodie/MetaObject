@@ -11,7 +11,7 @@
 #include "MetaObject/object/detail/IMetaObjectImpl.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include "MetaObject/params/InputParam.hpp"
-#include "MetaObject/params/Buffers/BufferFactory.hpp"
+#include "MetaObject/params/buffers/BufferFactory.hpp"
 #include "MetaObject/params/InputParam.hpp"
 #include "MetaObject/params/VariableManager.hpp"
 

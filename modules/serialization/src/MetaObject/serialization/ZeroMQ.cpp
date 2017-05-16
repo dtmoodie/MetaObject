@@ -1,4 +1,4 @@
-#include "MetaObject/Serialization/ZeroMQ.hpp"
+#include "MetaObject/serialization/ZeroMQ.hpp"
 using namespace mo;
 
 #ifdef HAVE_ZEROMQ
@@ -14,7 +14,7 @@ ZeroMQContext::ZeroMQContext()
 ZeroMQContext* ZeroMQContext::Instance()
 {
     static ZeroMQContext g_inst;
-    
+
     return &g_inst;
 }
 
@@ -84,12 +84,12 @@ ZeroMQContext* ZeroMQContext::Instance()
 
 struct ParamPublisher::impl
 {
-    
+
 };
 
 ParamPublisher::ParamPublisher()
 {
-    
+
 }
 
 ParamPublisher::~ParamPublisher()

@@ -1,12 +1,14 @@
 #ifdef HAVE_OPENCV
 
 #include "MetaObject/params/MetaParam.hpp"
-#include "MetaObject/params/UI/Qt/OpenCV.hpp"
-#include "MetaObject/params/UI/Qt/Containers.hpp"
-#include "MetaObject/params/UI/Qt/TParamProxy.hpp"
-#include "MetaObject/params/Buffers/CircularBuffer.hpp"
-#include "MetaObject/params/Buffers/StreamBuffer.hpp"
-#include "MetaObject/params/Buffers/Map.hpp"
+#ifdef HAVE_QT
+#include "MetaObject/params/ui/Qt/OpenCV.hpp"
+#include "MetaObject/params/ui/Qt/Containers.hpp"
+#include "MetaObject/params/ui/Qt/TParamProxy.hpp"
+#endif
+#include "MetaObject/params/buffers/CircularBuffer.hpp"
+#include "MetaObject/params/buffers/StreamBuffer.hpp"
+#include "MetaObject/params/buffers/Map.hpp"
 #include "MetaObject/serialization/CerealPolicy.hpp"
 #include "MetaObject/serialization/cvSpecializations.hpp"
 #ifdef MO_EXPORTS

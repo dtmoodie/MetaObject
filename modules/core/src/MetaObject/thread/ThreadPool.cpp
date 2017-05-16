@@ -1,5 +1,5 @@
-#include "MetaObject/Thread/ThreadPool.hpp"
-#include "MetaObject/Thread/Thread.hpp"
+#include "MetaObject/thread/ThreadPool.hpp"
+#include "MetaObject/thread/Thread.hpp"
 using namespace mo;
 ThreadPool::PooledThread::~PooledThread()
 {

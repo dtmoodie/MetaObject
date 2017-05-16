@@ -16,7 +16,7 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 https://github.com/dtmoodie/Params
 */
-#include "MetaObject/params/UI/UI.hpp"
+#include "MetaObject/params/ui/UI.hpp"
 
 /*using namespace mo::UI;
 

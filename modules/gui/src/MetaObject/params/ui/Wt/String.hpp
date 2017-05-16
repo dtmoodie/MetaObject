@@ -16,7 +16,7 @@ namespace wt
     public:
         static const int IS_DEFAULT = false;
         TDataProxy();
-        void CreateUi(IParamProxy* proxy, std::string* data, bool read_only);
+        void CreateUi(IParamProxy* proxy, std::string& data, bool read_only);
         void UpdateUi(const std::string& data);
         void onUiUpdate(std::string& data);
         void SetTooltip(const std::string& tp);

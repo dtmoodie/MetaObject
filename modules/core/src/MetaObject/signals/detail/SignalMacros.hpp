@@ -6,9 +6,9 @@
 #endif
 
 #include "MetaObject/signals/SignalInfo.hpp"
-#include "MetaObject/detail/HelperMacros.hpp"
+#include "MetaObject/core/detail/HelperMacros.hpp"
 #include "MetaObject/signals/TSignal.hpp"
-#include "MetaObject/detail/Counter.hpp"
+#include "MetaObject/core/detail/Counter.hpp"
 #include <vector>
 
 #define SIGNAL_CALL_1(N, name, ret) \

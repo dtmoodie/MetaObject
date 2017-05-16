@@ -1,10 +1,10 @@
 #include "MetaObject/core/Context.hpp"
-#include "MetaObject/Thread/ThreadRegistry.hpp"
+#include "MetaObject/thread/ThreadRegistry.hpp"
 #include "MetaObject/core/detail/Allocator.hpp"
 #include "MetaObject/logging/Profiling.hpp"
 #include "MetaObject/core/detail/HelperMacros.hpp"
 #include "MetaObject/core/detail/Allocator.hpp"
-#include "MetaObject/Thread/ThreadRegistry.hpp"
+#include "MetaObject/thread/ThreadRegistry.hpp"
 
 #include "boost/lexical_cast.hpp"
 #include <boost/thread/tss.hpp>

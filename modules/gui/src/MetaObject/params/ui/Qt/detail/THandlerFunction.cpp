@@ -1,5 +1,5 @@
 #ifdef HAVE_QT5
-#include "MetaObject/params/UI/Qt/POD.hpp"
+#include "MetaObject/params/ui/Qt/POD.hpp"
 #include "MetaObject/params/Types.hpp"
 #include <boost/thread/recursive_mutex.hpp>
 #include "qpushbutton.h"

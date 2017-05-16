@@ -1,4 +1,4 @@
-#include "MetaObject/params/Buffers/BufferFactory.hpp"
+#include "MetaObject/params/buffers/BufferFactory.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include <map>
 
