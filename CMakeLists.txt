@@ -392,7 +392,6 @@ function(metaobject_declare_module)
     set(metaobject_modules "${metaobject_modules};metaobject_${metaobject_declare_module_NAME}" CACHE INTERNAL "" FORCE)
     target_compile_definitions(metaobject_${metaobject_declare_module_NAME} PRIVATE -DMetaObject_EXPORTS)
     if(metaobject_declare_module_DEPENDS)
-        message("metaobject_${metaobject_declare_module_NAME} depends on ${metaobject_declare_module_DEPENDS}")
         rcc_link_lib(metaobject_${metaobject_declare_module_NAME} ${metaobject_declare_module_DEPENDS})
     endif()
 
@@ -405,6 +404,7 @@ function(metaobject_declare_module)
             $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
             $<INSTALL_INTERFACE:include>
     )
+
     set_target_properties(metaobject_${metaobject_declare_module_NAME} PROPERTIES FOLDER Modules)
     if(metaobject_declare_module_FLAGS)
         target_compile_options(metaobject_${metaobject_declare_module_NAME} PUBLIC ${metaobject_declare_module_FLAGS})
@@ -432,7 +432,21 @@ function(metaobject_declare_module)
         FILES_MATCHING PATTERN "*.hpp"
     )
     install(EXPORT metaobject_${metaobject_declare_module_NAME}Targets DESTINATION "${CMAKE_INSTALL_PREFIX}/share/MetaObject" COMPONENT dev)
-
+    RCC_TARGET_CONFIG(metaobject_${metaobject_declare_module_NAME})
+    if(RCC_VERBOSE_CONFIG)
+        set(test_lib "")
+        set(test_inc "")
+        _target_helper(test_lib test_inc metaobject_${metaobject_declare_module_NAME} " ")
+        message("---------------")
+        list(REMOVE_DUPLICATES test_lib)
+        foreach(lib ${test_lib})
+            message("  ${lib}")
+        endforeach()
+        list(REMOVE_DUPLICATES test_inc)
+        foreach(inc ${test_inc})
+            message("  ${inc}")
+        endforeach()
+    endif(RCC_VERBOSE_CONFIG)
 endfunction()
 
 SUBDIRLIST(modules "${CMAKE_CURRENT_LIST_DIR}/modules")
