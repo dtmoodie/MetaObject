@@ -1,5 +1,5 @@
 #include "MetaObject/core/detail/AllocatorImpl.hpp"
-#include "MetaObject/Thread/Cuda.hpp"
+#include "MetaObject/thread/Cuda.hpp"
 #include <ctime>
 
 

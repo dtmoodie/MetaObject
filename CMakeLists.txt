@@ -246,7 +246,7 @@ find_package(Wt QUIET)
       PATHS ${Wt_DIR} "${Wt_INCLUDE_DIR}/../"
       ENV ${Wt_DIR}
       PATH PATH_SUFFIXES bin
-	)
+    )
 
     if(Wt_BIN_DIR)
       set(Wt_BIN_DIR_DBG ${Wt_BIN_DIR} CACHE PATH "" FORCE)
@@ -375,24 +375,24 @@ file(GLOB children RELATIVE "${basedir}/${curdir}" "${basedir}/${curdir}/*")
 endmacro()
 
 function(metaobject_declare_module)
-	set(oneValueArgs NAME)
-	set(multiValueArgs SRC DEPENDS FLAGS CUDA_SRC)
-	cmake_parse_arguments(metaobject_declare_module "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
-	GroupSources("${CMAKE_CURRENT_LIST_DIR}/src/MetaObject/" "/" " ")
-	if(${metaobject_declare_module_CUDA_SRC})
-		cuda_add_library(metaobject_${metaobject_declare_module_NAME} SHARED ${${metaobject_declare_module_CUDA_SRC}})
-	else()
-		if(${metaobject_declare_module_SRC})
-			message(${${metaobject_declare_module_SRC}})
-			add_library(metaobject_${metaobject_declare_module_NAME} SHARED ${${metaobject_declare_module_SRC}})
-		else()
-			file(GLOB_RECURSE src "src/*.cpp" "src/*.h" "src/*.hpp")
-			add_library(metaobject_${metaobject_declare_module_NAME} SHARED ${src})
-		endif()
-	endif()
-	set(metaobject_modules "${metaobject_modules};metaobject_${metaobject_declare_module_NAME}" CACHE INTERNAL "" FORCE)
+    set(oneValueArgs NAME)
+    set(multiValueArgs SRC DEPENDS FLAGS CUDA_SRC)
+    cmake_parse_arguments(metaobject_declare_module "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
+    GroupSources("${CMAKE_CURRENT_LIST_DIR}/src/MetaObject/" "/" " ")
+    if(${metaobject_declare_module_CUDA_SRC})
+        cuda_add_library(metaobject_${metaobject_declare_module_NAME} SHARED ${${metaobject_declare_module_CUDA_SRC}})
+    else()
+        if(${metaobject_declare_module_SRC})
+            add_library(metaobject_${metaobject_declare_module_NAME} SHARED ${${metaobject_declare_module_SRC}})
+        else()
+            file(GLOB_RECURSE src "src/*.cpp" "src/*.h" "src/*.hpp")
+            add_library(metaobject_${metaobject_declare_module_NAME} SHARED ${src})
+        endif()
+    endif()
+    set(metaobject_modules "${metaobject_modules};metaobject_${metaobject_declare_module_NAME}" CACHE INTERNAL "" FORCE)
     target_compile_definitions(metaobject_${metaobject_declare_module_NAME} PRIVATE -DMetaObject_EXPORTS)
-	if(metaobject_declare_module_DEPENDS)
+    if(metaobject_declare_module_DEPENDS)
+        message("metaobject_${metaobject_declare_module_NAME} depends on ${metaobject_declare_module_DEPENDS}")
         rcc_link_lib(metaobject_${metaobject_declare_module_NAME} ${metaobject_declare_module_DEPENDS})
     endif()
 
@@ -405,7 +405,7 @@ function(metaobject_declare_module)
             $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
             $<INSTALL_INTERFACE:include>
     )
-	set_target_properties(metaobject_${metaobject_declare_module_NAME} PROPERTIES FOLDER Modules)
+    set_target_properties(metaobject_${metaobject_declare_module_NAME} PROPERTIES FOLDER Modules)
     if(metaobject_declare_module_FLAGS)
         target_compile_options(metaobject_${metaobject_declare_module_NAME} PUBLIC ${metaobject_declare_module_FLAGS})
     endif()
@@ -431,7 +431,8 @@ function(metaobject_declare_module)
         DESTINATION include
         FILES_MATCHING PATTERN "*.hpp"
     )
-	install(EXPORT metaobject_${metaobject_declare_module_NAME}Targets DESTINATION "${CMAKE_INSTALL_PREFIX}/share/MetaObject" COMPONENT dev)
+    install(EXPORT metaobject_${metaobject_declare_module_NAME}Targets DESTINATION "${CMAKE_INSTALL_PREFIX}/share/MetaObject" COMPONENT dev)
+
 endfunction()
 
 SUBDIRLIST(modules "${CMAKE_CURRENT_LIST_DIR}/modules")
@@ -442,7 +443,7 @@ set(MetaObject_LIBRARIES "${metaobject_modules}" CACHE STRING "" FORCE)
 
 # -------------------- tests ----------------------------------
 if(BUILD_TESTS)
-	add_subdirectory(tests)
+    add_subdirectory(tests)
 endif(BUILD_TESTS)
 
 # ---------------------- status message -----------------------------
