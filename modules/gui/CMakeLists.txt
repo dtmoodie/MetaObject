@@ -27,4 +27,4 @@ if(Wt_FOUND)
         optimized;${Wt_LIBRARY}
         optimized;${Wt_HTTP_LIBRARY}
     )
-endif(WT_FOUND)
+endif(Wt_FOUND)
