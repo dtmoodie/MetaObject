@@ -75,8 +75,20 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 #ifdef DISCARD_MESSAGE
 #undef DISCARD_MESSAGE
 #endif
-
-
+#ifdef ALIAS_BOOST_LOG_SEVERITIES
+namespace boost {
+    namespace log {
+        inline namespace BOOST_LOG_VERSION_NAMESPACE {
+            namespace trivial {
+                constexpr severity_level FATAL = fatal;
+                constexpr severity_level ERROR = error;
+                constexpr severity_level WARNING = warning;
+                constexpr severity_level INFO = info;
+            }
+        }
+    }
+}
+#endif
 #define DISCARD_MESSAGE true ? (void)0 : mo::LogMessageVoidify() & mo::eat_message().stream()
 
 #define LOG_EVERY_N(severity, n) \
@@ -105,15 +117,16 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 #define ASSERT_LT(lhs, rhs)  ASSERT_OP(< , lhs, rhs)
 #define ASSERT_GE(lhs, rhs)  ASSERT_OP(>=, lhs, rhs)
 #define ASSERT_GT(lhs, rhs)  ASSERT_OP(> , lhs, rhs)
+#define MO_ASSERT(exp) if(!(exp)) mo::ThrowOnDestroy(__FUNCTION__, __FILE__, __LINE__).stream() << "[" << #exp << "] FAILED! "
 
 #define CHECK_OP(op, lhs, rhs, severity) if(lhs op rhs)  LOG(severity) << "[" << #lhs << " " << #op << " " << #rhs << "] - Failed (" << lhs << " " <<  #op << " " << rhs << ")"
 
-#define CHECK_EQ(lhs, rhs, severity) CHECK_OP(==, lhs, rhs, severity)
-#define CHECK_NE(lhs, rhs, severity) CHECK_OP(!=, lhs, rhs, severity)
-#define CHECK_LE(lhs, rhs, severity) CHECK_OP(<=, lhs, rhs, severity)
-#define CHECK_LT(lhs, rhs, severity) CHECK_OP(< , lhs, rhs, severity)
-#define CHECK_GE(lhs, rhs, severity) CHECK_OP(>=, lhs, rhs, severity)
-#define CHECK_GT(lhs, rhs, severity) CHECK_OP(> , lhs, rhs, severity)
+#define CHECK_EQ(lhs, rhs) ASSERT_EQ(lhs, rhs)
+#define CHECK_NE(lhs, rhs) ASSERT_NE(lhs, rhs)
+#define CHECK_LE(lhs, rhs) ASSERT_LE(lhs, rhs)
+#define CHECK_LT(lhs, rhs) ASSERT_LT(lhs, rhs)
+#define CHECK_GE(lhs, rhs) ASSERT_GE(lhs, rhs)
+#define CHECK_GT(lhs, rhs) ASSERT_GT(lhs, rhs)
 
 #ifdef _DEBUG
 #define DBG_CHECK_EQ(lhs, rhs, severity) CHECK_OP(==, lhs, rhs, severity)
