@@ -1,25 +1,22 @@
 #pragma once
 #include "MetaObject/detail/Export.hpp"
 #include <cstddef>
-namespace mo
-{
-    size_t MO_EXPORTS GetThisThread();
-    class MO_EXPORTS ThreadRegistry
-    {
+namespace mo{
+    size_t MO_EXPORTS getThisThread();
+    class MO_EXPORTS ThreadRegistry{
     public:
-        enum ThreadType
-        {
+        enum ThreadType{
             GUI,
             ANY
         };
-        void RegisterThread(ThreadType type, size_t id = GetThisThread());
-        size_t GetThread(int type);
+        void registerThread(ThreadType type, size_t id = getThisThread());
+        size_t getThread(int type);
 
-        static ThreadRegistry* Instance();
+        static ThreadRegistry* instance();
     private:
         ThreadRegistry();
         ~ThreadRegistry();
-        
+
         struct impl;
         impl* _pimpl;
     };

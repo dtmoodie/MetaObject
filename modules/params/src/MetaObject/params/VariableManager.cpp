@@ -10,12 +10,12 @@ struct VariableManager::impl
 {
     std::map<std::string, IParam*> _Params;
     //std::map<std::string, std::shared_ptr<Connection>> _delete_Connections;
-	TSlot<void(IParam*)> delete_slot;
+    TSlot<void(IParam*)> delete_slot;
 };
 VariableManager::VariableManager()
 {
     pimpl = new impl();
-	pimpl->delete_slot = std::bind(&VariableManager::RemoveParam, this, std::placeholders::_1);
+    pimpl->delete_slot = std::bind(&VariableManager::removeParam, this, std::placeholders::_1);
 }
 VariableManager::~VariableManager()
 {
@@ -38,11 +38,11 @@ std::vector<IParam*> VariableManager::getOutputParams(TypeInfo type)
         if(itr->second->getTypeInfo() == type && itr->second->checkFlags(Output_e))
         {
             valid_outputs.push_back(itr->second);
-        }   
+        }
     }
     return valid_outputs;
 }
-std::vector<IParam*> VariableManager::getAllParmaeters()
+std::vector<IParam*> VariableManager::getAllParms()
 {
     std::vector<IParam*> output;
     for(auto& itr : pimpl->_Params)
@@ -61,7 +61,7 @@ std::vector<IParam*> VariableManager::getAllOutputParams()
             output.push_back(itr.second);
         }
     }
-    return output;    
+    return output;
 }
 IParam* VariableManager::getParam(std::string name)
 {

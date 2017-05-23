@@ -1,6 +1,6 @@
 #include "obj.hpp"
 
-#include <MetaObject/MetaObjectFactory.hpp>
+#include <MetaObject/object/MetaObjectFactory.hpp>
 #include <MetaObject/logging/Log.hpp>
 #include <boost/thread.hpp>
 int main()
@@ -18,28 +18,28 @@ int main()
         LOG(debug) << "Exception caught in the wrong handler";
     }
 
-	auto factory = mo::MetaObjectFactory::Instance(); // ->RegisterTranslationUnit();
-	factory->RegisterTranslationUnit();
-	auto obj = rcc::shared_ptr<printable>::Create();
-	
-	bool recompiling = false;
-	while (1)
-	{
-		obj->print();
+    auto factory = mo::MetaObjectFactory::instance(); // ->registerTranslationUnit();
+    factory->registerTranslationUnit();
+    auto obj = rcc::shared_ptr<printable>::create();
+
+    bool recompiling = false;
+    while (1)
+    {
+        obj->print();
 
 
-		if (factory->CheckCompile())
-		{
-			recompiling = true;
-		}
-		if (recompiling)
-		{
-			if (factory->SwapObjects())
-			{
-				recompiling = false;
-			}
-		}
-		boost::this_thread::sleep_for(boost::chrono::seconds(1));
-	}
+        if (factory->CheckCompile())
+        {
+            recompiling = true;
+        }
+        if (recompiling)
+        {
+            if (factory->SwapObjects())
+            {
+                recompiling = false;
+            }
+        }
+        boost::this_thread::sleep_for(boost::chrono::seconds(1));
+    }
 
 }

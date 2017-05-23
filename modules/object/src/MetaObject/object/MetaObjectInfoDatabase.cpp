@@ -17,18 +17,18 @@ MetaObjectInfoDatabase::~MetaObjectInfoDatabase()
     delete _pimpl;
 }
 
-MetaObjectInfoDatabase* MetaObjectInfoDatabase::Instance()
+MetaObjectInfoDatabase* MetaObjectInfoDatabase::instance()
 {
     static MetaObjectInfoDatabase g_inst;
     return &g_inst;
 }
-        
-void MetaObjectInfoDatabase::RegisterInfo(IMetaObjectInfo* info)
+
+void MetaObjectInfoDatabase::registerInfo(IMetaObjectInfo* info)
 {
-    _pimpl->info[info->GetObjectName()] = info;
+    _pimpl->info[info->getObjectName()] = info;
 }
-        
-std::vector<IMetaObjectInfo*> MetaObjectInfoDatabase::GetMetaObjectInfo()
+
+std::vector<IMetaObjectInfo*> MetaObjectInfoDatabase::getMetaObjectInfo()
 {
     std::vector<IMetaObjectInfo*> output;
     for(auto& itr : _pimpl->info)
@@ -38,7 +38,7 @@ std::vector<IMetaObjectInfo*> MetaObjectInfoDatabase::GetMetaObjectInfo()
     return output;
 }
 
-IMetaObjectInfo* MetaObjectInfoDatabase::GetMetaObjectInfo(std::string name)
+IMetaObjectInfo* MetaObjectInfoDatabase::getMetaObjectInfo(std::string name)
 {
     auto itr = _pimpl->info.find(name);
     if(itr != _pimpl->info.end())

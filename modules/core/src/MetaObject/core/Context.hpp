@@ -1,29 +1,33 @@
 #pragma once
 #include "MetaObject/detail/Export.hpp"
-#include <opencv2/core/cuda.hpp>
 #include <string>
 
-namespace mo
-{
+typedef struct CUstream_st *cudaStream_t;
+namespace cv{
+namespace cuda{
+    class Stream;
+} // namespace cv::cuda
+} // namespace cv
+namespace mo{
     class Allocator;
-    class MO_EXPORTS Context
-    {
+    class MO_EXPORTS Context{
     public:
-        static Context* GetDefaultThreadContext();
-        static void SetDefaultThreadContext(Context*  ctx);
-        Context(const std::string& name = "");
+        static Context*     getDefaultThreadContext();
+        static void         setDefaultThreadContext(Context*  ctx);
+        static Context*     create(const std::string& name = "");
 
-        ~Context();
-        void setName(const std::string& name);
-        cv::cuda::Stream&      GetStream();
-        void                  SetStream(cv::cuda::Stream stream);
+        virtual                         ~Context();
+        virtual void                    setName(const std::string& name);
+        virtual cv::cuda::Stream&       getStream();
+        virtual cudaStream_t            getCudaStream() const;
+        virtual void                    setStream(const cv::cuda::Stream& stream);
 
         size_t process_id = 0;
         size_t thread_id = 0;
         std::string host_name;
         Allocator* allocator;
-    private:
-        cv::cuda::Stream stream;
+    protected:
+        Context();
         std::string name;
-    };
-}
+    }; // class mo::Context
+} // namespace mo

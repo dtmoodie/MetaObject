@@ -3,7 +3,7 @@
 #include "MetaObject/params/buffers/CircularBuffer.hpp"
 #include "MetaObject/params/buffers/StreamBuffer.hpp"
 #include "MetaObject/params/buffers/Map.hpp"
-#include "MetaObject/IMetaObject.hpp"
+#include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/detail/Counter.hpp"
 #include "MetaObject/detail/MetaObjectMacros.hpp"
@@ -31,7 +31,7 @@
 #include <fstream>
 using namespace mo;
 
-INSTANTIATE_META_Param(int);
+INSTANTIATE_META_PARAM(int);
 
 
 
@@ -61,7 +61,7 @@ MO_REGISTER_OBJECT(output_Paramed_object)
 BuildCallback* cb = nullptr;
 BOOST_AUTO_TEST_CASE(input_Param_manual)
 {
-    MetaObjectFactory::Instance()->GetObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
+    MetaObjectFactory::instance()->GetObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
     cb = new BuildCallback();
     auto input = input_Paramed_object::Create();
     auto output = output_Paramed_object::Create();
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
         {
             if(input->test_input_param.getData(data, ts))
             {
-                //BOOST_REQUIRE_EQUAL(mo::time_t(data * mo::ms), mo::time_t(ts * (10 * mo::ms)));
+                //BOOST_REQUIRE_EQUAL(mo::Time_t(data * mo::ms), mo::Time_t(ts * (10 * mo::ms)));
                 ts += mo::Time_t(1 * mo::ms);
             }
         }
@@ -194,7 +194,7 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
             BOOST_REQUIRE_EQUAL(data, i * 10);
             boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
         }
-        mo::Allocator::CleanupThreadSpecificAllocator();
+        mo::Allocator::cleanupThreadSpecificAllocator();
     });
     while(!started)
     {
@@ -209,7 +209,7 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
     background_thread.interrupt();
     background_thread.timed_join(boost::posix_time::time_duration(0,2,0));
     //background_thread.();
-    mo::Allocator::CleanupThreadSpecificAllocator();
+    mo::Allocator::cleanupThreadSpecificAllocator();
 }
 
 

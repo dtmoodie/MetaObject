@@ -99,7 +99,7 @@ public:
     virtual std::vector<ISlot*>                            getSlots(const std::string& name) const;
     virtual std::vector<std::pair<ISlot*, std::string>>    getSlots(const TypeInfo& signature) const;
     virtual ISlot*                                         getSlot(const std::string& name, const TypeInfo& signature) const;
-    template<class T> 
+    template<class T>
     TSlot<T>*                                              getSlot(const std::string& name) const;
 
     virtual int  disConnectByName(const std::string& name);
@@ -134,9 +134,9 @@ public:
     template<class T> ITParam<T>* getParamOptional(const std::string& name) const;
 
     // Connects an input Param to an output Param
-    bool ConnectInput(const std::string& input_name, IMetaObject* output_object, IParam* output_param, ParamType type = StreamBuffer_e);
-    bool ConnectInput(InputParam* input, IMetaObject* output_object, IParam* output_param, ParamType type = StreamBuffer_e);
-    static bool ConnectInput(IMetaObject* output_object, IParam* output_Param,
+    bool connectInput(const std::string& input_name, IMetaObject* output_object, IParam* output_param, ParamType type = StreamBuffer_e);
+    bool connectInput(InputParam* input, IMetaObject* output_object, IParam* output_param, ParamType type = StreamBuffer_e);
+    static bool connectInput(IMetaObject* output_object, IParam* output_Param,
                              IMetaObject* input_object, InputParam* input_param, ParamType type = StreamBuffer_e);
 protected:
     virtual IParam* addParam(std::shared_ptr<IParam> param);

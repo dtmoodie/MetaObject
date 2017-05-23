@@ -7,13 +7,13 @@
 #include <sstream>
 using namespace mo;
 
-std::string IMetaObjectInfo::Print() const
+std::string IMetaObjectInfo::print() const
 {
     std::stringstream ss;
     ss << "\n\n";
-    std::string name = GetObjectName();
+    std::string name = getObjectName();
 
-    ss << GetInterfaceId(); // << " *** " << GetObjectName() << " ***\n";
+    ss << getInterfaceId(); // << " *** " << getObjectName() << " ***\n";
     ss << " ***** ";
     ss << name << " ";
     if(name.size() < 20)
@@ -21,10 +21,10 @@ std::string IMetaObjectInfo::Print() const
             ss << "*";
     ss << "\n";
 
-    auto tooltip = GetObjectTooltip();
+    auto tooltip = getObjectTooltip();
     if(tooltip.size())
         ss << "  " << tooltip << "\n";
-    auto help = GetObjectHelp();
+    auto help = getObjectHelp();
     if(help.size())
         ss << "    " << help << "\n";
     auto params = getParamInfo();
@@ -76,7 +76,7 @@ std::string IMetaObjectInfo::Print() const
                 ss << "    " << sig->description << "\n";
         }
     }
-    
+
     auto my_slots = getSlotInfo();
     if(my_slots .size())
     {

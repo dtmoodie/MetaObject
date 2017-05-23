@@ -22,11 +22,11 @@
 #  define MO_EXPORTS
 #endif
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
-INSTANTIATE_META_Param(std::vector<int>);
-INSTANTIATE_META_Param(std::vector<unsigned short>);
-INSTANTIATE_META_Param(std::vector<unsigned int>);
-INSTANTIATE_META_Param(std::vector<char>);
-INSTANTIATE_META_Param(std::vector<unsigned char>);
-INSTANTIATE_META_Param(std::vector<float>);
-INSTANTIATE_META_Param(std::vector<double>);
-INSTANTIATE_META_Param(std::vector<std::string>);
+INSTANTIATE_META_PARAM(std::vector<int>);
+INSTANTIATE_META_PARAM(std::vector<unsigned short>);
+INSTANTIATE_META_PARAM(std::vector<unsigned int>);
+INSTANTIATE_META_PARAM(std::vector<char>);
+INSTANTIATE_META_PARAM(std::vector<unsigned char>);
+INSTANTIATE_META_PARAM(std::vector<float>);
+INSTANTIATE_META_PARAM(std::vector<double>);
+INSTANTIATE_META_PARAM(std::vector<std::string>);

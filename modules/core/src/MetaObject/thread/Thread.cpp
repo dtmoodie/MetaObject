@@ -10,7 +10,7 @@
 using namespace mo;
 
 
-void Thread::PushEventQueue(const std::function<void(void)>& f)
+void Thread::pushEventQueue(const std::function<void(void)>& f)
 {
     boost::unique_lock<boost::recursive_timed_mutex> lock(_mtx);
     _event_queue.push(f);
@@ -18,19 +18,19 @@ void Thread::PushEventQueue(const std::function<void(void)>& f)
     _cv.notify_all();
 }
 // Work can be stolen and can exist on any thread
-void Thread::PushWork(const std::function<void(void)>& f)
+void Thread::pushWork(const std::function<void(void)>& f)
 {
     boost::unique_lock<boost::recursive_timed_mutex> lock(_mtx);
     _work_queue.push(f);
     lock.unlock();
     _cv.notify_all();
 }
-void Thread::Start()
+void Thread::start()
 {
     _run = true;
     _cv.notify_all();
 }
-void Thread::Stop()
+void Thread::stop()
 {
     _run = false;
     _thread.interrupt();
@@ -43,19 +43,19 @@ void Thread::Stop()
             LOG(warning) << "Waited " << wait_count / 1000 << " second for " << this->_name << " to stop";
     }
 }
-void Thread::SetExitCallback(const std::function<void(void)>& f)
+void Thread::setExitCallback(const std::function<void(void)>& f)
 {
     _on_exit = f;
 }
-void Thread::SetStartCallback(const std::function<void(void)>& f)
+void Thread::setStartCallback(const std::function<void(void)>& f)
 {
     _on_start = f;
 }
-std::shared_ptr<Connection> Thread::SetInnerLoop(TSlot<int(void)>* slot)
+std::shared_ptr<Connection> Thread::setInnerLoop(TSlot<int(void)>* slot)
 {
     return slot->connect(_inner_loop);
 }
-ThreadPool* Thread::GetPool() const
+ThreadPool* Thread::getPool() const
 {
     return _pool;
 }
@@ -75,7 +75,7 @@ Thread::Thread()
     _ctx = nullptr;
     _inner_loop.reset(new mo::TSignalRelay<int(void)>());
     _quit = false;
-    _thread = boost::thread(&Thread::Main, this);
+    _thread = boost::thread(&Thread::main, this);
     _paused = false;
 
 }
@@ -85,7 +85,7 @@ Thread::Thread(ThreadPool* pool)
     _pool = pool;
     _ctx = nullptr;
     _quit = false;
-    _thread = boost::thread(&Thread::Main, this);
+    _thread = boost::thread(&Thread::main, this);
 
 }
 
@@ -101,12 +101,12 @@ Thread::~Thread()
         LOG(warning) << this->_name << " did not join after waiting 10 seconds";
     }
 }
-void Thread::HandleEvents(int ms)
+void Thread::handleEvents(int ms)
 {
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
     {
         boost::unique_lock<boost::recursive_timed_mutex> lock(_mtx);
-        while(mo::ThreadSpecificQueue::RunOnce())
+        while(mo::ThreadSpecificQueue::runOnce())
         {
             if(boost::posix_time::time_duration(
                 boost::posix_time::microsec_clock::universal_time() - start).total_milliseconds() >= ms)
@@ -150,7 +150,7 @@ struct ThreadSanitizer
     }
     ~ThreadSanitizer()
     {
-        mo::Allocator::CleanupThreadSpecificAllocator();
+        mo::Allocator::cleanupThreadSpecificAllocator();
         _paused_flag = true;
         _cv.notify_all();
     }
@@ -158,18 +158,18 @@ struct ThreadSanitizer
     boost::condition_variable_any& _cv;
 };
 
-void Thread::Main()
+void Thread::main()
 {
     ThreadSanitizer allocator_deleter(_paused, _cv);
     (void)allocator_deleter;
-    mo::Context ctx;
+    std::unique_ptr<mo::Context> ctx(mo::Context::create());
     {
         boost::unique_lock<boost::recursive_timed_mutex> lock(_mtx);
-        _ctx = &ctx;
+        _ctx = ctx.get();
         lock.unlock();
         _cv.notify_all();
     }
-    mo::Context::SetDefaultThreadContext(_ctx);
+    mo::Context::setDefaultThreadContext(_ctx);
     if(_on_start)
         _on_start();
     while(!_quit)
@@ -191,7 +191,7 @@ void Thread::Main()
                     _event_queue.pop();
                 }
                 lock.unlock();
-                mo::ThreadSpecificQueue::RunOnce();
+                mo::ThreadSpecificQueue::runOnce();
             }
 
             int delay = 0;
@@ -201,7 +201,7 @@ void Thread::Main()
             }
             if(delay)
             {
-                auto time = boost::chrono::system_clock::now() + boost::chrono::milliseconds(delay);
+                //auto time = boost::chrono::system_clock::now() + boost::chrono::milliseconds(delay);
                 while (_work_queue.size())
                 {
                     _work_queue.back()();
@@ -265,7 +265,7 @@ void Thread::Main()
                 _event_queue.back()();
                 _event_queue.pop();
             }
-            mo::ThreadSpecificQueue::RunOnce();
+            mo::ThreadSpecificQueue::runOnce();
         }catch(boost::thread_interrupted& e)
         {
 
@@ -326,7 +326,7 @@ void Thread::Main()
                             _event_queue.back()();
                             _event_queue.pop();
                         }
-                        mo::ThreadSpecificQueue::RunOnce();
+                        mo::ThreadSpecificQueue::runOnce();
                     }
                 }catch(boost::thread_interrupted& e)
                 {
@@ -358,11 +358,11 @@ void Thread::Main()
 
 }*/
 
-size_t Thread::GetId() const
+size_t Thread::getId() const
 {
-    return GetThreadId(_thread);
+    return getThreadId(_thread);
 }
-bool Thread::IsOnThread() const
+bool Thread::isOnThread() const
 {
-    return GetId() == GetThisThread();
+    return getId() == getThisThread();
 }

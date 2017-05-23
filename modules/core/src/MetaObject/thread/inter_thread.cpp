@@ -110,7 +110,7 @@ struct impl {
         QueueRegistery::Instance().GetQueue(id)->setCallback(f);
     }
     void push(const std::function<void(void)>& f, size_t id, void* obj) {
-        if(GetThisThread() == id) {
+        if(getThisThread() == id) {
             f();
             return;
         }
@@ -203,7 +203,7 @@ struct impl {
         QueueRegistery::Instance().clear();
     }
 };
-void ThreadSpecificQueue::Push(const std::function<void(void)>& f, size_t id, void* obj) {
+void ThreadSpecificQueue::push(const std::function<void(void)>& f, size_t id, void* obj) {
 
 #ifdef _DEBUG
     if(impl::inst()->_deleted_objects.find(obj) != impl::inst()->_deleted_objects.end()) {
@@ -213,24 +213,24 @@ void ThreadSpecificQueue::Push(const std::function<void(void)>& f, size_t id, vo
 #endif
     impl::inst()->push(f, id, obj);
 }
-int ThreadSpecificQueue::Run(size_t id) {
+int ThreadSpecificQueue::run(size_t id) {
     return impl::inst()->run(id);
 }
-void ThreadSpecificQueue::RegisterNotifier(const std::function<void(void)>& f, size_t id) {
+void ThreadSpecificQueue::registerNotifier(const std::function<void(void)>& f, size_t id) {
     impl::inst()->register_notifier(f, id);
 }
-bool ThreadSpecificQueue::RunOnce(size_t id) {
+bool ThreadSpecificQueue::runOnce(size_t id) {
     return impl::inst()->run_once(id);
 }
-void ThreadSpecificQueue::RemoveFromQueue(void* obj) {
+void ThreadSpecificQueue::removeFromQueue(void* obj) {
     impl::inst()->remove_from_queue(obj);
 #ifdef _DEBUG
     impl::inst()->_deleted_objects.insert(obj);
 #endif
 }
-size_t ThreadSpecificQueue::Size(size_t id) {
+size_t ThreadSpecificQueue::size(size_t id) {
     return impl::inst()->size(id);
 }
-void ThreadSpecificQueue::Cleanup() {
+void ThreadSpecificQueue::cleanup() {
     impl::inst()->Cleanup();
 }

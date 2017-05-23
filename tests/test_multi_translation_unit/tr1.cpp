@@ -7,4 +7,4 @@
 #include "MetaObject/params/buffers/Map.hpp"
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 
-INSTANTIATE_META_Param(std::vector<std::string>)
+INSTANTIATE_META_PARAM(std::vector<std::string>)

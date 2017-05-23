@@ -10,7 +10,7 @@ void load(AR& ar, std::vector<mo::IParam*>& Params) {
     for (auto& param : Params) {
         if (param->checkFlags(mo::Output_e) || param->checkFlags(mo::Input_e))
             continue;
-        auto func1 = mo::SerializationFactory::Instance()->GetLoadFunction(param->getTypeInfo(), ar);
+        auto func1 = mo::SerializationFactory::instance()->getLoadFunction(param->getTypeInfo(), ar);
         if (func1) {
             if (!func1(param, ar)) {
                 LOG(debug) << "Unable to deserialize " << param->getName() << " of type " << param->getTypeInfo().name();
@@ -25,7 +25,7 @@ void save(AR& ar, std::vector<mo::IParam*> const& Params) {
     for (auto& param : Params) {
         if (param->checkFlags(mo::Output_e) || param->checkFlags(mo::Input_e))
             continue;
-        auto func1 = mo::SerializationFactory::Instance()->GetSaveFunction(param->getTypeInfo(), ar);
+        auto func1 = mo::SerializationFactory::instance()->getSaveFunction(param->getTypeInfo(), ar);
         if (func1) {
             if (!func1(param, ar)) {
                 LOG(debug) << "Unable to deserialize " << param->getName() << " of type " << param->getTypeInfo().name();

@@ -48,22 +48,19 @@ rmt_pop_cuda_f rmt_pop_gpu = nullptr;
 rmt_set_thread_name_f rmt_set_thread = nullptr;
 #endif
 
-void mo::SetThreadName(const char* name)
-{
-    if (rmt_set_thread)
-    {
+void mo::setThreadName(const char* name){
+    if (rmt_set_thread){
         rmt_set_thread(name);
     }
-    if (nvtx_name_thread)
-    {
-        nvtx_name_thread(mo::GetThisThread(), name);
+    if (nvtx_name_thread){
+        nvtx_name_thread(mo::getThisThread(), name);
     }
 }
 
 
 
 #ifdef RMT_BUILTIN
-void InitRemotery()
+void initRemotery()
 {
     /*if(rmt)
         return;
@@ -88,7 +85,7 @@ void InitRemotery()
 }
 
 #else
-void InitRemotery()
+void initRemotery()
 {
     if(rmt_push_cpu && rmt_pop_cpu)
         return;
@@ -138,7 +135,7 @@ void InitRemotery()
 }
 #endif
 
-void InitNvtx()
+void initNvtx()
 {
     if (nvtx_push && nvtx_pop)
         return;
@@ -156,30 +153,27 @@ void InitNvtx()
     }
 #else
     void* nvtx_handle = dlopen("libnvToolsExt.so", RTLD_NOW);
-    if (nvtx_handle)
-    {
+    if (nvtx_handle){
         LOG(info) << "Loaded nvtx module";
         nvtx_push = (push_f)dlsym(nvtx_handle, "nvtxRangePushA");
         nvtx_pop = (pop_f)dlsym(nvtx_handle, "nvtxRangePop");
         nvtx_name_thread = (nvtx_name_thread_f)dlsym(nvtx_handle, "nvtxNameOsThreadA");
         nvtx_name_stream = (nvtx_name_stream_f)dlsym(nvtx_handle, "nvtxNameCuStreamA");
-    }
-    else
-    {
+    }else{
         LOG(info) << "No nvtx library loaded";
     }
 #endif
 }
 
 
-void mo::InitProfiling()
+void mo::initProfiling()
 {
 #ifndef PROFILING_NONE
-    InitNvtx();
-    InitRemotery();
+    initNvtx();
+    initRemotery();
 #endif
 }
-void mo::PushCpu(const char* name, unsigned int* rmt_hash)
+void mo::pushCpu(const char* name, unsigned int* rmt_hash)
 {
     if (nvtx_push)
         (*nvtx_push)(name);
@@ -189,7 +183,7 @@ void mo::PushCpu(const char* name, unsigned int* rmt_hash)
     }*/
 }
 
-void mo::PopCpu()
+void mo::popCpu()
 {
     if (nvtx_pop)
     {
@@ -200,71 +194,64 @@ void mo::PopCpu()
         rmt_pop_cpu();
     }*/
 }
-void mo::SetStreamName(const char* name, cv::cuda::Stream& stream)
-{
-    if(nvtx_name_stream)
-    {
-        nvtx_name_stream(cv::cuda::StreamAccessor::getStream(stream), name);
+void mo::setStreamName(const char* name, const cudaStream_t stream){
+    if(nvtx_name_stream){
+        nvtx_name_stream(stream, name);
     }
 }
 
-scoped_profile::scoped_profile(std::string name, unsigned int* obj_hash, unsigned int* cuda_hash, cv::cuda::Stream* stream):
+scoped_profile::scoped_profile(std::string name, unsigned int* obj_hash, unsigned int* cuda_hash, cudaStream_t stream):
     scoped_profile(name.c_str(), obj_hash, cuda_hash, stream)
 {
 
 }
 
-scoped_profile::scoped_profile(const char* name, unsigned int* rmt_hash, unsigned int* rmt_cuda, cv::cuda::Stream* stream)
-{
+scoped_profile::scoped_profile(const char* name, unsigned int* rmt_hash, unsigned int* rmt_cuda, cudaStream_t stream){
 #ifndef PROFILING_NONE
     if(nvtx_push)
         (*nvtx_push)(name);
-	/*if (rmt && rmt_push_cpu)
-	{
+    /*if (rmt && rmt_push_cpu)
+    {
         rmt_push_cpu(name, rmt_hash);
-	}*/
+    }*/
 #endif
 }
 
-scoped_profile::scoped_profile(const char* name, const char* func, unsigned int* rmt_hash, unsigned int* rmt_cuda, cv::cuda::Stream* stream)
-{
+scoped_profile::scoped_profile(const char* name, const char* func, unsigned int* rmt_hash, unsigned int* rmt_cuda, cudaStream_t stream){
 #ifndef PROFILING_NONE
-	std::stringstream ss;
-	ss << name;
-	ss << "[";
-	ss << func;
-	ss << "]";
+    std::stringstream ss;
+    ss << name;
+    ss << "[";
+    ss << func;
+    ss << "]";
     const char* str = ss.str().c_str();
-    if(nvtx_push)
-    {
+    if(nvtx_push){
         (*nvtx_push)(str);
     }
-	/*if (rmt && rmt_push_cpu)
-	{
+    /*if (rmt && rmt_push_cpu)
+    {
         rmt_push_cpu(str, rmt_hash);
         if(stream && rmt_push_gpu)
         {
             rmt_push_gpu(str, rmt_cuda, cv::cuda::StreamAccessor::getStream(*stream));
             this->stream = stream;
         }
-	}*/
+    }*/
 #endif
 }
 
 scoped_profile::~scoped_profile()
 {
 #ifndef PROFILING_NONE
-    if(nvtx_pop)
-    {
+    if(nvtx_pop){
         (*nvtx_pop)();
     }
-	/*if (rmt && rmt_pop_cpu)
-	{
-        rmt_pop_cpu();
-	}*/
-    if(stream && rmt_pop_gpu)
+    /*if (rmt && rmt_pop_cpu)
     {
-        rmt_pop_gpu(cv::cuda::StreamAccessor::getStream(*stream));
+        rmt_pop_cpu();
+    }*/
+    if(stream && rmt_pop_gpu){
+        rmt_pop_gpu(stream);
     }
 #endif
 }

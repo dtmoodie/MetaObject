@@ -33,18 +33,18 @@ MetaObjectFactory::~MetaObjectFactory()
     delete _pimpl;
 }
 
-IRuntimeObjectSystem* MetaObjectFactory::GetObjectSystem()
+IRuntimeObjectSystem* MetaObjectFactory::getObjectSystem()
 {
     return &_pimpl->obj_system;
 }
 
-MetaObjectFactory* MetaObjectFactory::Instance(SystemTable* table)
+MetaObjectFactory* MetaObjectFactory::instance(SystemTable* table)
 {
     static MetaObjectFactory g_inst(table);
     return &g_inst;
 }
 
-IMetaObject* MetaObjectFactory::Create(const char* type_name, int interface_id)
+IMetaObject* MetaObjectFactory::create(const char* type_name, int interface_id)
 {
     auto constructor = _pimpl->obj_system.GetObjectFactorySystem()->GetConstructor(type_name);
     if(constructor)
@@ -66,13 +66,13 @@ IMetaObject* MetaObjectFactory::Create(const char* type_name, int interface_id)
     }
     return nullptr;
 }
-IMetaObject* MetaObjectFactory::Get(ObjectId id, const char* type_name)
+IMetaObject* MetaObjectFactory::get(ObjectId id, const char* type_name)
 {
     AUDynArray<IObjectConstructor*> constructors;
     _pimpl->obj_system.GetObjectFactorySystem()->GetAll(constructors);
     if(id.m_ConstructorId < constructors.Size() && id.m_ConstructorId >= 0)
     {
-        if(strcmp(constructors[id.m_ConstructorId]->GetName(), type_name) == 0)
+        if(strcmp(constructors[id.m_ConstructorId]->getName(), type_name) == 0)
         {
             IObject* obj = constructors[id.m_ConstructorId]->GetConstructedObject(id.m_PerTypeId);
             if (obj)
@@ -85,17 +85,17 @@ IMetaObject* MetaObjectFactory::Get(ObjectId id, const char* type_name)
             }
         }else
         {
-            LOG(debug) << "Requested type \"" << type_name << "\" does not match constructor type \"" << constructors[id.m_ConstructorId]->GetName() << "\" for given ID";
+            LOG(debug) << "Requested type \"" << type_name << "\" does not match constructor type \"" << constructors[id.m_ConstructorId]->getName() << "\" for given ID";
             std::string str_type_name(type_name);
             for(int i = 0; i < constructors.Size(); ++i)
             {
-                if(std::string(constructors[i]->GetName()) == str_type_name)
+                if(std::string(constructors[i]->getName()) == str_type_name)
                 {
                     IObject* obj = constructors[i]->GetConstructedObject(id.m_PerTypeId);
                     if(obj)
                     {
                         return dynamic_cast<IMetaObject*>(obj);
-                    }else 
+                    }else
                     {
                         return nullptr; // Object just doesn't exist yet.
                     }
@@ -107,7 +107,7 @@ IMetaObject* MetaObjectFactory::Get(ObjectId id, const char* type_name)
     return nullptr;
 }
 
-std::vector<std::string> MetaObjectFactory::ListConstructableObjects(int interface_id) const
+std::vector<std::string> MetaObjectFactory::listConstructableObjects(int interface_id) const
 {
     std::vector<std::string> output;
     AUDynArray<IObjectConstructor*> constructors;
@@ -115,15 +115,15 @@ std::vector<std::string> MetaObjectFactory::ListConstructableObjects(int interfa
     for(int i = 0; i < constructors.Size(); ++i)
     {
         if(interface_id == -1)
-            output.emplace_back(constructors[i]->GetName());
+            output.emplace_back(constructors[i]->getName());
         else
             if(constructors[i]->GetInterfaceId() == interface_id)
-                output.emplace_back(constructors[i]->GetName());
+                output.emplace_back(constructors[i]->getName());
     }
     return output;
 }
 
-std::string MetaObjectFactory::PrintAllObjectInfo(int interface_id) const
+std::string MetaObjectFactory::printAllObjectInfo(int interface_id) const
 {
     std::stringstream ss;
     AUDynArray<IObjectConstructor*> constructors;
@@ -134,13 +134,13 @@ std::string MetaObjectFactory::PrintAllObjectInfo(int interface_id) const
         {
             if(interface_id == -1)
             {
-                ss << info->Print();
+                ss << info->print();
             }
             else
             {
                 if(constructors[i]->GetInterfaceId() == interface_id)
                 {
-                    ss << info->Print();
+                    ss << info->print();
                 }
             }
         }
@@ -148,13 +148,13 @@ std::string MetaObjectFactory::PrintAllObjectInfo(int interface_id) const
     return ss.str();
 }
 
-IObjectConstructor* MetaObjectFactory::GetConstructor(const char* type_name) const
+IObjectConstructor* MetaObjectFactory::getConstructor(const char* type_name) const
 {
     return _pimpl->obj_system.GetObjectFactorySystem()->GetConstructor(type_name);
 }
 
 
-std::vector<IObjectConstructor*> MetaObjectFactory::GetConstructors(int interface_id) const
+std::vector<IObjectConstructor*> MetaObjectFactory::getConstructors(int interface_id) const
 {
     std::vector<IObjectConstructor*> output;
     AUDynArray<IObjectConstructor*> constructors;
@@ -170,7 +170,7 @@ std::vector<IObjectConstructor*> MetaObjectFactory::GetConstructors(int interfac
     return output;
 }
 
-IObjectInfo* MetaObjectFactory::GetObjectInfo(const char* type_name) const
+IObjectInfo* MetaObjectFactory::getObjectInfo(const char* type_name) const
 {
     auto constructor = _pimpl->obj_system.GetObjectFactorySystem()->GetConstructor(type_name);
     if(constructor)
@@ -179,7 +179,7 @@ IObjectInfo* MetaObjectFactory::GetObjectInfo(const char* type_name) const
     }
     return nullptr;
 }
-std::vector<IObjectInfo*> MetaObjectFactory::GetAllObjectInfo() const
+std::vector<IObjectInfo*> MetaObjectFactory::getAllObjectInfo() const
 {
     std::vector<IObjectInfo*> output;
     AUDynArray<IObjectConstructor*> constructors;
@@ -190,17 +190,17 @@ std::vector<IObjectInfo*> MetaObjectFactory::GetAllObjectInfo() const
     }
     return output;
 }
-void MetaObjectFactory::SetupObjectConstructors(IPerModuleInterface* pPerModuleInterface)
+void MetaObjectFactory::setupObjectConstructors(IPerModuleInterface* pPerModuleInterface)
 {
-    GetObjectSystem()->SetupObjectConstructors(pPerModuleInterface);
+    getObjectSystem()->SetupObjectConstructors(pPerModuleInterface);
 }
 
 
-std::vector<std::string> MetaObjectFactory::ListLoadedPlugins() const
+std::vector<std::string> MetaObjectFactory::listLoadedPlugins() const
 {
     return _pimpl->plugins;
 }
-int MetaObjectFactory::LoadPlugins(const std::string& path_)
+int MetaObjectFactory::loadPlugins(const std::string& path_)
 {
     boost::filesystem::path path(boost::filesystem::current_path().string() + "/" + path_);
     int count = 0;
@@ -212,7 +212,7 @@ int MetaObjectFactory::LoadPlugins(const std::string& path_)
         if(itr->path().extension().string() == ".so")
 #endif
         {
-            if(LoadPlugin(itr->path().string()))
+            if(loadPlugin(itr->path().string()))
                 ++count;
         }
     }
@@ -255,10 +255,10 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
         auto err = GetLastError();
         LOG(debug) << "Failed to load " << plugin_name << " due to: [" << err << "] " << GetLastErrorAsString();
         _pimpl->plugins.push_back(fullPluginPath + " - failed");
-        
+
         return false;
     }
-    
+
     typedef IPerModuleInterface* (*moduleFunctor)();
     moduleFunctor module = (moduleFunctor)GetProcAddress(handle, "GetPerModuleInterface");
     if (module)
@@ -285,7 +285,7 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
 #else
 #include "dlfcn.h"
 
-bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
+bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
 {
     LOG(info) << "Loading " << fullPluginPath;
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
@@ -346,7 +346,7 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
     {
         interface->SetProjectIdForAllConstructors(id);
     }
-    SetupObjectConstructors(interface);
+    setupObjectConstructors(interface);
     boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
     _pimpl->plugins.push_back(fullPluginPath + " - success. In " + boost::lexical_cast<std::string>((end - start).total_seconds()) + " seconds");
     return true;
@@ -354,41 +354,41 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
 
 #endif
 
-bool MetaObjectFactory::AbortCompilation()
+bool MetaObjectFactory::abortCompilation()
 {
-	return _pimpl->obj_system.AbortCompilation();
+    return _pimpl->obj_system.AbortCompilation();
 }
-bool MetaObjectFactory::CheckCompile()
+bool MetaObjectFactory::checkCompile()
 {
-	static boost::posix_time::ptime prevTime = boost::posix_time::microsec_clock::universal_time();
-	boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
-	boost::posix_time::time_duration delta = currentTime - prevTime;
-	if (delta.total_milliseconds() < 10)
-		return false;
-	_pimpl->obj_system.GetFileChangeNotifier()->Update(float(delta.total_milliseconds()) / 1000.0f);
-	return IsCurrentlyCompiling();
+    static boost::posix_time::ptime prevTime = boost::posix_time::microsec_clock::universal_time();
+    boost::posix_time::ptime currentTime = boost::posix_time::microsec_clock::universal_time();
+    boost::posix_time::time_duration delta = currentTime - prevTime;
+    if (delta.total_milliseconds() < 10)
+        return false;
+    _pimpl->obj_system.GetFileChangeNotifier()->Update(float(delta.total_milliseconds()) / 1000.0f);
+    return isCurrentlyCompiling();
 }
-bool MetaObjectFactory::IsCurrentlyCompiling()
+bool MetaObjectFactory::isCurrentlyCompiling()
 {
-	return _pimpl->obj_system.GetIsCompiling();
+    return _pimpl->obj_system.GetIsCompiling();
 }
-bool MetaObjectFactory::IsCompileComplete()
+bool MetaObjectFactory::isCompileComplete()
 {
-	return _pimpl->obj_system.GetIsCompiledComplete();
+    return _pimpl->obj_system.GetIsCompiledComplete();
 }
-bool MetaObjectFactory::SwapObjects()
+bool MetaObjectFactory::swapObjects()
 {
-	if (IsCompileComplete())
-	{
-		return _pimpl->obj_system.LoadCompiledModule();
-	}
-	return false;
+    if (isCompileComplete())
+    {
+        return _pimpl->obj_system.LoadCompiledModule();
+    }
+    return false;
 }
-void MetaObjectFactory::SetCompileCallback(std::function<void(const std::string, int)>& f)
+void MetaObjectFactory::setCompileCallback(std::function<void(const std::string, int)>& f)
 {
-       
+
 }
-std::shared_ptr<Connection> MetaObjectFactory::ConnectConstructorAdded(TSlot<void(void)>* slot)
+std::shared_ptr<Connection> MetaObjectFactory::connectConstructorAdded(TSlot<void(void)>* slot)
 {
     return _pimpl->on_constructor_added.connect(slot);
 }

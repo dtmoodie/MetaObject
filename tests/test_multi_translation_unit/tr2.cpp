@@ -4,7 +4,7 @@
 #include "MetaObject/params/buffers/CircularBuffer.hpp"
 #include "MetaObject/params/buffers/StreamBuffer.hpp"
 #include "MetaObject/params/buffers/Map.hpp"
-#include "MetaObject/IMetaObject.hpp"
+#include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/detail/Counter.hpp"
 #include "MetaObject/detail/MetaObjectMacros.hpp"

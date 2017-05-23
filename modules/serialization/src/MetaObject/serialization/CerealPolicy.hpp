@@ -16,24 +16,24 @@ namespace IO {
 namespace Cereal {
 template<class T> struct Policy {
     Policy() {
-        SerializationFactory::Instance()->SetBinarySerializationFunctions(
+        SerializationFactory::instance()->setBinarySerializationFunctions(
             TypeInfo(typeid(T)),
-            std::bind(&Policy<T>::Serialize<cereal::BinaryOutputArchive>, std::placeholders::_1, std::placeholders::_2),
-            std::bind(&Policy<T>::DeSerialize<cereal::BinaryInputArchive>, std::placeholders::_1, std::placeholders::_2));
+            std::bind(&Policy<T>::serialize<cereal::BinaryOutputArchive>, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&Policy<T>::deSerialize<cereal::BinaryInputArchive>, std::placeholders::_1, std::placeholders::_2));
 
-        SerializationFactory::Instance()->SetXmlSerializationFunctions(
+        SerializationFactory::instance()->setXmlSerializationFunctions(
             TypeInfo(typeid(T)),
-            std::bind(&Policy<T>::Serialize<cereal::XMLOutputArchive>, std::placeholders::_1, std::placeholders::_2),
-            std::bind(&Policy<T>::DeSerialize<cereal::XMLInputArchive>, std::placeholders::_1, std::placeholders::_2));
+            std::bind(&Policy<T>::serialize<cereal::XMLOutputArchive>, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&Policy<T>::deSerialize<cereal::XMLInputArchive>, std::placeholders::_1, std::placeholders::_2));
 
-        SerializationFactory::Instance()->SetJsonSerializationFunctions(
+        SerializationFactory::instance()->setJsonSerializationFunctions(
             TypeInfo(typeid(T)),
-            std::bind(&Policy<T>::Serialize<cereal::JSONOutputArchive>, std::placeholders::_1, std::placeholders::_2),
-            std::bind(&Policy<T>::DeSerialize<cereal::JSONInputArchive>, std::placeholders::_1, std::placeholders::_2));
+            std::bind(&Policy<T>::serialize<cereal::JSONOutputArchive>, std::placeholders::_1, std::placeholders::_2),
+            std::bind(&Policy<T>::deSerialize<cereal::JSONInputArchive>, std::placeholders::_1, std::placeholders::_2));
     }
 
     template<class AR>
-    static bool Serialize(IParam* param, AR& ar) {
+    static bool serialize(IParam* param, AR& ar) {
         auto typed = dynamic_cast<ITAccessibleParam<T>*>(param);
         if(typed == nullptr)
             return false;
@@ -42,7 +42,7 @@ template<class T> struct Policy {
         return true;
     }
     template<class AR>
-    static bool DeSerialize(IParam* param, AR& ar) {
+    static bool deSerialize(IParam* param, AR& ar) {
         auto typed = dynamic_cast<ITAccessibleParam<T>*>(param);
         if (typed == nullptr)
             return false;

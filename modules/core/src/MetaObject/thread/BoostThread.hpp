@@ -8,5 +8,5 @@ namespace boost
 }
 namespace mo
 {
-    size_t MO_EXPORTS GetThreadId(const boost::thread& thread);
+    size_t MO_EXPORTS getThreadId(const boost::thread& thread);
 }

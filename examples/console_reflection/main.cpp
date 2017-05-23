@@ -5,14 +5,14 @@ int main()
     /*!
      * \brief factory is a pointer to the global object factory
      */
-    auto factory = mo::MetaObjectFactory::Instance();
+    auto factory = mo::MetaObjectFactory::instance();
 
     // call the inlined register translation unit function to register ConcreteImplementation
     // to the global object registry
-    factory->RegisterTranslationUnit();
+    factory->registerTranslationUnit();
 
     // Get a list of objects that inherit from ExampleInterface
-    auto constructors = factory->GetConstructors(ExampleInterface::s_interfaceID);
+    auto constructors = factory->getConstructors(ExampleInterface::s_interfaceID);
 
     // Print static object info
     for(IObjectConstructor* constructor : constructors)

@@ -1,5 +1,5 @@
 #define BOOST_TEST_MAIN
-#include "MetaObject/IMetaObject.hpp"
+#include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/detail/IMetaObjectImpl.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/detail/Counter.hpp"
@@ -83,7 +83,7 @@ struct GlobalFixture{
     ~GlobalFixture(){
         mo::ThreadPool::Instance()->Cleanup();
         mo::ThreadSpecificQueue::Cleanup();
-        mo::Allocator::CleanupThreadSpecificAllocator();
+        mo::Allocator::cleanupThreadSpecificAllocator();
     }
 };
 BOOST_GLOBAL_FIXTURE(GlobalFixture);

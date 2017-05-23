@@ -1,5 +1,5 @@
 #include "MetaObject/signals/ISignal.hpp"
-//#include "MetaObject/IMetaObject.hpp"
+//#include "MetaObject/object/IMetaObject.hpp"
 using namespace mo;
 
 const Context* ISignal::getContext() const

@@ -111,8 +111,8 @@ using namespace mo;
 template<class AR> void EnumParam::serialize(AR& ar){
     ar(CEREAL_NVP(enumerations), CEREAL_NVP(values), CEREAL_NVP(currentSelection));
 }
-INSTANTIATE_META_Param(ReadFile);
-INSTANTIATE_META_Param(WriteFile);
-INSTANTIATE_META_Param(ReadDirectory);
-INSTANTIATE_META_Param(WriteDirectory);
-INSTANTIATE_META_Param(EnumParam);
+INSTANTIATE_META_PARAM(ReadFile);
+INSTANTIATE_META_PARAM(WriteFile);
+INSTANTIATE_META_PARAM(ReadDirectory);
+INSTANTIATE_META_PARAM(WriteDirectory);
+INSTANTIATE_META_PARAM(EnumParam);

@@ -1,5 +1,5 @@
 #pragma once
-#include "TypeTraits.hpp"
+#include "traits/TypeTraits.hpp"
 #include "MetaObject/params/IParam.hpp"
 namespace boost{
     template<typename T> class lock_guard;
@@ -25,7 +25,7 @@ public:
     }
 
     AccessToken(ITParam<T>& param, typename ParamTraits<T>::Storage_t& data) :
-        lock(param.mtx()), _param(param), _data(ParamTraits<T>::getMutable(data)) {
+        lock(param.mtx()), _param(param), _data(ParamTraits<T>::get(data)) {
 
     }
 

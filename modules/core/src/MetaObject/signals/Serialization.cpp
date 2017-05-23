@@ -21,13 +21,13 @@ SignalSerializationFactory::SignalSerializationFactory()
     _pimpl = new impl();
 }
 
-SignalSerializationFactory* SignalSerializationFactory::Instance()
+SignalSerializationFactory* SignalSerializationFactory::instance()
 {
     static SignalSerializationFactory inst;
     return &inst;
 }
 
-SignalSerializationFactory::call_function_f SignalSerializationFactory::GetTextFunction(ISlot* slot)
+SignalSerializationFactory::call_function_f SignalSerializationFactory::getTextFunction(ISlot* slot)
 {
     auto itr = _pimpl->_registry.find(slot->getSignature());
     if (itr != _pimpl->_registry.end())
@@ -37,7 +37,7 @@ SignalSerializationFactory::call_function_f SignalSerializationFactory::GetTextF
     return call_function_f();
 }
 
-ISignalCaller* SignalSerializationFactory::GetTextFunctor(ISlot* slot)
+ISignalCaller* SignalSerializationFactory::getTextFunctor(ISlot* slot)
 {
     auto itr = _pimpl->_registry.find(slot->getSignature());
     if(itr != _pimpl->_registry.end())
@@ -47,7 +47,7 @@ ISignalCaller* SignalSerializationFactory::GetTextFunctor(ISlot* slot)
     return nullptr;
 }
 
-void SignalSerializationFactory::SetTextFunctions(ISlot* slot,
+void SignalSerializationFactory::setTextFunctions(ISlot* slot,
     call_function_f function,
     signal_caller_constructor_f caller_constructor,
     signal_sink_constructor_f sink_constructor)

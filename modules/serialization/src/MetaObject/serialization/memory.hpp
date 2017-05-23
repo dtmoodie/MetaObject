@@ -1,7 +1,7 @@
 #pragma once
 #include "RuntimeObjectSystem/shared_ptr.hpp"
 #include "Serializer.hpp"
-#include "MetaObject/params/IO/SerializationFactory.hpp"
+#include "MetaObject/serialization//SerializationFactory.hpp"
 #include <MetaObject/logging/Log.hpp>
 #include <cereal/cereal.hpp>
 #include <cereal/archives/binary.hpp>
@@ -33,10 +33,10 @@ template<class AR, class T> void load(AR& ar, rcc::shared_ptr<T> & m) {
         ar(cereal::make_nvp("TypeId", id.m_ConstructorId));
         ar(cereal::make_nvp("InstanceId", id.m_PerTypeId));
         ar(make_nvp("TypeName", type));
-        if(auto obj = mo::MetaObjectFactory::Instance()->Get(id, type.c_str())) {
+        if(auto obj = mo::MetaObjectFactory::instance()->get(id, type.c_str())) {
             m = obj;
         } else {
-            m = mo::MetaObjectFactory::Instance()->Create(type.c_str());
+            m = mo::MetaObjectFactory::instance()->create(type.c_str());
         }
         if (mo::CheckHasBeenSerialized(m->GetObjectId()))
             return;
@@ -59,6 +59,6 @@ template<class AR, class T> void load(AR& ar, rcc::weak_ptr<T> & m) {
     ar(cereal::make_nvp("TypeId", id.m_ConstructorId));
     ar(cereal::make_nvp("InstanceId", id.m_PerTypeId));
     ar(make_nvp("TypeName", type));
-    m = mo::MetaObjectFactory::Instance()->Get(id, type.c_str());
+    m = mo::MetaObjectFactory::instance()->get(id, type.c_str());
 }
 }

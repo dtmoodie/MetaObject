@@ -18,12 +18,12 @@ namespace mo
         typedef std::function<ISignalSink*(std::shared_ptr<ISignalRelay>, std::ostream&)> signal_sink_constructor_f;
 
 
-        SignalSerializationFactory* Instance();
-        call_function_f GetTextFunction(ISlot* slot);
-        ISignalCaller* GetTextFunctor(ISlot* slot);
+        SignalSerializationFactory* instance();
+        call_function_f getTextFunction(ISlot* slot);
+        ISignalCaller* getTextFunctor(ISlot* slot);
 
-        void SetTextFunctions(ISlot* slot, 
-            call_function_f function, 
+        void setTextFunctions(ISlot* slot,
+            call_function_f function,
             signal_caller_constructor_f caller_constructor,
             signal_sink_constructor_f sink_constructor);
 

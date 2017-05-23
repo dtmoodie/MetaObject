@@ -36,7 +36,7 @@ class MO_EXPORTS ITextSerializer {
 
 class MO_EXPORTS SerializationFactory {
 public:
-    static SerializationFactory* Instance();
+    static SerializationFactory* instance();
 
     typedef std::function<bool(IParam*, cereal::BinaryOutputArchive&)> SerializeBinary_f;
     typedef std::function<bool(IParam*, cereal::BinaryInputArchive&)> DeSerializeBinary_f;
@@ -47,34 +47,34 @@ public:
     typedef std::function<bool(IParam*, std::stringstream&)> SerializeText_f;
     typedef std::function<bool(IParam*, std::stringstream&)> DeSerializeText_f;
 
-    SerializeBinary_f   GetBinarySerializationFunction(const TypeInfo& type);
-    DeSerializeBinary_f GetBinaryDeSerializationFunction(const TypeInfo& type);
+    SerializeBinary_f   getBinarySerializationFunction(const TypeInfo& type);
+    DeSerializeBinary_f getBinaryDeSerializationFunction(const TypeInfo& type);
 
-    SerializeXml_f      GetXmlSerializationFunction(const TypeInfo& type);
-    DeSerializeXml_f    GetXmlDeSerializationFunction(const TypeInfo& type);
+    SerializeXml_f      getXmlSerializationFunction(const TypeInfo& type);
+    DeSerializeXml_f    getXmlDeSerializationFunction(const TypeInfo& type);
 
-    SerializeJson_f     GetJsonSerializationFunction(const TypeInfo& type);
-    DeSerializeJson_f   GetJsonDeSerializationFunction(const TypeInfo& type);
+    SerializeJson_f     getJsonSerializationFunction(const TypeInfo& type);
+    DeSerializeJson_f   getJsonDeSerializationFunction(const TypeInfo& type);
 
-    SerializeText_f     GetTextSerializationFunction(const TypeInfo& type);
-    DeSerializeText_f   GetTextDeSerializationFunction(const TypeInfo& type);
+    SerializeText_f     getTextSerializationFunction(const TypeInfo& type);
+    DeSerializeText_f   getTextDeSerializationFunction(const TypeInfo& type);
 
-    SerializeBinary_f GetSaveFunction(const TypeInfo& type, cereal::BinaryOutputArchive& ar);
-    DeSerializeBinary_f GetLoadFunction(const TypeInfo& type, cereal::BinaryInputArchive& ar);
+    SerializeBinary_f getSaveFunction(const TypeInfo& type, cereal::BinaryOutputArchive& ar);
+    DeSerializeBinary_f getLoadFunction(const TypeInfo& type, cereal::BinaryInputArchive& ar);
 
-    SerializeXml_f GetSaveFunction(const TypeInfo& type, cereal::XMLOutputArchive& ar);
-    DeSerializeXml_f GetLoadFunction(const TypeInfo& type, cereal::XMLInputArchive& ar);
+    SerializeXml_f getSaveFunction(const TypeInfo& type, cereal::XMLOutputArchive& ar);
+    DeSerializeXml_f getLoadFunction(const TypeInfo& type, cereal::XMLInputArchive& ar);
 
-    SerializeJson_f GetSaveFunction(const TypeInfo& type, cereal::JSONOutputArchive& ar);
-    DeSerializeJson_f GetLoadFunction(const TypeInfo& type, cereal::JSONInputArchive& ar);
+    SerializeJson_f getSaveFunction(const TypeInfo& type, cereal::JSONOutputArchive& ar);
+    DeSerializeJson_f getLoadFunction(const TypeInfo& type, cereal::JSONInputArchive& ar);
 
-    void SetBinarySerializationFunctions(const TypeInfo& type, SerializeBinary_f serialize, DeSerializeBinary_f deserialize);
+    void setBinarySerializationFunctions(const TypeInfo& type, SerializeBinary_f serialize, DeSerializeBinary_f deserialize);
 
-    void SetXmlSerializationFunctions(const TypeInfo& type, SerializeXml_f serialize, DeSerializeXml_f deserialize);
+    void setXmlSerializationFunctions(const TypeInfo& type, SerializeXml_f serialize, DeSerializeXml_f deserialize);
 
-    void SetJsonSerializationFunctions(const TypeInfo& type, SerializeJson_f serialize, DeSerializeJson_f deserialize);
+    void setJsonSerializationFunctions(const TypeInfo& type, SerializeJson_f serialize, DeSerializeJson_f deserialize);
 
-    void SetTextSerializationFunctions(const TypeInfo& type, SerializeText_f serialize, DeSerializeText_f deserialize);
+    void setTextSerializationFunctions(const TypeInfo& type, SerializeText_f serialize, DeSerializeText_f deserialize);
 private:
     SerializationFactory();
     ~SerializationFactory();

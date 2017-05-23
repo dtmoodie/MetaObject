@@ -3,7 +3,7 @@
 #include <MetaObject/params/IO/TextPolicy.hpp>
 #include <MetaObject/params/Types.hpp>
 #include "MetaObject/params/MetaParam.hpp"
-#include "MetaObject/IMetaObject.hpp"
+#include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/detail/Counter.hpp"
 #include "MetaObject/detail/MetaObjectMacros.hpp"
@@ -68,7 +68,7 @@ BOOST_AUTO_TEST_CASE(serialize_manual_xml)
 {
     cb = new BuildCallback();
     mo::MetaParams::initialize();
-    MetaObjectFactory::Instance()->GetObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
+    MetaObjectFactory::instance()->GetObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
     rcc::shared_ptr<serializable_object> obj = serializable_object::Create();
     {
         std::ofstream ofs("test.xml");
@@ -187,14 +187,14 @@ BOOST_AUTO_TEST_CASE(serialize_multi_by_policy_binary)
 }
 
 
-INSTANTIATE_META_Param(mo::ReadFile);
-INSTANTIATE_META_Param(std::vector<int>);
+INSTANTIATE_META_PARAM(mo::ReadFile);
+INSTANTIATE_META_PARAM(std::vector<int>);
 BOOST_AUTO_TEST_CASE(deserialize_text_path)
 {
     mo::ReadFile data;
     mo::TParamPtr<mo::ReadFile> param;
     param.updatePtr(&data);
-    auto deserialization_function = mo::SerializationFactory::Instance()->GetTextDeSerializationFunction(param.getTypeInfo());
+    auto deserialization_function = mo::SerializationFactory::instance()->GetTextDeSerializationFunction(param.getTypeInfo());
     BOOST_REQUIRE(deserialization_function);
     std::stringstream ss;
     ss << "/asdf/asdf/asdf/test.txt";
@@ -207,7 +207,7 @@ BOOST_AUTO_TEST_CASE(serialize_text_vector)
     std::vector<int> data = {0, 1, 2, 3, 4, 5, 6, 7};
     mo::TParamPtr<std::vector<int>> param;
     param.updatePtr(&data);
-    auto serialization_function = mo::SerializationFactory::Instance()->GetTextSerializationFunction(param.getTypeInfo());
+    auto serialization_function = mo::SerializationFactory::instance()->GetTextSerializationFunction(param.getTypeInfo());
     BOOST_REQUIRE(serialization_function);
     std::stringstream ss;
     serialization_function(&param,ss);
@@ -221,7 +221,7 @@ BOOST_AUTO_TEST_CASE(deserialize_text_vector)
     std::vector<int> data;
     mo::TParamPtr<std::vector<int>> param;
     param.updatePtr(&data);
-    auto deserialization_function = mo::SerializationFactory::Instance()->GetTextDeSerializationFunction(param.getTypeInfo());
+    auto deserialization_function = mo::SerializationFactory::instance()->GetTextDeSerializationFunction(param.getTypeInfo());
     BOOST_REQUIRE(deserialization_function);
     std::stringstream ss;
     ss << "[0, 1, 2, 3, 4, 5, 6, 7]";

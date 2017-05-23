@@ -1,5 +1,5 @@
 #define BOOST_TEST_MAIN
-#include "MetaObject/IMetaObject.hpp"
+#include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/detail/MetaObjectMacros.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
@@ -8,7 +8,7 @@
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/ParamInfo.hpp"
 
-#include "MetaObject/MetaObjectFactory.hpp"
+#include "MetaObject/object/MetaObjectFactory.hpp"
 
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>
@@ -23,7 +23,7 @@ using namespace mo;
 
 struct base: public IMetaObject
 {
-    
+
     MO_BEGIN(base)
         PARAM(int, base_param, 5);
         MO_SIGNAL(void, base_signal, int);
@@ -102,13 +102,13 @@ MO_REGISTER_OBJECT(multi_derive);
 
 BOOST_AUTO_TEST_CASE(initialize)
 {
-    mo::MetaObjectFactory::Instance();
-    mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
+    mo::MetaObjectFactory::instance();
+    mo::MetaObjectFactory::instance()->registerTranslationUnit();
 }
 
 BOOST_AUTO_TEST_CASE(object_print)
 {
-    auto info = mo::MetaObjectFactory::Instance()->GetObjectInfo("derived_signals");
+    auto info = mo::MetaObjectFactory::instance()->GetObjectInfo("derived_signals");
     info->Print();
 }
 
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE(call_overloaded_slot)
 
 BOOST_AUTO_TEST_CASE(interface_id_check)
 {
-    auto constructor = mo::MetaObjectFactory::Instance()->GetConstructor("derived1");
+    auto constructor = mo::MetaObjectFactory::instance()->getConstructor("derived1");
     BOOST_REQUIRE(constructor);
     BOOST_REQUIRE_EQUAL(constructor->GetInterfaceId(), 1);
 }
@@ -193,7 +193,7 @@ BOOST_AUTO_TEST_CASE(interface_id_check)
 BOOST_AUTO_TEST_CASE(diamond)
 {
     //auto obj = rcc::shared_ptr<multi_derive>::Create();
-    auto constructor = mo::MetaObjectFactory::Instance()->GetConstructor("multi_derive");
+    auto constructor = mo::MetaObjectFactory::instance()->getConstructor("multi_derive");
     BOOST_REQUIRE(constructor);
     auto info = constructor->GetObjectInfo();
     std::cout << info->Print();

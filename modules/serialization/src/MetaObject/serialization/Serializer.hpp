@@ -46,7 +46,7 @@ public:
 
     static BinarySerialize_f    GetSerializationFunctionBinary(const char* obj_type);
     static BinaryDeSerialize_f  GetDeSerializationFunctionBinary(const char* obj_type);
-    static XMLSerialize_f       GetSerializationFunctionXML(const char* obj_type);
+    static XMLSerialize_f       getSerializationFunctionXML(const char* obj_type);
     static XMLDeSerialize_f     GetDeSerializationFunctionXML(const char* obj_type);
     static JSONSerialize_f       GetSerializationFunctionJSON(const char* obj_type);
     static JSONDeSerialize_f     GetDeSerializationFunctionJSON(const char* obj_type);

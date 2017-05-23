@@ -35,19 +35,19 @@
 #endif
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 
-INSTANTIATE_META_Param(bool);
-INSTANTIATE_META_Param(int);
-INSTANTIATE_META_Param(unsigned short);
-INSTANTIATE_META_Param(unsigned int);
-INSTANTIATE_META_Param(char);
-INSTANTIATE_META_Param(unsigned char);
-INSTANTIATE_META_Param(long long);
-INSTANTIATE_META_Param(size_t);
-INSTANTIATE_META_Param(float);
-INSTANTIATE_META_Param(double);
-INSTANTIATE_META_Param(std::string);
+INSTANTIATE_META_PARAM(bool);
+INSTANTIATE_META_PARAM(int);
+INSTANTIATE_META_PARAM(unsigned short);
+INSTANTIATE_META_PARAM(unsigned int);
+INSTANTIATE_META_PARAM(char);
+INSTANTIATE_META_PARAM(unsigned char);
+INSTANTIATE_META_PARAM(long long);
+INSTANTIATE_META_PARAM(size_t);
+INSTANTIATE_META_PARAM(float);
+INSTANTIATE_META_PARAM(double);
+INSTANTIATE_META_PARAM(std::string);
 typedef std::map<std::string, std::string> StringMap;
-INSTANTIATE_META_Param(StringMap);
+INSTANTIATE_META_PARAM(StringMap);
 
 void mo::MetaParams::initialize()
 {

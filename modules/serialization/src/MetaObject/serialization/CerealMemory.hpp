@@ -1,10 +1,9 @@
 #pragma once
-#include "CerealParams.hpp"
-#include "MetaObject/IMetaObject.hpp"
-#include "MetaObject/MetaObjectFactory.hpp"
+#include "CerealParameters.hpp"
+#include "MetaObject/object/IMetaObject.hpp"
+#include "MetaObject/object/MetaObjectFactory.hpp"
 #include "MetaObject/logging/Log.hpp"
 #include "RuntimeObjectSystem/shared_ptr.hpp"
-
 
 #include <type_traits>
 
@@ -14,7 +13,7 @@ typename std::enable_if<std::is_base_of<mo::IMetaObject, T>::value>::type
 load(AR& ar, rcc::shared_ptr<T>& obj) {
     std::string type;
     ar(CEREAL_NVP(type));
-    obj = mo::MetaObjectFactory::Instance()->Create(type.c_str());
+    obj = mo::MetaObjectFactory::instance()->create(type.c_str());
     if(!obj) {
         LOG(warning) << "Unable to create object with type: " << type;
         return;

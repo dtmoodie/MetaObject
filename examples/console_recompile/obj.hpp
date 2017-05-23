@@ -1,5 +1,5 @@
 #pragma once
-#include "MetaObject/IMetaObject.hpp"
+#include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/detail/MetaObjectMacros.hpp"
 
 struct printable: public mo::IMetaObject

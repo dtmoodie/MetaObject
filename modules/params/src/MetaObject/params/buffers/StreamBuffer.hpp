@@ -32,7 +32,7 @@ namespace mo
             virtual boost::optional<size_t> getFrameBufferCapacity();
             virtual OptionalTime_t getTimePaddingCapacity();
 
-            virtual ParamType GetBufferType() const{ return StreamBuffer_e;}
+            virtual ParamType getBufferType() const{ return StreamBuffer_e;}
         protected:
             virtual void prune();
             OptionalTime_t          _current_timestamp;

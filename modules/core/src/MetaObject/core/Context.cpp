@@ -1,30 +1,44 @@
 #include "MetaObject/core/Context.hpp"
+#include "MetaObject/logging/Log.hpp"
 #include "MetaObject/thread/ThreadRegistry.hpp"
 #include "MetaObject/core/detail/Allocator.hpp"
 #include "MetaObject/logging/Profiling.hpp"
 #include "MetaObject/core/detail/HelperMacros.hpp"
 #include "MetaObject/core/detail/Allocator.hpp"
 #include "MetaObject/thread/ThreadRegistry.hpp"
-
+#include "CvContext.hpp"
+#include "CudaContext.hpp"
 #include "boost/lexical_cast.hpp"
 #include <boost/thread/tss.hpp>
 using namespace mo;
 boost::thread_specific_ptr<Context> thread_specific_context;
 
 thread_local Context* thread_set_context = nullptr;
-
-Context::Context(const std::string& name) {
-    thread_id = GetThisThread();
-    allocator = Allocator::GetThreadSpecificAllocator();
-    GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(allocator);
-    CpuThreadAllocatorSetter<cv::Mat>::Set(allocator);
-    if(name.size())
-        setName(name);
+static Context*     create(const std::string& name){
+    Context* ctx = nullptr;
+#ifdef HAVE_OPENCV
+    ctx = new CvContext();
+#else
+#ifdef HAVE_CUDA
+    ctx = new CudaContext();
+#else
+    ctx = new Context();
+#endif
+#endif
+    ctx->setName(name);
     if(!thread_set_context)
-        thread_set_context = this;
+        thread_set_context = ctx;
+    return ctx;
 }
 
-Context* Context::GetDefaultThreadContext() {
+Context::Context() {
+    thread_id = getThisThread();
+    allocator = Allocator::getThreadSpecificAllocator();
+    GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(allocator);
+    CpuThreadAllocatorSetter<cv::Mat>::Set(allocator);
+}
+
+Context* Context::getDefaultThreadContext() {
     if(thread_set_context)
         return thread_set_context;
 
@@ -34,15 +48,14 @@ Context* Context::GetDefaultThreadContext() {
     return thread_specific_context.get();
 }
 
-void Context::SetDefaultThreadContext(Context*  ctx) {
+void Context::setDefaultThreadContext(Context*  ctx) {
     thread_set_context = ctx;
 }
 
 void Context::setName(const std::string& name) {
     if(name.size()) {
         allocator->setName(name);
-        mo::SetThreadName(name.c_str());
-
+        mo::setThreadName(name.c_str());
     } else {
         allocator->setName("Thread " + boost::lexical_cast<std::string>(thread_id) + " allocator");
     }
@@ -53,10 +66,9 @@ Context::~Context() {
     //stream.waitForCompletion();
 }
 
-cv::cuda::Stream &Context::GetStream() {
-    return stream;
+cv::cuda::Stream& Context::getStream() {
+    THROW(warning) << "Not a gpu context";
+    return *static_cast<cv::cuda::Stream*>(nullptr);
 }
 
-void Context::SetStream(cv::cuda::Stream stream) {
-    mo::SetStreamName(name.c_str(), stream);
-}
+void Context::setStream(const cv::cuda::Stream& stream) {}

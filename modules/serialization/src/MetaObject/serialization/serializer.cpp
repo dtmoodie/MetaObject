@@ -47,70 +47,70 @@ void SerializerFactory::RegisterDeSerializationFunctionXML(const char* obj_type,
 
 void SerializerFactory::RegisterSerializationFunctionJSON(const char* obj_type, JSONSerialize_f f)
 {
-	_json_serialization_functions[obj_type] = f;
+    _json_serialization_functions[obj_type] = f;
 }
 void SerializerFactory::RegisterDeSerializationFunctionJSON(const char* obj_type, JSONDeSerialize_f f)
 {
-	_json_deserialization_functions[obj_type] = f;
+    _json_deserialization_functions[obj_type] = f;
 }
 SerializerFactory::BinarySerialize_f SerializerFactory::GetSerializationFunctionBinary(const char* obj_type)
 {
-	auto itr = _binary_serialization_functions.find(obj_type);
-	if (itr != _binary_serialization_functions.end())
-	{
-		return itr->second;
-	}
-	return SerializerFactory::BinarySerialize_f();
+    auto itr = _binary_serialization_functions.find(obj_type);
+    if (itr != _binary_serialization_functions.end())
+    {
+        return itr->second;
+    }
+    return SerializerFactory::BinarySerialize_f();
 }
 
 SerializerFactory::BinaryDeSerialize_f SerializerFactory::GetDeSerializationFunctionBinary(const char* obj_type)
 {
-	auto itr = _binary_deserialization_functions.find(obj_type);
-	if (itr != _binary_deserialization_functions.end())
-	{
-		return itr->second;
-	}
-	return SerializerFactory::BinaryDeSerialize_f();
+    auto itr = _binary_deserialization_functions.find(obj_type);
+    if (itr != _binary_deserialization_functions.end())
+    {
+        return itr->second;
+    }
+    return SerializerFactory::BinaryDeSerialize_f();
 }
 
-SerializerFactory::XMLSerialize_f SerializerFactory::GetSerializationFunctionXML(const char* obj_type)
+SerializerFactory::XMLSerialize_f SerializerFactory::getSerializationFunctionXML(const char* obj_type)
 {
-	auto itr = _xml_serialization_functions.find(obj_type);
-	if (itr != _xml_serialization_functions.end())
-	{
-		return itr->second;
-	}
-	return SerializerFactory::XMLSerialize_f();
+    auto itr = _xml_serialization_functions.find(obj_type);
+    if (itr != _xml_serialization_functions.end())
+    {
+        return itr->second;
+    }
+    return SerializerFactory::XMLSerialize_f();
 }
 
 SerializerFactory::XMLDeSerialize_f SerializerFactory::GetDeSerializationFunctionXML(const char* obj_type)
 {
-	auto itr = _xml_deserialization_functions.find(obj_type);
-	if (itr != _xml_deserialization_functions.end())
-	{
-		return itr->second;
-	}
-	return SerializerFactory::XMLDeSerialize_f();
+    auto itr = _xml_deserialization_functions.find(obj_type);
+    if (itr != _xml_deserialization_functions.end())
+    {
+        return itr->second;
+    }
+    return SerializerFactory::XMLDeSerialize_f();
 }
 
 SerializerFactory::JSONSerialize_f SerializerFactory::GetSerializationFunctionJSON(const char* obj_type)
 {
-	auto itr = _json_serialization_functions.find(obj_type);
-	if (itr != _json_serialization_functions.end())
-	{
-		return itr->second;
-	}
-	return SerializerFactory::JSONSerialize_f();
+    auto itr = _json_serialization_functions.find(obj_type);
+    if (itr != _json_serialization_functions.end())
+    {
+        return itr->second;
+    }
+    return SerializerFactory::JSONSerialize_f();
 }
 
 SerializerFactory::JSONDeSerialize_f SerializerFactory::GetDeSerializationFunctionJSON(const char* obj_type)
 {
-	auto itr = _json_deserialization_functions.find(obj_type);
-	if (itr != _json_deserialization_functions.end())
-	{
-		return itr->second;
-	}
-	return SerializerFactory::JSONDeSerialize_f();
+    auto itr = _json_deserialization_functions.find(obj_type);
+    if (itr != _json_deserialization_functions.end())
+    {
+        return itr->second;
+    }
+    return SerializerFactory::JSONDeSerialize_f();
 }
 
 void SerializerFactory::Serialize(const rcc::shared_ptr<IMetaObject>& obj, std::ostream& os, SerializationType type)
@@ -139,7 +139,7 @@ void SerializerFactory::Serialize(const rcc::shared_ptr<IMetaObject>& obj, std::
 
 void SerializerFactory::DeSerialize(IMetaObject* obj, std::istream& is, SerializationType type)
 {
-    
+
     if(type == Binary_e)
     {
         cereal::BinaryInputArchive ar(is);
@@ -174,7 +174,7 @@ rcc::shared_ptr<IMetaObject> SerializerFactory::DeSerialize(std::istream& os, Se
         ar(CEREAL_NVP(ObjectType));
         if(ObjectType.size())
         {
-            obj = MetaObjectFactory::Instance()->Create(ObjectType.c_str());
+            obj = MetaObjectFactory::instance()->create(ObjectType.c_str());
             auto func_itr = _binary_deserialization_functions.find(obj->GetTypeName());
             if (func_itr != _binary_deserialization_functions.end())
             {
@@ -187,7 +187,7 @@ rcc::shared_ptr<IMetaObject> SerializerFactory::DeSerialize(std::istream& os, Se
         cereal::XMLInputArchive ar(os);
         std::string ObjectType;
         ar(CEREAL_NVP(ObjectType));
-        obj = MetaObjectFactory::Instance()->Create(ObjectType.c_str());
+        obj = MetaObjectFactory::instance()->create(ObjectType.c_str());
         if(obj)
         {
             auto func_itr = _xml_deserialization_functions.find(obj->GetTypeName());
@@ -213,7 +213,7 @@ bool mo::Serialize(cereal::BinaryOutputArchive& ar, const IMetaObject* obj)
         ar(cereal::make_nvp("TypeName", type));
         for (auto& param : params)
         {
-            auto func1 = SerializationFactory::Instance()->GetBinarySerializationFunction(param->getTypeInfo());
+            auto func1 = SerializationFactory::instance()->getBinarySerializationFunction(param->getTypeInfo());
             if (func1)
             {
                 if (!func1(param, ar))
@@ -237,7 +237,7 @@ bool mo::DeSerialize(cereal::BinaryInputArchive& ar, IMetaObject* obj)
 
 bool mo::Serialize(cereal::XMLOutputArchive& ar, const IMetaObject* obj)
 {
-    if (auto func = SerializerFactory::GetSerializationFunctionXML(obj->GetTypeName()))
+    if (auto func = SerializerFactory::getSerializationFunctionXML(obj->GetTypeName()))
     {
         func(obj, ar);
         return true;
@@ -250,7 +250,7 @@ bool mo::Serialize(cereal::XMLOutputArchive& ar, const IMetaObject* obj)
         ar(cereal::make_nvp("TypeName", type));
         for (auto& param : params)
         {
-            auto func1 = SerializationFactory::Instance()->GetXmlSerializationFunction(param->getTypeInfo());
+            auto func1 = SerializationFactory::instance()->getXmlSerializationFunction(param->getTypeInfo());
             if (func1)
             {
                 if (!func1(param, ar))
@@ -306,7 +306,7 @@ bool mo::Serialize(cereal::JSONOutputArchive& ar, const IMetaObject* obj)
             }
             if(param->checkFlags(mo::Output_e))
                 continue;
-            auto func1 = SerializationFactory::Instance()->GetJsonSerializationFunction(param->getTypeInfo());
+            auto func1 = SerializationFactory::instance()->getJsonSerializationFunction(param->getTypeInfo());
             if (func1)
             {
                 if (!func1(param, ar))
@@ -354,7 +354,7 @@ bool mo::DeSerialize(cereal::JSONInputArchive& ar, IMetaObject* obj)
             }
             if (param->checkFlags(mo::Output_e))
                 continue;
-            auto func1 = SerializationFactory::Instance()->GetJsonDeSerializationFunction(param->getTypeInfo());
+            auto func1 = SerializationFactory::instance()->getJsonDeSerializationFunction(param->getTypeInfo());
             if (func1)
             {
                 if (!func1(param, ar))

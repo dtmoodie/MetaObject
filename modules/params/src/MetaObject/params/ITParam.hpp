@@ -18,7 +18,7 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/Params
 */
 #include "IParam.hpp"
-#include "TypeTraits.hpp"
+#include "traits/TypeTraits.hpp"
 
 namespace mo {
 template<class T>

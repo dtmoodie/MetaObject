@@ -46,7 +46,7 @@ void ThreadPool::ReturnThread(Thread* thread_)
         if(thread.thread == thread_)
         {
             thread.available = true;
-            thread_->Stop();
+            thread_->stop();
         }
     }
 }

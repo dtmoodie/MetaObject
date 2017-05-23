@@ -23,7 +23,7 @@ namespace mo
                 {
                     if (slot_ctx->thread_id != sig_ctx->thread_id)
                     {
-                        ThreadSpecificQueue::Push(
+                        ThreadSpecificQueue::push(
                             std::bind([slot](T... args)
                         {
                             (*slot)(args...);
@@ -56,7 +56,7 @@ namespace mo
             {
                 if(slot_ctx->process_id == ctx->process_id && slot_ctx->thread_id != ctx->thread_id)
                 {
-                    ThreadSpecificQueue::Push(
+                    ThreadSpecificQueue::push(
                         std::bind([slot](T... args)
                         {
                             (*slot)(args...);

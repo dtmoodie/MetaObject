@@ -1,7 +1,7 @@
 #pragma once
 
 
-#include <MetaObject/MetaObject.hpp>
+#include <MetaObject/object/MetaObject.hpp>
 
 /*!
  * \brief The ExampleInterfaceInfo struct for static information about objects that inherit from the ExampleInterface class

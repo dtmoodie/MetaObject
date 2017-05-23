@@ -33,7 +33,7 @@ namespace mo
             {
                 _size = size;
             }
-            virtual ParamType GetBufferType() const{ return ConstMap_e;}
+            virtual ParamType getBufferType() const{ return ConstMap_e;}
 		private:
 			size_t _size;
         };

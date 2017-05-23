@@ -41,9 +41,9 @@ public:
         Context* ctx = nullptr, size_t* fn_ = nullptr);
 
     virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
-    
+
     virtual IParam* emitUpdate(const OptionalTime_t&  ts_    = OptionalTime_t(),
-        Context*                                      ctx_   = Context::GetDefaultThreadContext(),
+        Context*                                      ctx_   = Context::getDefaultThreadContext(),
         const boost::optional<size_t>&                fn_    = boost::optional<size_t>(),
         ICoordinateSystem*                            cs_    = nullptr,
         UpdateFlags                                   flags_ = ValueUpdated_e);
@@ -80,17 +80,17 @@ public:
 
     virtual AccessToken<T> access();
 
-    virtual IParam* emitUpdate(const OptionalTime_t&   ts_ = OptionalTime_t(),
-        Context*                                       ctx_ = Context::GetDefaultThreadContext(),
-        const boost::optional<size_t>&                 fn_ = boost::optional<size_t>(),
-        ICoordinateSystem*                             cs_ = nullptr,
+    virtual IParam* emitUpdate(const OptionalTime_t&   ts_    = OptionalTime_t(),
+        Context*                                       ctx_   = Context::getDefaultThreadContext(),
+        const boost::optional<size_t>&                 fn_    = boost::optional<size_t>(),
+        ICoordinateSystem*                             cs_    = nullptr,
         UpdateFlags                                    flags_ = ValueUpdated_e);
 
     virtual IParam* emitUpdate(const IParam& other);
 
     template<typename... Args>
     T& reset(Args... args){
-        return ParamTraits<T, void>::reset(data, std::forward<Args>(args)...);
+        return ParamTraits<T>::reset(data, std::forward<Args>(args)...);
     }
 protected:
     virtual bool updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);

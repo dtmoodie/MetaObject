@@ -14,7 +14,7 @@ struct SerializationFactory::impl
 
 SerializationFactory::SerializationFactory()
 {
-    _pimpl = new impl();    
+    _pimpl = new impl();
 }
 
 SerializationFactory::~SerializationFactory()
@@ -22,7 +22,7 @@ SerializationFactory::~SerializationFactory()
     delete _pimpl;
 }
 
-SerializationFactory* SerializationFactory::Instance()
+SerializationFactory* SerializationFactory::instance()
 {
     static SerializationFactory* g_inst = nullptr;
     if(g_inst == nullptr)
@@ -30,7 +30,7 @@ SerializationFactory* SerializationFactory::Instance()
     return g_inst;
 }
 
-SerializationFactory::SerializeBinary_f SerializationFactory::GetBinarySerializationFunction(const TypeInfo& type)
+SerializationFactory::SerializeBinary_f SerializationFactory::getBinarySerializationFunction(const TypeInfo& type)
 {
     auto itr = _pimpl->_binary_map.find(type);
     if(itr != _pimpl->_binary_map.end())
@@ -40,7 +40,7 @@ SerializationFactory::SerializeBinary_f SerializationFactory::GetBinarySerializa
     return SerializeBinary_f();
 }
 
-SerializationFactory::DeSerializeBinary_f SerializationFactory::GetBinaryDeSerializationFunction(const TypeInfo& type)
+SerializationFactory::DeSerializeBinary_f SerializationFactory::getBinaryDeSerializationFunction(const TypeInfo& type)
 {
     auto itr = _pimpl->_binary_map.find(type);
     if (itr != _pimpl->_binary_map.end())
@@ -50,7 +50,7 @@ SerializationFactory::DeSerializeBinary_f SerializationFactory::GetBinaryDeSeria
     return DeSerializeBinary_f ();
 }
 
-SerializationFactory::SerializeXml_f SerializationFactory::GetXmlSerializationFunction(const TypeInfo& type)
+SerializationFactory::SerializeXml_f SerializationFactory::getXmlSerializationFunction(const TypeInfo& type)
 {
     auto itr = _pimpl->_xml_map.find(type);
     if (itr != _pimpl->_xml_map.end())
@@ -60,7 +60,7 @@ SerializationFactory::SerializeXml_f SerializationFactory::GetXmlSerializationFu
     return SerializeXml_f();
 }
 
-SerializationFactory::DeSerializeXml_f SerializationFactory::GetXmlDeSerializationFunction(const TypeInfo& type)
+SerializationFactory::DeSerializeXml_f SerializationFactory::getXmlDeSerializationFunction(const TypeInfo& type)
 {
     auto itr = _pimpl->_xml_map.find(type);
     if (itr != _pimpl->_xml_map.end())
@@ -70,7 +70,7 @@ SerializationFactory::DeSerializeXml_f SerializationFactory::GetXmlDeSerializati
     return DeSerializeXml_f();
 }
 
-SerializationFactory::SerializeJson_f SerializationFactory::GetJsonSerializationFunction(const TypeInfo& type)
+SerializationFactory::SerializeJson_f SerializationFactory::getJsonSerializationFunction(const TypeInfo& type)
 {
     auto itr = _pimpl->_json_map.find(type);
     if (itr != _pimpl->_json_map.end())
@@ -79,7 +79,7 @@ SerializationFactory::SerializeJson_f SerializationFactory::GetJsonSerialization
     }
     return SerializeJson_f();
 }
-SerializationFactory::DeSerializeJson_f SerializationFactory::GetJsonDeSerializationFunction(const TypeInfo& type)
+SerializationFactory::DeSerializeJson_f SerializationFactory::getJsonDeSerializationFunction(const TypeInfo& type)
 {
     auto itr = _pimpl->_json_map.find(type);
     if (itr != _pimpl->_json_map.end())
@@ -89,7 +89,7 @@ SerializationFactory::DeSerializeJson_f SerializationFactory::GetJsonDeSerializa
     return DeSerializeJson_f();
 }
 
-SerializationFactory::SerializeText_f SerializationFactory::GetTextSerializationFunction(const TypeInfo& type)
+SerializationFactory::SerializeText_f SerializationFactory::getTextSerializationFunction(const TypeInfo& type)
 {
     auto itr = _pimpl->_text_map.find(type);
     if (itr != _pimpl->_text_map.end())
@@ -99,7 +99,7 @@ SerializationFactory::SerializeText_f SerializationFactory::GetTextSerialization
     return SerializeText_f();
 }
 
-SerializationFactory::DeSerializeText_f SerializationFactory::GetTextDeSerializationFunction(const TypeInfo& type)
+SerializationFactory::DeSerializeText_f SerializationFactory::getTextDeSerializationFunction(const TypeInfo& type)
 {
     auto itr = _pimpl->_text_map.find(type);
     if (itr != _pimpl->_text_map.end())
@@ -110,62 +110,62 @@ SerializationFactory::DeSerializeText_f SerializationFactory::GetTextDeSerializa
 }
 
 
-void SerializationFactory::SetBinarySerializationFunctions(const TypeInfo& type, SerializeBinary_f s, DeSerializeBinary_f l)
+void SerializationFactory::setBinarySerializationFunctions(const TypeInfo& type, SerializeBinary_f s, DeSerializeBinary_f l)
 {
     if(_pimpl->_binary_map.find(type) == _pimpl->_binary_map.end())
         _pimpl->_binary_map[type] = std::make_pair(s, l);
 }
 
-void SerializationFactory::SetXmlSerializationFunctions(const TypeInfo& type, SerializeXml_f s, DeSerializeXml_f l)
+void SerializationFactory::setXmlSerializationFunctions(const TypeInfo& type, SerializeXml_f s, DeSerializeXml_f l)
 {
     if(_pimpl->_xml_map.find(type) == _pimpl->_xml_map.end())
         _pimpl->_xml_map[type] = std::make_pair(s, l);
 }
 
-void SerializationFactory::SetJsonSerializationFunctions(const TypeInfo& type, SerializeJson_f serialize, DeSerializeJson_f deserialize)
+void SerializationFactory::setJsonSerializationFunctions(const TypeInfo& type, SerializeJson_f serialize, DeSerializeJson_f deserialize)
 {
     if(_pimpl->_json_map.find(type) == _pimpl->_json_map.end())
         _pimpl->_json_map[type] = std::make_pair(serialize, deserialize);
 }
 
-void SerializationFactory::SetTextSerializationFunctions(const TypeInfo& type, SerializeText_f serialize, DeSerializeText_f deserialize)
+void SerializationFactory::setTextSerializationFunctions(const TypeInfo& type, SerializeText_f serialize, DeSerializeText_f deserialize)
 {
     if(_pimpl->_text_map.find(type) == _pimpl->_text_map.end())
         _pimpl->_text_map[type] = std::make_pair(serialize, deserialize);
 }
 
-SerializationFactory::SerializeBinary_f SerializationFactory::GetSaveFunction(const TypeInfo& type, cereal::BinaryOutputArchive& ar)
+SerializationFactory::SerializeBinary_f SerializationFactory::getSaveFunction(const TypeInfo& type, cereal::BinaryOutputArchive& ar)
 {
     (void)ar;
-    return GetBinarySerializationFunction(type);
+    return getBinarySerializationFunction(type);
 }
 
-SerializationFactory::DeSerializeBinary_f SerializationFactory::GetLoadFunction(const TypeInfo& type, cereal::BinaryInputArchive& ar)
+SerializationFactory::DeSerializeBinary_f SerializationFactory::getLoadFunction(const TypeInfo& type, cereal::BinaryInputArchive& ar)
 {
     (void)ar;
-    return GetBinaryDeSerializationFunction(type);
+    return getBinaryDeSerializationFunction(type);
 }
 
-SerializationFactory::SerializeXml_f SerializationFactory::GetSaveFunction(const TypeInfo& type, cereal::XMLOutputArchive& ar)
+SerializationFactory::SerializeXml_f SerializationFactory::getSaveFunction(const TypeInfo& type, cereal::XMLOutputArchive& ar)
 {
     (void)ar;
-    return GetXmlSerializationFunction(type);
+    return getXmlSerializationFunction(type);
 }
 
-SerializationFactory::DeSerializeXml_f SerializationFactory::GetLoadFunction(const TypeInfo& type, cereal::XMLInputArchive& ar)
+SerializationFactory::DeSerializeXml_f SerializationFactory::getLoadFunction(const TypeInfo& type, cereal::XMLInputArchive& ar)
 {
     (void)ar;
-    return GetXmlDeSerializationFunction(type);
+    return getXmlDeSerializationFunction(type);
 }
 
-SerializationFactory::SerializeJson_f SerializationFactory::GetSaveFunction(const TypeInfo& type, cereal::JSONOutputArchive &ar)
+SerializationFactory::SerializeJson_f SerializationFactory::getSaveFunction(const TypeInfo& type, cereal::JSONOutputArchive &ar)
 {
     (void)ar;
-    return GetJsonSerializationFunction(type);
+    return getJsonSerializationFunction(type);
 }
 
-SerializationFactory::DeSerializeJson_f SerializationFactory::GetLoadFunction(const TypeInfo& type, cereal::JSONInputArchive &ar)
+SerializationFactory::DeSerializeJson_f SerializationFactory::getLoadFunction(const TypeInfo& type, cereal::JSONInputArchive &ar)
 {
     (void)ar;
-    return GetJsonDeSerializationFunction(type);
+    return getJsonDeSerializationFunction(type);
 }

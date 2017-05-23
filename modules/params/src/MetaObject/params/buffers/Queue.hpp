@@ -41,7 +41,7 @@ namespace mo
             void SetSize(long long size);
             long long GetSize();
             void getTimestampRange(mo::Time_t& start, mo::Time_t& end);
-            virtual ParamType GetBufferType() const{ return Queue_e;}
+            virtual ParamType getBufferType() const{ return Queue_e;}
         protected:
             virtual void onInputUpdate(Context* ctx, IParam* param);
             moodycamel::ConcurrentQueue<T> _queue;

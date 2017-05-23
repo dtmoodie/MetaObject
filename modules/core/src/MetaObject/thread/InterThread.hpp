@@ -9,13 +9,13 @@ namespace mo
     class MO_EXPORTS ThreadSpecificQueue
     {
     public:
-        static void Push(const std::function<void(void)>& f, size_t id = GetThisThread(), void* obj = nullptr);
-        static void RemoveFromQueue(void* obj);
-        static int Run(size_t id = GetThisThread());
-        static bool RunOnce(size_t id = GetThisThread());
+        static void push(const std::function<void(void)>& f, size_t id = getThisThread(), void* obj = nullptr);
+        static void removeFromQueue(void* obj);
+        static int  run(size_t id = getThisThread());
+        static bool runOnce(size_t id = getThisThread());
         // Register a notifier function to signal new data input onto a queue
-        static void RegisterNotifier(const std::function<void(void)>& f, size_t id = GetThisThread());
-		static size_t Size(size_t id = GetThisThread());
-        static void Cleanup();
+        static void registerNotifier(const std::function<void(void)>& f, size_t id = getThisThread());
+        static size_t size(size_t id = getThisThread());
+        static void cleanup();
     };
 } // namespace Signals

@@ -9,11 +9,11 @@
 #include <cuda.h>
 
 namespace mo {
-MO_EXPORTS inline unsigned char* alignMemory(unsigned char* ptr, int elemSize);
-MO_EXPORTS inline int alignmentOffset(unsigned char* ptr, int elemSize);
-MO_EXPORTS void SetScopeName(const std::string& name);
-MO_EXPORTS const std::string& GetScopeName();
-MO_EXPORTS void InstallThrustPoolingAllocator();
+MO_EXPORTS inline unsigned char*    alignMemory(unsigned char* ptr, int elemSize);
+MO_EXPORTS inline int               alignmentOffset(unsigned char* ptr, int elemSize);
+MO_EXPORTS void                     setScopeName(const std::string& name);
+MO_EXPORTS const std::string&       getScopeName();
+MO_EXPORTS void                     installThrustPoolingAllocator();
 
 template<class T>
 class GpuThreadAllocatorSetter {
@@ -55,8 +55,8 @@ private:
 class Allocator;
 class MO_EXPORTS CpuAllocatorThreadAdapter: public cv::MatAllocator {
 public:
-    static void SetThreadAllocator(cv::MatAllocator* allocator);
-    static void SetGlobalAllocator(cv::MatAllocator* allocator);
+    static void setThreadAllocator(cv::MatAllocator* allocator);
+    static void setGlobalAllocator(cv::MatAllocator* allocator);
     cv::UMatData* allocate(int dims, const int* sizes, int type,
                            void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
     bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
@@ -65,8 +65,8 @@ public:
 
 class MO_EXPORTS GpuAllocatorThreadAdapter: public cv::cuda::GpuMat::Allocator {
 public:
-    static void SetThreadAllocator(cv::cuda::GpuMat::Allocator* allocator);
-    static void SetGlobalAllocator(cv::cuda::GpuMat::Allocator* allocator);
+    static void setThreadAllocator(cv::cuda::GpuMat::Allocator* allocator);
+    static void setGlobalAllocator(cv::cuda::GpuMat::Allocator* allocator);
 
     virtual bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
     virtual void free(cv::cuda::GpuMat* mat);
@@ -76,22 +76,22 @@ class MO_EXPORTS Allocator
     : virtual public cv::cuda::GpuMat::Allocator
     , virtual public cv::MatAllocator {
 public:
-    static Allocator* GetThreadSafeAllocator();
-    static Allocator* GetThreadSpecificAllocator();
-    static void SetThreadSpecificAllocator(Allocator* allocator);
-    static void CleanupThreadSpecificAllocator();
+    static Allocator*   getThreadSafeAllocator();
+    static Allocator*   getThreadSpecificAllocator();
+    static void         setThreadSpecificAllocator(Allocator* allocator);
+    static void         cleanupThreadSpecificAllocator();
 
     // Used for stl allocators
-    virtual unsigned char* allocateGpu(size_t num_bytes) = 0;
-    virtual void deallocateGpu(uchar* ptr, size_t numBytes) = 0;
+    virtual unsigned char*  allocateGpu(size_t num_bytes) = 0;
+    virtual void            deallocateGpu(uchar* ptr, size_t numBytes) = 0;
 
-    virtual unsigned char* allocateCpu(size_t num_bytes) = 0;
-    virtual void deallocateCpu(uchar* ptr, size_t numBytes) = 0;
-    virtual void Release() {}
-    void setName(const std::string& name) {
+    virtual unsigned char*  allocateCpu(size_t num_bytes) = 0;
+    virtual void            deallocateCpu(uchar* ptr, size_t numBytes) = 0;
+    virtual void            release() {}
+    void                    setName(const std::string& name) {
         this->name = name;
     }
-    const std::string getName() {
+    const std::string       getName() {
         return name;
     }
 private:
@@ -109,7 +109,7 @@ private:
 class MO_EXPORTS PitchedPolicy {
 public:
     inline PitchedPolicy();
-    inline void SizeNeeded(int rows, int cols, int elemSize,
+    inline void sizeNeeded(int rows, int cols, int elemSize,
                            size_t& sizeNeeded, size_t& stride);
 private:
     size_t textureAlignment;
@@ -122,7 +122,7 @@ private:
  */
 class MO_EXPORTS ContinuousPolicy {
 public:
-    inline void SizeNeeded(int rows, int cols, int elemSize,
+    inline void sizeNeeded(int rows, int cols, int elemSize,
                            size_t& sizeNeeded, size_t& stride);
 };
 
@@ -140,8 +140,8 @@ public:
      * \brief GetMemoryUsage
      * \return current estimated memory usage
      */
-    inline size_t GetMemoryUsage() const;
-    virtual void Release() {}
+    inline size_t getMemoryUsage() const;
+    virtual void release() {}
 protected:
     size_t memoryUsage;
     /*!
@@ -171,12 +171,12 @@ public:
     typedef cv::cuda::GpuMat MatType;
     PoolPolicy(size_t initialBlockSize = 1e7);
 
-    inline bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
-    inline void free(cv::cuda::GpuMat* mat);
+    inline bool             allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
+    inline void             free(cv::cuda::GpuMat* mat);
 
-    inline unsigned char* allocate(size_t num_bytes);
-    inline void deallocate(unsigned char* ptr, size_t num_bytes);
-    virtual void Release();
+    inline unsigned char*   allocate(size_t num_bytes);
+    inline void             deallocate(unsigned char* ptr, size_t num_bytes);
+    virtual void            release();
 private:
     size_t _initial_block_size;
     std::list<std::shared_ptr<GpuMemoryBlock>> blocks;
@@ -185,30 +185,30 @@ private:
 
 class MO_EXPORTS CpuPoolPolicy: virtual public cv::MatAllocator {
 public:
-    cv::UMatData* allocate(int dims, const int* sizes, int type,
+    cv::UMatData*   allocate(int dims, const int* sizes, int type,
                            void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
-    void deallocate(cv::UMatData* data) const;
-    uchar* allocate(size_t num_bytes);
-    void deallocate(uchar* ptr, size_t num_bytes);
-    void Release() {}
+    bool            allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void            deallocate(cv::UMatData* data) const;
+    uchar*          allocate(size_t num_bytes);
+    void            deallocate(uchar* ptr, size_t num_bytes);
+    void            release() {}
 };
 
 class MO_EXPORTS mt_CpuPoolPolicy : virtual public CpuPoolPolicy {
 public:
-    cv::UMatData* allocate(int dims, const int* sizes, int type,
+    cv::UMatData*   allocate(int dims, const int* sizes, int type,
                            void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
-    void deallocate(cv::UMatData* data) const;
-    uchar* allocate(size_t num_bytes);
-    void deallocate(uchar* ptr, size_t num_bytes);
+    bool            allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void            deallocate(cv::UMatData* data) const;
+    uchar*          allocate(size_t num_bytes);
+    void            deallocate(uchar* ptr, size_t num_bytes);
 };
 class MO_EXPORTS PinnedAllocator : virtual public cv::MatAllocator {
 public:
-    cv::UMatData* allocate(int dims, const int* sizes, int type,
+    cv::UMatData*   allocate(int dims, const int* sizes, int type,
                            void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
-    void deallocate(cv::UMatData* data) const;
+    bool            allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void            deallocate(cv::UMatData* data) const;
 };
 
 
@@ -230,12 +230,14 @@ class MO_EXPORTS StackPolicy<cv::cuda::GpuMat, PaddingPolicy>
 public:
     typedef cv::cuda::GpuMat MatType;
     StackPolicy();
-    bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
-    void free(cv::cuda::GpuMat* mat);
 
-    unsigned char* allocate(size_t num_bytes);
-    void deallocate(unsigned char* ptr, size_t num_bytes);
-    virtual void Release();
+    bool    allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
+    void    free(cv::cuda::GpuMat* mat);
+
+    unsigned char*  allocate(size_t num_bytes);
+    void            deallocate(unsigned char* ptr, size_t num_bytes);
+
+    virtual void    release();
 protected:
     void clear();
     struct FreeMemory {
@@ -256,24 +258,28 @@ class MO_EXPORTS CpuStackPolicy
     , public virtual cv::MatAllocator {
 public:
     typedef cv::Mat MatType;
-    cv::UMatData* allocate(int dims, const int* sizes, int type,
+
+    cv::UMatData*   allocate(int dims, const int* sizes, int type,
                            void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
-    uchar* allocate(size_t total);
-    void deallocate(cv::UMatData* data) const;
-    void deallocate(uchar* ptr, size_t total);
-    void Release() {}
+    bool            allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void            deallocate(cv::UMatData* data) const;
+
+    uchar*          allocate(size_t total);
+    void            deallocate(uchar* ptr, size_t total);
+    void            release() {}
 };
 
 class MO_EXPORTS mt_CpuStackPolicy: virtual public CpuStackPolicy {
 public:
     typedef cv::Mat MatType;
-    cv::UMatData* allocate(int dims, const int* sizes, int type,
+
+    cv::UMatData*   allocate(int dims, const int* sizes, int type,
                            void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const;
-    bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
-    uchar* allocate(size_t total);
+    bool            allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const;
+    void            deallocate(cv::UMatData* data) const;
+
+    uchar*          allocate(size_t total);
     bool deallocate(uchar* ptr, size_t total);
-    void deallocate(cv::UMatData* data) const;
 };
 
 
@@ -289,10 +295,10 @@ template<typename PaddingPolicy>
 class MO_EXPORTS NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>
     : public virtual AllocationPolicy {
 public:
-    bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
-    void free(cv::cuda::GpuMat* mat);
-    unsigned char* allocate(size_t num_bytes);
-    void deallocate(unsigned char* ptr, size_t num_bytes);
+    bool    allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize);
+    void    free(cv::cuda::GpuMat* mat);
+    unsigned char*  allocate(size_t num_bytes);
+    void            deallocate(unsigned char* ptr, size_t num_bytes);
 };
 
 template<class Allocator, class MatType>
@@ -368,8 +374,8 @@ private:
 class MO_EXPORTS CpuMemoryPool {
 public:
     virtual ~CpuMemoryPool() {}
-    static CpuMemoryPool* GlobalInstance();
-    static CpuMemoryPool* ThreadInstance();
+    static CpuMemoryPool* globalInstance();
+    static CpuMemoryPool* threadInstance();
     virtual bool allocate(void** ptr, size_t total, size_t elemSize) = 0;
     virtual uchar* allocate(size_t total) = 0;
     virtual bool deallocate(void* ptr, size_t total) = 0;
@@ -378,8 +384,8 @@ public:
 class MO_EXPORTS CpuMemoryStack {
 public:
     virtual ~CpuMemoryStack() {}
-    static CpuMemoryStack* GlobalInstance();
-    static CpuMemoryStack* ThreadInstance();
+    static CpuMemoryStack* globalInstance();
+    static CpuMemoryStack* threadInstance();
     virtual bool allocate(void** ptr, size_t total, size_t elemSize) = 0;
     virtual uchar* allocate(size_t total) = 0;
     virtual bool deallocate(void* ptr, size_t total) = 0;
@@ -426,7 +432,7 @@ public:
 
     inline unsigned char* allocate(size_t num_bytes);
     inline void deallocate(unsigned char* ptr, size_t num_bytes);
-    void Release();
+    void release();
 private:
     size_t threshold;
 };
@@ -445,7 +451,7 @@ public:
     inline void deallocate(cv::UMatData* data) const;
     inline unsigned char* allocate(size_t num_bytes);
     inline void deallocate(unsigned char* ptr, size_t num_bytes);
-    void Release();
+    void release();
 private:
     size_t threshold;
 };
@@ -533,12 +539,12 @@ public:
 
     pointer allocate(size_type n) {
         pointer ptr = nullptr;
-        CpuMemoryPool::ThreadInstance()->allocate((void**)&ptr, n*sizeof(T), sizeof(T));
+        CpuMemoryPool::threadInstance()->allocate((void**)&ptr, n*sizeof(T), sizeof(T));
         return ptr;
     }
 
     void deallocate(pointer ptr, size_type n) {
-        CpuMemoryPool::ThreadInstance()->deallocate(ptr, n*sizeof(T));
+        CpuMemoryPool::threadInstance()->deallocate(ptr, n*sizeof(T));
     }
 };
 
@@ -561,12 +567,12 @@ public:
 
     pointer allocate(size_type n) {
         pointer ptr = nullptr;
-        CpuMemoryPool::GlobalInstance()->allocate((void**)&ptr, n*sizeof(T), sizeof(T));
+        CpuMemoryPool::globalInstance()->allocate((void**)&ptr, n*sizeof(T), sizeof(T));
         return ptr;
     }
 
     void deallocate(pointer ptr, size_type n) {
-        CpuMemoryPool::GlobalInstance()->deallocate(ptr, n*sizeof(T));
+        CpuMemoryPool::globalInstance()->deallocate(ptr, n*sizeof(T));
     }
 };
 
@@ -587,12 +593,12 @@ public:
 
     pointer allocate(size_type n) {
         pointer ptr = nullptr;
-        CpuMemoryPool::GlobalInstance()->allocate(&ptr, n, 1);
+        CpuMemoryPool::globalInstance()->allocate(&ptr, n, 1);
         return ptr;
     }
 
     void deallocate(pointer ptr, size_type n) {
-        CpuMemoryPool::GlobalInstance()->deallocate(ptr, n);
+        CpuMemoryPool::globalInstance()->deallocate(ptr, n);
     }
 };
 template<class T, class U> bool operator==(const PinnedStlAllocatorPoolGlobal<T>& lhs, const PinnedStlAllocatorPoolGlobal<U>& rhs) {

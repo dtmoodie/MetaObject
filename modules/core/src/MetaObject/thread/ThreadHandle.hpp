@@ -24,18 +24,18 @@ namespace mo
         ThreadHandle& operator=(const ThreadHandle& other);
 
         Context* getContext();
-        size_t GetId() const;
-        bool IsOnThread() const;
-        void PushEventQueue(const std::function<void(void)>& f);
+        size_t getId() const;
+        bool isOnThread() const;
+        void pushEventQueue(const std::function<void(void)>& f);
         // Work can be stolen and can exist on any thread
-        void PushWork(const std::function<void(void)>& f);
-        void Start();
-        void Stop();
-        bool GetIsRunning() const;
-        void SetExitCallback(const std::function<void(void)>& f);
-        void SetStartCallback(const std::function<void(void)>& f);
-        void SetThreadName(const std::string& name);
-        std::shared_ptr<Connection> SetInnerLoop(TSlot<int(void)>* slot);
+        void pushWork(const std::function<void(void)>& f);
+        void start();
+        void stop();
+        bool getIsRunning() const;
+        void setExitCallback(const std::function<void(void)>& f);
+        void setStartCallback(const std::function<void(void)>& f);
+        void setThreadName(const std::string& name);
+        std::shared_ptr<Connection> setInnerLoop(TSlot<int(void)>* slot);
     protected:
         friend class ThreadPool;
         ThreadHandle(Thread* thread, int* ref_count);

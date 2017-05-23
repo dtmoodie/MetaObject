@@ -108,7 +108,7 @@ public:
     void subscribe(); // Subscribe to this Param as an output
     void unsubscribe(); // unsubscribe to this Param as an output
     bool hasSubscriptions() const; // Determine if there are any input Params using this Param as an output
-    
+
     virtual const TypeInfo&     getTypeInfo() const = 0; // Implemented in concrete type
 
     // Register slots to be called on update of this Param
@@ -126,10 +126,10 @@ public:
 
     // commit changes to a Param, updates underlying meta info and emits signals accordingly
     virtual IParam* emitUpdate(const OptionalTime_t&         ts_    = OptionalTime_t(),                   // The timestamp of the new data
-                              Context*                       ctx_   = Context::GetDefaultThreadContext(), // The context from which the data was updated
+                              Context*                       ctx_   = Context::getDefaultThreadContext(), // The context from which the data was updated
                               const boost::optional<size_t>& fn_    = boost::optional<size_t>(),          // The frame number of the update
                               ICoordinateSystem*             cs_    = nullptr,                            // The coordinate system of the data
-                              UpdateFlags                    flags_ = ValueUpdated_e);                
+                              UpdateFlags                    flags_ = ValueUpdated_e);
 
     virtual IParam* emitUpdate(const IParam& other); // commit a Param's value copying metadata info from another parmaeter
     template<class Archive> void serialize(Archive& ar); // Used for cereal serialization

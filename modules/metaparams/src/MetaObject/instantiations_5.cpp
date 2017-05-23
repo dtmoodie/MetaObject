@@ -55,10 +55,10 @@ namespace Text
 }
 }
 
-INSTANTIATE_META_Param(cv::Rect);
-INSTANTIATE_META_Param(cv::Rect2d);
-INSTANTIATE_META_Param(cv::Rect2f);
-INSTANTIATE_META_Param(std::vector<cv::Rect>);
-INSTANTIATE_META_Param(std::vector<cv::Rect2f>);
+INSTANTIATE_META_PARAM(cv::Rect);
+INSTANTIATE_META_PARAM(cv::Rect2d);
+INSTANTIATE_META_PARAM(cv::Rect2f);
+INSTANTIATE_META_PARAM(std::vector<cv::Rect>);
+INSTANTIATE_META_PARAM(std::vector<cv::Rect2f>);
 
 #endif

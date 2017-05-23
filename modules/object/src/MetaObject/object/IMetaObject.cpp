@@ -113,7 +113,7 @@ void IMetaObject::Init(bool firstInit) {
                 }
                 auto input = this->getInput(param_connection.input_param);
                 if (input) {
-                    if(this->ConnectInput(input, obj.Get(), output, param_connection.connection_type)) {
+                    if(this->connectInput(input, obj.Get(), output, param_connection.connection_type)) {
                         LOG(debug) << "ReConnected " << GetTypeName() << ":" << param_connection.input_param
                                    << " to " << obj->GetTypeName() << ":" << param_connection.output_param;
                     } else {
@@ -214,11 +214,11 @@ int IMetaObject::setupVariableManager(IVariableManager* manager) {
 int IMetaObject::removeVariableManager(IVariableManager* mgr) {
     int count = 0;
     for (auto& param : _pimpl->_implicit_params) {
-        mgr->RemoveParam(param.second.get());
+        mgr->removeParam(param.second.get());
         ++count;
     }
     for (auto& param : _pimpl->_params) {
-        mgr->RemoveParam(param.second);
+        mgr->removeParam(param.second);
         ++count;
     }
     return count;
@@ -474,13 +474,13 @@ std::vector<IParam*> IMetaObject::getOutputs(const TypeInfo& type_filter, const 
     }
     return output;
 }
-bool IMetaObject::ConnectInput(const std::string& input_name,
+bool IMetaObject::connectInput(const std::string& input_name,
                                IMetaObject* output_object,
                                IParam* output,
                                ParamType type_) {
     auto input = getInput(input_name);
     if(input && output)
-        return ConnectInput(input, output_object, output, type_);
+        return connectInput(input, output_object, output, type_);
 
     auto inputs = getInputs();
     auto print_inputs = [inputs]()->std::string {
@@ -497,7 +497,7 @@ bool IMetaObject::ConnectInput(const std::string& input_name,
     return false;
 }
 
-bool IMetaObject::ConnectInput(InputParam* input,
+bool IMetaObject::connectInput(InputParam* input,
                                IMetaObject* output_object,
                                IParam* output,
                                ParamType type_) {
@@ -579,10 +579,10 @@ bool IMetaObject::ConnectInput(InputParam* input,
     return false;
 }
 
-bool IMetaObject::ConnectInput(IMetaObject* out_obj, IParam* out_param,
+bool IMetaObject::connectInput(IMetaObject* out_obj, IParam* out_param,
                                IMetaObject* in_obj, InputParam* in_param,
                                ParamType type) {
-    return in_obj->ConnectInput(in_param, out_obj, out_param, type);
+    return in_obj->connectInput(in_param, out_obj, out_param, type);
 }
 IParam* IMetaObject::addParam(std::shared_ptr<IParam> param) {
     param->setMtx(_mtx);

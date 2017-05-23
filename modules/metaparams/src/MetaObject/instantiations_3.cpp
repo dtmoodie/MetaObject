@@ -24,10 +24,10 @@
 #  define MO_EXPORTS
 #endif
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
-INSTANTIATE_META_Param(cv::Point2f);
-INSTANTIATE_META_Param(cv::Point2d);
-INSTANTIATE_META_Param(cv::Point3d);
-INSTANTIATE_META_Param(cv::Point3f);
-INSTANTIATE_META_Param(cv::Point);
+INSTANTIATE_META_PARAM(cv::Point2f);
+INSTANTIATE_META_PARAM(cv::Point2d);
+INSTANTIATE_META_PARAM(cv::Point3d);
+INSTANTIATE_META_PARAM(cv::Point3f);
+INSTANTIATE_META_PARAM(cv::Point);
 
 #endif

@@ -6,7 +6,7 @@
 using namespace mo;
 boost::thread_specific_ptr<Allocator> thread_specific_allocator;
 thread_local Allocator* thread_specific_allocator_unowned = nullptr;
-boost::thread_specific_ptr<std::string> current_scope;
+thread_local std::string current_scope;
 
 thread_local cv::MatAllocator* t_cpuAllocator = nullptr;
 cv::MatAllocator* g_cpuAllocator = nullptr;
@@ -21,7 +21,7 @@ cv::UMatData* CpuAllocatorThreadAdapter::allocate(int dims, const int* sizes, in
         return t_cpuAllocator->allocate(dims, sizes, type, data, step, flags, usageFlags);
     } else {
         if(g_cpuAllocator == nullptr) {
-            g_cpuAllocator = mo::Allocator::GetThreadSafeAllocator();
+            g_cpuAllocator = mo::Allocator::getThreadSafeAllocator();
         }
         return g_cpuAllocator->allocate(dims, sizes, type, data, step, flags, usageFlags);
     }
@@ -32,7 +32,7 @@ bool CpuAllocatorThreadAdapter::allocate(cv::UMatData* data, int accessflags, cv
         return t_cpuAllocator->allocate(data, accessflags, usageFlags);
     } else {
         if(g_cpuAllocator == nullptr) {
-            g_cpuAllocator = mo::Allocator::GetThreadSafeAllocator();
+            g_cpuAllocator = mo::Allocator::getThreadSafeAllocator();
         }
         return g_cpuAllocator->allocate(data, accessflags, usageFlags);
     }
@@ -43,17 +43,17 @@ void CpuAllocatorThreadAdapter::deallocate(cv::UMatData* data) const {
         t_cpuAllocator->deallocate(data);
     } else {
         if(g_cpuAllocator == nullptr) {
-            g_cpuAllocator = mo::Allocator::GetThreadSafeAllocator();
+            g_cpuAllocator = mo::Allocator::getThreadSafeAllocator();
         }
         g_cpuAllocator->deallocate(data);
     }
 }
 
-void CpuAllocatorThreadAdapter::SetThreadAllocator(cv::MatAllocator* allocator) {
+void CpuAllocatorThreadAdapter::setThreadAllocator(cv::MatAllocator* allocator) {
     t_cpuAllocator = allocator;
 }
 
-void CpuAllocatorThreadAdapter::SetGlobalAllocator(cv::MatAllocator* allocator) {
+void CpuAllocatorThreadAdapter::setGlobalAllocator(cv::MatAllocator* allocator) {
     g_cpuAllocator = allocator;
 }
 
@@ -62,7 +62,7 @@ bool GpuAllocatorThreadAdapter::allocate(cv::cuda::GpuMat* mat, int rows, int co
         return t_gpuAllocator->allocate(mat, rows, cols, elemSize);
     } else {
         if(g_gpuAllocator == nullptr) {
-            g_gpuAllocator = mo::Allocator::GetThreadSafeAllocator();
+            g_gpuAllocator = mo::Allocator::getThreadSafeAllocator();
         }
         return g_gpuAllocator->allocate(mat, rows, cols, elemSize);
     }
@@ -74,32 +74,26 @@ void GpuAllocatorThreadAdapter::free(cv::cuda::GpuMat* mat) {
         t_gpuAllocator->free(mat);
     } else {
         if(g_gpuAllocator == nullptr) {
-            g_gpuAllocator = mo::Allocator::GetThreadSafeAllocator();
+            g_gpuAllocator = mo::Allocator::getThreadSafeAllocator();
         }
         g_gpuAllocator->free(mat);
     }
 }
 
-void GpuAllocatorThreadAdapter::SetThreadAllocator(cv::cuda::GpuMat::Allocator* allocator) {
+void GpuAllocatorThreadAdapter::setThreadAllocator(cv::cuda::GpuMat::Allocator* allocator) {
     t_gpuAllocator = allocator;
 }
 
-void GpuAllocatorThreadAdapter::SetGlobalAllocator(cv::cuda::GpuMat::Allocator* allocator) {
+void GpuAllocatorThreadAdapter::setGlobalAllocator(cv::cuda::GpuMat::Allocator* allocator) {
     g_gpuAllocator = allocator;
 }
 
-void mo::SetScopeName(const std::string& name) {
-    if (current_scope.get() == nullptr) {
-        current_scope.reset(new std::string());
-    }
-    *current_scope = name;
+void mo::setScopeName(const std::string& name) {
+    current_scope = name;
 }
 
-const std::string& mo::GetScopeName() {
-    if (current_scope.get() == nullptr) {
-        current_scope.reset(new std::string());
-    }
-    return *current_scope;
+const std::string& mo::getScopeName() {
+    return current_scope;
 }
 
 class CpuMemoryPoolImpl: public CpuMemoryPool {
@@ -196,7 +190,7 @@ public:
 private:
     boost::mutex mtx;
 };
-CpuMemoryPool* CpuMemoryPool::GlobalInstance() {
+CpuMemoryPool* CpuMemoryPool::globalInstance() {
     static CpuMemoryPool* g_inst = nullptr;
     if(g_inst == nullptr) {
         g_inst = new mt_CpuMemoryPoolImpl();
@@ -204,7 +198,7 @@ CpuMemoryPool* CpuMemoryPool::GlobalInstance() {
     return g_inst;
 }
 
-CpuMemoryPool* CpuMemoryPool::ThreadInstance() {
+CpuMemoryPool* CpuMemoryPool::threadInstance() {
     static boost::thread_specific_ptr<CpuMemoryPool> g_inst;
     if(g_inst.get() == nullptr) {
         g_inst.reset(new CpuMemoryPoolImpl());
@@ -268,7 +262,7 @@ public:
     }
 private:
     void cleanup(bool force  = false, bool destructor = false) {
-        if(IsCudaThread())
+        if(isCudaThread())
             return;
         auto time = clock();
         if (force)
@@ -320,35 +314,24 @@ private:
     boost::mutex mtx;
 };
 
-CpuMemoryStack* CpuMemoryStack::GlobalInstance() {
+CpuMemoryStack* CpuMemoryStack::globalInstance() {
     static CpuMemoryStack* g_inst = nullptr;
     if(g_inst == nullptr) {
-        /*#ifdef _MSC_VER
-                g_inst = new mt_CpuMemoryStackImpl(1000);
-        #else
-
-                g_inst = new RefCountPolicy<mt_CpuMemoryStackImpl>(1000*1000);
-        #endif*/
         g_inst = new mt_CpuMemoryStackImpl(1.5 * CLOCKS_PER_SEC);
     }
     return g_inst;
 }
 
-CpuMemoryStack* CpuMemoryStack::ThreadInstance() {
+CpuMemoryStack* CpuMemoryStack::threadInstance() {
     static boost::thread_specific_ptr<CpuMemoryStack> g_inst;
     if(g_inst.get() == nullptr) {
-        /*#ifdef _MSC_VER
-                g_inst.reset(new CpuMemoryStackImpl(1000));
-        #else
-                g_inst.reset(new RefCountPolicy<CpuMemoryStackImpl>(1000*1000));
-        #endif*/
         g_inst.reset(new CpuMemoryStackImpl(1.5 * CLOCKS_PER_SEC));
 
     }
     return g_inst.get();
 }
 
-Allocator* Allocator::GetThreadSafeAllocator() {
+Allocator* Allocator::getThreadSafeAllocator() {
     static Allocator* g_inst = nullptr;
     if(g_inst == nullptr) {
         g_inst = new mt_UniversalAllocator_t();
@@ -356,7 +339,7 @@ Allocator* Allocator::GetThreadSafeAllocator() {
     return g_inst;
 }
 
-Allocator* Allocator::GetThreadSpecificAllocator() {
+Allocator* Allocator::getThreadSpecificAllocator() {
     if(thread_specific_allocator_unowned)
         return thread_specific_allocator_unowned;
     if(thread_specific_allocator.get() == nullptr) {
@@ -364,12 +347,12 @@ Allocator* Allocator::GetThreadSpecificAllocator() {
     }
     return thread_specific_allocator.get();
 }
-void Allocator::SetThreadSpecificAllocator(Allocator* allocator) {
-    CleanupThreadSpecificAllocator();
+void Allocator::setThreadSpecificAllocator(Allocator* allocator) {
+    cleanupThreadSpecificAllocator();
     thread_specific_allocator_unowned = allocator;
 }
 
-void Allocator::CleanupThreadSpecificAllocator() {
+void Allocator::cleanupThreadSpecificAllocator() {
     if(auto ptr = thread_specific_allocator.release()) {
         delete ptr;
     }
@@ -402,7 +385,7 @@ cv::UMatData* CpuStackPolicy::allocate(int dims, const int* sizes, int type,
     } else {
         void* ptr = 0;
         //CpuDelayedDeallocationPool::instance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
-        CpuMemoryStack::ThreadInstance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
+        CpuMemoryStack::threadInstance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
 
         u->data = u->origdata = static_cast<uchar*>(ptr);
     }
@@ -410,14 +393,14 @@ cv::UMatData* CpuStackPolicy::allocate(int dims, const int* sizes, int type,
     return u;
 }
 uchar* CpuStackPolicy::allocate(size_t total) {
-    return CpuMemoryStack::ThreadInstance()->allocate(total);
+    return CpuMemoryStack::threadInstance()->allocate(total);
 }
 
 bool CpuStackPolicy::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const {
     return false;
 }
 void CpuStackPolicy::deallocate(uchar* ptr, size_t total) {
-    CpuMemoryStack::ThreadInstance()->deallocate(ptr, total);
+    CpuMemoryStack::threadInstance()->deallocate(ptr, total);
 }
 
 void CpuStackPolicy::deallocate(cv::UMatData* u) const {
@@ -429,8 +412,7 @@ void CpuStackPolicy::deallocate(cv::UMatData* u) const {
 
     if (u->refcount == 0) {
         if (!(u->flags & cv::UMatData::USER_ALLOCATED)) {
-            //cudaFreeHost(u->origdata);
-            CpuMemoryStack::ThreadInstance()->deallocate(u->origdata, u->size);
+            CpuMemoryStack::threadInstance()->deallocate(u->origdata, u->size);
             u->origdata = 0;
         }
 
@@ -465,8 +447,7 @@ cv::UMatData* mt_CpuStackPolicy::allocate(int dims, const int* sizes, int type,
         u->flags |= cv::UMatData::USER_ALLOCATED;
     } else {
         void* ptr = 0;
-        //CpuDelayedDeallocationPool::instance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
-        CpuMemoryStack::GlobalInstance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
+        CpuMemoryStack::globalInstance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
 
         u->data = u->origdata = static_cast<uchar*>(ptr);
     }
@@ -487,8 +468,7 @@ void mt_CpuStackPolicy::deallocate(cv::UMatData* u) const {
 
     if (u->refcount == 0) {
         if (!(u->flags & cv::UMatData::USER_ALLOCATED)) {
-            //cudaFreeHost(u->origdata);
-            CpuMemoryStack::GlobalInstance()->deallocate(u->origdata, u->size);
+            CpuMemoryStack::globalInstance()->deallocate(u->origdata, u->size);
             u->origdata = 0;
         }
 
@@ -522,7 +502,7 @@ cv::UMatData* CpuPoolPolicy::allocate(int dims, const int* sizes, int type,
         u->flags |= cv::UMatData::USER_ALLOCATED;
     } else {
         void* ptr = 0;
-        CpuMemoryPool::ThreadInstance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
+        CpuMemoryPool::threadInstance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
 
         u->data = u->origdata = static_cast<uchar*>(ptr);
     }
@@ -543,8 +523,7 @@ void CpuPoolPolicy::deallocate(cv::UMatData* u) const {
 
     if (u->refcount == 0) {
         if (!(u->flags & cv::UMatData::USER_ALLOCATED)) {
-            //cudaFreeHost(u->origdata);
-            CpuMemoryPool::ThreadInstance()->deallocate(u->origdata, u->size);
+            CpuMemoryPool::threadInstance()->deallocate(u->origdata, u->size);
             u->origdata = 0;
         }
 
@@ -552,7 +531,7 @@ void CpuPoolPolicy::deallocate(cv::UMatData* u) const {
     }
 }
 uchar* CpuPoolPolicy::allocate(size_t num_bytes) {
-    return CpuMemoryPool::ThreadInstance()->allocate(num_bytes);
+    return CpuMemoryPool::threadInstance()->allocate(num_bytes);
 }
 
 void CpuPoolPolicy::deallocate(uchar* ptr, size_t num_bytes) {
@@ -585,7 +564,7 @@ cv::UMatData* mt_CpuPoolPolicy::allocate(int dims, const int* sizes, int type,
         u->flags |= cv::UMatData::USER_ALLOCATED;
     } else {
         void* ptr = 0;
-        CpuMemoryPool::GlobalInstance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
+        CpuMemoryPool::globalInstance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
 
         u->data = u->origdata = static_cast<uchar*>(ptr);
     }
@@ -607,7 +586,7 @@ void mt_CpuPoolPolicy::deallocate(cv::UMatData* u) const {
     if (u->refcount == 0) {
         if (!(u->flags & cv::UMatData::USER_ALLOCATED)) {
             //cudaFreeHost(u->origdata);
-            CpuMemoryPool::GlobalInstance()->deallocate(u->origdata, u->size);
+            CpuMemoryPool::globalInstance()->deallocate(u->origdata, u->size);
             u->origdata = 0;
         }
 

@@ -39,7 +39,7 @@ PitchedPolicy::PitchedPolicy() {
     textureAlignment = cv::cuda::DeviceInfo(cv::cuda::getDevice()).textureAlignment();
 }
 
-void PitchedPolicy::SizeNeeded(int rows, int cols, int elemSize, size_t& sizeNeeded, size_t& stride) {
+void PitchedPolicy::sizeNeeded(int rows, int cols, int elemSize, size_t& sizeNeeded, size_t& stride) {
     if (rows == 1 || cols == 1) {
         stride = cols*elemSize;
     } else {
@@ -53,7 +53,7 @@ void PitchedPolicy::SizeNeeded(int rows, int cols, int elemSize, size_t& sizeNee
 
 /// ==========================================================
 /// ContinuousPolicy
-void ContinuousPolicy::SizeNeeded(int rows, int cols, int elemSize, size_t& sizeNeeded, size_t& stride) {
+void ContinuousPolicy::sizeNeeded(int rows, int cols, int elemSize, size_t& sizeNeeded, size_t& stride) {
     stride = cols*elemSize;
     sizeNeeded = stride * rows;
 }
@@ -69,7 +69,7 @@ PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::PoolPolicy(size_t initialBlockSize)
 template<typename PaddingPolicy>
 bool PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize) {
     size_t sizeNeeded, stride;
-    PaddingPolicy::SizeNeeded(rows, cols, elemSize, sizeNeeded, stride);
+    PaddingPolicy::sizeNeeded(rows, cols, elemSize, sizeNeeded, stride);
     unsigned char* ptr;
     for (auto itr : blocks) {
         ptr = itr->allocate(sizeNeeded, elemSize);
@@ -151,7 +151,7 @@ void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char* ptr,
 }
 
 template<typename PaddingPolicy>
-void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::Release() {
+void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::release() {
     blocks.clear();
 }
 
@@ -172,7 +172,7 @@ bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
     cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize) {
     size_t sizeNeeded, stride;
 
-    PaddingPolicy::SizeNeeded(rows, cols, elemSize, sizeNeeded, stride);
+    PaddingPolicy::sizeNeeded(rows, cols, elemSize, sizeNeeded, stride);
     typedef typename std::list<typename StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::FreeMemory>::iterator Itr;
     std::vector<std::pair<clock_t, Itr>> candidates;
     clock_t time = clock();
@@ -286,7 +286,7 @@ void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::clear() {
 }
 
 template<typename PaddingPolicy>
-void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::Release() {
+void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::release() {
     for(auto& itr : deallocateList) {
         CV_CUDEV_SAFE_CALL(cudaFree(itr.ptr));
     }
@@ -299,7 +299,7 @@ template<typename PaddingPolicy>
 bool NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
     cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize) {
     size_t size_needed, stride;
-    PaddingPolicy::SizeNeeded(rows, cols, elemSize, size_needed, stride);
+    PaddingPolicy::sizeNeeded(rows, cols, elemSize, size_needed, stride);
     if (rows > 1 && cols > 1) {
         CV_CUDEV_SAFE_CALL(cudaMallocPitch(&mat->data, &mat->step, elemSize * cols, rows));
         memoryUsage += mat->step*rows;
@@ -442,7 +442,7 @@ template<class Allocator>
 RefCountPolicyImpl<Allocator, cv::cuda::GpuMat>::~RefCountPolicyImpl() {
     //CV_Assert(ref_count == 0 && "Warning, trying to delete allocator while cv::cuda::GpuMat's still reference it");
     if(ref_count != 0) {
-        LOG(warning) << "Trying to delete allocator while cv::cuda::GpuMat's still reference it";
+        LOG(warning) << "Trying to delete allocator while " << ref_count << " cv::cuda::GpuMats still reference it";
     }
 }
 template<class Allocator>
@@ -481,8 +481,8 @@ template<class Allocator>
 bool ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::allocate(
     cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize) {
     if(Allocator::allocate(mat, rows, cols, elemSize)) {
-        scopeOwnership[mat->data] = GetScopeName();
-        scopedAllocationSize[GetScopeName()] += mat->step * mat->rows;
+        scopeOwnership[mat->data] = getScopeName();
+        scopedAllocationSize[getScopeName()] += mat->step * mat->rows;
         return true;
     }
     return false;
@@ -501,8 +501,8 @@ void ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::free(cv::cuda::GpuMat* mat) 
 template<class Allocator>
 unsigned char* ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::allocate(size_t num_bytes) {
     if(auto ptr = Allocator::allocate(num_bytes)) {
-        scopeOwnership[ptr] = GetScopeName();
-        scopedAllocationSize[GetScopeName()] += num_bytes;
+        scopeOwnership[ptr] = getScopeName();
+        scopedAllocationSize[getScopeName()] += num_bytes;
         return ptr;
     }
     return nullptr;
@@ -554,9 +554,9 @@ void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::deall
 }
 
 template<class SmallAllocator, class LargeAllocator>
-void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::Release() {
-    SmallAllocator::Release();
-    LargeAllocator::Release();
+void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::cuda::GpuMat>::release() {
+    SmallAllocator::release();
+    LargeAllocator::release();
 }
 
 template<class SmallAllocator, class LargeAllocator>
@@ -625,9 +625,9 @@ void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::deallocate(uns
 }
 
 template<class SmallAllocator, class LargeAllocator>
-void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::Release() {
-    SmallAllocator::Release();
-    LargeAllocator::Release();
+void CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::release() {
+    SmallAllocator::release();
+    LargeAllocator::release();
 }
 
 template<class SmallAllocator, class LargeAllocator>
@@ -683,9 +683,9 @@ public:
         CPUAllocator::deallocate(data);
     }
 
-    void Release() {
-        CPUAllocator::Release();
-        GPUAllocator::Release();
+    void release() {
+        CPUAllocator::release();
+        GPUAllocator::release();
     }
 };
 

@@ -8,12 +8,12 @@ namespace mo
     class MO_EXPORTS MetaObjectInfoDatabase
     {
     public:
-        static MetaObjectInfoDatabase* Instance();
-        
-        void RegisterInfo(IMetaObjectInfo* info);
-        
-        std::vector<IMetaObjectInfo*> GetMetaObjectInfo();
-        IMetaObjectInfo* GetMetaObjectInfo(std::string name);
+        static MetaObjectInfoDatabase* instance();
+
+        void registerInfo(IMetaObjectInfo* info);
+
+        std::vector<IMetaObjectInfo*> getMetaObjectInfo();
+        IMetaObjectInfo* getMetaObjectInfo(std::string name);
     private:
         MetaObjectInfoDatabase();
         ~MetaObjectInfoDatabase();

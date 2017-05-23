@@ -17,29 +17,29 @@ namespace mo
     {
     public:
         // Events have to be handled by this thread
-        void PushEventQueue(const std::function<void(void)>& f);
+        void pushEventQueue(const std::function<void(void)>& f);
         // Work can be stolen and can exist on any thread
-        void PushWork(const std::function<void(void)>& f);
-        void Start();
-        void Stop();
-        size_t GetId() const;
-        bool IsOnThread() const;
+        void pushWork(const std::function<void(void)>& f);
+        void start();
+        void stop();
+        size_t getId() const;
+        bool isOnThread() const;
 
-        void SetExitCallback(const std::function<void(void)>& f);
-        void SetStartCallback(const std::function<void(void)>& f);
-        //void SetInnerLoop(const std::function<int(void)>& f);
-        std::shared_ptr<Connection> SetInnerLoop(TSlot<int(void)>* slot);
-        ThreadPool* GetPool() const;
+        void setExitCallback(const std::function<void(void)>& f);
+        void setStartCallback(const std::function<void(void)>& f);
+        //void setInnerLoop(const std::function<int(void)>& f);
+        std::shared_ptr<Connection> setInnerLoop(TSlot<int(void)>* slot);
+        ThreadPool* getPool() const;
         Context* getContext();
     protected:
         friend class ThreadPool;
         friend class ThreadHandle;
-        
+
         Thread();
         Thread(ThreadPool* pool);
         ~Thread();
-        void Main();
-        void HandleEvents(int ms);
+        void main();
+        void handleEvents(int ms);
 
         Thread& operator=(const Thread&) = delete;
         Thread(const Thread&)            = delete;

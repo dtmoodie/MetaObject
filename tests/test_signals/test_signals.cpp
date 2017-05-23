@@ -1,6 +1,6 @@
 #define BOOST_TEST_MAIN
 
-#include "MetaObject/IMetaObject.hpp"
+#include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/RelayManager.hpp"
 #include "MetaObject/detail/Counter.hpp"
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(threaded_signal)
     TSlot<void(int)> slot = TSlot<void(int)>(std::bind(
         [&thread_ctx](int value)->void
         {
-            BOOST_REQUIRE_EQUAL(thread_ctx.thread_id, mo::GetThisThread());
+            BOOST_REQUIRE_EQUAL(thread_ctx.thread_id, mo::getThisThread());
             BOOST_REQUIRE_EQUAL(5, value);
         }, std::placeholders::_1));
 
@@ -60,7 +60,7 @@ BOOST_AUTO_TEST_CASE(threaded_signal)
 
     boost::thread thread = boost::thread([&thread_ctx]()->void
     {
-        thread_ctx.thread_id = mo::GetThisThread();
+        thread_ctx.thread_id = mo::getThisThread();
         while(!boost::this_thread::interruption_requested())
         {
             ThreadSpecificQueue::Run(thread_ctx.thread_id);

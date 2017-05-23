@@ -12,7 +12,7 @@ template<class T> class ITParam;
 namespace IO {
 namespace Text {
 namespace imp {
-template<class T> 
+template<class T>
 constexpr bool is_numeric_v = (std::is_floating_point<T>::value || std::is_integral<T>::value);
 
 inline size_t textSize(const std::string& str) {
@@ -207,7 +207,7 @@ template<typename T> bool DeSerialize(ITAccessibleParam<std::vector<T>>* param, 
         while (ss >> value) {
             ss >> ch;
             (token)().push_back(value);
-        }    
+        }
     }
     return true;
 }
@@ -237,7 +237,7 @@ template<typename T> bool WrapDeSerialize(IParam* param, std::stringstream& ss) 
 
 template<class T> struct Policy {
     Policy() {
-        SerializationFactory::Instance()->SetTextSerializationFunctions(
+        SerializationFactory::instance()->setTextSerializationFunctions(
             TypeInfo(typeid(T)),
             std::bind(&WrapSerialize<T>, std::placeholders::_1, std::placeholders::_2),
             std::bind(&WrapDeSerialize<T>, std::placeholders::_1, std::placeholders::_2));

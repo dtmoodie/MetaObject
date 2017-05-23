@@ -2,7 +2,7 @@
 #ifndef __CUDACC__
 #include <boost/thread/recursive_mutex.hpp>
 namespace mo{
-	template<typename T> class ITParam;
+    template<typename T> class ITParam;
     template<typename T>
     ITParam<T>::ITParam(const std::string& name,
                         ParamFlags flags,
@@ -10,12 +10,12 @@ namespace mo{
                         Context* ctx,
                         size_t fn):
         IParam(name, flags, ts, ctx, fn){
-	}
+    }
 
     template<typename T>
     const TypeInfo& ITParam<T>::getTypeInfo() const{
-		return _type_info;
-	}
+        return _type_info;
+    }
 
     template<class T> template<class... Args>
     ITParam<T>* ITParam<T>::updateData(ConstStorageRef_t data, const Args&... args) {
@@ -25,7 +25,7 @@ namespace mo{
             fn = *fnptr;
         else fn = this->_fn + 1;
         const mo::Time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...);
-        auto ctx = GetKeywordInputDefault<tag::context>(Context::GetDefaultThreadContext(), args...);
+        auto ctx = GetKeywordInputDefault<tag::context>(Context::getDefaultThreadContext(), args...);
         auto cs = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...);
         updateDataImpl(data, ts ? *ts : OptionalTime_t(), ctx, fn, cs);
         return this;

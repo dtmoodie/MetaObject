@@ -4,7 +4,7 @@
 #include "boost/thread.hpp"
 
 
-size_t mo::GetThreadId(const boost::thread& thread)
+size_t mo::getThreadId(const boost::thread& thread)
 {
     std::stringstream ss;
     ss << std::hex << thread.get_id();

@@ -3,6 +3,6 @@
 
 namespace mo
 {
-    bool MO_EXPORTS IsCudaThread();
-    void MO_EXPORTS SetCudaThread();
+    bool MO_EXPORTS isCudaThread();
+    void MO_EXPORTS setCudaThread();
 }

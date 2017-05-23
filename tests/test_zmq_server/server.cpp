@@ -3,7 +3,7 @@
 
 #define BOOST_TEST_MAIN
 
-#include "MetaObject/IMetaObject.hpp"
+#include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/detail/IMetaObjectImpl.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/detail/Counter.hpp"
@@ -14,7 +14,7 @@
 #include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParam.hpp"
-#include "MetaObject/params/IO/SerializationFunctionRegistry.hpp"
+#include "MetaObject/params/IO/SerializationFactory.hpp"
 #include "MetaObject/params/IO/Policy.hpp"
 #include "MetaObject/params/VariableManager.h"
 #include "MetaObject/params/ParamServer.hpp"
@@ -54,7 +54,7 @@ BOOST_AUTO_TEST_CASE(server)
 
     TParam<int> Param;
     Param.UpdateData(0);
-    auto serialize_func = SerializationFunctionRegistry::Instance()->GetBinarySerializationFunction(Param.GetTypeInfo());
+    auto serialize_func = SerializationFactory::instance()->GetBinarySerializationFunction(Param.getTypeInfo());
     BOOST_REQUIRE(serialize_func);
     int count = 0;
     while(1)

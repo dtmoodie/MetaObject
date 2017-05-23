@@ -55,55 +55,55 @@ Context* ThreadHandle::getContext()
     }
     return nullptr;
 }
-void ThreadHandle::PushEventQueue(const std::function<void(void)>& f)
+void ThreadHandle::pushEventQueue(const std::function<void(void)>& f)
 {
     if(_thread)
     {
-        _thread->PushEventQueue(f);
+        _thread->pushEventQueue(f);
     }
 }
 // Work can be stolen and can exist on any thread
-void ThreadHandle::PushWork(const std::function<void(void)>& f)
+void ThreadHandle::pushWork(const std::function<void(void)>& f)
 {
     if(_thread)
     {
-        _thread->PushWork(f);
+        _thread->pushWork(f);
     }
 }
-void ThreadHandle::Start()
+void ThreadHandle::start()
 {
     if (_thread)
     {
-        _thread->Start();
+        _thread->start();
     }
 }
-void ThreadHandle::Stop()
+void ThreadHandle::stop()
 {
     if(_thread)
     {
-        _thread->Stop();
+        _thread->stop();
     }
 }
-void ThreadHandle::SetExitCallback(const std::function<void(void)>& f)
+void ThreadHandle::setExitCallback(const std::function<void(void)>& f)
 {
     if(_thread)
     {
-        _thread->SetExitCallback(f);
+        _thread->setExitCallback(f);
     }
 }
-void ThreadHandle::SetStartCallback(const std::function<void(void)>& f)
+void ThreadHandle::setStartCallback(const std::function<void(void)>& f)
 {
     if(_thread)
     {
-        _thread->SetStartCallback(f);
+        _thread->setStartCallback(f);
     }
 }
 
-std::shared_ptr<Connection> ThreadHandle::SetInnerLoop(TSlot<int(void)>* slot)
+std::shared_ptr<Connection> ThreadHandle::setInnerLoop(TSlot<int(void)>* slot)
 {
     if(_thread)
     {
-        return _thread->SetInnerLoop(slot);
+        return _thread->setInnerLoop(slot);
     }
     return std::shared_ptr<Connection>();
 }
@@ -114,7 +114,7 @@ void ThreadHandle::decrement()
         --(*_ref_count);
         if (*_ref_count <= 0 && _thread)
      {
-            ThreadPool* pool = _thread->GetPool();
+            ThreadPool* pool = _thread->getPool();
             if (pool)
             {
                 pool->ReturnThread(_thread);
@@ -133,39 +133,39 @@ void ThreadHandle::increment()
         ++(*_ref_count);
     }
 }
-size_t ThreadHandle::GetId() const
+size_t ThreadHandle::getId() const
 {
-    return _thread->GetId();
+    return _thread->getId();
 }
 
-bool ThreadHandle::IsOnThread() const
+bool ThreadHandle::isOnThread() const
 {
-    return _thread->IsOnThread();
+    return _thread->isOnThread();
 }
-bool ThreadHandle::GetIsRunning() const
+bool ThreadHandle::getIsRunning() const
 {
     if(_thread == nullptr)
         return false;
     return _thread->_run && !_thread->_paused;
 }
-void ThreadHandle::SetThreadName(const std::string& name)
+void ThreadHandle::setThreadName(const std::string& name)
 {
     if(_thread)
     {
-        if(_thread->IsOnThread())
+        if(_thread->isOnThread())
         {
-            mo::SetThreadName(name.c_str());
-            mo::SetStreamName(name.c_str(), _thread->getContext()->GetStream());
+            mo::setThreadName(name.c_str());
+            mo::setStreamName(name.c_str(), _thread->getContext()->getCudaStream());
             _thread->_name = name;
             _thread->getContext()->setName(name);
         }else
         {
             Thread* thread = _thread;
             std::string name_ = name;
-            _thread->PushEventQueue([name_, thread, this]()
+            _thread->pushEventQueue([name_, thread, this]()
             {
-                mo::SetThreadName(name_.c_str());
-                mo::SetStreamName(name_.c_str(), thread->getContext()->GetStream());
+                mo::setThreadName(name_.c_str());
+                mo::setStreamName(name_.c_str(), thread->getContext()->getCudaStream());
                 _thread->_name = name_;
                 _thread->getContext()->setName(name_);
             });

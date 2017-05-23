@@ -3,7 +3,7 @@
 
 #define BOOST_TEST_MAIN
 
-#include "MetaObject/IMetaObject.hpp"
+#include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/detail/IMetaObjectImpl.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/detail/Counter.hpp"
@@ -14,7 +14,7 @@
 #include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParam.hpp"
-#include "MetaObject/params/IO/SerializationFunctionRegistry.hpp"
+#include "MetaObject/params/IO/SerializationFactory.hpp"
 #include "MetaObject/params/ParamClient.hpp"
 #include "cereal/archives/portable_binary.hpp"
 #include "RuntimeObjectSystem.h"
@@ -49,7 +49,7 @@ BOOST_AUTO_TEST_CASE(client)
     zmq::message_t msg;
     TParam<int> Param;
     Param.UpdateData(0);
-    auto deserialization_func = SerializationFunctionRegistry::Instance()->GetBinaryDeSerializationFunction(Param.GetTypeInfo());
+    auto deserialization_func = SerializationFactory::instance()->GetBinaryDeSerializationFunction(Param.getTypeInfo());
     int count = 0;
     while(1)
     {
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(client)
             std::istringstream iss(static_cast<char*>(msg.data()));
             cereal::BinaryInputArchive ar(iss);
             deserialization_func(&Param, ar);
-            mo::time_t ts = Param.GetTimestamp();
+            mo::Time_t ts = Param.GetTimestamp();
             int value = Param.GetData();
             BOOST_REQUIRE_EQUAL(ts, value);
             ++count;

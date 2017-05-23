@@ -9,8 +9,8 @@
 
 namespace mo
 {
-	// Static object information available for each meta object
-	// Used for static introspection
+    // Static object information available for each meta object
+    // Used for static introspection
 
     // Specialize this for each class which requires additional fields
     template<class Type, class InterfaceInfo>
@@ -18,12 +18,12 @@ namespace mo
     {
     };
 
-    template<class T> 
+    template<class T>
     struct MetaObjectInfo: public MetaObjectInfoImpl<T, typename T::InterfaceInfo>
     {
         MetaObjectInfo()
         {
-            MetaObjectInfoDatabase::Instance()->RegisterInfo(this);   
+            MetaObjectInfoDatabase::instance()->registerInfo(this);
         }
         static void getParamInfoStatic(std::vector<ParamInfo*>& info)
         {
@@ -37,11 +37,11 @@ namespace mo
         {
             T::getSlotInfoStatic(info);
         }
-		static std::string                 TooltipStatic()
+        static std::string                 tooltipStatic()
         {
             return _get_tooltip_helper<T>();
         }
-        static std::string                 DescriptionStatic()
+        static std::string                 descriptionStatic()
         {
             return _get_description_helper<T>();
         }
@@ -55,48 +55,48 @@ namespace mo
             getParamInfoStatic(info);
             return info;
         }
-		std::vector<SignalInfo*>           getSignalInfo() const
+        std::vector<SignalInfo*>           getSignalInfo() const
         {
             std::vector<SignalInfo*> info;
             getSignalInfoStatic(info);
             return info;
         }
-		std::vector<SlotInfo*>             getSlotInfo() const
+        std::vector<SlotInfo*>             getSlotInfo() const
         {
             std::vector<SlotInfo*> info;
             getSlotInfoStatic(info);
             return info;
         }
-		std::string                        GetObjectTooltip() const
+        std::string                        getObjectTooltip() const
         {
-            return TooltipStatic();
+            return tooltipStatic();
         }
-		std::string                        GetObjectHelp() const
+        std::string                        getObjectHelp() const
         {
-            return DescriptionStatic();
+            return descriptionStatic();
         }
         TypeInfo                           getTypeInfo() const
         {
             return getTypeInfoStatic();
         }
-        std::string                        GetObjectName() const
+        std::string                        getObjectName() const
         {
             return T::GetTypeNameStatic();
         }
-        unsigned int                       GetInterfaceId() const
+        unsigned int                       getInterfaceId() const
         {
             return T::s_interfaceID;
         }
-        virtual std::string GetInterfaceName() const
+        virtual std::string getInterfaceName() const
         {
             return T::GetInterfaceName();
         }
     private:
-        DEFINE_HAS_STATIC_FUNCTION(HasTooltip, V::GetTooltipStatic, std::string(*)(void));
-        DEFINE_HAS_STATIC_FUNCTION(HasDescription, V::GetDescriptionStatic, std::string(*)(void));
+        DEFINE_HAS_STATIC_FUNCTION(HasTooltip, V::getTooltipStatic, std::string(*)(void));
+        DEFINE_HAS_STATIC_FUNCTION(HasDescription, V::getDescriptionStatic, std::string(*)(void));
         template<class U> static std::string _get_tooltip_helper(typename std::enable_if<HasTooltip<U>::value, void>::type* = 0)
         {
-            return U::GetTooltipStatic();
+            return U::getTooltipStatic();
         }
         template<class U> static std::string _get_tooltip_helper(typename std::enable_if<!HasTooltip<U>::value, void>::type* = 0)
         {
@@ -104,7 +104,7 @@ namespace mo
         }
         template<class U> static std::string _get_description_helper(typename std::enable_if<HasDescription<U>::value, void>::type* = 0)
         {
-            return U::GetDescriptionStatic();
+            return U::getDescriptionStatic();
         }
         template<class U> static std::string _get_description_helper(typename std::enable_if<!HasDescription<U>::value, void>::type* = 0)
         {

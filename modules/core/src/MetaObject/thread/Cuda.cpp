@@ -3,11 +3,11 @@
 thread_local bool is_cuda_thread = false;
 namespace mo
 {
-void SetCudaThread()
+void setCudaThread()
 {
     is_cuda_thread = true;
 }
-bool IsCudaThread()
+bool isCudaThread()
 {
     return is_cuda_thread;
 }

@@ -14,7 +14,7 @@ public:
     virtual void removeParam(IParam* param);
 
     virtual std::vector<IParam*> getOutputParams(TypeInfo type);
-    virtual std::vector<IParam*> getAllParmaeters();
+    virtual std::vector<IParam*> getAllParms();
     virtual std::vector<IParam*> getAllOutputParams();
 
     virtual IParam* getOutputParam(std::string name);
