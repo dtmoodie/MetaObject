@@ -1,6 +1,18 @@
 #pragma once
 #ifdef HAVE_QT5
-#include "MetaObject/detail/Export.hpp"
+
+#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__)
+#ifdef metaobject_qtgui_EXPORTS
+#  define MO_QTGUI_EXPORTS __declspec(dllexport)
+#else
+#  define MO_QTGUI_EXPORTS __declspec(dllimport)
+#endif
+#elif defined __GNUC__ && __GNUC__ >= 4
+#  define MO_QTGUI_EXPORTS __attribute__ ((visibility ("default")))
+#else
+#  define MO_QTGUI_EXPORTS
+#endif
+
 #include <qobject.h>
 #include <qdatetime.h>
 
@@ -14,7 +26,7 @@ namespace mo
             // *****************************************************************************
             //                                SignalProxy
             // *****************************************************************************
-            class MO_EXPORTS SignalProxy : public QObject
+            class MO_QTGUI_EXPORTS SignalProxy : public QObject
             {
                 Q_OBJECT
                 IHandler* handler;
