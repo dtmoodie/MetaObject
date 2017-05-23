@@ -108,7 +108,7 @@ namespace mo
     }
 
     template<class T>
-    bool ITInputParam<T>::getData(Storage_t& data, const OptionalTime_t& ts,
+    bool ITInputParam<T>::getData(InputStorage_t& data, const OptionalTime_t& ts,
         Context* ctx, size_t* fn_){
         if(this->_shared_input){
             return this->_shared_input->getData(data, ts, ctx, fn_);
@@ -119,7 +119,7 @@ namespace mo
     }
 
     template<class T>
-    bool ITInputParam<T>::getData(Storage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_){
+    bool ITInputParam<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_){
         if (this->_shared_input) {
             return this->_shared_input->getData(data, fn, ctx, ts_);
         }

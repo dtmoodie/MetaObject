@@ -26,7 +26,7 @@ namespace mo
         }
 
         template<class T>
-        bool CircularBuffer<T>::getData(Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_){
+        bool CircularBuffer<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_){
             if (!ts && _data_buffer.size()){
                 if(fn_) *fn_ = _data_buffer.back().fn;
                 data = _data_buffer.back().data;
@@ -43,7 +43,7 @@ namespace mo
         }
 
         template<class T>
-        bool CircularBuffer<T>::getData(Storage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_){
+        bool CircularBuffer<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_){
             for (auto& itr : _data_buffer) {
                 if (itr.fn == fn && itr.ts) {
                     if (ts_) *ts_ = *itr.ts;
@@ -55,7 +55,7 @@ namespace mo
         }
 
         template<class T>
-        bool CircularBuffer<T>::updateDataImpl(ConstStorageRef_t data_,
+        bool CircularBuffer<T>::updateDataImpl(const Storage_t& data_,
                                                OptionalTime_t ts,
                                                Context* ctx,
                                                size_t fn,

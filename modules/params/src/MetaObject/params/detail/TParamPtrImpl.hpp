@@ -27,7 +27,7 @@ namespace mo
     }
 
     template<typename T>
-    bool TParamPtr<T>::getData(Storage_t& value, const OptionalTime_t& ts, Context* ctx, size_t* fn_) {
+    bool TParamPtr<T>::getData(InputStorage_t& value, const OptionalTime_t& ts, Context* ctx, size_t* fn_) {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if(!ts){
             if(ptr){
@@ -45,7 +45,7 @@ namespace mo
     }
 
     template<typename T>
-    bool TParamPtr<T>::getData(Storage_t& value, size_t fn, Context* ctx, OptionalTime_t* ts){
+    bool TParamPtr<T>::getData(InputStorage_t& value, size_t fn, Context* ctx, OptionalTime_t* ts){
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if(fn == this->_fn && ptr){
             ParamTraits<T>::reset(value, *ptr);
@@ -82,7 +82,7 @@ namespace mo
     }
 
     template<typename T>
-    bool TParamPtr<T>::updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs){
+    bool TParamPtr<T>::updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs){
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if(ptr){
             *ptr = ParamTraits<T>::get(data);
@@ -107,7 +107,7 @@ namespace mo
     MetaParam<T, 100, void> TParamPtr<T>::_meta_Param;
 
     template<typename T>
-    bool TParamOutput<T>::getData(Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_) {
+    bool TParamOutput<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_) {
         if (!ts || ts == this->_ts) {
             data = this->data;
             return true;
@@ -116,7 +116,7 @@ namespace mo
     }
 
     template<typename T>
-    bool TParamOutput<T>::getData(Storage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_) {
+    bool TParamOutput<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_) {
         if (fn == this->_fn) {
             data = this->data;
             return true;
@@ -130,7 +130,7 @@ namespace mo
     }
 
     template<typename T>
-    bool TParamOutput<T>::updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs) {
+    bool TParamOutput<T>::updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs) {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         this->data = data;
         lock.unlock();

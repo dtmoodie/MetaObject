@@ -20,9 +20,10 @@ template<class Type> struct ParamTraitsShared;
 // Base unspecialized forward declaration
 template<class Type, class Enable = void> struct ParamTraitsImpl {};
 
+//template<class Type, int N> struct TraitSelector{};
 
 // priority based selectors
-template<class Type, int Priority> struct TraitSelector: public TraitSelector<Type, Priority - 1>{};
+template<class Type, int N> struct TraitSelector: public TraitSelector<Type, N - 1>{};
 
 // High priority specializations for rcc::shared ptr types
 template<class Type> struct TraitSelector<rcc::shared_ptr<Type>, 1>{
@@ -34,9 +35,9 @@ template<class Type> struct TraitSelector<rcc::weak_ptr<Type>, 1>{
 };
 
 // High priority specializations for std::shared_ptr
-template<class Type> struct TraitSelector<std::shared_ptr<Type>, 1>{
-    typedef ParamTraitsShared<Type> TraitType;
-};
+//template<class Type> struct TraitSelector<std::shared_ptr<Type>, 1>{
+    //typedef ParamTraitsShared<Type> TraitType;
+//};
 
 // Defaults to this with lowest priority
 template<class T> struct TraitSelector<T, 0>{
@@ -44,6 +45,7 @@ template<class T> struct TraitSelector<T, 0>{
 };
 
 // frontend, access everything through this
-template<class Type> struct ParamTraits: public TraitSelector<Type, 1>::TraitType{};
-
+template<class Type> struct ParamTraits: public TraitSelector<Type, 1>::TraitType{
+};
+    
 }

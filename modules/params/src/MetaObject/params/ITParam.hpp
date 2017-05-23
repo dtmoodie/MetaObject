@@ -23,16 +23,16 @@ https://github.com/dtmoodie/Params
 namespace mo {
 template<class T>
 struct Stamped {
-    Stamped(typename ParamTraits<T>::Storage_t& data):
+    Stamped(typename ParamTraits<T>::ConstStorageRef_t data):
         data(data), fn(0) {}
 
-    explicit Stamped(mo::Time_t ts, const typename ParamTraits<T>::Storage_t& data):
+    explicit Stamped(mo::Time_t ts, typename ParamTraits<T>::ConstStorageRef_t data):
         ts(ts), data(data) {}
 
-    explicit Stamped(size_t fn, const typename ParamTraits<T>::Storage_t& data):
+    explicit Stamped(size_t fn, typename ParamTraits<T>::ConstStorageRef_t data):
         fn(fn), data(data) {}
 
-    explicit Stamped(mo::Time_t ts, size_t fn, const typename ParamTraits<T>::Storage_t& data):
+    explicit Stamped(mo::Time_t ts, size_t fn, typename ParamTraits<T>::ConstStorageRef_t data):
         ts(ts), fn(fn), data(data) {}
 
     template<class...U>
@@ -41,7 +41,12 @@ struct Stamped {
         this->ts = ts;
         this->fn = frame_number;
     }
-
+    Stamped& operator=(const Stamped<T>& other){
+        this->data = other.data;
+        this->ts = other.ts;
+        this->fn = other.fn;
+        return *this;
+    }
     template<class A>
     void serialize(A& ar) {
         ar(ts);
@@ -51,41 +56,50 @@ struct Stamped {
 
     OptionalTime_t ts;
     size_t fn;
-    typename ParamTraits<T>::Storage_t data;
+    typename std::remove_const<typename std::remove_reference<typename ParamTraits<T>::ConstStorageRef_t>::type>::type data;
 };
 
 // The state struct is used to save a snapshot of the state of a Param at a point in time
 template<class T>
 struct State: public Stamped<T> {
-    State(mo::Time_t ts, size_t fn, Context* ctx, ICoordinateSystem* cs, const typename ParamTraits<T>::Storage_t& init):
+    State(mo::Time_t ts, size_t fn, Context* ctx, ICoordinateSystem* cs, typename ParamTraits<T>::ConstStorageRef_t init):
         Stamped<T>(ts, fn, init),
         ctx(ctx),
         cs(cs) {}
 
-    State(mo::Time_t ts, size_t fn, Context* ctx, const typename ParamTraits<T>::Storage_t& init):
+    State(mo::Time_t ts, size_t fn, Context* ctx, typename ParamTraits<T>::ConstStorageRef_t init):
         Stamped<T>(ts, fn, init),
         ctx(ctx),
         cs(nullptr) {}
 
-    State(size_t fn, Context* ctx, ICoordinateSystem* cs, const typename ParamTraits<T>::Storage_t& init):
+    State(size_t fn, Context* ctx, ICoordinateSystem* cs, typename ParamTraits<T>::ConstStorageRef_t init):
         Stamped<T>(fn, init),
         ctx(ctx),
         cs(cs) {}
 
-    State(mo::Time_t ts, size_t fn, const typename ParamTraits<T>::Storage_t& init):
+    State(mo::Time_t ts, size_t fn, typename ParamTraits<T>::ConstStorageRef_t init):
         Stamped<T>(ts, fn, init),
         ctx(nullptr),
         cs(nullptr) {}
 
-    State(mo::Time_t ts, const typename ParamTraits<T>::Storage_t& init):
+    State(mo::Time_t ts, typename ParamTraits<T>::ConstStorageRef_t init):
         Stamped<T>(ts, init),
         ctx(nullptr),
         cs(nullptr) {}
 
-    State(const typename ParamTraits<T>::Storage_t& init):
+    State(typename ParamTraits<T>::ConstStorageRef_t init):
         Stamped<T>(init),
         ctx(nullptr),
         cs(nullptr) {}
+
+    State& operator=(const State<T>& other) {
+        this->data = other.data;
+        this->ts = other.ts;
+        this->fn = other.fn;
+        this->ctx = other.ctx;
+        this->cs = other.cs;
+        return *this;
+    }
     Context* ctx;
     ICoordinateSystem* cs;
 };
@@ -108,13 +122,13 @@ public:
     ITParam(const std::string& name = "", ParamFlags flags = Control_e,
             OptionalTime_t ts = OptionalTime_t(), Context* ctx = nullptr, size_t fn = 0);
 
-    virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
+    virtual bool getData(InputStorage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
                          Context* ctx = nullptr, size_t* fn_ = nullptr) = 0;
 
-    virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr) = 0;
+    virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr) = 0;
 
     template<class... Args>
-    ITParam<T>* updateData(ConstStorageRef_t data, const Args&... args);
+    ITParam<T>* updateData(const Storage_t& data, const Args&... args);
 
     virtual const TypeInfo& getTypeInfo() const;
 
@@ -124,7 +138,7 @@ public:
     std::shared_ptr<Connection>         registerUpdateNotifier(std::shared_ptr<TSignalRelay<TUpdateSig_t>>& relay);
 protected:
     friend class AccessToken<T>;
-    virtual bool updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs) = 0;
+    virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs) = 0;
     TSignal<TUpdateSig_t> _typed_update_signal;
 private:
     static const TypeInfo _type_info;

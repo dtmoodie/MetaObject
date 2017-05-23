@@ -69,7 +69,7 @@ auto Serialize_imp(std::ostream& os, T const& obj, int) ->decltype(os << obj, vo
 }
 
 template<typename T>
-void Serialize_imp(std::ostream& os, T const& obj, long) {
+void Serialize_imp(std::ostream& os, T const& obj, size_t) {
 
 }
 
@@ -78,7 +78,7 @@ auto DeSerialize_imp(std::istream& is, T& obj, int) ->decltype(is >> obj, void()
     is >> obj;
 }
 template<typename T>
-void DeSerialize_imp(std::istream& is, T& obj, long) {
+void DeSerialize_imp(std::istream& is, T& obj,size_t) {
 
 }
 

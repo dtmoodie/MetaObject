@@ -37,10 +37,10 @@ public:
                       bool ownsData_ = false);
     ~TParamPtr();
 
-    virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
+    virtual bool getData(InputStorage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
         Context* ctx = nullptr, size_t* fn_ = nullptr);
 
-    virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
+    virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 
     virtual IParam* emitUpdate(const OptionalTime_t&  ts_    = OptionalTime_t(),
         Context*                                      ctx_   = Context::getDefaultThreadContext(),
@@ -54,7 +54,7 @@ public:
 
     ITParam<T>* updatePtr(T* ptr, bool ownsData_ = false);
 protected:
-    virtual bool updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
+    virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
     T* ptr;
     bool ownsData;
     static MetaParam<T, 100> _meta_Param;
@@ -73,10 +73,10 @@ public:
 
     TParamOutput(): IParam(mo::tag::_param_flags = mo::ParamFlags::Output_e ){}
 
-    virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
+    virtual bool getData(InputStorage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
         Context* ctx = nullptr, size_t* fn_ = nullptr);
 
-    virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
+    virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 
     virtual AccessToken<T> access();
 
@@ -93,7 +93,7 @@ public:
         return ParamTraits<T>::reset(data, std::forward<Args>(args)...);
     }
 protected:
-    virtual bool updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
+    virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
 private:
     Storage_t data;
 };

@@ -14,7 +14,7 @@ NNStreamBuffer<T>::NNStreamBuffer(const std::string& name):
 }
 
 template<class T>
-typename std::map<SequenceKey, typename NNStreamBuffer<T>::Storage_t>::iterator NNStreamBuffer<T>::search(OptionalTime_t ts){
+typename std::map<SequenceKey, typename NNStreamBuffer<T>::InputStorage_t>::iterator NNStreamBuffer<T>::search(OptionalTime_t ts){
 	if (!ts){ // default timestamp passed in, get newest value
 		if (this->_data_buffer.size())
 			return this->_data_buffer.rbegin().base();
@@ -39,7 +39,7 @@ typename std::map<SequenceKey, typename NNStreamBuffer<T>::Storage_t>::iterator 
 	return this->_data_buffer.end();
 }
 template<class T>
-typename std::map<SequenceKey, typename NNStreamBuffer<T>::Storage_t>::iterator NNStreamBuffer<T>::search(size_t fn){
+typename std::map<SequenceKey, typename NNStreamBuffer<T>::InputStorage_t>::iterator NNStreamBuffer<T>::search(size_t fn){
 	auto upper = this->_data_buffer.upper_bound(fn);
 	auto lower = this->_data_buffer.lower_bound(fn);
 	if (upper != this->_data_buffer.end() && lower != this->_data_buffer.end()){
@@ -57,7 +57,7 @@ typename std::map<SequenceKey, typename NNStreamBuffer<T>::Storage_t>::iterator 
 }
 
 template<class T>
-bool NNStreamBuffer<T>::getData(Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_){
+bool NNStreamBuffer<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_){
     mo::Mutex_t::scoped_lock lock(IParam::mtx());
     auto itr = search(ts);
     if(itr != this->_data_buffer.end()){
@@ -72,7 +72,7 @@ bool NNStreamBuffer<T>::getData(Storage_t& data, const OptionalTime_t& ts, Conte
 }
 
 template<class T>
-bool NNStreamBuffer<T>::getData(Storage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_) {
+bool NNStreamBuffer<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_) {
     mo::Mutex_t::scoped_lock lock(IParam::mtx());
     auto itr = search(fn);
     if (itr != this->_data_buffer.end()) {

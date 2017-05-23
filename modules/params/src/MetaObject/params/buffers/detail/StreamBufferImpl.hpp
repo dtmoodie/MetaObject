@@ -10,7 +10,7 @@ namespace mo{
         }
 
         template<class T>
-        bool StreamBuffer<T>::getData(Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_){
+        bool StreamBuffer<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_){
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             if(Map<T>::getData(data, ts, ctx, &_current_frame_number)){
                 if(!ts) _current_timestamp = this->_data_buffer.rbegin()->first.ts;
@@ -23,7 +23,7 @@ namespace mo{
         }
 
         template<class T>
-        bool StreamBuffer<T>::getData(Storage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_){
+        bool StreamBuffer<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_){
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             if (Map<T>::getData(data, fn, ctx, &_current_timestamp)) {
                 _current_frame_number = fn;

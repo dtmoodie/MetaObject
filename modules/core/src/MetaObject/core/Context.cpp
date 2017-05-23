@@ -14,7 +14,8 @@ using namespace mo;
 boost::thread_specific_ptr<Context> thread_specific_context;
 
 thread_local Context* thread_set_context = nullptr;
-static Context*     create(const std::string& name){
+
+Context* mo::Context::create(const std::string& name){
     Context* ctx = nullptr;
 #ifdef HAVE_OPENCV
     ctx = new CvContext();
@@ -70,5 +71,7 @@ cv::cuda::Stream& Context::getStream() {
     THROW(warning) << "Not a gpu context";
     return *static_cast<cv::cuda::Stream*>(nullptr);
 }
-
+cudaStream_t Context::getCudaStream() const{
+    return nullptr;
+}
 void Context::setStream(const cv::cuda::Stream& stream) {}

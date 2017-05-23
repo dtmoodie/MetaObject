@@ -88,14 +88,17 @@ template<class Type> struct ParamTraitsImpl<Type, typename std::enable_if<std::i
     }
 
     template<class...Args>
-    static void reset(InputStorage_t& input_storage, Args...args) {
-        input_storage = Type(std::forward(args)...);
+    static void reset(InputStorage_t& input_storage, Args&&...args) {
+        input_storage = Type(std::forward<Args>(args)...);
     }
     template<class...Args>
     static void nullify(InputStorage_t& input_storage) {
         input_storage.reset();
     }
     static inline Type& get(Storage_t& value){
+        return value;
+    }
+    static inline const Type& get(const Storage_t& value){
         return value;
     }
     static inline Type* ptr(Type& value){

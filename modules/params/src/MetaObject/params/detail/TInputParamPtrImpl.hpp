@@ -19,7 +19,7 @@ namespace mo
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if(ITInputParam<T>::setInput(param)){
             if(_user_var){
-                Storage_t data;
+                InputStorage_t data;
                 if(this->_input)
                      if(this->_input->getData(data)){
                          _current_data = data;
@@ -43,7 +43,7 @@ namespace mo
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if(ITInputParam<T>::setInput(param)){
             if(_user_var){
-                Storage_t data;
+                InputStorage_t data;
                 if(ITInputParam<T>::_input)
                     if(ITInputParam<T>::_input->getData(data)){
                         _current_data = data;
@@ -88,7 +88,7 @@ namespace mo
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if(_user_var){
             size_t fn;
-            Storage_t data;
+            InputStorage_t data;
             if(ITInputParam<T>::_shared_input){
                 if(!ITInputParam<T>::_shared_input->getData(data, ts, this->_ctx, &fn)){
                     return false;
@@ -115,7 +115,7 @@ namespace mo
         OptionalTime_t ts;
         if(_user_var){
             if(ITInputParam<T>::_shared_input){
-                Storage_t data;
+                InputStorage_t data;
                 if(ITInputParam<T>::_shared_input->getData(data, fn, this->_ctx, &ts)){
                     _current_data = data;
                     
@@ -128,7 +128,7 @@ namespace mo
                 }
             }
             if(ITInputParam<T>::_input){
-                Storage_t data;
+                InputStorage_t data;
                 if(this->_input->getData(data, fn, this->_ctx, &ts)){
                     _current_data = data;
                     *_user_var = &(*_current_data);

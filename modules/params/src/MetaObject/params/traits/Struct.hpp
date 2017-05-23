@@ -59,7 +59,7 @@ template<class Type> struct ParamTraitsImpl<Type, typename std::enable_if<!std::
 
     template<class...Args>
     static void reset(InputStorage_t& input_storage, Args&&...args) {
-        input_storage.reset(new Type(std::forward<args>(args)...));
+        input_storage.reset(new Type(std::forward<Args>(args)...));
     }
 
     template<class...Args>
@@ -68,12 +68,20 @@ template<class Type> struct ParamTraitsImpl<Type, typename std::enable_if<!std::
     }
 
     // Access underlying data
-    static inline Type& get(ConstStorageRef_t value){
+    static inline Type& get(const Storage_t& value){
         MO_ASSERT(value);
         return *value;
     }
 
-    static inline StoragePtr_t ptr(ConstStorageRef_t data){
+    static inline const Type& get(ConstStorageRef_t& value) {
+        MO_ASSERT(value);
+        return *value;
+    }
+
+    static inline StoragePtr_t ptr(const Storage_t& data){
+        return data.get();
+    }
+    static inline ConstStoragePtr_t ptr(ConstStorageRef_t& data) {
         return data.get();
     }
 

@@ -62,10 +62,10 @@ namespace mo{
 
             Map(const std::string& name = "");
 
-            virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
+            virtual bool getData(InputStorage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
                 Context* ctx = nullptr, size_t* fn_ = nullptr);
 
-            virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
+            virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 
             virtual void setFrameBufferCapacity(size_t size);
             virtual void setTimePaddingCapacity(mo::Time_t time);
@@ -77,12 +77,12 @@ namespace mo{
             virtual bool getFrameNumberRange(size_t& start, size_t& end);
             virtual ParamType getBufferType() const{ return Map_e;}
         protected:
-            virtual bool updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
+            virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
             virtual void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
-			typename std::map<SequenceKey, Storage_t>::iterator search(OptionalTime_t ts);
-			typename std::map<SequenceKey, Storage_t>::iterator search(size_t fn);
+			typename std::map<SequenceKey, InputStorage_t>::iterator search(OptionalTime_t ts);
+			typename std::map<SequenceKey, InputStorage_t>::iterator search(size_t fn);
 
-            std::map<SequenceKey, Storage_t> _data_buffer;
+            std::map<SequenceKey, InputStorage_t> _data_buffer;
         };
     }
 

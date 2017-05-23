@@ -240,7 +240,7 @@ std::string GetLastErrorAsString()
     return message;
 }
 
-bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
+bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
 {
     static int projectCount = 0;
     LOG(info) << "Loading plugin " << fullPluginPath;
@@ -277,7 +277,7 @@ bool MetaObjectFactory::LoadPlugin(const std::string& fullPluginPath)
         {
             moduleInterface->SetProjectIdForAllConstructors(id);
         }
-        SetupObjectConstructors(moduleInterface);
+        setupObjectConstructors(moduleInterface);
     }
     _pimpl->plugins.push_back(plugin_name + " - success");
     return true;

@@ -13,7 +13,7 @@ namespace mo
 
 
         template<class T>
-        bool Map<T>::getData(Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_){
+        bool Map<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_){
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             auto itr = search(ts);
             if (itr != _data_buffer.end()){
@@ -27,7 +27,7 @@ namespace mo
         }
 
         template<class T>
-        bool Map<T>::getData(Storage_t& value, size_t fn, Context* ctx, OptionalTime_t* ts){
+        bool Map<T>::getData(InputStorage_t& value, size_t fn, Context* ctx, OptionalTime_t* ts){
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             auto itr = search(fn);
             if (itr != _data_buffer.end()){
@@ -41,7 +41,7 @@ namespace mo
         }
 
         template<class T>
-        bool Map<T>::updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs){
+        bool Map<T>::updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs){
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             _data_buffer[{ts,fn}] = data;
             IParam::_modified = true;
@@ -93,7 +93,7 @@ namespace mo
             return false;
         }
         
-        template<class T> typename std::map<SequenceKey, typename Map<T>::Storage_t>::iterator  Map<T>::search(OptionalTime_t ts){
+        template<class T> typename std::map<SequenceKey, typename Map<T>::InputStorage_t>::iterator  Map<T>::search(OptionalTime_t ts){
             if (_data_buffer.size() == 0)
                 return _data_buffer.end();
             if (!ts){
@@ -104,7 +104,7 @@ namespace mo
             return _data_buffer.find(*ts);
         }
         
-        template<class T> typename std::map<SequenceKey, typename Map<T>::Storage_t>::iterator Map<T>::search(size_t fn){
+        template<class T> typename std::map<SequenceKey, typename Map<T>::InputStorage_t>::iterator Map<T>::search(size_t fn){
             if (_data_buffer.size() == 0)
                 return _data_buffer.end();
             return _data_buffer.find(fn);

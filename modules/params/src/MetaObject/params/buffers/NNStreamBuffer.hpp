@@ -18,15 +18,15 @@ namespace mo{
             
             NNStreamBuffer(const std::string& name = "");
 
-            virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
+            virtual bool getData(InputStorage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
                 Context* ctx = nullptr, size_t* fn_ = nullptr);
 
-            virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
+            virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 
             virtual ParamType getBufferType() const{ return NNStreamBuffer_e;}
         protected:
-			typename std::map<SequenceKey, Storage_t>::iterator search(OptionalTime_t ts);
-			typename std::map<SequenceKey, Storage_t>::iterator search(size_t fn);
+			typename std::map<SequenceKey, InputStorage_t>::iterator search(OptionalTime_t ts);
+			typename std::map<SequenceKey, InputStorage_t>::iterator search(size_t fn);
         };
     }
 

@@ -66,7 +66,7 @@ public:
     bool getInput(size_t fn, OptionalTime_t* ts = nullptr);
 
 protected:
-    virtual bool updateDataImpl(ConstStorageRef_t, OptionalTime_t, Context*, size_t, ICoordinateSystem*) {
+    virtual bool updateDataImpl(const Storage_t&, OptionalTime_t, Context*, size_t, ICoordinateSystem*) {
         return true;
     }
     Input_t* _user_var; // Pointer to the user space pointer variable of type T

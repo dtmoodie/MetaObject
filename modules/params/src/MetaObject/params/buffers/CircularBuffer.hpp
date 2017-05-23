@@ -52,10 +52,10 @@ namespace Buffer
             OptionalTime_t ts = {},
             ParamFlags type = Buffer_e);
 
-        virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
+        virtual bool getData(InputStorage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
             Context* ctx = nullptr, size_t* fn_ = nullptr);
 
-        virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
+        virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 
         virtual void setFrameBufferCapacity(size_t size);
         virtual void setTimePaddingCapacity(mo::Time_t time);
@@ -69,7 +69,7 @@ namespace Buffer
         void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
         virtual ParamType getBufferType() const{ return CircularBuffer_e;}
     protected:
-        bool updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
+        bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
     };
 }
     

@@ -34,13 +34,13 @@ public:
     TParam(const std::string& name) : IParam(name) { }
     TParam();
 
-    virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
+    virtual bool getData(InputStorage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
         Context* ctx = nullptr, size_t* fn_ = nullptr);
 
-    virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
+    virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
     virtual AccessToken<T> access();
 protected:
-    virtual bool updateDataImpl(ConstStorageRef_t data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
+    virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
     Storage_t _data;
 private:
     static ParamConstructor<TParam<T>> _typed_param_constructor;

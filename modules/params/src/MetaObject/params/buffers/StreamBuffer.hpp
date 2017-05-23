@@ -22,10 +22,10 @@ namespace mo
 
             StreamBuffer(const std::string& name = "");
 
-            virtual bool getData(Storage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
+            virtual bool getData(InputStorage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
                 Context* ctx = nullptr, size_t* fn_ = nullptr);
 
-            virtual bool getData(Storage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
+            virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 
             virtual void setFrameBufferCapacity(size_t size);
             virtual void setTimePaddingCapacity(mo::Time_t time);

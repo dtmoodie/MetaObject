@@ -150,6 +150,8 @@ RUNTIME_COMPILER_LINKLIBRARY("-lboost_log_setup")
 #define MO_THROW_SPECIFIER
 #endif
 
+#define CUDA_ERROR_CHECK(exp) cudaError_t err = exp; (err == cudaSuccess) ? (void)0 : mo::LogMessageVoidify() & THROW(warning) << "[" << 	cudaGetErrorString(err) << "]"
+
 namespace mo {
 
 MO_EXPORTS void InitLogging();
@@ -159,14 +161,15 @@ std::string MO_EXPORTS printCallstack(size_t skipLevels, bool makeFunctionNamesS
 std::string MO_EXPORTS printCallstack(size_t skipLevels, bool makeFunctionNamesStandOut, std::stringstream& ss);
 
 
-struct ICallstackException{
+struct MO_EXPORTS ICallstackException{
     virtual ~ICallstackException();
-    virtual std::string callstack();
+    virtual std::string callstack() = 0;
 };
 
 // This class creates a message to be logged with 
 template<class Exc, boost::log::BOOST_LOG_VERSION_NAMESPACE::trivial::severity_level Severity>
 struct CallstackSeverityException: virtual public Exc, virtual public ICallstackException{
+
     template<class... Args>
     CallstackSeverityException(Args... args):
         Exc(std::forward(args)...), _msg(s_msg_buffer){}

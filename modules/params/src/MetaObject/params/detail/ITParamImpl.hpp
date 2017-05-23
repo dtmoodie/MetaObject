@@ -18,7 +18,7 @@ namespace mo{
     }
 
     template<class T> template<class... Args>
-    ITParam<T>* ITParam<T>::updateData(ConstStorageRef_t data, const Args&... args) {
+    ITParam<T>* ITParam<T>::updateData(const Storage_t& data, const Args&... args) {
         size_t fn;
         const size_t* fnptr = GetKeywordInputOptional<tag::frame_number>(args...);
         if (fnptr)

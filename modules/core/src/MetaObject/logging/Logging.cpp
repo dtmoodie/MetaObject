@@ -42,6 +42,9 @@
 #include <sstream>
 // https://github.com/Microsoft/CNTK/blob/7c811de9e33d0184fdf340cd79f4f17faacf41cc/Source/Common/ExceptionWithCallStack.cpp
 
+mo::ICallstackException::~ICallstackException(){
+
+}
 
 void mo::InitLogging()
 {
