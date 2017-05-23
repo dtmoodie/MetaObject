@@ -1,6 +1,7 @@
 #pragma once
 #include <MetaObject/Parameters/IParameter.hpp>
 #include <MetaObject/Parameters/MetaParameter.hpp>
+#include <MetaObject/Detail/Counter.hpp>
 #include "SerializationFunctionRegistry.hpp"
 #include <boost/lexical_cast.hpp>
 #include <map>
@@ -35,48 +36,92 @@ namespace Text
 
         // test if stream serialization of a type is possible
         template<class T>
-        struct stream_serializable
-        {
+        struct stream_deserializable{
             template<class U>
-            static constexpr auto check(std::stringstream is, U val, int)->decltype(is >> val, size_t())
-            {
+            static constexpr auto check(std::stringstream is, U val, int)->decltype(is >> val, size_t()){
                 return 0;
             }
             template<class U>
-            static constexpr int check(std::stringstream is, U val, size_t)
-            {
+            static constexpr int check(std::stringstream is, U val, size_t){
                 return 0;
             }
             static const bool value = sizeof(check<T>(std::stringstream(), std::declval<T>(), 0)) == sizeof(size_t);
         };
 
+        template<class T>
+        struct stream_serializable{
+            template<class U>
+            static constexpr auto check(std::stringstream is, U val, int)->decltype(is << val, size_t()){
+                return 0;
+            }
+            template<class U>
+            static constexpr int check(std::stringstream is, U val, size_t){
+                return 0;
+            }
+            static const bool value = sizeof(check<T>(std::stringstream(), std::declval<T>(), 0)) == sizeof(size_t);
+        };
+
+        template<class T1, class T2>
+        struct stream_serializable<std::pair<T1, T2>>{
+            static const bool value = stream_serializable<T1>::value && stream_serializable<T2>::value;
+        };
+
+        template<class T1, class T2>
+        struct stream_deserializable<std::pair<T1, T2>>{
+            static const bool value = stream_deserializable<T1>::value && stream_deserializable<T2>::value;
+        };
 
         template<typename T>
-        auto Serialize_imp(std::ostream& os, T const& obj, int) ->decltype(os << obj, void())
+        bool Serialize_imp(std::ostream& os, T const& obj, mo::_counter_<0> dummy){
+            (void)dummy;
+            return false;
+        }
+
+        template<typename T, int P>
+        bool Serialize_imp(std::ostream& os, T const& obj, mo::_counter_<P> dummy){
+            return Serialize_imp(os, obj, --dummy);
+        }
+
+        template<typename T>
+        bool DeSerialize_imp(std::istream& os, T const& obj, mo::_counter_<0> dummy){
+            (void)dummy;
+            return false;
+        }
+
+        template<typename T, int P>
+        bool DeSerialize_imp(std::istream& os, T const& obj, mo::_counter_<P> dummy){
+            return DeSerialize_imp(os, obj, --dummy);
+        }
+
+        template<typename T>
+        auto Serialize_imp(std::ostream& os, T const& obj, mo::_counter_<10> dummy) ->decltype(os << obj, bool())
         {
             os << obj;
+            return true;
         }
 
-        template<typename T>
-        void Serialize_imp(std::ostream& os, T const& obj, long)
-        {
-
+        template<typename T1, typename T2> typename std::enable_if<stream_serializable<std::pair<T1, T2>>::value, bool>::type Serialize_imp(std::ostream& is, const std::pair<T1, T2>& obj, mo::_counter_<10> dumm7){
+            is << obj.first;
+            is << ',';
+            is << obj.second;
+            return true;
         }
-
         template<typename T>
-        auto DeSerialize_imp(std::istream& is, T& obj, int) ->decltype(is >> obj, void())
+        auto DeSerialize_imp(std::istream& is, T& obj, mo::_counter_<10> dummy) ->decltype(is >> obj, bool())
         {
             is >> obj;
+            return true;
         }
-        template<typename T>
-        void DeSerialize_imp(std::istream& is, T& obj, long)
-        {
-
+        template<typename T1, typename T2> bool DeSerialize_imp(std::istream& is, std::pair<T1, T2>& obj, typename std::enable_if<stream_serializable<std::pair<T1, T2>>::value, mo::_counter_<10> >::type){
+            is >> obj.first;
+            char c;
+            is >> c;
+            is >> obj.second;
+            return true;
         }
 
         template<typename T>
-        auto Serialize_imp(std::ostream& os, std::vector<T> const& obj, int)->decltype(os << std::declval<T>(), void())
-        {
+        auto Serialize_imp(std::ostream& os, std::vector<T> const& obj, mo::_counter_<10> dummy)->decltype(os << std::declval<T>(), bool()){
             os << "size = " << obj.size();
             os << '\n';
 
@@ -104,10 +149,11 @@ namespace Text
                 }
                 os << '\n';
             }
+            return true;
         }
 
         template<typename T>
-        auto DeSerialize_imp(std::istream& is, std::vector<T>& obj, int) ->decltype(is >> std::declval<T>(), void())
+        auto DeSerialize_imp(std::istream& is, std::vector<T>& obj, mo::_counter_<10> dummy) ->decltype(is >> std::declval<T>(), bool())
         {
             std::string str;
             is >> str;
@@ -124,124 +170,126 @@ namespace Text
                     obj.resize(index + 1);
                     obj[index] = value;
                 }
+                return true;
             }
+            return false;
         }
 
         template<class T1, class T2>
-        typename std::enable_if<stream_serializable<T1>::value && stream_serializable<T2>::value >::type
-        DeSerialize_imp(std::istream& is, std::map<T1, T2>& obj, int)
-        {
+        typename std::enable_if<stream_serializable<T1>::value && stream_serializable<T2>::value, bool >::type
+        DeSerialize_imp(std::istream& is, std::map<T1, T2>& obj, mo::_counter_<10> dummy){
+            /*auto start = is.tellg();
+            auto idx = start;
+            char c = is.get();
+            bool found = false;
+            while(is.good()){
+                if(c == '='){
+                    found = true;
+                    break;
+                }
+                idx = is.tellg();
+                c = is.get();
+            }
+            if(!found) return;
+            is.seekg(start);
+            std::stringstream ss;
+            while(is.tellg() != idx)
+                ss << is.get();
+            T1 key;
+            DeSerialize_imp(ss, key, 0);
+            ss.str(std::string());
+            is.get();
+            while(is.good())
+                ss << is.get();
+            T2 value;
+            DeSerialize_imp(ss, value, 0);
+            obj[key] = value;*/
+
             std::string str;
             is >> str;
             auto pos = str.find('=');
             if(pos == std::string::npos)
-                return;
+                return false;
             T1 key;
             T2 value;
             {
                 std::stringstream ss;
                 ss << str.substr(0, pos);
-                ss >> key;
+                DeSerialize_imp(ss, key, mo::_counter_<10>());
             }
             {
                 std::stringstream ss;
                 ss << str.substr(pos + 1);
-                ss >> value;
+                DeSerialize_imp(ss, value, mo::_counter_<10>());
             }
             obj[key] = value;
+            return true;
         }
 
         template<class T1, class T2>
-        typename std::enable_if<stream_serializable<T1>::value && stream_serializable<T2>::value >::type
-        Serialize_imp(std::ostream& os, std::map<T1, T2> const& obj, int)
-        {
+        typename std::enable_if<stream_serializable<T1>::value && stream_serializable<T2>::value, bool >::type
+        Serialize_imp(std::ostream& os, std::map<T1, T2> const& obj, mo::_counter_<10> dummy){
             int count = 0;
-            for(const auto& pair : obj)
-            {
+            for(const auto& pair : obj){
                 if(count != 0)
                     os << ", ";
-                os << pair.first << "=" << pair.second;
+                //os << pair.first << "=" << pair.second;
+                Serialize_imp(os, pair.first, mo::_counter_<10>());
+                os << '=';
+                Serialize_imp(os, pair.second, mo::_counter_<10>());
                 ++count;
             }
+            return true;
         }
 
-
-        template<typename T>
-        bool Serialize(ITypedParameter<T>* param, std::stringstream& ss)
-        {
-            T* ptr = param->GetDataPtr();
-            if (ptr)
-            {
-                Serialize_imp(ss, *ptr, 0);
-                //ss << *ptr;
-                return true;
-            }
-            return false;
-        }
-
-        template<typename T>
-        bool DeSerialize(ITypedParameter<T>* param, std::stringstream& ss)
-        {
-            T* ptr = param->GetDataPtr();
-            if (ptr)
-            {
-                //ss >> *ptr;
-                DeSerialize_imp(ss, *ptr, 0);
-                return true;
-            }
-            return false;
-        }
-        template<typename T> bool Serialize(ITypedParameter<std::vector<T>>* param, std::stringstream& ss)
-        {
-            std::vector<T>* ptr = param->GetDataPtr();
-            if (ptr)
-            {
-                Serialize_imp(ss, *ptr, 0);
-                return true;
-            }
-            return false;
-        }
-        template<typename T> bool DeSerialize(ITypedParameter<std::vector<T>>* param, std::stringstream& ss)
-        {
-            std::vector<T>* ptr = param->GetDataPtr();
-            if (ptr)
-            {
-                auto pos = ss.str().find('=');
-                if(pos != std::string::npos)
-                {
-                    std::string str;
-                    std::getline(ss, str, '=');
-                    size_t index = boost::lexical_cast<size_t>(str);
-                    std::getline(ss, str);
-                    T value = boost::lexical_cast<T>(str);
-                    if(index >= ptr->size())
-                    {
-                        ptr->resize(index + 1);
-                    }
-                    (*ptr)[index] = value;
-                    return true;
-                }else
-                {
-                    ptr->clear();
-                    std::string size;
-                    std::getline(ss, size, '[');
-                    if (size.size())
-                    {
-                        ptr->reserve(boost::lexical_cast<size_t>(size));
-                    }
-                    T value;
-                    char ch; // For flushing the ','
-                    while (ss >> value)
-                    {
-                        ss >> ch;
-                        ptr->push_back(value);
-                    }
+        template<typename T> bool DeSerialize_imp(std::stringstream& ss, std::vector<T>& param, typename std::enable_if<stream_deserializable<T>::value, mo::_counter_<10> >::type dummy){
+            auto pos = ss.str().find('=');
+            if(pos != std::string::npos){
+                std::string str;
+                std::getline(ss, str, '=');
+                size_t index = boost::lexical_cast<size_t>(str);
+                std::getline(ss, str);
+                T value = boost::lexical_cast<T>(str);
+                if(index >= param.size()){
+                    param.resize(index + 1);
                 }
+                param[index] = value;
                 return true;
+            }else{
+                param.clear();
+                std::string size;
+                std::getline(ss, size, '[');
+                if (size.size()){
+                    param.reserve(boost::lexical_cast<size_t>(size));
+                }
+                T value;
+                char ch; // For flushing the ','
+                while (ss >> value){
+                    ss >> ch;
+                    param.push_back(value);
+                }
+            }
+            return true;
+        }
+
+        template<typename T>
+        bool Serialize(ITypedParameter<T>* param, std::stringstream& ss){
+            T* ptr = param->GetDataPtr();
+            if (ptr){
+                return Serialize_imp(ss, *ptr, mo::_counter_<10>());
             }
             return false;
         }
-    }
+
+        template<typename T>
+        bool DeSerialize(ITypedParameter<T>* param, std::stringstream& ss){
+            T* ptr = param->GetDataPtr();
+            if (ptr){
+                return DeSerialize_imp(ss, *ptr, mo::_counter_<10>());
+            }
+            return false;
+        }
+    } // namespace imp
 
 
     template<typename T> bool WrapSerialize(IParameter* param, std::stringstream& ss)
