@@ -20,9 +20,9 @@ template<class Type> struct RccParamTraitsImplShared{
         REQUIRES_GPU_SYNC = 0,
         HAS_TRIVIAL_MOVE = 0
     };
-
+    typedef rcc::shared_ptr<Type> Raw_t;
     typedef rcc::shared_ptr<Type> Storage_t;
-    typedef Type& TypeRef_t;
+    typedef rcc::shared_ptr<Type>& TypeRef_t;
     typedef const Type& ConstTypeRef_t;
     typedef Type* StoragePtr_t;
     typedef const Type* ConstStoragePtr_t;
@@ -54,13 +54,13 @@ template<class Type> struct RccParamTraitsImplShared{
     static void nullify(InputStorage_t& input_storage) {
         input_storage.Reset();
     }
-    static inline Type& get(Storage_t& value){
+    static inline rcc::shared_ptr<Type>& get(Storage_t& value){
         MO_ASSERT(value);
-        return *value.Get();
+        return value;
     }
-    static inline const Type& get(const InputStorage_t& value){
+    static inline const rcc::shared_ptr<const Type>& get(const InputStorage_t& value){
         MO_ASSERT(value);
-        return *value.Get();
+        return value;
     }
 
     static inline Type* ptr(Storage_t& value){
@@ -81,14 +81,14 @@ template<class Type> struct RccParamTraitsImplWeak{
         REQUIRES_GPU_SYNC = 0,
         HAS_TRIVIAL_MOVE = 0
     };
-
-    typedef rcc::shared_ptr<Type> Storage_t;
-    typedef Type& TypeRef_t;
+    typedef rcc::weak_ptr<Type> Raw_t;
+    typedef rcc::weak_ptr<Type> Storage_t;
+    typedef rcc::weak_ptr<Type>& TypeRef_t;
     typedef const Type& ConstTypeRef_t;
     typedef Type* StoragePtr_t;
     typedef const Type* ConstStoragePtr_t;
-    typedef const rcc::shared_ptr<const Type>& ConstStorageRef_t;
-    typedef rcc::shared_ptr<const Type> InputStorage_t;
+    typedef const rcc::weak_ptr<const Type>& ConstStorageRef_t;
+    typedef rcc::weak_ptr<const Type> InputStorage_t;
     typedef const Type* Input_t;
 
 
@@ -115,13 +115,11 @@ template<class Type> struct RccParamTraitsImplWeak{
     static void nullify(InputStorage_t& input_storage) {
         input_storage.Reset();
     }
-    static inline Type& get(Storage_t& value){
-        MO_ASSERT(value);
-        return *value.Get();
+    static inline rcc::weak_ptr<Type>& get(Storage_t& value){
+        return value;
     }
-    static inline const Type& get(const InputStorage_t& value){
-        MO_ASSERT(value);
-        return *value.Get();
+    static inline const rcc::weak_ptr<const Type>& get(const InputStorage_t& value){
+        return value;
     }
 
     static inline Type* ptr(Storage_t& value){
@@ -142,7 +140,7 @@ template<class Type> struct ParamTraitsShared{
         REQUIRES_GPU_SYNC = 0,
         HAS_TRIVIAL_MOVE = 0
     };
-
+    typedef std::shared_ptr<Type> Raw_t;
     typedef std::shared_ptr<Type> Storage_t;
     typedef Type& TypeRef_t;
     typedef const Type& ConstTypeRef_t;

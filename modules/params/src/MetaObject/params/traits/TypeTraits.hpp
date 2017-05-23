@@ -45,7 +45,7 @@ template<class T> struct TraitSelector<T, 0>{
 };
 
 // frontend, access everything through this
-template<class Type> struct ParamTraits: public TraitSelector<Type, 1>::TraitType{
+template<class Type> struct ParamTraits: public TraitSelector<Type, 2>::TraitType{
 };
-    
+
 }

@@ -74,9 +74,9 @@ namespace mo
             ITParam<T>::_typed_update_signal(ParamTraits<T>::copy(*ptr), this, other.getContext(), other.getTimestamp(), other.getFrameNumber(), other.getCoordinateSystem(), mo::ValueUpdated_e);
         return this;
     }
-    
+
     template<typename T>
-    AccessToken<T> TParamPtr<T>::access() { 
+    AccessToken<T> TParamPtr<T>::access() {
         MO_ASSERT(ptr);
         return AccessToken<T>(*this, *ptr);
     }
@@ -94,9 +94,9 @@ namespace mo
         return false;
     }
 
-    
+
     template<typename T>
-    ITParam<T>* TParamPtr<T>::updatePtr(T* ptr, bool ownsData_){
+    ITParam<T>* TParamPtr<T>::updatePtr(Raw_t* ptr, bool ownsData_){
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         this->ptr = ptr;
         this->ownsData = ownsData_;

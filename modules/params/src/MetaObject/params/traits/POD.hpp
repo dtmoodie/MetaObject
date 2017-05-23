@@ -15,7 +15,7 @@ template<class Type> struct ParamTraitsImpl<Type, typename std::enable_if<std::i
         REQUIRES_GPU_SYNC = 0,
         HAS_TRIVIAL_MOVE = 1
     };
-
+    typedef Type Raw_t;
     typedef Type Storage_t;
     typedef Type& TypeRef_t;
     typedef const Type& ConstTypeRef_t;
@@ -63,7 +63,7 @@ template<class Type> struct ParamTraitsImpl<Type, typename std::enable_if<std::i
         REQUIRES_GPU_SYNC = 0,
         HAS_TRIVIAL_MOVE = 1
     };
-
+    typedef Type Raw_t;
     typedef Type Storage_t;
     typedef Type& TypeRef_t;
     typedef const Type& ConstTypeRef_t;

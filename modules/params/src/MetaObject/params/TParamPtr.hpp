@@ -4,14 +4,16 @@
 namespace mo {
 /*! The TParamPtr class is a concrete implementation of ITParam
  *  which implements wrapping of a raw pointer to user data.  This is used
- *  extensively inside of the OUTPUT macro as follows:
+ *  extensively inside of the PARAM macro as follows:
  *
  *  float user_data;
  *  TParamPtr<float> user_param("float_data", &user_data);
- *  user_param.UpdateData(10);
+ *  user_param.updateData(10);
+ *  user_data == 10;
  *
  *  This code snipit creates a user space variable 'user_data'
- *  which is wrapped for reflection purposes by 'user_param'
+ *  which is wrapped for reflection purposes by 'user_param' named 'float_data'.
+ *  Updates to user_param are reflected in user_data
  */
 template<typename T>
 class MO_EXPORTS TParamPtr: virtual public ITAccessibleParam< T > {
@@ -20,6 +22,7 @@ public:
     typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
     typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
     typedef typename ParamTraits<T>::Input_t Input_t;
+    typedef typename ParamTraits<T>::Raw_t Raw_t;
     typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
     typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
     typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
@@ -52,14 +55,18 @@ public:
 
     virtual AccessToken<T> access();
 
-    ITParam<T>* updatePtr(T* ptr, bool ownsData_ = false);
+    ITParam<T>* updatePtr(Raw_t* ptr, bool ownsData_ = false);
 protected:
     virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
-    T* ptr;
+    Raw_t* ptr;
     bool ownsData;
     static MetaParam<T, 100> _meta_Param;
 };
 
+/*!
+ * TParamOutput is used with the OUTPUT macro.  In this case, the param owns the data and the owning parent object
+ * owns a reference to the data which is updated by the param's reset function.
+ */
 template<typename T>
 class MO_EXPORTS TParamOutput: virtual public ITAccessibleParam< T >{
 public:

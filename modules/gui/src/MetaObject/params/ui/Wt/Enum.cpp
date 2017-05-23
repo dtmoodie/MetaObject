@@ -1,16 +1,17 @@
 #ifdef HAVE_WT
 #include <MetaObject/params/ui/Wt/Enum.hpp>
+#include <MetaObject/params/AccessToken.hpp>
 using namespace mo::UI::wt;
 using namespace mo;
 
-TParamProxy<EnumParam, void>::TParamProxy(ITParam<EnumParam>* param_,
+TParamProxy<EnumParam, void>::TParamProxy(ITAccessibleParam<EnumParam>* param_,
     MainApplication* app_,
     WContainerWidget* parent_) :
     IParamProxy(param_, app_, parent_),
     _param(param_)
 {
     _combo_box = new Wt::WComboBox(this);
-    mo::ParamTraits<EnumParam>::Storage_t data;
+    mo::ParamTraits<EnumParam>::InputStorage_t data;
     if(param_->getData(data)){
         for(auto& name : data->enumerations){
             _combo_box->addItem(name);
@@ -31,7 +32,7 @@ void TParamProxy<EnumParam, void>::onParamUpdate(mo::Context* ctx, mo::IParam* p
     auto lock = _app->getUpdateLock();
     _combo_box->clear();
     mo::Mutex_t::scoped_lock param_lock(param->mtx());
-    mo::ParamTraits<EnumParam>::Storage_t data;
+    mo::ParamTraits<EnumParam>::InputStorage_t data;
     if(_param->getData(data)){
         for (auto& name : data->enumerations){
             _combo_box->addItem(name);
@@ -40,19 +41,16 @@ void TParamProxy<EnumParam, void>::onParamUpdate(mo::Context* ctx, mo::IParam* p
     _app->requestUpdate();
 }
 
-void TParamProxy<EnumParam, void>::onUiChanged()
-{
-    mo::Mutex_t::scoped_lock lock(_param->mtx());
-    mo::ParamTraits<mo::EnumParam>::Storage_t data;
-    if(_param->getData(data)){
-        std::vector<std::string>& enums = data->enumerations;
-        for (int i = 0; i < enums.size(); ++i){
-            if (enums[i] == _combo_box->currentText()){
-                data->currentSelection = i;
-                return;
-            }
+void TParamProxy<EnumParam, void>::onUiChanged(){
+    auto token = _param->access();
+    std::vector<std::string>& enums = token().enumerations;
+    for (int i = 0; i < enums.size(); ++i){
+        if (enums[i] == _combo_box->currentText()){
+            token().currentSelection = i;
+            return;
         }
     }
+
 }
 
 #endif

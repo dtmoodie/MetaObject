@@ -70,7 +70,7 @@ public:
 private:
     AccessTokenLock lock;
     ITParam<T>& _param;
-    T& _data;
+    typename ParamTraits<T>::TypeRef_t _data;
     OptionalTime_t ts;
     boost::optional<size_t> fn;
     Context* _ctx = nullptr;
