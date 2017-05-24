@@ -105,9 +105,9 @@ namespace qt
     public:
         Constructor(){
             if(!ParamProxy<T>::IS_DEFAULT)
-                WidgetFactory::Instance()->RegisterConstructor(TypeInfo(typeid(T)), std::bind(&Constructor<T>::Create, std::placeholders::_1));
+                WidgetFactory::Instance()->RegisterConstructor(TypeInfo(typeid(T)), std::bind(&Constructor<T>::create, std::placeholders::_1));
         }
-        static std::shared_ptr<IParamProxy> Create(IParam* param){
+        static std::shared_ptr<IParamProxy> create(IParam* param){
             return std::shared_ptr<IParamProxy>(new ParamProxy<T>(param));
         }
     };

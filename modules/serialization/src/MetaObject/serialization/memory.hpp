@@ -18,7 +18,7 @@ template<class AR, class T> void save(AR& ar, rcc::shared_ptr<T> const & m) {
         ar(make_nvp("TypeName", type));
         return;
     }
-    mo::Serialize(ar, m.Get());
+    mo::Serialize(ar, m.get());
     mo::SetHasBeenSerialized(m->GetObjectId());
 }
 
@@ -26,7 +26,7 @@ template<class AR, class T> void load(AR& ar, rcc::shared_ptr<T> & m) {
     if(m) {
         if (mo::CheckHasBeenSerialized(m->GetObjectId()))
             return;
-        mo::DeSerialize(ar, m.Get());
+        mo::DeSerialize(ar, m.get());
     } else {
         std::string type;
         ObjectId id;
@@ -40,7 +40,7 @@ template<class AR, class T> void load(AR& ar, rcc::shared_ptr<T> & m) {
         }
         if (mo::CheckHasBeenSerialized(m->GetObjectId()))
             return;
-        mo::DeSerialize(ar, m.Get());
+        mo::DeSerialize(ar, m.get());
     }
     mo::SetHasBeenSerialized(m->GetObjectId());
 }

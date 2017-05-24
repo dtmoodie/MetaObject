@@ -79,7 +79,7 @@ namespace mo
     template<class R, class ... T> class TextSlotCaller<R(T...)>: public ISignalCaller
     {
     public:
-        static ISignalCaller* Create(ISlot* slot)
+        static ISignalCaller* create(ISlot* slot)
         {
             auto typed = dynamic_cast<TSlot<R(T...)>*>(slot);
             if(typed)
@@ -108,7 +108,7 @@ namespace mo
     template<class R, class ... T> class TextSlotSink: virtual public ISignalSink, virtual public TSlot<R(T...)>
     {
     public:
-        static ISignalSink* Create(std::shared_ptr<ISignalRelay> relay, std::ostream& stream)
+        static ISignalSink* create(std::shared_ptr<ISignalRelay> relay, std::ostream& stream)
         {
             auto typed = std::dynamic_pointer_cast<TSignalRelay<R(T...)>*>(relay);
             if(typed)

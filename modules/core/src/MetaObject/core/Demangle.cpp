@@ -47,9 +47,9 @@ void Demangle::GetTypeMapBinary(std::ostream& stream) {
     auto& reg = Registry();
     for(auto& itr : reg) {
         if(itr.second.size()) {
-            lut[itr.second] = itr.first.Get().hash_code();
+            lut[itr.second] = itr.first.get().hash_code();
         } else {
-            lut[itr.first.name()] = itr.first.Get().hash_code();
+            lut[itr.first.name()] = itr.first.get().hash_code();
         }
     }
     ar(lut);

@@ -5,8 +5,8 @@
 #include "MetaObject/params/buffers/Map.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/signals/TSignal.hpp"
-#include "MetaObject/detail/Counter.hpp"
-#include "MetaObject/detail/MetaObjectMacros.hpp"
+#include "MetaObject/core/detail/Counter.hpp"
+#include "MetaObject/object/detail/MetaObjectMacros.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
 #include "MetaObject/params/ParamMacros.hpp"
@@ -14,7 +14,7 @@
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/logging/CompileLogger.hpp"
 #include "MetaObject/params/buffers/BufferFactory.hpp"
-#include "MetaObject/detail/Allocator.hpp"
+#include "MetaObject/core/detail/Allocator.hpp"
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
@@ -61,26 +61,26 @@ MO_REGISTER_OBJECT(output_Paramed_object)
 BuildCallback* cb = nullptr;
 BOOST_AUTO_TEST_CASE(input_Param_manual)
 {
-    MetaObjectFactory::instance()->GetObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
+    MetaObjectFactory::instance()->getObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
     cb = new BuildCallback();
-    auto input = input_Paramed_object::Create();
-    auto output = output_Paramed_object::Create();
+    auto input = input_Paramed_object::create();
+    auto output = output_Paramed_object::create();
     input->test_input_param.setInput(&output->test_output_param);
     BOOST_REQUIRE(input->test_input);
     BOOST_REQUIRE_EQUAL(input->test_input, &output->test_output);
-    BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);    
+    BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
 }
 
 
 
 BOOST_AUTO_TEST_CASE(input_Param_programatic)
 {
-    auto input = input_Paramed_object::Create();
+    auto input = input_Paramed_object::create();
     auto input_ = input->getParamOptional("test_input");
 
-    auto output = output_Paramed_object::Create();
+    auto output = output_Paramed_object::create();
     auto output_ = output->getParamOptional("test_output");
-    
+
     BOOST_REQUIRE(input_);
     BOOST_REQUIRE(output_);
     auto input_param = dynamic_cast<InputParam*>(input_);
@@ -93,10 +93,10 @@ BOOST_AUTO_TEST_CASE(input_Param_programatic)
 
 BOOST_AUTO_TEST_CASE(buffered_input)
 {
-    auto input = input_Paramed_object::Create();
+    auto input = input_Paramed_object::create();
     auto input_ = input->getParamOptional("test_input");
 
-    auto output = output_Paramed_object::Create();
+    auto output = output_Paramed_object::create();
     auto output_ = output->getParamOptional("test_output");
 
     BOOST_REQUIRE(input_);
@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(buffered_input)
     for(int i = 1; i < 100000; ++i)
     {
         output->test_output_param.updateData(i*10, mo::Time_t(i * mo::ms));
-        int data;
+        boost::optional<int> data;
         BOOST_REQUIRE(input->test_input_param.getData(data, mo::Time_t((i-1) * mo::ms)));
         BOOST_REQUIRE_EQUAL(data, (i-1)*10);
     }
@@ -118,10 +118,10 @@ BOOST_AUTO_TEST_CASE(buffered_input)
 
 BOOST_AUTO_TEST_CASE(threaded_buffered_input)
 {
-    auto input = input_Paramed_object::Create();
+    auto input = input_Paramed_object::create();
     auto input_ = input->getParamOptional("test_input");
 
-    auto output = output_Paramed_object::Create();
+    auto output = output_Paramed_object::create();
     auto output_ = output->getParamOptional("test_output");
 
     BOOST_REQUIRE(input_);
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
     [&quit,&input]()
     {
         mo::Time_t ts = mo::Time_t(0 * mo::ms);
-        int data;
+        boost::optional<int> data;
         while(!quit)
         {
             if(input->test_input_param.getData(data, ts))
@@ -158,12 +158,12 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
 
 BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
 {
-    mo::Context ctx;
-    auto input = input_Paramed_object::Create();
+    std::unique_ptr<mo::Context> ctx(mo::Context::create());
+    auto input = input_Paramed_object::create();
     auto input_ = input->getParamOptional("test_input");
 
-    auto output = output_Paramed_object::Create();
-    output->setContext(&ctx);
+    auto output = output_Paramed_object::create();
+    output->setContext(ctx.get());
     auto output_ = output->getParamOptional("test_output");
 
     BOOST_REQUIRE(input_);
@@ -179,10 +179,11 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
     boost::thread background_thread(
         [&input, &started, &count]()
     {
-        mo::Context _ctx;
-        input->setContext(&_ctx);
+        ///mo::Context _ctx;
+        std::unique_ptr<mo::Context> _ctx(mo::Context::create());
+        input->setContext(_ctx.get());
         started = true;
-        int data;
+        boost::optional<int> data;
         for(int i = 0; i < 1000; ++i)
         {
             bool good = input->test_input_param.getData(data, mo::Time_t(i*mo::ms));

@@ -165,11 +165,11 @@ void initOutputs(){\
     _init_outputs(mo::_counter_<N_ - 1>()); \
     _init_parent_outputs(); \
 } \
-template<class T> void loadParams(T& ar){ \
+template<class T> void load(T& ar){ \
     _load_params<T>(ar, mo::_counter_<N_ -1>()); \
     _load_parent<T>(ar); \
 } \
-template<class T> void saveParams(T& ar) const{ \
+template<class T> void save(T& ar) const{ \
     _save_params<T>(ar, mo::_counter_<N_ -1>()); \
     _save_parent<T>(ar); \
 }
@@ -202,10 +202,10 @@ void _serialize_parent_params(ISimpleSerializer* pSerializer){ \
     PARENT1::serializeParams(pSerializer); \
 } \
 template<class T> void _load_parent(T& ar){ \
-    PARENT1::loadParams(ar); \
+    PARENT1::load(ar); \
 } \
 template<class T> void _save_parent(T& ar) const{ \
-   PARENT1::saveParams(ar); \
+   PARENT1::save(ar); \
 } \
 void _bind_parent_slots(bool firstInit){ \
     PARENT1::bindSlots(firstInit); \
@@ -237,12 +237,12 @@ void _serialize_parent_params(ISimpleSerializer* pSerializer){ \
     PARENT2::serializeParams(pSerializer); \
 } \
 template<class T> void _load_parent(T& ar){ \
-    PARENT1::loadParams(ar); \
-    PARENT2::loadParams(ar); \
+    PARENT1::load(ar); \
+    PARENT2::load(ar); \
 } \
 template<class T> void _save_parent(T& ar) const{ \
-   PARENT1::saveParams(ar); \
-   PARENT2::saveParams(ar); \
+   PARENT1::save(ar); \
+   PARENT2::save(ar); \
 } \
 void _bind_parent_slots(bool firstInit){ \
     PARENT1::bindSlots(firstInit); \

@@ -65,11 +65,11 @@ template<class Type> struct RccParamTraitsImplShared{
 
     static inline Type* ptr(Storage_t& value){
         MO_ASSERT(value);
-        return value.Get();
+        return value.get();
     }
     static inline const Type* ptr(const InputStorage_t& value){
         MO_ASSERT(value);
-        return value.Get();
+        return value.get();
     }
 }; // RccParamTraitsImplShared
 
@@ -124,11 +124,11 @@ template<class Type> struct RccParamTraitsImplWeak{
 
     static inline Type* ptr(Storage_t& value){
         MO_ASSERT(value);
-        return value.Get();
+        return value.get();
     }
     static inline const Type* ptr(const InputStorage_t& value){
         MO_ASSERT(value);
-        return value.Get();
+        return value.get();
     }
 }; // RccParamTraitsImplWeak
 
@@ -176,20 +176,20 @@ template<class Type> struct ParamTraitsShared{
     }
     static inline Type& get(Storage_t& value){
         MO_ASSERT(value);
-        return *value.Get();
+        return *value.get();
     }
     static inline const Type& get(const InputStorage_t& value){
         MO_ASSERT(value);
-        return *value.Get();
+        return *value.get();
     }
 
     static inline Type* ptr(Storage_t& value){
         MO_ASSERT(value);
-        return value.Get();
+        return value.get();
     }
     static inline const Type* ptr(const InputStorage_t& value){
         MO_ASSERT(value);
-        return value.Get();
+        return value.get();
     }
 };
 

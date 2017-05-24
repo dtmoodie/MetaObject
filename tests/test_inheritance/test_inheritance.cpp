@@ -1,6 +1,6 @@
 #define BOOST_TEST_MAIN
 #include "MetaObject/object/IMetaObject.hpp"
-#include "MetaObject/detail/MetaObjectMacros.hpp"
+#include "MetaObject/object/detail/MetaObjectMacros.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
 
@@ -108,8 +108,8 @@ BOOST_AUTO_TEST_CASE(initialize)
 
 BOOST_AUTO_TEST_CASE(object_print)
 {
-    auto info = mo::MetaObjectFactory::instance()->GetObjectInfo("derived_signals");
-    info->Print();
+    auto info = mo::MetaObjectFactory::instance()->getObjectInfo("derived_signals");
+    info->print();
 }
 
 BOOST_AUTO_TEST_CASE(Param_static)
@@ -142,7 +142,7 @@ BOOST_AUTO_TEST_CASE(slots_static)
 
 BOOST_AUTO_TEST_CASE(Param_dynamic)
 {
-    auto derived_obj = derived_Param::Create();
+    auto derived_obj = derived_Param::create();
     BOOST_REQUIRE_EQUAL(derived_obj->base_param, 5);
     BOOST_REQUIRE_EQUAL(derived_obj->derived_param, 10);
     derived_obj->base_param = 10;
@@ -155,7 +155,7 @@ BOOST_AUTO_TEST_CASE(Param_dynamic)
 
 BOOST_AUTO_TEST_CASE(call_base_slot)
 {
-    auto derived_obj = derived_signals::Create();
+    auto derived_obj = derived_signals::create();
     TSignal<void(int)> sig;
     derived_obj->ConnectByName("base_slot", &sig);
     BOOST_REQUIRE_EQUAL(derived_obj->base_count, 0);
@@ -165,7 +165,7 @@ BOOST_AUTO_TEST_CASE(call_base_slot)
 
 BOOST_AUTO_TEST_CASE(call_derived_slot)
 {
-    auto derived_obj = derived_signals::Create();
+    auto derived_obj = derived_signals::create();
     TSignal<void(int)> sig;
     derived_obj->ConnectByName("derived_slot", &sig);
     BOOST_REQUIRE_EQUAL(derived_obj->derived_count, 0);
@@ -175,7 +175,7 @@ BOOST_AUTO_TEST_CASE(call_derived_slot)
 
 BOOST_AUTO_TEST_CASE(call_overloaded_slot)
 {
-    auto derived_obj = derived_signals::Create();
+    auto derived_obj = derived_signals::create();
     TSignal<void(int)> sig;
     derived_obj->ConnectByName("override_slot", &sig);
     BOOST_REQUIRE_EQUAL(derived_obj->derived_count, 0);
@@ -192,11 +192,11 @@ BOOST_AUTO_TEST_CASE(interface_id_check)
 
 BOOST_AUTO_TEST_CASE(diamond)
 {
-    //auto obj = rcc::shared_ptr<multi_derive>::Create();
+    //auto obj = rcc::shared_ptr<multi_derive>::create();
     auto constructor = mo::MetaObjectFactory::instance()->getConstructor("multi_derive");
     BOOST_REQUIRE(constructor);
     auto info = constructor->GetObjectInfo();
-    std::cout << info->Print();
+    std::cout << info->print();
     //auto meta_info = dynamic_cast<MetaObjectInfo*>(info);
     //BOOST_REQUIRE(meta_info);
 

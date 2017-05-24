@@ -37,7 +37,7 @@ public:
     TypeInfo(const std::type_info&); // non-explicit
 
     // Access for the wrapped std::type_info
-    const std::type_info& Get() const;
+    const std::type_info& get() const;
     // Compatibility functions
     bool before(const TypeInfo& rhs) const;
     std::string name() const;
@@ -65,7 +65,7 @@ inline bool TypeInfo::before(const TypeInfo& rhs) const {
     return pInfo_->before(*rhs.pInfo_) != 0;
 }
 
-inline const std::type_info& TypeInfo::Get() const {
+inline const std::type_info& TypeInfo::get() const {
     assert(pInfo_);
     return *pInfo_;
 }
@@ -92,7 +92,7 @@ inline std::string TypeInfo::name() const {
 inline bool operator==(const TypeInfo& lhs, const TypeInfo& rhs)
 // type_info::operator== return type is int in some VC libraries
 {
-    return (lhs.Get() == rhs.Get()) != 0;
+    return (lhs.get() == rhs.get()) != 0;
 }
 
 inline bool operator<(const TypeInfo& lhs, const TypeInfo& rhs) {

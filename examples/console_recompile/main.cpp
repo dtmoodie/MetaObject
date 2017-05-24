@@ -28,13 +28,13 @@ int main()
         obj->print();
 
 
-        if (factory->CheckCompile())
+        if (factory->checkCompile())
         {
             recompiling = true;
         }
         if (recompiling)
         {
-            if (factory->SwapObjects())
+            if (factory->swapObjects())
             {
                 recompiling = false;
             }

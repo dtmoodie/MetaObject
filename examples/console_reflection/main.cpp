@@ -23,11 +23,11 @@ int main()
             interface_info->PrintHelp();
         }
         // Print reflection info
-        std::cout <<  info->Print() << std::endl;
+        std::cout <<  info->print() << std::endl;
     }
 
     // Construct an object
-    mo::IMetaObject* obj = factory->Create("ConcreteImplementation");
+    mo::IMetaObject* obj = factory->create("ConcreteImplementation");
     if(ExampleInterface* interface_object = dynamic_cast<ExampleInterface*>(obj))
     {
         interface_object->foo();

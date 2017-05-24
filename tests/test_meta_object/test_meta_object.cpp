@@ -3,10 +3,10 @@
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
-#include "MetaObject/signals/RelayManager.hpp"
+#include "MetaObject/object/RelayManager.hpp"
 #include "MetaObject/signals/TSignal.hpp"
-#include "MetaObject/detail/Counter.hpp"
-#include "MetaObject/detail/MetaObjectMacros.hpp"
+#include "MetaObject/core/detail/Counter.hpp"
+#include "MetaObject/object/detail/MetaObjectMacros.hpp"
 #include "MetaObject/params//ParamMacros.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/TInputParam.hpp"
@@ -111,19 +111,19 @@ MO_REGISTER_OBJECT(test_meta_object_input)
 BOOST_AUTO_TEST_CASE(test_meta_object_static_introspection_global)
 {
     MetaObjectFactory::instance()->registerTranslationUnit();
-    auto info = MetaObjectInfoDatabase::Instance()->GetMetaObjectInfo();
+    auto info = MetaObjectInfoDatabase::instance()->getMetaObjectInfo();
     BOOST_REQUIRE(info.size());
     for (auto& item : info)
     {
-        std::cout << item->Print() << std::endl;
+        std::cout << item->print() << std::endl;
     }
 }
 
 BOOST_AUTO_TEST_CASE(test_meta_object_static_introspection_specific)
 {
-    auto info = MetaObjectInfoDatabase::Instance()->GetMetaObjectInfo("test_meta_object_signals");
+    auto info = MetaObjectInfoDatabase::instance()->getMetaObjectInfo("test_meta_object_signals");
     BOOST_REQUIRE(info);
-    std::cout << info->Print() << std::endl;
+    std::cout << info->print() << std::endl;
 }
 
 

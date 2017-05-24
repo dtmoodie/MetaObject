@@ -3,8 +3,8 @@
 #include "MetaObject/signals/detail/SlotMacros.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/signals/TSignal.hpp"
-#include "MetaObject/detail/Counter.hpp"
-#include "MetaObject/detail/MetaObjectMacros.hpp"
+#include "MetaObject/core/detail/Counter.hpp"
+#include "MetaObject/object/detail/MetaObjectMacros.hpp"
 #include "MetaObject/params/ParamMacros.hpp"
 
 #include "MetaObject/params/TParamPtr.hpp"

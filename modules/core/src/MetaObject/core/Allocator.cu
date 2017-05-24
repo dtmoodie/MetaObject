@@ -1,5 +1,5 @@
 /*
-#include "MetaObject/detail/Allocator.hpp"
+#include "MetaObject/core/detail/Allocator.hpp"
 #include "MetaObject/detail/AllocatorImpl.hpp"
 #include <opencv2/core/cuda/utility.hpp>
 

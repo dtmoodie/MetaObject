@@ -113,7 +113,7 @@ void IMetaObject::Init(bool firstInit) {
                 }
                 auto input = this->getInput(param_connection.input_param);
                 if (input) {
-                    if(this->connectInput(input, obj.Get(), output, param_connection.connection_type)) {
+                    if(this->connectInput(input, obj.get(), output, param_connection.connection_type)) {
                         LOG(debug) << "ReConnected " << GetTypeName() << ":" << param_connection.input_param
                                    << " to " << obj->GetTypeName() << ":" << param_connection.output_param;
                     } else {

@@ -11,7 +11,7 @@ namespace mo
 	public:
 		static RelayFactory* Instance();
 		void RegisterCreator(std::function<ISignalRelay*(void)> f, const TypeInfo& type);
-		ISignalRelay* Create(const TypeInfo& type);
+		ISignalRelay* create(const TypeInfo& type);
 	private:
 		RelayFactory();
 		~RelayFactory();

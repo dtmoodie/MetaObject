@@ -1,9 +1,9 @@
 #define BOOST_TEST_MAIN
 #include "MetaObject/object/IMetaObject.hpp"
-#include "MetaObject/detail/IMetaObjectImpl.hpp"
+#include "MetaObject/object/detail/IMetaObjectImpl.hpp"
 #include "MetaObject/signals/TSignal.hpp"
-#include "MetaObject/detail/Counter.hpp"
-#include "MetaObject/detail/MetaObjectMacros.hpp"
+#include "MetaObject/core/detail/Counter.hpp"
+#include "MetaObject/object/detail/MetaObjectMacros.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
 #include "MetaObject/params/ParamMacros.hpp"
@@ -13,7 +13,7 @@
 #include "MetaObject/params/buffers/BufferFactory.hpp"
 #include "MetaObject/params/buffers/IBuffer.hpp"
 #include "MetaObject/thread/ThreadPool.hpp"
-#include "MetaObject/detail/Allocator.hpp"
+#include "MetaObject/core/detail/Allocator.hpp"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include <boost/any.hpp>
@@ -82,7 +82,7 @@ T* end(T(&ptr)[sz]) {
 struct GlobalFixture{
     ~GlobalFixture(){
         mo::ThreadPool::Instance()->Cleanup();
-        mo::ThreadSpecificQueue::Cleanup();
+        mo::ThreadSpecificQueue::cleanup();
         mo::Allocator::cleanupThreadSpecificAllocator();
     }
 };
@@ -91,8 +91,8 @@ struct BufferFixture{
     BufferFixture(){
         output_param.updatePtr(&output);
         input_param.setUserDataPtr(&input);
-        output_param.setContext(mo::Context::GetDefaultThreadContext());
-        input_param.setContext(mo::Context::GetDefaultThreadContext());
+        output_param.setContext(mo::Context::getDefaultThreadContext());
+        input_param.setContext(mo::Context::getDefaultThreadContext());
     }
     mo::TParamPtr<int> output_param;
     int output;
@@ -125,9 +125,9 @@ BOOST_AUTO_PARAM_TEST_CASE(buffer_test, buffer_test_cases, end(buffer_test_cases
             output_param.updateData(i, mo::tag::_timestamp = mo::Time_t(i * mo::ms));
         }
         for (auto itr = process_queue.begin(); itr != process_queue.end();) {
-            int data;
+            boost::optional<int> data;
             BOOST_REQUIRE(input_param.getData(data, *itr));
-            BOOST_REQUIRE_EQUAL(mo::Time_t(data * mo::ms), *itr);
+            BOOST_REQUIRE_EQUAL(mo::Time_t(*data * mo::ms), *itr);
             itr = process_queue.erase(itr);
         }
     }
@@ -138,9 +138,9 @@ BOOST_AUTO_PARAM_TEST_CASE(buffer_test, buffer_test_cases, end(buffer_test_cases
             output_param.emitUpdate(mo::OptionalTime_t(i * mo::ms));
         }
         for (auto itr = process_queue.begin(); itr != process_queue.end();) {
-            int data;
+            boost::optional<int> data;
             BOOST_REQUIRE(input_param.getData(data, *itr));
-            BOOST_REQUIRE_EQUAL(mo::Time_t((data / 2) * mo::ms), *itr);
+            BOOST_REQUIRE_EQUAL(mo::Time_t((*data / 2) * mo::ms), *itr);
             itr = process_queue.erase(itr);
         }
     }

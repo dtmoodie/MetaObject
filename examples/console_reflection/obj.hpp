@@ -40,7 +40,7 @@ class ExampleInterface: public TInterface<ExampleInterface, mo::IMetaObject>
 {
 public:
     /*!
-     * \brief InterfaceInfo typedef allows for the MetaObjectInfo templated class in MetaObject/MetaObjectInfo.hpp
+     * \brief InterfaceInfo typedef allows for the MetaObjectInfo templated class in MetaObject/object/MetaObjectInfo.hpp
      *        to detect the correct object info interface to inherit from
      */
     typedef ExampleInterfaceInfo InterfaceInfo;

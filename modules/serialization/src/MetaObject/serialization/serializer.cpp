@@ -122,7 +122,7 @@ void SerializerFactory::Serialize(const rcc::shared_ptr<IMetaObject>& obj, std::
         auto func_itr = _binary_serialization_functions.find(obj->GetTypeName());
         if (func_itr != _binary_serialization_functions.end())
         {
-            func_itr->second(obj.Get(), ar);
+            func_itr->second(obj.get(), ar);
         }
     }else if(type == xml_e)
     {
@@ -132,7 +132,7 @@ void SerializerFactory::Serialize(const rcc::shared_ptr<IMetaObject>& obj, std::
         auto func_itr = _xml_serialization_functions.find(obj->GetTypeName());
         if (func_itr != _xml_serialization_functions.end())
         {
-            func_itr->second(obj.Get(), ar);
+            func_itr->second(obj.get(), ar);
         }
     }
 }

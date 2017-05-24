@@ -30,7 +30,7 @@ void RelayFactory::RegisterCreator(std::function<ISignalRelay*(void)> f, const T
 	_pimpl->factories[type] = f;
 }
 
-ISignalRelay* RelayFactory::Create(const TypeInfo& type)
+ISignalRelay* RelayFactory::create(const TypeInfo& type)
 {
 	auto itr = _pimpl->factories.find(type);
 	if (itr != _pimpl->factories.end())

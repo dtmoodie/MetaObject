@@ -72,7 +72,7 @@ IMetaObject* MetaObjectFactory::get(ObjectId id, const char* type_name)
     _pimpl->obj_system.GetObjectFactorySystem()->GetAll(constructors);
     if(id.m_ConstructorId < constructors.Size() && id.m_ConstructorId >= 0)
     {
-        if(strcmp(constructors[id.m_ConstructorId]->getName(), type_name) == 0)
+        if(strcmp(constructors[id.m_ConstructorId]->GetName(), type_name) == 0)
         {
             IObject* obj = constructors[id.m_ConstructorId]->GetConstructedObject(id.m_PerTypeId);
             if (obj)
@@ -85,11 +85,11 @@ IMetaObject* MetaObjectFactory::get(ObjectId id, const char* type_name)
             }
         }else
         {
-            LOG(debug) << "Requested type \"" << type_name << "\" does not match constructor type \"" << constructors[id.m_ConstructorId]->getName() << "\" for given ID";
+            LOG(debug) << "Requested type \"" << type_name << "\" does not match constructor type \"" << constructors[id.m_ConstructorId]->GetName() << "\" for given ID";
             std::string str_type_name(type_name);
             for(int i = 0; i < constructors.Size(); ++i)
             {
-                if(std::string(constructors[i]->getName()) == str_type_name)
+                if(std::string(constructors[i]->GetName()) == str_type_name)
                 {
                     IObject* obj = constructors[i]->GetConstructedObject(id.m_PerTypeId);
                     if(obj)
@@ -115,10 +115,10 @@ std::vector<std::string> MetaObjectFactory::listConstructableObjects(int interfa
     for(int i = 0; i < constructors.Size(); ++i)
     {
         if(interface_id == -1)
-            output.emplace_back(constructors[i]->getName());
+            output.emplace_back(constructors[i]->GetName());
         else
             if(constructors[i]->GetInterfaceId() == interface_id)
-                output.emplace_back(constructors[i]->getName());
+                output.emplace_back(constructors[i]->GetName());
     }
     return output;
 }

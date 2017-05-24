@@ -1,6 +1,6 @@
 #define BOOST_TEST_MAIN
-#include "MetaObject/detail/Allocator.hpp"
-#include "MetaObject/detail/AllocatorImpl.hpp"
+#include "MetaObject/core/detail/Allocator.hpp"
+#include "MetaObject/core/detail/AllocatorImpl.hpp"
 #include "MetaObject/logging/Profiling.hpp"
 
 #include <boost/log/core.hpp>
@@ -26,14 +26,14 @@ using namespace mo;
 BOOST_AUTO_TEST_CASE(initialize_thread)
 {
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::warning);
-    BOOST_REQUIRE(mo::Allocator::GetThreadSpecificAllocator());
+    BOOST_REQUIRE(mo::Allocator::getThreadSpecificAllocator());
     mo::InitLogging();
-    mo::InitProfiling();
+    mo::initProfiling();
 }
 
 BOOST_AUTO_TEST_CASE(initialize_global)
 {
-    BOOST_REQUIRE(mo::Allocator::GetThreadSafeAllocator());
+    BOOST_REQUIRE(mo::Allocator::getThreadSafeAllocator());
 }
 
 DEFINE_HAS_STATIC_FUNCTION(HasGpuDefaultAllocator, setDefaultThreadAllocator, void(*)(cv::cuda::GpuMat::Allocator*));
@@ -42,13 +42,13 @@ DEFINE_HAS_STATIC_FUNCTION(HasCpuDefaultAllocator, setDefaultThreadAllocator, vo
 BOOST_AUTO_TEST_CASE(test_cpu_set_allocator)
 {
     BOOST_REQUIRE(HasCpuDefaultAllocator<cv::Mat>::value);
-    BOOST_REQUIRE(mo::CpuThreadAllocatorSetter<cv::Mat>::Set(mo::Allocator::GetThreadSafeAllocator()));
+    BOOST_REQUIRE(mo::CpuThreadAllocatorSetter<cv::Mat>::Set(mo::Allocator::getThreadSafeAllocator()));
 }
 
 BOOST_AUTO_TEST_CASE(test_gpu_set_allocator)
 {
     BOOST_REQUIRE(HasGpuDefaultAllocator<cv::cuda::GpuMat>::value);
-    BOOST_REQUIRE(mo::GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(mo::Allocator::GetThreadSafeAllocator()));
+    BOOST_REQUIRE(mo::GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(mo::Allocator::getThreadSafeAllocator()));
 }
 
 BOOST_AUTO_TEST_CASE(test_cpu_pooled_allocation)
@@ -187,7 +187,7 @@ BOOST_AUTO_TEST_CASE(test_cpu_stack_allocation)
 }
 BOOST_AUTO_TEST_CASE(test_cpu_combined_allocation)
 {
-    cv::Mat::setDefaultAllocator(mo::Allocator::GetThreadSpecificAllocator());
+    cv::Mat::setDefaultAllocator(mo::Allocator::getThreadSpecificAllocator());
     auto start = boost::posix_time::microsec_clock::local_time();
     for (int i = 0; i < 1000; ++i)
     {
@@ -208,7 +208,7 @@ BOOST_AUTO_TEST_CASE(test_cpu_combined_allocation)
     end = boost::posix_time::microsec_clock::local_time();
     double set_size = boost::posix_time::time_duration(end - start).total_milliseconds();
 
-    cv::Mat::setDefaultAllocator(mo::Allocator::GetThreadSafeAllocator());
+    cv::Mat::setDefaultAllocator(mo::Allocator::getThreadSafeAllocator());
     start = boost::posix_time::microsec_clock::local_time();
     for (int i = 0; i < 1000; ++i)
     {
@@ -293,9 +293,9 @@ BOOST_AUTO_TEST_CASE(test_gpu_random_allocation_pattern)
         << " Default Allocator: " << default_allocator << "\n"
         << " Pool Allocator:    " << pool_allocator << "\n";
 
-    poolAllocator.Release();
+    poolAllocator.release();
     cv::cuda::GpuMat::setDefaultAllocator(defaultAllocator);
-    //Allocator::GetThreadSpecificAllocator()->Release();
+    //Allocator::getThreadSpecificAllocator()->Release();
 }
 
 
@@ -355,8 +355,8 @@ BOOST_AUTO_TEST_CASE(test_gpu_static_allocation_pattern)
         << " Default Allocator: " << default_allocator << "\n"
         << " Pool Allocator:    " << pool_allocator << "\n";
 
-    poolAllocator.Release();
-    Allocator::GetThreadSpecificAllocator()->Release();
+    poolAllocator.release();
+    Allocator::getThreadSpecificAllocator()->release();
     cv::cuda::GpuMat::setDefaultAllocator(defaultAllocator);
 }
 

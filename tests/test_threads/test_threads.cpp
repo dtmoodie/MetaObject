@@ -14,10 +14,10 @@ int main()
     {
         mo::ThreadHandle handle = mo::ThreadPool::Instance()->RequestThread();
         mo::ThreadHandle handle2 = handle;
-        auto Connection = handle.setInnerLoop(&inner_loop);
-        handle.Start();
+        auto connection = handle.setInnerLoop(&inner_loop);
+        handle.start();
         boost::this_thread::sleep_for(boost::chrono::seconds(10));
-        handle.Stop();
+        handle.stop();
     }
     boost::this_thread::sleep_for(boost::chrono::seconds(10));
     mo::ThreadPool::Instance()->Cleanup();

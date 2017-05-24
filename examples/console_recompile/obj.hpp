@@ -1,6 +1,6 @@
 #pragma once
 #include "MetaObject/object/IMetaObject.hpp"
-#include "MetaObject/detail/MetaObjectMacros.hpp"
+#include "MetaObject/object/detail/MetaObjectMacros.hpp"
 
 struct printable: public mo::IMetaObject
 {

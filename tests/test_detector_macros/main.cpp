@@ -8,7 +8,7 @@
 #endif
 #include <boost/thread.hpp>
 #include <iostream>
-#include <MetaObject/detail/HelperMacros.hpp>
+#include <MetaObject/core/detail/HelperMacros.hpp>
 
 
 struct object_with_members

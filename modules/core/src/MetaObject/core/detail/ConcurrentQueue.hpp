@@ -2400,7 +2400,7 @@ private:
         bool new_block_index(size_t numberOfFilledSlotsToExpose) {
             auto prevBlockSizeMask = pr_blockIndexSize - 1;
 
-            // Create the new block
+            // create the new block
             pr_blockIndexSize <<= 1;
             auto newRawPtr = static_cast<char*>((Traits::malloc)(sizeof(BlockIndexHeader) + std::alignment_of<BlockIndexEntry>::value - 1 + sizeof(BlockIndexEntry) * pr_blockIndexSize));
             if (newRawPtr == nullptr) {
