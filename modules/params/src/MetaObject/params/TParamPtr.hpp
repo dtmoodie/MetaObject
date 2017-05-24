@@ -99,6 +99,10 @@ public:
     T& reset(Args... args){
         return ParamTraits<T>::reset(data, std::forward<Args>(args)...);
     }
+    T& reset(ConstStorageRef_t value){
+        return ParamTraits<T>::reset(data, value);
+    }
+
 protected:
     virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
 private:

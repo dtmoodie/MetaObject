@@ -134,12 +134,12 @@ void _init_params(bool firstInit, mo::_counter_<N> dummy){ \
     name##_param.updatePtr(&name); \
     name##_param.setContext(_ctx); \
     name##_param.setName(#name); \
-    name##_param.setFlags(mo::ParamType::State_e); \
+    name##_param.setFlags(mo::ParamFlags::State_e); \
     addParam(&name##_param); \
     _init_params(firstInit, --dummy); \
 } \
 static void _list_param_info(std::vector<mo::ParamInfo*>& info, mo::_counter_<N> dummy){ \
-    static mo::ParamInfo s_info(mo::TypeInfo(typeid(mo::argument_type<void(type_)>::type)), #name, "", "", mo::ParamType::State_e); \
+    static mo::ParamInfo s_info(mo::TypeInfo(typeid(mo::argument_type<void(type_)>::type)), #name, "", "", mo::ParamFlags::State_e); \
     info.push_back(&s_info); \
     _list_param_info(info, --dummy); \
 } \

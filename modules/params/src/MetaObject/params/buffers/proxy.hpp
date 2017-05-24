@@ -68,7 +68,7 @@ namespace mo
                     auto time = _input_Param->GetTimeIndex();
                     if (auto data = _input_Param->Data(time))
                     {
-                        _buffer->UpdateData(data, time, stream);
+                        _buffer->updateData(data, time, stream);
                     }
                 }
             }
@@ -80,13 +80,13 @@ namespace mo
             {
                 return _buffer->GetData(value, time_index);
             }
-            virtual void UpdateData(T& data_, mo::Time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
+            virtual void updateData(T& data_, mo::Time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
             {
             }
-            virtual void UpdateData(const T& data_, mo::Time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
+            virtual void updateData(const T& data_, mo::Time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
             {    
             }
-            virtual void UpdateData(T* data_, mo::Time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
+            virtual void updateData(T* data_, mo::Time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
             {
             }
 
@@ -98,9 +98,9 @@ namespace mo
             {
                 dynamic_cast<IBuffer*>(_buffer.get())->SetSize(size);
             }
-            virtual mo::Time_t GetSize()
+            virtual mo::Time_t getSize()
             {
-                return dynamic_cast<IBuffer*>(_buffer.get())->GetSize();
+                return dynamic_cast<IBuffer*>(_buffer.get())->getSize();
             }
             virtual void getTimestampRange(mo::Time_t& start, mo::Time_t& end)
             {

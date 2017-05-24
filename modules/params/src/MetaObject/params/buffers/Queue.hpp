@@ -31,15 +31,15 @@ namespace mo
                                  Context* ctx = nullptr, size_t* fn = nullptr);
             bool GetData(T& value, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts = nullptr);
 
-            ITParam<T>* UpdateData(T& data_, mo::Time_t ts = -1 * mo::second, Context* ctx = nullptr);
-            ITParam<T>* UpdateData(const T& data_, mo::Time_t ts = -1 * mo::second, Context* ctx = nullptr);
-            ITParam<T>* UpdateData(T* data_, mo::Time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            ITParam<T>* updateData(T& data_, mo::Time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            ITParam<T>* updateData(const T& data_, mo::Time_t ts = -1 * mo::second, Context* ctx = nullptr);
+            ITParam<T>* updateData(T* data_, mo::Time_t ts = -1 * mo::second, Context* ctx = nullptr);
 
             bool Update(IParam* other, Context* ctx = nullptr);
             std::shared_ptr<IParam> DeepCopy() const;
 
             void SetSize(long long size);
-            long long GetSize();
+            long long getSize();
             void getTimestampRange(mo::Time_t& start, mo::Time_t& end);
             virtual ParamType getBufferType() const{ return Queue_e;}
         protected:

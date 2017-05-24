@@ -29,19 +29,19 @@ T Queue<T>::GetData(mo::Time_t ts, Context* ctx)
 }
 
 template<class T>
-ITParam<T>* Queue<T>::UpdateData(T& data_, mo::Time_t ts, Context* ctx)
+ITParam<T>* Queue<T>::updateData(T& data_, mo::Time_t ts, Context* ctx)
 {
 
 }
 
 template<class T>
-ITParam<T>* UpdateData(const T& data_, mo::Time_t ts, Context* ctx)
+ITParam<T>* updateData(const T& data_, mo::Time_t ts, Context* ctx)
 {
 
 }
 
 template<class T>
-ITParam<T>* UpdateData(T* data_, mo::Time_t ts, Context* ctx)
+ITParam<T>* updateData(T* data_, mo::Time_t ts, Context* ctx)
 {
 
 }
@@ -64,7 +64,7 @@ void SetSize(long long size)
 }
 
 template<class T>
-long long GetSize()
+long long getSize()
 {
 
 }

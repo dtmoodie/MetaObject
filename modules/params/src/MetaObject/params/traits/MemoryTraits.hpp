@@ -41,7 +41,7 @@ template<class Type> struct RccParamTraitsImplShared{
     }
 
     template<class...Args>
-    static Type& reset(Storage_t& input_storage, Args...args) {
+    static rcc::shared_ptr<Type>& reset(Storage_t& input_storage, Args...args) {
         input_storage = Storage_t(std::forward<Args...>(args)...);
         return get(input_storage);
     }
@@ -102,8 +102,15 @@ template<class Type> struct RccParamTraitsImplWeak{
     }
 
     template<class...Args>
-    static Type& reset(Storage_t& input_storage, Args...args) {
+    static rcc::weak_ptr<Type>& reset(Storage_t& input_storage, Args...args) {
         input_storage = Storage_t(std::forward<Args...>(args)...);
+        return get(input_storage);
+    }
+
+    // TODO figure out deep copy of polymorphic type, likely with ISimpleSerializer
+    template<class...Args>
+    static rcc::weak_ptr<Type>& reset(Storage_t& input_storage, ConstStorageRef_t args) {
+        //input_storage = Storage_t(std::forward<Args...>(args)...);
         return get(input_storage);
     }
 

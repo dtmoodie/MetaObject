@@ -50,7 +50,7 @@ ITParam<T>* IMetaObject::updateParam(const std::string& name, const T& value, co
         ctx = _ctx;
     auto param = getParamOptional<T>(name);
     if (param) {
-        param->UpdateData(value, ts, ctx);
+        param->updateData(value, ts, ctx);
         return param;
     } else {
         std::shared_ptr<ITParam<T>> new_param(new TParam<T>(name, value));

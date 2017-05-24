@@ -136,11 +136,12 @@ public:
     Mutex_t& mtx(); // Get reference to Param mutex.  If setMtx was called, this will reference the mutex that was set, otherwise one will be created
     void setMtx(Mutex_t* mtx); // Use this to share a mutex with an owning object, ie a parent.
 
-    ParamFlags  appendFlags(ParamFlags flags_);   // Append a flag to the Param, return previous values
-    ParamFlags  toggleFlags(ParamFlags flags_);   // Toggle the value of a flag, returns previous flags
-    bool checkFlags(ParamFlags flag) const;          // Check if a single flag is set
-    bool modified() const;                              // Check if has been modified
-    void modified(bool value);                          // Set if it has been modified
+    ParamFlags  appendFlags(ParamFlags flags_); // Append a flag to the Param, return previous values
+    ParamFlags  toggleFlags(ParamFlags flags_); // Toggle the value of a flag, returns previous flags
+    bool checkFlags(ParamFlags flag) const;     // Check if a single flag is set
+    ParamFlags setFlags(ParamFlags flags_);     // Set flags of the Param, return previous values
+    bool modified() const;                      // Check if has been modified
+    void modified(bool value);                  // Set if it has been modified
 protected:
     template<class T> friend class UI::qt::ParamProxy;
 
@@ -157,7 +158,7 @@ protected:
     int                _subscribers = 0;
     bool               _modified = false; // Set to true if modified by the user interface etc, set to false by the owning object.
 private:
-    ParamFlags setFlags(ParamFlags flags_);      // Set flags of the Param, return previous values
+
 };
 
 template<typename Archive>

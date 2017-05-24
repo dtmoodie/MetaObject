@@ -46,7 +46,7 @@ APPEND_FLAGS(name, mo::Optional_e);
 void _init_params(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
 { \
     _init_params(firstInit, --dummy); \
-    name##_param.AppendFlags(flags); \
+    name##_param.appendFlags(flags); \
 }
 
 
@@ -75,7 +75,7 @@ PERSISTENT_(type, name, __COUNTER__)
 #define STATUS(type_, name, init)\
 mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param; \
 mo::argument_type<void(type_)>::type name = init; \
-STATUS_(type, name, init, __COUNTER__)
+STATUS_(type_, name, init, __COUNTER__)
 
 #define TOOLTIP(name, TOOLTIP) TOOLTIP_(name, TOOLTIP, __COUNTER__)
 

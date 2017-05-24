@@ -53,13 +53,13 @@ BOOST_AUTO_TEST_CASE(server)
     zmq::message_t topic(topic_name.size());
 
     TParam<int> Param;
-    Param.UpdateData(0);
+    Param.updateData(0);
     auto serialize_func = SerializationFactory::instance()->GetBinarySerializationFunction(Param.getTypeInfo());
     BOOST_REQUIRE(serialize_func);
     int count = 0;
     while(1)
     {
-        Param.UpdateData(count, count);
+        Param.updateData(count, count);
         socket.send(topic, ZMQ_SNDMORE);
         std::stringstream oss;
         {

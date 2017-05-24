@@ -48,7 +48,7 @@ BOOST_AUTO_TEST_CASE(client)
     socket.setsockopt(ZMQ_SUBSCRIBE, topic, strlen(topic));
     zmq::message_t msg;
     TParam<int> Param;
-    Param.UpdateData(0);
+    Param.updateData(0);
     auto deserialization_func = SerializationFactory::instance()->GetBinaryDeSerializationFunction(Param.getTypeInfo());
     int count = 0;
     while(1)
@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(client)
             std::istringstream iss(static_cast<char*>(msg.data()));
             cereal::BinaryInputArchive ar(iss);
             deserialization_func(&Param, ar);
-            mo::Time_t ts = Param.GetTimestamp();
+            mo::Time_t ts = Param.getTimestamp();
             int value = Param.GetData();
             BOOST_REQUIRE_EQUAL(ts, value);
             ++count;

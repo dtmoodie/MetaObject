@@ -58,6 +58,15 @@ template<class Type> struct ParamTraitsImpl<Type, typename std::enable_if<!std::
         return *input_storage;
     }
 
+    static Type& reset(Storage_t& input_storage, ConstStorageRef_t data){
+        if(data){
+            input_storage.reset(new Type(*data));
+        }else{
+            input_storage.reset(new Type());
+        }
+        return *input_storage;
+    }
+
     template<class...Args>
     static void reset(InputStorage_t& input_storage, Args&&...args) {
         input_storage.reset(new Type(std::forward<Args>(args)...));

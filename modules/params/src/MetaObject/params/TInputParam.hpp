@@ -31,11 +31,11 @@ public:
     
     
 protected:
-    T* userVar; // Pointer to the user space variable of type T
+    T* _user_var; // Pointer to the user space variable of type T
 
     void onInputUpdate(Context* ctx, IParam* param) {
-        if(this->input && userVar)
-            this->input->GetData(*userVar, -1, this->getContext());
+        if(this->input && _user_var)
+            this->input->GetData(*_user_var, -1, this->getContext());
         IParam::OnUpdate(ctx);
     }
     void onInputDelete(IParam* param) {

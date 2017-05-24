@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(test_recompile)
 
 BOOST_AUTO_TEST_CASE(test_obj_swap)
 {
-    auto constructor = MetaObjectFactory::instance()->getObjectSystem()->GetObjectFactorySystem()->getConstructor("test_meta_object_signals");
+    auto constructor = MetaObjectFactory::instance()->getObjectSystem()->GetObjectFactorySystem()->GetConstructor("test_meta_object_signals");
     auto obj = constructor->Construct();
     BOOST_REQUIRE(obj);
     auto state = constructor->GetState(obj->GetPerTypeId());
