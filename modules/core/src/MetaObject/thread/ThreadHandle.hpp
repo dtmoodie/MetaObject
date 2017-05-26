@@ -1,19 +1,17 @@
 #pragma once
-
 #include <MetaObject/detail/Export.hpp>
+#include <MetaObject/core/detail/Forward.hpp>
 #include <memory>
 #include <functional>
 
-namespace mo
-{
+namespace mo{
     class Thread;
     class ThreadPool;
     class Context;
     class ISlot;
     class Connection;
     template<class T> class TSlot;
-    class MO_EXPORTS ThreadHandle
-    {
+    class MO_EXPORTS ThreadHandle{
     public:
         ThreadHandle();
         ThreadHandle(const ThreadHandle& other);
@@ -23,10 +21,10 @@ namespace mo
         ThreadHandle& operator=(ThreadHandle&& other);
         ThreadHandle& operator=(const ThreadHandle& other);
 
-        Context* getContext();
-        size_t getId() const;
-        bool isOnThread() const;
-        void pushEventQueue(const std::function<void(void)>& f);
+        ContextPtr_t getContext();
+        size_t       getId() const;
+        bool         isOnThread() const;
+        void         pushEventQueue(const std::function<void(void)>& f);
         // Work can be stolen and can exist on any thread
         void pushWork(const std::function<void(void)>& f);
         void start();

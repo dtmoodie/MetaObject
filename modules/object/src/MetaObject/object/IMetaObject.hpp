@@ -41,21 +41,21 @@ public:
     virtual ~IMetaObject();
 
     // Setup
-    virtual void     setContext(Context* ctx, bool overwrite = false);
-    virtual Context* getContext() const;
-    virtual int      setupSignals(RelayManager* mgr);
-    virtual int      setupVariableManager(IVariableManager* mgr);
-    virtual int      removeVariableManager(IVariableManager* mgr);
-    virtual void     bindSlots(bool firstInit) = 0;
-    virtual void     Init(bool firstInit); // inherited from RCC
-    virtual void     initCustom(bool firstInit);
-    virtual void     initParams(bool firstInit) = 0;
-    virtual int      initSignals(bool firstInit) = 0;
-    virtual void     initOutputs() = 0;
+    virtual void         setContext(const ContextPtr_t& ctx, bool overwrite = false);
+    virtual ContextPtr_t getContext() const;
+    virtual int          setupSignals(RelayManager* mgr);
+    virtual int          setupVariableManager(IVariableManager* mgr);
+    virtual int          removeVariableManager(IVariableManager* mgr);
+    virtual void         bindSlots(bool firstInit) = 0;
+    virtual void         Init(bool firstInit); // inherited from RCC
+    virtual void         initCustom(bool firstInit);
+    virtual void         initParams(bool firstInit) = 0;
+    virtual int          initSignals(bool firstInit) = 0;
+    virtual void         initOutputs() = 0;
 
-    virtual void     Serialize(ISimpleSerializer *pSerializer); // Inherit from RCC's IObject
-    virtual void     serializeConnections(ISimpleSerializer* pSerializer);
-    virtual void     serializeParams(ISimpleSerializer* pSerializer);
+    virtual void         Serialize(ISimpleSerializer *pSerializer); // Inherit from RCC's IObject
+    virtual void         serializeConnections(ISimpleSerializer* pSerializer);
+    virtual void         serializeParams(ISimpleSerializer* pSerializer);
 
     // ------- Introspection
     // Get vector of info objects for each corresponding introspection class
@@ -150,14 +150,14 @@ protected:
     void addSlot(ISlot* slot, const std::string& name);
     void setParamRoot(const std::string& root);
     void addConnection(std::shared_ptr<Connection>& Connection, const std::string& signal_name, const std::string& slot_name, const TypeInfo& signature, IMetaObject* obj = nullptr);
-    virtual void onParamUpdate(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+    virtual void onParamUpdate(IParam*, const ContextPtr_t&, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
 
     friend class RelayManager;
     struct	impl;
 
-    impl*         _pimpl;
-    Context*      _ctx;
-    RelayManager* _sig_manager;
-    Mutex_t*      _mtx;
+    impl*          _pimpl;
+    ContextPtr_t   _ctx;
+    RelayManager*  _sig_manager;
+    Mutex_t*       _mtx;
 };
 }

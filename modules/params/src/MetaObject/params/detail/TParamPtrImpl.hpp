@@ -57,10 +57,10 @@ namespace mo
 
     template<typename T>
     IParam* TParamPtr<T>::emitUpdate(const OptionalTime_t&         ts_,
-        Context*                       ctx_,
-        const boost::optional<size_t>& fn_,
-        ICoordinateSystem*             cs_,
-        UpdateFlags                    flags_){
+            const ContextPtr_t&                       ctx_,
+            const boost::optional<size_t>& fn_,
+            ICoordinateSystem*             cs_,
+            UpdateFlags                    flags_){
         IParam::emitUpdate(ts_, ctx_, fn_, cs_, flags_);
         if(ptr)
             ITParam<T>::_typed_update_signal(ParamTraits<T>::copy(*ptr), this, ctx_, ts_, this->_fn, cs_, flags_);
@@ -71,7 +71,8 @@ namespace mo
     IParam* TParamPtr<T>::emitUpdate(const IParam& other){
         IParam::emitUpdate(other);
         if (ptr)
-            ITParam<T>::_typed_update_signal(ParamTraits<T>::copy(*ptr), this, other.getContext(), other.getTimestamp(), other.getFrameNumber(), other.getCoordinateSystem(), mo::ValueUpdated_e);
+            ITParam<T>::_typed_update_signal(ParamTraits<T>::copy(*ptr), this, other.getContext(), 
+                other.getTimestamp(), other.getFrameNumber(), other.getCoordinateSystem(), mo::ValueUpdated_e);
         return this;
     }
 
@@ -82,7 +83,7 @@ namespace mo
     }
 
     template<typename T>
-    bool TParamPtr<T>::updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs){
+    bool TParamPtr<T>::updateDataImpl(const Storage_t& data, OptionalTime_t ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs){
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if(ptr){
             *ptr = ParamTraits<T>::get(data);
@@ -130,7 +131,7 @@ namespace mo
     }
 
     template<typename T>
-    bool TParamOutput<T>::updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs) {
+    bool TParamOutput<T>::updateDataImpl(const Storage_t& data, OptionalTime_t ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs) {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         this->data = data;
         lock.unlock();
@@ -140,7 +141,7 @@ namespace mo
 
     template<typename T>
     IParam* TParamOutput<T>::emitUpdate(const OptionalTime_t&         ts_,
-        Context*                       ctx_,
+        const ContextPtr_t&            ctx_,
         const boost::optional<size_t>& fn_,
         ICoordinateSystem*             cs_,
         UpdateFlags                    flags_) {
@@ -152,7 +153,8 @@ namespace mo
     template<typename T>
     IParam* TParamOutput<T>::emitUpdate(const IParam& other) {
         IParam::emitUpdate(other);
-        ITParam<T>::_typed_update_signal(data, this, other.getContext(), other.getTimestamp(), other.getFrameNumber(), other.getCoordinateSystem(), mo::ValueUpdated_e);
+        ITParam<T>::_typed_update_signal(data, this, other.getContext(), other.getTimestamp(), 
+            other.getFrameNumber(), other.getCoordinateSystem(), mo::ValueUpdated_e);
         return this;
     }
 }

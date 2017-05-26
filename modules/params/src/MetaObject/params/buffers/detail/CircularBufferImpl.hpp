@@ -57,15 +57,15 @@ namespace mo
         template<class T>
         bool CircularBuffer<T>::updateDataImpl(const Storage_t& data_,
                                                OptionalTime_t ts,
-                                               Context* ctx,
+                                               const ContextPtr_t& ctx,
                                                size_t fn,
                                                ICoordinateSystem* cs){
 			{
 				mo::Mutex_t::scoped_lock lock(IParam::mtx());
 				if (ts)
-					_data_buffer.push_back(State<T>(*ts, fn, ctx, cs, data_));
+					_data_buffer.push_back(State<T>(*ts, fn, ctx.get(), cs, data_));
 				else
-					_data_buffer.push_back(State<T>(fn, ctx, cs, data_));
+					_data_buffer.push_back(State<T>(fn, ctx.get(), cs, data_));
 				this->_modified = true;
 			}
             ITParam<T>::_typed_update_signal(data_, this, ctx, ts, fn, cs, mo::InputUpdated_e);
@@ -118,10 +118,11 @@ namespace mo
             return false;
         }
 
-        template<class T> void  CircularBuffer<T>::onInputUpdate(ConstStorageRef_t data, IParam*, Context* ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags fg){
+        template<class T> void  CircularBuffer<T>::onInputUpdate(ConstStorageRef_t data, IParam*, const ContextPtr_t& ctx, 
+                                                                 OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags fg){
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
-            if (ts) _data_buffer.push_back(State<T>(*ts, fn, ctx, cs, data));
-            else _data_buffer.push_back(State<T>(fn, ctx, cs, data));
+            if (ts) _data_buffer.push_back(State<T>(*ts, fn, ctx.get(), cs, data));
+            else _data_buffer.push_back(State<T>(fn, ctx.get(), cs, data));
             this->_modified = true;
             lock.unlock();
             ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);

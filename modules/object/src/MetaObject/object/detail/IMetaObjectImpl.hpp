@@ -33,7 +33,7 @@ ITParam<T>* IMetaObject::getParamOptional(const std::string& name) const {
 template<class T>
 ITParam<T>* IMetaObject::updateParam(const std::string& name, T& value, const OptionalTime_t& ts, Context* ctx) {
     if(ctx == nullptr)
-        ctx = _ctx;
+        ctx = _ctx.get();
     auto param = getParamOptional<T>(name);
     if(param) {
         param->updateData(value, ts, ctx);
@@ -47,7 +47,7 @@ ITParam<T>* IMetaObject::updateParam(const std::string& name, T& value, const Op
 template<class T>
 ITParam<T>* IMetaObject::updateParam(const std::string& name, const T& value, const OptionalTime_t& ts, Context* ctx) {
     if (ctx == nullptr)
-        ctx = _ctx;
+        ctx = _ctx.get();
     auto param = getParamOptional<T>(name);
     if (param) {
         param->updateData(value, ts, ctx);

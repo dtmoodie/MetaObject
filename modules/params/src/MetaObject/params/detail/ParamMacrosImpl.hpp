@@ -27,7 +27,7 @@ void _init_params(bool firstInit, mo::_counter_<N> dummy){ \
         name = init; \
     name##_param.setMtx(_mtx); \
     name##_param.updatePtr(&name); \
-    name##_param.setContext(_ctx); \
+    name##_param.setContext(_ctx.get()); \
     name##_param.setName(#name); \
     addParam(&name##_param); \
     _init_params(firstInit, --dummy); \
@@ -44,7 +44,7 @@ void _init_params(bool firstInit, mo::_counter_<N> dummy){ \
 void _init_params(bool firstInit, mo::_counter_<N> dummy){ \
     name##_param.setMtx(_mtx); \
     name##_param.updatePtr(&name); \
-    name##_param.setContext(_ctx); \
+    name##_param.setContext(_ctx.get()); \
     name##_param.setName(#name); \
     addParam(&name##_param); \
     _init_params(firstInit, --dummy); \
@@ -71,7 +71,7 @@ void _init_params(bool firstInit, mo::_counter_<N> dummy){ \
     }\
     name##_param.setMtx(_mtx); \
     name##_param.updatePtr(&name); \
-    name##_param.setContext(_ctx); \
+    name##_param.setContext(_ctx.get()); \
     name##_param.setName(#name); \
     addParam(&name##_param); \
     _init_params(firstInit, --dummy); \
@@ -90,7 +90,7 @@ void _init_params(bool firstInit, mo::_counter_<N> dummy){ \
     if(firstInit) \
         name = name##_param.reset(init); \
     name##_param.setMtx(_mtx); \
-    name##_param.setContext(_ctx); \
+    name##_param.setContext(_ctx.get()); \
     name##_param.setName(#name); \
     addParam(&name##_param); \
     _init_params(firstInit, --dummy); \
@@ -132,7 +132,7 @@ void _init_params(bool firstInit, mo::_counter_<N> dummy){ \
         name = init; \
     name##_param.setMtx(_mtx); \
     name##_param.updatePtr(&name); \
-    name##_param.setContext(_ctx); \
+    name##_param.setContext(_ctx.get()); \
     name##_param.setName(#name); \
     name##_param.setFlags(mo::ParamFlags::State_e); \
     addParam(&name##_param); \

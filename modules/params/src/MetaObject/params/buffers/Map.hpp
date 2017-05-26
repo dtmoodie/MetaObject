@@ -56,7 +56,7 @@ namespace mo{
             typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
             typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
             typedef typename ParamTraits<T>::Input_t Input_t;
-            typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+            typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, const ContextPtr_t&, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
             typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
             typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
 
@@ -77,8 +77,8 @@ namespace mo{
             virtual bool getFrameNumberRange(size_t& start, size_t& end);
             virtual ParamType getBufferType() const{ return Map_e;}
         protected:
-            virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
-            virtual void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+            virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs);
+            virtual void onInputUpdate(ConstStorageRef_t, IParam*, const ContextPtr_t&, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
 			typename std::map<SequenceKey, InputStorage_t>::iterator search(OptionalTime_t ts);
 			typename std::map<SequenceKey, InputStorage_t>::iterator search(size_t fn);
 

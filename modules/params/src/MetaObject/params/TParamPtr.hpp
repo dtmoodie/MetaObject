@@ -23,7 +23,7 @@ public:
     typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
     typedef typename ParamTraits<T>::Input_t Input_t;
     typedef typename ParamTraits<T>::Raw_t Raw_t;
-    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, const ContextPtr_t&, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
     typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
     typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
 
@@ -46,7 +46,7 @@ public:
     virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 
     virtual IParam* emitUpdate(const OptionalTime_t&  ts_    = OptionalTime_t(),
-        Context*                                      ctx_   = Context::getDefaultThreadContext(),
+        const ContextPtr_t&                           ctx_   = Context::getDefaultThreadContext(),
         const boost::optional<size_t>&                fn_    = boost::optional<size_t>(),
         ICoordinateSystem*                            cs_    = nullptr,
         UpdateFlags                                   flags_ = ValueUpdated_e);
@@ -57,7 +57,7 @@ public:
 
     ITParam<T>* updatePtr(Raw_t* ptr, bool ownsData_ = false);
 protected:
-    virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
+    virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs);
     Raw_t* ptr;
     bool ownsData;
     static MetaParam<T, 100> _meta_Param;
@@ -74,7 +74,7 @@ public:
     typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
     typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
     typedef typename ParamTraits<T>::Input_t Input_t;
-    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, const ContextPtr_t&, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
     typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
     typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
 
@@ -88,7 +88,7 @@ public:
     virtual AccessToken<T> access();
 
     virtual IParam* emitUpdate(const OptionalTime_t&   ts_    = OptionalTime_t(),
-        Context*                                       ctx_   = Context::getDefaultThreadContext(),
+        const ContextPtr_t&                            ctx_   = Context::getDefaultThreadContext(),
         const boost::optional<size_t>&                 fn_    = boost::optional<size_t>(),
         ICoordinateSystem*                             cs_    = nullptr,
         UpdateFlags                                    flags_ = ValueUpdated_e);
@@ -104,7 +104,7 @@ public:
     }
 
 protected:
-    virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
+    virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs);
 private:
     Storage_t data;
 };

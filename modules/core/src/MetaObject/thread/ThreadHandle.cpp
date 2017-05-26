@@ -39,21 +39,18 @@ ThreadHandle& ThreadHandle::operator=(ThreadHandle&& other)
     other._thread = nullptr;
     return *this;
 }
-ThreadHandle& ThreadHandle::operator=(const ThreadHandle& other)
-{
+ThreadHandle& ThreadHandle::operator=(const ThreadHandle& other){
     decrement();
     this->_ref_count = other._ref_count;
     this->_thread = other._thread;
     increment();
     return *this;
 }
-Context* ThreadHandle::getContext()
-{
-    if(_thread)
-    {
+ContextPtr_t ThreadHandle::getContext(){
+    if(_thread){
         return _thread->getContext();
     }
-    return nullptr;
+    return ContextPtr_t();
 }
 void ThreadHandle::pushEventQueue(const std::function<void(void)>& f)
 {

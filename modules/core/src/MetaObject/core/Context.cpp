@@ -11,11 +11,10 @@
 #include "boost/lexical_cast.hpp"
 #include <boost/thread/tss.hpp>
 using namespace mo;
-boost::thread_specific_ptr<Context> thread_specific_context;
 
-thread_local Context* thread_set_context = nullptr;
+thread_local std::shared_ptr<Context> thread_set_context = nullptr;
 
-Context* mo::Context::create(const std::string& name){
+std::shared_ptr<Context> mo::Context::create(const std::string& name){
     Context* ctx = nullptr;
 #ifdef HAVE_OPENCV
     ctx = new CvContext();
@@ -27,9 +26,10 @@ Context* mo::Context::create(const std::string& name){
 #endif
 #endif
     ctx->setName(name);
-    if(!thread_set_context)
-        thread_set_context = ctx;
-    return ctx;
+    std::shared_ptr<Context> output(ctx);
+    if(thread_set_context == nullptr)
+        thread_set_context = output;
+    return output;
 }
 
 Context::Context() {
@@ -39,17 +39,12 @@ Context::Context() {
     CpuThreadAllocatorSetter<cv::Mat>::Set(allocator);
 }
 
-Context* Context::getDefaultThreadContext() {
+std::shared_ptr<Context> Context::getDefaultThreadContext() {
     if(thread_set_context)
         return thread_set_context;
-
-    if(thread_specific_context.get() == nullptr) {
-        thread_specific_context.reset(new Context());
-    }
-    return thread_specific_context.get();
 }
 
-void Context::setDefaultThreadContext(Context*  ctx) {
+void Context::setDefaultThreadContext(const std::shared_ptr<Context>& ctx) {
     thread_set_context = ctx;
 }
 
@@ -64,7 +59,6 @@ void Context::setName(const std::string& name) {
 }
 
 Context::~Context() {
-    //stream.waitForCompletion();
 }
 
 cv::cuda::Stream& Context::getStream() {

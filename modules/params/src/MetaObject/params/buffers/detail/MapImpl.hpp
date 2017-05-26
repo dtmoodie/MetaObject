@@ -41,7 +41,7 @@ namespace mo
         }
 
         template<class T>
-        bool Map<T>::updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs){
+        bool Map<T>::updateDataImpl(const Storage_t& data, OptionalTime_t ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs){
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             _data_buffer[{ts,fn}] = data;
             IParam::_modified = true;
@@ -110,7 +110,7 @@ namespace mo
             return _data_buffer.find(fn);
         }
         
-        template<class T> void Map<T>::onInputUpdate(ConstStorageRef_t data, IParam* input, Context* ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags){
+        template<class T> void Map<T>::onInputUpdate(ConstStorageRef_t data, IParam* input, const ContextPtr_t& ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags){
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             _data_buffer[{ts, fn}] = data;
             IParam::_modified = true;

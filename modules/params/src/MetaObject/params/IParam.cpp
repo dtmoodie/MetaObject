@@ -25,7 +25,7 @@ https://github.com/dtmoodie/Params
 
 namespace mo{
 
-IParam::IParam(const std::string& name_, ParamFlags flags_, OptionalTime_t ts, Context* ctx, size_t fn) :
+IParam::IParam(const std::string& name_, ParamFlags flags_, OptionalTime_t ts, const ContextPtr_t& ctx, size_t fn) :
     _modified(false), 
     _subscribers(0),
     _mtx(nullptr),
@@ -62,7 +62,7 @@ IParam* IParam::setCoordinateSystem(ICoordinateSystem* system){
     return this;
 }
 
-IParam* IParam::setContext(Context* ctx){
+IParam* IParam::setContext(const ContextPtr_t&  ctx){
     _ctx = ctx;
     return this;
 }
@@ -90,7 +90,7 @@ size_t IParam::getFrameNumber() const{
     return _fn;
 }
 
-Context* IParam::getContext() const{
+ContextPtr_t IParam::getContext() const{
     return _ctx;
 }
 
@@ -155,23 +155,21 @@ std::shared_ptr<Connection> IParam::registerDeleteNotifier(std::shared_ptr<TSign
     return _delete_signal.connect(relay);
 }
 
-IParam* IParam::emitUpdate(const OptionalTime_t& ts_, Context* ctx_, const boost::optional<size_t>& fn, ICoordinateSystem* cs_, UpdateFlags flags_){
+IParam* IParam::emitUpdate(const OptionalTime_t& ts_, const ContextPtr_t& ctx_, const boost::optional<size_t>& fn, ICoordinateSystem* cs_, UpdateFlags flags_){
+    mo::Mutex_t::scoped_lock lock(mtx());
+    _ts = ts_;
+    if(fn){
+        this->_fn = *fn;
+    }else
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
-        _ts = ts_;
-        if(fn)
-        {
-            this->_fn = *fn;
-        }else
-        {
-            ++this->_fn;
-        }
-        if(cs_ != nullptr)
-        {
-            _cs = cs_;
-        }
-        _modified = true;
+        ++this->_fn;
     }
+    if(cs_ != nullptr)
+    {
+        _cs = cs_;
+    }
+    _modified = true;
+    lock.unlock();
     _update_signal(this, ctx_, ts_, this->_fn, cs_, flags_);
     return this;
 }

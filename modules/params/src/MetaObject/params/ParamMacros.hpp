@@ -82,7 +82,7 @@ STATUS_(type_, name, init, __COUNTER__)
 #define DESCRIPTION(name, DESCRIPTION)
 
 #define OUTPUT(type_, name, init) \
-mo::TParamOutput<mo::argument_type<void(type_)>::type> name##_param; \
+mo::TParamOutput<typename mo::argument_type<void(type_)>::type> name##_param; \
 OUTPUT_(type_, name, init, __COUNTER__); \
 mo::argument_type<void(type_)>::type& name = name##_param.reset(init);
 

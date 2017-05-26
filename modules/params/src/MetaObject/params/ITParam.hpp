@@ -115,7 +115,7 @@ public:
     typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
     typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
     typedef typename ParamTraits<T>::Input_t Input_t;
-    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, const ContextPtr_t&, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
     typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
     typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
     // brief ITParam default constructor, passes args to IParam
@@ -138,7 +138,7 @@ public:
     std::shared_ptr<Connection>         registerUpdateNotifier(std::shared_ptr<TSignalRelay<TUpdateSig_t>>& relay);
 protected:
     friend class AccessToken<T>;
-    virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs) = 0;
+    virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs) = 0;
     TSignal<TUpdateSig_t> _typed_update_signal;
 private:
     static const TypeInfo _type_info;

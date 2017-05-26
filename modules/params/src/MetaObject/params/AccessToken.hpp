@@ -55,7 +55,7 @@ public:
         return *this;
     }
 
-    AccessToken<T>& operator()(Context* ctx) {
+    AccessToken<T>& operator()(const ContextPtr_t& ctx) {
         _ctx = ctx;
         return *this;
     }
@@ -73,7 +73,7 @@ private:
     typename ParamTraits<T>::TypeRef_t _data;
     OptionalTime_t ts;
     boost::optional<size_t> fn;
-    Context* _ctx = nullptr;
+    ContextPtr_t _ctx;
     bool valid = false;
 };
 

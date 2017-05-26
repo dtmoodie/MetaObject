@@ -27,7 +27,7 @@ private:
 
 
 #define PROFILE_OBJ(name) \
-mo::scoped_profile profile_object(name, __FUNCTION__, &_rmt_hash, &_rmt_cuda_hash, _ctx->stream)
+mo::scoped_profile profile_object(name, __FUNCTION__, &_rmt_hash, &_rmt_cuda_hash, _ctx.get()->stream)
 
 #define PROFILE_RANGE(name) \
 mo::scoped_profile profile_scope_##name(#name)

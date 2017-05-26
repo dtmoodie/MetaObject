@@ -2,11 +2,10 @@
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
 #include "MetaObject/thread/ThreadRegistry.hpp"
+#include "MetaObject/core/detail/Forward.hpp"
 #include <memory>
 
-namespace mo
-{
-    class Context;
+namespace mo{
     class Connection;
     class SignalManager;
     class ISlot;
@@ -18,8 +17,7 @@ namespace mo
     // The Connecting callback has contextual information that is used by the signal to determine
     // How to relay the function call to any Connected slots.
     // Slots are receivers of signals and callbacks.
-    class MO_EXPORTS ISignal
-    {
+    class MO_EXPORTS ISignal{
     public:
         virtual TypeInfo getSignature() const = 0;
         virtual std::shared_ptr<Connection> connect(ISlot* slot) = 0;
@@ -29,12 +27,12 @@ namespace mo
         virtual bool disConnect(std::weak_ptr<ISignalRelay> relay) = 0;
 
         IMetaObject* getParent() const;
-        const Context* getContext() const;
-        void setContext(Context* ctx);
+        ContextPtr_t getContext() const;
+        void setContext(const ContextPtr_t& ctx);
     protected:
         friend class IMetaObject;
         void setParent(IMetaObject* parent);
         IMetaObject* _parent = nullptr;
-        Context* _ctx = nullptr;
+        ContextPtr_t _ctx = nullptr;
     };
 }

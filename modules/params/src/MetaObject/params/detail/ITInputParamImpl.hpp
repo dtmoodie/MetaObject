@@ -160,7 +160,8 @@ namespace mo
     }
 
     template<class T>
-    void ITInputParam<T>::onInputUpdate(ConstStorageRef_t, IParam* param, Context* ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags fg){
+    void ITInputParam<T>::onInputUpdate(ConstStorageRef_t, IParam* param, const ContextPtr_t& ctx, OptionalTime_t ts, 
+                                        size_t fn, ICoordinateSystem* cs, UpdateFlags fg){
         this->emitUpdate(ts, ctx, fn, cs, InputUpdated_e);
     }
 }

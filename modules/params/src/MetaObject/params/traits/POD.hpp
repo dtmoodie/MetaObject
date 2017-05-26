@@ -22,7 +22,7 @@ template<class Type> struct ParamTraitsImpl<Type, typename std::enable_if<std::i
     typedef Type* StoragePtr_t;
     typedef const Type* ConstStoragePtr_t;
     typedef const Type& ConstStorageRef_t;
-    typedef boost::optional<Type> InputStorage_t;
+    typedef Type InputStorage_t;
     typedef const Type* Input_t;
 
     static inline Storage_t copy(const Type& value) {
@@ -70,7 +70,7 @@ template<class Type> struct ParamTraitsImpl<Type, typename std::enable_if<std::i
     typedef Type* StoragePtr_t;
     typedef const Type* ConstStoragePtr_t;
     typedef Type ConstStorageRef_t;
-    typedef boost::optional<Type> InputStorage_t;
+    typedef Type InputStorage_t;
     typedef const Type* Input_t;
 
 
@@ -87,10 +87,6 @@ template<class Type> struct ParamTraitsImpl<Type, typename std::enable_if<std::i
         return input_storage;
     }
 
-    template<class...Args>
-    static void reset(InputStorage_t& input_storage, Args&&...args) {
-        input_storage = Type(std::forward<Args>(args)...);
-    }
     template<class...Args>
     static void nullify(InputStorage_t& input_storage) {
         input_storage.reset();

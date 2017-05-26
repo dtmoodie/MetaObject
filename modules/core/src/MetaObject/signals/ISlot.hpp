@@ -19,13 +19,13 @@ namespace mo
         virtual void clear() = 0;
         virtual TypeInfo getSignature() const = 0;
         IMetaObject* getParent() const;
-        const Context* getContext() const;
-        void setContext(Context* ctx);
+        std::shared_ptr<Context> getContext() const;
+        void setContext(const std::shared_ptr<Context>& ctx);
 
     protected:
         friend class IMetaObject;
         void setParent(IMetaObject* parent);
         IMetaObject* _parent = nullptr;
-        Context* _ctx = nullptr;
+        std::shared_ptr<Context> _ctx;
     };
 }

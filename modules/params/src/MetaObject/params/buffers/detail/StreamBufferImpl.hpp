@@ -80,7 +80,7 @@ namespace mo{
         }
 
         template<class T>
-        bool BlockingStreamBuffer<T>::updateDataImpl(const T& data_, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs){
+        bool BlockingStreamBuffer<T>::updateDataImpl(const T& data_, OptionalTime_t ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs){
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             while (this->_data_buffer.size() > _size){
                 LOG_EVERY_N(debug, 10) << "Pushing to " << this->getTreeName() << " waiting on read, current buffer size " << this->_data_buffer.size();

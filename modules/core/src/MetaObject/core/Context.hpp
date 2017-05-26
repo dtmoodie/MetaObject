@@ -1,7 +1,7 @@
 #pragma once
 #include "MetaObject/detail/Export.hpp"
 #include <string>
-
+#include <memory>
 typedef struct CUstream_st *cudaStream_t;
 namespace cv{
 namespace cuda{
@@ -12,9 +12,9 @@ namespace mo{
     class Allocator;
     class MO_EXPORTS Context{
     public:
-        static Context*     getDefaultThreadContext();
-        static void         setDefaultThreadContext(Context*  ctx);
-        static Context*     create(const std::string& name = "");
+        static std::shared_ptr<Context> getDefaultThreadContext();
+        static void                     setDefaultThreadContext(const std::shared_ptr<Context>& ctx);
+        static std::shared_ptr<Context> create(const std::string& name = "");
 
         virtual                         ~Context();
         virtual void                    setName(const std::string& name);

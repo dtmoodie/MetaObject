@@ -1,5 +1,6 @@
 #pragma once
 #include <MetaObject/detail/Export.hpp>
+#include <MetaObject/core/detail/Forward.hpp>
 #include <MetaObject/signals/TSignalRelay.hpp>
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
@@ -7,14 +8,12 @@
 #include <functional>
 #include <queue>
 
-namespace mo
-{
+namespace mo{
     class ThreadPool;
     class Context;
     class ThreadHandle;
     class ISlot;
-    class MO_EXPORTS Thread
-    {
+    class MO_EXPORTS Thread{
     public:
         // Events have to be handled by this thread
         void pushEventQueue(const std::function<void(void)>& f);
@@ -29,8 +28,8 @@ namespace mo
         void setStartCallback(const std::function<void(void)>& f);
         //void setInnerLoop(const std::function<int(void)>& f);
         std::shared_ptr<Connection> setInnerLoop(TSlot<int(void)>* slot);
-        ThreadPool* getPool() const;
-        Context* getContext();
+        ThreadPool*  getPool() const;
+        ContextPtr_t getContext();
     protected:
         friend class ThreadPool;
         friend class ThreadHandle;
@@ -49,10 +48,10 @@ namespace mo
 
         std::function<void(void)>             _on_start;
         std::function<void(void)>             _on_exit;
-        Context*                              _ctx;
+        ContextPtr_t                          _ctx;
         ThreadPool*                           _pool;
         boost::condition_variable_any         _cv;
-        boost::recursive_timed_mutex                _mtx;
+        boost::recursive_timed_mutex          _mtx;
         // if _run == true, execute the main inner loop
         volatile bool                         _run;
         // if _quit == true, cleanup and exit the thread

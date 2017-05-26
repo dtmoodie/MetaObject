@@ -62,7 +62,6 @@ bool IMetaObject::connect(IMetaObject* sender, const std::string& signal_name, I
 IMetaObject::IMetaObject() {
     _mtx = new mo::Mutex_t();
     _pimpl = new impl();
-    _ctx = nullptr;
     _sig_manager = nullptr;
     _pimpl->_slot_param_updated = std::bind(&IMetaObject::onParamUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5, std::placeholders::_6);
 }
@@ -239,8 +238,8 @@ void IMetaObject::serializeConnections(ISimpleSerializer* pSerializer) {
 void IMetaObject::serializeParams(ISimpleSerializer* pSerializer) {
 
 }
-void IMetaObject::setContext(Context* ctx, bool overwrite) {
-    if(_ctx && overwrite == false)
+void IMetaObject::setContext(const std::shared_ptr<Context>& ctx, bool overwrite) {
+    if(_ctx.get() && overwrite == false)
         return;
     if(ctx == nullptr)
         LOG(info) << "Setting context to nullptr";
@@ -355,7 +354,7 @@ InputParam* IMetaObject::getInput(const std::string& name) const {
     return nullptr;
 }
 
-Context* IMetaObject::getContext() const {
+std::shared_ptr<Context> IMetaObject::getContext() const {
     return _ctx;
 }
 
@@ -530,8 +529,8 @@ bool IMetaObject::connectInput(InputParam* input,
                 return false;
             }
         }
-        if(output_ctx && _ctx) {
-            if(output_ctx->thread_id != _ctx->thread_id) {
+        if(output_ctx && _ctx.get()) {
+            if(output_ctx->thread_id != _ctx.get()->thread_id) {
                 auto buffer = Buffer::BufferFactory::CreateProxy(output, type_);
                 if(buffer) {
                     buffer->setName(output->getTreeName() + " buffer for " + input->getTreeName());
@@ -870,7 +869,7 @@ void IMetaObject::addConnection(std::shared_ptr<Connection>& Connection,
     info.signature = signature;
     _pimpl->_connections.push_back(info);
 }
-void IMetaObject::onParamUpdate(IParam* param, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags) {
+void IMetaObject::onParamUpdate(IParam* param, const ContextPtr_t&, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags) {
     this->_pimpl->_sig_param_updated(this, param);
 }
 } // namespace mo

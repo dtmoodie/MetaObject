@@ -179,9 +179,9 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
     boost::thread background_thread(
         [&input, &started, &count]()
     {
-        ///mo::Context _ctx;
-        std::unique_ptr<mo::Context> _ctx(mo::Context::create());
-        input->setContext(_ctx.get());
+        ///mo::Context _ctx.get();
+        std::unique_ptr<mo::Context> _ctx.get()(mo::Context::create());
+        input->setContext(_ctx.get().get());
         started = true;
         boost::optional<int> data;
         for(int i = 0; i < 1000; ++i)
