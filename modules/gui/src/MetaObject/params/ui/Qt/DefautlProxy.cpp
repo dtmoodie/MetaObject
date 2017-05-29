@@ -48,7 +48,7 @@ void DefaultProxy::onUiUpdate(QObject* source)
 {
 }
 
-void DefaultProxy::onParamUpdate(IParam*, const ContextPtr_t&, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags)
+void DefaultProxy::onParamUpdate(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags)
 {
 
 }

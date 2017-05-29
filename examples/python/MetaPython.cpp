@@ -2,12 +2,12 @@
 #include "MetaObject/Python/Python.hpp"
 #include "MetaObject/Logging/Log.hpp"
 #include <iostream>
-#include "MetaObject/MetaObjectFactory.hpp"
+#include "MetaObject/object/MetaObjectFactory.hpp"
 #include <boost/python/to_python_converter.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-#include "MetaObject/IMetaObject.hpp"
-#include "MetaObject/Detail/MetaObjectMacros.hpp"
-#include "MetaObject/Parameters/ParameterMacros.hpp"
+#include "MetaObject/object/IMetaObject.hpp"
+#include "MetaObject/object/detail/MetaObjectMacros.hpp"
+#include "MetaObject/params/ParamMacros.hpp"
 
 namespace bp = boost::python;
 
@@ -26,18 +26,18 @@ struct NullDeleter
 
 boost::shared_ptr<mo::MetaObjectFactory> GetObjectFactory()
 {
-    return boost::shared_ptr<mo::MetaObjectFactory>(mo::MetaObjectFactory::Instance(), NullDeleter());
+    return boost::shared_ptr<mo::MetaObjectFactory>(mo::MetaObjectFactory::instance(), NullDeleter());
 }
 
 template <typename T> T* get_pointer(rcc::shared_ptr<T>& p) {
     //notice the const_cast<> at this point
     //for some unknown reason, bp likes to have it like that
-    return const_cast<T*>(p.Get());
+    return const_cast<T*>(p.get());
 }
 
 template<typename T> const T* get_pointer(const rcc::shared_ptr<T> & p)
 {
-    return const_cast<T*>(p.Get());
+    return const_cast<T*>(p.get());
 }
 
 namespace boost { 
@@ -60,7 +60,7 @@ namespace boost {
 
 BOOST_PYTHON_MODULE(MetaPython)
 {
-    mo::MetaObjectFactory::Instance()->RegisterTranslationUnit();
+    mo::MetaObjectFactory::instance()->registerTranslationUnit();
 
     boost::python::scope().attr("__version__") = "0.1";
 
@@ -68,8 +68,8 @@ BOOST_PYTHON_MODULE(MetaPython)
 
     bp::class_<mo::MetaObjectFactory, boost::shared_ptr<mo::MetaObjectFactory>, boost::noncopyable>("MetaObjectFactory", bp::no_init)
         .def("Instance", &GetObjectFactory).staticmethod("Instance")
-        .def("ListConstructableObjects", &mo::MetaObjectFactory::ListConstructableObjects)
-        .def("LoadPlugin", &mo::MetaObjectFactory::LoadPlugin);
+        .def("ListConstructableObjects", &mo::MetaObjectFactory::listConstructableObjects)
+        .def("LoadPlugin", &mo::MetaObjectFactory::loadPlugin);
 
     bp::class_<std::vector<std::string> >("StringVec")
         .def(bp::vector_indexing_suite<std::vector<std::string> >());

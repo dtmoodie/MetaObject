@@ -1,6 +1,6 @@
 #include "MetaObject/signals/SignalInfo.hpp"
 #include <sstream>
-std::string mo::SignalInfo::Print()
+std::string mo::SignalInfo::print()
 {
     std::stringstream ss;
     ss << "- " << name << " [" << signature.name() << "]\n";

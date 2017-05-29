@@ -91,8 +91,8 @@ struct BufferFixture{
     BufferFixture(){
         output_param.updatePtr(&output);
         input_param.setUserDataPtr(&input);
-        output_param.setContext(mo::Context::getDefaultThreadContext());
-        input_param.setContext(mo::Context::getDefaultThreadContext());
+        output_param.setContext(mo::Context::getDefaultThreadContext().get());
+        input_param.setContext(mo::Context::getDefaultThreadContext().get());
     }
     mo::TParamPtr<int> output_param;
     int output;
@@ -125,9 +125,9 @@ BOOST_AUTO_PARAM_TEST_CASE(buffer_test, buffer_test_cases, end(buffer_test_cases
             output_param.updateData(i, mo::tag::_timestamp = mo::Time_t(i * mo::ms));
         }
         for (auto itr = process_queue.begin(); itr != process_queue.end();) {
-            boost::optional<int> data;
+            int data;
             BOOST_REQUIRE(input_param.getData(data, *itr));
-            BOOST_REQUIRE_EQUAL(mo::Time_t(*data * mo::ms), *itr);
+            BOOST_REQUIRE_EQUAL(mo::Time_t(data * mo::ms), *itr);
             itr = process_queue.erase(itr);
         }
     }
@@ -138,9 +138,9 @@ BOOST_AUTO_PARAM_TEST_CASE(buffer_test, buffer_test_cases, end(buffer_test_cases
             output_param.emitUpdate(mo::OptionalTime_t(i * mo::ms));
         }
         for (auto itr = process_queue.begin(); itr != process_queue.end();) {
-            boost::optional<int> data;
+            int data;
             BOOST_REQUIRE(input_param.getData(data, *itr));
-            BOOST_REQUIRE_EQUAL(mo::Time_t((*data / 2) * mo::ms), *itr);
+            BOOST_REQUIRE_EQUAL(mo::Time_t((data / 2) * mo::ms), *itr);
             itr = process_queue.erase(itr);
         }
     }

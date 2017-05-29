@@ -19,7 +19,7 @@ public:
 
     virtual bool acceptsInput(std::weak_ptr<mo::IParam> param) const;
     virtual bool acceptsInput(mo::IParam* param) const;
-    virtual bool acceptsType(mo::TypeInfo type) const;
+    virtual bool acceptsType(const mo::TypeInfo& type) const;
 
     const mo::TypeInfo& getTypeInfo() const;
     void on_param_update(mo::Context* ctx, mo::IParam* param);

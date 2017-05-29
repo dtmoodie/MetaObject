@@ -150,7 +150,7 @@ protected:
     void addSlot(ISlot* slot, const std::string& name);
     void setParamRoot(const std::string& root);
     void addConnection(std::shared_ptr<Connection>& Connection, const std::string& signal_name, const std::string& slot_name, const TypeInfo& signature, IMetaObject* obj = nullptr);
-    virtual void onParamUpdate(IParam*, const ContextPtr_t&, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+    virtual void onParamUpdate(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
 
     friend class RelayManager;
     struct	impl;

@@ -34,24 +34,26 @@ template<class Type> struct ParamTraitsImpl<Type, typename std::enable_if<std::i
     }
 
     template<class...Args>
-    static Type& reset(Storage_t& input_storage, Args...args) {
-        input_storage = Type(std::forward(args)...);
+    static Type& reset(Storage_t& input_storage, Args&&...args) {
+        input_storage = Type(std::forward<Args>(args)...);
         return input_storage;
     }
 
     template<class...Args>
-    static void reset(InputStorage_t& input_storage, Args...args) {
-        input_storage = Type(std::forward(args)...);
-    }
-    template<class...Args>
     static void nullify(InputStorage_t& input_storage) {
         input_storage.reset();
     }
-    static inline Type& getMutable(Storage_t& value){
+    static inline Type& get(Storage_t& value){
         return value;
     }
     static inline const Type& get(ConstStorageRef_t value){
         return value;
+    }
+    static inline Type* ptr(Storage_t& value){
+        return &value;
+    }
+    static inline const Type* ptr(ConstStorageRef_t value){
+        return &value;
     }
 };
 

@@ -22,17 +22,14 @@ IMetaObject* ISlot::getParent() const
 {
     return _parent;
 }
-std::shared_ptr<Context> ISlot::getContext() const
-{
+Context* ISlot::getContext() const{
     if(_ctx)
         return _ctx;
-    if(_parent)
-    {
+    if(_parent){
         //return _parent->getContext();
     }
     return nullptr;
 }
-void ISlot::setContext(const std::shared_ptr<Context>& ctx)
-{
+void ISlot::setContext(Context* ctx){
     _ctx = ctx;
 }

@@ -56,7 +56,7 @@ namespace mo
     }
 
     template<typename T>
-    bool TParam<T>::updateDataImpl(const Storage_t& data, OptionalTime_t ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs){
+    bool TParam<T>::updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs){
         _data = data;
         this->_fn = fn;
         this->_ts = ts;

@@ -2,14 +2,14 @@
 //#include "MetaObject/object/IMetaObject.hpp"
 using namespace mo;
 
-ContextPtr_t ISignal::getContext() const{
+Context* ISignal::getContext() const{
     return _ctx;
     if(_parent){
         //return _parent->getContext();
     }
     return nullptr;
 }
-void ISignal::setContext(const ContextPtr_t&  ctx){
+void ISignal::setContext(Context*  ctx){
     _ctx = ctx;
 }
 

@@ -245,10 +245,10 @@ void IMetaObject::setContext(const std::shared_ptr<Context>& ctx, bool overwrite
         LOG(info) << "Setting context to nullptr";
     _ctx = ctx;
     for(auto& param : _pimpl->_implicit_params) {
-        param.second->setContext(ctx);
+        param.second->setContext(ctx.get());
     }
     for(auto& param : _pimpl->_params) {
-        param.second->setContext(ctx);
+        param.second->setContext(ctx.get());
     }
 }
 
@@ -585,7 +585,7 @@ bool IMetaObject::connectInput(IMetaObject* out_obj, IParam* out_param,
 }
 IParam* IMetaObject::addParam(std::shared_ptr<IParam> param) {
     param->setMtx(_mtx);
-    param->setContext(_ctx);
+    param->setContext(_ctx.get());
 #ifdef _DEBUG
     for(auto& param_ : _pimpl->_params) {
         if(param_.second == param.get()) {
@@ -605,7 +605,7 @@ IParam* IMetaObject::addParam(std::shared_ptr<IParam> param) {
 
 IParam* IMetaObject::addParam(IParam* param) {
     param->setMtx(_mtx);
-    param->setContext(_ctx);
+    param->setContext(_ctx.get());
 #ifdef _DEBUG
     for(auto& param_ : _pimpl->_params) {
         if(param_.second == param) {
@@ -869,7 +869,7 @@ void IMetaObject::addConnection(std::shared_ptr<Connection>& Connection,
     info.signature = signature;
     _pimpl->_connections.push_back(info);
 }
-void IMetaObject::onParamUpdate(IParam* param, const ContextPtr_t&, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags) {
+void IMetaObject::onParamUpdate(IParam* param, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags) {
     this->_pimpl->_sig_param_updated(this, param);
 }
 } // namespace mo

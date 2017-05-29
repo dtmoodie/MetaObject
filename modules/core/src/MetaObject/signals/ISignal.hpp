@@ -27,12 +27,12 @@ namespace mo{
         virtual bool disConnect(std::weak_ptr<ISignalRelay> relay) = 0;
 
         IMetaObject* getParent() const;
-        ContextPtr_t getContext() const;
-        void setContext(const ContextPtr_t& ctx);
+        Context* getContext() const;
+        void setContext(Context* ctx);
     protected:
         friend class IMetaObject;
         void setParent(IMetaObject* parent);
         IMetaObject* _parent = nullptr;
-        ContextPtr_t _ctx = nullptr;
+        Context* _ctx = nullptr;
     };
 }

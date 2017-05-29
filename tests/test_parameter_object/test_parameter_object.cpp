@@ -110,7 +110,7 @@ BOOST_AUTO_TEST_CASE(buffered_input)
     for(int i = 1; i < 100000; ++i)
     {
         output->test_output_param.updateData(i*10, mo::Time_t(i * mo::ms));
-        boost::optional<int> data;
+        int data;
         BOOST_REQUIRE(input->test_input_param.getData(data, mo::Time_t((i-1) * mo::ms)));
         BOOST_REQUIRE_EQUAL(data, (i-1)*10);
     }
@@ -137,7 +137,7 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
     [&quit,&input]()
     {
         mo::Time_t ts = mo::Time_t(0 * mo::ms);
-        boost::optional<int> data;
+        int data;
         while(!quit)
         {
             if(input->test_input_param.getData(data, ts))
@@ -158,12 +158,12 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
 
 BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
 {
-    std::unique_ptr<mo::Context> ctx(mo::Context::create());
+    auto ctx = mo::Context::create();
     auto input = input_Paramed_object::create();
     auto input_ = input->getParamOptional("test_input");
 
     auto output = output_Paramed_object::create();
-    output->setContext(ctx.get());
+    output->setContext(ctx);
     auto output_ = output->getParamOptional("test_output");
 
     BOOST_REQUIRE(input_);
@@ -180,10 +180,10 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
         [&input, &started, &count]()
     {
         ///mo::Context _ctx.get();
-        std::unique_ptr<mo::Context> _ctx.get()(mo::Context::create());
-        input->setContext(_ctx.get().get());
+        auto _ctx = mo::Context::create();
+        input->setContext(_ctx);
         started = true;
-        boost::optional<int> data;
+        int data;
         for(int i = 0; i < 1000; ++i)
         {
             bool good = input->test_input_param.getData(data, mo::Time_t(i*mo::ms));

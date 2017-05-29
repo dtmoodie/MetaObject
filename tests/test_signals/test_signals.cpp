@@ -43,8 +43,8 @@ BOOST_AUTO_TEST_CASE(signals)
 
 BOOST_AUTO_TEST_CASE(threaded_signal)
 {
-    std::unique_ptr<mo::Context> ctx(mo::Context::create());
-    std::unique_ptr<mo::Context> thread_ctx(mo::Context::create("Thread context"));
+    auto  ctx = mo::Context::create();
+    auto thread_ctx = mo::Context::create("Thread context");
 
     TSlot<void(int)> slot = TSlot<void(int)>(std::bind(
         [&thread_ctx](int value)->void
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(threaded_signal)
 
 BOOST_AUTO_TEST_CASE(relay_manager)
 {
-    std::unique_ptr<mo::Context> ctx(mo::Context::create());
+    auto ctx = mo::Context::create();
     mo::RelayManager manager;
 
 

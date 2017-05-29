@@ -1,13 +1,11 @@
 #pragma once
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
-
+#include <MetaObject/core/detail/Forward.hpp>
 #include <vector>
 #include <memory>
 
 namespace mo {
-class IParam;
-template<typename T> class ITParam;
 template<typename T> class TInputParam;
 class MO_EXPORTS IVariableManager {
 public:

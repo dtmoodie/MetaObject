@@ -1,12 +1,11 @@
 #pragma once
-#include "traits/TypeTraits.hpp"
 #include "MetaObject/params/IParam.hpp"
+#include "traits/TypeTraits.hpp"
 namespace boost{
     template<typename T> class lock_guard;
 }
 
 namespace mo{
-template<class T> class ITParam;
 struct MO_EXPORTS AccessTokenLock{
     AccessTokenLock();
     AccessTokenLock(AccessTokenLock& other);
@@ -55,7 +54,7 @@ public:
         return *this;
     }
 
-    AccessToken<T>& operator()(const ContextPtr_t& ctx) {
+    AccessToken<T>& operator()(Context* ctx) {
         _ctx = ctx;
         return *this;
     }
@@ -73,7 +72,7 @@ private:
     typename ParamTraits<T>::TypeRef_t _data;
     OptionalTime_t ts;
     boost::optional<size_t> fn;
-    ContextPtr_t _ctx;
+    Context* _ctx = nullptr;
     bool valid = false;
 };
 

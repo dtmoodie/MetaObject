@@ -2,7 +2,7 @@
 #include "MetaObject/params/ITParam.hpp"
 namespace mo
 {
-    template<typename T> class ITParam;
+    template<typename T, class Enable = void> class ITParam;
     namespace Buffer
     {
         class IBuffer;

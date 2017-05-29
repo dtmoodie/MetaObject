@@ -26,7 +26,7 @@ class ICoordinateSystem;
 
 class IParam;
 class InputParam;
-template<class T> class ITParam;
+template<class T, class Enable = void> class ITParam;
 template<class T> class ITInputParam;
 
 struct ParamInfo;

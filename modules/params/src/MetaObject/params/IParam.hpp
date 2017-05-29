@@ -54,12 +54,11 @@ MO_KEYWORD_INPUT(timestamp, mo::Time_t)
 MO_KEYWORD_INPUT(frame_number, size_t)
 MO_KEYWORD_INPUT(coordinate_system, ICoordinateSystem*)
 MO_KEYWORD_INPUT(context, Context*)
-MO_KEYWORD_INPUT(contextptr, ContextPtr_t)
 MO_KEYWORD_INPUT(param_name, std::string)
 MO_KEYWORD_INPUT(tree_root, std::string)
 MO_KEYWORD_INPUT(param_flags, ParamFlags)
 
-typedef void(UpdateSig_t)(IParam*, const ContextPtr_t&, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags); // Sig for signature not signal
+typedef void(UpdateSig_t)(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags); // Sig for signature not signal
 typedef TSlot<UpdateSig_t>            UpdateSlot_t;
 typedef TSignal<UpdateSig_t>          UpdateSignal_t;
 typedef std::shared_ptr<UpdateSlot_t> UpdateSlotPtr_t;
@@ -80,23 +79,23 @@ public:
             _ts = *ts;
 
         _fn        = GetKeywordInputDefault<tag::frame_number>(-1, args...);
-        _ctx       = GetKeywordInputDefault<tag::contextptr>(ContextPtr_t(), args...);
+        _ctx       = GetKeywordInputDefault<tag::context>(nullptr, args...);
         _cs        = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...);
         _flags     = GetKeywordInputDefault<tag::param_flags>(mo::Control_e, args...);
         _tree_root = GetKeywordInputDefault<tag::tree_root>("", args...);
     }
 
-    IParam(const std::string&  name_   = "",
-           ParamFlags          flags_  = Control_e,
-           OptionalTime_t      ts_     = OptionalTime_t(),
-           const ContextPtr_t& ctx_    = ContextPtr_t(),
-           size_t              fn_     = -1);
+    IParam(const std::string&   name_   = "",
+           ParamFlags           flags_  = Control_e,
+           OptionalTime_t       ts_     = OptionalTime_t(),
+           Context*             ctx_    = nullptr,
+           size_t               fn_     = -1);
     
     virtual ~IParam();
 
     IParam* setName(const std::string& name_); // Get the name of this Param
     IParam* setTreeRoot(const std::string& tree_root_); // Set the root to the name of this Param. IE objname:paramanme, set objname
-    IParam* setContext(const ContextPtr_t& ctx); // Set the compute context of this Param
+    IParam* setContext(Context* ctx); // Set the compute context of this Param
     IParam* setFrameNumber(size_t fn); // Set the frame number for this Param
     IParam* setTimestamp(const mo::Time_t& ts); // Set the timestamp for this Param
     IParam* setCoordinateSystem(ICoordinateSystem* cs_); // Set the coordinate system for this Param
@@ -106,7 +105,7 @@ public:
     const std::string&  getTreeRoot()  const; // Get the tree root of this Param, ie the name of the owning parent object
     OptionalTime_t      getTimestamp() const; // Get the timestamp of this Param, may not exist for all Params
     size_t              getFrameNumber() const; // Get the frame number for this Param. Initialized such that first update will set to 0, and increment at every update unless specified
-    ContextPtr_t        getContext()   const; // Get the compute context of this Param
+    Context*            getContext()   const; // Get the compute context of this Param
     ICoordinateSystem*  getCoordinateSystem() const; // Get the coordinate system of this Param
 
     void subscribe(); // Subscribe to this Param as an output
@@ -129,11 +128,11 @@ public:
     std::shared_ptr<Connection> registerDeleteNotifier(std::shared_ptr<ISignalRelay> relay);
 
     // commit changes to a Param, updates underlying meta info and emits signals accordingly
-    virtual IParam* emitUpdate(const OptionalTime_t&         ts_    = OptionalTime_t(),                   // The timestamp of the new data
-                              const ContextPtr_t&            ctx_   = Context::getDefaultThreadContext(), // The context from which the data was updated
-                              const boost::optional<size_t>& fn_    = boost::optional<size_t>(),          // The frame number of the update
-                              ICoordinateSystem*             cs_    = nullptr,                            // The coordinate system of the data
-                              UpdateFlags                    flags_ = ValueUpdated_e);
+    virtual IParam* emitUpdate( const OptionalTime_t&           ts_    = OptionalTime_t(),                   // The timestamp of the new data
+                                Context*                        ctx_   = Context::getDefaultThreadContext().get(), // The context from which the data was updated
+                                const boost::optional<size_t>&  fn_    = boost::optional<size_t>(),          // The frame number of the update
+                                ICoordinateSystem*              cs_    = nullptr,                            // The coordinate system of the data
+                                UpdateFlags                     flags_ = ValueUpdated_e);
 
     virtual IParam* emitUpdate(const IParam& other); // commit a Param's value copying metadata info from another parmaeter
     template<class Archive> void serialize(Archive& ar); // Used for cereal serialization
@@ -152,7 +151,7 @@ protected:
     OptionalTime_t           _ts;
     size_t                   _fn;
     ICoordinateSystem*       _cs;
-    ContextPtr_t             _ctx;
+    Context*                 _ctx;
     std::string              _name;
     std::string              _tree_root;
     ParamFlags               _flags;

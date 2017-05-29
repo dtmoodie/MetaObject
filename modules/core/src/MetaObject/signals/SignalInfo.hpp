@@ -5,7 +5,7 @@ namespace mo
 {
     struct MO_EXPORTS SignalInfo
     {
-        std::string Print();
+        std::string print();
         TypeInfo signature;
         std::string name;
         std::string description;

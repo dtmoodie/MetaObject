@@ -8,7 +8,7 @@
 
 namespace mo
 {
-    template<class T> class ITParam;
+    template<class T, class Enable = void> class ITParam;
     template<class T> class ITRangedParam;
     namespace UI
     {

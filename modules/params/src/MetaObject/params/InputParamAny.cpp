@@ -67,7 +67,7 @@ bool InputParamAny::acceptsInput(mo::IParam* param) const
     return true;
 }
 
-bool InputParamAny::acceptsType(mo::TypeInfo type) const
+bool InputParamAny::acceptsType(const mo::TypeInfo& type) const
 {
     return true;
 }

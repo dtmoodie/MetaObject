@@ -40,8 +40,7 @@ Context::Context() {
 }
 
 std::shared_ptr<Context> Context::getDefaultThreadContext() {
-    if(thread_set_context)
-        return thread_set_context;
+    return thread_set_context;
 }
 
 void Context::setDefaultThreadContext(const std::shared_ptr<Context>& ctx) {

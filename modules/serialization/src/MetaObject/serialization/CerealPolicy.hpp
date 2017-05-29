@@ -10,7 +10,7 @@
 #include <functional>
 
 namespace mo {
-template<class T> class ITParam;
+template<class T, class Enable = void> class ITParam;
 template<class T, int N, typename Enable> struct MetaParam;
 namespace IO {
 namespace Cereal {

@@ -23,13 +23,13 @@ namespace mo
                 if(this->_input)
                      if(this->_input->getData(data)){
                          _current_data = data;
-                         *_user_var = &(*_current_data);
+                         *_user_var = ParamTraits<T>::ptr(_current_data);
                          return true;
                      }
                 if(this->_shared_input)
                     if(this->_shared_input->getData(data)){
                         _current_data = data;
-                        *_user_var = &(*_current_data);
+                        *_user_var = ParamTraits<T>::ptr(_current_data);
                         return true;
                     }
             }
@@ -67,7 +67,7 @@ namespace mo
     }
 
     template<typename T>
-    void TInputParamPtr<T>::onInputUpdate(ConstStorageRef_t data, IParam* param, const ContextPtr_t& ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags fg){
+    void TInputParamPtr<T>::onInputUpdate(ConstStorageRef_t data, IParam* param, Context* ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags fg){
         if(fg == mo::BufferUpdated_e && param->checkFlags(mo::Buffer_e)){
             ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
             IParam::emitUpdate(ts, ctx, fn, cs, fg);
@@ -78,7 +78,7 @@ namespace mo
             this->_ts = ts;
             this->_fn = fn;
             if(_user_var){
-                *_user_var = &(*_current_data);
+                *_user_var = ParamTraits<T>::ptr(_current_data);
             }
         }
     }
@@ -90,18 +90,18 @@ namespace mo
             size_t fn;
             InputStorage_t data;
             if(ITInputParam<T>::_shared_input){
-                if(!ITInputParam<T>::_shared_input->getData(data, ts, this->_ctx.get(), &fn)){
+                if(!ITInputParam<T>::_shared_input->getData(data, ts, this->_ctx, &fn)){
                     return false;
                 }
             }
             if(ITInputParam<T>::_input)
             {
-                if (!ITInputParam<T>::_input->getData(data, ts, this->_ctx.get(), &fn)) {
+                if (!ITInputParam<T>::_input->getData(data, ts, this->_ctx, &fn)) {
                     return false;
                 }
             }
             _current_data = data;
-            *_user_var = &(*_current_data);
+            *_user_var = ParamTraits<T>::ptr(_current_data);
             if (fn_)
                 *fn_ = fn;
             return true;
@@ -116,10 +116,10 @@ namespace mo
         if(_user_var){
             if(ITInputParam<T>::_shared_input){
                 InputStorage_t data;
-                if(ITInputParam<T>::_shared_input->getData(data, fn, this->_ctx.get(), &ts)){
+                if(ITInputParam<T>::_shared_input->getData(data, fn, this->_ctx, &ts)){
                     _current_data = data;
                     
-                    *_user_var = &(*_current_data);
+                    *_user_var = ParamTraits<T>::ptr(_current_data);
                     if (ts_)
                         *ts_ = ts;
                     this->_ts = ts;
@@ -129,9 +129,9 @@ namespace mo
             }
             if(ITInputParam<T>::_input){
                 InputStorage_t data;
-                if(this->_input->getData(data, fn, this->_ctx.get(), &ts)){
+                if(this->_input->getData(data, fn, this->_ctx, &ts)){
                     _current_data = data;
-                    *_user_var = &(*_current_data);
+                    *_user_var = ParamTraits<T>::ptr(_current_data);
                     if (ts_)
                         *ts_ = ts;
                     this->_ts = ts;
