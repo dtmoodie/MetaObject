@@ -14,7 +14,6 @@ class QWidget;
 namespace mo{
 class IParam;
 class Context;
-template<typename T, class Enable = void> class ITParam;
 template<typename T> class ITRangedParam;
 template<typename T> class THandler;
 template<typename T, int N, typename Enable> struct MetaParam;

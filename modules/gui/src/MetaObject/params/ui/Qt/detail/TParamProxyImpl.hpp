@@ -6,14 +6,10 @@
 #include "qpushbutton.h"
 #include "qlabel.h"
 
-namespace mo
-{
-    template<class T, class Enable = void> class ITParam;
+namespace mo{
     template<class T> class ITRangedParam;
-    namespace UI
-    {
-        namespace qt
-        {            
+    namespace UI{
+        namespace qt{
             template<typename T> 
             ParamProxy<T>::~ParamProxy(){
                 

@@ -3,14 +3,10 @@
 #include <MetaObject/detail/TypeInfo.hpp>
 #include <Wt/WApplication>
 
-namespace mo
-{
-    template<class T, class Enable = void> class ITParam;
+namespace mo{
     class IParam;
-    namespace UI
-    {
-        namespace wt
-        {
+    namespace UI{
+        namespace wt{
             class IParamProxy;
             class IParamInputProxy;
             class IParamOutputProxy;

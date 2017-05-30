@@ -24,6 +24,7 @@ namespace mo {
 template<typename T>
 class MO_EXPORTS TParam : virtual public ITAccessibleParam<T> {
 public:
+    typedef T ValueType;
     typedef typename ParamTraits<T>::Storage_t Storage_t;
     typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
     typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;

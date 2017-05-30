@@ -144,6 +144,7 @@ template<typename T, bool S> using storage_update_selector_t = typename std::ena
 template<typename T>
 class MO_EXPORTS ITParam<T, storage_update_selector_t<T, false>> : virtual public ITParamImpl<T> {
 public:
+    typedef T ValueType;
     typedef std::shared_ptr<ITParam<T>> Ptr;
     typedef typename ParamTraits<T>::Storage_t Storage_t;
     typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
@@ -166,7 +167,7 @@ public:
         const mo::Time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...);
         auto ctx = GetKeywordInputDefault<tag::context>(Context::getDefaultThreadContext().get(), args...);
         auto cs = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...);
-        updateDataImpl(data, ts ? *ts : OptionalTime_t(), ctx, fn, cs);
+        this->updateDataImpl(data, ts ? *ts : OptionalTime_t(), ctx, fn, cs);
         return this;
     }
 
@@ -182,7 +183,7 @@ public:
         const mo::Time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...);
         auto ctx = GetKeywordInputDefault<tag::context>(Context::getDefaultThreadContext().get(), args...);
         auto cs = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...);
-        updateDataImpl(tmp, ts ? *ts : OptionalTime_t(), ctx, fn, cs);
+        this->updateDataImpl(tmp, ts ? *ts : OptionalTime_t(), ctx, fn, cs);
         return this;
     }
 };
@@ -217,7 +218,7 @@ public:
         const mo::Time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...);
         auto ctx = GetKeywordInputDefault<tag::context>(Context::getDefaultThreadContext().get(), args...);
         auto cs = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...);
-        updateDataImpl(data, ts ? *ts : OptionalTime_t(), ctx, fn, cs);
+        this->updateDataImpl(data, ts ? *ts : OptionalTime_t(), ctx, fn, cs);
         return this;
     }
 };

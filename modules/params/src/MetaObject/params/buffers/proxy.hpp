@@ -1,13 +1,9 @@
 #pragma once
 #include "MetaObject/params/ITParam.hpp"
-namespace mo
-{
-    template<typename T, class Enable = void> class ITParam;
-    namespace Buffer
-    {
+namespace mo{
+    namespace Buffer{
         class IBuffer;
-        template<typename T> class Proxy : public ITParam<T>, public IBuffer
-        {
+        template<typename T> class Proxy : public ITParam<T>, public IBuffer{
             ITParam<T>* _input_Param;
             std::shared_ptr<ITParam<T>> _buffer;
 
