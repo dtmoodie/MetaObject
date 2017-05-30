@@ -297,7 +297,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
         if (dlsym_error) {
             LOG(warning)  << dlsym_error << '\n';
             boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
-            _pimpl->plugins.push_back(fullPluginPath + " - failed (dlsym_error). In " +
+            _pimpl->plugins.push_back("failed - " + fullPluginPath + " (dlsym_error). In " +
                                       boost::lexical_cast<std::string>((end - start).total_seconds()) + " seconds");
             return false;
         }
@@ -317,7 +317,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
     if (dlsym_error) {
         LOG(warning)  << dlsym_error << '\n';
         boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
-        _pimpl->plugins.push_back(fullPluginPath + " - failed (dlsym_error). In " +
+        _pimpl->plugins.push_back("failed - " + fullPluginPath + " (dlsym_error). In " +
                                   boost::lexical_cast<std::string>((end - start).total_seconds()) + " seconds");
         return false;
     }
@@ -325,7 +325,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
     {
         LOG(warning)  << "module == nullptr" << std::endl;
         boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
-        _pimpl->plugins.push_back(fullPluginPath + " - failed (module == nullptr). In " +
+        _pimpl->plugins.push_back("failed - " + fullPluginPath + " (module == nullptr). In " +
                                   boost::lexical_cast<std::string>((end - start).total_seconds()) + " seconds");
         return false;
     }
@@ -348,7 +348,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
     }
     setupObjectConstructors(interface);
     boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
-    _pimpl->plugins.push_back(fullPluginPath + " - success. In " + boost::lexical_cast<std::string>((end - start).total_seconds()) + " seconds");
+    _pimpl->plugins.push_back("Success - " + fullPluginPath + " In " + boost::lexical_cast<std::string>((end - start).total_seconds()) + " seconds");
     return true;
 }
 
