@@ -12,8 +12,8 @@ std::string IMetaObjectInfo::print() const
     std::stringstream ss;
     ss << "\n\n";
     std::string name = getObjectName();
-
-    ss << getInterfaceId(); // << " *** " << getObjectName() << " ***\n";
+    ss << getInterfaceName();
+    //ss << getInterfaceId(); // << " *** " << getObjectName() << " ***\n";
     ss << " ***** ";
     ss << name << " ";
     if(name.size() < 20)
