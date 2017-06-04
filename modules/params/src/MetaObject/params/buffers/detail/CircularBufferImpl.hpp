@@ -118,13 +118,14 @@ namespace mo
             return false;
         }
 
-        template<class T> void  CircularBuffer<T>::onInputUpdate(ConstStorageRef_t data, IParam*, const ContextPtr_t& ctx, 
+        template<class T> void  CircularBuffer<T>::onInputUpdate(ConstStorageRef_t data, IParam* param, Context* ctx,
                                                                  OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags fg){
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
-            if (ts) _data_buffer.push_back(State<T>(*ts, fn, ctx.get(), cs, data));
-            else _data_buffer.push_back(State<T>(fn, ctx.get(), cs, data));
+            if (ts) _data_buffer.push_back(State<T>(*ts, fn, ctx, cs, data));
+            else _data_buffer.push_back(State<T>(fn, ctx, cs, data));
             this->_modified = true;
             lock.unlock();
+            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
             ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
         }
         template<typename T> ParamConstructor<CircularBuffer<T>> CircularBuffer<T>::_circular_buffer_param_constructor;

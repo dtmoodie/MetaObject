@@ -134,6 +134,7 @@ find_package(Boost REQUIRED COMPONENTS ${Boost_required_components})
 
 # ---------------------- cereal ---------------------------------
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include")
+set(cereal_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include" CACHE PATH "" FORCE)
 set(PROJECT_BIN_DIRS_RELWITHDEBINFO "")
 set(PROJECT_BIN_DIRS_RELEASE "")
 set(PROJECT_BIN_DIRS_DEBUG "")
@@ -361,7 +362,7 @@ file(GLOB children RELATIVE "${basedir}/${curdir}" "${basedir}/${curdir}/*")
         endif()
    endforeach()
 endmacro()
-
+set(metaobject_module_includes "" CACHE INTERNAL "" FORCE)
 function(metaobject_declare_module)
     set(oneValueArgs NAME)
     set(multiValueArgs SRC DEPENDS FLAGS CUDA_SRC)
@@ -396,6 +397,7 @@ function(metaobject_declare_module)
             $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
             $<INSTALL_INTERFACE:include>
     )
+    set(metaobject_module_includes "${metaobject_module_includes};${CMAKE_CURRENT_LIST_DIR}/src" CACHE INTERNAL "" FORCE)
 
     set_target_properties(metaobject_${metaobject_declare_module_NAME} PROPERTIES FOLDER Modules)
     if(metaobject_declare_module_FLAGS)
@@ -424,7 +426,7 @@ function(metaobject_declare_module)
         FILES_MATCHING PATTERN "*.hpp"
     )
     install(EXPORT metaobject_${metaobject_declare_module_NAME}Targets DESTINATION "${CMAKE_INSTALL_PREFIX}/share/MetaObject" COMPONENT dev)
-    RCC_TARGET_CONFIG(metaobject_${metaobject_declare_module_NAME})
+
     if(RCC_VERBOSE_CONFIG)
         set(test_lib "")
         set(test_inc "")
@@ -446,7 +448,7 @@ foreach( module ${modules})
     add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/modules/${module})
 endforeach()
 set(MetaObject_LIBRARIES "${metaobject_modules}" CACHE STRING "" FORCE)
-
+set(MetaObject_INCLUDE_DIRS "${metaobject_module_includes};${cereal_INCLUDE_DIRS};${RCC_INCLUDE_DIRS}" CACHE PATH "" FORCE)
 # -------------------- tests ----------------------------------
 if(BUILD_TESTS)
     add_subdirectory(tests)

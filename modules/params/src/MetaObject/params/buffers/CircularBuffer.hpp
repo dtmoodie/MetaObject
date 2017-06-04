@@ -38,7 +38,7 @@ namespace Buffer
         typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
         typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
         typedef typename ParamTraits<T>::Input_t Input_t;
-        typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, const ContextPtr_t&, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+        typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
         typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
         typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
         typedef T ValueType;
@@ -66,7 +66,7 @@ namespace Buffer
         bool getTimestampRange(mo::Time_t& start, mo::Time_t& end);
         bool getFrameNumberRange(size_t& start,size_t& end);
             
-        void onInputUpdate(ConstStorageRef_t, IParam*, const ContextPtr_t&, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+        void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
         virtual ParamType getBufferType() const{ return CircularBuffer_e;}
     protected:
         bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs);

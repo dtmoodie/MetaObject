@@ -134,13 +134,13 @@ std::string MetaObjectFactory::printAllObjectInfo(int interface_id) const
         {
             if(interface_id == -1)
             {
-                ss << info->print();
+                ss << info->Print();
             }
             else
             {
                 if(constructors[i]->GetInterfaceId() == interface_id)
                 {
-                    ss << info->print();
+                    ss << info->Print();
                 }
             }
         }

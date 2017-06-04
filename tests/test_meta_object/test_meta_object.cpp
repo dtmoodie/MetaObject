@@ -115,7 +115,7 @@ BOOST_AUTO_TEST_CASE(test_meta_object_static_introspection_global)
     BOOST_REQUIRE(info.size());
     for (auto& item : info)
     {
-        std::cout << item->print() << std::endl;
+        std::cout << item->Print() << std::endl;
     }
 }
 
@@ -123,7 +123,7 @@ BOOST_AUTO_TEST_CASE(test_meta_object_static_introspection_specific)
 {
     auto info = MetaObjectInfoDatabase::instance()->getMetaObjectInfo("test_meta_object_signals");
     BOOST_REQUIRE(info);
-    std::cout << info->print() << std::endl;
+    std::cout << info->Print() << std::endl;
 }
 
 
@@ -190,7 +190,7 @@ BOOST_AUTO_TEST_CASE(test_meta_object_external_slot)
     {
         slot_called = value == 5;
     });
-    BOOST_REQUIRE(meta_obj->ConnectByName("test_int", &int_slot));
+    BOOST_REQUIRE(meta_obj->connectByName("test_int", &int_slot));
     int desired_value = 5;
     meta_obj->sig_test_int(desired_value);
     BOOST_REQUIRE(slot_called);
@@ -204,12 +204,12 @@ BOOST_AUTO_TEST_CASE(test_meta_object_internal_slot)
     auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_slots");
     auto obj = constructor->Construct();
     auto meta_obj = static_cast<test_meta_object_slots*>(obj);
-    //auto slot = meta_obj->GetSlot_test_void<void()>();
-    //auto overload = meta_obj->GetSlot_test_void<void(int)>();
+    //auto slot = meta_obj->getSlot_test_void<void()>();
+    //auto overload = meta_obj->getSlot_test_void<void(int)>();
     meta_obj->Init(true);
     meta_obj->setupSignals(&mgr);
     TSignal<void(void)> signal;
-    BOOST_REQUIRE(meta_obj->ConnectByName("test_void", &signal));
+    BOOST_REQUIRE(meta_obj->connectByName("test_void", &signal));
     signal();
     BOOST_REQUIRE_EQUAL(meta_obj->slot_called, 1);
     signal();

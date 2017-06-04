@@ -430,7 +430,7 @@ BOOST_AUTO_TEST_CASE(stl_allocator_pool)
 BOOST_AUTO_TEST_CASE(async_transfer_rate_random)
 {
     boost::posix_time::ptime start, end;
-    double zero_allocation_time, default_time, pinned_time, pooled_time, stack_time;
+    double zero_allocation_time, default_time, pooled_time;
     const int num_iterations = 500;
     std::vector<int> sizes;
     sizes.resize(num_iterations);
@@ -492,7 +492,7 @@ BOOST_AUTO_TEST_CASE(async_transfer_rate_random)
 
     {
         mo::ConcreteAllocator<mo::CpuStackPolicy, mo::StackPolicy<cv::cuda::GpuMat, mo::ContinuousPolicy>> allocator;
-        auto defaultAllocator = cv::cuda::GpuMat::defaultAllocator();
+        //auto defaultAllocator = cv::cuda::GpuMat::defaultAllocator();
         cv::cuda::GpuMat::setDefaultAllocator(&allocator);
         cv::Mat::setDefaultAllocator(&allocator);
         cv::cuda::Stream stream;

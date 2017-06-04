@@ -79,21 +79,25 @@ namespace mo
         {
             return getTypeInfoStatic();
         }
-        std::string                        getObjectName() const
+        std::string                        GetObjectName() const
         {
             return T::GetTypeNameStatic();
         }
-        unsigned int                       getInterfaceId() const
+        unsigned int                       GetInterfaceId() const
         {
             return T::s_interfaceID;
         }
-        virtual std::string getInterfaceName() const
+        virtual std::string GetInterfaceName() const
         {
             return T::GetInterfaceName();
         }
+        virtual IObjectConstructor* GetConstructor() const
+        {
+           return T::GetConstructorStatic();
+        }
     private:
-        DEFINE_HAS_STATIC_FUNCTION(HasTooltip, V::getTooltipStatic, std::string(*)(void));
-        DEFINE_HAS_STATIC_FUNCTION(HasDescription, V::getDescriptionStatic, std::string(*)(void));
+        DEFINE_HAS_STATIC_FUNCTION(HasTooltip, getTooltipStatic, std::string(*)(void));
+        DEFINE_HAS_STATIC_FUNCTION(HasDescription, getDescriptionStatic, std::string(*)(void));
         template<class U> static std::string _get_tooltip_helper(typename std::enable_if<HasTooltip<U>::value, void>::type* = 0)
         {
             return U::getTooltipStatic();

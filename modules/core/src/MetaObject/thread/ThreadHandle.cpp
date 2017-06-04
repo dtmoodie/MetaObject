@@ -46,7 +46,7 @@ ThreadHandle& ThreadHandle::operator=(const ThreadHandle& other){
     increment();
     return *this;
 }
-ContextPtr_t ThreadHandle::getContext(){
+ContextPtr_t ThreadHandle::getContext() const{
     if(_thread){
         return _thread->getContext();
     }

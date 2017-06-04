@@ -206,10 +206,10 @@ struct impl {
 void ThreadSpecificQueue::push(const std::function<void(void)>& f, size_t id, void* obj) {
 
 #ifdef _DEBUG
-    if(impl::inst()->_deleted_objects.find(obj) != impl::inst()->_deleted_objects.end()) {
+    /*if(impl::inst()->_deleted_objects.find(obj) != impl::inst()->_deleted_objects.end()) {
         LOG(trace) << "Pushing function onto queue from deleted object";
         //return;
-    }
+    }*/
 #endif
     impl::inst()->push(f, id, obj);
 }
@@ -225,7 +225,7 @@ bool ThreadSpecificQueue::runOnce(size_t id) {
 void ThreadSpecificQueue::removeFromQueue(void* obj) {
     impl::inst()->remove_from_queue(obj);
 #ifdef _DEBUG
-    impl::inst()->_deleted_objects.insert(obj);
+    //impl::inst()->_deleted_objects.insert(obj);
 #endif
 }
 size_t ThreadSpecificQueue::size(size_t id) {

@@ -3,9 +3,10 @@
 #include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
+#include <MetaObject/params/detail/ParamMacrosImpl.hpp>
 
-#define INSTANTIATE_META_PARAM(TYPE) \
-static mo::MetaParam<TYPE, __COUNTER__> COMBINE(g_meta_Param, __LINE__)(#TYPE); \
-template class mo::TInputParamPtr<TYPE>; \
-template class mo::TParamPtr<TYPE>; \
-template class mo::TParamOutput<TYPE>
+#define INSTANTIATE_META_PARAM(TYPE)                                                                               \
+    static mo::MetaParam<mo::argument_type<void(TYPE)>::type, __COUNTER__> COMBINE(g_meta_Param, __LINE__)(#TYPE); \
+    template class mo::TInputParamPtr<mo::argument_type<void(TYPE)>::type>;                                        \
+    template class mo::TParamPtr<mo::argument_type<void(TYPE)>::type>;                                             \
+    template class mo::TParamOutput<mo::argument_type<void(TYPE)>::type>

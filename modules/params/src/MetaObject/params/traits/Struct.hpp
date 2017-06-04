@@ -1,13 +1,15 @@
 #pragma once
 #include "MetaObject/logging/Log.hpp"
 #include <type_traits>
-namespace mo{
-template<class Type, class Enable> struct ParamTraitsImpl;
+namespace mo {
+template <class Type, class Enable>
+struct ParamTraitsImpl;
 /*!
  *  Specialization for non POD datatypes.  Assume it is necessary to store it in a std::shared_ptr
  *  share one object using std::shared_ptr<const Type> between the output, inputs, and buffers
  */
-template<class Type> struct ParamTraitsImpl<Type, typename std::enable_if<!std::is_pod<Type>::value>::type> {
+template <class Type>
+struct ParamTraitsImpl<Type, typename std::enable_if<!std::is_pod<Type>::value>::type> {
     enum {
         REQUIRES_GPU_SYNC = 0,
         HAS_TRIVIAL_MOVE = 0
@@ -33,68 +35,85 @@ template<class Type> struct ParamTraitsImpl<Type, typename std::enable_if<!std::
     // User space input pointer, used in TInputParamPtr
     typedef const Type* Input_t;
 
-
     // Shallow copy if possible
-    static inline Storage_t copy(const Type& value) {
+    static inline Storage_t copy(const Type& value)
+    {
         return Storage_t(new Type(value));
     }
-    static inline Storage_t copy(ConstStorageRef_t value){
+
+    static inline Storage_t copy(ConstStorageRef_t value)
+    {
         return value; // copy constructor in Storage_t
     }
 
     // deep copy if possible
-    static Storage_t clone(const Type& value){
+    static Storage_t clone(const Type& value)
+    {
         Storage_t output(new Type(value)); // This assumes a copy constructor
         return output;
     }
-    static Storage_t clone(ConstStorageRef_t  value){
+    static Storage_t clone(ConstStorageRef_t value)
+    {
         Storage_t output(new Type(get(value))); // This assumes a copy constructor
         return output;
     }
 
-    template<class...Args>
-    static Type& reset(Storage_t& input_storage, Args&&...args) {
+    template <class... Args>
+    static Type& reset(Storage_t& input_storage, Args&&... args)
+    {
         input_storage.reset(new Type(std::forward<Args>(args)...));
         return *input_storage;
     }
 
-    static Type& reset(Storage_t& input_storage, ConstStorageRef_t data){
-        if(data){
+    static Type& reset(Storage_t& input_storage, ConstStorageRef_t data)
+    {
+        if (data) {
             input_storage.reset(new Type(*data));
-        }else{
+        } else {
             input_storage.reset(new Type());
         }
+        MO_ASSERT(input_storage != nullptr);
         return *input_storage;
     }
 
-    template<class...Args>
-    static void reset(InputStorage_t& input_storage, Args&&...args) {
+    static void move(Storage_t& storage, Type&& data)
+    {
+        storage = std::make_shared<Type>(std::move(data));
+    }
+
+    template <class... Args>
+    static void reset(InputStorage_t& input_storage, Args&&... args)
+    {
         input_storage.reset(new Type(std::forward<Args>(args)...));
     }
 
-    template<class...Args>
-    static void nullify(InputStorage_t& input_storage) {
+    template <class... Args>
+    static void nullify(InputStorage_t& input_storage)
+    {
         input_storage.reset();
     }
 
     // Access underlying data
-    static inline Type& get(const Storage_t& value){
+    static inline Type& get(const Storage_t& value)
+    {
         MO_ASSERT(value);
         return *value;
     }
 
-    static inline const Type& get(ConstStorageRef_t& value) {
+    static inline const Type& get(ConstStorageRef_t& value)
+    {
         MO_ASSERT(value);
         return *value;
     }
 
-    static inline StoragePtr_t ptr(const Storage_t& data){
+    static inline StoragePtr_t ptr(const Storage_t& data)
+    {
         return data.get();
     }
-    static inline ConstStoragePtr_t ptr(ConstStorageRef_t& data) {
+    static inline ConstStoragePtr_t ptr(ConstStorageRef_t& data)
+    {
         return data.get();
     }
-
 };
 
 } // namespace mo

@@ -16,10 +16,12 @@ namespace mo
         virtual std::vector<SignalInfo*>    getSignalInfo() const = 0;
         virtual std::vector<SlotInfo*>      getSlotInfo() const = 0;
         virtual TypeInfo                    getTypeInfo() const = 0;
-        virtual std::string                 print() const;
+        virtual std::string                 Print(IObjectInfo::Verbosity verbosity = IObjectInfo::INFO) const; // Pascal case in RCC
+        virtual std::string                 getObjectTooltip() const;
+        virtual std::string                 getObjectHelp() const;
         virtual std::string                 getDisplayName() const
         {
-            return getObjectName();
+            return GetObjectName();
         }
     };
 }

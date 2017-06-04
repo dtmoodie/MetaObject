@@ -7,6 +7,7 @@
 #endif
 #include "MetaObject/signals/TSlot.hpp"
 #include "MetaObject/core/detail/Counter.hpp"
+#include "MetaObject/core/detail/Forward.hpp"
 #include "MetaObject/signals/SlotInfo.hpp"
 
 // -------------------------------------------------------------------------------------------
@@ -116,5 +117,5 @@ static void _list_slots(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy
   #define MO_SLOT(RET, ...)
   #define DESCRIBE_SLOT(NAME, DESCRIPTION)
 #endif
-#define PARAM_UPDATE_SLOT(NAME) MO_SLOT(void, on_##NAME##_modified, mo::Context*, mo::IParam*)
+#define PARAM_UPDATE_SLOT(NAME) MO_SLOT(void, on_##NAME##_modified, mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, mo::ICoordinateSystem*, mo::UpdateFlags)
 #define SLOT_TOOLTIP(name, tooltip) SLOT_TOOLTIP_(name, tooltip, __COUNTER__)

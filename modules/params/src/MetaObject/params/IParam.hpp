@@ -34,6 +34,24 @@ https://github.com/dtmoodie/MetaObject
 #include <string>
 #include <memory>
 
+#ifndef MetaObject_EXPORTS
+#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
+#ifdef WIN32
+    #pragma comment(lib, "Advapi32.lib")
+    #ifdef _DEBUG
+        RUNTIME_COMPILER_LINKLIBRARY("metaobject_paramsd.lib")
+    #else
+        RUNTIME_COMPILER_LINKLIBRARY("metaobject_params.lib")
+    #endif
+#else // Unix
+    #ifdef NDEBUG
+        RUNTIME_COMPILER_LINKLIBRARY("-lmetaobject_params")
+    #else
+        RUNTIME_COMPILER_LINKLIBRARY("-lmetaobject_paramsd")
+    #endif // NDEBUG
+#endif // WIN32
+#endif // MetaObject_EXPORTS
+
 namespace mo {
 template<class AR> void load(AR& ar, mo::Time_t& t) {
     double value;
@@ -90,7 +108,7 @@ public:
            OptionalTime_t       ts_     = OptionalTime_t(),
            Context*             ctx_    = nullptr,
            size_t               fn_     = -1);
-    
+
     virtual ~IParam();
 
     IParam* setName(const std::string& name_); // Get the name of this Param
@@ -99,7 +117,7 @@ public:
     IParam* setFrameNumber(size_t fn); // Set the frame number for this Param
     IParam* setTimestamp(const mo::Time_t& ts); // Set the timestamp for this Param
     IParam* setCoordinateSystem(ICoordinateSystem* cs_); // Set the coordinate system for this Param
-    
+
     const std::string&  getName()      const; // Get the name of this Param
     const std::string   getTreeName()  const; // Get the name of this parmaeter appended with the tree root. IE root_name:param_name
     const std::string&  getTreeRoot()  const; // Get the tree root of this Param, ie the name of the owning parent object

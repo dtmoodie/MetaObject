@@ -109,7 +109,7 @@ BOOST_AUTO_TEST_CASE(initialize)
 BOOST_AUTO_TEST_CASE(object_print)
 {
     auto info = mo::MetaObjectFactory::instance()->getObjectInfo("derived_signals");
-    info->print();
+    info->Print();
 }
 
 BOOST_AUTO_TEST_CASE(Param_static)
@@ -157,7 +157,7 @@ BOOST_AUTO_TEST_CASE(call_base_slot)
 {
     auto derived_obj = derived_signals::create();
     TSignal<void(int)> sig;
-    derived_obj->ConnectByName("base_slot", &sig);
+    derived_obj->connectByName("base_slot", &sig);
     BOOST_REQUIRE_EQUAL(derived_obj->base_count, 0);
     sig(100);
     BOOST_REQUIRE_EQUAL(derived_obj->base_count, 100);
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(call_derived_slot)
 {
     auto derived_obj = derived_signals::create();
     TSignal<void(int)> sig;
-    derived_obj->ConnectByName("derived_slot", &sig);
+    derived_obj->connectByName("derived_slot", &sig);
     BOOST_REQUIRE_EQUAL(derived_obj->derived_count, 0);
     sig(100);
     BOOST_REQUIRE_EQUAL(derived_obj->derived_count, 100);
@@ -177,7 +177,7 @@ BOOST_AUTO_TEST_CASE(call_overloaded_slot)
 {
     auto derived_obj = derived_signals::create();
     TSignal<void(int)> sig;
-    derived_obj->ConnectByName("override_slot", &sig);
+    derived_obj->connectByName("override_slot", &sig);
     BOOST_REQUIRE_EQUAL(derived_obj->derived_count, 0);
     sig(100);
     BOOST_REQUIRE_EQUAL(derived_obj->derived_count, 300);
@@ -196,7 +196,7 @@ BOOST_AUTO_TEST_CASE(diamond)
     auto constructor = mo::MetaObjectFactory::instance()->getConstructor("multi_derive");
     BOOST_REQUIRE(constructor);
     auto info = constructor->GetObjectInfo();
-    std::cout << info->print();
+    std::cout << info->Print();
     //auto meta_info = dynamic_cast<MetaObjectInfo*>(info);
     //BOOST_REQUIRE(meta_info);
 

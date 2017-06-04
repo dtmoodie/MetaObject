@@ -17,7 +17,17 @@ std::string mo::paramFlagsToString(ParamFlags type) {
         return "Buffer";
     case Optional_e:
         return "Optional";
+    case Unstamped_e:
+        return "Unstamped";
+    case Source_e:
+        return "Source";
+    case Sync_e:
+        return "Sync";
+    case RequestBuffered_e:
+        return "RequestBuffered";
     case Desynced_e:
+        return "";
+    case OwnsMutex_e:
         return "";
     }
     return "";
@@ -60,8 +70,14 @@ std::string mo::paramTypeToString(ParamType flags) {
         return "NNStreamBuffer";
     case Queue_e:
         return "Queue";
+    case BlockingQueue_e:
+        return "BlockingQueue";
+    case DroppingQueue_e:
+        return "DroppingQueue";
+    case ForceDirectConnection_e:
+        return "ForceDirectConnection";
     case ForceBufferedConnection_e:
-        return "";
+        return "ForceBufferedConnection";
     }
     return "";
 }

@@ -69,7 +69,7 @@ namespace mo
     template<typename T>
     void TInputParamPtr<T>::onInputUpdate(ConstStorageRef_t data, IParam* param, Context* ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags fg){
         if(fg == mo::BufferUpdated_e && param->checkFlags(mo::Buffer_e)){
-            ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
             IParam::emitUpdate(ts, ctx, fn, cs, fg);
             return;
         }
@@ -88,22 +88,22 @@ namespace mo
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if(_user_var){
             size_t fn;
-            InputStorage_t data;
             if(ITInputParam<T>::_shared_input){
-                if(!ITInputParam<T>::_shared_input->getData(data, ts, this->_ctx, &fn)){
+                if(!ITInputParam<T>::_shared_input->getData(_current_data, ts, this->_ctx, &fn)){
                     return false;
                 }
             }
             if(ITInputParam<T>::_input)
             {
-                if (!ITInputParam<T>::_input->getData(data, ts, this->_ctx, &fn)) {
+                if (!ITInputParam<T>::_input->getData(_current_data, ts, this->_ctx, &fn)) {
                     return false;
                 }
             }
-            _current_data = data;
             *_user_var = ParamTraits<T>::ptr(_current_data);
             if (fn_)
                 *fn_ = fn;
+            this->_ts = ts;
+            this->_fn = fn;
             return true;
         }
         return false;
@@ -112,33 +112,23 @@ namespace mo
     template<typename T>
     bool TInputParamPtr<T>::getInput(size_t fn, OptionalTime_t* ts_){
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
-        OptionalTime_t ts;
         if(_user_var){
+            OptionalTime_t ts;
             if(ITInputParam<T>::_shared_input){
-                InputStorage_t data;
-                if(ITInputParam<T>::_shared_input->getData(data, fn, this->_ctx, &ts)){
-                    _current_data = data;
-                    
-                    *_user_var = ParamTraits<T>::ptr(_current_data);
-                    if (ts_)
-                        *ts_ = ts;
-                    this->_ts = ts;
-                    this->_fn = fn;
-                    return true;
+                if(!ITInputParam<T>::_shared_input->getData(_current_data, fn, this->_ctx, &ts)){
+                    return false;
                 }
             }
             if(ITInputParam<T>::_input){
-                InputStorage_t data;
-                if(this->_input->getData(data, fn, this->_ctx, &ts)){
-                    _current_data = data;
-                    *_user_var = ParamTraits<T>::ptr(_current_data);
-                    if (ts_)
-                        *ts_ = ts;
-                    this->_ts = ts;
-                    this->_fn = fn;
-                    return true;
+                if(!this->_input->getData(_current_data, fn, this->_ctx, &ts)){
+                    return false;
                 }
             }
+            *_user_var = ParamTraits<T>::ptr(_current_data);
+            if (ts_)
+                *ts_ = ts;
+            this->_ts = ts;
+            this->_fn = fn;
         }
         return false;
     }

@@ -21,7 +21,7 @@ namespace mo{
         ThreadHandle& operator=(ThreadHandle&& other);
         ThreadHandle& operator=(const ThreadHandle& other);
 
-        ContextPtr_t getContext();
+        ContextPtr_t getContext() const;
         size_t       getId() const;
         bool         isOnThread() const;
         void         pushEventQueue(const std::function<void(void)>& f);

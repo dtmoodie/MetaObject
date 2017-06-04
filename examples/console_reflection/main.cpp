@@ -23,7 +23,7 @@ int main()
             interface_info->PrintHelp();
         }
         // Print reflection info
-        std::cout <<  info->print() << std::endl;
+        std::cout << info->Print() << std::endl;
     }
 
     // Construct an object

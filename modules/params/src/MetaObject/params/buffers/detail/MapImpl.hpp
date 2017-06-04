@@ -112,7 +112,7 @@ namespace mo{
             IParam::_modified = true;
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
+            ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
         }
     }
 }

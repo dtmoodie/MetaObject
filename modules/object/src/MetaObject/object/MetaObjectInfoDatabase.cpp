@@ -19,13 +19,16 @@ MetaObjectInfoDatabase::~MetaObjectInfoDatabase()
 
 MetaObjectInfoDatabase* MetaObjectInfoDatabase::instance()
 {
-    static MetaObjectInfoDatabase g_inst;
-    return &g_inst;
+    static MetaObjectInfoDatabase* g_inst = nullptr;
+    if(g_inst == nullptr){
+        g_inst = new MetaObjectInfoDatabase();
+    }
+    return g_inst;
 }
 
 void MetaObjectInfoDatabase::registerInfo(IMetaObjectInfo* info)
 {
-    _pimpl->info[info->getObjectName()] = info;
+    _pimpl->info[info->GetObjectName()] = info;
 }
 
 std::vector<IMetaObjectInfo*> MetaObjectInfoDatabase::getMetaObjectInfo()
