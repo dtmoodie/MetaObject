@@ -10,7 +10,9 @@
 #include <RuntimeCompiler/FileSystemUtils.h>
 #include <sstream>
 using namespace mo;
-
+#ifdef GetModuleFileName
+#undef GetModuleFileName
+#endif
 std::string IMetaObjectInfo::getObjectTooltip() const{
     return "";
 }
