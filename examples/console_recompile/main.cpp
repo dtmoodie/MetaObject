@@ -12,6 +12,7 @@ int main()
 
     }catch(mo::ExceptionWithCallStack<std::string>& e)
     {
+        (void)e;
         LOG(debug) << "Exception caught in the correct handler";
     }catch(...)
     {

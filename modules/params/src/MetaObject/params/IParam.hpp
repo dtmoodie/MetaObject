@@ -79,6 +79,20 @@ MO_KEYWORD_INPUT(context, Context*)
 MO_KEYWORD_INPUT(param_name, std::string)
 MO_KEYWORD_INPUT(tree_root, std::string)
 MO_KEYWORD_INPUT(param_flags, ParamFlags)
+
+#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__)
+#if defined (metaobject_params_EXPORTS)
+#  define PARAM_EXPORTS __declspec(dllexport)
+#else
+#  define PARAM_EXPORTS  __declspec(dllimport)
+#endif
+#elif defined __GNUC__ && __GNUC__ >= 4
+#  define PARAM_EXPORTS  __attribute__ ((visibility ("default")))
+#else
+#  define PARAM_EXPORTS 
+#endif
+
+
 namespace tag {
     struct param;
 }
@@ -99,10 +113,11 @@ namespace kwargs {
     };
 
     template <>
-    struct TKeyword<tag::param> {
+    struct PARAM_EXPORTS TKeyword<tag::param> {
         static TKeyword            instance;
         TaggedArgument<tag::param> operator=(const IParam& data);
     };
+    
 } // namespace kwargs
 
 namespace tag {

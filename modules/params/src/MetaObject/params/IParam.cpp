@@ -26,12 +26,13 @@ https://github.com/dtmoodie/Params
 namespace mo {
 
 namespace kwargs {
-
     TKeyword<tag::param> TKeyword<tag::param>::instance;
 
     TaggedArgument<tag::param> TKeyword<tag::param>::operator=(const IParam& data) {
         return TaggedArgument<tag::param>(data);
     }
+
+    template MO_EXPORTS struct TKeyword<tag::param>;
 }
 
 IParam::IParam(const std::string& name_, ParamFlags flags_, OptionalTime_t ts, Context* ctx, size_t fn)
