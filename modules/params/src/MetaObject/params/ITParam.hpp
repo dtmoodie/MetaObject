@@ -25,53 +25,46 @@ template <class T>
 struct Stamped {
     Stamped(typename ParamTraits<T>::ConstStorageRef_t data)
         : data(data)
-        , fn(0)
-    {
+        , fn(0) {
     }
 
     explicit Stamped(mo::Time_t ts, typename ParamTraits<T>::ConstStorageRef_t data)
         : ts(ts)
-        , data(data)
-    {
+        , data(data) {
     }
 
     explicit Stamped(size_t fn, typename ParamTraits<T>::ConstStorageRef_t data)
         : fn(fn)
-        , data(data)
-    {
+        , data(data) {
     }
 
     explicit Stamped(mo::Time_t ts, size_t fn, typename ParamTraits<T>::ConstStorageRef_t data)
         : ts(ts)
         , fn(fn)
-        , data(data)
-    {
+        , data(data) {
     }
 
     template <class... U>
     Stamped(mo::Time_t ts, size_t frame_number, U... args)
-        : data(args...)
-    {
+        : data(args...) {
         this->ts = ts;
         this->fn = frame_number;
     }
-    Stamped& operator=(const Stamped<T>& other)
-    {
+    Stamped& operator=(const Stamped<T>& other) {
         this->data = other.data;
-        this->ts = other.ts;
-        this->fn = other.fn;
+        this->ts   = other.ts;
+        this->fn   = other.fn;
         return *this;
     }
     template <class A>
-    void serialize(A& ar)
-    {
+    void serialize(A& ar) {
         ar(ts);
         ar(fn);
         ar(*static_cast<T*>(this));
     }
 
-    OptionalTime_t ts;
-    size_t fn;
+    OptionalTime_t                                                                                                     ts;
+    size_t                                                                                                             fn;
     typename std::remove_const<typename std::remove_reference<typename ParamTraits<T>::ConstStorageRef_t>::type>::type data;
 };
 
@@ -81,55 +74,48 @@ struct State : public Stamped<T> {
     State(mo::Time_t ts, size_t fn, Context* ctx, ICoordinateSystem* cs, typename ParamTraits<T>::ConstStorageRef_t init)
         : Stamped<T>(ts, fn, init)
         , ctx(ctx)
-        , cs(cs)
-    {
+        , cs(cs) {
     }
 
     State(mo::Time_t ts, size_t fn, Context* ctx, typename ParamTraits<T>::ConstStorageRef_t init)
         : Stamped<T>(ts, fn, init)
         , ctx(ctx)
-        , cs(nullptr)
-    {
+        , cs(nullptr) {
     }
 
     State(size_t fn, Context* ctx, ICoordinateSystem* cs, typename ParamTraits<T>::ConstStorageRef_t init)
         : Stamped<T>(fn, init)
         , ctx(ctx)
-        , cs(cs)
-    {
+        , cs(cs) {
     }
 
     State(mo::Time_t ts, size_t fn, typename ParamTraits<T>::ConstStorageRef_t init)
         : Stamped<T>(ts, fn, init)
         , ctx(nullptr)
-        , cs(nullptr)
-    {
+        , cs(nullptr) {
     }
 
     State(mo::Time_t ts, typename ParamTraits<T>::ConstStorageRef_t init)
         : Stamped<T>(ts, init)
         , ctx(nullptr)
-        , cs(nullptr)
-    {
+        , cs(nullptr) {
     }
 
     State(typename ParamTraits<T>::ConstStorageRef_t init)
         : Stamped<T>(init)
         , ctx(nullptr)
-        , cs(nullptr)
-    {
+        , cs(nullptr) {
     }
 
-    State& operator=(const State<T>& other)
-    {
+    State& operator=(const State<T>& other) {
         this->data = other.data;
-        this->ts = other.ts;
-        this->fn = other.fn;
-        this->ctx = other.ctx;
-        this->cs = other.cs;
+        this->ts   = other.ts;
+        this->fn   = other.fn;
+        this->ctx  = other.ctx;
+        this->cs   = other.cs;
         return *this;
     }
-    Context* ctx;
+    Context*           ctx;
     ICoordinateSystem* cs;
 };
 
@@ -141,26 +127,55 @@ using enable_if_storage_differs_t = typename std::enable_if<!std::is_same<T, U>:
 template <typename T>
 class MO_EXPORTS ITParamImpl : virtual public IParam {
 public:
-    typedef std::shared_ptr<ITParam<T> > Ptr;
-    typedef typename ParamTraits<T>::Storage_t Storage_t;
+    typedef std::shared_ptr<ITParam<T> >               Ptr;
+    typedef typename ParamTraits<T>::Storage_t         Storage_t;
     typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
-    typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
-    typedef typename ParamTraits<T>::Input_t Input_t;
+    typedef typename ParamTraits<T>::InputStorage_t    InputStorage_t;
+    typedef typename ParamTraits<T>::Input_t           Input_t;
     typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
     typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
-    typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
+    typedef TSlot<TUpdateSig_t>   TUpdateSlot_t;
 
     virtual bool getData(InputStorage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
-        Context* ctx = nullptr, size_t* fn_ = nullptr)
+                         Context* ctx = nullptr, size_t* fn_ = nullptr)
         = 0;
 
     virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr) = 0;
 
-    virtual const TypeInfo& getTypeInfo() const;
+    virtual const TypeInfo&             getTypeInfo() const;
     virtual std::shared_ptr<Connection> registerUpdateNotifier(ISlot* f);
     virtual std::shared_ptr<Connection> registerUpdateNotifier(std::shared_ptr<ISignalRelay> relay);
     std::shared_ptr<Connection> registerUpdateNotifier(TUpdateSlot_t* f);
     std::shared_ptr<Connection> registerUpdateNotifier(std::shared_ptr<TSignalRelay<TUpdateSig_t> >& relay);
+
+    template <class... Args>
+    ITParamImpl<T>* updateData(const Storage_t& data, const Args&... args) {
+        size_t             fn;
+        OptionalTime_t     ts;
+        Context*           ctx   = nullptr;
+        ICoordinateSystem* cs    = nullptr;
+        const IParam*      param = GetKeywordInputOptional<tag::param>(args...);
+        if (param) {
+            fn  = param->getFrameNumber();
+            ctx = param->getContext();
+            cs  = param->getCoordinateSystem();
+            ts  = param->getTimestamp();
+        }
+        const size_t* fnptr = GetKeywordInputOptional<tag::frame_number>(args...);
+        if (fnptr)
+            fn = *fnptr;
+        else
+            fn = this->_fn + 1;
+
+        if (auto tsptr = GetKeywordInputOptional<tag::timestamp>(args...))
+            ts = *tsptr;
+        if (auto ctx_ = GetKeywordInputDefault<tag::context>(nullptr, args...))
+            ctx = ctx_;
+        if (auto cs_ = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...))
+            cs = cs_;
+        this->updateDataImpl(data, ts, ctx, fn, cs);
+        return this;
+    }
 
 protected:
     friend class AccessToken<T>;
@@ -177,53 +192,27 @@ using storage_update_selector_t = typename std::enable_if<std::is_same<typename 
 template <typename T>
 class MO_EXPORTS ITParam<T, storage_update_selector_t<T, false> > : virtual public ITParamImpl<T> {
 public:
-    typedef T ValueType;
-    typedef std::shared_ptr<ITParam<T> > Ptr;
-    typedef typename ParamTraits<T>::Storage_t Storage_t;
+    typedef T                                          ValueType;
+    typedef std::shared_ptr<ITParam<T> >               Ptr;
+    typedef typename ParamTraits<T>::Storage_t         Storage_t;
     typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
-    typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
-    typedef typename ParamTraits<T>::Input_t Input_t;
+    typedef typename ParamTraits<T>::InputStorage_t    InputStorage_t;
+    typedef typename ParamTraits<T>::Input_t           Input_t;
     typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
     typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
-    typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
+    typedef TSlot<TUpdateSig_t>   TUpdateSlot_t;
     // brief ITParam default constructor, passes args to IParam
     ITParam(const std::string& name = "", ParamFlags flags = Control_e,
-        OptionalTime_t ts = OptionalTime_t(), Context* ctx = nullptr, size_t fn = 0)
-        : IParam(name, flags, ts, ctx, fn)
-    {
+            OptionalTime_t ts = OptionalTime_t(), Context* ctx = nullptr, size_t fn = 0)
+        : IParam(name, flags, ts, ctx, fn) {
     }
 
     template <class... Args>
-    ITParam<T>* updateData(const Storage_t& data, const Args&... args)
-    {
-        size_t fn;
-        const size_t* fnptr = GetKeywordInputOptional<tag::frame_number>(args...);
-        if (fnptr)
-            fn = *fnptr;
-        else
-            fn = this->_fn + 1;
-        const mo::Time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...);
-        auto ctx = GetKeywordInputDefault<tag::context>(Context::getDefaultThreadContext().get(), args...);
-        auto cs = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...);
-        this->updateDataImpl(data, ts ? *ts : OptionalTime_t(), ctx, fn, cs);
-        return this;
-    }
-
-    template <class... Args>
-    ITParam<T>* updateData(const T& data, const Args&... args)
-    {
-        size_t fn;
+    ITParam<T>* updateData(const T& data, const Args&... args) {
+        size_t    fn;
         Storage_t tmp;
         ParamTraits<T>::reset(tmp, data);
-        const size_t* fnptr = GetKeywordInputOptional<tag::frame_number>(args...);
-        if (fnptr)
-            fn = *fnptr;
-        else
-            fn = this->_fn + 1;
-        const mo::Time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...);
-        auto ctx = GetKeywordInputDefault<tag::context>(Context::getDefaultThreadContext().get(), args...);
-        auto cs = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...);
-        this->updateDataImpl(tmp, ts ? *ts : OptionalTime_t(), ctx, fn, cs);
+        ITParamImpl<T>::updateData(tmp, args...);
         return this;
     }
 };
@@ -231,41 +220,18 @@ public:
 template <typename T>
 class MO_EXPORTS ITParam<T, storage_update_selector_t<T, true> > : virtual public ITParamImpl<T> {
 public:
-    typedef std::shared_ptr<ITParam<T> > Ptr;
-    typedef typename ParamTraits<T>::Storage_t Storage_t;
+    typedef std::shared_ptr<ITParam<T> >               Ptr;
+    typedef typename ParamTraits<T>::Storage_t         Storage_t;
     typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
-    typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
-    typedef typename ParamTraits<T>::Input_t Input_t;
+    typedef typename ParamTraits<T>::InputStorage_t    InputStorage_t;
+    typedef typename ParamTraits<T>::Input_t           Input_t;
     typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
     typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
-    typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
+    typedef TSlot<TUpdateSig_t>   TUpdateSlot_t;
     // brief ITParam default constructor, passes args to IParam
     ITParam(const std::string& name = "", ParamFlags flags = Control_e,
-        OptionalTime_t ts = OptionalTime_t(), Context* ctx = nullptr, size_t fn = 0)
-        : IParam(name, flags, ts, ctx, fn)
-    {
-    }
-
-    virtual bool getData(InputStorage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
-        Context* ctx = nullptr, size_t* fn_ = nullptr)
-        = 0;
-
-    virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr) = 0;
-
-    template <class... Args>
-    ITParam<T>* updateData(const Storage_t& data, const Args&... args)
-    {
-        size_t fn;
-        const size_t* fnptr = GetKeywordInputOptional<tag::frame_number>(args...);
-        if (fnptr)
-            fn = *fnptr;
-        else
-            fn = this->_fn + 1;
-        const mo::Time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...);
-        auto ctx = GetKeywordInputDefault<tag::context>(Context::getDefaultThreadContext().get(), args...);
-        auto cs = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...);
-        this->updateDataImpl(data, ts ? *ts : OptionalTime_t(), ctx, fn, cs);
-        return this;
+            OptionalTime_t ts = OptionalTime_t(), Context* ctx = nullptr, size_t fn = 0)
+        : IParam(name, flags, ts, ctx, fn) {
     }
 };
 }
