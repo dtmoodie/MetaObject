@@ -164,7 +164,7 @@ public:
         const size_t* fnptr = GetKeywordInputOptional<tag::frame_number>(args...);
         if (fnptr)
             fn = *fnptr;
-        else
+        else if (param == nullptr)
             fn = this->_fn + 1;
 
         if (auto tsptr = GetKeywordInputOptional<tag::timestamp>(args...))

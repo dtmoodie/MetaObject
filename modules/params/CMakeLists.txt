@@ -7,12 +7,4 @@ IF(Qt5_FOUND)
   TARGET_INCLUDE_DIRECTORIES(metaobject_params PRIVATE $<BUILD_INTERFACE:${Qt5Core_INCLUDE_DIRS}>)
 ENDIF()
 
-set(libs "")
-set(incs "")
-_target_helper(libs incs metaobject_params " ")
-message("\nmetaobject_params includes:\n")
-foreach(inc ${incs})
-    message(${inc})
-endforeach()
-
 

@@ -88,28 +88,24 @@ bool TInputParamPtr<T>::getInput(OptionalTime_t ts, size_t* fn_) {
     mo::Mutex_t::scoped_lock lock(IParam::mtx());
     if (_user_var) {
         size_t             fn;
-        ICoordinateSystem* cs  = nullptr;
-        Context*           ctx = nullptr;
+        ICoordinateSystem* cs = nullptr;
         if (ITInputParam<T>::_shared_input) {
             if (!ITInputParam<T>::_shared_input->getData(_current_data, ts, this->_ctx, &fn)) {
                 return false;
             }
-            ctx = ITInputParam<T>::_shared_input->getContext();
-            cs  = ITInputParam<T>::_shared_input->getCoordinateSystem();
+            cs = ITInputParam<T>::_shared_input->getCoordinateSystem();
         }
         if (ITInputParam<T>::_input) {
             if (!ITInputParam<T>::_input->getData(_current_data, ts, this->_ctx, &fn)) {
                 return false;
             }
-            ctx = ITInputParam<T>::_input->getContext();
-            cs  = ITInputParam<T>::_input->getCoordinateSystem();
+            cs = ITInputParam<T>::_input->getCoordinateSystem();
         }
         *_user_var = ParamTraits<T>::ptr(_current_data);
         if (fn_)
             *fn_  = fn;
         this->_ts = ts;
         this->_fn = fn;
-        this->setContext(ctx);
         this->setCoordinateSystem(cs);
         return true;
     }
@@ -121,28 +117,24 @@ bool TInputParamPtr<T>::getInput(size_t fn, OptionalTime_t* ts_) {
     mo::Mutex_t::scoped_lock lock(IParam::mtx());
     if (_user_var) {
         OptionalTime_t     ts;
-        ICoordinateSystem* cs  = nullptr;
-        Context*           ctx = nullptr;
+        ICoordinateSystem* cs = nullptr;
         if (ITInputParam<T>::_shared_input) {
             if (!ITInputParam<T>::_shared_input->getData(_current_data, fn, this->_ctx, &ts)) {
                 return false;
             }
-            ctx = ITInputParam<T>::_shared_input->getContext();
-            cs  = ITInputParam<T>::_shared_input->getCoordinateSystem();
+            cs = ITInputParam<T>::_shared_input->getCoordinateSystem();
         }
         if (ITInputParam<T>::_input) {
             if (!this->_input->getData(_current_data, fn, this->_ctx, &ts)) {
                 return false;
             }
-            ctx = ITInputParam<T>::_input->getContext();
-            cs  = ITInputParam<T>::_input->getCoordinateSystem();
+            cs = ITInputParam<T>::_input->getCoordinateSystem();
         }
         *_user_var = ParamTraits<T>::ptr(_current_data);
         if (ts_)
             *ts_  = ts;
         this->_ts = ts;
         this->_fn = fn;
-        this->setContext(ctx);
         this->setCoordinateSystem(cs);
         return true;
     }
