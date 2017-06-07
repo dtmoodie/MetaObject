@@ -23,8 +23,8 @@ unsigned char* alignMemory(unsigned char* ptr, int elemSize) {
     }
     return ptr + i;  // Forces memory to be aligned to an element's byte boundary
 }
-int alignmentOffset(unsigned char* ptr, int elemSize) {
-    int i;
+int alignmentOffset(unsigned char* ptr, size_t elemSize) {
+    size_t i;
     for (i = 0; i < elemSize; ++i) {
         if (reinterpret_cast<size_t>(ptr + i) % elemSize == 0) {
             break;

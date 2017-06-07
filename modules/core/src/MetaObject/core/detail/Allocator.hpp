@@ -10,7 +10,7 @@
 
 namespace mo {
 MO_EXPORTS inline unsigned char*    alignMemory(unsigned char* ptr, int elemSize);
-MO_EXPORTS inline int               alignmentOffset(unsigned char* ptr, int elemSize);
+MO_EXPORTS inline int               alignmentOffset(unsigned char* ptr, size_t elemSize);
 MO_EXPORTS void                     setScopeName(const std::string& name);
 MO_EXPORTS const std::string&       getScopeName();
 MO_EXPORTS void                     installThrustPoolingAllocator();

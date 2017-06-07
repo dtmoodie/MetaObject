@@ -53,7 +53,7 @@ void mo::setThreadName(const char* name){
         rmt_set_thread(name);
     }
     if (nvtx_name_thread){
-        nvtx_name_thread(mo::getThisThread(), name);
+        nvtx_name_thread(static_cast<uint32_t>(mo::getThisThread()), name);
     }
 }
 

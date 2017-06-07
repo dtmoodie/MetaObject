@@ -317,7 +317,7 @@ private:
 CpuMemoryStack* CpuMemoryStack::globalInstance() {
     static CpuMemoryStack* g_inst = nullptr;
     if(g_inst == nullptr) {
-        g_inst = new mt_CpuMemoryStackImpl(1.5 * CLOCKS_PER_SEC);
+        g_inst = new mt_CpuMemoryStackImpl(static_cast<size_t>(1.5 * CLOCKS_PER_SEC));
     }
     return g_inst;
 }
@@ -325,7 +325,7 @@ CpuMemoryStack* CpuMemoryStack::globalInstance() {
 CpuMemoryStack* CpuMemoryStack::threadInstance() {
     static boost::thread_specific_ptr<CpuMemoryStack> g_inst;
     if(g_inst.get() == nullptr) {
-        g_inst.reset(new CpuMemoryStackImpl(1.5 * CLOCKS_PER_SEC));
+        g_inst.reset(new CpuMemoryStackImpl(static_cast<size_t>(1.5 * CLOCKS_PER_SEC)));
 
     }
     return g_inst.get();

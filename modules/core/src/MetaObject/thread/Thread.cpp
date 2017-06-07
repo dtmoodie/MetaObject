@@ -190,7 +190,9 @@ void Thread::main(){
                 _cv.notify_all();
             }
         }catch(cv::Exception& e){
+            (void)e;
         }catch(boost::thread_interrupted& e){
+            (void)e;
         }catch(...){
         }
     }
