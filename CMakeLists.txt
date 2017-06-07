@@ -120,7 +120,6 @@ find_package(Boost REQUIRED COMPONENTS ${Boost_required_components})
   include_directories(${Boost_INCLUDE_DIRS})
   link_directories(${Boost_LIBRARY_DIR_DEBUG})
   link_directories(${Boost_LIBRARY_DIR})
-  list(APPEND link_libs ${Boost_LIBRARIES})
   list(APPEND PROJECT_BIN_DIRS_DEBUG_ ${Boost_LIBRARY_DIR})
   list(APPEND PROJECT_BIN_DIRS_RELEASE_ ${Boost_LIBRARY_DIR})
   list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO_ ${Boost_LIBRARY_DIR})
@@ -130,8 +129,11 @@ find_package(Boost REQUIRED COMPONENTS ${Boost_required_components})
   set(bin_dirs_ "${BIN_DIRS};Boost")
   list(REMOVE_DUPLICATES bin_dirs_)
   set(BIN_DIRS "${bin_dirs_}" CACHE STRING "" FORCE)
-
-
+  set(Boost_TARGETS "")
+  foreach(cmp ${Boost_required_components})
+	list(APPEND Boost_TARGETS "Boost::${cmp}")
+  endforeach()
+  
 # ---------------------- cereal ---------------------------------
 include_directories("${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include")
 set(cereal_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include" CACHE PATH "" FORCE)
