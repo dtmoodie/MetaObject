@@ -131,7 +131,9 @@ find_package(Boost REQUIRED COMPONENTS ${Boost_required_components})
   set(BIN_DIRS "${bin_dirs_}" CACHE STRING "" FORCE)
   set(Boost_TARGETS "")
   foreach(cmp ${Boost_required_components})
+      if(TARGET Boost::${cmp})
 	list(APPEND Boost_TARGETS "Boost::${cmp}")
+        endif()
   endforeach()
   
 # ---------------------- cereal ---------------------------------
