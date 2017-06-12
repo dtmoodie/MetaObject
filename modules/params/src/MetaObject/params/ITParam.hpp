@@ -209,7 +209,6 @@ public:
 
     template <class... Args>
     ITParam<T>* updateData(const T& data, const Args&... args) {
-        size_t    fn;
         Storage_t tmp;
         ParamTraits<T>::reset(tmp, data);
         ITParamImpl<T>::updateData(tmp, args...);
