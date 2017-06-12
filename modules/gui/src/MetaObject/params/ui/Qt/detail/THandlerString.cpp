@@ -14,7 +14,8 @@ THandler<std::string, void>::THandler(IParamProxy& parent):
 }
 
 void THandler<std::string, void>::updateUi(const std::string& data){
-    lineEdit->setText(QString::fromStdString(data));
+    if(lineEdit)
+        lineEdit->setText(QString::fromStdString(data));
 }
 
 void THandler<std::string, void>::updateParam(std::string& data) {
