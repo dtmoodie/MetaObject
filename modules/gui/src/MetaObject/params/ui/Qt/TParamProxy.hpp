@@ -26,6 +26,7 @@ namespace qt
     // **********************************************************************************
     template<typename T> class ParamProxy : public IParamProxy{
     public:
+    static const bool IS_DEFAULT = THandler<T>::IS_DEFAULT;
         ParamProxy(IParam* param):
             _param_handler(*this){
             setParam(param);
@@ -113,7 +114,7 @@ namespace qt
 }
 }
 #define MO_UI_QT_PARAMTERPROXY_METAParam(N) \
-        template<class T> struct MetaParam<T, N, typename std::enable_if<!UI::qt::ParamProxy<T>::IS_DEFAULT, void>::type>: public MetaParam<T, N-1, void> \
+        template<class T> struct MetaParam<T, N, typename std::enable_if<!UI::qt::ParamProxy<T>::IS_DEFAULT>::type>: public MetaParam<T, N-1, void> \
         { \
             static UI::qt::Constructor<T> _Param_proxy_constructor; \
             MetaParam(const char* name): \
@@ -122,7 +123,7 @@ namespace qt
                 (void)&_Param_proxy_constructor; \
             } \
         }; \
-        template<class T> UI::qt::Constructor<T> MetaParam<T,N, typename std::enable_if<!UI::qt::ParamProxy<T>::IS_DEFAULT, void>::type>::_Param_proxy_constructor;
+        template<class T> UI::qt::Constructor<T> MetaParam<T,N, typename std::enable_if<!UI::qt::ParamProxy<T>::IS_DEFAULT>::type>::_Param_proxy_constructor;
 
 MO_UI_QT_PARAMTERPROXY_METAParam(__COUNTER__)
 }

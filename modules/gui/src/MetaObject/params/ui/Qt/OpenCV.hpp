@@ -152,8 +152,16 @@ namespace mo
                     return output;
                 }
             };
-            template<typename T, int ROW> class THandler<typename ::cv::Vec<T, ROW>, void> : public THandler<::cv::Matx<T,ROW,1>>{};
-            template<typename T> class THandler<typename ::cv::Scalar_<T>, void> : public THandler<::cv::Vec<T, 4>>{};
+            template<typename T, int ROW> class THandler<typename ::cv::Vec<T, ROW>, void> : public THandler<::cv::Matx<T,ROW,1>>{
+            public:
+                THandler(IParamProxy& parent):
+                    THandler<::cv::Matx<T,ROW,1>>(parent){}
+            };
+            template<typename T> class THandler<typename ::cv::Scalar_<T>, void> : public THandler<::cv::Vec<T, 4>>{
+            public:
+                THandler(IParamProxy& parent):
+                    THandler<cv::Vec<T,4>>(parent){}
+            };
 
             // **********************************************************************************
             // *************************** cv::Point_ *********************************************
