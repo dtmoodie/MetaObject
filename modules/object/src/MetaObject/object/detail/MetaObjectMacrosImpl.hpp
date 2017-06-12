@@ -261,7 +261,7 @@ static void _list_parent_slots(std::vector<mo::SlotInfo*>& info){ \
     PARENT2::getSlotInfoStatic(info); \
 } \
 int _init_parent_signals(bool firstInit){ \
-    return PARENT1::initSignals(firstInit) + PARENT2::initSignals(firstInit);; \
+    return PARENT1::initSignals(firstInit) + PARENT2::initSignals(firstInit); \
 }
 
 #ifdef _MSC_VER
@@ -284,7 +284,7 @@ int _init_parent_signals(bool firstInit) {(void)firstInit; return 0;}
 
 #define MO_BEGIN_1(CLASS_NAME, N_) \
 typedef CLASS_NAME THIS_CLASS;      \
-HANDLE_NO_PARENT; \
+HANDLE_NO_PARENT \
 SIGNAL_INFO_START(N_) \
 SIGNALS_START(N_) \
 SLOT_INFO_START(N_) \
@@ -295,7 +295,7 @@ static rcc::shared_ptr<CLASS_NAME> create();
 
 #define MO_DERIVE_(N_, CLASS_NAME, ...) \
 typedef CLASS_NAME THIS_CLASS; \
-HANDLE_PARENT(__VA_ARGS__); \
+HANDLE_PARENT(__VA_ARGS__) \
 SIGNAL_INFO_START(N_) \
 SIGNALS_START(N_) \
 SLOT_INFO_START(N_) \
