@@ -143,10 +143,13 @@ namespace IO {
                 max_size += 4;
                 // index is 3 digits plus '=' sign
                 int i = 0;
+                int max_cols = 300 / (max_size + 5);
+                if(max_cols == 0) max_cols = 1;
+
                 while (i < obj.size()) // row
                 {
                     int col_count = 0;
-                    while (i < obj.size() && col_count < 6) // col
+                    while (i < obj.size() && col_count < max_cols) // col
                     {
                         os << std::setw(3) << std::setfill('0') << i;
                         os << '=';
