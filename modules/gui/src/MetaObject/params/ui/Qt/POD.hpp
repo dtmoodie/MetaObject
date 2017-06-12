@@ -75,7 +75,8 @@ namespace mo
                 
                 void updateUi(const T& data) { 
                     _updating = true;
-                    box->setValue(data); 
+                    if(box)
+                        box->setValue(data); 
                     _updating = false;
                 }
                 
@@ -108,10 +109,12 @@ namespace mo
                     box(nullptr), UiUpdateHandler(parent){}
 
                 void updateUi(const T& data){
-                    box->setValue(data);
+                    if(box)
+                        box->setValue(data);
                 }
                 void updateParam(T& data){
-                    data = box->value();
+                    if(box)
+                        data = box->value();
                 }
                 std::vector<QWidget*> getUiWidgets(QWidget* parent){
                     std::vector<QWidget*> output;

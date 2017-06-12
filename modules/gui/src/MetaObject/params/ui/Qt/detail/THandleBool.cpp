@@ -14,13 +14,15 @@ THandler<bool,void>::THandler(IParamProxy& parent):
 
 void THandler<bool,void>::updateUi( const bool& data){
     _updating= true;
-    chkBox->setChecked(data);
+    if(chkBox)
+        chkBox->setChecked(data);
     _updating = false;
 }
 
 
 void THandler<bool, void>::updateParam(bool& data){
-    data = chkBox->isChecked();
+    if(chkBox)
+        data = chkBox->isChecked();
 }
 
 std::vector < QWidget*> THandler<bool,void>::getUiWidgets(QWidget* parent_){
