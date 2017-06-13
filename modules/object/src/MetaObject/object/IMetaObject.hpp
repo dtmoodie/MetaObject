@@ -118,6 +118,7 @@ public:
     virtual std::vector<ISlot*> getSlots(const std::string& name) const;
     virtual std::vector<std::pair<ISlot*, std::string> > getSlots(const TypeInfo& signature) const;
     virtual ISlot* getSlot(const std::string& name, const TypeInfo& signature) const;
+    TSlot<void(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags)>* getSlot_param_updated() const;
     template <class T>
     TSlot<T>* getSlot(const std::string& name) const;
 

@@ -759,6 +759,9 @@ ISlot* IMetaObject::getSlot(const std::string& name, const TypeInfo& signature) 
     return nullptr;
 }
 
+TSlot<void(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags)>* IMetaObject::getSlot_param_updated() const{
+    return &_pimpl->_slot_param_updated;
+}
 bool IMetaObject::connectByName(const std::string& name, ISlot* slot)
 {
     auto signal = getSignal(name, slot->getSignature());
