@@ -433,6 +433,17 @@ IParam* IMetaObject::getOutput(const std::string& name) const
     if (itr2 != _pimpl->_implicit_params.end()) {
         return itr2->second.get();
     }
+    // to a pass through all params to see if the param was renamed
+    for(const auto& itr : _pimpl->_params){
+        if(itr.second->getName() == name){
+            return itr.second;
+        }
+    }
+    for(const auto& itr : _pimpl->_implicit_params){
+        if(itr.second->getName() == name){
+            return itr.second.get();
+        }
+    }
     return nullptr;
 }
 std::vector<IParam*> IMetaObject::getOutputs(const std::string& name_filter) const
