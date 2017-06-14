@@ -56,7 +56,7 @@ public:
     ITParam<T>* updatePtr(Raw_t* ptr, bool ownsData_ = false);
 
 protected:
-    virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
+    virtual bool updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
     Raw_t* ptr;
     bool ownsData;
     static MetaParam<T, 100> _meta_Param;
@@ -96,7 +96,7 @@ public:
         UpdateFlags flags_ = ValueUpdated_e);
     virtual IParam* emitUpdate(const IParam& other){return IParam::emitUpdate(other);}
 protected:
-    virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
+    virtual bool updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
 
 private:
     Storage_t data;

@@ -42,7 +42,7 @@ namespace Buffer {
     }
 
     template <class T>
-    bool Map<T>::updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs) {
+    bool Map<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, ICoordinateSystem* cs) {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         _data_buffer[{ ts, fn, cs, ctx }] = data;
         IParam::_modified = true;
@@ -99,7 +99,7 @@ namespace Buffer {
     }
 
     template <class T>
-    typename std::map<SequenceKey, typename Map<T>::InputStorage_t>::iterator Map<T>::search(OptionalTime_t ts) {
+    typename std::map<SequenceKey, typename Map<T>::InputStorage_t>::iterator Map<T>::search(const OptionalTime_t& ts) {
         if (_data_buffer.size() == 0)
             return _data_buffer.end();
         if (!ts) {

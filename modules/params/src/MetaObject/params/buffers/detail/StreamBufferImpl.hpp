@@ -89,7 +89,7 @@ namespace Buffer {
     }
 
     template <class T>
-    bool BlockingStreamBuffer<T>::updateDataImpl(const T& data_, OptionalTime_t ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs) {
+    bool BlockingStreamBuffer<T>::updateDataImpl(const T& data_, const OptionalTime_t& ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs) {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         while (this->_data_buffer.size() > _size) {
             LOG_EVERY_N(debug, 10) << "Pushing to " << this->getTreeName() << " waiting on read, current buffer size " << this->_data_buffer.size();
@@ -122,6 +122,21 @@ namespace Buffer {
         }
         lock.unlock();
         _cv.notify_all();
+    }
+    template <class T>
+    void BlockingStreamBuffer<T>::onInputUpdate(ConstStorageRef_t data, IParam* input, Context* ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags) {
+        mo::Mutex_t::scoped_lock lock(IParam::mtx());
+        while (this->_data_buffer.size() > _size) {
+            LOG_EVERY_N(debug, 10) << "Pushing to " << this->getTreeName() << " waiting on read, current buffer size " << this->_data_buffer.size();
+            _cv.wait_for(lock, boost::chrono::milliseconds(2));
+            // Periodically emit an update signal in case a dirty flag was not set correctly and the read thread is just sleeping
+            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+        }
+        this->_data_buffer[{ ts, fn, cs, ctx }] = data;
+        IParam::_modified = true;
+        lock.unlock();
+        IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+        ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
     }
 }
 }

@@ -84,7 +84,7 @@ void TInputParamPtr<T>::onInputUpdate(ConstStorageRef_t data, IParam* param, Con
 }
 
 template <typename T>
-bool TInputParamPtr<T>::getInput(OptionalTime_t ts, size_t* fn_) {
+bool TInputParamPtr<T>::getInput(const OptionalTime_t& ts, size_t* fn_) {
     mo::Mutex_t::scoped_lock lock(IParam::mtx());
     if (_user_var && (ITInputParam<T>::_shared_input || ITInputParam<T>::_input)) {
         size_t             fn;

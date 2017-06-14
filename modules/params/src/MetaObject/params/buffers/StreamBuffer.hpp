@@ -44,13 +44,18 @@ namespace mo
         template<class T> class MO_EXPORTS BlockingStreamBuffer : public StreamBuffer<T>{
         public:
             typedef T ValueType;
+            typedef typename ParamTraits<T>::Storage_t Storage_t;
+            typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
+            typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
+            typedef typename ParamTraits<T>::Input_t Input_t;
             static const ParamType Type = BlockingStreamBuffer_e;
 
             BlockingStreamBuffer(const std::string& name = "");
 
             virtual ParamType getBufferType() const{ return BlockingStreamBuffer_e;}
         protected:
-            bool updateDataImpl(const T& data, OptionalTime_t ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs);
+            bool updateDataImpl(const T& data, const OptionalTime_t& ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs);
+            virtual void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
             virtual void prune();
             size_t _size;
             boost::condition_variable_any _cv;

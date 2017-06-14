@@ -90,9 +90,9 @@ namespace Buffer {
         virtual ParamType getBufferType() const { return Map_e; }
 
     protected:
-        virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
+        virtual bool updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
         virtual void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
-        typename std::map<SequenceKey, InputStorage_t>::iterator search(OptionalTime_t ts);
+        typename std::map<SequenceKey, InputStorage_t>::iterator search(const OptionalTime_t& ts);
         typename std::map<SequenceKey, InputStorage_t>::iterator search(size_t fn);
 
         std::map<SequenceKey, InputStorage_t> _data_buffer;

@@ -1,19 +1,20 @@
 #include "MetaObject/core/Demangle.hpp"
+#include "MetaObject/detail/TypeInfo.hpp"
 #include <map>
-#ifdef HAVE_CEREAL
+
 #include <cereal/cereal.hpp>
 #include <cereal/archives/binary.hpp>
 #include <cereal/types/map.hpp>
 #include <cereal/types/string.hpp>
-#endif
+#include <fstream>
 using namespace mo;
-std::map<TypeInfo, std::string>& Registry() {
+std::map<TypeInfo, std::string>& registry() {
     static std::map<TypeInfo, std::string> inst;
     return inst;
 }
 
-std::string Demangle::TypeToName(TypeInfo type) {
-    std::map<TypeInfo, std::string>& reg = Registry();
+std::string Demangle::typeToName(const TypeInfo& type) {
+    std::map<TypeInfo, std::string>& reg = registry();
     auto itr = reg.find(type);
     if(itr != reg.end()) {
         return itr->second;
@@ -21,8 +22,8 @@ std::string Demangle::TypeToName(TypeInfo type) {
     return type.name();
 }
 
-void Demangle::RegisterName(TypeInfo type, const char* name) {
-    std::map<TypeInfo, std::string>& reg = Registry();
+void Demangle::registerName(const TypeInfo& type, const char* name) {
+    std::map<TypeInfo, std::string>& reg = registry();
     auto itr = reg.find(type);
     if(itr == reg.end()) {
         reg[type] = name;
@@ -32,19 +33,19 @@ void Demangle::RegisterName(TypeInfo type, const char* name) {
     }
 }
 
-void Demangle::RegisterType(TypeInfo type) {
-    std::map<TypeInfo, std::string>& reg = Registry();
+void Demangle::registerType(const TypeInfo& type) {
+    std::map<TypeInfo, std::string>& reg = registry();
     auto itr = reg.find(type);
     if(itr == reg.end()) {
         reg[type] = "";
     }
 }
 
-void Demangle::GetTypeMapBinary(std::ostream& stream) {
-#ifdef HAVE_CEREAL
+void Demangle::getTypeMapBinary(std::ostream& stream) {
+
     cereal::BinaryOutputArchive ar(stream);
     std::map<std::string, size_t> lut;
-    auto& reg = Registry();
+    auto& reg = registry();
     for(auto& itr : reg) {
         if(itr.second.size()) {
             lut[itr.second] = itr.first.get().hash_code();
@@ -53,9 +54,10 @@ void Demangle::GetTypeMapBinary(std::ostream& stream) {
         }
     }
     ar(lut);
-#endif
+
 }
 
-void Demangle::SaveTypeMap(const std::string& filename) {
-
+void Demangle::saveTypeMap(const std::string& filename) {
+    std::ofstream ofs(filename);
+    getTypeMapBinary(ofs);
 }

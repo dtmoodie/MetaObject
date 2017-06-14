@@ -12,7 +12,7 @@ InputParam::~InputParam()
 
 }
 
-bool InputParam::getInput(OptionalTime_t ts, size_t* fn)
+bool InputParam::getInput(const OptionalTime_t& ts, size_t* fn)
 {
     return false;
 }

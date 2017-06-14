@@ -81,7 +81,7 @@ AccessToken<T> TParamPtr<T>::access()
 }
 
 template <typename T>
-bool TParamPtr<T>::updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs)
+bool TParamPtr<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, ICoordinateSystem* cs)
 {
     mo::Mutex_t::scoped_lock lock(IParam::mtx());
     if (ptr) {
@@ -133,7 +133,7 @@ AccessToken<T> TParamOutput<T>::access()
 }
 
 template <typename T>
-bool TParamOutput<T>::updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs)
+bool TParamOutput<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, ICoordinateSystem* cs)
 {
     mo::Mutex_t::scoped_lock lock(IParam::mtx());
     //this->data = data;

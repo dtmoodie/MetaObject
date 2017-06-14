@@ -22,7 +22,6 @@ https://github.com/dtmoodie/Params
 #include "MetaObject/logging/Log.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
 #include "MetaObject/params/IParam.hpp"
-
 #include <map>
 
 using namespace mo;
@@ -46,7 +45,7 @@ WidgetFactory* WidgetFactory::Instance()
 
 void WidgetFactory::RegisterConstructor(const TypeInfo& type, WidgetFactory::HandlerConstructor_f f)
 {
-    LOG(trace) << "Registering type " << type.name();
+    //LOG(trace) << "Registering type " << type.name();
     auto itr = _pimpl->registry.find(type);
     if(itr == _pimpl->registry.end())
     {

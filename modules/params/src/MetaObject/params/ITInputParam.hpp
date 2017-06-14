@@ -31,13 +31,13 @@ public:
     size_t         getInputFrameNumber();
 
     virtual bool   isInputSet() const;
-    
+
     virtual bool getData(InputStorage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
                  Context* ctx = nullptr, size_t* fn_ = nullptr);
 
     virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 protected:
-    virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs){return true;}
+    virtual bool updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, ICoordinateSystem* cs){ (void)data; (void)ts; (void)ctx; (void)fn; (void)cs; return true;}
 
     virtual void onInputDelete(IParam const* param);
     virtual void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);

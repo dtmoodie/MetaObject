@@ -6,18 +6,18 @@ namespace mo
     template<class T> class TParam;
     template<class T, int N, typename Enable> struct MetaParam;
 
-	template<typename T> 
+    template<typename T>
     TParam<T>::TParam() :
-		ITParam<T>(), _data(),
+        ITParam<T>(), _data(),
         IParam()
-	{
-		(void)&_typed_param_constructor;
+    {
+        (void)&_typed_param_constructor;
         (void)&_meta_param;
-	}
+    }
 
-	template<typename T> 
+    template<typename T>
     bool TParam<T>::getData(InputStorage_t& value, const OptionalTime_t& ts, Context* ctx, size_t* fn)
-	{
+    {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if (!ts)
         {
@@ -34,7 +34,7 @@ namespace mo
             }
         }
         return false;
-	}
+    }
 
     template<typename T>
     bool TParam<T>::getData(InputStorage_t& value, size_t fn, Context* ctx, OptionalTime_t* ts)
@@ -56,14 +56,14 @@ namespace mo
     }
 
     template<typename T>
-    bool TParam<T>::updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs){
+    bool TParam<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, ICoordinateSystem* cs){
         _data = data;
         this->_fn = fn;
         this->_ts = ts;
         ITParam<T>::_typed_update_signal(data, this, ctx, ts, this->_fn, cs, ValueUpdated_e);
         return true;
-	}
-	
-	template<typename T> ParamConstructor<TParam<T>> TParam<T>::_typed_param_constructor;
+    }
+
+    template<typename T> ParamConstructor<TParam<T>> TParam<T>::_typed_param_constructor;
     template<typename T> MetaParam<T, 100>  TParam<T>::_meta_param;
 }

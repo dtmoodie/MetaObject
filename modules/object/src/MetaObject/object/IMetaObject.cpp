@@ -547,7 +547,7 @@ bool IMetaObject::connectInput(InputParam* input,
             auto buffer = Buffer::BufferFactory::CreateProxy(output, type_);
             if (!buffer) {
                 LOG(warning) << "Unable to create " << paramTypeToString(type_)
-                             << " for datatype " << Demangle::TypeToName(output->getTypeInfo());
+                             << " for datatype " << Demangle::typeToName(output->getTypeInfo());
                 return false;
             }
             std::string buffer_type = paramTypeToString(type_);
@@ -557,9 +557,9 @@ bool IMetaObject::connectInput(InputParam* input,
                 return true;
             } else {
                 LOG(debug) << "Failed to connect output " << output->getName()
-                           << "[" << Demangle::TypeToName(output->getTypeInfo()) << "] to input "
+                           << "[" << Demangle::typeToName(output->getTypeInfo()) << "] to input "
                            << dynamic_cast<IParam*>(input)->getName()
-                           << "[" << Demangle::TypeToName(dynamic_cast<IParam*>(input)->getTypeInfo()) << "]";
+                           << "[" << Demangle::typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()) << "]";
                 return false;
             }
         }
@@ -573,13 +573,13 @@ bool IMetaObject::connectInput(InputParam* input,
                         return true;
                     } else {
                         LOG(debug) << "Failed to connect output " << output->getName()
-                                   << "[" << Demangle::TypeToName(output->getTypeInfo()) << "] to input "
+                                   << "[" << Demangle::typeToName(output->getTypeInfo()) << "] to input "
                                    << dynamic_cast<IParam*>(input)->getName() << "["
-                                   << Demangle::TypeToName(dynamic_cast<IParam*>(input)->getTypeInfo()) << "]";
+                                   << Demangle::typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()) << "]";
                         return false;
                     }
                 } else {
-                    LOG(debug) << "No buffer of desired type found for type " << Demangle::TypeToName(output->getTypeInfo());
+                    LOG(debug) << "No buffer of desired type found for type " << Demangle::typeToName(output->getTypeInfo());
                 }
             } else {
                 if (input->setInput(output)) {
@@ -587,9 +587,9 @@ bool IMetaObject::connectInput(InputParam* input,
                     return true;
                 } else {
                     LOG(debug) << "Failed to connect output " << output->getName()
-                               << "[" << Demangle::TypeToName(output->getTypeInfo()) << "] to input "
+                               << "[" << Demangle::typeToName(output->getTypeInfo()) << "] to input "
                                << dynamic_cast<IParam*>(input)->getName()
-                               << "[" << Demangle::TypeToName(dynamic_cast<IParam*>(input)->getTypeInfo()) << "]";
+                               << "[" << Demangle::typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()) << "]";
                     return false;
                 }
             }
@@ -599,16 +599,16 @@ bool IMetaObject::connectInput(InputParam* input,
                 return true;
             } else {
                 LOG(debug) << "Failed to connect output " << output->getName()
-                           << "[" << Demangle::TypeToName(output->getTypeInfo()) << "] to input "
+                           << "[" << Demangle::typeToName(output->getTypeInfo()) << "] to input "
                            << dynamic_cast<IParam*>(input)->getName()
-                           << "[" << Demangle::TypeToName(dynamic_cast<IParam*>(input)->getTypeInfo()) << "]";
+                           << "[" << Demangle::typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()) << "]";
                 return false;
             }
         }
     }
     LOG(debug) << "Input \"" << input->getTreeName()
                << "\"  does not accept input of type: "
-               << Demangle::TypeToName(output->getTypeInfo());
+               << Demangle::typeToName(output->getTypeInfo());
     return false;
 }
 

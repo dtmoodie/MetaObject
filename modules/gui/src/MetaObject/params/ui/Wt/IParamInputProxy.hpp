@@ -22,7 +22,7 @@ namespace mo
 
                 {
                     _item_text->setText(param_->getTreeName());
-                    _item_text->setToolTip(mo::Demangle::TypeToName(param_->getTypeInfo()));
+                    _item_text->setToolTip(mo::Demangle::typeToName(param_->getTypeInfo()));
                     _combo_box->changed().connect(
                         std::bind([this]()
                     {

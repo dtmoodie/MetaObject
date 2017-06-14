@@ -105,7 +105,7 @@ std::string IMetaObjectInfo::Print(Verbosity verbosity) const
             if(param->type_flags & Output_e)
                 ss << "O";
 
-            ss << " [" << mo::Demangle::TypeToName(param->data_type) << "]\n";
+            ss << " [" << mo::Demangle::typeToName(param->data_type) << "]\n";
             if(param->tooltip.size())
                 ss << "    " << param->tooltip << "\n";
             if(param->description.size())

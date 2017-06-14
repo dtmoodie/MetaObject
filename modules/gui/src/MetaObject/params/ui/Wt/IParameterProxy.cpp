@@ -14,7 +14,7 @@ IParamProxy::IParamProxy(IParam* param_, MainApplication* app_,
 {
     _onUpdateConnection = param_->registerUpdateNotifier(&_onUpdateSlot);
     auto text = new Wt::WText(param_->getTreeName(), this);
-    text->setToolTip(Demangle::TypeToName(param_->getTypeInfo()));
+    text->setToolTip(Demangle::typeToName(param_->getTypeInfo()));
     this->addWidget(text);
 }
 

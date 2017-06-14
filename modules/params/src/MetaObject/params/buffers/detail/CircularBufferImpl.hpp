@@ -56,18 +56,18 @@ namespace mo
 
         template<class T>
         bool CircularBuffer<T>::updateDataImpl(const Storage_t& data_,
-                                               OptionalTime_t ts,
+                                               const OptionalTime_t& ts,
                                                const ContextPtr_t& ctx,
                                                size_t fn,
                                                ICoordinateSystem* cs){
-			{
-				mo::Mutex_t::scoped_lock lock(IParam::mtx());
-				if (ts)
-					_data_buffer.push_back(State<T>(*ts, fn, ctx.get(), cs, data_));
-				else
-					_data_buffer.push_back(State<T>(fn, ctx.get(), cs, data_));
-				this->_modified = true;
-			}
+            {
+                mo::Mutex_t::scoped_lock lock(IParam::mtx());
+                if (ts)
+                    _data_buffer.push_back(State<T>(*ts, fn, ctx.get(), cs, data_));
+                else
+                    _data_buffer.push_back(State<T>(fn, ctx.get(), cs, data_));
+                this->_modified = true;
+            }
             ITParam<T>::_typed_update_signal(data_, this, ctx, ts, fn, cs, mo::InputUpdated_e);
             return true;
         }
@@ -76,16 +76,16 @@ namespace mo
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             _data_buffer.set_capacity(size);
         }
-        
+
         template<class T> void CircularBuffer<T>::setTimePaddingCapacity(mo::Time_t time){
             (void)time;
         }
-        
+
         template<class T> boost::optional<size_t> CircularBuffer<T>::getFrameBufferCapacity(){
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             return _data_buffer.capacity();
         }
-        
+
         template<class T> OptionalTime_t CircularBuffer<T>::getTimePaddingCapacity(){
             return {};
         }

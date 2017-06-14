@@ -65,14 +65,14 @@ namespace Buffer
         virtual size_t getSize();
         bool getTimestampRange(mo::Time_t& start, mo::Time_t& end);
         bool getFrameNumberRange(size_t& start,size_t& end);
-            
+
         void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
         virtual ParamType getBufferType() const{ return CircularBuffer_e;}
     protected:
-        bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs);
+        bool updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs);
     };
 }
-    
+
 #define MO_METAParam_INSTANCE_CBUFFER_(N) \
 template<class T> struct MetaParam<T, N>: public MetaParam<T, N-1, void> \
 { \
@@ -87,7 +87,7 @@ template<class T> struct MetaParam<T, N>: public MetaParam<T, N-1, void> \
 }; \
 template<class T> ParamConstructor<Buffer::CircularBuffer<T>> MetaParam<T, N>::_circular_buffer_param_constructor; \
 template<class T> BufferConstructor<Buffer::CircularBuffer<T>> MetaParam<T, N>::_circular_buffer_constructor;
-    
+
 MO_METAParam_INSTANCE_CBUFFER_(__COUNTER__)
 }
 #include "detail/CircularBufferImpl.hpp"

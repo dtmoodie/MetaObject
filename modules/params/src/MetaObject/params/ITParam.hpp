@@ -180,7 +180,7 @@ public:
 protected:
     friend class AccessToken<T>;
     TSignal<TUpdateSig_t> _typed_update_signal;
-    virtual bool updateDataImpl(const Storage_t& data, OptionalTime_t ts, Context* ctx, size_t fn, ICoordinateSystem* cs) = 0;
+    virtual bool updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, ICoordinateSystem* cs) = 0;
 
 private:
     static const TypeInfo _type_info;

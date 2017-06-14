@@ -22,7 +22,7 @@ namespace mo
             public:
                 THandler(IParamProxy& parent):
                     _parent(parent){
-                    LOG(debug) << "Creating handler for default unspecialized Param " << Demangle::TypeToName(typeid(T));
+                    LOG(debug) << "Creating handler for default unspecialized Param " << Demangle::typeToName(mo::TypeInfo(typeid(T)));
                 }
 
                 // Update user interface from parameter update
@@ -33,9 +33,9 @@ namespace mo
 
                 // notify parent ParamProxy of the update, param proxy will lock parameter and call updateParam
                 void onUiUpdate(QObject* sender){ _parent.onUiUpdate(sender); }
-                
+
                 virtual std::vector<QWidget*> getUiWidgets(QWidget* parent){
-                    LOG(debug) << "Creating widget for default unspecialized Param " << Demangle::TypeToName(typeid(T));
+                    LOG(debug) << "Creating widget for default unspecialized Param " << Demangle::typeToName(mo::TypeInfo(typeid(T)));
                     return std::vector<QWidget*>();
                 }
                 inline void setUpdating(bool val = true) { }

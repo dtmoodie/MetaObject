@@ -35,7 +35,7 @@ public:
 
     // This loads the value at the requested timestamp into the input
     // Param such that it can be read
-    virtual bool getInput(OptionalTime_t ts, size_t* fn = nullptr);
+    virtual bool getInput(const OptionalTime_t& ts, size_t* fn = nullptr);
     virtual bool getInput(size_t fn, OptionalTime_t* ts = nullptr);
     // This gets a pointer to the variable that feeds into this input
     virtual IParam* getInputParam() = 0;
