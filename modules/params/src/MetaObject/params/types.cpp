@@ -1,20 +1,20 @@
 #include <MetaObject/params/Types.hpp>
 using namespace mo;
 
-ReadFile::ReadFile(const std::string& str) : 
-    boost::filesystem::path(str) 
+ReadFile::ReadFile(const std::string& str) :
+    boost::filesystem::path(str)
 {}
 
-WriteFile::WriteFile(const std::string& file) : 
-    boost::filesystem::path(file) 
+WriteFile::WriteFile(const std::string& file) :
+    boost::filesystem::path(file)
 {}
 
-ReadDirectory::ReadDirectory(const boost::filesystem::path& path) :
-    boost::filesystem::path(path) 
+ReadDirectory::ReadDirectory(const std::string& path) :
+    boost::filesystem::path(path)
 {}
 
-WriteDirectory::WriteDirectory(const std::string& str) : 
-    boost::filesystem::path(str) 
+WriteDirectory::WriteDirectory(const std::string& str) :
+    boost::filesystem::path(str)
 {}
 
 

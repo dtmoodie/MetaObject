@@ -9,6 +9,7 @@
 #include "MetaObject/params/buffers/Map.hpp"
 #include "MetaObject/serialization/CerealPolicy.hpp"
 #include "MetaObject/serialization/TextPolicy.hpp"
+#include "MetaObject/serialization/cereal_map.hpp"
 
 #ifdef emit
 #undef emit

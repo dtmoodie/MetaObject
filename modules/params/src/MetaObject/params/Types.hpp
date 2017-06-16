@@ -26,15 +26,47 @@ https://github.com/dtmoodie/Params
 namespace mo {
 struct MO_EXPORTS ReadFile : public boost::filesystem::path {
     ReadFile(const std::string& str = "");
+    template<class AR> std::string save_minimal(const AR& ar) const{
+        (void)ar;
+        return this->string();
+    }
+    template<class AR> void load_minimal(const AR& ar, const std::string& value){
+        (void)ar;
+        *this = value;
+    }
 };
 struct MO_EXPORTS WriteFile : public boost::filesystem::path {
     WriteFile(const std::string& file = "");
+    template<class AR> std::string save_minimal(const AR& ar) const{
+        (void)ar;
+        return this->string();
+    }
+    template<class AR> void load_minimal(const AR& ar, const std::string& value){
+        (void)ar;
+        *this = value;
+    }
 };
 struct MO_EXPORTS ReadDirectory : public boost::filesystem::path {
-    ReadDirectory(const boost::filesystem::path& path = "");
+    ReadDirectory(const std::string& path = "");
+    template<class AR> std::string save_minimal(const AR& ar) const{
+        (void)ar;
+        return this->string();
+    }
+    template<class AR> void load_minimal(const AR& ar, const std::string& value){
+        (void)ar;
+        *this = value;
+    }
 };
 struct MO_EXPORTS WriteDirectory : public boost::filesystem::path {
     WriteDirectory(const std::string& str = "");
+    template<class AR> std::string save_minimal(const AR& ar) const{
+        (void)ar;
+        return this->string();
+    }
+    template<class AR> void load_minimal(const AR& ar, const std::string& value){
+        (void)ar;
+        *this = value;
+    }
 };
 
 class MO_EXPORTS EnumParam {

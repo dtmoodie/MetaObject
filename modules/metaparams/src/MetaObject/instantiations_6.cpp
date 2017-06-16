@@ -69,44 +69,6 @@ bool Serialize(ITAccessibleParam<EnumParam>* param, std::stringstream& ss){
 } // namespace IO
 } // namespace mo
 
-namespace cereal{
-    template<class Archive> void load(Archive& ar, mo::ReadFile& m){
-        std::string path;
-        ar(path);
-        m = path;
-    }
-    template<class Archive> void save(Archive& ar, mo::ReadFile const & m){
-        std::string path = m.string();
-        ar(path);
-    }
-    template<class Archive> void load(Archive& ar, mo::WriteFile& m){
-        std::string path;
-        ar(path);
-        m = path;
-    }
-    template<class Archive> void save(Archive& ar, mo::WriteFile const& m){
-        std::string path = m.string();
-        ar(path);
-    }
-    template<class Archive> void load(Archive& ar, mo::ReadDirectory& m){
-        std::string path;
-        ar(path);
-        m = mo::ReadDirectory(path);
-    }
-    template<class Archive> void save(Archive& ar, mo::ReadDirectory const& m){
-        std::string path = m.string();
-        ar(path);
-    }
-    template<class Archive> void load(Archive& ar, mo::WriteDirectory& m){
-        std::string path;
-        ar(path);
-        m = path;
-    }
-    template<class Archive> void save(Archive& ar, mo::WriteDirectory const& m){
-        std::string path = m.string();
-        ar(path);
-    }
-}
 using namespace mo;
 template<class AR> void EnumParam::serialize(AR& ar){
     ar(CEREAL_NVP(enumerations), CEREAL_NVP(values), CEREAL_NVP(currentSelection));
