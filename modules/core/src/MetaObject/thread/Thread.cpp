@@ -30,15 +30,19 @@ void Thread::start(){
 }
 
 void Thread::stop(){
+    if(_run == false && _paused == true)
+        return;
     _run = false;
     _thread.interrupt();
     int wait_count = 0;
-    while(!_paused && _thread.joinable()){
+    while(!_paused){
         boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
         ++wait_count;
         if(wait_count % 1000 == 0)
             LOG(warning) << "Waited " << wait_count / 1000 << " second for " << this->_name << " to stop";
     }
+    //_thread.join();
+    LOG(info) << _name << " has stopped";
 }
 void Thread::setExitCallback(const std::function<void(void)>& f){
     _on_exit = f;
@@ -80,11 +84,12 @@ Thread::~Thread(){
     PROFILE_FUNCTION
     _quit = true;
     _run = false;
-    LOG(info) << "Shutting down " << this->_name << " thread";
+    LOG(info) << "Waiting for " << this->_name << " to join";
     _thread.interrupt();
     if(!_thread.timed_join(boost::posix_time::time_duration(0,0,10))){
         LOG(warning) << this->_name << " did not join after waiting 10 seconds";
     }
+    LOG(info) << this->_name << " shutdown complete";
 }
 
 void Thread::handleEvents(int ms){
@@ -173,6 +178,7 @@ void Thread::main(){
 
             int delay = 0;
             if(_inner_loop->HasSlots() && _run){
+                _paused = false;
                 delay = (*_inner_loop)();
             }
             if(delay){
