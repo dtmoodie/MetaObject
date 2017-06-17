@@ -33,7 +33,8 @@ namespace cereal
         break;
 
       std::string key = namePtr;
-      std::string value; ar( value );
+      T value; 
+      ar( value );
       hint = map.emplace_hint( hint, std::move( key ), std::move( value ) );
     }
   }
