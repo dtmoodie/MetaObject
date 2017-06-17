@@ -70,6 +70,12 @@ IMetaObject::IMetaObject()
 
 IMetaObject::~IMetaObject()
 {
+    if(_pimpl->_variable_manager){
+        auto params = getParams();
+        for(auto param : params){
+            _pimpl->_variable_manager->removeParam(param);
+        }
+    }
     delete _mtx;
     delete _pimpl;
 }
