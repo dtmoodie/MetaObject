@@ -36,6 +36,8 @@ namespace qt
         }
 
         QWidget* getParamWidget(QWidget* parent){
+            if(!this->_param)
+                return nullptr;
             QWidget* output = new QWidget(parent);
             auto widgets = _param_handler.getUiWidgets(output);
             QGridLayout* layout = new QGridLayout(output);
@@ -55,10 +57,15 @@ namespace qt
                 for (size_t i = widgets.size() - 1; i > 0; --i){
                     QWidget::setTabOrder(widgets[i], widgets[i - 1]);
                 }
-                auto token = _param->access();
-                _param_handler.setUpdating(true);
-                _param_handler.updateUi(token());
-                _param_handler.setUpdating(false);
+                try {
+                    auto token = _param->access();
+                    _param_handler.setUpdating(true);
+                    _param_handler.updateUi(token());
+                    _param_handler.setUpdating(false);
+                } catch (mo::ExceptionWithCallStack<std::string>& exc) {
+                    (void)exc; // exception thrown if data hasn't been populated yet on some parameters
+                }
+
             }
             return output;
         }
@@ -70,24 +77,23 @@ namespace qt
         bool setParam(IParam* param){
             this->_param = dynamic_cast<ITAccessibleParam<T>*>(param);
             if(this->_param){
-                auto token = this->_param->access();
-                _param_handler.setUpdating(true);
-                _param_handler.updateUi(token());
-                _param_handler.setUpdating(false);
                 return true;
             }
             return false;
         }
     protected:
         void onParamUpdate(typename ParamTraits<T>::ConstStorageRef_t data, IParam* param, Context* ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags fg){
+            (void)ctx; (void)ts; (void)fn; (void)cs; (void)fg;
             if(param == this->param){
+                // Should handle pushing to UI thread here
                 _param_handler.updateUi(ParamTraits<T>::get(data));
             }
         }
 
-        void onParamDelete(IParam const* param){}
+        void onParamDelete(IParam const* param){ if(param == this->_param) this->_param = nullptr;}
 
         virtual void onUiUpdate(QObject* source){
+            (void)source; // should probably redesign to pass into updateParam
             auto token = _param->access();
             _param_handler.setUpdating(true);
             _param_handler.updateParam(token());

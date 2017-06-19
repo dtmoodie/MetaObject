@@ -17,8 +17,10 @@ template<class AR, class T> void serialize(AR& ar, cv::Rect_<T>& rect) {
 }
 
 template<class AR, class T, int N> void serialize(AR& ar, cv::Vec<T, N>& vec) {
+    cereal::size_type size = N;
+    ar(cereal::make_size_tag(size));
     for (int i = 0; i < N; ++i) {
-        ar(make_nvp(std::to_string(i), vec[i]));
+        ar(vec[i]);
     }
 }
 }

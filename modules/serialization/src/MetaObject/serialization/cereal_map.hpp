@@ -5,7 +5,7 @@
 
 namespace cereal
 {
-  //! Saving for std::map<std::string, std::string> for text based archives
+  //! Saving for std::map<std::string, T> for text based archives
   // Note that this shows off some internal cereal traits such as EnableIf,
   // which will only allow this template to be instantiated if its predicates
   // are true
@@ -17,7 +17,7 @@ namespace cereal
       ar( cereal::make_nvp( i.first, i.second ) );
   }
 
-  //! Loading for std::map<std::string, std::string> for text based archives
+  //! Loading for std::map<std::string, T> for text based archives
   template <class Archive, class T, class C, class A,
             traits::EnableIf<traits::is_text_archive<Archive>::value> = traits::sfinae> inline
   void load( Archive & ar, std::map<std::string, T, C, A> & map )
@@ -33,7 +33,7 @@ namespace cereal
         break;
 
       std::string key = namePtr;
-      T value; 
+      T value;
       ar( value );
       hint = map.emplace_hint( hint, std::move( key ), std::move( value ) );
     }

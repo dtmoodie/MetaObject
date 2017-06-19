@@ -1,11 +1,13 @@
 #pragma once
 #include "Allocator.hpp"
 #include "MetaObject/logging/Log.hpp"
+#include <MetaObject/thread/Cuda.hpp>
 #include <opencv2/cudev/common.hpp>
 #include <opencv2/core/cuda.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/tss.hpp>
 #include <cuda_runtime.h>
+
 namespace mo {
 #define MO_CUDA_ERROR_CHECK(expr, msg){ \
     cudaError_t err = (expr); \
@@ -270,6 +272,8 @@ void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char* ptr
 
 template<typename PaddingPolicy>
 void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::clear() {
+    if(isCudaThread())
+        return;
     auto time = clock();
     for (auto itr = deallocateList.begin(); itr != deallocateList.end(); ) {
         if((time - itr->free_time) > deallocateDelay) {
@@ -287,6 +291,8 @@ void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::clear() {
 
 template<typename PaddingPolicy>
 void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::release() {
+    if(isCudaThread())
+        return;
     for(auto& itr : deallocateList) {
         CV_CUDEV_SAFE_CALL(cudaFree(itr.ptr));
     }
@@ -320,6 +326,8 @@ bool NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
 
 template<typename PaddingPolicy>
 void NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::free(cv::cuda::GpuMat* mat) {
+    if(isCudaThread())
+        return;
     CV_CUDEV_SAFE_CALL(cudaFree(mat->data));
     cv::fastFree(mat->refcount);
 }
@@ -334,6 +342,9 @@ unsigned char* NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_
 
 template<typename PaddingPolicy>
 void NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char* ptr, size_t num_bytes) {
+    if(isCudaThread())
+        return;
+    (void)num_bytes;
     CV_CUDEV_SAFE_CALL(cudaFree(ptr));
 }
 

@@ -13,10 +13,8 @@ THandler<bool,void>::THandler(IParamProxy& parent):
 }
 
 void THandler<bool,void>::updateUi( const bool& data){
-    _updating= true;
     if(chkBox)
         chkBox->setChecked(data);
-    _updating = false;
 }
 
 

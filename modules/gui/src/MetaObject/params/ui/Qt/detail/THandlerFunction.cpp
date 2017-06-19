@@ -8,12 +8,13 @@ using namespace mo::UI;
 using namespace mo::UI::qt;
 
 THandler<std::function<void(void)>, void>::THandler(IParamProxy& parent) :
-    btn(nullptr),
-    UiUpdateHandler(parent)
-{}
+    UiUpdateHandler(parent),
+    btn(nullptr){
+
+}
 
 void THandler<std::function<void(void)>, void>::updateUi(const std::function<void(void)>& data){
-    
+    (void)data;
 }
 
 void THandler<std::function<void(void)>, void>::updateParam(std::function<void(void)>& data) {

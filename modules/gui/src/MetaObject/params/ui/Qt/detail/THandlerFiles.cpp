@@ -15,9 +15,7 @@ THandler<WriteDirectory, void>::THandler(IParamProxy& parent):
 
 void THandler<WriteDirectory, void>::updateUi( const WriteDirectory& data){
     if(btn){
-        _updating = true;
         btn->setText(QString::fromStdString(data.string()));
-        _updating = false;
     }
 }
 
@@ -47,9 +45,7 @@ THandler<ReadDirectory, void>::THandler(IParamProxy& parent):
 
 void THandler<ReadDirectory, void>::updateUi(const ReadDirectory& data){
     if(btn){
-        _updating = true;
         btn->setText(QString::fromStdString(data.string()));
-        _updating = false;
     }
 }
 
@@ -69,14 +65,15 @@ std::vector<QWidget*> THandler<ReadDirectory, void>::getUiWidgets(QWidget* paren
     return output;
 }
 
-THandler<ReadFile, void>::THandler(IParamProxy& parent): 
+THandler<ReadFile, void>::THandler(IParamProxy& parent):
     UiUpdateHandler(parent),
     btn(nullptr){
 }
 
 void THandler<ReadFile, void>::updateUi( const ReadFile& data){
     _updating = true;
-    btn->setText(QString::fromStdString(data.string()));
+    if(btn)
+        btn->setText(QString::fromStdString(data.string()));
     _updating = false;
 }
 
@@ -97,15 +94,14 @@ std::vector<QWidget*> THandler<ReadFile, void>::getUiWidgets(QWidget* parent_){
 }
 
 
-THandler<WriteFile, void>::THandler(IParamProxy& parent): 
+THandler<WriteFile, void>::THandler(IParamProxy& parent):
     UiUpdateHandler(parent),
     btn(nullptr){
 }
 
 void THandler<WriteFile, void>::updateUi(const WriteFile& data){
-    _updating = true;
-    btn->setText(QString::fromStdString(data.string()));
-    _updating = false;
+    if(btn)
+        btn->setText(QString::fromStdString(data.string()));
 }
 
 void THandler<WriteFile, void>::updateParam(WriteFile& data) {

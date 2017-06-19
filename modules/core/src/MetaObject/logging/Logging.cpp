@@ -83,7 +83,7 @@ void mo::InitLogging()
     auto fmtTimeStamp = boost::log::expressions::
         format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S.%f");
 
-    // File sink 
+    // File sink
     boost::log::formatter logFmt =
         boost::log::expressions::format("[%1%] (%2%) [%3%] [%4%] %5%")
         % fmtTimeStamp
@@ -243,7 +243,7 @@ static inline wcstring utf16(const std::wstring& p)
     std::string mo::printCallstack(size_t skipLevels, bool makeFunctionNamesStandOut)
     {
         std::stringstream ss;
-        
+
         return printCallstack(skipLevels, makeFunctionNamesStandOut, ss);
     }
     std::string mo::printCallstack(size_t skipLevels, bool makeFunctionNamesStandOut, std::stringstream& ss)
@@ -384,14 +384,14 @@ mo::IExceptionWithCallStackBase::~IExceptionWithCallStackBase()
     _currently_throwing_exception = false;
 }
 
-mo::ThrowOnDestroy::ThrowOnDestroy(const char* function, const char* file, int line) 
+mo::ThrowOnDestroy::ThrowOnDestroy(const char* function, const char* file, int line)
 {
     log_stream_ <<"[" << file << ":"
-                      << line << "]";
+                      << line << " - " << function << "]";
 }
 std::ostringstream &mo::ThrowOnDestroy::stream()
-{ 
-    return log_stream_; 
+{
+    return log_stream_;
 }
 
 mo::ThrowOnDestroy::~ThrowOnDestroy() MO_THROW_SPECIFIER
@@ -403,7 +403,7 @@ mo::ThrowOnDestroy::~ThrowOnDestroy() MO_THROW_SPECIFIER
         _currently_throwing_exception = true;
         throw mo::ExceptionWithCallStack<std::string>(log_stream_.str(), ss.str());
     }
-    
+
 }
 mo::ThrowOnDestroy_trace::ThrowOnDestroy_trace(const char* function, const char* file, int line): ThrowOnDestroy(function, file, line) {}
 mo::ThrowOnDestroy_trace::~ThrowOnDestroy_trace() MO_THROW_SPECIFIER
@@ -417,11 +417,11 @@ mo::ThrowOnDestroy_trace::~ThrowOnDestroy_trace() MO_THROW_SPECIFIER
     }
 }
 
-mo::ThrowOnDestroy_debug::ThrowOnDestroy_debug(const char* function, const char* file, int line): ThrowOnDestroy(function, file, line) 
+mo::ThrowOnDestroy_debug::ThrowOnDestroy_debug(const char* function, const char* file, int line): ThrowOnDestroy(function, file, line)
 {
 }
 
-mo::ThrowOnDestroy_info::ThrowOnDestroy_info(const char* function, const char* file, int line): ThrowOnDestroy(function, file, line) 
+mo::ThrowOnDestroy_info::ThrowOnDestroy_info(const char* function, const char* file, int line): ThrowOnDestroy(function, file, line)
 {
 }
 

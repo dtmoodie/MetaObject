@@ -10,13 +10,13 @@ THandler<EnumParam, void>::THandler(IParamProxy& parent) : UiUpdateHandler(paren
 
 
 void THandler<EnumParam, void>::updateUi( const EnumParam& data){
-    _updating = true;
-    enumCombo->clear();
-    for (int i = 0; i < data.enumerations.size(); ++i){
-        enumCombo->addItem(QString::fromStdString(data.enumerations[i]));
+    if(enumCombo){
+        enumCombo->clear();
+        for (int i = 0; i < data.enumerations.size(); ++i){
+            enumCombo->addItem(QString::fromStdString(data.enumerations[i]));
+        }
+        enumCombo->setCurrentIndex(data.currentSelection);
     }
-    enumCombo->setCurrentIndex(data.currentSelection);
-    _updating = false; 
 }
 
 void THandler<EnumParam, void>::updateParam(EnumParam& data){

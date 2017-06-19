@@ -10,6 +10,11 @@
 #include "MetaObject/params/buffers/Map.hpp"
 #include "MetaObject/serialization/CerealPolicy.hpp"
 #include "MetaObject/serialization/cvSpecializations.hpp"
+#include "MetaObject/serialization/cereal_map.hpp"
+#include "cereal/types/map.hpp"
+#include "cereal/types/string.hpp"
+#include <cereal/types/vector.hpp>
+
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
 #endif
@@ -54,4 +59,7 @@ INSTANTIATE_META_PARAM(cv::Vec2f);
 INSTANTIATE_META_PARAM(cv::Vec3f);
 INSTANTIATE_META_PARAM(cv::Vec2b);
 INSTANTIATE_META_PARAM(cv::Vec3b);
+INSTANTIATE_META_PARAM(std::vector<cv::Vec3b>);
+typedef std::map<std::string, cv::Vec3b> ClassColormap_t;
+INSTANTIATE_META_PARAM(ClassColormap_t);
 #endif
