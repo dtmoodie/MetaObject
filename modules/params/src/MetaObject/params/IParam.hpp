@@ -160,7 +160,7 @@ public:
         _name = GetKeywordInputDefault<tag::param_name>("unnamed", args...);
         if (const mo::Time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...))
             _ts = *ts;
-
+        _mtx = nullptr;
         _fn        = GetKeywordInputDefault<tag::frame_number>(-1, args...);
         _ctx       = GetKeywordInputDefault<tag::context>(nullptr, args...);
         _cs        = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...);
