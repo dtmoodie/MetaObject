@@ -88,7 +88,7 @@ void IMetaObject::Init(bool firstInit)
     initCustom(firstInit);
     auto params = getParams();
     for (auto param : params) {
-        auto update_slot = this->getSlot<void(mo::Context*, mo::IParam*)>("on_" + param->getName() + "_modified");
+        auto update_slot = this->getSlot<mo::UpdateSig_t>("on_" + param->getName() + "_modified");
         if (update_slot) {
             auto Connection = param->registerUpdateNotifier(update_slot);
             this->addConnection(Connection, param->getName() + "_modified", "on_" + param->getName() + "_modified", update_slot->getSignature(), this);
