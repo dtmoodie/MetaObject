@@ -38,6 +38,7 @@ template<class T> struct Policy {
             return false;
         auto token = typed->access();
         ar(cereal::make_nvp(param->getName(), (token)()));
+        token.setValid(false); // only reading data, not writing, thus don't emit update
         return true;
     }
     template<class AR>
