@@ -310,6 +310,13 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
         init();
     }
 
+    typedef const char*(*InfoFunctor)();
+    
+    InfoFunctor info = (InfoFunctor)dlsym(handle, "getPluginBuildInfo");
+    if(info){
+        LOG(debug) << info();
+    }
+    
     typedef IPerModuleInterface* (*moduleFunctor)();
 
     moduleFunctor module = (moduleFunctor)dlsym(handle, "GetPerModuleInterface");
