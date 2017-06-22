@@ -1,4 +1,5 @@
 #pragma once
+#include <MetaObject/detail/Export.hpp>
 #include <boost/version.hpp>
 #include <boost/units/systems/si.hpp>
 #include <boost/units/systems/si/prefixes.hpp>
@@ -20,4 +21,7 @@ static const auto ns = nanosecond;
 static const auto us = microseconds;
 typedef boost::units::quantity<boost::units::si::time> Time_t;
 typedef boost::optional<Time_t> OptionalTime_t;
+typedef mo::Time_t(*GetTime_f)();
+MO_EXPORTS mo::Time_t getCurrentTime();
+MO_EXPORTS void setTimeSource(GetTime_f timefunc);
 }
