@@ -104,7 +104,13 @@ namespace Buffer {
         ITParam<T>::_typed_update_signal(data_, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
         return true;
     }
-
+    
+    template<class T>
+    void BlockingStreamBuffer<T>::setFrameBufferCapacity(size_t size){
+        _size = size;
+        StreamBuffer<T>::setFrameBufferCapacity(size);
+    }
+    
     template <class T>
     void BlockingStreamBuffer<T>::prune() {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());

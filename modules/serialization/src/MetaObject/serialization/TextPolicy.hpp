@@ -289,9 +289,15 @@ namespace IO {
             template <typename T>
             bool Serialize(ITAccessibleParam<T>* param, std::stringstream& ss)
             {
-                auto token = param->access();
-                bool success = Serialize_imp(ss, token(), mo::_counter_<10>());
-                token.setValid(false); // read only access
+                bool success = false;
+                try{
+                    auto token = param->access();
+                    success = Serialize_imp(ss, token(), mo::_counter_<10>());
+                    token.setValid(false); // read only access
+                }catch(...){
+                    
+                }
+
                 return success;
             }
 
