@@ -25,7 +25,7 @@ namespace mo{
 
             virtual ParamType getBufferType() const{ return NNStreamBuffer_e;}
         protected:
-			typename std::map<SequenceKey, InputStorage_t>::iterator search(OptionalTime_t ts);
+			typename std::map<SequenceKey, InputStorage_t>::iterator search(const OptionalTime_t& ts);
 			typename std::map<SequenceKey, InputStorage_t>::iterator search(size_t fn);
         };
     }
