@@ -4,14 +4,17 @@
 #include <ostream>
 namespace cereal {
 template<class AR, class T> void serialize(AR& ar, cv::Point_<T>& pt) {
-    ar(make_nvp("x", pt.x), make_nvp("y", pt.y));
+    cereal::size_type size = 3;
+    ar(pt.x, pt.y);
 }
 template<class AR, class T> void serialize(AR& ar, cv::Point3_<T>& pt) {
-    ar(make_nvp("x", pt.x), make_nvp("y", pt.y), make_nvp("z", pt.z));
+    cereal::size_type size = 3;
+    ar(cereal::make_size_tag(size));
+    ar(pt.x, pt.y, pt.z);
 }
-template<class AR, class T> void serialize(AR& ar, cv::Scalar_<T>& pt) {
+/*template<class AR, class T> void serialize(AR& ar, cv::Scalar_<T>& pt) {
     ar(make_nvp("0", pt[0]), make_nvp("1", pt[1]), make_nvp("2", pt[2]), make_nvp("3", pt[3]));
-}
+}*/
 template<class AR, class T> void serialize(AR& ar, cv::Rect_<T>& rect) {
     ar(make_nvp("x", rect.x), make_nvp("y", rect.y), make_nvp("width", rect.width), make_nvp("height", rect.height));
 }
