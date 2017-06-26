@@ -136,8 +136,15 @@ namespace Buffer {
             LOG_EVERY_N(debug, 10) << "Pushing to " << this->getTreeName() << " waiting on read, current buffer size " << this->_data_buffer.size();
             _cv.wait_for(lock, boost::chrono::milliseconds(2));
             // Periodically emit an update signal in case a dirty flag was not set correctly and the read thread is just sleeping
+            if(lock)
+                lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            if(!lock)
+                lock.lock();
         }
+        if(!lock)
+            lock.lock();
         this->_data_buffer[{ ts, fn, cs, ctx }] = data;
         IParam::_modified = true;
         lock.unlock();
