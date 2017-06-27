@@ -6,7 +6,11 @@
 #include "MetaObject/thread/ThreadRegistry.hpp"
 #include "MetaObject/logging/Profiling.hpp"
 #include "MetaObject/core/detail/Allocator.hpp"
+#ifdef _MSC_VER
 
+#else
+#include <pthread.h>
+#endif
 using namespace mo;
 
 
@@ -15,6 +19,7 @@ void Thread::pushEventQueue(const std::function<void(void)>& f){
     _event_queue.push(f);
     lock.unlock();
     _cv.notify_all();
+    
 }
 // Work can be stolen and can exist on any thread
 void Thread::pushWork(const std::function<void(void)>& f){
@@ -50,6 +55,16 @@ void Thread::setExitCallback(const std::function<void(void)>& f){
 void Thread::setStartCallback(const std::function<void(void)>& f){
     _on_start = f;
 }
+void Thread::setName(const std::string& name){
+    this->_name = name;
+#ifdef _MSC_VER
+    
+#else
+    pthread_t tid = static_cast<pthread_t>(_thread.native_handle());
+    pthread_setname_np(tid, name.c_str());
+#endif
+}
+
 std::shared_ptr<Connection> Thread::setInnerLoop(TSlot<int(void)>* slot){
     return slot->connect(_inner_loop);
 }

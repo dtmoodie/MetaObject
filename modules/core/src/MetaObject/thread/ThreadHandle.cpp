@@ -153,7 +153,7 @@ void ThreadHandle::setThreadName(const std::string& name)
         {
             mo::setThreadName(name.c_str());
             mo::setStreamName(name.c_str(), _thread->getContext()->getCudaStream());
-            _thread->_name = name;
+            _thread->setName(name);
             _thread->getContext()->setName(name);
         }else
         {
@@ -163,7 +163,7 @@ void ThreadHandle::setThreadName(const std::string& name)
             {
                 mo::setThreadName(name_.c_str());
                 mo::setStreamName(name_.c_str(), thread->getContext()->getCudaStream());
-                _thread->_name = name_;
+                _thread->setName(name_);
                 _thread->getContext()->setName(name_);
             });
         }

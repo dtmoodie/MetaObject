@@ -26,6 +26,7 @@ namespace mo{
 
         void setExitCallback(const std::function<void(void)>& f);
         void setStartCallback(const std::function<void(void)>& f);
+        void setName(const std::string& name);
         //void setInnerLoop(const std::function<int(void)>& f);
         std::shared_ptr<Connection> setInnerLoop(TSlot<int(void)>* slot);
         ThreadPool*  getPool() const;
