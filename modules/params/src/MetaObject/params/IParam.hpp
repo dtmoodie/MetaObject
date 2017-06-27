@@ -256,15 +256,4 @@ void IParam::serialize(Archive& ar) {
     ar(_flags);
 }
 }
-namespace cereal {
-template <class AR>
-void save(AR& ar, const mo::Time_t& time) {
-    ar(time.value());
-}
-template <class AR>
-void load(AR& ar, mo::Time_t& time) {
-    double value;
-    ar(value);
-    time.from_value(value);
-}
-}
+
