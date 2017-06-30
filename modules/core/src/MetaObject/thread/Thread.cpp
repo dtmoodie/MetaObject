@@ -6,17 +6,13 @@
 #include "MetaObject/thread/ThreadRegistry.hpp"
 #include "MetaObject/logging/Profiling.hpp"
 #include "MetaObject/core/detail/Allocator.hpp"
-#ifdef _MSC_VER
-
-#else
-#include <pthread.h>
-#endif
+#include "MetaObject/core/detail/Time.hpp"
 using namespace mo;
 
 
 void Thread::pushEventQueue(const std::function<void(void)>& f){
     boost::unique_lock<boost::recursive_timed_mutex> lock(_mtx);
-    _event_queue.push(f);
+    _event_queue.enqueue(f);
     lock.unlock();
     _cv.notify_all();
     
@@ -24,7 +20,7 @@ void Thread::pushEventQueue(const std::function<void(void)>& f){
 // Work can be stolen and can exist on any thread
 void Thread::pushWork(const std::function<void(void)>& f){
     boost::unique_lock<boost::recursive_timed_mutex> lock(_mtx);
-    _work_queue.push(f);
+    _work_queue.enqueue(f);
     lock.unlock();
     _cv.notify_all();
 }
@@ -57,12 +53,7 @@ void Thread::setStartCallback(const std::function<void(void)>& f){
 }
 void Thread::setName(const std::string& name){
     this->_name = name;
-#ifdef _MSC_VER
-    
-#else
-    pthread_t tid = static_cast<pthread_t>(_thread.native_handle());
-    pthread_setname_np(tid, name.c_str());
-#endif
+    setThreadName(_thread, name);
 }
 
 std::shared_ptr<Connection> Thread::setInnerLoop(TSlot<int(void)>* slot){
@@ -108,7 +99,7 @@ Thread::~Thread(){
 }
 
 void Thread::handleEvents(int ms){
-    boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
+    /*boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
     {
         boost::unique_lock<boost::recursive_timed_mutex> lock(_mtx);
         while(mo::ThreadSpecificQueue::runOnce())
@@ -144,25 +135,28 @@ void Thread::handleEvents(int ms){
     if(elapsed.total_milliseconds() < ms)
     {
         boost::this_thread::sleep_for(boost::chrono::milliseconds(ms - elapsed.total_milliseconds()));
-    }
+    }*/
 }
-struct ThreadSanitizer
+struct mo::Thread::ThreadSanitizer
 {
-    ThreadSanitizer(volatile bool& paused_flag, boost::condition_variable_any& cv):
+    ThreadSanitizer(volatile bool& paused_flag, boost::condition_variable_any& cv, mo::Thread& thread):
         _paused_flag(paused_flag),
-        _cv(cv){
+        _cv(cv),
+        m_thread(thread){
     }
     ~ThreadSanitizer(){
+        LOG(info) << m_thread._name << " exiting";
         mo::Allocator::cleanupThreadSpecificAllocator();
         _paused_flag = true;
         _cv.notify_all();
     }
     volatile bool& _paused_flag;
     boost::condition_variable_any& _cv;
+    mo::Thread& m_thread;
 };
 
 void Thread::main(){
-    ThreadSanitizer allocator_deleter(_paused, _cv);
+    ThreadSanitizer allocator_deleter(_paused, _cv, *this);
     (void)allocator_deleter;
     auto ctx = mo::Context::create();
     {
@@ -177,19 +171,14 @@ void Thread::main(){
     while(!_quit){
         // Execute any events
         try{
-            boost::unique_lock<boost::recursive_timed_mutex> lock(_mtx, boost::chrono::milliseconds(1));
-            if(lock.owns_lock()){
-                if(_work_queue.size()){
-                    _work_queue.back()();
-                    _work_queue.pop();
-                }
-                if(_event_queue.size()){
-                    _event_queue.back()();
-                    _event_queue.pop();
-                }
-                lock.unlock();
-                mo::ThreadSpecificQueue::runOnce();
+            std::function<void(void)> f;
+            if(_work_queue.try_dequeue(f)){
+                f();
             }
+            if(_event_queue.try_dequeue(f)){
+                f();
+            }
+            mo::ThreadSpecificQueue::runOnce();
 
             int delay = 0;
             if(_inner_loop->HasSlots() && _run){
@@ -197,14 +186,19 @@ void Thread::main(){
                 delay = (*_inner_loop)();
             }
             if(delay){
-                while (_work_queue.size()){
-                    _work_queue.back()();
-                    _work_queue.pop();
+                auto start_time = mo::getCurrentTime();
+                while((mo::getCurrentTime() - start_time) < mo::Time_t(mo::ms * delay)){
+                    if(_work_queue.try_dequeue(f)){
+                        f();
+                    }
+                    if(_event_queue.try_dequeue(f)){
+                        f();
+                    }
+                    mo::ThreadSpecificQueue::runOnce();
                 }
-                while (_event_queue.size()){
-                    _event_queue.back()();
-                    _event_queue.pop();
-                }
+                auto size = mo::ThreadSpecificQueue::size();
+                if(size)
+                    LOG(trace) << size << " events unprocessed on thread " << _name << " [" << getThreadId(_thread) << "]";
             }
             if(!_run){
                 _paused = true;

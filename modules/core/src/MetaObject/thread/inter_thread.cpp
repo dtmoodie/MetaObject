@@ -16,11 +16,10 @@ struct impl {
     };
     struct QueueRegistery;
     struct EventQueue {
-        void push(const Event& ev) {
-            //queue.push(ev);
+        void push(const Event& ev, size_t id) {
             queue.enqueue(ev);
             if(queue.size_approx() > 100)
-                LOG(warning) << "Event loop processing queue overflow";
+                LOG(warning) << "Event loop processing queue overflow " << id << " " << queue.size_approx();
             std::lock_guard<std::mutex> lock(mtx);
             if(callback)
                 callback();
@@ -34,18 +33,6 @@ struct impl {
         }
         void remove(void* obj) {
             (void)obj;
-            /*for (auto itr = queue.begin(); itr != queue.end(); )
-            {
-                if(itr->obj == obj)
-                {
-                    LOG(trace) << "Removing item from queue for object: " << obj;
-                    itr = queue.erase(itr);
-                }
-                else
-                {
-                    ++itr;
-                }
-            }*/
         }
         size_t size() {
             return queue.size_approx();
@@ -91,15 +78,6 @@ struct impl {
         std::mutex mtx;
     };
 
-
-    /*std::map<size_t,  // Thread id
-        std::tuple<
-            ConcurrentQueue<std::pair<std::function<void(void)>, void*>>,  // queue of function + obj*
-            std::function<void(void)>, std::mutex> // callback on push to queue
-    > thread_queues;
-    std::mutex mtx;*/
-
-
     static impl* inst() {
         static impl* g_inst = nullptr;
         if(g_inst == nullptr)
@@ -114,18 +92,7 @@ struct impl {
             f();
             return;
         }
-        QueueRegistery::Instance().GetQueue(id)->push({f, obj});
-        /*std::tuple<ConcurrentQueue<std::pair<std::function<void(void)>, void*>>, std::function<void(void)>, std::mutex>* queue = nullptr;
-        {
-            std::unique_lock<std::mutex> lock(mtx);
-            queue = &thread_queues[id];
-        }
-        std::unique_lock<std::mutex> lock(std::get<2>(*queue));
-        if(std::get<0>(*queue).size() > 100)
-            LOG(warning) << "Event loop processing queue overflow " << std::get<0>(*queue).size() << " for thread " << id;
-        std::get<0>(*queue).push(std::pair<std::function<void(void)>, void*>(f, obj));
-        if (std::get<1>(*queue))
-            std::get<1>(*queue)();*/
+        QueueRegistery::Instance().GetQueue(id)->push({f, obj}, id);
     }
     int run(size_t id) {
         auto queue = QueueRegistery::Instance().GetQueue(id);
@@ -136,21 +103,6 @@ struct impl {
             ++count;
         }
         return count;
-
-        /*std::tuple<ConcurrentQueue<std::pair<std::function<void(void)>, void*>>, std::function<void(void)>, std::mutex>* queue = nullptr;
-        {
-            std::lock_guard<std::mutex> lock(mtx);
-            queue = &thread_queues[id];
-        }
-
-        std::unique_lock<std::mutex> lock(std::get<2>(*queue));
-        std::pair<std::function<void(void)>, void*> f;
-        while (std::get<0>(*queue).try_pop(f))
-        {
-            lock.unlock();
-            f.first();
-            lock.lock();
-        }*/
     }
     bool run_once(size_t id) {
         auto queue = QueueRegistery::Instance().GetQueue(id);
@@ -160,57 +112,18 @@ struct impl {
             return true;
         }
         return false;
-        /*std::tuple<ConcurrentQueue<std::pair<std::function<void(void)>, void*>>, std::function<void(void)>, std::mutex>* queue = nullptr;
-        {
-            std::lock_guard<std::mutex> lock(mtx);
-            queue = &thread_queues[id];
-        }
-        std::pair<std::function<void(void)>, void*> f;
-        std::unique_lock<std::mutex> lock(std::get<2>(*queue));
-        if(std::get<0>(*queue).try_pop(f))
-        {
-            lock.unlock();
-            f.first();
-            lock.lock();
-        }*/
     }
     void remove_from_queue(void* obj) {
         QueueRegistery::Instance().RemoveFromQueue(obj);
-        /*std::lock_guard<std::mutex> lock(mtx);
-        for (auto& queue: thread_queues)
-        {
-            std::lock_guard<std::mutex> lock(std::get<2>(queue.second));
-            for (auto itr = std::get<0>(queue.second).begin(); itr != std::get<0>(queue.second).end(); )
-            {
-                if(itr->second == obj)
-                {
-                    LOG(trace) << "Removing item from queue for object: " << obj;
-                    itr = std::get<0>(queue.second).erase(itr);
-                }
-                else
-                {
-                    ++itr;
-                }
-            }
-        }*/
     }
     size_t size(size_t id) {
         return QueueRegistery::Instance().GetQueue(id)->size();
-        //std::lock_guard<std::mutex> lock(mtx);
-        //return std::get<0>(thread_queues[id]).size();
     }
     void Cleanup() {
         QueueRegistery::Instance().clear();
     }
 };
 void ThreadSpecificQueue::push(const std::function<void(void)>& f, size_t id, void* obj) {
-
-#ifdef _DEBUG
-    /*if(impl::inst()->_deleted_objects.find(obj) != impl::inst()->_deleted_objects.end()) {
-        LOG(trace) << "Pushing function onto queue from deleted object";
-        //return;
-    }*/
-#endif
     impl::inst()->push(f, id, obj);
 }
 int ThreadSpecificQueue::run(size_t id) {
@@ -224,9 +137,6 @@ bool ThreadSpecificQueue::runOnce(size_t id) {
 }
 void ThreadSpecificQueue::removeFromQueue(void* obj) {
     impl::inst()->remove_from_queue(obj);
-#ifdef _DEBUG
-    //impl::inst()->_deleted_objects.insert(obj);
-#endif
 }
 size_t ThreadSpecificQueue::size(size_t id) {
     return impl::inst()->size(id);
