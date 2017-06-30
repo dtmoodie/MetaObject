@@ -122,12 +122,8 @@ namespace mo
                     if (box == nullptr){
                         box = new QSpinBox(parent);
                         box->setMaximumWidth(100);
-                        if (std::numeric_limits<T>::max() > std::numeric_limits<int>::max())
-                            box->setMinimum(std::numeric_limits<int>::max());
-                        else
-                            box->setMinimum(std::numeric_limits<T>::max());
-
-                        box->setMinimum(std::numeric_limits<T>::min());
+                        box->setMaximum(std::max<int>(std::numeric_limits<T>::max(), std::numeric_limits<int>::max()));
+                        box->setMinimum(std::min<int>(std::numeric_limits<T>::min(), std::numeric_limits<int>::min()));
                     }
 
                     box->connect(box, SIGNAL(valueChanged(int)), proxy, SLOT(on_update(int)));
