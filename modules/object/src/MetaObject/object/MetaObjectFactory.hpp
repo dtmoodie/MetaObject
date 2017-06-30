@@ -22,9 +22,9 @@ namespace mo
         static MetaObjectFactory*          instance(SystemTable* system_table = nullptr);
 
         std::vector<std::string>           listConstructableObjects(int interface_id = -1) const;
-        std::string                        printAllObjectInfo(int interface_id = -1) const;
+        std::string                        printAllObjectInfo(int64_t interface_id = -1) const;
 
-        std::vector<IObjectConstructor*>   getConstructors(int interface_id = -1) const;
+        std::vector<IObjectConstructor*>   getConstructors(int64_t interface_id = -1) const;
         IObjectConstructor*                getConstructor(const char* type_name) const;
         IObjectInfo*                       getObjectInfo(const char* type_name) const;
         std::vector<IObjectInfo*>          getAllObjectInfo() const;
