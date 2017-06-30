@@ -8,7 +8,6 @@
 #include <boost/thread/tss.hpp>
 #include <cuda_runtime.h>
 
-namespace mo {
 #define MO_CUDA_ERROR_CHECK(expr, msg){ \
     cudaError_t err = (expr); \
     if(err != cudaSuccess) { \
@@ -16,16 +15,18 @@ namespace mo {
     } \
 }
 
+namespace mo {
+
 unsigned char* alignMemory(unsigned char* ptr, int elemSize) {
     int i;
     for (i = 0; i < elemSize; ++i) {
-        if (reinterpret_cast<size_t>(ptr + i) % elemSize == 0) {
+        if (reinterpret_cast<size_t>(ptr + i) % static_cast<size_t>(elemSize) == 0) {
             break;
         }
     }
     return ptr + i;  // Forces memory to be aligned to an element's byte boundary
 }
-int alignmentOffset(unsigned char* ptr, size_t elemSize) {
+size_t alignmentOffset(unsigned char* ptr, size_t elemSize) {
     size_t i;
     for (i = 0; i < elemSize; ++i) {
         if (reinterpret_cast<size_t>(ptr + i) % elemSize == 0) {
@@ -43,21 +44,21 @@ PitchedPolicy::PitchedPolicy() {
 
 void PitchedPolicy::sizeNeeded(int rows, int cols, int elemSize, size_t& sizeNeeded, size_t& stride) {
     if (rows == 1 || cols == 1) {
-        stride = cols*elemSize;
+        stride = static_cast<size_t>(cols*elemSize);
     } else {
-        if((cols*elemSize % textureAlignment) == 0)
-            stride = cols*elemSize;
+        if((static_cast<size_t>(cols*elemSize) % textureAlignment) == 0)
+            stride = static_cast<size_t>(cols*elemSize);
         else
-            stride = cols*elemSize + textureAlignment - (cols*elemSize % textureAlignment);
+            stride = static_cast<size_t>(cols*elemSize) + textureAlignment - (static_cast<size_t>(cols*elemSize) % textureAlignment);
     }
-    sizeNeeded = stride*rows;
+    sizeNeeded = stride* static_cast<size_t>(rows);
 }
 
 /// ==========================================================
 /// ContinuousPolicy
 void ContinuousPolicy::sizeNeeded(int rows, int cols, int elemSize, size_t& sizeNeeded, size_t& stride) {
-    stride = cols*elemSize;
-    sizeNeeded = stride * rows;
+    stride = static_cast<size_t>(cols*elemSize);
+    sizeNeeded = stride * static_cast<size_t>(rows);
 }
 
 /// ==========================================================
@@ -78,7 +79,7 @@ bool PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(cv::cuda::GpuMat* mat
         if (ptr) {
             mat->data = ptr;
             mat->step = stride;
-            mat->refcount = (int*)cv::fastMalloc(sizeof(int));
+            mat->refcount = static_cast<int*>(cv::fastMalloc(sizeof(int)));
             memoryUsage += mat->step*rows;
             LOG(trace) << "[GPU] Reusing block of size (" << rows << "," << cols << ") "
                        << mat->step * rows / (1024 * 1024) << " MB from memory block. Total usage: "
@@ -96,7 +97,7 @@ bool PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(cv::cuda::GpuMat* mat
     if (unsigned char* ptr = (*blocks.rbegin())->allocate(sizeNeeded, elemSize)) {
         mat->data = ptr;
         mat->step = stride;
-        mat->refcount = (int*)cv::fastMalloc(sizeof(int));
+        mat->refcount = static_cast<int*>(cv::fastMalloc(sizeof(int)));
         memoryUsage += mat->step*rows;
         LOG(trace) << "[GPU] Reusing block of size (" << rows << "," << cols << ") "
                    << mat->step * rows / (1024 * 1024)
@@ -145,6 +146,7 @@ unsigned char* PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t size
 
 template<typename PaddingPolicy>
 void PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char* ptr, size_t num_bytes) {
+    (void)num_bytes;
     for (auto itr : blocks) {
         if (itr->deAllocate(ptr)) {
             return;
@@ -189,10 +191,10 @@ bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
         });
         mat->data = best_candidate->second->ptr;
         mat->step = stride;
-        mat->refcount = (int*)cv::fastMalloc(sizeof(int));
+        mat->refcount = static_cast<int*>(cv::fastMalloc(sizeof(int)));
 
         LOG(trace) << "[GPU] Reusing block of size (" << rows << "," << cols << ") "
-                   << mat->step * rows / (1024 * 1024) << " MB at " << (void*)best_candidate->second->ptr
+                   << mat->step * rows / (1024 * 1024) << " MB at " << static_cast<void*>(best_candidate->second->ptr)
                    << " which was stale for "
                    << best_candidate->first * 1000 / CLOCKS_PER_SEC
                    << " ms. total usage: "
@@ -202,26 +204,25 @@ bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
         return true;
     }
     if (rows > 1 && cols > 1) {
-
-        MO_CUDA_ERROR_CHECK(cudaMallocPitch(&mat->data, &mat->step, elemSize * cols, rows),
+        MO_CUDA_ERROR_CHECK(cudaMallocPitch(&mat->data, &mat->step, elemSize * static_cast<size_t>(cols), static_cast<size_t>(rows)),
                             << " while allocating " << rows << ", " << cols << ". Elemsize: " << elemSize
                             << " Total allocation: " << elemSize*cols*rows / (1024 * 1024) << " MB");
 
         this->memoryUsage += mat->step * rows;
         LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") "
                    << mat->step * rows / (1024 * 1024) << " MB at "
-                   << (void*)mat->data << ". Total usage: "
+                   << static_cast<void*>(mat->data) << ". Total usage: "
                    << memoryUsage / (1024 * 1024) << " MB";
     } else {
         CV_CUDEV_SAFE_CALL(cudaMalloc(&mat->data, elemSize * cols * rows));
         this->memoryUsage += mat->step * rows;
         LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") "
                    << cols * rows / (1024 * 1024) << " MB at "
-                   << (void*)mat->data << ". Total usage: "
+                   << static_cast<void*>(mat->data) << ". Total usage: "
                    << memoryUsage / (1024 * 1024) << " MB";
-        mat->step = elemSize * cols;
+        mat->step = elemSize * static_cast<size_t>(cols);
     }
-    mat->refcount = (int*)cv::fastMalloc(sizeof(int));
+    mat->refcount = static_cast<int*>(cv::fastMalloc(sizeof(int)));
     return true;
 }
 
@@ -246,7 +247,7 @@ unsigned char* StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t siz
             current_allocations[ptr] = sizeNeeded;
             LOG(trace) << "[GPU] Allocating block of size " << itr->size / (1024 * 1024)
                        << "MB from the memory stack which was stale for " << (time - itr->free_time) * 1000 / CLOCKS_PER_SEC
-                       << " ms at " << (void*) itr->ptr;
+                       << " ms at " << static_cast<void*>(itr->ptr);
             deallocateList.erase(itr);
             return ptr;
         }
@@ -255,12 +256,13 @@ unsigned char* StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t siz
     this->memoryUsage += sizeNeeded;
     current_allocations[ptr] = sizeNeeded;
     LOG(trace) << "[GPU] Allocating block of size " << sizeNeeded / (1024 * 1024)
-               << "MB at " <<  (void*) ptr;
+               << "MB at " <<  static_cast<void*>(ptr);
     return ptr;
 }
 
 template<typename PaddingPolicy>
 void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char* ptr, size_t num_bytes) {
+    (void)num_bytes;
     auto itr = current_allocations.find(ptr);
     if(itr != current_allocations.end()) {
         current_allocations.erase(itr);
@@ -280,7 +282,7 @@ void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::clear() {
             memoryUsage -= itr->size;
             LOG(trace) << "[GPU] Deallocating block of size " << itr->size /(1024*1024)
                        << "MB. Which was stale for " << (time - itr->free_time) * 1000 / CLOCKS_PER_SEC << " ms at "
-                       << (void*)itr->ptr;
+                       << static_cast<void*>(itr->ptr);
             CV_CUDEV_SAFE_CALL(cudaFree(itr->ptr));
             itr = deallocateList.erase(itr);
         } else {
@@ -318,9 +320,9 @@ bool NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
         LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") "
                    << cols * rows / (1024 * 1024) << " MB. Total usage: "
                    << memoryUsage / (1024 * 1024) << " MB";
-        mat->step = elemSize * cols;
+        mat->step = elemSize * static_cast<size_t>(cols);
     }
-    mat->refcount = (int*)cv::fastMalloc(sizeof(int));
+    mat->refcount = static_cast<int*>(cv::fastMalloc(sizeof(int)));
     return true;
 }
 
@@ -416,7 +418,6 @@ cv::UMatData* RefCountPolicyImpl<Allocator, cv::Mat>::allocate(int dims, const i
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const {
     auto ret = Allocator::allocate(dims, sizes, type, data, step, flags, usageFlags);
     if(ret) {
-        //++ref_count;
         return ret;
     }
     return nullptr;
@@ -424,7 +425,6 @@ cv::UMatData* RefCountPolicyImpl<Allocator, cv::Mat>::allocate(int dims, const i
 template<class Allocator>
 bool RefCountPolicyImpl<Allocator, cv::Mat>::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const {
     if(Allocator::allocate(data, accessflags, usageFlags)) {
-        //++ref_count;
         return true;
     }
     return false;
@@ -432,7 +432,6 @@ bool RefCountPolicyImpl<Allocator, cv::Mat>::allocate(cv::UMatData* data, int ac
 template<class Allocator>
 void RefCountPolicyImpl<Allocator, cv::Mat>::deallocate(cv::UMatData* data) const {
     Allocator::deallocate(data);
-    //--ref_count;
 }
 
 template<class Allocator>
@@ -521,6 +520,7 @@ unsigned char* ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::allocate(size_t nu
 
 template<class Allocator>
 void ScopeDebugPolicy<Allocator, cv::cuda::GpuMat>::deallocate(unsigned char* ptr, size_t num_bytes) {
+    (void)num_bytes;
     Allocator::free(ptr);
     auto itr = scopeOwnership.find(ptr);
     if (itr != scopeOwnership.end()) {
@@ -592,7 +592,7 @@ cv::UMatData* CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::alloc
             }
         }
 
-        total *= sizes[i];
+        total *= static_cast<size_t>(sizes[i]);
     }
     if(total < threshold) {
         return SmallAllocator::allocate(dims, sizes, type, data, step, flags, usageFlags);
@@ -605,6 +605,8 @@ template<class SmallAllocator, class LargeAllocator>
 bool CombinedPolicyImpl<SmallAllocator, LargeAllocator, cv::Mat>::allocate(
     cv::UMatData* data, int accessflags,
     cv::UMatUsageFlags usageFlags) const {
+    (void)usageFlags;
+    (void)accessflags;
     return (data != NULL);
 }
 
