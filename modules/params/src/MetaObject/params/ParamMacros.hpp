@@ -36,9 +36,9 @@
         _list_param_info(info, --dummy);                                                              \
     }
 
-#define OPTIONAL_INPUT(type, name, init) \
-    INPUT(type, name, init);             \
-    APPEND_FLAGS(name, mo::Optional_e);
+#define OPTIONAL_INPUT(type, name, init)  \
+    INPUT(type, name, init)               \
+    APPEND_FLAGS(name, mo::Optional_e)
 
 #define APPEND_FLAGS(name, flags)                                       \
     void _init_params(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
@@ -80,7 +80,7 @@
 
 #define OUTPUT(type_, name, init)                                                 \
     mo::TParamOutput<typename mo::argument_type<void(type_)>::type> name##_param; \
-    OUTPUT_(type_, name, init, __COUNTER__);                                      \
+    OUTPUT_(type_, name, init, __COUNTER__)                                       \
     mo::argument_type<void(type_)>::type name = init;
 
 #define SOURCE(type, name, init) \

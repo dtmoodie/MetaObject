@@ -225,7 +225,9 @@ namespace mo
     template<class R, class...T>
     bool TSignalRelay<R(T...)>::HasSlots() const
     {
-        return _slot != nullptr && *_slot;
+        if(_slot == nullptr)
+            return false;
+        return *_slot;
     }
 
 }

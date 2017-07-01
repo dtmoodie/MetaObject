@@ -1,5 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
-PROJECT(MetaObject)
+CMAKE_POLICY(SET CMP0048 NEW)
+PROJECT(MetaObject
+    VERSION 0.1)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 CMAKE_POLICY(SET CMP0020 NEW)
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/CMakeMacros.cmake")

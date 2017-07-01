@@ -121,4 +121,8 @@ namespace mo
 	{
 		return TypeInfo(typeid(R(T...)));
 	}
+    template<class R, class...T>
+    TSlot<R(T...)>::operator bool() const{
+        return std::function<R(T...)>::operator bool();
+    }
 }

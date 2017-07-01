@@ -2,8 +2,8 @@
 #include "MetaObject/thread/Cuda.hpp"
 #include <ctime>
 
-
 using namespace mo;
+AllocationPolicy::~AllocationPolicy(){}
 boost::thread_specific_ptr<Allocator> thread_specific_allocator;
 thread_local Allocator* thread_specific_allocator_unowned = nullptr;
 thread_local std::string current_scope;
@@ -99,8 +99,8 @@ const std::string& mo::getScopeName() {
 class CpuMemoryPoolImpl: public CpuMemoryPool {
 public:
     CpuMemoryPoolImpl(size_t initial_size = 1e8):
-        _initial_block_size(initial_size),
-        total_usage(0) {
+        total_usage(0),
+        _initial_block_size(initial_size){
         blocks.emplace_back(new mo::CpuMemoryBlock(_initial_block_size));
     }
 
@@ -112,7 +112,7 @@ public:
             if (_ptr) {
                 *ptr = _ptr;
                 LOG(trace) << "Allocating " << total << " bytes from pre-allocated memory block number "
-                           << index << " at address: " << (void*)_ptr;
+                           << index << " at address: " << static_cast<void*>(_ptr);
                 return true;
             }
             ++index;
@@ -124,7 +124,7 @@ public:
         _ptr = (*blocks.rbegin())->allocate(total, elemSize);
         if (_ptr) {
             LOG(debug) << "Allocating " << total
-                       << " bytes from newly created memory block at address: " << (void*)_ptr;
+                       << " bytes from newly created memory block at address: " << static_cast<void*>(_ptr);
             *ptr = _ptr;
             return true;
         }
@@ -137,7 +137,7 @@ public:
             _ptr = block->allocate(num_bytes, sizeof(uchar));
             if (_ptr) {
                 LOG(trace) << "Allocating " << num_bytes << " bytes from pre-allocated memory block number "
-                           << index << " at address: " << (void*)_ptr;
+                           << index << " at address: " << static_cast<void*>(_ptr);
                 return _ptr;
             }
             ++index;
@@ -149,7 +149,7 @@ public:
         _ptr = (*blocks.rbegin())->allocate(num_bytes, sizeof(uchar));
         if (_ptr) {
             LOG(debug) << "Allocating " << num_bytes
-                       << " bytes from newly created memory block at address: " << (void*)_ptr;
+                       << " bytes from newly created memory block at address: " << static_cast<void*>(_ptr);
             return _ptr;
         }
         return nullptr;
@@ -159,7 +159,7 @@ public:
             if (ptr >= itr->Begin() && ptr < itr->End()) {
                 LOG(trace) << "Releasing memory block of size "
                            << total << " at address: " << ptr;
-                if (itr->deAllocate((unsigned char*)ptr)) {
+                if (itr->deAllocate(static_cast<unsigned char*>(ptr))) {
                     return true;
                 }
             }
@@ -167,7 +167,7 @@ public:
         return false;
     }
 private:
-    size_t total_usage;
+    size_t total_usage = 0;
     size_t _initial_block_size;
     std::list<std::shared_ptr<mo::CpuMemoryBlock>> blocks;
 };
@@ -217,6 +217,7 @@ public:
     }
 
     bool allocate(void** ptr, size_t total, size_t elemSize) {
+        (void)elemSize;
         for (auto itr = deallocate_stack.begin(); itr != deallocate_stack.end(); ++itr) {
             if(std::get<2>(*itr) == total) {
                 *ptr = std::get<0>(*itr);
@@ -256,7 +257,7 @@ public:
 
     bool deallocate(void* ptr, size_t total) {
         LOG(trace) << "Releasing " << total / (1024 * 1024) << " MB to lazy deallocation pool";
-        deallocate_stack.emplace_back((unsigned char*)ptr, clock(), total);
+        deallocate_stack.emplace_back(static_cast<unsigned char*>(ptr), clock(), total);
         cleanup();
         return true;
     }
@@ -281,7 +282,7 @@ private:
                                << " ms. Total usage: " << total_usage / (1024 * 1024) << " MB";
 #endif
                 }
-                CV_CUDEV_SAFE_CALL(cudaFreeHost((void*)std::get<0>(*itr)));
+                MO_CUDA_ERROR_CHECK(cudaFreeHost(static_cast<void*>(std::get<0>(*itr))), "Error freeing " << std::get<2>(*itr) << " bytes of memory");
                 itr = deallocate_stack.erase(itr);
             } else {
                 ++itr;
@@ -373,7 +374,7 @@ cv::UMatData* CpuStackPolicy::allocate(int dims, const int* sizes, int type,
             }
         }
 
-        total *= sizes[i];
+        total *= static_cast<size_t>(sizes[i]);
     }
 
     cv::UMatData* u = new cv::UMatData(this);
@@ -397,6 +398,9 @@ uchar* CpuStackPolicy::allocate(size_t total) {
 }
 
 bool CpuStackPolicy::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const {
+    (void)data;
+    (void)accessflags;
+    (void)usageFlags;
     return false;
 }
 void CpuStackPolicy::deallocate(uchar* ptr, size_t total) {
@@ -425,6 +429,8 @@ void CpuStackPolicy::deallocate(cv::UMatData* u) const {
 
 cv::UMatData* mt_CpuStackPolicy::allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const {
+    (void)flags;
+    (void)usageFlags;
     size_t total = CV_ELEM_SIZE(type);
     for (int i = dims - 1; i >= 0; i--) {
         if (step) {
@@ -436,7 +442,7 @@ cv::UMatData* mt_CpuStackPolicy::allocate(int dims, const int* sizes, int type,
             }
         }
 
-        total *= sizes[i];
+        total *= size_t(sizes[i]);
     }
 
     cv::UMatData* u = new cv::UMatData(this);
@@ -456,6 +462,9 @@ cv::UMatData* mt_CpuStackPolicy::allocate(int dims, const int* sizes, int type,
 }
 
 bool mt_CpuStackPolicy::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const {
+    (void)data;
+    (void)accessflags;
+    (void)usageFlags;
     return false;
 }
 
@@ -480,6 +489,8 @@ void mt_CpuStackPolicy::deallocate(cv::UMatData* u) const {
 // CpuPoolPolicy
 cv::UMatData* CpuPoolPolicy::allocate(int dims, const int* sizes, int type,
                                       void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const {
+    (void)flags;
+    (void)usageFlags;
     size_t total = CV_ELEM_SIZE(type);
     for (int i = dims - 1; i >= 0; i--) {
         if (step) {
@@ -491,7 +502,7 @@ cv::UMatData* CpuPoolPolicy::allocate(int dims, const int* sizes, int type,
             }
         }
 
-        total *= sizes[i];
+        total *= size_t(sizes[i]);
     }
 
     cv::UMatData* u = new cv::UMatData(this);
@@ -511,6 +522,9 @@ cv::UMatData* CpuPoolPolicy::allocate(int dims, const int* sizes, int type,
 }
 
 bool CpuPoolPolicy::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const {
+    (void)data;
+    (void)accessflags;
+    (void)usageFlags;
     return false;
 }
 
@@ -535,13 +549,16 @@ uchar* CpuPoolPolicy::allocate(size_t num_bytes) {
 }
 
 void CpuPoolPolicy::deallocate(uchar* ptr, size_t num_bytes) {
-
+    (void)ptr;
+    (void)num_bytes;
 }
 
 // ================================================================
 // mt_CpuPoolPolicy
 cv::UMatData* mt_CpuPoolPolicy::allocate(int dims, const int* sizes, int type,
         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const {
+    (void)flags;
+    (void)usageFlags;
     size_t total = CV_ELEM_SIZE(type);
     for (int i = dims - 1; i >= 0; i--) {
         if (step) {
@@ -553,7 +570,7 @@ cv::UMatData* mt_CpuPoolPolicy::allocate(int dims, const int* sizes, int type,
             }
         }
 
-        total *= sizes[i];
+        total *= size_t(sizes[i]);
     }
 
     cv::UMatData* u = new cv::UMatData(this);
@@ -573,6 +590,9 @@ cv::UMatData* mt_CpuPoolPolicy::allocate(int dims, const int* sizes, int type,
 }
 
 bool mt_CpuPoolPolicy::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const {
+    (void)data;
+    (void)accessflags;
+    (void)usageFlags;
     return false;
 }
 
@@ -585,7 +605,6 @@ void mt_CpuPoolPolicy::deallocate(cv::UMatData* u) const {
 
     if (u->refcount == 0) {
         if (!(u->flags & cv::UMatData::USER_ALLOCATED)) {
-            //cudaFreeHost(u->origdata);
             CpuMemoryPool::globalInstance()->deallocate(u->origdata, u->size);
             u->origdata = 0;
         }
@@ -597,6 +616,8 @@ void mt_CpuPoolPolicy::deallocate(cv::UMatData* u) const {
 
 cv::UMatData* PinnedAllocator::allocate(int dims, const int* sizes, int type,
                                         void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const {
+    (void)flags;
+    (void)usageFlags;
     size_t total = CV_ELEM_SIZE(type);
     for (int i = dims - 1; i >= 0; i--) {
         if (step) {
@@ -608,7 +629,7 @@ cv::UMatData* PinnedAllocator::allocate(int dims, const int* sizes, int type,
             }
         }
 
-        total *= sizes[i];
+        total *= size_t(sizes[i]);
     }
 
     cv::UMatData* u = new cv::UMatData(this);
@@ -628,6 +649,9 @@ cv::UMatData* PinnedAllocator::allocate(int dims, const int* sizes, int type,
 }
 
 bool PinnedAllocator::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const {
+    (void)data;
+    (void)accessflags;
+    (void)usageFlags;
     return false;
 }
 

@@ -51,7 +51,7 @@ namespace mo
             static const ParamType Type = BlockingStreamBuffer_e;
 
             BlockingStreamBuffer(const std::string& name = "");
-
+            virtual void setFrameBufferCapacity(size_t size);
             virtual ParamType getBufferType() const{ return BlockingStreamBuffer_e;}
         protected:
             bool updateDataImpl(const T& data, const OptionalTime_t& ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs);

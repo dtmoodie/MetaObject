@@ -4,7 +4,8 @@
 #include <ostream>
 namespace cereal {
 template<class AR, class T> void serialize(AR& ar, cv::Point_<T>& pt) {
-    cereal::size_type size = 3;
+    cereal::size_type size = 2;
+    ar(cereal::make_size_tag(size));
     ar(pt.x, pt.y);
 }
 template<class AR, class T> void serialize(AR& ar, cv::Point3_<T>& pt) {

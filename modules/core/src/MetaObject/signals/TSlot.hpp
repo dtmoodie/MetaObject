@@ -28,6 +28,7 @@ namespace mo
 		virtual bool disConnect(std::weak_ptr<ISignalRelay> relay);
         void clear();
 		TypeInfo getSignature() const;
+        operator bool() const;
 	protected:
 		std::vector< std::shared_ptr< TSignalRelay<R(T...)> > > _relays;
 		

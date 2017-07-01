@@ -10,7 +10,7 @@
 
 namespace mo {
 MO_EXPORTS inline unsigned char*    alignMemory(unsigned char* ptr, int elemSize);
-MO_EXPORTS inline int               alignmentOffset(unsigned char* ptr, size_t elemSize);
+MO_EXPORTS inline size_t            alignmentOffset(unsigned char* ptr, size_t elemSize);
 MO_EXPORTS void                     setScopeName(const std::string& name);
 MO_EXPORTS const std::string&       getScopeName();
 MO_EXPORTS void                     installThrustPoolingAllocator();
@@ -136,6 +136,7 @@ public:
  */
 class MO_EXPORTS AllocationPolicy {
 public:
+    virtual ~AllocationPolicy();
     /*!
      * \brief GetMemoryUsage
      * \return current estimated memory usage
@@ -143,7 +144,7 @@ public:
     inline size_t getMemoryUsage() const;
     virtual void release() {}
 protected:
-    size_t memoryUsage;
+    size_t memoryUsage = 0;
     /*!
      * \brief current_allocations keeps track of the stacks allocated by allocate(size_t)
      *        since a call to free(unsigned char*) will not return the size of the allocated

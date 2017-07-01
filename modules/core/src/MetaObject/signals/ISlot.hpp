@@ -26,6 +26,6 @@ namespace mo
         friend class IMetaObject;
         void setParent(IMetaObject* parent);
         IMetaObject* _parent = nullptr;
-        Context* _ctx;
+        Context* _ctx = nullptr;
     };
 }

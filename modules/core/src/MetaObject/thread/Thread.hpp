@@ -2,6 +2,7 @@
 #include <MetaObject/detail/Export.hpp>
 #include <MetaObject/core/detail/Forward.hpp>
 #include <MetaObject/signals/TSignalRelay.hpp>
+#include <MetaObject/core/detail/ConcurrentQueue.hpp>
 #include <boost/thread.hpp>
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>
@@ -26,13 +27,16 @@ namespace mo{
 
         void setExitCallback(const std::function<void(void)>& f);
         void setStartCallback(const std::function<void(void)>& f);
+        void setName(const std::string& name);
         //void setInnerLoop(const std::function<int(void)>& f);
         std::shared_ptr<Connection> setInnerLoop(TSlot<int(void)>* slot);
         ThreadPool*  getPool() const;
         ContextPtr_t getContext();
     protected:
+        struct ThreadSanitizer;
         friend class ThreadPool;
         friend class ThreadHandle;
+        friend struct ThreadSanitizer;
 
         Thread();
         Thread(ThreadPool* pool);
@@ -60,8 +64,10 @@ namespace mo{
         volatile bool                         _paused;
         // Set by the thread handle, set this flag to skip executing the event loop because inner loop needs to run again asap
         volatile bool                         _run_inner_loop;
-        std::queue<std::function<void(void)>> _work_queue;
-        std::queue<std::function<void(void)>> _event_queue;
+        //std::queue<std::function<void(void)>> _work_queue;
+        //std::queue<std::function<void(void)>> _event_queue;
+        moodycamel::ConcurrentQueue<std::function<void(void)>> _work_queue;
+        moodycamel::ConcurrentQueue<std::function<void(void)>> _event_queue;
         std::string                           _name;
     };
 }

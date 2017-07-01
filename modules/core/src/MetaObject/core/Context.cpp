@@ -58,6 +58,9 @@ void Context::setName(const std::string& name) {
 }
 
 Context::~Context() {
+#ifdef _DEBUG
+    LOG(info) << "Context [" << name << "] destroyed";
+#endif
 }
 
 cv::cuda::Stream& Context::getStream() {

@@ -25,3 +25,16 @@ typedef mo::Time_t(*GetTime_f)();
 MO_EXPORTS mo::Time_t getCurrentTime();
 MO_EXPORTS void setTimeSource(GetTime_f timefunc);
 }
+
+namespace cereal {
+template <class AR>
+double save_minimal(const AR& ar, const mo::Time_t& time) {
+    (void)ar;
+    return time.value();
+}
+template <class AR>
+void load_minimal(AR& ar, mo::Time_t& time, const double& value) {
+    (void)ar;
+    time.from_value(value);
+}
+}
