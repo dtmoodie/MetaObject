@@ -102,3 +102,4 @@ private:
     Storage_t data;
 };
 }
+#include "detail/TParamPtrImpl.hpp"

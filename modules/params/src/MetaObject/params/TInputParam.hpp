@@ -75,3 +75,4 @@ protected:
 };
 }
 #include "MetaObject/params/detail/TInputParamImpl.hpp"
+#include "detail/TInputParamPtrImpl.hpp"

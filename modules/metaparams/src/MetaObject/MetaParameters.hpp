@@ -17,10 +17,72 @@
     #endif
   #endif
 #endif
-namespace mo
-{
-    namespace MetaParams
-    {
-        METAPARAMTERS_EXPORTS void initialize();
-    }
+
+#define META_PARAM_EXTERN(TYPE) \
+    extern template class mo::TInputParamPtr<TYPE>; \
+    extern template class mo::TParamPtr<TYPE>; \
+    extern template class mo::TParamOutput<TYPE>;
+
+#include <MetaObject/params/TInputParam.hpp>
+#include <MetaObject/params/TParamPtr.hpp>
+#include <MetaObject/params/Types.hpp>
+namespace mo{
+namespace MetaParams{
+    METAPARAMTERS_EXPORTS void initialize();
 }
+}
+
+META_PARAM_EXTERN(bool)
+META_PARAM_EXTERN(int)
+META_PARAM_EXTERN(unsigned short)
+META_PARAM_EXTERN(unsigned int)
+META_PARAM_EXTERN(char)
+META_PARAM_EXTERN(unsigned char)
+META_PARAM_EXTERN(long)
+META_PARAM_EXTERN(long long)
+META_PARAM_EXTERN(size_t)
+META_PARAM_EXTERN(float)
+META_PARAM_EXTERN(double)
+META_PARAM_EXTERN(std::string)
+META_PARAM_EXTERN(long)
+typedef std::map<std::string, std::string> StringMap;
+META_PARAM_EXTERN(StringMap);
+
+META_PARAM_EXTERN(std::vector<int>);
+META_PARAM_EXTERN(std::vector<unsigned short>);
+META_PARAM_EXTERN(std::vector<unsigned int>);
+META_PARAM_EXTERN(std::vector<char>);
+META_PARAM_EXTERN(std::vector<unsigned char>);
+META_PARAM_EXTERN(std::vector<float>);
+META_PARAM_EXTERN(std::vector<double>);
+META_PARAM_EXTERN(std::vector<std::string>);
+
+#ifdef HAVE_OPENCV
+#include <opencv2/core/types.hpp>
+META_PARAM_EXTERN(cv::Point2f);
+META_PARAM_EXTERN(cv::Point2d);
+META_PARAM_EXTERN(cv::Point3d);
+META_PARAM_EXTERN(cv::Point3f);
+META_PARAM_EXTERN(cv::Point);
+
+META_PARAM_EXTERN(cv::Scalar);
+META_PARAM_EXTERN(cv::Vec2f);
+META_PARAM_EXTERN(cv::Vec3f);
+META_PARAM_EXTERN(cv::Vec2b);
+META_PARAM_EXTERN(cv::Vec3b);
+META_PARAM_EXTERN(std::vector<cv::Vec3b>);
+typedef std::map<std::string, cv::Vec3b> ClassColormap_t;
+META_PARAM_EXTERN(ClassColormap_t);
+
+META_PARAM_EXTERN(cv::Rect);
+META_PARAM_EXTERN(cv::Rect2d);
+META_PARAM_EXTERN(cv::Rect2f);
+META_PARAM_EXTERN(std::vector<cv::Rect>);
+META_PARAM_EXTERN(std::vector<cv::Rect2f>);
+#endif
+
+META_PARAM_EXTERN(mo::ReadFile);
+META_PARAM_EXTERN(mo::WriteFile);
+META_PARAM_EXTERN(mo::ReadDirectory);
+META_PARAM_EXTERN(mo::WriteDirectory);
+META_PARAM_EXTERN(mo::EnumParam);
