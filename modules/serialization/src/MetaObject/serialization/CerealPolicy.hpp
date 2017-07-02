@@ -50,7 +50,11 @@ template<class T> struct Policy {
         auto nvp = cereal::make_optional_nvp(param->getName(), (token)(), (token)());
         try {
             ar(nvp);
-        } catch(...) {
+        } catch(cereal::Exception& e) {
+            LOG(debug) << "Failed to deserialize " << param->getName() << " due to " << e.what();
+            token.setValid(false);
+            return false;
+        }catch(...){
             token.setValid(false);
             return false;
         }

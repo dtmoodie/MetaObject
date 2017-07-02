@@ -1,5 +1,4 @@
 #ifdef HAVE_OPENCV
-
 #include "MetaObject/params/MetaParam.hpp"
 #ifdef HAVE_QT
 #include "MetaObject/params/ui/Qt/OpenCV.hpp"
@@ -11,6 +10,9 @@
 #include "MetaObject/params/buffers/Map.hpp"
 #include "MetaObject/serialization/CerealPolicy.hpp"
 #include "MetaObject/serialization/cvSpecializations.hpp"
+#include "MetaObject/params/detail/MetaParamImpl.hpp"
+#include "cereal/types/vector.hpp"
+#include <boost/lexical_cast.hpp>
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
 #endif
@@ -21,9 +23,7 @@
 #else
 #  define MO_EXPORTS
 #endif
-#include "MetaObject/params/detail/MetaParamImpl.hpp"
-#include "cereal/types/vector.hpp"
-#include <boost/lexical_cast.hpp>
+
 
 
 
