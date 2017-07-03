@@ -143,7 +143,8 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
             if(input->test_input_param.getData(data, ts))
             {
                 //BOOST_REQUIRE_EQUAL(mo::Time_t(data * mo::ms), mo::Time_t(ts * (10 * mo::ms)));
-                ts += mo::Time_t(1 * mo::ms);
+                // TODO FIX
+                //ts += mo::Time_t(1 * mo::ms);
             }
         }
     });
