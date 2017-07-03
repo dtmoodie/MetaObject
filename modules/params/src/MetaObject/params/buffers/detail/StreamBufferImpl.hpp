@@ -6,7 +6,7 @@ namespace Buffer {
     template <class T>
     StreamBuffer<T>::StreamBuffer(const std::string& name)
         : ITParam<T>(name, Buffer_e)
-        , _time_padding(500 * mo::milli * mo::second)
+        , _time_padding(mo::ms * 500)
         , _frame_padding(100) {
     }
 
@@ -61,7 +61,7 @@ namespace Buffer {
         if (_current_timestamp && _time_padding) {
             auto itr = this->_data_buffer.begin();
             while (itr != this->_data_buffer.end()) {
-                if (itr->first.ts && *itr->first.ts < (*_current_timestamp - *_time_padding)) {
+                if (itr->first.ts && *itr->first.ts < mo::Time_t(*_current_timestamp - *_time_padding)) {
                     itr = this->_data_buffer.erase(itr);
                 } else {
                     ++itr;

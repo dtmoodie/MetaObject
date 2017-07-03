@@ -187,14 +187,24 @@ void Thread::main(){
             }
             if(delay){
                 auto start_time = mo::getCurrentTime();
-                while((mo::getCurrentTime() - start_time) < mo::Time_t(mo::ms * delay)){
+                bool processed_work = false;
+                while(mo::Time_t(mo::getCurrentTime() - start_time) < mo::Time_t(mo::ms * delay)){
                     if(_work_queue.try_dequeue(f)){
+                        processed_work = true;
                         f();
                     }
                     if(_event_queue.try_dequeue(f)){
+                        processed_work = true;
                         f();
                     }
-                    mo::ThreadSpecificQueue::runOnce();
+                    if(mo::ThreadSpecificQueue::runOnce())
+                        processed_work = true;
+                    if(!processed_work){
+                        
+                        //boost::this_thread::sleep_for();
+                        break;
+                    }
+                        
                 }
                 auto size = mo::ThreadSpecificQueue::size();
                 if(size)

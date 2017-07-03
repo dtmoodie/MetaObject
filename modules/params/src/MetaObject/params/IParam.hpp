@@ -53,18 +53,6 @@ RUNTIME_COMPILER_LINKLIBRARY("-lmetaobject_paramsd")
 #endif // MetaObject_EXPORTS
 
 namespace mo {
-template <class AR>
-void load(AR& ar, mo::Time_t& t) {
-    double value;
-    ar(value);
-    t.from_value(value);
-}
-
-template <class AR>
-void save(AR& ar, const mo::Time_t& t) {
-    ar(t.value());
-}
-
 namespace UI {
     namespace qt {
         template <class T>
@@ -172,7 +160,7 @@ public:
            ParamFlags         flags_ = Control_e,
            OptionalTime_t     ts_    = OptionalTime_t(),
            Context*           ctx_   = nullptr,
-           size_t             fn_    = -1);
+           size_t             fn_    = std::numeric_limits<size_t>::max());
 
     virtual ~IParam();
 
