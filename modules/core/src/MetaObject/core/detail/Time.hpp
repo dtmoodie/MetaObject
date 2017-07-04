@@ -4,7 +4,7 @@
 #include <boost/optional.hpp>
 #include <boost/optional/optional_io.hpp>
 namespace mo {
-typedef std::chrono::system_clock::time_point Time_t;
+typedef std::chrono::high_resolution_clock::time_point Time_t;
 typedef boost::optional<Time_t> OptionalTime_t;
 
 template<class T> struct TimePrefix{
@@ -28,18 +28,19 @@ Time_t operator*(double rhs, const TimePrefix<T>& lhs){
     (void)lhs;
     return TimePrefix<T>::convert(rhs);
 }
-std::ostream& operator <<(std::ostream& lhs, const mo::Time_t& rhs);
 
 typedef mo::Time_t(*GetTime_f)();
 MO_EXPORTS mo::Time_t getCurrentTime();
 MO_EXPORTS void setTimeSource(GetTime_f timefunc);
 } // namespace mo
+
 namespace std{
-std::ostream& operator <<(std::ostream& lhs, const std::chrono::system_clock::time_point& rhs);
-std::ostream& operator <<(std::ostream& lhs, const std::chrono::milliseconds& rhs);
-std::ostream& operator <<(std::ostream& lhs, const std::chrono::microseconds& rhs);
-std::ostream& operator <<(std::ostream& lhs, const std::chrono::nanoseconds& rhs);
-std::ostream& operator <<(std::ostream& lhs, const std::chrono::seconds& rhs);
+    MO_EXPORTS std::ostream& operator <<(std::ostream& lhs, const std::chrono::system_clock::time_point& rhs);
+    MO_EXPORTS std::ostream& operator <<(std::ostream& lhs, const std::chrono::high_resolution_clock::time_point& rhs);
+    MO_EXPORTS std::ostream& operator <<(std::ostream& lhs, const std::chrono::milliseconds& rhs);
+    MO_EXPORTS std::ostream& operator <<(std::ostream& lhs, const std::chrono::microseconds& rhs);
+    MO_EXPORTS std::ostream& operator <<(std::ostream& lhs, const std::chrono::nanoseconds& rhs);
+    MO_EXPORTS std::ostream& operator <<(std::ostream& lhs, const std::chrono::seconds& rhs);
 }
 namespace cereal {
 template <class AR>

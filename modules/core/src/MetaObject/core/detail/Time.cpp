@@ -12,10 +12,6 @@ namespace mo{
     MO_EXPORTS void setTimeSource(GetTime_f timefunc){
         time_source = timefunc;
     }
-    std::ostream& operator <<(std::ostream& lhs, const mo::Time_t& rhs){
-        lhs << rhs.time_since_epoch().count() << " ns";
-        return lhs;
-    }
 }
 
 namespace std{
@@ -23,7 +19,10 @@ std::ostream& operator <<(std::ostream& lhs, const std::chrono::system_clock::ti
     lhs << rhs.time_since_epoch().count() << " ns";
     return lhs;
 }
-
+std::ostream& operator <<(std::ostream& lhs, const std::chrono::high_resolution_clock::time_point& rhs) {
+    lhs << rhs.time_since_epoch().count() << " ns";
+    return lhs;
+}
 std::ostream& operator <<(std::ostream& lhs, const std::chrono::milliseconds& rhs){
     lhs << rhs.count() << " ms";
     return lhs;
