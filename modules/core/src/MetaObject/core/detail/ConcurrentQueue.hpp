@@ -1,5 +1,5 @@
 #pragma once
-#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 
 #include <boost/thread/mutex.hpp>
 #include <boost/thread/condition_variable.hpp>

@@ -1,8 +1,8 @@
 #include "MetaObject/core/Context.hpp"
-#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 #include "MetaObject/thread/ThreadRegistry.hpp"
 #include "MetaObject/core/detail/Allocator.hpp"
-#include "MetaObject/logging/Profiling.hpp"
+#include "MetaObject/logging/profiling.hpp"
 #include "MetaObject/core/detail/HelperMacros.hpp"
 #include "MetaObject/core/detail/Allocator.hpp"
 #include "MetaObject/thread/ThreadRegistry.hpp"
@@ -59,7 +59,7 @@ void Context::setName(const std::string& name) {
 
 Context::~Context() {
 #ifdef _DEBUG
-    LOG(info) << "Context [" << name << "] destroyed";
+    MO_LOG(info) << "Context [" << name << "] destroyed";
 #endif
 }
 

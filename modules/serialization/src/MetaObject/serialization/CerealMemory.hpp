@@ -2,7 +2,7 @@
 #include "CerealParameters.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/object/MetaObjectFactory.hpp"
-#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 #include "RuntimeObjectSystem/shared_ptr.hpp"
 
 #include <type_traits>
@@ -15,7 +15,7 @@ load(AR& ar, rcc::shared_ptr<T>& obj) {
     ar(CEREAL_NVP(type));
     obj = mo::MetaObjectFactory::instance()->create(type.c_str());
     if(!obj) {
-        LOG(warning) << "Unable to create object with type: " << type;
+        MO_LOG(warning) << "Unable to create object with type: " << type;
         return;
     }
     auto Params = obj->getParams();

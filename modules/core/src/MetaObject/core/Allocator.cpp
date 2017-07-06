@@ -1,5 +1,5 @@
 #include "MetaObject/core/detail/AllocatorImpl.hpp"
-#include "MetaObject/thread/Cuda.hpp"
+#include "MetaObject/thread/cuda.hpp"
 #include <ctime>
 
 using namespace mo;
@@ -111,19 +111,19 @@ public:
             _ptr = block->allocate(total, elemSize);
             if (_ptr) {
                 *ptr = _ptr;
-                LOG(trace) << "Allocating " << total << " bytes from pre-allocated memory block number "
+                MO_LOG(trace) << "Allocating " << total << " bytes from pre-allocated memory block number "
                            << index << " at address: " << static_cast<void*>(_ptr);
                 return true;
             }
             ++index;
         }
-        LOG(trace) << "Creating new block of page locked memory for allocation.";
+        MO_LOG(trace) << "Creating new block of page locked memory for allocation.";
         blocks.push_back(
             std::shared_ptr<mo::CpuMemoryBlock>(
                 new mo::CpuMemoryBlock(std::max(_initial_block_size / 2, total))));
         _ptr = (*blocks.rbegin())->allocate(total, elemSize);
         if (_ptr) {
-            LOG(debug) << "Allocating " << total
+            MO_LOG(debug) << "Allocating " << total
                        << " bytes from newly created memory block at address: " << static_cast<void*>(_ptr);
             *ptr = _ptr;
             return true;
@@ -136,19 +136,19 @@ public:
         for (auto& block : blocks) {
             _ptr = block->allocate(num_bytes, sizeof(uchar));
             if (_ptr) {
-                LOG(trace) << "Allocating " << num_bytes << " bytes from pre-allocated memory block number "
+                MO_LOG(trace) << "Allocating " << num_bytes << " bytes from pre-allocated memory block number "
                            << index << " at address: " << static_cast<void*>(_ptr);
                 return _ptr;
             }
             ++index;
         }
-        LOG(trace) << "Creating new block of page locked memory for allocation.";
+        MO_LOG(trace) << "Creating new block of page locked memory for allocation.";
         blocks.push_back(
             std::shared_ptr<mo::CpuMemoryBlock>(
                 new mo::CpuMemoryBlock(std::max(_initial_block_size / 2, num_bytes))));
         _ptr = (*blocks.rbegin())->allocate(num_bytes, sizeof(uchar));
         if (_ptr) {
-            LOG(debug) << "Allocating " << num_bytes
+            MO_LOG(debug) << "Allocating " << num_bytes
                        << " bytes from newly created memory block at address: " << static_cast<void*>(_ptr);
             return _ptr;
         }
@@ -157,7 +157,7 @@ public:
     bool deallocate(void* ptr, size_t total) {
         for (auto itr : blocks) {
             if (ptr >= itr->Begin() && ptr < itr->End()) {
-                LOG(trace) << "Releasing memory block of size "
+                MO_LOG(trace) << "Releasing memory block of size "
                            << total << " at address: " << ptr;
                 if (itr->deAllocate(static_cast<unsigned char*>(ptr))) {
                     return true;
@@ -222,14 +222,14 @@ public:
             if(std::get<2>(*itr) == total) {
                 *ptr = std::get<0>(*itr);
                 deallocate_stack.erase(itr);
-                LOG(trace) << "[CPU] Reusing memory block of size "
+                MO_LOG(trace) << "[CPU] Reusing memory block of size "
                            << total / (1024 * 1024) << " MB. Total usage: "
                            << total_usage /(1024*1024) << " MB";
                 return true;
             }
         }
         this->total_usage += total;
-        LOG(trace) << "[CPU] Allocating block of size "
+        MO_LOG(trace) << "[CPU] Allocating block of size "
                    << total / (1024 * 1024) << " MB. Total usage: "
                    << total_usage / (1024 * 1024) << " MB";
         CV_CUDEV_SAFE_CALL(cudaMallocHost(ptr, total));
@@ -240,14 +240,14 @@ public:
             if(std::get<2>(*itr) == total) {
 
                 deallocate_stack.erase(itr);
-                LOG(trace) << "[CPU] Reusing memory block of size "
+                MO_LOG(trace) << "[CPU] Reusing memory block of size "
                            << total / (1024 * 1024) << " MB. Total usage: "
                            << total_usage /(1024*1024) << " MB";
                 return std::get<0>(*itr);
             }
         }
         this->total_usage += total;
-        LOG(trace) << "[CPU] Allocating block of size "
+        MO_LOG(trace) << "[CPU] Allocating block of size "
                    << total / (1024 * 1024) << " MB. Total usage: "
                    << total_usage / (1024 * 1024) << " MB";
         uchar* ptr = nullptr;
@@ -256,7 +256,7 @@ public:
     }
 
     bool deallocate(void* ptr, size_t total) {
-        LOG(trace) << "Releasing " << total / (1024 * 1024) << " MB to lazy deallocation pool";
+        MO_LOG(trace) << "Releasing " << total / (1024 * 1024) << " MB to lazy deallocation pool";
         deallocate_stack.emplace_back(static_cast<unsigned char*>(ptr), clock(), total);
         cleanup();
         return true;
@@ -273,11 +273,11 @@ private:
                 total_usage -= std::get<2>(*itr);
                 if(!destructor) {
 #ifdef _MSC_VER
-                    LOG(trace) << "[CPU] DeAllocating block of size " << std::get<2>(*itr) / (1024 * 1024)
+                    MO_LOG(trace) << "[CPU] DeAllocating block of size " << std::get<2>(*itr) / (1024 * 1024)
                                << " MB. Which was stale for " << time - std::get<1>(*itr)
                                << " ms. Total usage: " << total_usage / (1024 * 1024) << " MB";
 #else
-                    LOG(trace) << "[CPU] DeAllocating block of size " << std::get<2>(*itr) / (1024 * 1024)
+                    MO_LOG(trace) << "[CPU] DeAllocating block of size " << std::get<2>(*itr) / (1024 * 1024)
                                << " MB. Which was stale for " << (time - std::get<1>(*itr)) / 1000
                                << " ms. Total usage: " << total_usage / (1024 * 1024) << " MB";
 #endif

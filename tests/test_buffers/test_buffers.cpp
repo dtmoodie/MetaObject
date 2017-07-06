@@ -81,7 +81,7 @@ T* end(T(&ptr)[sz]) {
 
 struct GlobalFixture{
     ~GlobalFixture(){
-        mo::ThreadPool::Instance()->Cleanup();
+        mo::ThreadPool::instance()->cleanup();
         mo::ThreadSpecificQueue::cleanup();
         mo::Allocator::cleanupThreadSpecificAllocator();
     }

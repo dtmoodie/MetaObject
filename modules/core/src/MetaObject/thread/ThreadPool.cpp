@@ -1,27 +1,21 @@
 #include "MetaObject/thread/ThreadPool.hpp"
 #include "MetaObject/thread/Thread.hpp"
 using namespace mo;
-ThreadPool::PooledThread::~PooledThread()
-{
+ThreadPool::PooledThread::~PooledThread() {
     delete this->thread;
 }
 
-ThreadPool* ThreadPool::Instance()
-{
+ThreadPool* ThreadPool::instance() {
     static ThreadPool* g_inst = nullptr;
-    if(g_inst == nullptr)
-    {
+    if (g_inst == nullptr) {
         g_inst = new ThreadPool();
     }
     return g_inst;
 }
 
-ThreadHandle ThreadPool::RequestThread()
-{
-    for(auto& thread : _threads)
-    {
-        if(thread.available)
-        {
+ThreadHandle ThreadPool::requestThread() {
+    for (auto& thread : _threads) {
+        if (thread.available) {
             thread.ref_count = 0;
             return ThreadHandle(thread.thread, &thread.ref_count);
         }
@@ -30,21 +24,13 @@ ThreadHandle ThreadPool::RequestThread()
     return ThreadHandle(_threads.back().thread, &_threads.back().ref_count);
 }
 
-void ThreadPool::Cleanup()
-{
-    /*for(auto& thread : _threads)
-    {
-        delete thread.thread;
-    }*/
+void ThreadPool::cleanup() {
     _threads.clear();
 }
 
-void ThreadPool::ReturnThread(Thread* thread_)
-{
-    for(auto& thread : _threads)
-    {
-        if(thread.thread == thread_)
-        {
+void ThreadPool::returnThread(Thread* thread_) {
+    for (auto& thread : _threads) {
+        if (thread.thread == thread_) {
             thread.available = true;
             thread_->stop();
         }

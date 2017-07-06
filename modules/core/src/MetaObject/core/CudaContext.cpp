@@ -1,6 +1,6 @@
 #include "CudaContext.hpp"
-#include "MetaObject/logging/Log.hpp"
-#include <MetaObject/logging/Profiling.hpp>
+#include "MetaObject/logging/logging.hpp"
+#include <MetaObject/logging/profiling.hpp>
 #include <cuda_runtime_api.h>
 #ifdef HAVE_OPENCV
 #include <opencv2/core/cuda_stream_accessor.hpp>

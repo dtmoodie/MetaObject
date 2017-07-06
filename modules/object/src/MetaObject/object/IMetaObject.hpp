@@ -123,8 +123,8 @@ public:
     TSlot<T>* getSlot(const std::string& name) const;
 
     virtual int disconnectByName(const std::string& name);
-    virtual bool disConnect(ISignal* sig);
-    virtual int disConnect(IMetaObject* obj);
+    virtual bool disconnect(ISignal* sig);
+    virtual int disconnect(IMetaObject* obj);
 
     // Params
     virtual ParamVec_t getDisplayParams() const;

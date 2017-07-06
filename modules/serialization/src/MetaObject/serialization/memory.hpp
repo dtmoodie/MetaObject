@@ -2,7 +2,7 @@
 #include "RuntimeObjectSystem/shared_ptr.hpp"
 #include "Serializer.hpp"
 #include "MetaObject/serialization//SerializationFactory.hpp"
-#include <MetaObject/logging/Log.hpp>
+#include <MetaObject/logging/logging.hpp>
 #include <cereal/cereal.hpp>
 #include <cereal/archives/binary.hpp>
 #include <cereal/archives/json.hpp>

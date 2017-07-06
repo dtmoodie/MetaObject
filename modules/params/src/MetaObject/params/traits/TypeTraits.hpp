@@ -2,7 +2,7 @@
 #include <boost/optional.hpp>
 #include <type_traits>
 #include <memory>
-#include <MetaObject/logging/Log.hpp>
+#include <MetaObject/logging/logging.hpp>
 #include "POD.hpp"
 #include "Struct.hpp"
 

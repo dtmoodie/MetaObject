@@ -1,5 +1,5 @@
 #include "MetaObject/params/ParamFactory.hpp"
-#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include <map>
 
@@ -38,9 +38,9 @@ std::shared_ptr<IParam> ParamFactory::create(TypeInfo data_type, ParamType Param
         {
             return std::shared_ptr<IParam>(itr2->second());
         }
-        LOG(debug) << "Requested datatype (" << data_type.name() << ") exists but the specified Param type : " << Param_type << " does not.";
+        MO_LOG(debug) << "Requested datatype (" << data_type.name() << ") exists but the specified Param type : " << Param_type << " does not.";
     }
-    LOG(debug) << "Requested datatype (" << data_type.name() << ") does not exist";
+    MO_LOG(debug) << "Requested datatype (" << data_type.name() << ") does not exist";
     return nullptr;
 }
 

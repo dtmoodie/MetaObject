@@ -1,5 +1,5 @@
 #include "MetaObject/core/detail/Enums.hpp"
-#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 using namespace mo;
 std::string mo::paramFlagsToString(ParamFlags type) {
     switch(type) {

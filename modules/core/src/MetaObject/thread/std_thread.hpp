@@ -1,8 +1,11 @@
 #pragma once
-#include "Defs.h"
-#include <thread>
+#include "MetaObject/detail/Export.hpp"
+#include <cstddef>
 
-namespace Signals
-{
-    size_t SIGNAL_EXPORTS get_thread_id(const std::thread::id& id);
+namespace std {
+class thread;
+}
+
+namespace mo {
+size_t MO_EXPORTS getThreadId(const std::thread& thread);
 }

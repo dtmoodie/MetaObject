@@ -1,6 +1,6 @@
 #pragma once
 #ifndef __CUDACC__
-#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 #include <boost/thread/recursive_mutex.hpp>
 #include <functional>
 #include <memory>

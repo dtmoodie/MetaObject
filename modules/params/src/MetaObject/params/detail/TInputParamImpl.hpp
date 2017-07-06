@@ -1,6 +1,6 @@
 #pragma once
 #include <functional>
-#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 namespace mo
 {
 

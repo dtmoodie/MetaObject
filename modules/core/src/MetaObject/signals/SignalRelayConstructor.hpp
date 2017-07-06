@@ -1,18 +1,17 @@
 #pragma once
-#include "MetaObject/signals/RelayFactory.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
-namespace mo
-{
-    template<class Sig> class SignalRelayConstructor
-    {
-    public:
-        SignalRelayConstructor()
-        {
-            RelayFactory::Instance()->RegisterCreator(
-                []()->ISignalRelay*
-            {
+#include "MetaObject/signals/RelayFactory.hpp"
+
+namespace mo {
+template <class Sig>
+class SignalRelayConstructor {
+public:
+    SignalRelayConstructor() {
+        RelayFactory::instance()->registerCreator(
+            []() -> ISignalRelay* {
                 return new TSignalRelay<Sig>();
-            }, TypeInfo(typeid(Sig)));
-        }
-    };
+            },
+            TypeInfo(typeid(Sig)));
+    }
+};
 }

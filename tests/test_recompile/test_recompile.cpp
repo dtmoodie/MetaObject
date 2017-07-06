@@ -51,7 +51,7 @@ build_callback* cb = nullptr;
 BOOST_AUTO_TEST_CASE(test_recompile)
 {
     cb = new build_callback;
-    LOG(info) << "Current working directory " << boost::filesystem::current_path().string();
+    MO_LOG(info) << "Current working directory " << boost::filesystem::current_path().string();
     MetaObjectFactory::instance()->registerTranslationUnit();
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
 }

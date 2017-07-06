@@ -19,7 +19,7 @@ https://github.com/dtmoodie/Params
 
 #include "MetaObject/params/ui/WidgetFactory.hpp"
 #include "MetaObject/params/ui/Qt/DefaultProxy.hpp"
-#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include <map>
@@ -45,7 +45,7 @@ WidgetFactory* WidgetFactory::Instance()
 
 void WidgetFactory::RegisterConstructor(const TypeInfo& type, WidgetFactory::HandlerConstructor_f f)
 {
-    //LOG(trace) << "Registering type " << type.name();
+    //MO_LOG(trace) << "Registering type " << type.name();
     auto itr = _pimpl->registry.find(type);
     if(itr == _pimpl->registry.end())
     {
@@ -69,13 +69,13 @@ std::shared_ptr<IParamProxy> WidgetFactory::CreateProxy(IParam* param)
     auto itr = _pimpl->registry.find(param->getTypeInfo());
     if (itr == _pimpl->registry.end())
     {
-        LOG(debug) << "No Widget Factory registered for type " << typeName
+        MO_LOG(debug) << "No Widget Factory registered for type " << typeName
             << " unable to make widget for Param: " << treeName
             << ".  Known types: " << print_types(_pimpl->registry);
 
         return std::shared_ptr<IParamProxy>(new DefaultProxy(param));
     }
-    LOG(trace) << "Creating handler for " << typeName << " " << treeName;
+    MO_LOG(trace) << "Creating handler for " << typeName << " " << treeName;
     return itr->second(param);
 }
 

@@ -1,6 +1,6 @@
 #include "CvContext.hpp"
 #include <opencv2/core/cuda_stream_accessor.hpp>
-#include <MetaObject/logging/Profiling.hpp>
+#include <MetaObject/logging/profiling.hpp>
 namespace mo{
     CvContext::CvContext(){
 

@@ -1,5 +1,5 @@
 #pragma once
-#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 #include "MetaObject/params/AccessToken.hpp"
 namespace mo
 {
