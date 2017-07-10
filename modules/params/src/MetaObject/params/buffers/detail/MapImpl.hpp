@@ -42,7 +42,7 @@ namespace Buffer {
     }
 
     template <class T>
-    bool Map<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, ICoordinateSystem* cs) {
+    bool Map<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, const std::shared_ptr<ICoordinateSystem>& cs) {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         _data_buffer[{ ts, fn, cs, ctx }] = data;
         IParam::_modified = true;
@@ -118,7 +118,7 @@ namespace Buffer {
     }
 
     template <class T>
-    void Map<T>::onInputUpdate(ConstStorageRef_t data, IParam* input, Context* ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags) {
+    void Map<T>::onInputUpdate(ConstStorageRef_t data, IParam* input, Context* ctx, OptionalTime_t ts, size_t fn, const std::shared_ptr<ICoordinateSystem>& cs, UpdateFlags) {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         _data_buffer[{ ts, fn, cs, ctx }] = data;
         IParam::_modified = true;

@@ -776,7 +776,7 @@ ISlot* IMetaObject::getSlot(const std::string& name, const TypeInfo& signature) 
     return nullptr;
 }
 
-TSlot<void(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags)>* IMetaObject::getSlot_param_updated() const{
+TSlot<void(IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)>* IMetaObject::getSlot_param_updated() const{
     return &_pimpl->_slot_param_updated;
 }
 bool IMetaObject::connectByName(const std::string& name, ISlot* slot)
@@ -939,7 +939,7 @@ void IMetaObject::addConnection(std::shared_ptr<Connection>& Connection,
     info.signature = signature;
     _pimpl->_connections.push_back(info);
 }
-void IMetaObject::onParamUpdate(IParam* param, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags)
+void IMetaObject::onParamUpdate(IParam* param, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)
 {
     this->_pimpl->_sig_param_updated(this, param);
 }

@@ -60,7 +60,7 @@ template <typename T>
 IParam* TParamPtr<T>::emitUpdate(const OptionalTime_t& ts_,
     Context*                                           ctx_,
     const boost::optional<size_t>&                     fn_,
-    ICoordinateSystem*                                 cs_,
+    const std::shared_ptr<ICoordinateSystem>&          cs_,
     UpdateFlags                                        flags_) {
     IParam::emitUpdate(ts_, ctx_, fn_, cs_, flags_);
     if (ptr)
@@ -75,7 +75,7 @@ AccessToken<T> TParamPtr<T>::access() {
 }
 
 template <typename T>
-bool TParamPtr<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, ICoordinateSystem* cs) {
+bool TParamPtr<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, const std::shared_ptr<ICoordinateSystem>& cs) {
     mo::Mutex_t::scoped_lock lock(IParam::mtx());
     if (ptr) {
         *ptr = ParamTraits<T>::get(data);
@@ -122,7 +122,7 @@ AccessToken<T> TParamOutput<T>::access() {
 }
 
 template <typename T>
-bool TParamOutput<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, ICoordinateSystem* cs) {
+bool TParamOutput<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, const std::shared_ptr<ICoordinateSystem>& cs) {
     mo::Mutex_t::scoped_lock lock(IParam::mtx());
     //this->data = data;
     if (this->ptr) {
@@ -137,7 +137,7 @@ template <typename T>
 IParam* TParamOutput<T>::emitUpdate(const OptionalTime_t& ts_,
     Context*                                              ctx_,
     const boost::optional<size_t>&                        fn_,
-    ICoordinateSystem*                                    cs_,
+    const std::shared_ptr<ICoordinateSystem>&             cs_,
     UpdateFlags                                           flags_) {
     if (this->ptr) {
         if (this->checkFlags(mo::Unstamped_e)) {

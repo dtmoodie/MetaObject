@@ -96,7 +96,8 @@
 #ifdef _MSC_VER
 #define MO_SLOT(RET, ...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__)(RET, __COUNTER__, __VA_ARGS__), BOOST_PP_EMPTY())
 #else
-#define MO_SLOT(NAME, ...) BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__) \
+#define MO_SLOT(NAME, ...)                \
+    BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__) \
     (NAME, __COUNTER__, __VA_ARGS__)
 #endif
 #define DESCRIBE_SLOT(NAME, DESCRIPTION) DESCRIBE_SLOT_(NAME, DESCRIPTION, __COUNTER__)
@@ -104,5 +105,5 @@
 #define MO_SLOT(RET, ...)
 #define DESCRIBE_SLOT(NAME, DESCRIPTION)
 #endif
-#define PARAM_UPDATE_SLOT(NAME) MO_SLOT(void, on_##NAME##_modified, mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, mo::ICoordinateSystem*, mo::UpdateFlags)
+#define PARAM_UPDATE_SLOT(NAME) MO_SLOT(void, on_##NAME##_modified, mo::IParam*, mo::Context*, mo::OptionalTime_t, size_t, const std::shared_ptr<mo::ICoordinateSystem>&, mo::UpdateFlags)
 #define SLOT_TOOLTIP(name, tooltip) SLOT_TOOLTIP_(name, tooltip, __COUNTER__)

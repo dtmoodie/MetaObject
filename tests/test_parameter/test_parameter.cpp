@@ -99,8 +99,8 @@ BOOST_AUTO_TEST_CASE(wrapped_Param)
     BOOST_REQUIRE(param.getData(data));
     BOOST_CHECK_EQUAL(data, 11);
     bool update_handler_called = false;
-    TSlot<void(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags)>
-        slot([&param, &update_handler_called](IParam* param_in, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags){
+    TSlot<void(IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)>
+        slot([&param, &update_handler_called](IParam* param_in, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags){
         update_handler_called = param_in == &param;
     });
     auto connection = param.registerUpdateNotifier(&slot);
@@ -125,8 +125,8 @@ BOOST_AUTO_TEST_CASE(input_param){
     BOOST_REQUIRE_EQUAL(data, value);
 
     bool update_handler_called = false;
-    TSlot<void(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags)>
-        slot([&update_handler_called](IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags){
+    TSlot<void(IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)>
+        slot([&update_handler_called](IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags){
         update_handler_called = true;
     });
     auto connection = input_param.registerUpdateNotifier(&slot);

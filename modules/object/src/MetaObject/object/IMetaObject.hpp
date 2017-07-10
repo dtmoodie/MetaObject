@@ -118,7 +118,7 @@ public:
     virtual std::vector<ISlot*> getSlots(const std::string& name) const;
     virtual std::vector<std::pair<ISlot*, std::string> > getSlots(const TypeInfo& signature) const;
     virtual ISlot* getSlot(const std::string& name, const TypeInfo& signature) const;
-    TSlot<void(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags)>* getSlot_param_updated() const;
+    TSlot<void(IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)>* getSlot_param_updated() const;
     template <class T>
     TSlot<T>* getSlot(const std::string& name) const;
 
@@ -179,7 +179,7 @@ protected:
     void addSlot(ISlot* slot, const std::string& name);
     void setParamRoot(const std::string& root);
     void addConnection(std::shared_ptr<Connection>& Connection, const std::string& signal_name, const std::string& slot_name, const TypeInfo& signature, IMetaObject* obj = nullptr);
-    virtual void onParamUpdate(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+    virtual void onParamUpdate(IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags);
 
     friend class RelayManager;
     struct impl;

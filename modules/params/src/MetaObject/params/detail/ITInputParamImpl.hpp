@@ -161,7 +161,7 @@ namespace mo
 
     template<class T>
     void ITInputParam<T>::onInputUpdate(ConstStorageRef_t, IParam* param, Context* ctx, OptionalTime_t ts,
-                                        size_t fn, ICoordinateSystem* cs, UpdateFlags fg){
+                                        size_t fn, const std::shared_ptr<ICoordinateSystem>& cs, UpdateFlags fg){
         this->emitUpdate(ts, ctx, fn, cs, InputUpdated_e);
     }
 }

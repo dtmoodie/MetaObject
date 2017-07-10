@@ -14,7 +14,7 @@ public:
     typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
     typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
     typedef typename ParamTraits<T>::Input_t Input_t;
-    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags);
     typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
     typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
 
@@ -37,10 +37,10 @@ public:
 
     virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 protected:
-    virtual bool updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, ICoordinateSystem* cs){ (void)data; (void)ts; (void)ctx; (void)fn; (void)cs; return true;}
+    virtual bool updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, const std::shared_ptr<ICoordinateSystem>& cs){ (void)data; (void)ts; (void)ctx; (void)fn; (void)cs; return true;}
 
     virtual void onInputDelete(IParam const* param);
-    virtual void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+    virtual void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags);
 
     std::shared_ptr<ITParam<T>> _shared_input;
     ITParam<T>*                 _input;

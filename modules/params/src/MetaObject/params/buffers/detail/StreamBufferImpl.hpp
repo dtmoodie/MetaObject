@@ -89,7 +89,7 @@ namespace Buffer {
     }
 
     template <class T>
-    bool BlockingStreamBuffer<T>::updateDataImpl(const T& data_, const OptionalTime_t& ts, const ContextPtr_t& ctx, size_t fn, ICoordinateSystem* cs) {
+    bool BlockingStreamBuffer<T>::updateDataImpl(const T& data_, const OptionalTime_t& ts, const ContextPtr_t& ctx, size_t fn, const std::shared_ptr<ICoordinateSystem>& cs) {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         while (this->_data_buffer.size() > _size) {
             MO_LOG_EVERY_N(debug, 10) << "Pushing to " << this->getTreeName() << " waiting on read, current buffer size " << this->_data_buffer.size();
@@ -136,7 +136,7 @@ namespace Buffer {
         _cv.notify_all();
     }
     template <class T>
-    void BlockingStreamBuffer<T>::onInputUpdate(ConstStorageRef_t data, IParam* input, Context* ctx, OptionalTime_t ts, size_t fn, ICoordinateSystem* cs, UpdateFlags) {
+    void BlockingStreamBuffer<T>::onInputUpdate(ConstStorageRef_t data, IParam* input, Context* ctx, OptionalTime_t ts, size_t fn, const std::shared_ptr<ICoordinateSystem>& cs, UpdateFlags) {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         while (this->_data_buffer.size() > _size) {
             MO_LOG_EVERY_N(debug, 10) << "Pushing to " << this->getTreeName() << " waiting on read, current buffer size " << this->_data_buffer.size();

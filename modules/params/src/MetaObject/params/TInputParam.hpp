@@ -19,44 +19,22 @@ https://github.com/dtmoodie/Params
 #pragma once
 #include "ITInputParam.hpp"
 
-
 namespace mo {
-/*template<typename T> class TInputParamCopy : virtual public ITInputParam<T> {
-public:
-    TInputParamCopy(const std::string& name, T* userVar_,
-                            ParamType type = Control_e) {
-        this->input = nullptr;
-    }
-
-
-
-protected:
-    T* _user_var; // Pointer to the user space variable of type T
-
-    void onInputUpdate(Context* ctx, IParam* param) {
-        if(this->input && _user_var)
-            this->input->GetData(*_user_var, -1, this->getContext());
-        IParam::OnUpdate(ctx);
-    }
-    void onInputDelete(IParam* param) {
-        this->input = nullptr;
-        IParam::OnUpdate(nullptr);
-    }
-};*/
 
 // Meant to reference a pointer variable in user space, and to update that variable whenever
 // IE int* myVar;
 // auto TParam = TInputParamPtr(&myVar); // TInputParam now updates myvar to point to whatever the
 // input variable is for TParam.
-template<typename T> class MO_EXPORTS TInputParamPtr : virtual public ITInputParam<T> {
+template <typename T>
+class MO_EXPORTS TInputParamPtr : virtual public ITInputParam<T> {
 public:
-    typedef typename ParamTraits<T>::Storage_t Storage_t;
+    typedef typename ParamTraits<T>::Storage_t         Storage_t;
     typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
-    typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
-    typedef typename ParamTraits<T>::Input_t Input_t;
-    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+    typedef typename ParamTraits<T>::InputStorage_t    InputStorage_t;
+    typedef typename ParamTraits<T>::Input_t           Input_t;
+    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags);
     typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
-    typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
+    typedef TSlot<TUpdateSig_t>   TUpdateSlot_t;
 
     TInputParamPtr(const std::string& name = "", Input_t* userVar_ = nullptr, Context* ctx = nullptr);
     bool setInput(std::shared_ptr<IParam> input);
@@ -66,12 +44,12 @@ public:
     bool getInput(size_t fn, OptionalTime_t* ts = nullptr);
 
 protected:
-    virtual bool updateDataImpl(const Storage_t&, const OptionalTime_t&, Context*, size_t, ICoordinateSystem*) {
+    virtual bool updateDataImpl(const Storage_t&, const OptionalTime_t&, Context*, size_t, const std::shared_ptr<ICoordinateSystem>&) {
         return true;
     }
-    Input_t* _user_var; // Pointer to the user space pointer variable of type T
+    Input_t*       _user_var; // Pointer to the user space pointer variable of type T
     InputStorage_t _current_data;
-    virtual void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+    virtual void   onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags);
 };
 }
 #include "MetaObject/params/detail/TInputParamImpl.hpp"
