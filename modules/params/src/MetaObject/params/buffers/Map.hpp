@@ -29,7 +29,7 @@ namespace mo {
 class Context;
 namespace Buffer {
     struct SequenceKey {
-        SequenceKey(OptionalTime_t ts, size_t fn = 0, ICoordinateSystem* cs_ = nullptr, Context* ctx_ = nullptr)
+        SequenceKey(OptionalTime_t ts, size_t fn = 0, const std::shared_ptr<ICoordinateSystem>& cs_ = nullptr, Context* ctx_ = nullptr)
             : ts(ts)
             , fn(fn)
             , cs(cs_)
@@ -41,10 +41,10 @@ namespace Buffer {
             , ctx(nullptr) {}
         SequenceKey(size_t fn)
             : fn(fn) {}
-        OptionalTime_t     ts;
-        size_t             fn;
-        ICoordinateSystem* cs;
-        Context*           ctx;
+        OptionalTime_t                     ts;
+        size_t                             fn;
+        std::shared_ptr<ICoordinateSystem> cs;
+        Context*                           ctx;
     };
     inline std::ostream& operator<<(std::ostream& os, const SequenceKey& key) {
         if (key.ts) os << *key.ts << " ";
@@ -68,14 +68,14 @@ namespace Buffer {
         typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
         typedef typename ParamTraits<T>::InputStorage_t    InputStorage_t;
         typedef typename ParamTraits<T>::Input_t           Input_t;
-        typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+        typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags);
         typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
         typedef TSlot<TUpdateSig_t>   TUpdateSlot_t;
 
         Map(const std::string& name = "");
 
         virtual bool getData(InputStorage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
-                             Context* ctx = nullptr, size_t* fn_ = nullptr);
+            Context* ctx = nullptr, size_t* fn_ = nullptr);
 
         virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 
@@ -90,8 +90,8 @@ namespace Buffer {
         virtual ParamType getBufferType() const { return Map_e; }
 
     protected:
-        virtual bool updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, ICoordinateSystem* cs);
-        virtual void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+        virtual bool updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, const std::shared_ptr<ICoordinateSystem>& cs);
+        virtual void onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags);
         typename std::map<SequenceKey, InputStorage_t>::iterator search(const OptionalTime_t& ts);
         typename std::map<SequenceKey, InputStorage_t>::iterator search(size_t fn);
 

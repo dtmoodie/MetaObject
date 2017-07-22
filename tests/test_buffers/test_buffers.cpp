@@ -81,7 +81,7 @@ T* end(T(&ptr)[sz]) {
 
 struct GlobalFixture{
     ~GlobalFixture(){
-        mo::ThreadPool::Instance()->Cleanup();
+        mo::ThreadPool::instance()->cleanup();
         mo::ThreadSpecificQueue::cleanup();
         mo::Allocator::cleanupThreadSpecificAllocator();
     }
@@ -115,7 +115,7 @@ BOOST_AUTO_PARAM_TEST_CASE(buffer_test, buffer_test_cases, end(buffer_test_cases
     buf->setFrameBufferCapacity(100);
     input_param.setInput(buffer);
     std::vector<mo::Time_t> process_queue;
-    mo::UpdateSlot_t slot([&process_queue](mo::IParam* param, mo::Context* ctx, mo::OptionalTime_t ts, size_t fn, mo::ICoordinateSystem* cs, mo::UpdateFlags fg){
+    mo::UpdateSlot_t slot([&process_queue](mo::IParam* param, mo::Context* ctx, mo::OptionalTime_t ts, size_t fn, const std::shared_ptr<mo::ICoordinateSystem>& cs, mo::UpdateFlags fg){
         if(fg == mo::UpdateFlags::BufferUpdated_e)
             process_queue.push_back(*ts);
     });

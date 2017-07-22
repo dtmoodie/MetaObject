@@ -71,7 +71,7 @@ struct Stamped {
 // The state struct is used to save a snapshot of the state of a Param at a point in time
 template <class T>
 struct State : public Stamped<T> {
-    State(mo::Time_t ts, size_t fn, Context* ctx, ICoordinateSystem* cs, typename ParamTraits<T>::ConstStorageRef_t init)
+    State(mo::Time_t ts, size_t fn, Context* ctx, const std::shared_ptr<ICoordinateSystem>& cs, typename ParamTraits<T>::ConstStorageRef_t init)
         : Stamped<T>(ts, fn, init)
         , ctx(ctx)
         , cs(cs) {
@@ -83,7 +83,7 @@ struct State : public Stamped<T> {
         , cs(nullptr) {
     }
 
-    State(size_t fn, Context* ctx, ICoordinateSystem* cs, typename ParamTraits<T>::ConstStorageRef_t init)
+    State(size_t fn, Context* ctx, const std::shared_ptr<ICoordinateSystem>& cs, typename ParamTraits<T>::ConstStorageRef_t init)
         : Stamped<T>(fn, init)
         , ctx(ctx)
         , cs(cs) {
@@ -115,8 +115,8 @@ struct State : public Stamped<T> {
         this->cs   = other.cs;
         return *this;
     }
-    Context*           ctx;
-    ICoordinateSystem* cs;
+    Context*                           ctx;
+    std::shared_ptr<ICoordinateSystem> cs;
 };
 
 template <typename T>
@@ -132,12 +132,12 @@ public:
     typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
     typedef typename ParamTraits<T>::InputStorage_t    InputStorage_t;
     typedef typename ParamTraits<T>::Input_t           Input_t;
-    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags);
     typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
     typedef TSlot<TUpdateSig_t>   TUpdateSlot_t;
 
     virtual bool getData(InputStorage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
-                         Context* ctx = nullptr, size_t* fn_ = nullptr)
+        Context* ctx = nullptr, size_t* fn_ = nullptr)
         = 0;
 
     virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr) = 0;
@@ -150,11 +150,11 @@ public:
 
     template <class... Args>
     ITParamImpl<T>* updateData(const Storage_t& data, const Args&... args) {
-        size_t             fn;
-        OptionalTime_t     ts;
-        Context*           ctx   = nullptr;
-        ICoordinateSystem* cs    = nullptr;
-        const IParam*      param = GetKeywordInputOptional<tag::param>(args...);
+        size_t                             fn;
+        OptionalTime_t                     ts;
+        Context*                           ctx = nullptr;
+        std::shared_ptr<ICoordinateSystem> cs;
+        const IParam*                      param = GetKeywordInputOptional<tag::param>(args...);
         if (param) {
             fn  = param->getFrameNumber();
             ctx = param->getContext();
@@ -171,7 +171,7 @@ public:
             ts = *tsptr;
         if (auto ctx_ = GetKeywordInputDefault<tag::context>(nullptr, args...))
             ctx = ctx_;
-        if (auto cs_ = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...))
+        if (auto cs_ = GetKeywordInputDefault<tag::coordinate_system>(std::shared_ptr<ICoordinateSystem>(), args...))
             cs = cs_;
         this->updateDataImpl(data, ts, ctx, fn, cs);
         return this;
@@ -180,7 +180,7 @@ public:
 protected:
     friend class AccessToken<T>;
     TSignal<TUpdateSig_t> _typed_update_signal;
-    virtual bool updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, ICoordinateSystem* cs) = 0;
+    virtual bool updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, const std::shared_ptr<ICoordinateSystem>& cs) = 0;
 
 private:
     static const TypeInfo _type_info;
@@ -198,12 +198,12 @@ public:
     typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
     typedef typename ParamTraits<T>::InputStorage_t    InputStorage_t;
     typedef typename ParamTraits<T>::Input_t           Input_t;
-    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags);
     typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
     typedef TSlot<TUpdateSig_t>   TUpdateSlot_t;
     // brief ITParam default constructor, passes args to IParam
     ITParam(const std::string& name = "", ParamFlags flags = Control_e,
-            OptionalTime_t ts = OptionalTime_t(), Context* ctx = nullptr, size_t fn = 0)
+        OptionalTime_t ts = OptionalTime_t(), Context* ctx = nullptr, size_t fn = 0)
         : IParam(name, flags, ts, ctx, fn) {
     }
 
@@ -224,12 +224,12 @@ public:
     typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
     typedef typename ParamTraits<T>::InputStorage_t    InputStorage_t;
     typedef typename ParamTraits<T>::Input_t           Input_t;
-    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags);
+    typedef void(TUpdateSig_t)(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags);
     typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
     typedef TSlot<TUpdateSig_t>   TUpdateSlot_t;
     // brief ITParam default constructor, passes args to IParam
     ITParam(const std::string& name = "", ParamFlags flags = Control_e,
-            OptionalTime_t ts = OptionalTime_t(), Context* ctx = nullptr, size_t fn = 0)
+        OptionalTime_t ts = OptionalTime_t(), Context* ctx = nullptr, size_t fn = 0)
         : IParam(name, flags, ts, ctx, fn) {
     }
 };

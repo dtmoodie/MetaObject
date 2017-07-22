@@ -1,5 +1,5 @@
 #pragma once
-#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 #include <type_traits>
 
 // forward declaration of weak ptrs

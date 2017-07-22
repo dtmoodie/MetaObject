@@ -1,14 +1,17 @@
 #pragma once
 #include "MetaObject/detail/Export.hpp"
+#include <memory>
 #include <string>
-namespace mo{
-    class MO_EXPORTS ICoordinateSystem{
-    public:
-        ICoordinateSystem(const std::string& name):m_name(name){}
+namespace mo {
+class MO_EXPORTS ICoordinateSystem {
+public:
+    ICoordinateSystem(const std::string& name);
+    virtual ~ICoordinateSystem();
+    virtual ICoordinateSystem* clone() const = 0;
+    const std::string&         getName() const;
+    void setName(const std::string& name);
 
-        inline const std::string& getName() const{return m_name;}
-        inline void setName(const std::string& name){m_name = name;}
-    private:
-        std::string m_name;
-    };
+private:
+    std::string m_name;
+};
 }

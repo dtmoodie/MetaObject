@@ -1,7 +1,7 @@
 #include "MetaObject/params/VariableManager.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include "MetaObject/params/InputParam.hpp"
-#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 #include "MetaObject/signals/TSlot.hpp"
 #include "MetaObject/signals/TSignalRelay.hpp"
 #include <map>
@@ -96,11 +96,11 @@ IParam* VariableManager::getOutputParam(std::string name)
             std::stringstream ss;
             for(auto potential : potentials)
                 ss << potential->getTreeName() << "\n";
-            LOG(debug) << "Warning ambiguous name \"" << name << "\" passed in, multiple potential matches\n " << ss.str();
+            MO_LOG(debug) << "Warning ambiguous name \"" << name << "\" passed in, multiple potential matches\n " << ss.str();
         }
         return potentials[0];
     }
-    LOG(debug) << "Unable to find Param named " << name;
+    MO_LOG(debug) << "Unable to find Param named " << name;
     return nullptr;
 }
 void VariableManager::linkParams(IParam* output, IParam* input)

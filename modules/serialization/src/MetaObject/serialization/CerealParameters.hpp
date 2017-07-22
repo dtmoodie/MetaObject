@@ -1,7 +1,7 @@
 #pragma once
 #include "cereal/archives/json.hpp"
 #include "MetaObject/params/IParam.hpp"
-#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 #include "SerializationFactory.hpp"
 
 namespace cereal {
@@ -13,10 +13,10 @@ void load(AR& ar, std::vector<mo::IParam*>& Params) {
         auto func1 = mo::SerializationFactory::instance()->getLoadFunction(param->getTypeInfo(), ar);
         if (func1) {
             if (!func1(param, ar)) {
-                LOG(debug) << "Unable to deserialize " << param->getName() << " of type " << param->getTypeInfo().name();
+                MO_LOG(debug) << "Unable to deserialize " << param->getName() << " of type " << param->getTypeInfo().name();
             }
         } else {
-            LOG(debug) << "No deserialization function exists for  " << param->getName() << " of type " << param->getTypeInfo().name();
+            MO_LOG(debug) << "No deserialization function exists for  " << param->getName() << " of type " << param->getTypeInfo().name();
         }
     }
 }
@@ -28,10 +28,10 @@ void save(AR& ar, std::vector<mo::IParam*> const& Params) {
         auto func1 = mo::SerializationFactory::instance()->getSaveFunction(param->getTypeInfo(), ar);
         if (func1) {
             if (!func1(param, ar)) {
-                LOG(debug) << "Unable to deserialize " << param->getName() << " of type " << param->getTypeInfo().name();
+                MO_LOG(debug) << "Unable to deserialize " << param->getName() << " of type " << param->getTypeInfo().name();
             }
         } else {
-            LOG(debug) << "No serialization function exists for  " << param->getName() << " of type " << param->getTypeInfo().name();
+            MO_LOG(debug) << "No serialization function exists for  " << param->getName() << " of type " << param->getTypeInfo().name();
         }
     }
 }

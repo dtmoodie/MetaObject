@@ -1,6 +1,6 @@
 #include "MetaObject/thread/InterThread.hpp"
 #include "MetaObject/core/detail/ConcurrentQueue.hpp"
-#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 #include <mutex>
 #include <set>
 #include <map>
@@ -19,7 +19,7 @@ struct impl {
         void push(const Event& ev, size_t id) {
             queue.enqueue(ev);
             if(queue.size_approx() > 100)
-                LOG(warning) << "Event loop processing queue overflow " << id << " " << queue.size_approx();
+                MO_LOG(warning) << "Event loop processing queue overflow " << id << " " << queue.size_approx();
             std::lock_guard<std::mutex> lock(mtx);
             if(callback)
                 callback();

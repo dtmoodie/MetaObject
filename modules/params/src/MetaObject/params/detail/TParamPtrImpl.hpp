@@ -1,6 +1,6 @@
 #pragma once
 #ifndef __CUDACC__
-#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 #include <MetaObject/params/AccessToken.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 namespace mo {
@@ -11,26 +11,23 @@ struct MetaParam;
 
 template <typename T>
 TParamPtr<T>::TParamPtr(const std::string& name,
-    T* ptr_,
-    ParamFlags type,
-    bool ownsData_)
+    T*                                     ptr_,
+    ParamFlags                             type,
+    bool                                   ownsData_)
     : ptr(ptr_)
     , ownsData(ownsData_)
-    , ITParam<T>(name, type)
-{
+    , ITParam<T>(name, type) {
     (void)&_meta_Param;
 }
 
 template <typename T>
-TParamPtr<T>::~TParamPtr()
-{
+TParamPtr<T>::~TParamPtr() {
     if (ownsData && ptr)
         delete ptr;
 }
 
 template <typename T>
-bool TParamPtr<T>::getData(InputStorage_t& value, const OptionalTime_t& ts, Context* ctx, size_t* fn_)
-{
+bool TParamPtr<T>::getData(InputStorage_t& value, const OptionalTime_t& ts, Context* ctx, size_t* fn_) {
     mo::Mutex_t::scoped_lock lock(IParam::mtx());
     if (!ts) {
         if (ptr) {
@@ -48,8 +45,7 @@ bool TParamPtr<T>::getData(InputStorage_t& value, const OptionalTime_t& ts, Cont
 }
 
 template <typename T>
-bool TParamPtr<T>::getData(InputStorage_t& value, size_t fn, Context* ctx, OptionalTime_t* ts)
-{
+bool TParamPtr<T>::getData(InputStorage_t& value, size_t fn, Context* ctx, OptionalTime_t* ts) {
     mo::Mutex_t::scoped_lock lock(IParam::mtx());
     if (fn == this->_fn && ptr) {
         ParamTraits<T>::reset(value, *ptr);
@@ -62,11 +58,10 @@ bool TParamPtr<T>::getData(InputStorage_t& value, size_t fn, Context* ctx, Optio
 
 template <typename T>
 IParam* TParamPtr<T>::emitUpdate(const OptionalTime_t& ts_,
-    Context* ctx_,
-    const boost::optional<size_t>& fn_,
-    ICoordinateSystem* cs_,
-    UpdateFlags flags_)
-{
+    Context*                                           ctx_,
+    const boost::optional<size_t>&                     fn_,
+    const std::shared_ptr<ICoordinateSystem>&          cs_,
+    UpdateFlags                                        flags_) {
     IParam::emitUpdate(ts_, ctx_, fn_, cs_, flags_);
     if (ptr)
         ITParam<T>::_typed_update_signal(ParamTraits<T>::copy(*ptr), this, ctx_, ts_, this->_fn, cs_, flags_);
@@ -74,15 +69,13 @@ IParam* TParamPtr<T>::emitUpdate(const OptionalTime_t& ts_,
 }
 
 template <typename T>
-AccessToken<T> TParamPtr<T>::access()
-{
+AccessToken<T> TParamPtr<T>::access() {
     MO_ASSERT(ptr);
     return AccessToken<T>(*this, *ptr);
 }
 
 template <typename T>
-bool TParamPtr<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, ICoordinateSystem* cs)
-{
+bool TParamPtr<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, const std::shared_ptr<ICoordinateSystem>& cs) {
     mo::Mutex_t::scoped_lock lock(IParam::mtx());
     if (ptr) {
         *ptr = ParamTraits<T>::get(data);
@@ -95,10 +88,9 @@ bool TParamPtr<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t& t
 }
 
 template <typename T>
-ITParam<T>* TParamPtr<T>::updatePtr(Raw_t* ptr, bool ownsData_)
-{
+ITParam<T>* TParamPtr<T>::updatePtr(Raw_t* ptr, bool ownsData_) {
     mo::Mutex_t::scoped_lock lock(IParam::mtx());
-    this->ptr = ptr;
+    this->ptr      = ptr;
     this->ownsData = ownsData_;
     return this;
 }
@@ -107,8 +99,7 @@ template <typename T>
 MetaParam<T, 100, void> TParamPtr<T>::_meta_Param;
 
 template <typename T>
-bool TParamOutput<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_)
-{
+bool TParamOutput<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_) {
     if (!ts || ts == this->_ts) {
         data = this->data;
         return true;
@@ -117,8 +108,7 @@ bool TParamOutput<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, Co
 }
 
 template <typename T>
-bool TParamOutput<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_)
-{
+bool TParamOutput<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_) {
     if (fn == this->_fn) {
         data = this->data;
         return true;
@@ -127,14 +117,12 @@ bool TParamOutput<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, Opt
 }
 
 template <typename T>
-AccessToken<T> TParamOutput<T>::access()
-{
+AccessToken<T> TParamOutput<T>::access() {
     return AccessToken<T>(*this, data);
 }
 
 template <typename T>
-bool TParamOutput<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, ICoordinateSystem* cs)
-{
+bool TParamOutput<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, const std::shared_ptr<ICoordinateSystem>& cs) {
     mo::Mutex_t::scoped_lock lock(IParam::mtx());
     //this->data = data;
     if (this->ptr) {
@@ -147,11 +135,10 @@ bool TParamOutput<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t
 
 template <typename T>
 IParam* TParamOutput<T>::emitUpdate(const OptionalTime_t& ts_,
-    Context* ctx_,
-    const boost::optional<size_t>& fn_,
-    ICoordinateSystem* cs_,
-    UpdateFlags flags_)
-{
+    Context*                                              ctx_,
+    const boost::optional<size_t>&                        fn_,
+    const std::shared_ptr<ICoordinateSystem>&             cs_,
+    UpdateFlags                                           flags_) {
     if (this->ptr) {
         if (this->checkFlags(mo::Unstamped_e)) {
             data = ParamTraits<T>::copy(*(this->ptr));
@@ -164,6 +151,5 @@ IParam* TParamOutput<T>::emitUpdate(const OptionalTime_t& ts_,
 
     return this;
 }
-
 }
 #endif

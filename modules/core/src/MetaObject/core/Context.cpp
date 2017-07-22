@@ -1,33 +1,33 @@
 #include "MetaObject/core/Context.hpp"
-#include "MetaObject/logging/Log.hpp"
-#include "MetaObject/thread/ThreadRegistry.hpp"
-#include "MetaObject/core/detail/Allocator.hpp"
-#include "MetaObject/logging/Profiling.hpp"
-#include "MetaObject/core/detail/HelperMacros.hpp"
-#include "MetaObject/core/detail/Allocator.hpp"
-#include "MetaObject/thread/ThreadRegistry.hpp"
-#include "CvContext.hpp"
 #include "CudaContext.hpp"
+#include "CvContext.hpp"
+#include "MetaObject/core/detail/Allocator.hpp"
+#include "MetaObject/core/detail/Allocator.hpp"
+#include "MetaObject/core/detail/HelperMacros.hpp"
+#include "MetaObject/logging/logging.hpp"
+#include "MetaObject/logging/profiling.hpp"
+#include "MetaObject/thread/ThreadRegistry.hpp"
+#include "MetaObject/thread/ThreadRegistry.hpp"
 #include "boost/lexical_cast.hpp"
 #include <boost/thread/tss.hpp>
 using namespace mo;
 
 thread_local std::shared_ptr<Context> thread_set_context = nullptr;
 
-std::shared_ptr<Context> mo::Context::create(const std::string& name){
+std::shared_ptr<Context> mo::Context::create(const std::string& name, int priority) {
     Context* ctx = nullptr;
 #ifdef HAVE_OPENCV
-    ctx = new CvContext();
+    ctx = new CvContext(priority);
 #else
 #ifdef HAVE_CUDA
-    ctx = new CudaContext();
+    ctx = new CudaContext(priority);
 #else
     ctx = new Context();
 #endif
 #endif
     ctx->setName(name);
     std::shared_ptr<Context> output(ctx);
-    if(thread_set_context == nullptr)
+    if (thread_set_context == nullptr)
         thread_set_context = output;
     return output;
 }
@@ -48,7 +48,7 @@ void Context::setDefaultThreadContext(const std::shared_ptr<Context>& ctx) {
 }
 
 void Context::setName(const std::string& name) {
-    if(name.size()) {
+    if (name.size()) {
         allocator->setName(name);
         mo::setThreadName(name.c_str());
     } else {
@@ -59,7 +59,7 @@ void Context::setName(const std::string& name) {
 
 Context::~Context() {
 #ifdef _DEBUG
-    LOG(info) << "Context [" << name << "] destroyed";
+    MO_LOG(info) << "Context [" << name << "] destroyed";
 #endif
 }
 
@@ -67,7 +67,8 @@ cv::cuda::Stream& Context::getStream() {
     THROW(warning) << "Not a gpu context";
     return *static_cast<cv::cuda::Stream*>(nullptr);
 }
-cudaStream_t Context::getCudaStream() const{
+cudaStream_t Context::getCudaStream() const {
     return nullptr;
 }
-void Context::setStream(const cv::cuda::Stream& stream) {}
+void Context::setStream(const cv::cuda::Stream& stream) { (void)stream; }
+void Context::setStream(cudaStream_t stream) { (void)stream; }

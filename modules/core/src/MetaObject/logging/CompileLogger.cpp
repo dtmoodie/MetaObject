@@ -1,5 +1,5 @@
 #include "MetaObject/logging/CompileLogger.hpp"
-#include <MetaObject/logging/Log.hpp>
+#include <MetaObject/logging/logging.hpp>
 #include <stdio.h>
 using namespace mo;
 

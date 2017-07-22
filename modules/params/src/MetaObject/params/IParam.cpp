@@ -42,8 +42,7 @@ IParam::IParam(const std::string& name_, ParamFlags flags_, OptionalTime_t ts, C
     , _name(name_)
     , _flags(flags_)
     , _ctx(ctx)
-    , _fn(fn)
-    , _cs(nullptr) {
+    , _fn(fn) {
 }
 
 IParam::~IParam() {
@@ -67,7 +66,7 @@ IParam* IParam::setFrameNumber(size_t fn) {
     return this;
 }
 
-IParam* IParam::setCoordinateSystem(ICoordinateSystem* system) {
+IParam* IParam::setCoordinateSystem(const std::shared_ptr<ICoordinateSystem>& system) {
     this->_cs = system;
     return this;
 }
@@ -104,7 +103,7 @@ Context* IParam::getContext() const {
     return _ctx;
 }
 
-ICoordinateSystem* IParam::getCoordinateSystem() const {
+const std::shared_ptr<ICoordinateSystem>& IParam::getCoordinateSystem() const {
     return _cs;
 }
 
@@ -164,7 +163,8 @@ std::shared_ptr<Connection> IParam::registerDeleteNotifier(std::shared_ptr<TSign
     return _delete_signal.connect(relay);
 }
 
-IParam* IParam::emitUpdate(const OptionalTime_t& ts_, Context* ctx_, const boost::optional<size_t>& fn, ICoordinateSystem* cs_, UpdateFlags flags_) {
+IParam* IParam::emitUpdate(const OptionalTime_t& ts_, Context* ctx_,
+    const boost::optional<size_t>& fn, const std::shared_ptr<ICoordinateSystem>& cs_, UpdateFlags flags_) {
     mo::Mutex_t::scoped_lock lock(mtx());
     _ts = ts_;
     if (fn) {

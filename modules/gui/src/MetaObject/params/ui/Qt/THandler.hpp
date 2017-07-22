@@ -2,7 +2,7 @@
 #ifdef HAVE_QT5
 #include "IHandler.hpp"
 #include "IParamProxy.hpp"
-#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 #include "MetaObject/core/Demangle.hpp"
 
 class QWidget;
@@ -22,7 +22,7 @@ namespace mo
             public:
                 THandler(IParamProxy& parent):
                     _parent(parent){
-                    LOG(debug) << "Creating handler for default unspecialized Param " << Demangle::typeToName(mo::TypeInfo(typeid(T)));
+                    MO_LOG(debug) << "Creating handler for default unspecialized Param " << Demangle::typeToName(mo::TypeInfo(typeid(T)));
                 }
 
                 // Update user interface from parameter update
@@ -35,7 +35,7 @@ namespace mo
                 void onUiUpdate(QObject* sender){ _parent.onUiUpdate(sender); }
 
                 virtual std::vector<QWidget*> getUiWidgets(QWidget* parent){
-                    LOG(debug) << "Creating widget for default unspecialized Param " << Demangle::typeToName(mo::TypeInfo(typeid(T)));
+                    MO_LOG(debug) << "Creating widget for default unspecialized Param " << Demangle::typeToName(mo::TypeInfo(typeid(T)));
                     return std::vector<QWidget*>();
                 }
                 inline void setUpdating(bool val = true) { }

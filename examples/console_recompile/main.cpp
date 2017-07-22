@@ -1,7 +1,7 @@
 #include "obj.hpp"
 
 #include <MetaObject/object/MetaObjectFactory.hpp>
-#include <MetaObject/logging/Log.hpp>
+#include <MetaObject/logging/logging.hpp>
 #include <boost/thread.hpp>
 int main()
 {
@@ -13,10 +13,10 @@ int main()
     }catch(mo::ExceptionWithCallStack<std::string>& e)
     {
         (void)e;
-        LOG(debug) << "Exception caught in the correct handler";
+        MO_LOG(debug) << "Exception caught in the correct handler";
     }catch(...)
     {
-        LOG(debug) << "Exception caught in the wrong handler";
+        MO_LOG(debug) << "Exception caught in the wrong handler";
     }
 
     auto factory = mo::MetaObjectFactory::instance(); // ->registerTranslationUnit();

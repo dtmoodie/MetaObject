@@ -62,24 +62,23 @@ namespace UI {
 
 MO_KEYWORD_INPUT(timestamp, mo::Time_t)
 MO_KEYWORD_INPUT(frame_number, size_t)
-MO_KEYWORD_INPUT(coordinate_system, ICoordinateSystem*)
+MO_KEYWORD_INPUT(coordinate_system, const std::shared_ptr<ICoordinateSystem>)
 MO_KEYWORD_INPUT(context, Context*)
 MO_KEYWORD_INPUT(param_name, std::string)
 MO_KEYWORD_INPUT(tree_root, std::string)
 MO_KEYWORD_INPUT(param_flags, ParamFlags)
 
 #if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__)
-#if defined (metaobject_params_EXPORTS)
-#  define PARAM_EXPORTS __declspec(dllexport)
+#if defined(metaobject_params_EXPORTS)
+#define PARAM_EXPORTS __declspec(dllexport)
 #else
-#  define PARAM_EXPORTS  __declspec(dllimport)
+#define PARAM_EXPORTS __declspec(dllimport)
 #endif
 #elif defined __GNUC__ && __GNUC__ >= 4
-#  define PARAM_EXPORTS  __attribute__ ((visibility ("default")))
+#define PARAM_EXPORTS __attribute__((visibility("default")))
 #else
-#  define PARAM_EXPORTS 
+#define PARAM_EXPORTS
 #endif
-
 
 namespace tag {
     struct param;
@@ -105,7 +104,7 @@ namespace kwargs {
         static TKeyword            instance;
         TaggedArgument<tag::param> operator=(const IParam& data);
     };
-    
+
 } // namespace kwargs
 
 namespace tag {
@@ -129,7 +128,7 @@ namespace tag {
     static mo::kwargs::TKeyword<param>& _param = mo::kwargs::TKeyword<param>::instance;
 }
 
-typedef void(UpdateSig_t)(IParam*, Context*, OptionalTime_t, size_t, ICoordinateSystem*, UpdateFlags); // Sig for signature not signal
+typedef void(UpdateSig_t)(IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags); // Sig for signature not signal
 typedef TSlot<UpdateSig_t>            UpdateSlot_t;
 typedef TSignal<UpdateSig_t>          UpdateSignal_t;
 typedef std::shared_ptr<UpdateSlot_t> UpdateSlotPtr_t;
@@ -148,19 +147,19 @@ public:
         _name = GetKeywordInputDefault<tag::param_name>("unnamed", args...);
         if (const mo::Time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...))
             _ts = *ts;
-        _mtx = nullptr;
-        _fn        = GetKeywordInputDefault<tag::frame_number>(-1, args...);
-        _ctx       = GetKeywordInputDefault<tag::context>(nullptr, args...);
-        _cs        = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...);
+        _mtx    = nullptr;
+        _fn     = GetKeywordInputDefault<tag::frame_number>(-1, args...);
+        _ctx    = GetKeywordInputDefault<tag::context>(nullptr, args...);
+        //_cs        = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...); // TODO keyword specialization for std::shared_ptrs
         _flags     = GetKeywordInputDefault<tag::param_flags>(mo::Control_e, args...);
         _tree_root = GetKeywordInputDefault<tag::tree_root>("", args...);
     }
 
     IParam(const std::string& name_  = "",
-           ParamFlags         flags_ = Control_e,
-           OptionalTime_t     ts_    = OptionalTime_t(),
-           Context*           ctx_   = nullptr,
-           size_t             fn_    = std::numeric_limits<size_t>::max());
+        ParamFlags            flags_ = Control_e,
+        OptionalTime_t        ts_    = OptionalTime_t(),
+        Context*              ctx_   = nullptr,
+        size_t                fn_    = std::numeric_limits<size_t>::max());
 
     virtual ~IParam();
 
@@ -169,15 +168,15 @@ public:
     IParam* setContext(Context* ctx); // Set the compute context of this Param
     IParam* setFrameNumber(size_t fn); // Set the frame number for this Param
     IParam* setTimestamp(const mo::Time_t& ts); // Set the timestamp for this Param
-    IParam* setCoordinateSystem(ICoordinateSystem* cs_); // Set the coordinate system for this Param
+    IParam* setCoordinateSystem(const std::shared_ptr<ICoordinateSystem>& cs_); // Set the coordinate system for this Param
 
-    const std::string& getName() const; // Get the name of this Param
-    const std::string  getTreeName() const; // Get the name of this parmaeter appended with the tree root. IE root_name:param_name
-    const std::string& getTreeRoot() const; // Get the tree root of this Param, ie the name of the owning parent object
-    OptionalTime_t     getTimestamp() const; // Get the timestamp of this Param, may not exist for all Params
-    size_t             getFrameNumber() const; // Get the frame number for this Param. Initialized such that first update will set to 0, and increment at every update unless specified
-    Context*           getContext() const; // Get the compute context of this Param
-    ICoordinateSystem* getCoordinateSystem() const; // Get the coordinate system of this Param
+    const std::string&                        getName() const; // Get the name of this Param
+    const std::string                         getTreeName() const; // Get the name of this parmaeter appended with the tree root. IE root_name:param_name
+    const std::string&                        getTreeRoot() const; // Get the tree root of this Param, ie the name of the owning parent object
+    OptionalTime_t                            getTimestamp() const; // Get the timestamp of this Param, may not exist for all Params
+    size_t                                    getFrameNumber() const; // Get the frame number for this Param. Initialized such that first update will set to 0, and increment at every update unless specified
+    Context*                                  getContext() const; // Get the compute context of this Param
+    const std::shared_ptr<ICoordinateSystem>& getCoordinateSystem() const; // Get the coordinate system of this Param
 
     void subscribe(); // Subscribe to this Param as an output
     void unsubscribe(); // unsubscribe to this Param as an output
@@ -199,11 +198,11 @@ public:
     std::shared_ptr<Connection> registerDeleteNotifier(std::shared_ptr<ISignalRelay> relay);
 
     // commit changes to a Param, updates underlying meta info and emits signals accordingly
-    virtual IParam* emitUpdate(const OptionalTime_t&          ts_    = OptionalTime_t(), // The timestamp of the new data
-                               Context*                       ctx_   = Context::getDefaultThreadContext().get(), // The context from which the data was updated
-                               const boost::optional<size_t>& fn_    = boost::optional<size_t>(), // The frame number of the update
-                               ICoordinateSystem*             cs_    = nullptr, // The coordinate system of the data
-                               UpdateFlags                    flags_ = ValueUpdated_e);
+    virtual IParam* emitUpdate(const OptionalTime_t& ts_    = OptionalTime_t(), // The timestamp of the new data
+        Context*                                     ctx_   = Context::getDefaultThreadContext().get(), // The context from which the data was updated
+        const boost::optional<size_t>&               fn_    = boost::optional<size_t>(), // The frame number of the update
+        const std::shared_ptr<ICoordinateSystem>&    cs_    = std::shared_ptr<ICoordinateSystem>(), // The coordinate system of the data
+        UpdateFlags                                  flags_ = ValueUpdated_e);
 
     virtual IParam* emitUpdate(const IParam& other); // commit a Param's value copying metadata info from another parmaeter
     template <class Archive>
@@ -221,18 +220,18 @@ protected:
     template <class T>
     friend class UI::qt::ParamProxy;
 
-    OptionalTime_t     _ts;
-    size_t             _fn;
-    ICoordinateSystem* _cs;
-    Context*           _ctx;
-    std::string        _name;
-    std::string        _tree_root;
-    ParamFlags         _flags;
-    UpdateSignal_t     _update_signal;
-    DeleteSignal_t     _delete_signal;
-    mo::Mutex_t*       _mtx         = nullptr;
-    int                _subscribers = 0;
-    bool               _modified    = false; // Set to true if modified by the user interface etc, set to false by the owning object.
+    OptionalTime_t                     _ts;
+    size_t                             _fn;
+    std::shared_ptr<ICoordinateSystem> _cs;
+    Context*                           _ctx;
+    std::string                        _name;
+    std::string                        _tree_root;
+    ParamFlags                         _flags;
+    UpdateSignal_t                     _update_signal;
+    DeleteSignal_t                     _delete_signal;
+    mo::Mutex_t*                       _mtx         = nullptr;
+    int                                _subscribers = 0;
+    bool                               _modified    = false; // Set to true if modified by the user interface etc, set to false by the owning object.
 };
 
 template <typename Archive>
@@ -244,4 +243,3 @@ void IParam::serialize(Archive& ar) {
     ar(_flags);
 }
 }
-

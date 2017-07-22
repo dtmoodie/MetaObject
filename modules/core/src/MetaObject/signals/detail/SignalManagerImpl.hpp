@@ -1,5 +1,5 @@
 #pragma once
-#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 namespace mo
 {
     //class SignalManager;
@@ -14,7 +14,7 @@ namespace mo
 		auto& sig = getSignal(name, signature);
 		if (!sig)
 		{
-			LOG(debug) << this << " Creating signal " << name << " <" << signature.name() << ">";
+			MO_LOG(debug) << this << " Creating signal " << name << " <" << signature.name() << ">";
 			sig.reset(new TSignal<T>());
 		}
 		return std::weak_ptr<TSignal<T>>(std::dynamic_pointer_cast<TSignal<T>>(sig));
@@ -26,7 +26,7 @@ namespace mo
         auto&sig = getSignal(name, signature);
 		if (!sig)
 		{
-			LOG(debug) << this << " Creating signal " << name << " <" << signature.name() << ">";
+			MO_LOG(debug) << this << " Creating signal " << name << " <" << signature.name() << ">";
 			sig.reset(new TSignal<T>());
 		}
         return std::weak_ptr<TSignal<T>>(std::dynamic_pointer_cast<TSignal<T>>(sig));

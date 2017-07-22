@@ -1,5 +1,5 @@
 #pragma once
-#include "MetaObject/logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
 #include "MetaObject/params/ITParam.hpp"
 #include "MetaObject/params/TParam.hpp"
