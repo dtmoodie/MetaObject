@@ -255,7 +255,7 @@ struct MO_EXPORTS IExceptionWithCallStackBase {
     virtual const char* callStack() const = 0;
     virtual ~IExceptionWithCallStackBase();
 };
-
+#ifndef _MSC_VER
 struct MO_EXPORTS ThrowStream : public IExceptionWithCallStackBase {
     ThrowStream(const ThrowStream& other);
     ThrowStream& operator()(int error, const char* file, int line, const char* func, bool collect_callstack = true);
@@ -299,7 +299,7 @@ struct MO_EXPORTS ThrowStream_error : public ThrowStream {
     ~ThrowStream_error();
     ThrowStream_error& operator()(int error, const char* file, int line, const char* func, bool collect_callstack = true);
 };
-
+#endif
 class MO_EXPORTS ThrowOnDestroy {
 public:
     ThrowOnDestroy(const char* function, const char* file, int line);

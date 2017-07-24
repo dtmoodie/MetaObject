@@ -51,7 +51,7 @@ template<class T> struct Policy {
         try {
             ar(nvp);
         } catch(cereal::Exception& e) {
-            LOG(debug) << "Failed to deserialize " << param->getName() << " due to " << e.what();
+            MO_LOG(debug) << "Failed to deserialize " << param->getName() << " due to " << e.what();
             token.setValid(false);
             return false;
         }catch(...){

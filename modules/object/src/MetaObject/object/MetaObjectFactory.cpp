@@ -213,7 +213,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath) {
 
     InfoFunctor info = (InfoFunctor)GetProcAddress(handle, "getPluginBuildInfo");
     if (info) {
-        LOG(debug) << info();
+        MO_LOG(debug) << info();
     }
 
     typedef IPerModuleInterface* (*moduleFunctor)();
