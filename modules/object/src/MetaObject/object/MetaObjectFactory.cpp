@@ -13,13 +13,27 @@
 using namespace mo;
 
 struct MetaObjectFactory::impl {
+    struct PluginInfo {
+        PluginInfo(const std::string& path, const std::string& state = "success",
+            unsigned int time = 0, const char* info = nullptr)
+            : m_path(path)
+            , m_state(state)
+            , m_load_time(time)
+            , m_build_info(info) {
+        }
+
+        std::string  m_path;
+        std::string  m_state;
+        unsigned int m_load_time  = 0; // total ms to load plugin
+        const char*  m_build_info = nullptr;
+    };
     impl(SystemTable* table) {
         obj_system.Initialise(&logger, table);
     }
-    RuntimeObjectSystem      obj_system;
-    CompileLogger            logger;
-    std::vector<std::string> plugins;
-    TSignal<void(void)>      on_constructor_added;
+    RuntimeObjectSystem     obj_system;
+    CompileLogger           logger;
+    std::vector<PluginInfo> plugins;
+    TSignal<void(void)>     on_constructor_added;
 };
 
 MetaObjectFactory::MetaObjectFactory(SystemTable* table) {
@@ -154,9 +168,29 @@ void MetaObjectFactory::setupObjectConstructors(IPerModuleInterface* pPerModuleI
     getObjectSystem()->SetupObjectConstructors(pPerModuleInterface);
 }
 
-std::vector<std::string> MetaObjectFactory::listLoadedPlugins() const {
-    return _pimpl->plugins;
+std::vector<std::string> MetaObjectFactory::listLoadedPlugins(PluginVerbosity verbosity) const {
+    std::vector<std::string> output;
+    for (size_t i = 0; i < _pimpl->plugins.size(); ++i) {
+        std::stringstream ss;
+        switch (verbosity) {
+        case brief:
+            ss << _pimpl->plugins[i].m_path;
+            break;
+        case info:
+            ss << _pimpl->plugins[i].m_path << " " << _pimpl->plugins[i].m_state << " (" << _pimpl->plugins[i].m_load_time << " ms)";
+            break;
+        case debug:
+            ss << _pimpl->plugins[i].m_path << " " << _pimpl->plugins[i].m_state << " (" << _pimpl->plugins[i].m_load_time << " ms)";
+            if (_pimpl->plugins[i].m_build_info)
+                ss << "\n"
+                   << _pimpl->plugins[i].m_build_info;
+            break;
+        }
+        output.push_back(ss.str());
+    }
+    return output;
 }
+
 int MetaObjectFactory::loadPlugins(const std::string& path_) {
     boost::filesystem::path path(boost::filesystem::current_path().string() + "/" + path_);
     int                     count = 0;
@@ -248,40 +282,42 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath) {
         if (dlsym_error) {
             MO_LOG(warning) << dlsym_error << '\n';
             boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
-            _pimpl->plugins.push_back("failed - " + fullPluginPath + " (dlsym_error). In " + boost::lexical_cast<std::string>((end - start).total_seconds()) + " seconds");
+            _pimpl->plugins.emplace_back(fullPluginPath, "failed (dlsym_error - " + std::string(dlsym_error),
+                (end - start).total_milliseconds(), nullptr);
             mo::setThisThreadName(old_name);
             return false;
         }
     }
 
     typedef void (*InitFunctor)();
-    InitFunctor init = (InitFunctor)dlsym(handle, "InitModule");
+
+    InitFunctor init = InitFunctor(dlsym(handle, "InitModule"));
     if (init) {
         init();
     }
-
     typedef const char* (*InfoFunctor)();
-
-    InfoFunctor info = (InfoFunctor)dlsym(handle, "getPluginBuildInfo");
+    InfoFunctor info = InfoFunctor(dlsym(handle, "getPluginBuildInfo"));
     if (info) {
         MO_LOG(debug) << info();
     }
 
     typedef IPerModuleInterface* (*moduleFunctor)();
 
-    moduleFunctor module      = (moduleFunctor)dlsym(handle, "GetPerModuleInterface");
+    moduleFunctor module      = moduleFunctor(dlsym(handle, "GetPerModuleInterface"));
     const char*   dlsym_error = dlerror();
     if (dlsym_error) {
         MO_LOG(warning) << dlsym_error << '\n';
         boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
-        _pimpl->plugins.push_back("failed - " + fullPluginPath + " (dlsym_error). In " + boost::lexical_cast<std::string>((end - start).total_seconds()) + " seconds");
+        _pimpl->plugins.emplace_back(fullPluginPath, "failed (dlsym_error - " + std::string(dlsym_error),
+            (end - start).total_milliseconds(), info ? info() : nullptr);
         mo::setThisThreadName(old_name);
         return false;
     }
     if (module == nullptr) {
         MO_LOG(warning) << "module == nullptr" << std::endl;
         boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
-        _pimpl->plugins.push_back("failed - " + fullPluginPath + " (module == nullptr). In " + boost::lexical_cast<std::string>((end - start).total_seconds()) + " seconds");
+        _pimpl->plugins.emplace_back(fullPluginPath, "failed (module == nullptr)",
+            (end - start).total_milliseconds(), info ? info() : nullptr);
         mo::setThisThreadName(old_name);
         return false;
     }
@@ -298,11 +334,12 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath) {
     int id = _pimpl->obj_system.ParseConfigFile(config_path.string().c_str());
 
     if (id >= 0) {
-        interface->SetProjectIdForAllConstructors(id);
+        interface->SetProjectIdForAllConstructors(static_cast<unsigned short>(id));
     }
     setupObjectConstructors(interface);
     boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
-    _pimpl->plugins.push_back("Success - " + fullPluginPath + " In " + boost::lexical_cast<std::string>((end - start).total_seconds()) + " seconds");
+    _pimpl->plugins.emplace_back(fullPluginPath, "success",
+        (end - start).total_milliseconds(), info ? info() : nullptr);
     mo::setThisThreadName(old_name);
     return true;
 }
