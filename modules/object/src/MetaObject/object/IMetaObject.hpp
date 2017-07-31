@@ -164,6 +164,8 @@ public:
     static bool connectInput(IMetaObject* output_object, IParam* output_Param,
         IMetaObject* input_object, InputParam* input_param, ParamType type = StreamBuffer_e);
 
+    Mutex_t& getMutex();
+
 protected:
     virtual IParam* addParam(std::shared_ptr<IParam> param);
     virtual IParam* addParam(IParam* param);

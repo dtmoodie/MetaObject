@@ -79,6 +79,9 @@ IMetaObject::~IMetaObject()
     delete _mtx;
     delete _pimpl;
 }
+Mutex_t& IMetaObject::getMutex(){
+    return *_mtx;
+}
 
 void IMetaObject::Init(bool firstInit)
 {
