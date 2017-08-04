@@ -30,6 +30,7 @@ enum ParamFlags {
     Sync_e = 256,
     RequestBuffered_e = 512,
     Source_e = 1024,
+    Dynamic_e = 2048,   // Dynamically created parameter object
     OwnsMutex_e = 65536 // Interally set by Params to determine if mutex needs to be deleted or not
 };
 
