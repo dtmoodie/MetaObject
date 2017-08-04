@@ -63,12 +63,19 @@ struct impl {
                 queue.second.remove(obj);
             }
         }
-        void clear() {
+        void clear(size_t id) {
             std::unique_lock<std::mutex> lock(mtx);
             Event ev;
-            for(auto& itr : queues) {
-                while(itr.second.pop(ev)) {
+            if(id == 0){
+                for(auto& itr : queues) {
+                    while(itr.second.pop(ev)) {
 
+                    }
+                }
+            }else{
+                auto itr = queues.find(id);
+                if(itr != queues.end()){
+                    while(itr->second.pop(ev)){}
                 }
             }
         }
@@ -119,8 +126,8 @@ struct impl {
     size_t size(size_t id) {
         return QueueRegistery::Instance().GetQueue(id)->size();
     }
-    void Cleanup() {
-        QueueRegistery::Instance().clear();
+    void Cleanup(size_t id) {
+        QueueRegistery::Instance().clear(id);
     }
 };
 void ThreadSpecificQueue::push(const std::function<void(void)>& f, size_t id, void* obj) {
@@ -129,9 +136,24 @@ void ThreadSpecificQueue::push(const std::function<void(void)>& f, size_t id, vo
 int ThreadSpecificQueue::run(size_t id) {
     return impl::inst()->run(id);
 }
-void ThreadSpecificQueue::registerNotifier(const std::function<void(void)>& f, size_t id) {
-    impl::inst()->register_notifier(f, id);
+
+ThreadSpecificQueue::ScopedNotifier::ScopedNotifier(size_t tid):
+    m_tid(tid){
+
 }
+
+ThreadSpecificQueue::ScopedNotifier::~ScopedNotifier(){
+    ThreadSpecificQueue::deregisterNotifier(m_tid);
+}
+
+ThreadSpecificQueue::ScopedNotifier ThreadSpecificQueue::registerNotifier(const std::function<void(void)>& f, size_t id) {
+    impl::inst()->register_notifier(f, id);
+    return {id};
+}
+void ThreadSpecificQueue::deregisterNotifier(size_t id){
+    impl::inst()->register_notifier(std::function<void(void)>(), id);
+}
+
 bool ThreadSpecificQueue::runOnce(size_t id) {
     return impl::inst()->run_once(id);
 }
@@ -141,6 +163,6 @@ void ThreadSpecificQueue::removeFromQueue(void* obj) {
 size_t ThreadSpecificQueue::size(size_t id) {
     return impl::inst()->size(id);
 }
-void ThreadSpecificQueue::cleanup() {
-    impl::inst()->Cleanup();
+void ThreadSpecificQueue::cleanup(size_t id) {
+    impl::inst()->Cleanup(id);
 }
