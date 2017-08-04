@@ -150,6 +150,7 @@ public:
     virtual IParam* getParamOptional(const std::string& name) const;
     virtual std::vector<IParam*> getParams(const std::string& filter = "") const;
     virtual std::vector<IParam*> getParams(const TypeInfo& filter) const;
+    virtual std::vector<std::shared_ptr<IParam>> getImplicitParams() const;
 
     template <class T>
     T getParamValue(const std::string& name, const OptionalTime_t& ts = OptionalTime_t(), Context* ctx = nullptr) const;

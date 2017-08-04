@@ -356,6 +356,13 @@ std::vector<IParam*> IMetaObject::getParams(const TypeInfo& filter) const
     return output;
 }
 
+std::vector<std::shared_ptr<IParam>> IMetaObject::getImplicitParams() const{
+    std::vector<std::shared_ptr<IParam>> output;
+    for(const auto& param : _pimpl->_implicit_params)
+        output.emplace_back(param.second);
+    return output;
+}
+
 IParam* IMetaObject::getParamOptional(const std::string& name) const
 {
     auto itr = _pimpl->_params.find(name);
@@ -627,6 +634,7 @@ bool IMetaObject::connectInput(IMetaObject* out_obj, IParam* out_param,
 {
     return in_obj->connectInput(in_param, out_obj, out_param, type);
 }
+
 IParam* IMetaObject::addParam(std::shared_ptr<IParam> param)
 {
     param->setMtx(_mtx);
