@@ -100,6 +100,7 @@ struct mo::Thread::ThreadSanitizer {
     }
     ~ThreadSanitizer() {
         MO_LOG(info) << m_thread._name << " exiting";
+        m_thread.getContext()->getStream().waitForCompletion();
         mo::ThreadSpecificQueue::run();
         _paused_flag = true;
         _cv.notify_all();
