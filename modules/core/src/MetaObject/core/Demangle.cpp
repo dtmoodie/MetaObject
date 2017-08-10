@@ -22,6 +22,17 @@ std::string Demangle::typeToName(const TypeInfo& type) {
     return type.name();
 }
 
+const TypeInfo& Demangle::nameToType(const std::string& name){
+    static TypeInfo default_type = TypeInfo(typeid(void));
+    std::map<TypeInfo, std::string>& reg = registry();
+    for(const auto& itr : reg){
+        if(itr.second == name){
+            return itr.first;
+        }
+    }
+    return default_type;
+}
+
 void Demangle::registerName(const TypeInfo& type, const char* name) {
     std::map<TypeInfo, std::string>& reg = registry();
     auto itr = reg.find(type);

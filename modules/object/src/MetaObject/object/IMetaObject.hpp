@@ -150,6 +150,7 @@ public:
     virtual IParam* getParamOptional(const std::string& name) const;
     virtual std::vector<IParam*> getParams(const std::string& filter = "") const;
     virtual std::vector<IParam*> getParams(const TypeInfo& filter) const;
+    virtual std::vector<std::shared_ptr<IParam>> getImplicitParams() const;
 
     template <class T>
     T getParamValue(const std::string& name, const OptionalTime_t& ts = OptionalTime_t(), Context* ctx = nullptr) const;
@@ -163,6 +164,8 @@ public:
     bool connectInput(InputParam* input, IMetaObject* output_object, IParam* output_param, ParamType type = StreamBuffer_e);
     static bool connectInput(IMetaObject* output_object, IParam* output_Param,
         IMetaObject* input_object, InputParam* input_param, ParamType type = StreamBuffer_e);
+
+    Mutex_t& getMutex();
 
 protected:
     virtual IParam* addParam(std::shared_ptr<IParam> param);

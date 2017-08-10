@@ -1,55 +1,57 @@
 #include "MetaObject/core/detail/Enums.hpp"
 #include "MetaObject/logging/logging.hpp"
 using namespace mo;
+
+#define TYPE_NAME_HELPER(name) {name##_e, #name }
+
+static const std::vector<std::pair<ParamFlags, std::string>> type_flag_map = {
+    TYPE_NAME_HELPER(None),
+    TYPE_NAME_HELPER(Input),
+    TYPE_NAME_HELPER(Output),
+    TYPE_NAME_HELPER(State),
+    TYPE_NAME_HELPER(Control),
+    TYPE_NAME_HELPER(Buffer),
+    TYPE_NAME_HELPER(Optional),
+    TYPE_NAME_HELPER(Unstamped),
+    TYPE_NAME_HELPER(Source),
+    TYPE_NAME_HELPER(Sync),
+    TYPE_NAME_HELPER(RequestBuffered),
+    TYPE_NAME_HELPER(Dynamic),
+    TYPE_NAME_HELPER(Source)
+};
+
 std::string mo::paramFlagsToString(ParamFlags type) {
-    switch(type) {
-    case None_e:
-        return "None";
-    case Input_e:
-        return "Input";
-    case Output_e:
-        return "Output";
-    case State_e:
-        return "State";
-    case Control_e:
-        return "Control";
-    case Buffer_e:
-        return "Buffer";
-    case Optional_e:
-        return "Optional";
-    case Unstamped_e:
-        return "Unstamped";
-    case Source_e:
-        return "Source";
-    case Sync_e:
-        return "Sync";
-    case RequestBuffered_e:
-        return "RequestBuffered";
-    case Desynced_e:
-        return "";
-    case OwnsMutex_e:
-        return "";
+    std::string output;
+    for(const auto& itr : type_flag_map){
+        if((itr.first & type) != 0){
+            if(output.empty()){
+                output = itr.second;
+            }else{
+                output += "|" + itr.second;
+            }
+        }
     }
-    return "";
+    return output;
 }
 
 ParamFlags mo::stringToParamFlags(const std::string& str) {
-    if(str == "None")
-        return None_e;
-    else if(str == "Input")
-        return Input_e;
-    else if(str == "Output")
-        return Output_e;
-    else if(str == "State")
-        return State_e;
-    else if(str == "Control")
-        return Control_e;
-    else if(str == "Buffer")
-        return Buffer_e;
-    else if(str == "Optional")
-        return Optional_e;
-    THROW(debug) << "Invalid string " << str;
-    return None_e;
+    std::string rest = str;
+    ParamFlags output = None_e;
+    auto pos = rest.find('|');
+    while(pos != std::string::npos){
+        std::string substr = rest.substr(0, pos);
+        rest = rest.substr(pos + 1);
+        for(const auto& itr : type_flag_map){
+            if(substr == itr.second)
+                output = ParamFlags(itr.first | output);
+        }
+        pos = rest.find('|');
+    }
+    for(const auto& itr : type_flag_map){
+        if(rest == itr.second)
+            output = ParamFlags(itr.first | output);
+    }
+    return output;
 }
 
 std::string mo::paramTypeToString(ParamType flags) {

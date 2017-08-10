@@ -18,6 +18,8 @@ https://github.com/dtmoodie/Params
 */
 #pragma once
 #include "ITInputParam.hpp"
+#include "ParamConstructor.hpp"
+#include "MetaParam.hpp"
 
 namespace mo {
 
@@ -51,6 +53,7 @@ protected:
     InputStorage_t _current_data;
     virtual void   onInputUpdate(ConstStorageRef_t, IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags);
 };
+
 }
 #include "MetaObject/params/detail/TInputParamImpl.hpp"
 #include "detail/TInputParamPtrImpl.hpp"

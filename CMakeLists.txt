@@ -18,6 +18,7 @@ option(WITH_PYTHON "Enable Python bindings" ON)
 option(WITH_OPENCV "Enable OpenCV types" ON )
 option(WITH_CUDA "Enable CUDA recompilation" ON)
 option(WITH_WT "Enable WT support" ON)
+option(WITH_ZEROMQ "Enable ZEROMQ support" OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -274,13 +275,16 @@ if(WITH_OPENCV)
 endif(WITH_OPENCV)
 
 # ----------------------- ZeroMQ ------------------------------------------
-find_package(ZeroMQ QUIET)
-if(${ZeroMQ_FOUND})
-  include_directories(${ZeroMQ_INCLUDE_DIR})
-  include_directories("${CMAKE_CURRENT_LIST_DIR}/dependencies/cppzmq") # cpp bindings
-  list(APPEND link_libs "optimized;${ZeroMQ_LIBRARY_RELEASE};debug;${ZeroMQ_LIBRARY_DEBUG}")
-  add_definitions(-DHAVE_ZEROMQ)
-endif(${ZeroMQ_FOUND})
+if(WITH_ZEROMQ)
+    find_package(ZeroMQ QUIET)
+    if(${ZeroMQ_FOUND})
+      include_directories(${ZeroMQ_INCLUDE_DIR})
+      include_directories("${CMAKE_CURRENT_LIST_DIR}/dependencies/cppzmq") # cpp bindings
+      list(APPEND link_libs "optimized;${ZeroMQ_LIBRARY_RELEASE};debug;${ZeroMQ_LIBRARY_DEBUG}")
+      add_definitions(-DHAVE_ZEROMQ)
+    endif(${ZeroMQ_FOUND})
+endif(WITH_ZEROMQ)
+
 
 FOREACH(dir ${BIN_DIRS})
   APPEND_BIN_DIR(${dir}_BIN_DIR_DBG PROJECT_BIN_DIRS_DEBUG)

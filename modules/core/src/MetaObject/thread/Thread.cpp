@@ -100,9 +100,12 @@ struct mo::Thread::ThreadSanitizer {
     }
     ~ThreadSanitizer() {
         MO_LOG(info) << m_thread._name << " exiting";
-        mo::Allocator::cleanupThreadSpecificAllocator();
+        m_thread.getContext()->getStream().waitForCompletion();
+        mo::ThreadSpecificQueue::run();
         _paused_flag = true;
         _cv.notify_all();
+        mo::Allocator::cleanupThreadSpecificAllocator();
+        mo::ThreadSpecificQueue::cleanup();
     }
     volatile bool&                 _paused_flag;
     boost::condition_variable_any& _cv;
@@ -140,9 +143,10 @@ void Thread::main() {
                 delay   = (*_inner_loop)();
             }
             if (delay) {
-                auto start_time     = mo::getCurrentTime();
+                const auto start_time     = mo::getCurrentTime();
+                auto delta = mo::Time_t(mo::getCurrentTime() - start_time);
                 bool processed_work = false;
-                while (mo::Time_t(mo::getCurrentTime() - start_time) < mo::Time_t(mo::ms * delay)) {
+                while (delta < mo::Time_t(mo::ms * delay)) {
                     if (_work_queue.try_dequeue(f)) {
                         processed_work = true;
                         f();
@@ -153,6 +157,7 @@ void Thread::main() {
                     }
                     if (mo::ThreadSpecificQueue::runOnce())
                         processed_work = true;
+                    delta = mo::Time_t(mo::getCurrentTime() - start_time);
                     if (!processed_work) {
                         boost::this_thread::sleep_for(boost::chrono::milliseconds(delay) - boost::chrono::milliseconds(
                                                                                                std::chrono::duration_cast<std::chrono::milliseconds>(mo::getCurrentTime() - start_time).count()));
@@ -162,6 +167,8 @@ void Thread::main() {
                 auto size = mo::ThreadSpecificQueue::size();
                 if (size)
                     MO_LOG(trace) << size << " events unprocessed on thread " << _name << " [" << getThreadId(_thread) << "]";
+                if(size > 100)
+                    mo::ThreadSpecificQueue::run();
             }
             if (!_run) {
                 _paused = true;
@@ -174,6 +181,8 @@ void Thread::main() {
         } catch (...) {
         }
     }
+
+    ctx.reset();
 }
 
 size_t Thread::getId() const {

@@ -104,7 +104,7 @@ namespace Buffer {
             return _data_buffer.end();
         if (!ts) {
             if (_data_buffer.size())
-                return _data_buffer.rbegin().base();
+                return (--this->_data_buffer.end());
             return _data_buffer.end();
         }
         return _data_buffer.find(*ts);
