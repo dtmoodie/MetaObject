@@ -370,6 +370,9 @@ public:
     inline void deallocate(unsigned char* ptr, size_t num_bytes);
 private:
     int ref_count = 0;
+#ifndef NDEBUG
+    std::map<void*, std::string> m_allocation_callstack;
+#endif
 };
 
 class MO_EXPORTS CpuMemoryPool {

@@ -66,6 +66,10 @@ bool NNStreamBuffer<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, 
         this->_current_timestamp = itr->first.ts;
         this->_current_frame_number = itr->first.fn;
         if(fn_) *fn_ = this->_current_frame_number;
+        this->_ts = itr->first.ts;
+        this->_fn = itr->first.fn;
+        this->_ctx  = itr->first.ctx;
+        this->_cs   = itr->first.cs;
         this->prune();
         data = itr->second;
         return true;
@@ -80,6 +84,10 @@ bool NNStreamBuffer<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, O
     if (itr != this->_data_buffer.end()) {
         this->_current_timestamp = itr->first.ts;
         this->_current_frame_number = itr->first.fn;
+        this->_ts = itr->first.ts;
+        this->_fn = itr->first.fn;
+        this->_ctx  = itr->first.ctx;
+        this->_cs   = itr->first.cs;
         if (ts_) *ts_ = this->_current_timestamp;
         this->prune();
         data = itr->second;

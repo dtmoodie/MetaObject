@@ -8,21 +8,320 @@
 #include <boost/lexical_cast.hpp>
 #include <iomanip>
 #include <map>
-namespace mo {
 
+#define ASSERT_SERIALIZABLE(TYPE) static_assert(mo::IO::Text::imp::stream_serializable<TYPE>::value, "Checking stream serializable for " #TYPE)
+
+namespace mo {
 namespace IO {
+namespace Text {
+namespace imp {
+    inline size_t textSize(const std::string& str);
+    inline size_t textSize(int value);
+    // test if stream serialization of a type is possible
+    template <class T>
+    struct stream_deserializable {
+        template <class U>
+        static constexpr auto check(std::istream* is, U* val) -> decltype(*is >> *val, size_t()) {
+            return 0;
+        }
+        template <class U>
+        static constexpr int check(...) {
+            return 0;
+        }
+        static const bool value = sizeof(check<T>((std::istream*)0, (T*)0)) == sizeof(size_t);
+    };
+
+    template <class T>
+    struct stream_serializable {
+        template <class U>
+        static constexpr auto check(std::ostream* os, U* val) -> decltype(*os << *val, size_t(0)) {
+            return 0;
+        }
+        template <class U>
+        static constexpr int check(...) {
+            return 0;
+        }
+        static const bool value = sizeof(check<T>((std::ostream*)0, (T*)0)) == sizeof(size_t);
+    };
+    template <class T1, class T2>
+    struct stream_serializable<std::pair<T1, T2> > {
+        static const bool value = stream_serializable<T1>::value && stream_serializable<T2>::value;
+    };
+} // mo::IO::Text::imp
+} // mo::IO::Text
+
+    template <class T, class Enable = void>
+    struct Traits {};
+
+    template <class T, class Enable = void>
+    struct PODTraits {};
+
+    template <class T>
+    struct PODTraits<T, typename std::enable_if<Text::imp::stream_serializable<T>::value && Text::imp::stream_deserializable<T>::value>::type> {
+        enum {
+            // used in containers to determine the number of elements that can be displayed per line
+            ElemsPerLine = 4,
+        };
+        static inline size_t textSize(const T& obj) {
+            return Text::imp::textSize(obj);
+        }
+        static inline bool serialize(std::ostream& os, const T& obj) {
+            os << obj;
+            return true;
+        }
+        static inline bool deserialize(std::istream& is, T& obj) {
+            is >> obj;
+            return true;
+        }
+    };
+
+    template <class T>
+    struct PODTraits<T, typename std::enable_if<Text::imp::stream_serializable<T>::value && !Text::imp::stream_deserializable<T>::value>::type> {
+        enum {
+            // used in containers to determine the number of elements that can be displayed per line
+            ElemsPerLine = 4,
+        };
+        static inline size_t textSize(const T& obj) {
+            return Text::imp::textSize(obj);
+        }
+        static inline bool serialize(std::ostream& os, const T& obj) {
+            os << obj;
+            return true;
+        }
+        static inline bool deserialize(std::istream& is, T& obj) {
+            (void)is;
+            (void)obj;
+            return false;
+        }
+    };
+
+    template <class T>
+    struct PODTraits<T, typename std::enable_if<!Text::imp::stream_serializable<T>::value && Text::imp::stream_deserializable<T>::value>::type> {
+        enum {
+            // used in containers to determine the number of elements that can be displayed per line
+            ElemsPerLine = 4,
+        };
+        static inline size_t textSize(const T& obj) {
+            return Text::imp::textSize(obj);
+        }
+        static inline bool serialize(std::ostream& os, const T& obj) {
+            (void)os;
+            (void)obj;
+            return false;
+        }
+        static inline bool deserialize(std::istream& is, T& obj) {
+            is >> obj;
+            return true;
+        }
+    };
+
+    template <class T>
+    struct PODTraits<T, typename std::enable_if<!Text::imp::stream_serializable<T>::value && !Text::imp::stream_deserializable<T>::value>::type> {
+        enum {
+            // used in containers to determine the number of elements that can be displayed per line
+            ElemsPerLine = 4,
+        };
+        static inline size_t textSize(const T& obj) {
+            (void)obj;
+            return 0;
+        }
+        static inline bool serialize(std::ostream& os, const T& obj) {
+            (void)os;
+            (void)obj;
+            return false;
+        }
+        static inline bool deserialize(std::istream& is, T& obj) {
+            (void)is;
+            (void)obj;
+            return false;
+        }
+    };
+
+    template <class T, int N, class Enable = void>
+    struct TraitSelector {
+        typedef typename TraitSelector<T, N - 1, void>::Trait Trait;
+    };
+
+    template <class T>
+    struct TraitSelector<T, 0, void> {
+        typedef PODTraits<T> Trait;
+    };
+
+    template <class T>
+    struct ContainerTrait {
+        enum {
+            Default = 1
+        };
+    };
+
+    template <class T>
+    struct ContainerTrait<std::vector<T> > {
+        enum {
+            // used in containers to determine the number of elements that can be displayed per line
+            ElemsPerLine = 4,
+            Default      = 0
+        };
+        static inline size_t textSize(const std::vector<T>& obj) {
+            size_t output = 0;
+            for (size_t i = 0; i < obj.size(); ++i) {
+                output += textSize(obj[i]);
+            }
+            return output;
+        }
+        static inline bool serialize(std::ostream& os, const std::vector<T>& obj) {
+            os << "size = " << obj.size();
+            os << '\n';
+
+            size_t max_size = 0;
+            for (const auto& item : obj) {
+                max_size = std::max<size_t>(max_size, mo::IO::TraitSelector<T, 3, void>::Trait::textSize(item));
+            }
+            max_size += 4;
+            // index is 3 digits plus '=' sign
+            int i                       = 0;
+            int max_cols                = 300 / (max_size + 5);
+            if (max_cols == 0) max_cols = 1;
+            max_cols                    = std::max<int>(max_cols, mo::IO::TraitSelector<T, 3, void>::Trait::ElemsPerLine);
+
+            while (i < obj.size()) // row
+            {
+                int col_count = 0;
+                while (i < obj.size() && col_count < max_cols) // col
+                {
+                    os << std::setw(3) << std::setfill('0') << i;
+                    os << '=';
+                    int size = mo::IO::TraitSelector<T, 3, void>::Trait::textSize(obj[i]);
+                    for (int j = size; j < max_size; ++j)
+                        os << ' ';
+                    mo::IO::TraitSelector<T, 3, void>::Trait::serialize(os, obj[i]);
+                    os << ' ';
+                    ++col_count;
+                    ++i;
+                }
+                os << '\n';
+            }
+            return true;
+        }
+        static inline bool deserialize(std::istream& is, std::vector<T>& obj) {
+            std::string str;
+            is >> str;
+            auto pos = str.find('=');
+            if (pos != std::string::npos) {
+                size_t index = boost::lexical_cast<size_t>(str.substr(0, pos));
+
+                std::stringstream ss;
+                ss << str.substr(pos + 1);
+                T value;
+                if (mo::IO::TraitSelector<T, 3, void>::Trait::deserialize(ss, value)) {
+                    if (index < obj.size()) {
+                        obj[index] = value;
+                    } else {
+                        obj.resize(index + 1);
+                        obj[index] = value;
+                    }
+                    return true;
+                }
+            }
+            return false;
+        }
+    };
+    template <class T1, class T2>
+    struct ContainerTrait<std::pair<T1, T2> > {
+        enum {
+            // used in containers to determine the number of elements that can be displayed per line
+            ElemsPerLine = 4,
+            Default      = 0
+        };
+        static inline size_t textSize(const std::pair<T1, T2>& obj) {
+            size_t output = 0;
+            for (size_t i = 0; i < obj.size(); ++i) {
+                output += textSize(obj[i]);
+            }
+            return output;
+        }
+        static inline bool serialize(std::ostream& os, const std::pair<T1, T2>& obj) {
+            if (mo::IO::TraitSelector<T1, 3, void>::Trait::serialize(os, obj.first)) {
+                os << ',';
+                if (mo::IO::TraitSelector<T2, 3, void>::Trait::serialize(os, obj.second)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+        static inline bool deserialize(std::istream& is, std::pair<T1, T2>& obj) {
+            if (mo::IO::TraitSelector<T1, 3, void>::Trait::deserialize(is, obj.first)) {
+                char c;
+                is >> c;
+                if (mo::IO::TraitSelector<T2, 3, void>::Trait::deserialize(is, obj.second)) {
+                    return true;
+                }
+            }
+            return false;
+        }
+    };
+    template <class K, class T>
+    struct ContainerTrait<std::map<K, T> > {
+        enum {
+            // used in containers to determine the number of elements that can be displayed per line
+            ElemsPerLine = 4,
+            Default      = 0
+        };
+        static inline size_t textSize(const std::map<K, T>& obj) {
+            size_t output = 0;
+            for (size_t i = 0; i < obj.size(); ++i) {
+                output += textSize(obj[i]);
+            }
+            return output;
+        }
+        static inline bool serialize(std::ostream& os, const std::map<K, T>& obj) {
+            int count = 0;
+            for (const auto& pair : obj) {
+                if (count != 0)
+                    os << ", ";
+                mo::IO::TraitSelector<K, 3, void>::Trait::serialize(os, pair.first);
+                os << '=';
+                mo::IO::TraitSelector<T, 3, void>::Trait::serialize(os, pair.second);
+                ++count;
+            }
+            return true;
+        }
+        static inline bool deserialize(std::istream& is, std::map<K, T>& obj) {
+            std::string str;
+            is >> str;
+            auto pos = str.find('=');
+            if (pos == std::string::npos)
+                return false;
+            K key;
+            T value;
+            {
+                std::stringstream ss;
+                ss << str.substr(0, pos);
+                mo::IO::TraitSelector<K, 3, void>::Trait::deserialize(ss, key);
+            }
+            {
+                std::stringstream ss;
+                ss << str.substr(pos + 1);
+                mo::IO::TraitSelector<T, 3, void>::Trait::deserialize(ss, value);
+            }
+            obj[key] = value;
+            return true;
+        }
+    };
+
+    template <class T>
+    struct TraitSelector<T, 1, typename std::enable_if<ContainerTrait<T>::Default == 0>::type> {
+        typedef ContainerTrait<T> Trait;
+    };
     namespace Text {
         namespace imp {
-            inline size_t textSize(const std::string& str)
-            {
+            inline size_t textSize(const std::string& str) {
                 return str.size();
             }
-            inline size_t textSize(int value)
-            {
+            inline size_t textSize(int value) {
                 size_t sign = 0;
                 if (value < 0)
                     sign = 1;
-                value = abs(value);
+                value    = abs(value);
                 if (value > 1000)
                     return 4 + sign;
                 if (value > 100)
@@ -32,286 +331,28 @@ namespace IO {
                 return 1 + sign;
             }
 
-            // test if stream serialization of a type is possible
-            template <class T>
-            struct stream_deserializable {
-                template <class U>
-                static constexpr auto check(std::stringstream is, U val, int) -> decltype(is >> val, size_t())
-                {
-                    return 0;
-                }
-                template <class U>
-                static constexpr int check(std::stringstream is, U val, size_t)
-                {
-                    return 0;
-                }
-                static const bool value = sizeof(check<T>(std::stringstream(), std::declval<T>(), 0)) == sizeof(size_t);
-            };
-
-            template <class T>
-            struct stream_serializable {
-                template <class U>
-                static constexpr auto check(std::stringstream is, U val, int) -> decltype(is << val, size_t())
-                {
-                    return 0;
-                }
-                template <class U>
-                static constexpr int check(std::stringstream is, U val, size_t)
-                {
-                    return 0;
-                }
-                static const bool value = sizeof(check<T>(std::stringstream(), std::declval<T>(), 0)) == sizeof(size_t);
-            };
-
-            template <class T1, class T2>
-            struct stream_serializable<std::pair<T1, T2> > {
-                static const bool value = stream_serializable<T1>::value && stream_serializable<T2>::value;
-            };
-
-            template <class T1, class T2>
-            struct stream_deserializable<std::pair<T1, T2> > {
-                static const bool value = stream_deserializable<T1>::value && stream_deserializable<T2>::value;
-            };
-
             template <typename T>
-            bool Serialize_imp(std::ostream& os, T const& obj, mo::_counter_<0> dummy)
-            {
-                (void)dummy;
-                return false;
-            }
-
-            template <typename T, int P>
-            bool Serialize_imp(std::ostream& os, T const& obj, mo::_counter_<P> dummy)
-            {
-                return Serialize_imp(os, obj, --dummy);
-            }
-
-            template <typename T>
-            bool DeSerialize_imp(std::istream& os, T const& obj, mo::_counter_<0> dummy)
-            {
-                (void)dummy;
-                return false;
-            }
-
-            template <typename T, int P>
-            bool DeSerialize_imp(std::istream& os, T const& obj, mo::_counter_<P> dummy)
-            {
-                return DeSerialize_imp(os, obj, --dummy);
-            }
-
-            template <typename T>
-            auto Serialize_imp(std::ostream& os, T const& obj, mo::_counter_<10> dummy) -> decltype(os << obj, bool())
-            {
-                os << obj;
-                return true;
-            }
-
-            template <typename T1, typename T2>
-            typename std::enable_if<stream_serializable<std::pair<T1, T2> >::value, bool>::type Serialize_imp(std::ostream& is, const std::pair<T1, T2>& obj, mo::_counter_<10> dumm7)
-            {
-                is << obj.first;
-                is << ',';
-                is << obj.second;
-                return true;
-            }
-            template <typename T>
-            auto DeSerialize_imp(std::istream& is, T& obj, mo::_counter_<10> dummy) -> decltype(is >> obj, bool())
-            {
-                is >> obj;
-                return true;
-            }
-            template <typename T1, typename T2>
-            bool DeSerialize_imp(std::istream& is, std::pair<T1, T2>& obj, typename std::enable_if<stream_serializable<std::pair<T1, T2> >::value, mo::_counter_<10> >::type)
-            {
-                is >> obj.first;
-                char c;
-                is >> c;
-                is >> obj.second;
-                return true;
-            }
-
-            template <typename T>
-            auto Serialize_imp(std::ostream& os, std::vector<T> const& obj, mo::_counter_<10> dummy) -> decltype(os << std::declval<T>(), bool())
-            {
-                os << "size = " << obj.size();
-                os << '\n';
-
-                size_t max_size = 0;
-                for (const auto& item : obj) {
-                    max_size = std::max<size_t>(max_size, textSize(item));
-                }
-                max_size += 4;
-                // index is 3 digits plus '=' sign
-                int i = 0;
-                int max_cols = 300 / (max_size + 5);
-                if(max_cols == 0) max_cols = 1;
-
-                while (i < obj.size()) // row
-                {
-                    int col_count = 0;
-                    while (i < obj.size() && col_count < max_cols) // col
-                    {
-                        os << std::setw(3) << std::setfill('0') << i;
-                        os << '=';
-                        int size = textSize(obj[i]);
-                        for (int j = size; j < max_size; ++j)
-                            os << ' ';
-                        os << obj[i] << ' ';
-                        ++col_count;
-                        ++i;
-                    }
-                    os << '\n';
-                }
-                return true;
-            }
-
-            template <typename T>
-            auto DeSerialize_imp(std::istream& is, std::vector<T>& obj, mo::_counter_<10> dummy) -> decltype(is >> std::declval<T>(), bool())
-            {
-                std::string str;
-                is >> str;
-                auto pos = str.find('=');
-                if (pos != std::string::npos) {
-                    size_t index = boost::lexical_cast<size_t>(str.substr(0, pos));
-                    T value = boost::lexical_cast<T>(str.substr(pos + 1));
-                    if (index < obj.size()) {
-
-                    } else {
-                        obj.resize(index + 1);
-                        obj[index] = value;
-                    }
-                    return true;
-                }
-                return false;
-            }
-
-            template <class T1, class T2>
-            typename std::enable_if<stream_serializable<T1>::value && stream_serializable<T2>::value, bool>::type
-            DeSerialize_imp(std::istream& is, std::map<T1, T2>& obj, mo::_counter_<10> dummy)
-            {
-                /*auto start = is.tellg();
-            auto idx = start;
-            char c = is.get();
-            bool found = false;
-            while(is.good()){
-                if(c == '='){
-                    found = true;
-                    break;
-                }
-                idx = is.tellg();
-                c = is.get();
-            }
-            if(!found) return;
-            is.seekg(start);
-            std::stringstream ss;
-            while(is.tellg() != idx)
-                ss << is.get();
-            T1 key;
-            DeSerialize_imp(ss, key, 0);
-            ss.str(std::string());
-            is.get();
-            while(is.good())
-                ss << is.get();
-            T2 value;
-            DeSerialize_imp(ss, value, 0);
-            obj[key] = value;*/
-
-                std::string str;
-                is >> str;
-                auto pos = str.find('=');
-                if (pos == std::string::npos)
-                    return false;
-                T1 key;
-                T2 value;
-                {
-                    std::stringstream ss;
-                    ss << str.substr(0, pos);
-                    DeSerialize_imp(ss, key, mo::_counter_<10>());
-                }
-                {
-                    std::stringstream ss;
-                    ss << str.substr(pos + 1);
-                    DeSerialize_imp(ss, value, mo::_counter_<10>());
-                }
-                obj[key] = value;
-                return true;
-            }
-
-            template <class T1, class T2>
-            typename std::enable_if<stream_serializable<T1>::value && stream_serializable<T2>::value, bool>::type
-            Serialize_imp(std::ostream& os, std::map<T1, T2> const& obj, mo::_counter_<10> dummy)
-            {
-                int count = 0;
-                for (const auto& pair : obj) {
-                    if (count != 0)
-                        os << ", ";
-                    //os << pair.first << "=" << pair.second;
-                    Serialize_imp(os, pair.first, mo::_counter_<10>());
-                    os << '=';
-                    Serialize_imp(os, pair.second, mo::_counter_<10>());
-                    ++count;
-                }
-                return true;
-            }
-
-            template <typename T>
-            bool DeSerialize_imp(std::stringstream& ss, std::vector<T>& param, typename std::enable_if<stream_deserializable<T>::value, mo::_counter_<10> >::type dummy)
-            {
-                auto pos = ss.str().find('=');
-                if (pos != std::string::npos) {
-                    std::string str;
-                    std::getline(ss, str, '=');
-                    size_t index = boost::lexical_cast<size_t>(str);
-                    std::getline(ss, str);
-                    T value = boost::lexical_cast<T>(str);
-                    if (index >= param.size()) {
-                        param.resize(index + 1);
-                    }
-                    param[index] = value;
-                    return true;
-                } else {
-                    param.clear();
-                    std::string size;
-                    std::getline(ss, size, '[');
-                    if (size.size()) {
-                        param.reserve(boost::lexical_cast<size_t>(size));
-                    }
-                    T value;
-                    char ch; // For flushing the ','
-                    while (ss >> value) {
-                        ss >> ch;
-                        param.push_back(value);
-                    }
-                }
-                return true;
-            }
-
-            template <typename T>
-            bool Serialize(ITAccessibleParam<T>* param, std::stringstream& ss)
-            {
+            bool Serialize(ITAccessibleParam<T>* param, std::stringstream& ss) {
                 bool success = false;
-                try{
+                try {
                     auto token = param->access();
-                    success = Serialize_imp(ss, token(), mo::_counter_<10>());
+                    success = TraitSelector<T, 3>::Trait::serialize(ss, token());
                     token.setValid(false); // read only access
-                }catch(...){
-                    
+                } catch (...) {
                 }
 
                 return success;
             }
 
             template <typename T>
-            bool DeSerialize(ITAccessibleParam<T>* param, std::stringstream& ss)
-            {
+            bool DeSerialize(ITAccessibleParam<T>* param, std::stringstream& ss) {
                 auto token = param->access();
-                return DeSerialize_imp(ss, token(), mo::_counter_<10>());
+                return TraitSelector<T, 3>::Trait::deserialize(ss, token());
             }
         } // namespace imp
 
         template <typename T>
-        bool WrapSerialize(IParam* param, std::stringstream& ss)
-        {
+        bool WrapSerialize(IParam* param, std::stringstream& ss) {
             auto typed = dynamic_cast<ITAccessibleParam<T>*>(param);
             if (typed) {
                 if (imp::Serialize(typed, ss)) {
@@ -322,8 +363,7 @@ namespace IO {
         }
 
         template <typename T>
-        bool WrapDeSerialize(IParam* param, std::stringstream& ss)
-        {
+        bool WrapDeSerialize(IParam* param, std::stringstream& ss) {
             auto typed = dynamic_cast<ITAccessibleParam<T>*>(param);
             if (typed) {
                 if (imp::DeSerialize(typed, ss)) {
@@ -336,8 +376,7 @@ namespace IO {
 
         template <class T>
         struct Policy {
-            Policy()
-            {
+            Policy() {
                 SerializationFactory::instance()->setTextSerializationFunctions(
                     TypeInfo(typeid(T)),
                     std::bind(&WrapSerialize<T>, std::placeholders::_1, std::placeholders::_2),
@@ -352,8 +391,7 @@ namespace IO {
     struct MetaParam<T, N, void> : public MetaParam<T, N - 1, void> { \
         static IO::Text::Policy<T> _text_policy;                      \
         MetaParam(const char* name)                                   \
-            : MetaParam<T, N - 1, void>(name)                         \
-        {                                                             \
+            : MetaParam<T, N - 1, void>(name) {                       \
             (void)&_text_policy;                                      \
         }                                                             \
     };                                                                \

@@ -66,6 +66,11 @@ IParam* IParam::setFrameNumber(size_t fn) {
     return this;
 }
 
+IParam* IParam::setTimestamp(const mo::Time_t& ts){
+    this->_ts = ts;
+    return this;
+}
+
 IParam* IParam::setCoordinateSystem(const std::shared_ptr<ICoordinateSystem>& system) {
     this->_cs = system;
     return this;
@@ -232,9 +237,15 @@ ParamFlags IParam::appendFlags(ParamFlags flags_) {
 bool IParam::checkFlags(ParamFlags flag) const {
     return (_flags & flag) != 0;
 }
+
+ParamFlags IParam::getFlags() const{
+    return _flags;
+}
+
 bool IParam::modified() const {
     return _modified;
 }
+
 void IParam::modified(bool value) {
     _modified = value;
 }

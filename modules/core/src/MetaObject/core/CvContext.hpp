@@ -5,6 +5,7 @@ namespace mo {
 class CvContext : public CudaContext {
 public:
     CvContext(int priority);
+    virtual ~CvContext() override;
     virtual void setName(const std::string& name);
     virtual cv::cuda::Stream& getStream();
     virtual cudaStream_t      getCudaStream() const;

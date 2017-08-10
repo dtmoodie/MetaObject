@@ -214,6 +214,7 @@ public:
     ParamFlags toggleFlags(ParamFlags flags_); // Toggle the value of a flag, returns previous flags
     bool checkFlags(ParamFlags flag) const; // Check if a single flag is set
     ParamFlags setFlags(ParamFlags flags_); // Set flags of the Param, return previous values
+    ParamFlags getFlags() const;
     bool modified() const; // Check if has been modified
     void modified(bool value); // Set if it has been modified
 protected:

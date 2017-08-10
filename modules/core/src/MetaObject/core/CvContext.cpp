@@ -7,6 +7,10 @@ CvContext::CvContext(int priority)
     , m_cv_stream(cv::cuda::StreamAccessor::wrapStream(this->m_cuda_stream)) {
 }
 
+CvContext::~CvContext(){
+    m_cv_stream.waitForCompletion();
+}
+
 void CvContext::setName(const std::string& name) {
     mo::setStreamName(name.c_str(), getCudaStream());
     Context::setName(name);
