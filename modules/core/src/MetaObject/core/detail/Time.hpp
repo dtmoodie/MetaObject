@@ -35,7 +35,6 @@ MO_EXPORTS void setTimeSource(GetTime_f timefunc);
 } // namespace mo
 
 namespace std{
-    MO_EXPORTS std::ostream& operator <<(std::ostream& lhs, const std::chrono::system_clock::time_point& rhs);
     MO_EXPORTS std::ostream& operator <<(std::ostream& lhs, const std::chrono::high_resolution_clock::time_point& rhs);
     MO_EXPORTS std::ostream& operator <<(std::ostream& lhs, const std::chrono::milliseconds& rhs);
     MO_EXPORTS std::ostream& operator <<(std::ostream& lhs, const std::chrono::microseconds& rhs);
