@@ -15,10 +15,7 @@ namespace mo{
 }
 
 namespace std{
-std::ostream& operator <<(std::ostream& lhs, const std::chrono::system_clock::time_point& rhs){
-    lhs << rhs.time_since_epoch().count() << " ns";
-    return lhs;
-}
+
 std::ostream& operator <<(std::ostream& lhs, const std::chrono::high_resolution_clock::time_point& rhs) {
     lhs << rhs.time_since_epoch().count() << " ns";
     return lhs;

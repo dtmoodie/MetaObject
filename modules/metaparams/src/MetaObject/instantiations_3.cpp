@@ -23,6 +23,19 @@
 #else
 #  define MO_EXPORTS
 #endif
+namespace cv{
+    template<class T>
+    std::ostream& operator<<(std::ostream& os, const cv::Point_<T>& pt){
+        os << pt.x << ", " << pt.y;
+        return os;
+    }
+    template<class T>
+    std::ostream& operator<<(std::ostream& os, const cv::Point3_<T>& pt){
+        os << pt.x << ", " << pt.y << ", " << pt.z;
+        return os;
+    }
+
+}
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 INSTANTIATE_META_PARAM(cv::Point2f);
 INSTANTIATE_META_PARAM(cv::Point2d);
