@@ -111,7 +111,7 @@ public:
             _ptr = block->allocate(total, elemSize);
             if (_ptr) {
                 *ptr = _ptr;
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
                 MO_LOG(trace) << "Allocating " << total << " bytes from pre-allocated memory block number "
                            << index << " at address: " << static_cast<void*>(_ptr);
 #endif
@@ -125,7 +125,7 @@ public:
                 new mo::CpuMemoryBlock(std::max(_initial_block_size / 2, total))));
         _ptr = (*blocks.rbegin())->allocate(total, elemSize);
         if (_ptr) {
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
             MO_LOG(debug) << "Allocating " << total
                        << " bytes from newly created memory block at address: " << static_cast<void*>(_ptr);
 #endif
@@ -140,7 +140,7 @@ public:
         for (auto& block : blocks) {
             _ptr = block->allocate(num_bytes, sizeof(uchar));
             if (_ptr) {
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
                 MO_LOG(trace) << "Allocating " << num_bytes << " bytes from pre-allocated memory block number "
                            << index << " at address: " << static_cast<void*>(_ptr);
 #endif
@@ -148,7 +148,7 @@ public:
             }
             ++index;
         }
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
         MO_LOG(trace) << "Creating new block of page locked memory for allocation.";
 #endif
         blocks.push_back(
@@ -156,7 +156,7 @@ public:
                 new mo::CpuMemoryBlock(std::max(_initial_block_size / 2, num_bytes))));
         _ptr = (*blocks.rbegin())->allocate(num_bytes, sizeof(uchar));
         if (_ptr) {
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
             MO_LOG(debug) << "Allocating " << num_bytes
                        << " bytes from newly created memory block at address: " << static_cast<void*>(_ptr);
 #endif
@@ -167,7 +167,7 @@ public:
     bool deallocate(void* ptr, size_t total) {
         for (auto itr : blocks) {
             if (ptr >= itr->Begin() && ptr < itr->End()) {
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
                 MO_LOG(trace) << "Releasing memory block of size "
                            << total << " at address: " << ptr;
 #endif
@@ -234,7 +234,7 @@ public:
             if(std::get<2>(*itr) == total) {
                 *ptr = std::get<0>(*itr);
                 deallocate_stack.erase(itr);
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
                 MO_LOG(trace) << "[CPU] Reusing memory block of size "
                            << total / (1024 * 1024) << " MB. Total usage: "
                            << total_usage /(1024*1024) << " MB";
@@ -243,7 +243,7 @@ public:
             }
         }
         this->total_usage += total;
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
         MO_LOG(trace) << "[CPU] Allocating block of size "
                    << total / (1024 * 1024) << " MB. Total usage: "
                    << total_usage / (1024 * 1024) << " MB";
@@ -256,14 +256,16 @@ public:
             if(std::get<2>(*itr) == total) {
 
                 deallocate_stack.erase(itr);
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
                 MO_LOG(trace) << "[CPU] Reusing memory block of size "
                            << total / (1024 * 1024) << " MB. Total usage: "
                            << total_usage /(1024*1024) << " MB";
+#endif
                 return std::get<0>(*itr);
             }
         }
         this->total_usage += total;
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
         MO_LOG(trace) << "[CPU] Allocating block of size "
                    << total / (1024 * 1024) << " MB. Total usage: "
                    << total_usage / (1024 * 1024) << " MB";
@@ -274,7 +276,7 @@ public:
     }
 
     bool deallocate(void* ptr, size_t total) {
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
         MO_LOG(trace) << "Releasing " << total / (1024 * 1024) << " MB to lazy deallocation pool";
 #endif
         deallocate_stack.emplace_back(static_cast<unsigned char*>(ptr), clock(), total);
@@ -292,7 +294,7 @@ private:
             if((time - std::get<1>(*itr)) > deallocation_delay) {
                 total_usage -= std::get<2>(*itr);
                 if(!destructor) {
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
 #ifdef _MSC_VER
                     MO_LOG(trace) << "[CPU] DeAllocating block of size " << std::get<2>(*itr) / (1024 * 1024)
                                << " MB. Which was stale for " << time - std::get<1>(*itr)
@@ -407,7 +409,6 @@ cv::UMatData* CpuStackPolicy::allocate(int dims, const int* sizes, int type,
         u->flags |= cv::UMatData::USER_ALLOCATED;
     } else {
         void* ptr = 0;
-        //CpuDelayedDeallocationPool::instance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
         CpuMemoryStack::threadInstance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
 
         u->data = u->origdata = static_cast<uchar*>(ptr);

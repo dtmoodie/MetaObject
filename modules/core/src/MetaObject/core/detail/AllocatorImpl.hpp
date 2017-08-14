@@ -82,7 +82,7 @@ bool PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(cv::cuda::GpuMat* mat
             mat->step     = stride;
             mat->refcount = static_cast<int*>(cv::fastMalloc(sizeof(int)));
             memoryUsage += mat->step * rows;
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
             MO_LOG(trace) << "[GPU] Reusing block of size (" << rows << "," << cols << ") "
                           << mat->step * rows / (1024 * 1024) << " MB from memory block. Total usage: "
                           << memoryUsage / (1024 * 1024) << " MB";
@@ -101,7 +101,7 @@ bool PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(cv::cuda::GpuMat* mat
         mat->step     = stride;
         mat->refcount = static_cast<int*>(cv::fastMalloc(sizeof(int)));
         memoryUsage += mat->step * rows;
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
         MO_LOG(trace) << "[GPU] Reusing block of size (" << rows << "," << cols << ") "
                       << mat->step * rows / (1024 * 1024)
                       << " MB from memory block. Total usage: "
@@ -137,7 +137,7 @@ unsigned char* PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t size
     }
     // If we get to this point, then no memory was found, need to allocate new memory
     blocks.push_back(std::shared_ptr<GpuMemoryBlock>(new GpuMemoryBlock(std::max(_initial_block_size / 2, sizeNeeded))));
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
     MO_LOG(trace) << "[GPU] Expanding memory pool by "
                   << std::max(_initial_block_size / 2, sizeNeeded) / (1024 * 1024)
                   << " MB";
@@ -197,7 +197,7 @@ bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
         mat->data     = best_candidate->second->ptr;
         mat->step     = stride;
         mat->refcount = static_cast<int*>(cv::fastMalloc(sizeof(int)));
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
         MO_LOG(trace) << "[GPU] Reusing block of size (" << rows << "," << cols << ") "
                       << mat->step * rows / (1024 * 1024) << " MB at " << static_cast<void*>(best_candidate->second->ptr)
                       << " which was stale for "
@@ -215,7 +215,7 @@ bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
             << " Total allocation: " << elemSize * cols * rows / (1024 * 1024) << " MB");
 
         this->memoryUsage += mat->step * rows;
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
         MO_LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") "
                       << mat->step * rows / (1024 * 1024) << " MB at "
                       << static_cast<void*>(mat->data) << ". Total usage: "
@@ -224,7 +224,7 @@ bool StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
     } else {
         CV_CUDEV_SAFE_CALL(cudaMalloc(&mat->data, elemSize * cols * rows));
         this->memoryUsage += mat->step * rows;
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
         MO_LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") "
                       << cols * rows / (1024 * 1024) << " MB at "
                       << static_cast<void*>(mat->data) << ". Total usage: "
@@ -256,7 +256,7 @@ unsigned char* StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t siz
             ptr = itr->ptr;
             this->memoryUsage += sizeNeeded;
             current_allocations[ptr] = sizeNeeded;
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
             MO_LOG(trace) << "[GPU] Allocating block of size " << itr->size / (1024 * 1024)
                           << "MB from the memory stack which was stale for " << (time - itr->free_time) * 1000 / CLOCKS_PER_SEC
                           << " ms at " << static_cast<void*>(itr->ptr);
@@ -268,7 +268,7 @@ unsigned char* StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t siz
     CV_CUDEV_SAFE_CALL(cudaMalloc(&ptr, sizeNeeded));
     this->memoryUsage += sizeNeeded;
     current_allocations[ptr] = sizeNeeded;
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
     MO_LOG(trace) << "[GPU] Allocating block of size " << sizeNeeded / (1024 * 1024)
                   << "MB at " << static_cast<void*>(ptr);
 #endif
@@ -326,7 +326,7 @@ bool NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
     if (rows > 1 && cols > 1) {
         CV_CUDEV_SAFE_CALL(cudaMallocPitch(&mat->data, &mat->step, elemSize * cols, rows));
         memoryUsage += mat->step * rows;
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
         MO_LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") "
                       << mat->step * rows / (1024 * 1024) << " MB. Total usage: "
                       << memoryUsage / (1024 * 1024) << " MB";
@@ -334,7 +334,7 @@ bool NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(
     } else {
         CV_CUDEV_SAFE_CALL(cudaMalloc(&mat->data, elemSize * cols * rows));
         memoryUsage += elemSize * cols * rows;
-#ifdef _DEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
         MO_LOG(trace) << "[GPU] Allocating block of size (" << rows << "," << cols << ") "
                       << cols * rows / (1024 * 1024) << " MB. Total usage: "
                       << memoryUsage / (1024 * 1024) << " MB";
@@ -470,7 +470,7 @@ RefCountPolicyImpl<Allocator, cv::cuda::GpuMat>::~RefCountPolicyImpl() {
     //CV_Assert(ref_count == 0 && "Warning, trying to delete allocator while cv::cuda::GpuMat's still reference it");
     if (ref_count != 0) {
         MO_LOG(warning) << "Trying to delete allocator while " << ref_count << " cv::cuda::GpuMats still reference it";
-#ifndef NDEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
         for(const auto& itr : this->m_allocation_callstack){
             MO_LOG(debug) << itr.second;
         }
@@ -481,7 +481,7 @@ template <class Allocator>
 bool RefCountPolicyImpl<Allocator, cv::cuda::GpuMat>::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize) {
     if (Allocator::allocate(mat, rows, cols, elemSize)) {
         ++ref_count;
-#ifndef NDEBUG
+#if defined(_DEBUG) && defined(DEBUG_ALLOCATION)
         this->m_allocation_callstack[static_cast<void*>(mat->datastart)] = mo::printCallstack(3, true);
 #endif
         return true;
