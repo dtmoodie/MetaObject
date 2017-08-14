@@ -9,7 +9,7 @@ struct ParamInfo {
                   const std::string& name_,
                   const std::string& tooltip_ = "",
                   const std::string description_ = "",
-                  ParamFlags type_flags_ = Control_e,
+                  ParamFlags type_flags_ = ParamFlags::Control_e,
                   const std::string& init = ""):
         data_type(type_), name(name_),
         tooltip(tooltip_), description(description_),
@@ -21,6 +21,6 @@ struct ParamInfo {
     std::string tooltip;
     std::string description;
     std::string initial_value;
-    ParamFlags type_flags;
+    EnumClassBitset<ParamFlags> type_flags;
 };
 }

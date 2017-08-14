@@ -98,11 +98,11 @@ std::string IMetaObjectInfo::Print(Verbosity verbosity) const
             ss <<  param->name;
             for(int i = 0; i < longest_name - static_cast<int>(param->name.size()); ++i)
                 ss << " ";
-            if(param->type_flags & Control_e)
+            if(param->type_flags.test(ParamFlags::Control_e))
                 ss << "C";
-            if(param->type_flags & Input_e)
+            if(param->type_flags.test(ParamFlags::Input_e))
                 ss << "I";
-            if(param->type_flags & Output_e)
+            if(param->type_flags.test(ParamFlags::Output_e))
                 ss << "O";
 
             ss << " [" << mo::Demangle::typeToName(param->data_type) << "]\n";

@@ -35,7 +35,7 @@ std::vector<IParam*> VariableManager::getOutputParams(TypeInfo type)
     std::vector<IParam*> valid_outputs;
     for(auto itr = pimpl->_Params.begin(); itr != pimpl->_Params.end(); ++itr)
     {
-        if(itr->second->getTypeInfo() == type && itr->second->checkFlags(Output_e))
+        if(itr->second->getTypeInfo() == type && itr->second->checkFlags(ParamFlags::Output_e))
         {
             valid_outputs.push_back(itr->second);
         }
@@ -56,7 +56,7 @@ std::vector<IParam*> VariableManager::getAllOutputParams()
     std::vector<IParam*> output;
     for(auto& itr : pimpl->_Params)
     {
-        if(itr.second->checkFlags(Output_e))
+        if(itr.second->checkFlags(ParamFlags::Output_e))
         {
             output.push_back(itr.second);
         }

@@ -7,7 +7,7 @@ namespace Buffer
 
 template<class T>
 NNStreamBuffer<T>::NNStreamBuffer(const std::string& name):
-    ITParam<T>(name, Buffer_e),
+    ITParam<T>(name, ParamFlags::Buffer_e),
     StreamBuffer<T>(name)
 {
 

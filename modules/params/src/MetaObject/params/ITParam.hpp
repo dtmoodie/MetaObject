@@ -202,7 +202,7 @@ public:
     typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
     typedef TSlot<TUpdateSig_t>   TUpdateSlot_t;
     // brief ITParam default constructor, passes args to IParam
-    ITParam(const std::string& name = "", ParamFlags flags = Control_e,
+    ITParam(const std::string& name = "", ParamFlags flags = ParamFlags::Control_e,
         OptionalTime_t ts = OptionalTime_t(), Context* ctx = nullptr, size_t fn = 0)
         : IParam(name, flags, ts, ctx, fn) {
     }
@@ -228,7 +228,7 @@ public:
     typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
     typedef TSlot<TUpdateSig_t>   TUpdateSlot_t;
     // brief ITParam default constructor, passes args to IParam
-    ITParam(const std::string& name = "", ParamFlags flags = Control_e,
+    ITParam(const std::string& name = "", ParamFlags flags = ParamFlags::Control_e,
         OptionalTime_t ts = OptionalTime_t(), Context* ctx = nullptr, size_t fn = 0)
         : IParam(name, flags, ts, ctx, fn) {
     }

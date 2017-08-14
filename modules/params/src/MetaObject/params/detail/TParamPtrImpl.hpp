@@ -140,7 +140,7 @@ IParam* TParamOutput<T>::emitUpdate(const OptionalTime_t& ts_,
     const std::shared_ptr<ICoordinateSystem>&             cs_,
     UpdateFlags                                           flags_) {
     if (this->ptr) {
-        if (this->checkFlags(mo::Unstamped_e)) {
+        if (this->checkFlags(mo::ParamFlags::Unstamped_e)) {
             data = ParamTraits<T>::copy(*(this->ptr));
         } else {
             ParamTraits<T>::move(data, std::move(*(this->ptr)));

@@ -8,7 +8,7 @@ namespace cereal {
 template<class AR>
 void load(AR& ar, std::vector<mo::IParam*>& Params) {
     for (auto& param : Params) {
-        if (param->checkFlags(mo::Output_e) || param->checkFlags(mo::Input_e))
+        if (param->checkFlags(mo::ParamFlags::Output_e) || param->checkFlags(mo::ParamFlags::Input_e))
             continue;
         auto func1 = mo::SerializationFactory::instance()->getLoadFunction(param->getTypeInfo(), ar);
         if (func1) {
@@ -23,7 +23,7 @@ void load(AR& ar, std::vector<mo::IParam*>& Params) {
 template<class AR>
 void save(AR& ar, std::vector<mo::IParam*> const& Params) {
     for (auto& param : Params) {
-        if (param->checkFlags(mo::Output_e) || param->checkFlags(mo::Input_e))
+        if (param->checkFlags(mo::ParamFlags::Output_e) || param->checkFlags(mo::ParamFlags::Input_e))
             continue;
         auto func1 = mo::SerializationFactory::instance()->getSaveFunction(param->getTypeInfo(), ar);
         if (func1) {

@@ -46,11 +46,11 @@ namespace Buffer {
 
         CircularBuffer(T&& init, const std::string& name = "",
             OptionalTime_t ts   = {},
-            ParamFlags     type = Buffer_e);
+            ParamFlags     type = ParamFlags::Buffer_e);
 
         CircularBuffer(const std::string& name = "",
             OptionalTime_t                ts   = {},
-            ParamFlags                    type = Buffer_e);
+            ParamFlags                    type = ParamFlags::Buffer_e);
 
         virtual bool getData(InputStorage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
             Context* ctx = nullptr, size_t* fn_ = nullptr);

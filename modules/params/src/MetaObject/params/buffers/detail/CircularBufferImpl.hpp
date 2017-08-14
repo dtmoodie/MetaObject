@@ -5,8 +5,8 @@ namespace Buffer {
     template <class T>
     CircularBuffer<T>::CircularBuffer(T&& init, const std::string& name, OptionalTime_t ts, ParamFlags type)
         : ITInputParam<T>(name)
-        , ITParam<T>(name, mo::Buffer_e)
-        , IParam(name, mo::Buffer_e) {
+        , ITParam<T>(name, mo::ParamFlags::Buffer_e)
+        , IParam(name, mo::ParamFlags::Buffer_e) {
         (void)&_circular_buffer_constructor;
         (void)&_circular_buffer_param_constructor;
         _data_buffer.set_capacity(10);
@@ -16,8 +16,8 @@ namespace Buffer {
     template <class T>
     CircularBuffer<T>::CircularBuffer(const std::string& name, OptionalTime_t ts, ParamFlags type)
         : ITInputParam<T>(name)
-        , ITParam<T>(name, mo::Buffer_e)
-        , IParam(name, mo::Buffer_e) {
+        , ITParam<T>(name, mo::ParamFlags::Buffer_e)
+        , IParam(name, mo::ParamFlags::Buffer_e) {
         _data_buffer.set_capacity(10);
     }
 

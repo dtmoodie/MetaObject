@@ -31,14 +31,14 @@
     static void _list_param_info(std::vector<mo::ParamInfo*>& info, mo::_counter_<__COUNTER__> dummy) \
     {                                                                                                 \
         static mo::ParamInfo s_info(mo::TypeInfo(typeid(mo::argument_type<void(type_)>::type)),       \
-            #name, "", "", mo::Input_e, #init);                                                       \
+            #name, "", "", mo::ParamFlags::Input_e, #init);                                                       \
         info.push_back(&s_info);                                                                      \
         _list_param_info(info, --dummy);                                                              \
     }
 
 #define OPTIONAL_INPUT(type, name, init)  \
     INPUT(type, name, init)               \
-    APPEND_FLAGS(name, mo::Optional_e)
+    APPEND_FLAGS(name, mo::ParamFlags::Optional_e)
 
 #define APPEND_FLAGS(name, flags)                                       \
     void _init_params(bool firstInit, mo::_counter_<__COUNTER__> dummy) \
@@ -85,7 +85,7 @@
 
 #define SOURCE(type, name, init) \
     OUTPUT(type, name, init)     \
-    APPEND_FLAGS(name, mo::Source_e)
+    APPEND_FLAGS(name, mo::ParamFlags::Source_e)
 
 #else
 #define PARAM(type, name, init)

@@ -409,7 +409,7 @@ std::vector<InputParam*> IMetaObject::getInputs(const TypeInfo& type_filter, con
 {
     std::vector<InputParam*> output;
     for (auto param : _pimpl->_params) {
-        if (param.second->checkFlags(Input_e)) {
+        if (param.second->checkFlags(ParamFlags::Input_e)) {
             if (param.second->getTypeInfo() == type_filter) {
                 if (name_filter.size()) {
                     if (name_filter.find(param.first) != std::string::npos)
@@ -423,7 +423,7 @@ std::vector<InputParam*> IMetaObject::getInputs(const TypeInfo& type_filter, con
         }
     }
     for (auto param : _pimpl->_implicit_params) {
-        if (param.second->checkFlags(Input_e)) {
+        if (param.second->checkFlags(ParamFlags::Input_e)) {
             if (param.second->getTypeInfo() == type_filter) {
                 if (name_filter.size()) {
                     if (name_filter.find(param.first) != std::string::npos)
@@ -466,7 +466,7 @@ std::vector<IParam*> IMetaObject::getOutputs(const std::string& name_filter) con
 {
     std::vector<IParam*> output;
     for (auto param : _pimpl->_params) {
-        if (param.second->checkFlags(Output_e)) {
+        if (param.second->checkFlags(ParamFlags::Output_e)) {
             if (name_filter.size()) {
                 if (param.first.find(name_filter) != std::string::npos) {
                     output.push_back(param.second);
@@ -477,7 +477,7 @@ std::vector<IParam*> IMetaObject::getOutputs(const std::string& name_filter) con
         }
     }
     for (auto param : _pimpl->_implicit_params) {
-        if (param.second->checkFlags(Output_e)) {
+        if (param.second->checkFlags(ParamFlags::Output_e)) {
             if (name_filter.size()) {
                 if (param.first.find(name_filter) != std::string::npos) {
                     output.push_back(param.second.get());
@@ -494,7 +494,7 @@ std::vector<IParam*> IMetaObject::getOutputs(const TypeInfo& type_filter, const 
 {
     std::vector<IParam*> output;
     for (auto param : _pimpl->_params) {
-        if (param.second->checkFlags(Output_e)) {
+        if (param.second->checkFlags(ParamFlags::Output_e)) {
             if (name_filter.size()) {
                 if (name_filter.find(param.first) != std::string::npos) {
                     if (param.second->getTypeInfo() == type_filter)
@@ -507,7 +507,7 @@ std::vector<IParam*> IMetaObject::getOutputs(const TypeInfo& type_filter, const 
         }
     }
     for (auto param : _pimpl->_implicit_params) {
-        if (param.second->checkFlags(Output_e)) {
+        if (param.second->checkFlags(ParamFlags::Output_e)) {
             if (name_filter.size()) {
                 if (name_filter.find(param.first) != std::string::npos) {
                     if (param.second->getTypeInfo() == type_filter)
@@ -558,7 +558,7 @@ bool IMetaObject::connectInput(InputParam* input,
     if (input && input->acceptsInput(output)) {
         // Check contexts to see if a buffer needs to be setup
         auto output_ctx = output->getContext();
-        if (type_ & ForceBufferedConnection_e || input->checkFlags(mo::RequestBuffered_e) || output->checkFlags(mo::RequestBuffered_e)) {
+        if (type_ & ForceBufferedConnection_e || input->checkFlags(mo::ParamFlags::RequestBuffered_e) || output->checkFlags(mo::ParamFlags::RequestBuffered_e)) {
             type_ = ParamType(type_ & ~ForceBufferedConnection_e);
             auto buffer = Buffer::BufferFactory::CreateProxy(output, type_);
             if (!buffer) {
@@ -648,7 +648,7 @@ IParam* IMetaObject::addParam(std::shared_ptr<IParam> param)
     }
 #endif
     _pimpl->_implicit_params[param->getName()] = param;
-    if (param->checkFlags(Input_e)) {
+    if (param->checkFlags(ParamFlags::Input_e)) {
         _pimpl->_input_Params[param->getName()] = dynamic_cast<InputParam*>(param.get());
     }
     param->registerUpdateNotifier(&(this->_pimpl->_slot_param_updated));
@@ -669,7 +669,7 @@ IParam* IMetaObject::addParam(IParam* param)
     }
 #endif
     _pimpl->_params[param->getName()] = param;
-    if (param->checkFlags(Input_e)) {
+    if (param->checkFlags(ParamFlags::Input_e)) {
         _pimpl->_input_Params[param->getName()] = dynamic_cast<InputParam*>(param);
     }
     auto Connection = param->registerUpdateNotifier(&(this->_pimpl->_slot_param_updated));

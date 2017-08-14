@@ -5,7 +5,7 @@ namespace mo {
 namespace Buffer {
     template <class T>
     StreamBuffer<T>::StreamBuffer(const std::string& name)
-        : ITParam<T>(name, Buffer_e)
+        : ITParam<T>(name, ParamFlags::Buffer_e)
         , _time_padding(mo::ms * 500)
         , _frame_padding(100) {
     }
@@ -84,7 +84,7 @@ namespace Buffer {
     template <class T>
     BlockingStreamBuffer<T>::BlockingStreamBuffer(const std::string& name)
         : StreamBuffer<T>(name)
-        , ITParam<T>(name, mo::Buffer_e)
+        , ITParam<T>(name, mo::ParamFlags::Buffer_e)
         , _size(100) {
     }
 

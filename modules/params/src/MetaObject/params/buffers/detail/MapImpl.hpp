@@ -5,7 +5,7 @@ namespace Buffer {
     template <class T>
     Map<T>::Map(const std::string& name)
         : ITInputParam<T>(name) {
-        this->appendFlags(Buffer_e);
+        this->appendFlags(ParamFlags::Buffer_e);
     }
 
     template <class T>

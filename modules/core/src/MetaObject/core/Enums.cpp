@@ -2,7 +2,7 @@
 #include "MetaObject/logging/logging.hpp"
 using namespace mo;
 
-#define TYPE_NAME_HELPER(name) {name##_e, #name }
+#define TYPE_NAME_HELPER(name) {ParamFlags::name##_e, #name }
 
 static const std::vector<std::pair<ParamFlags, std::string>> type_flag_map = {
     TYPE_NAME_HELPER(None),
@@ -20,10 +20,10 @@ static const std::vector<std::pair<ParamFlags, std::string>> type_flag_map = {
     TYPE_NAME_HELPER(Source)
 };
 
-std::string mo::paramFlagsToString(ParamFlags type) {
+std::string mo::paramFlagsToString(EnumClassBitset<ParamFlags> type) {
     std::string output;
     for(const auto& itr : type_flag_map){
-        if((itr.first & type) != 0){
+        if(type.test(itr.first)){
             if(output.empty()){
                 output = itr.second;
             }else{
@@ -34,22 +34,24 @@ std::string mo::paramFlagsToString(ParamFlags type) {
     return output;
 }
 
-ParamFlags mo::stringToParamFlags(const std::string& str) {
+EnumClassBitset<ParamFlags> mo::stringToParamFlags(const std::string& str) {
     std::string rest = str;
-    ParamFlags output = None_e;
+    EnumClassBitset<ParamFlags> output;
     auto pos = rest.find('|');
     while(pos != std::string::npos){
         std::string substr = rest.substr(0, pos);
         rest = rest.substr(pos + 1);
         for(const auto& itr : type_flag_map){
             if(substr == itr.second)
-                output = ParamFlags(itr.first | output);
+                //output = ParamFlags(itr.first | output);
+                output.flip(itr.first);
         }
         pos = rest.find('|');
     }
     for(const auto& itr : type_flag_map){
         if(rest == itr.second)
-            output = ParamFlags(itr.first | output);
+            //output = ParamFlags(itr.first | output);
+            output.flip(itr.first);
     }
     return output;
 }

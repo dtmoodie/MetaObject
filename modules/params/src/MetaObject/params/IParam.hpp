@@ -66,7 +66,7 @@ MO_KEYWORD_INPUT(coordinate_system, const std::shared_ptr<ICoordinateSystem>)
 MO_KEYWORD_INPUT(context, Context*)
 MO_KEYWORD_INPUT(param_name, std::string)
 MO_KEYWORD_INPUT(tree_root, std::string)
-MO_KEYWORD_INPUT(param_flags, ParamFlags)
+MO_KEYWORD_INPUT(param_flags, EnumClassBitset<ParamFlags>)
 
 #if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__)
 #if defined(metaobject_params_EXPORTS)
@@ -151,12 +151,12 @@ public:
         _fn     = GetKeywordInputDefault<tag::frame_number>(-1, args...);
         _ctx    = GetKeywordInputDefault<tag::context>(nullptr, args...);
         //_cs        = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...); // TODO keyword specialization for std::shared_ptrs
-        _flags     = GetKeywordInputDefault<tag::param_flags>(mo::Control_e, args...);
+        _flags     = GetKeywordInputDefault<tag::param_flags>(EnumClassBitset<ParamFlags>(mo::ParamFlags::Control_e), args...);
         _tree_root = GetKeywordInputDefault<tag::tree_root>("", args...);
     }
 
     IParam(const std::string& name_  = "",
-        ParamFlags            flags_ = Control_e,
+        ParamFlags            flags_ = ParamFlags::Control_e,
         OptionalTime_t        ts_    = OptionalTime_t(),
         Context*              ctx_   = nullptr,
         size_t                fn_    = std::numeric_limits<size_t>::max());
@@ -210,11 +210,12 @@ public:
     Mutex_t& mtx(); // Get reference to Param mutex.  If setMtx was called, this will reference the mutex that was set, otherwise one will be created
     void setMtx(Mutex_t* mtx); // Use this to share a mutex with an owning object, ie a parent.
 
-    ParamFlags appendFlags(ParamFlags flags_); // Append a flag to the Param, return previous values
-    ParamFlags toggleFlags(ParamFlags flags_); // Toggle the value of a flag, returns previous flags
+    EnumClassBitset<ParamFlags> appendFlags(ParamFlags flags_); // Append a flag to the Param, return previous values
+    EnumClassBitset<ParamFlags> toggleFlags(ParamFlags flags_); // Toggle the value of a flag, returns previous flags
     bool checkFlags(ParamFlags flag) const; // Check if a single flag is set
-    ParamFlags setFlags(ParamFlags flags_); // Set flags of the Param, return previous values
-    ParamFlags getFlags() const;
+    EnumClassBitset<ParamFlags> setFlags(ParamFlags flags_); // Set flags of the Param, return previous values
+    EnumClassBitset<ParamFlags> setFlags(EnumClassBitset<ParamFlags> flags_); // Set flags of the Param, return previous values
+    EnumClassBitset<ParamFlags> getFlags() const;
     bool modified() const; // Check if has been modified
     void modified(bool value); // Set if it has been modified
 protected:
@@ -227,7 +228,7 @@ protected:
     Context*                           _ctx;
     std::string                        _name;
     std::string                        _tree_root;
-    ParamFlags                         _flags;
+    EnumClassBitset<ParamFlags>        _flags;
     UpdateSignal_t                     _update_signal;
     DeleteSignal_t                     _delete_signal;
     mo::Mutex_t*                       _mtx         = nullptr;

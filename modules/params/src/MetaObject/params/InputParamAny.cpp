@@ -7,7 +7,7 @@ InputParamAny::InputParamAny(const std::string& name):
 {
     this->setName(name);
     _void_type_info = mo::TypeInfo(typeid(void));
-    this->appendFlags(mo::Input_e);
+    this->appendFlags(mo::ParamFlags::Input_e);
 }
 
 bool InputParamAny::getInput(OptionalTime_t ts, size_t* fn)

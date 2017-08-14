@@ -36,7 +36,7 @@ public:
      */
     TParamPtr(const std::string& name      = "",
         T*                       ptr_      = nullptr,
-        ParamFlags               type      = Control_e,
+        ParamFlags               type      = ParamFlags::Control_e,
         bool                     ownsData_ = false);
     ~TParamPtr();
 

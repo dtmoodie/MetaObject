@@ -47,7 +47,7 @@ IParam::IParam(const std::string& name_, ParamFlags flags_, OptionalTime_t ts, C
 
 IParam::~IParam() {
     _delete_signal(this);
-    if (checkFlags(OwnsMutex_e))
+    if (checkFlags(ParamFlags::OwnsMutex_e))
         delete _mtx;
 }
 
@@ -193,15 +193,18 @@ IParam* IParam::emitUpdate(const IParam& other) {
 Mutex_t& IParam::mtx() {
     if (_mtx == nullptr) {
         _mtx   = new boost::recursive_timed_mutex();
-        _flags = ParamFlags(_flags | OwnsMutex_e);
+        //_flags = ParamFlags(_flags | ParamFlags::OwnsMutex_e);
+        //_flags[ParamFlags::OwnsMutex_e] = 0;
+        _flags.set(ParamFlags::OwnsMutex_e);
     }
     return *_mtx;
 }
 
 void IParam::setMtx(boost::recursive_timed_mutex* mtx_) {
-    if (_mtx && checkFlags(OwnsMutex_e)) {
+    if (_mtx && checkFlags(ParamFlags::OwnsMutex_e)) {
         delete _mtx;
-        _flags = ParamFlags(_flags & OwnsMutex_e);
+        //_flags[ParamFlags::OwnsMutex_e] = 0;
+        _flags.reset(ParamFlags::OwnsMutex_e);
     }
     _mtx = mtx_;
 }
@@ -222,23 +225,32 @@ bool IParam::hasSubscriptions() const {
     return _subscribers != 0;
 }
 
-ParamFlags IParam::setFlags(ParamFlags flags_) {
+EnumClassBitset<ParamFlags> IParam::setFlags(ParamFlags flags_) {
     auto prev = _flags;
-    _flags    = flags_;
+    //_flags    = flags_;
+    _flags.set(flags_);
     return prev;
 }
 
-ParamFlags IParam::appendFlags(ParamFlags flags_) {
-    ParamFlags prev = _flags;
-    _flags          = ParamFlags(_flags | flags_);
+EnumClassBitset<ParamFlags> IParam::setFlags(EnumClassBitset<ParamFlags> flags_) {
+    auto prev = _flags;
+    _flags = flags_;
+    return prev;
+}
+
+EnumClassBitset<ParamFlags> IParam::appendFlags(ParamFlags flags_) {
+    auto prev = _flags;
+    //_flags          = ParamFlags(_flags | flags_);
+    _flags.set(flags_);
     return prev;
 }
 
 bool IParam::checkFlags(ParamFlags flag) const {
-    return (_flags & flag) != 0;
+    //return (_flags & flag) != 0;
+    return _flags.test(flag);
 }
 
-ParamFlags IParam::getFlags() const{
+EnumClassBitset<ParamFlags> IParam::getFlags() const{
     return _flags;
 }
 

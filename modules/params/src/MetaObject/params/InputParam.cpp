@@ -2,7 +2,7 @@
 using namespace mo;
 
 InputParam::InputParam():
-    IParam("", mo::Input_e)
+    IParam("", mo::ParamFlags::Input_e)
 {
 
 }

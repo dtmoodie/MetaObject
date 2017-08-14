@@ -11,7 +11,7 @@ template <typename T>
 TInputParamPtr<T>::TInputParamPtr(const std::string& name, Input_t* user_var_, Context* ctx)
     : _user_var(user_var_)
     , ITInputParam<T>(name, ctx)
-    , IParam(name, mo::Input_e) {
+    , IParam(name, mo::ParamFlags::Input_e) {
 }
 
 template <typename T>
@@ -68,7 +68,7 @@ void TInputParamPtr<T>::setUserDataPtr(Input_t* user_var_) {
 
 template <typename T>
 void TInputParamPtr<T>::onInputUpdate(ConstStorageRef_t data, IParam* param, Context* ctx, OptionalTime_t ts, size_t fn, const std::shared_ptr<ICoordinateSystem>& cs, UpdateFlags fg) {
-    if (fg == mo::BufferUpdated_e && param->checkFlags(mo::Buffer_e)) {
+    if (fg == mo::BufferUpdated_e && param->checkFlags(mo::ParamFlags::Buffer_e)) {
         ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
         IParam::emitUpdate(ts, ctx, fn, cs, fg);
         return;

@@ -20,7 +20,7 @@ struct argument_type<T(U)> {
     static void _list_param_info(std::vector<mo::ParamInfo*>& info, mo::_counter_<N> dummy)     \
     {                                                                                           \
         static mo::ParamInfo s_info(mo::TypeInfo(typeid(mo::argument_type<void(type_)>::type)), \
-            #name, "", "", mo::Control_e, #init);                                               \
+            #name, "", "", mo::ParamFlags::Control_e, #init);                                               \
         info.push_back(&s_info);                                                                \
         _list_param_info(info, --dummy);                                                        \
     }                                                                                           \
