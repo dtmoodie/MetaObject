@@ -147,9 +147,6 @@ static inline cstring utf8(const std::string& p) {
 static inline wcstring utf16(const std::wstring& p) {
     return p;
 }
-
-#else
-
 #endif
 
 static std::string MakeFunctionNameStandOut(std::string origName) {
