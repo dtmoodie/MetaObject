@@ -106,6 +106,9 @@ struct mo::Thread::ThreadSanitizer {
         _cv.notify_all();
         mo::Allocator::cleanupThreadSpecificAllocator();
         mo::ThreadSpecificQueue::cleanup();
+        std::function<void(void)> f;
+        while(m_thread._work_queue.try_dequeue(f)){}
+        while(m_thread._event_queue.try_dequeue(f)){}
     }
     volatile bool&                 _paused_flag;
     boost::condition_variable_any& _cv;
