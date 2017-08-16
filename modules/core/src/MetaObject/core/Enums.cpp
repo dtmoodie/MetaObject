@@ -1,5 +1,6 @@
 #include "MetaObject/core/detail/Enums.hpp"
 #include "MetaObject/logging/logging.hpp"
+#include <vector>
 using namespace mo;
 
 #define TYPE_NAME_HELPER(name) {name##_e, #name }

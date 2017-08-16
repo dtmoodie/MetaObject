@@ -67,9 +67,7 @@ void mo::InitLogging() {
         boost::log::keywords::iteration = boost::log::expressions::reverse,
         boost::log::keywords::depth     = 2);
 
-    boost::log::formatter consoleFmt = boost::log::expressions::format("%1%<%2%,%3%> %4%")
-                                       % consoleFmtTimeStamp // 1
-                                       % fmtThreadId // 2
+    boost::log::formatter consoleFmt = boost::log::expressions::format("%1%<%2%")
                                        % fmtSeverity // 3
                                        % boost::log::expressions::smessage; // 4
 

@@ -9,7 +9,7 @@ namespace mo
     class MO_EXPORTS ThreadSpecificQueue
     {
     public:
-        struct ScopedNotifier{
+        struct MO_EXPORTS ScopedNotifier{
             ScopedNotifier(size_t tid);
             ~ScopedNotifier();
         private:

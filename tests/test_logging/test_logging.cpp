@@ -75,12 +75,12 @@ BOOST_AUTO_TEST_CASE(ten_threaded_logging_first_10, *boost::unit_test::timeout(1
     for (int j = 0; j < 10; ++j) {
         threads.emplace_back(new boost::thread([j]() {
             for (int i = 0; i < 5000; ++i) {
-                LOG_FIRST_N(debug, 10) << "Logging from thread " << j << ": " << i;
+                MO_LOG_FIRST_N(debug, 10) << "Logging from thread " << j << ": " << i;
             }
         }));
     }
     for (int i = 0; i < 5000; ++i) {
-        LOG_FIRST_N(debug, 10) << "Main thread iteration " << i;
+		MO_LOG_FIRST_N(debug, 10) << "Main thread iteration " << i;
     }
     for (auto thread : threads) {
         thread->join();
