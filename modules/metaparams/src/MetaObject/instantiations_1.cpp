@@ -22,7 +22,7 @@
 #endif
 #include <cereal/types/string.hpp>
 #include <cereal/types/map.hpp>
-#include "MetaParameters.hpp"
+
 
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
@@ -51,7 +51,3 @@ INSTANTIATE_META_PARAM(std::string);
 typedef std::map<std::string, std::string> StringMap;
 INSTANTIATE_META_PARAM(StringMap);
 
-void mo::MetaParams::initialize()
-{
-
-}

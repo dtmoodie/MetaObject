@@ -238,10 +238,8 @@ if(WITH_WT)
 find_package(Wt QUIET)
   if(Wt_FOUND)
     find_path(Wt_BIN_DIR
-      NAMES wt.dll wtd.dll
-      PATHS ${Wt_DIR} "${Wt_INCLUDE_DIR}/../"
-      ENV ${Wt_DIR}
-      PATH PATH_SUFFIXES bin
+      wt.dll
+      HINTS "${Wt_INCLUDE_DIR}/../bin"
     )
 
     if(Wt_BIN_DIR)

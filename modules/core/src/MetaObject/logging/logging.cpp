@@ -31,10 +31,11 @@
 #include <boost/log/utility/setup/file.hpp>
 
 #ifdef _WIN32
+#include <windows.h> // This needs to be included before DbgHelp.h
+
 #include "DbgHelp.h"
 #include <WinBase.h>
 #include <codecvt>
-#include <windows.h>
 #endif
 
 #include <algorithm>
@@ -400,7 +401,7 @@ ExceptionWithCallStack<std::string>::ExceptionWithCallStack(const std::string& m
 const char* mo::ExceptionWithCallStack<std::string>::callStack() const {
     return m_callStack.c_str();
 }
-
+#ifndef _MSC_VER
 ThrowStream::ThrowStream()
     : msg(s_msg_buffer) {
 }
@@ -420,6 +421,7 @@ ThrowStream& mo::ThrowStream::operator()(int error, const char* file, int line, 
 const char* ThrowStream::callStack() const {
     return callstack.c_str();
 }
+
 thread_local ThrowStream ThrowStream::s_instance;
 thread_local std::stringstream ThrowStream::s_msg_buffer;
 
@@ -490,4 +492,5 @@ ThrowStream_error& ThrowStream_error::operator()(int error, const char* file, in
     MO_LOG(error) << msg.str();
     return *this;
 }
+#endif
 }
