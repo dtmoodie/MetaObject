@@ -4,6 +4,7 @@
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/TSlot.hpp"
+#include "MetaObject/core/detail/Time.hpp"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include <MetaObject/thread/boost_thread.hpp>
@@ -14,7 +15,7 @@ using namespace mo;
 
 struct MetaObjectFactory::impl {
     struct PluginInfo {
-        PluginInfo(const std::string& path, const std::string& state = "success",
+        PluginInfo(const std::string& path = "", const std::string& state = "success",
             unsigned int time = 0, const char* info = nullptr)
             : m_path(path)
             , m_state(state)
@@ -234,13 +235,16 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath) {
     if (!boost::filesystem::is_regular_file(fullPluginPath)) {
         return false;
     }
+    impl::PluginInfo plugin_info;
     std::string plugin_name = boost::filesystem::path(fullPluginPath).stem().string();
+    plugin_info.m_path = fullPluginPath;
+    mo::Time_t start = mo::getCurrentTime();
     HMODULE     handle      = LoadLibrary(fullPluginPath.c_str());
     if (handle == nullptr) {
         auto err = GetLastError();
         MO_LOG(debug) << "Failed to load " << plugin_name << " due to: [" << err << "] " << GetLastErrorAsString();
-        _pimpl->plugins.push_back(fullPluginPath + " - failed");
-
+        plugin_info.m_state = "failed";
+        _pimpl->plugins.push_back(plugin_info);
         return false;
     }
     typedef const char*(*InfoFunctor)();
@@ -248,6 +252,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath) {
     InfoFunctor info = (InfoFunctor)GetProcAddress(handle, "getPluginBuildInfo");
     if (info) {
         MO_LOG(debug) << info();
+        plugin_info.m_build_info = info();
     }
 
     typedef IPerModuleInterface* (*moduleFunctor)();
@@ -268,7 +273,11 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath) {
         }
         setupObjectConstructors(moduleInterface);
     }
-    _pimpl->plugins.push_back(plugin_name + " - success");
+    mo::Time_t end = mo::getCurrentTime();
+    //_pimpl->plugins.push_back(plugin_name + " - success");
+    plugin_info.m_state = "success";
+    plugin_info.m_load_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    _pimpl->plugins.push_back(plugin_info);
     return true;
 }
 #else

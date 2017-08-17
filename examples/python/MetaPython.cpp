@@ -1,6 +1,6 @@
 #include "boost/python.hpp"
 #include "MetaObject/Python/Python.hpp"
-#include "MetaObject/Logging/Log.hpp"
+#include "MetaObject/logging/logging.hpp"
 #include <iostream>
 #include "MetaObject/object/MetaObjectFactory.hpp"
 #include <boost/python/to_python_converter.hpp>
