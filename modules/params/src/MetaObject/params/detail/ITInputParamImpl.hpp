@@ -153,6 +153,8 @@ namespace mo
     // ---- protected functions
     template<class T>
     void ITInputParam<T>::onInputDelete(IParam const* param){
+        if((this->_input && this->_input != param) || (this->_shared_input && this->_shared_input.get() != param))
+            return;
         mo::Mutex_t::scoped_lock lock(this->mtx());
         this->_shared_input.reset();
         this->_input = nullptr;
