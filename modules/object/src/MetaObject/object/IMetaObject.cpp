@@ -166,6 +166,10 @@ void IMetaObject::Init(bool firstInit)
                     auto connection_ = slot->connect(signal);
                     if (connection_) {
                         connection.connection = connection_;
+                    }else{
+                        MO_LOG(info) << "Unable to reconnect signal \"" << 
+                            connection.signal_name << "\" <" << signal->getSignature().name() << "> to slot \"" << 
+                            connection.slot_name   << "\" <" << slot->getSignature().name() << ">";
                     }
                 }
             }
@@ -674,7 +678,7 @@ IParam* IMetaObject::addParam(IParam* param)
     }
     auto Connection = param->registerUpdateNotifier(&(this->_pimpl->_slot_param_updated));
     _pimpl->_sig_param_added(this, param);
-    this->addConnection(Connection, "param_update", "param_updated",
+    this->addConnection(Connection, "param_updated", "param_updated",
         this->_pimpl->_slot_param_updated.getSignature(), this);
     return param;
 }
