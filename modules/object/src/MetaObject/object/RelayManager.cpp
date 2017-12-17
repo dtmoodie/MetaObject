@@ -53,10 +53,10 @@ void RelayManager::connectSignal(IMetaObject* obj, const std::string& signal_nam
     auto signals = obj->getSignals(signal_name);
     for(auto signal : signals)
     {
-        auto Connection = connect(signal, signal_name, obj);
-        if(Connection)
+        auto connection = connect(signal, signal_name, obj);
+        if(connection)
         {
-            obj->addConnection(Connection, signal_name, signal_name, signal->getSignature(), nullptr);
+            obj->addConnection(std::move(connection), signal_name, signal_name, signal->getSignature(), nullptr);
         }
     }
 }
@@ -66,10 +66,10 @@ void RelayManager::connectSlot(IMetaObject* obj, const std::string& slot_name)
     auto slots = obj->getSlots(slot_name);
     for (auto slot : slots)
     {
-        auto Connection = connect(slot, slot_name, obj);
-        if (Connection)
+        auto connection = connect(slot, slot_name, obj);
+        if (connection)
         {
-            obj->addConnection(Connection, slot_name, slot_name, slot->getSignature(), nullptr);
+            obj->addConnection(std::move(connection), slot_name, slot_name, slot->getSignature(), nullptr);
         }
     }
 }
@@ -79,10 +79,10 @@ bool RelayManager::connectSignal(IMetaObject* obj, const std::string& name, cons
 	auto signal = obj->getSignal(name, type);
 	if (signal)
 	{
-		auto Connection = connect(signal, name, obj);
-		if (Connection)
+		auto connection = connect(signal, name, obj);
+		if (connection)
 		{
-			obj->addConnection(Connection, name, "", signal->getSignature());
+			obj->addConnection(std::move(connection), name, "", signal->getSignature());
 			return true;
 		}
 	}
@@ -93,10 +93,10 @@ bool RelayManager::connectSlot(IMetaObject* obj, const std::string& name, const 
 	auto slot = obj->getSlot(name, type);
 	if (slot)
 	{
-		auto Connection = connect(slot, name, obj);
-		if (Connection)
+		auto connection = connect(slot, name, obj);
+		if (connection)
 		{
-			obj->addConnection(Connection, "", name, type, nullptr);
+			obj->addConnection(std::move(connection), "", name, type, nullptr);
 		}
 	}
 	return false;

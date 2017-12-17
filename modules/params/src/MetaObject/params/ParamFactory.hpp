@@ -4,28 +4,30 @@
 #include "MetaObject/detail/TypeInfo.hpp"
 #include <functional>
 #include <memory>
+#include <vector>
 namespace mo {
 class IParam;
-// Only include types that it makes sense to dynamically construct.
-// No reason to create a TParamPtr most of the time because it is used to wrap
-// user owned data
-
-
 class MO_EXPORTS ParamFactory {
 public:
-    typedef std::function<IParam*(void)> create_f;
+    typedef std::function<std::shared_ptr<IParam>(void)> create_f;
     static ParamFactory* instance();
 
+    ParamFactory();
+    ~ParamFactory();
     // Each specialization of a Param must have a unique type
-    void RegisterConstructor(TypeInfo data_type, create_f function, ParamType Param_type);
-    void RegisterConstructor(TypeInfo Param_type, create_f function);
+    void registerConstructor(const TypeInfo& data_type, create_f function, ParamType Param_type);
+    void registerConstructor(const TypeInfo& Param_type, create_f function);
 
     // Give datatype and Param type enum
-    std::shared_ptr<IParam> create(TypeInfo data_type, ParamType Param_type);
+    std::shared_ptr<IParam> create(const TypeInfo& data_type, ParamType Param_type);
+
     // Must give exact Param type, such as TParam<int>
-    std::shared_ptr<IParam> create(TypeInfo Param_type);
+    std::shared_ptr<IParam> create(const TypeInfo& Param_type);
+
+    std::vector<TypeInfo> listConstructableDataTypes(ParamType type);
+    std::vector<std::pair<TypeInfo, ParamType>> listConstructableDataTypes();
 private:
     struct impl;
-    std::shared_ptr<impl> pimpl;
+    std::unique_ptr<impl> m_pimpl;
 };
 }

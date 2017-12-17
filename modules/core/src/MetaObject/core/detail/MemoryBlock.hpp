@@ -15,22 +15,25 @@ protected:
     inline void _deallocate(unsigned char* data);
 };
 
-template<class XPU> class MO_EXPORTS MemoryBlock: public XPU {
+template<class XPU> 
+class MO_EXPORTS MemoryBlock: public XPU {
 public:
     MemoryBlock(size_t size_);
     ~MemoryBlock();
 
     unsigned char* allocate(size_t size_, size_t elemSize_);
     bool deAllocate(unsigned char* ptr);
-    unsigned char* Begin() const;
-    unsigned char* End() const;
-    size_t Size() const;
+    const unsigned char* begin() const;
+    const unsigned char* end() const;
+    unsigned char* begin();
+    unsigned char* end();
+    size_t size() const;
 protected:
-    unsigned char* begin;
-    unsigned char* end;
-    size_t size;
-    std::map<unsigned char*, unsigned char*> allocatedBlocks;
+    unsigned char* m_begin;
+    unsigned char* m_end;
+    std::map<unsigned char*, unsigned char*> m_allocated_blocks;
 };
+
 typedef MemoryBlock<GPUMemory> GpuMemoryBlock;
 typedef MemoryBlock<CPUMemory> CpuMemoryBlock;
 }

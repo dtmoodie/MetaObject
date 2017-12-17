@@ -1,5 +1,5 @@
 #pragma once
-#include "IObjectInfo.h"
+#include "RuntimeObjectSystem/IObjectInfo.h"
 #include "MetaObject/detail/TypeInfo.hpp"
 #include "MetaObject/detail/Export.hpp"
 

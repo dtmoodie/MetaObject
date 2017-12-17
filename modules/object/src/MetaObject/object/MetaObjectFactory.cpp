@@ -13,21 +13,42 @@
 #include <boost/filesystem.hpp>
 using namespace mo;
 
-struct MetaObjectFactory::impl {
-    struct PluginInfo {
-        PluginInfo(const std::string& path = "", const std::string& state = "success",
-            unsigned int time = 0, const char* info = nullptr)
-            : m_path(path)
-            , m_state(state)
-            , m_load_time(time)
-            , m_build_info(info) {
-        }
+std::string PluginInfo::getPath() const
+{
+    return m_path;
+}
 
-        std::string  m_path;
-        std::string  m_state;
-        unsigned int m_load_time  = 0; // total ms to load plugin
-        const char*  m_build_info = nullptr;
-    };
+std::string PluginInfo::getState() const
+{
+    return m_state;
+}
+
+unsigned int PluginInfo::getLoadTime() const
+{
+    return m_load_time;
+}
+
+std::string PluginInfo::getBuildInfo() const
+{
+    if(m_build_info)
+        return std::string(m_build_info);
+    return "";
+}
+
+unsigned int PluginInfo::getId() const
+{
+    return m_id;
+}
+
+std::string PluginInfo::getPluginName() const
+{
+    boost::filesystem::path path(m_path);
+    return path.replace_extension("").filename().string();
+}
+
+
+struct MetaObjectFactory::impl {
+
     impl(SystemTable* table) {
         obj_system.Initialise(&logger, table);
     }
@@ -192,6 +213,11 @@ std::vector<std::string> MetaObjectFactory::listLoadedPlugins(PluginVerbosity ve
     return output;
 }
 
+std::vector<PluginInfo> MetaObjectFactory::listLoadedPluginInfo() const
+{
+    return _pimpl->plugins;
+}
+
 int MetaObjectFactory::loadPlugins(const std::string& path_) {
     boost::filesystem::path path(boost::filesystem::current_path().string() + "/" + path_);
     int                     count = 0;
@@ -235,7 +261,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath) {
     if (!boost::filesystem::is_regular_file(fullPluginPath)) {
         return false;
     }
-    impl::PluginInfo plugin_info;
+    PluginInfo plugin_info;
     std::string plugin_name = boost::filesystem::path(fullPluginPath).stem().string();
     plugin_info.m_path = fullPluginPath;
     mo::Time_t start = mo::getCurrentTime();
@@ -271,6 +297,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath) {
         if (id >= 0) {
             moduleInterface->SetProjectIdForAllConstructors(id);
         }
+        plugin_info.m_id = id;
         setupObjectConstructors(moduleInterface);
     }
     mo::Time_t end = mo::getCurrentTime();

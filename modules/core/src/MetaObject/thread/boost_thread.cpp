@@ -23,7 +23,9 @@ size_t mo::getThreadId(const boost::thread& thread) {
         tid = getThreadIdHelper(thread);
     return *tid;
 }
-void mo::setThreadName(boost::thread& thread, const std::string& name) {
+
+void mo::setThreadName(boost::thread& thread, const std::string& name) 
+{
 #ifdef _MSC_VER
 
 #else

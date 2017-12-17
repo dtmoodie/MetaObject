@@ -30,9 +30,9 @@ int IMetaObject::connect(IMetaObject* sender, const std::string& signal_name, IM
     for (auto signal : my_signals) {
         for (auto slot : my_slots) {
             if (signal->getSignature() == slot->getSignature()) {
-                auto Connection = slot->connect(signal);
-                if (Connection) {
-                    sender->addConnection(Connection, signal_name, slot_name, slot->getSignature(), receiver);
+                auto connection = slot->connect(signal);
+                if (connection) {
+                    sender->addConnection(std::move(connection), signal_name, slot_name, slot->getSignature(), receiver);
                     ++count;
                 }
                 break;
@@ -52,9 +52,11 @@ bool IMetaObject::connect(IMetaObject* sender, const std::string& signal_name, I
     if (signal) {
         auto slot = receiver->getSlot(slot_name, signature);
         if (slot) {
-            auto Connection = slot->connect(signal);
-            sender->addConnection(Connection, signal_name, slot_name, signature, receiver);
-            return true;
+            auto connection = slot->connect(signal);
+            if(connection){
+                sender->addConnection(std::move(connection), signal_name, slot_name, signature, receiver);
+                return true;
+            }
         }
     }
     return false;
@@ -93,13 +95,18 @@ void IMetaObject::Init(bool firstInit)
     for (auto param : params) {
         auto update_slot = this->getSlot<mo::UpdateSig_t>("on_" + param->getName() + "_modified");
         if (update_slot) {
-            auto Connection = param->registerUpdateNotifier(update_slot);
-            this->addConnection(Connection, param->getName() + "_modified", "on_" + param->getName() + "_modified", update_slot->getSignature(), this);
+            auto connection = param->registerUpdateNotifier(update_slot);
+            if(connection){
+                this->addConnection(std::move(connection), param->getName() + "_modified", "on_" + param->getName() + "_modified", update_slot->getSignature(), this);
+            }
+            
         }
         auto delete_slot = this->getSlot<void(mo::IParam const*)>("on_" + param->getName() + "_deleted");
         if (delete_slot) {
-            auto Connection = param->registerDeleteNotifier(delete_slot);
-            this->addConnection(Connection, param->getName() + "_deleted", "on_" + param->getName() + "_modified", update_slot->getSignature(), this);
+            auto connection = param->registerDeleteNotifier(delete_slot);
+            if(connection){
+                this->addConnection(std::move(connection), param->getName() + "_deleted", "on_" + param->getName() + "_modified", update_slot->getSignature(), this);
+            }            
         }
     }
 
@@ -676,9 +683,9 @@ IParam* IMetaObject::addParam(IParam* param)
     if (param->checkFlags(ParamFlags::Input_e)) {
         _pimpl->_input_Params[param->getName()] = dynamic_cast<InputParam*>(param);
     }
-    auto Connection = param->registerUpdateNotifier(&(this->_pimpl->_slot_param_updated));
+    auto connection = param->registerUpdateNotifier(&(this->_pimpl->_slot_param_updated));
     _pimpl->_sig_param_added(this, param);
-    this->addConnection(Connection, "param_updated", "param_updated",
+    this->addConnection(std::move(connection), "param_updated", "param_updated",
         this->_pimpl->_slot_param_updated.getSignature(), this);
     return param;
 }
@@ -798,9 +805,9 @@ bool IMetaObject::connectByName(const std::string& name, ISlot* slot)
 {
     auto signal = getSignal(name, slot->getSignature());
     if (signal) {
-        auto Connection = signal->connect(slot);
-        if (Connection) {
-            addConnection(Connection, name, "", slot->getSignature());
+        auto connection = signal->connect(slot);
+        if (connection) {
+            addConnection(std::move(connection), name, "", slot->getSignature());
             return true;
         }
     }
@@ -810,9 +817,9 @@ bool IMetaObject::connectByName(const std::string& name, ISignal* signal)
 {
     auto slot = getSlot(name, signal->getSignature());
     if (slot) {
-        auto Connection = slot->connect(signal);
-        if (Connection) {
-            addConnection(Connection, "", name, signal->getSignature());
+        auto connection = slot->connect(signal);
+        if (connection) {
+            addConnection(std::move(connection), "", name, signal->getSignature());
             return true;
         }
     }
@@ -835,9 +842,9 @@ int IMetaObject::connectByName(const std::string& signal_name,
     for (auto signal : my_signals) {
         for (auto slot : my_slots) {
             if (signal->getSignature() == slot->getSignature()) {
-                auto Connection = slot->connect(signal);
-                if (Connection) {
-                    addConnection(Connection, signal_name,
+                auto connection = slot->connect(signal);
+                if (connection) {
+                    addConnection(std::move(connection), signal_name,
                         slot_name, slot->getSignature(), receiver);
                     ++count;
                     break;
@@ -856,9 +863,9 @@ bool IMetaObject::connectByName(const std::string& signal_name,
     auto signal = getSignal(signal_name, signature);
     auto slot = receiver->getSlot(slot_name, signature);
     if (signal && slot) {
-        auto Connection = slot->connect(signal);
-        if (Connection) {
-            addConnection(Connection, signal_name, slot_name, signature, receiver);
+        auto connection = slot->connect(signal);
+        if (connection) {
+            addConnection(std::move(connection), signal_name, slot_name, signature, receiver);
             return true;
         }
     }
@@ -940,14 +947,14 @@ ISignal* IMetaObject::getSignal(const std::string& name, const TypeInfo& type) c
     return nullptr;
 }
 
-void IMetaObject::addConnection(std::shared_ptr<Connection>& Connection,
+void IMetaObject::addConnection(std::shared_ptr<Connection>&& connection,
     const std::string& signal_name,
     const std::string& slot_name,
     const TypeInfo& signature,
     IMetaObject* obj)
 {
     ConnectionInfo info;
-    info.connection = Connection;
+    info.connection = std::move(connection);
     info.obj = rcc::weak_ptr<IMetaObject>(obj);
     info.signal_name = signal_name;
     info.slot_name = slot_name;

@@ -3,7 +3,7 @@
 	url = https://github.com/dtmoodie/cereal
 [submodule "dependencies/rcc"]
 	path = dependencies/rcc
-	url = https://github.com/dtmoodie/runtimecompiledcplusplus
+	url = ../rcc
 [submodule "dependencies/cppzmq"]
 	path = dependencies/cppzmq
 	url = https://github.com/zeromq/cppzmq

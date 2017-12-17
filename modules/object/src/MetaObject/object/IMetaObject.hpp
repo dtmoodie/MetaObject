@@ -3,7 +3,7 @@
 #include "MetaObject/core/detail/Forward.hpp"
 #include "MetaObject/core/detail/Time.hpp"
 #include "MetaObject/detail/Export.hpp"
-#include <IObject.h>
+#include <RuntimeObjectSystem/IObject.h>
 #include <memory>
 
 #ifndef MetaObject_EXPORTS
@@ -52,6 +52,9 @@ class MO_EXPORTS IMetaObject : public IObject {
 public:
     typedef IMetaObject Interface;
     typedef IMetaObjectInfo InterfaceInfo;
+    typedef rcc::shared_ptr<IMetaObject> Ptr;
+    typedef rcc::shared_ptr<const IMetaObject> ConstPtr;
+
     static int connect(IMetaObject* sender, const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name);
     static bool connect(IMetaObject* sender, const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name, const TypeInfo& signature);
     template <class T>
@@ -181,7 +184,7 @@ protected:
     void addSignal(ISignal* signal, const std::string& name);
     void addSlot(ISlot* slot, const std::string& name);
     void setParamRoot(const std::string& root);
-    void addConnection(std::shared_ptr<Connection>& Connection, const std::string& signal_name, const std::string& slot_name, const TypeInfo& signature, IMetaObject* obj = nullptr);
+    void addConnection(std::shared_ptr<Connection>&& Connection, const std::string& signal_name, const std::string& slot_name, const TypeInfo& signature, IMetaObject* obj = nullptr);
     virtual void onParamUpdate(IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags);
 
     friend class RelayManager;

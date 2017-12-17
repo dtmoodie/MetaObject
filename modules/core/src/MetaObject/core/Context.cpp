@@ -32,14 +32,14 @@ std::shared_ptr<Context> mo::Context::create(const std::string& name, int priori
     return output;
 }
 
-Context::Context() {
+Context::Context() 
+{
     thread_id = getThisThread();
     allocator = Allocator::getThreadSpecificAllocator();
-    GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(allocator);
-    CpuThreadAllocatorSetter<cv::Mat>::Set(allocator);
 }
 
-std::shared_ptr<Context> Context::getDefaultThreadContext() {
+std::shared_ptr<Context> Context::getDefaultThreadContext() 
+{
     return thread_set_context;
 }
 

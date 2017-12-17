@@ -28,11 +28,13 @@ public:
     virtual cudaStream_t      getCudaStream() const;
     virtual void setStream(const cv::cuda::Stream& stream);
     virtual void setStream(cudaStream_t stream);
+    std::string getName() const{return name;}
+    size_t getThreadId() const{ return thread_id; }
 
     size_t      process_id = 0;
     size_t      thread_id  = 0;
     std::string host_name;
-    Allocator*  allocator;
+    std::shared_ptr<Allocator>  allocator;
 
 protected:
     Context();

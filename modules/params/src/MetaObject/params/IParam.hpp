@@ -137,7 +137,24 @@ typedef TSlot<void(const IParam*)>    DeleteSlot_t;
 typedef TSignal<void(const IParam*)>  DeleteSignal_t;
 typedef std::shared_ptr<DeleteSlot_t> DeleteSlotPtr_t;
 
-class MO_EXPORTS IParam : boost::noncopyable {
+class MO_EXPORTS ParamBase: public boost::noncopyable
+{
+public:
+    typedef std::shared_ptr<ParamBase>       Ptr;
+    typedef std::shared_ptr<const ParamBase> ConstPtr;
+    virtual const std::string&                        getName()             const = 0; // Get the name of this Param
+    virtual const std::string                         getTreeName()         const = 0; // Get the name of this parmaeter appended with the tree root. IE root_name:param_name
+    virtual const std::string&                        getTreeRoot()         const = 0; // Get the tree root of this Param, ie the name of the owning parent object
+    virtual OptionalTime_t                            getTimestamp()        const = 0; // Get the timestamp of this Param, may not exist for all Params
+    virtual size_t                                    getFrameNumber()      const = 0; // Get the frame number for this Param. Initialized such that first update will set to 0, and increment at every update unless specified
+    virtual Context*                                  getContext()          const = 0; // Get the compute context of this Param
+    virtual const std::shared_ptr<ICoordinateSystem>& getCoordinateSystem() const = 0; // Get the coordinate system of this Param
+    virtual const TypeInfo&                           getTypeInfo()         const = 0; // Implemented in concrete type
+};
+
+
+class MO_EXPORTS IParam : public ParamBase 
+{
 public:
     typedef std::shared_ptr<IParam>       Ptr;
     typedef std::shared_ptr<const IParam> ConstPtr;
@@ -181,8 +198,6 @@ public:
     void subscribe(); // Subscribe to this Param as an output
     void unsubscribe(); // unsubscribe to this Param as an output
     bool hasSubscriptions() const; // Determine if there are any input Params using this Param as an output
-
-    virtual const TypeInfo& getTypeInfo() const = 0; // Implemented in concrete type
 
     // Register slots to be called on update of this Param
     std::shared_ptr<Connection> registerUpdateNotifier(UpdateSlot_t* f);
