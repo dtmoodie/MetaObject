@@ -176,7 +176,6 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer) {
                 BOOST_REQUIRE_EQUAL(data, i * 10);
                 boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
             }
-            mo::Allocator::cleanupThreadSpecificAllocator();
         });
     while (!started) {
         boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
@@ -188,8 +187,6 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer) {
     std::cout << "Waiting for background thread to close\n";
     background_thread.interrupt();
     background_thread.timed_join(boost::posix_time::time_duration(0, 2, 0));
-    //background_thread.();
-    mo::Allocator::cleanupThreadSpecificAllocator();
 }
 
 BOOST_AUTO_TEST_CASE(cleanup) {

@@ -83,7 +83,6 @@ struct GlobalFixture{
     ~GlobalFixture(){
         mo::ThreadPool::instance()->cleanup();
         mo::ThreadSpecificQueue::cleanup();
-        mo::Allocator::cleanupThreadSpecificAllocator();
     }
 };
 BOOST_GLOBAL_FIXTURE(GlobalFixture);

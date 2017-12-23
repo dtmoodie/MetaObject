@@ -1,6 +1,7 @@
 #define BOOST_TEST_MAIN
 #include "MetaObject/core/detail/Allocator.hpp"
 #include "MetaObject/core/detail/AllocatorImpl.hpp"
+#include "MetaObject/core/detail/StlAllocator.hpp"
 #include "MetaObject/logging/profiling.hpp"
 
 #include <boost/log/core.hpp>
@@ -41,14 +42,10 @@ DEFINE_HAS_STATIC_FUNCTION(HasCpuDefaultAllocator, setDefaultThreadAllocator, vo
 
 BOOST_AUTO_TEST_CASE(test_cpu_set_allocator)
 {
-    BOOST_REQUIRE(HasCpuDefaultAllocator<cv::Mat>::value);
-    BOOST_REQUIRE(mo::CpuThreadAllocatorSetter<cv::Mat>::Set(mo::Allocator::getThreadSafeAllocator()));
 }
 
 BOOST_AUTO_TEST_CASE(test_gpu_set_allocator)
 {
-    BOOST_REQUIRE(HasGpuDefaultAllocator<cv::cuda::GpuMat>::value);
-    BOOST_REQUIRE(mo::GpuThreadAllocatorSetter<cv::cuda::GpuMat>::Set(mo::Allocator::getThreadSafeAllocator()));
 }
 
 BOOST_AUTO_TEST_CASE(test_cpu_pooled_allocation)
@@ -187,7 +184,8 @@ BOOST_AUTO_TEST_CASE(test_cpu_stack_allocation)
 }
 BOOST_AUTO_TEST_CASE(test_cpu_combined_allocation)
 {
-    cv::Mat::setDefaultAllocator(mo::Allocator::getThreadSpecificAllocator());
+    auto allocator = mo::Allocator::getThreadSpecificAllocator();
+    cv::Mat::setDefaultAllocator(allocator.get());
     auto start = boost::posix_time::microsec_clock::local_time();
     for (int i = 0; i < 1000; ++i)
     {
@@ -208,7 +206,8 @@ BOOST_AUTO_TEST_CASE(test_cpu_combined_allocation)
     end = boost::posix_time::microsec_clock::local_time();
     double set_size = boost::posix_time::time_duration(end - start).total_milliseconds();
 
-    cv::Mat::setDefaultAllocator(mo::Allocator::getThreadSafeAllocator());
+    allocator = mo::Allocator::getThreadSafeAllocator();
+    cv::Mat::setDefaultAllocator(allocator.get());
     start = boost::posix_time::microsec_clock::local_time();
     for (int i = 0; i < 1000; ++i)
     {
@@ -513,10 +512,6 @@ BOOST_AUTO_TEST_CASE(async_transfer_rate_random)
         pooled_time = boost::posix_time::time_duration(end - start).total_milliseconds();
         std::cout << "Pooled Allocation:  " << pooled_time << "\n";
     }
-
-
-
-
 }
 
 
