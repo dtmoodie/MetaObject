@@ -24,7 +24,7 @@ namespace mo
     {
     public:
         AccessToken(AccessToken<T>&& other) :
-            lock(other.lock), _param(other._param), _data(other._data), fn(other.fn),
+            lock(std::move(other.lock)), _param(other._param), _data(other._data), fn(other.fn),
             ts(other.ts), _ctx(other._ctx), valid(other.valid) 
         {
 
