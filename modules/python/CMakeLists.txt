@@ -1,1 +1,5 @@
-metaobject_declare_module(NAME python DEPENDS metaobject_core metaobject_object)
+if(HAVE_PYTHON)
+    metaobject_declare_module(NAME python DEPENDS metaobject_core metaobject_object)
+    target_include_directories(metaobject_python PUBLIC $<BUILD_INTERFACE:${PYTHON_INCLUDE_DIR}>)
+    target_link_libraries(metaobject_python ${Boost_PYTHON_LIBRARY_RELEASE} ${PYTHON_LIBRARY})
+endif()

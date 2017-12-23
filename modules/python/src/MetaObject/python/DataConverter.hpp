@@ -1,7 +1,7 @@
 #pragma once
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/params/IParam.hpp"
-
+#include "MetaObject/params/ITAccessibleParam.hpp"
 #include <boost/python.hpp>
 
 #include <map>

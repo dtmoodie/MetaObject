@@ -1,5 +1,3 @@
-#ifdef HAVE_BOOST_PYTHON
-
 #include "PythonSetup.hpp"
 #include "DataConverter.hpp"
 #include "MetaObject/params/ParamFactory.hpp"
@@ -110,4 +108,3 @@ BOOST_PYTHON_MODULE(metaobject)
 
 }
 
-#endif
