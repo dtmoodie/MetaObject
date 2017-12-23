@@ -1,0 +1,5 @@
+include_directories("${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include")
+set(cereal_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include" CACHE PATH "" FORCE)
+set(PROJECT_BIN_DIRS_RELWITHDEBINFO "")
+set(PROJECT_BIN_DIRS_RELEASE "")
+set(PROJECT_BIN_DIRS_DEBUG "")

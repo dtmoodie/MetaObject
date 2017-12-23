@@ -31,57 +31,8 @@ set(link_dirs_rel "")
 set(compile_flags "")
 
 set(HAVE_PYTHON OFF)
-if(WITH_PYTHON)
-  find_package(PythonLibs QUIET)
-  find_package(PythonInterp QUIET)
-  if(PythonLibs_FOUND AND PythonInterp_FOUND)
-    if(WIN32)
-        find_package(Boost QUIET COMPONENTS python python3 python2)
-        if(Boost_PYTHON_FOUND)
-          set(HAVE_PYTHON ON)
-          message("Building python bindings")
-          list(APPEND link_libs "${Boost_PYTHON_LIBRARY_RELEASE};${PYTHON_LIBRARY}")
-          get_filename_component(_python_lib_dirs "${PYTHON_LIBRARY}" DIRECTORY)
-          foreach(dir ${_python_lib_dirs})
-            if(NOT ${dir} STREQUAL debug AND NOT ${dir} STREQUAL optimized)
-              link_directories(${dir})
-            endif()
-          endforeach()
-          include_directories(${PYTHON_INCLUDE_DIR})
-          add_definitions(-DHAVE_BOOST_PYTHON)
-        endif()
-    else(WIN32)
-        if(NOT "${python_version}" VERSION_LESS "3.0.0")
-          # use python3
-          find_package(PythonInterp 3.0)
-          find_package(PythonLibs 3.0)
-          find_package(NumPy 1.7.1)
-          # Find the matching boost python implementation
-          set(version ${PYTHONLIBS_VERSION_STRING})
 
-          STRING( REGEX REPLACE "[^0-9]" "" boost_py_version ${version} )
-          find_package(Boost 1.46 COMPONENTS "python-py${boost_py_version}")
-          set(Boost_PYTHON_FOUND ${Boost_PYTHON-PY${boost_py_version}_FOUND})
-
-          while(NOT "${version}" STREQUAL "" AND NOT Boost_PYTHON_FOUND)
-            STRING( REGEX REPLACE "([0-9.]+).[0-9]+" "\\1" version ${version} )
-
-            STRING( REGEX REPLACE "[^0-9]" "" boost_py_version ${version} )
-            find_package(Boost 1.46 COMPONENTS "python-py${boost_py_version}")
-            set(Boost_PYTHON_FOUND ${Boost_PYTHON-PY${boost_py_version}_FOUND})
-
-            STRING( REGEX MATCHALL "([0-9.]+).[0-9]+" has_more_version ${version} )
-            if("${has_more_version}" STREQUAL "")
-              break()
-            endif()
-          endwhile()
-          if(NOT Boost_PYTHON_FOUND)
-            find_package(Boost 1.46 COMPONENTS python)
-          endif()
-      endif(NOT "${python_version}" VERSION_LESS "3.0.0")
-    endif(WIN32)
-  endif()
-endif()
+include(cmake/metaobject_dependencies.cmake)
 
 if(WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /FC /Zi /MP /Zm512 /bigobj /FS")
@@ -106,84 +57,6 @@ file(GLOB_RECURSE src "src/*.cpp")
 file(GLOB_RECURSE knl "src/*.cu")
 file(GLOB_RECURSE hdr "include/*.h" "include/*.hpp")
 
-# ------------------------------------------------------------------------------
-# ---------------------- External Dependencies ---------------------------------
-# ------------------------------------------------------------------------------
-
-# ---------------------- Boost ---------------------------------
-set(Boost_required_components system thread log log_setup)
-if(BUILD_TESTS)
-    list(APPEND Boost_required_components unit_test_framework)
-endif()
-set(Boost_USE_STATIC_LIBS        OFF)
-set(Boost_USE_MULTITHREADED      ON)
-set(Boost_USE_STATIC_RUNTIME     OFF)
-ADD_DEFINITIONS(-DBOOST_ALL_DYN_LINK)
-find_package(Boost REQUIRED COMPONENTS ${Boost_required_components})
-  include_directories(${Boost_INCLUDE_DIRS})
-  link_directories(${Boost_LIBRARY_DIR_DEBUG})
-  link_directories(${Boost_LIBRARY_DIR})
-  list(APPEND PROJECT_BIN_DIRS_DEBUG_ ${Boost_LIBRARY_DIR})
-  list(APPEND PROJECT_BIN_DIRS_RELEASE_ ${Boost_LIBRARY_DIR})
-  list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO_ ${Boost_LIBRARY_DIR})
-  list(APPEND PROJECT_BIN_DIRS_DEBUG_ ${Boost_LIBRARY_DIR_DEBUG})
-  list(APPEND PROJECT_BIN_DIRS_RELEASE_ ${Boost_LIBRARY_DIR_RELEASE})
-  list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO_ ${Boost_LIBRARY_DIR_RELEASE})
-  set(bin_dirs_ "${BIN_DIRS};Boost")
-  list(REMOVE_DUPLICATES bin_dirs_)
-  set(BIN_DIRS "${bin_dirs_}" CACHE STRING "" FORCE)
-  set(Boost_TARGETS "")
-  foreach(cmp ${Boost_required_components})
-    if(TARGET Boost::${cmp})
-      list(APPEND Boost_TARGETS "Boost::${cmp}")
-    endif()
-  endforeach()
-  
-# ---------------------- cereal ---------------------------------
-include_directories("${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include")
-set(cereal_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include" CACHE PATH "" FORCE)
-set(PROJECT_BIN_DIRS_RELWITHDEBINFO "")
-set(PROJECT_BIN_DIRS_RELEASE "")
-set(PROJECT_BIN_DIRS_DEBUG "")
-
-# --------------------- cuda -------------------------------------
-if(WITH_CUDA)
-  FIND_PACKAGE(CUDA REQUIRED)
-  include("cmake/Cuda.cmake")
-  IF(${CUDA_FOUND})
-    INCLUDE_DIRECTORIES(${CUDA_INCLUDE_DIRS})
-    ADD_DEFINITIONS(-DHAVE_CUDA)
-    list(APPEND PROJECT_BIN_DIRS_DEBUG_ ${CUDA_BIN_DIR})
-    list(APPEND PROJECT_BIN_DIRS_RELEASE_ ${CUDA_BIN_DIR})
-    list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO_ ${CUDA_BIN_DIR})
-  ENDIF(${CUDA_FOUND})
-endif(WITH_CUDA)
-if(NOT CUDA_CUDA_LIBRARY AND UNIX)
-    set(CUDA_CUDA_LIBRARY "/usr/local/nvidia/lib64/libcuda.so")
-endif(NOT CUDA_CUDA_LIBRARY AND UNIX)
-
-# ---------------------- rcc ---------------------------------
-if(NOT BUILD_DEPENDENCIES)
-    find_package(RCC QUIET)
-endif()
-if(RCC_FOUND)
-    message(STATUS "RCC found at: ${RCC_DIR} - ${RCC_INCLUDE_DIRS}")
-else(RCC_FOUND)
-    SET(IObject_INCLUDE "${CMAKE_CURRENT_SOURCE_DIR}/include")
-    set(RCC_INCLUDE_DEPENDENCIES "${Boost_INCLUDE_DIRS};${CMAKE_CURRENT_LIST_DIR}/include;${cereal_INCLUDE_DIRS}")
-    set(RCC_LIBRARY_DIRS_DEBUG "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/Debug")
-    set(RCC_LIBRARY_DIRS_RELWITHDEBINFO "${Boost_LIBRARY_DIR};${Boost_LIBRARY_DIR_DEBUG};${CMAKE_BINARY_DIR}/RelWithDebInfo")
-    if(MSVC)
-      set(RCC_COMPILE_FLAGS "/DBOOST_ALL_DYN_LINK")
-    else()
-      set(RCC_COMPILE_FLAGS "-DBOOST_ALL_DYN_LINK")
-    endif()
-    ADD_SUBDIRECTORY("dependencies/rcc")
-    include_directories(${RCC_INCLUDE_DIRS})
-    set_target_properties(RuntimeCompiler PROPERTIES FOLDER Dependencies)
-    set_target_properties(RuntimeObjectSystem PROPERTIES FOLDER Dependencies)
-endif(RCC_FOUND)
-
 # -------------------- Profiling ---------------------------------
 set(MO_PROFILING_MODE "BUILTIN" CACHE STRING "Set MetaObject profiling mode")
 set_property(CACHE MO_PROFILING_MODE PROPERTY STRINGS BUILTIN DYNAMIC NONE)
@@ -202,119 +75,38 @@ if(${MO_PROFILING_MODE} STREQUAL "NONE")
   add_definitions(-DPROFILING_NONE)
 endif()
 
-# ------------------------------------------------------------------------------
-# ---------------------- Optional dependencies ------------------
-# ------------------------------------------------------------------------------
-
-# ------------------------- QT5 ----------------------------------------------
-if(WITH_QT)
-  find_package(Qt5 QUIET COMPONENTS Core Widgets Gui)
-  if(Qt5_FOUND)
-    set(AUTOMOC OFF)
-    add_definitions(-DHAVE_QT5)
-    #QT5_WRAP_CPP(MOC "${CMAKE_CURRENT_LIST_DIR}/include/MetaObject/params/ui/Qt/SignalProxy.hpp")
-    list(APPEND src ${MOC})
-    INCLUDE_DIRECTORIES(${Qt5Gui_INCLUDE_DIRS} ${Qt5Widgets_INCLUDE_DIRS} ${Qt5Core_INCLUDE_DIRS})
-    list(APPEND link_libs Qt5::Core Qt5::Widgets Qt5::Gui)
-    get_target_property(qt5_core_bin_ Qt5::Core IMPORTED_LOCATION_DEBUG)
-    get_filename_component(qt5_bin_dir_ "${qt5_core_bin_}" DIRECTORY)
-    list(APPEND PROJECT_BIN_DIRS_DEBUG ${qt5_bin_dir_})
-    list(APPEND PROJECT_BIN_DIRS_RELEASE ${qt5_bin_dir_})
-    list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO ${qt5_bin_dir_})
-    set(Qt5_BIN_DIR_OPT ${qt5_bin_dir_} CACHE PATH "" FORCE)
-    set(Qt5_BIN_DIR ${qt5_bin_dir_} CACHE PATH "" FORCE)
-    set(Qt5_BIN_DIR_DBG ${qt5_bin_dir_} CACHE PATH "" FORCE)
-    set(bin_dirs_ "${BIN_DIRS};Qt5")
-    list(REMOVE_DUPLICATES bin_dirs_)
-    set(BIN_DIRS "${bin_dirs_}" CACHE STRING "" FORCE)
-    rcc_find_path(Qt5_PLUGIN_PATH qwindows.dll PATHS ${Qt5_BIN_DIR}/../plugins/platforms)
-  endif()
-endif()
-
-# ----------------------------WT ---------------------------------------------
-if(WITH_WT)
-find_package(Wt QUIET)
-  if(Wt_FOUND)
-    find_path(Wt_BIN_DIR
-      wt.dll
-      HINTS "${Wt_INCLUDE_DIR}/../bin"
-    )
-
-    if(Wt_BIN_DIR)
-      set(Wt_BIN_DIR_DBG ${Wt_BIN_DIR} CACHE PATH "" FORCE)
-      set(Wt_BIN_DIR_OPT ${Wt_BIN_DIR} CACHE PATH "" FORCE)
-      set(bin_dirs_ "${BIN_DIRS};Wt")
-      list(REMOVE_DUPLICATES bin_dirs_)
-      set(BIN_DIRS "${bin_dirs_}" CACHE STRING "" FORCE)
-    endif(Wt_BIN_DIR)
-  endif(Wt_FOUND)
-endif(WITH_WT)
-
-# -------------------------------- OpenCV -----------------------------------------
-if(WITH_OPENCV)
-  find_package(OpenCV QUIET COMPONENTS core cudaarithm)
-  if(OpenCV_FOUND)
-    add_definitions(-DHAVE_OPENCV)
-    include_directories(${OpenCV_INCLUDE_DIRS})
-    if(WIN32)
-        set(bin_dirs_ "${BIN_DIRS};OpenCV")
-        list(REMOVE_DUPLICATES bin_dirs_)
-        set(BIN_DIRS "${bin_dirs_}" CACHE STRING "" FORCE)
-        list(REMOVE_DUPLICATES BIN_DIRS)
-        get_target_property(dll_file_path_ opencv_core IMPORTED_LOCATION_RELEASE)
-        get_filename_component(dll_path ${dll_file_path_} DIRECTORY)
-        set(OpenCV_BIN_DIR ${dll_path} CACHE PATH "" FORCE)
-        set(OpenCV_BIN_DIR_OPT ${dll_path} CACHE PATH "" FORCE)
-        list(APPEND PROJECT_BIN_DIRS_DEBUG ${dll_path})
-        list(APPEND PROJECT_BIN_DIRS_RELEASE ${dll_path})
-        list(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO ${dll_path})
-    endif()
-  endif()
-endif(WITH_OPENCV)
-
-# ----------------------- ZeroMQ ------------------------------------------
-if(WITH_ZEROMQ)
-    find_package(ZeroMQ QUIET)
-    if(${ZeroMQ_FOUND})
-      include_directories(${ZeroMQ_INCLUDE_DIR})
-      include_directories("${CMAKE_CURRENT_LIST_DIR}/dependencies/cppzmq") # cpp bindings
-      list(APPEND link_libs "optimized;${ZeroMQ_LIBRARY_RELEASE};debug;${ZeroMQ_LIBRARY_DEBUG}")
-      add_definitions(-DHAVE_ZEROMQ)
-    endif(${ZeroMQ_FOUND})
-endif(WITH_ZEROMQ)
-
 
 FOREACH(dir ${BIN_DIRS})
-  APPEND_BIN_DIR(${dir}_BIN_DIR_DBG PROJECT_BIN_DIRS_DEBUG)
-  APPEND_BIN_DIR(${dir}_BIN_DIR_OPT PROJECT_BIN_DIRS_RELEASE)
-  APPEND_BIN_DIR(${dir}_BIN_DIR_OPT PROJECT_BIN_DIRS_RELWITHDEBINFO)
+    APPEND_BIN_DIR(${dir}_BIN_DIR_DBG PROJECT_BIN_DIRS_DEBUG)
+    APPEND_BIN_DIR(${dir}_BIN_DIR_OPT PROJECT_BIN_DIRS_RELEASE)
+    APPEND_BIN_DIR(${dir}_BIN_DIR_OPT PROJECT_BIN_DIRS_RELWITHDEBINFO)
 ENDFOREACH(dir ${BIN_DIRS})
 
 IF(Boost_LIBRARY_DIR_DEBUG AND EXISTS "${Boost_LIBRARY_DIR_DEBUG}" AND IS_DIRECTORY "${Boost_LIBRARY_DIR_DEBUG}")
- LIST(APPEND PROJECT_BIN_DIRS_DEBUG ${Boost_LIBRARY_DIR_DEBUG})
+    LIST(APPEND PROJECT_BIN_DIRS_DEBUG ${Boost_LIBRARY_DIR_DEBUG})
 ELSE(Boost_LIBRARY_DIR_DEBUG AND EXISTS "${Boost_LIBRARY_DIR_DEBUG}" AND IS_DIRECTORY "${Boost_LIBRARY_DIR_DEBUG}")
-  IF(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
-    LIST(APPEND PROJECT_BIN_DIRS_DEBUG ${BOOST_LIBRARYDIR})
-  ELSE(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
-    MESSAGE("Could not find boost binary dir in Boost_LIBRARY_DIR_DEBUG or BOOST_LIBRARYDIR")
-  ENDIF(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
+    IF(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
+        LIST(APPEND PROJECT_BIN_DIRS_DEBUG ${BOOST_LIBRARYDIR})
+    ELSE(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
+        MESSAGE("Could not find boost binary dir in Boost_LIBRARY_DIR_DEBUG or BOOST_LIBRARYDIR")
+    ENDIF(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
 ENDIF(Boost_LIBRARY_DIR_DEBUG AND EXISTS "${Boost_LIBRARY_DIR_DEBUG}" AND IS_DIRECTORY "${Boost_LIBRARY_DIR_DEBUG}")
 
 IF(Boost_LIBRARY_DIR_RELEASE AND EXISTS "${Boost_LIBRARY_DIR_RELEASE}" AND IS_DIRECTORY "${Boost_LIBRARY_DIR_RELEASE}")
-  LIST(APPEND PROJECT_BIN_DIRS_RELEASE ${Boost_LIBRARY_DIR_RELEASE})
-  LIST(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO ${Boost_LIBRARY_DIR_RELEASE})
+    LIST(APPEND PROJECT_BIN_DIRS_RELEASE ${Boost_LIBRARY_DIR_RELEASE})
+    LIST(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO ${Boost_LIBRARY_DIR_RELEASE})
 ELSE(Boost_LIBRARY_DIR_RELEASE AND EXISTS "${Boost_LIBRARY_DIR_RELEASE}" AND IS_DIRECTORY "${Boost_LIBRARY_DIR_RELEASE}")
-  IF(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
-    LIST(APPEND PROJECT_BIN_DIRS_RELEASE ${BOOST_LIBRARYDIR})
-    LIST(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO ${BOOST_LIBRARYDIR})
-  ELSE(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
-    IF(Boost_LIBRARY_DIR)
-      LIST(APPEND PROJECT_BIN_DIRS_RELEASE ${Boost_LIBRARY_DIR})
-      LIST(APPEND PROJECT_BIN_DIRS_DEBUG ${Boost_LIBRARY_DIR})
-    ELSE()
-      MESSAGE("Could not find boost binary dir in Boost_LIBRARY_DIR_DEBUG or BOOST_LIBRARYDIR")
-    ENDIF()
-  ENDIF(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
+    IF(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
+        LIST(APPEND PROJECT_BIN_DIRS_RELEASE ${BOOST_LIBRARYDIR})
+        LIST(APPEND PROJECT_BIN_DIRS_RELWITHDEBINFO ${BOOST_LIBRARYDIR})
+    ELSE(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
+        IF(Boost_LIBRARY_DIR)
+            LIST(APPEND PROJECT_BIN_DIRS_RELEASE ${Boost_LIBRARY_DIR})
+            LIST(APPEND PROJECT_BIN_DIRS_DEBUG ${Boost_LIBRARY_DIR})
+        ELSE()
+            MESSAGE("Could not find boost binary dir in Boost_LIBRARY_DIR_DEBUG or BOOST_LIBRARYDIR")
+        ENDIF()
+    ENDIF(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
 ENDIF(Boost_LIBRARY_DIR_RELEASE AND EXISTS "${Boost_LIBRARY_DIR_RELEASE}" AND IS_DIRECTORY "${Boost_LIBRARY_DIR_RELEASE}")
 
 list(REMOVE_DUPLICATES PROJECT_BIN_DIRS_DEBUG)
@@ -353,6 +145,8 @@ if(MSVC)
     list(APPEND LINK_DIRS_DEBUG "${CMAKE_BINARY_DIR}/Debug")
 endif()
 
+include(cmake/metaobject_declare_module.cmake)
+
 WRITE_RCC_CONFIG("${target_include_dirs_}" "${LINK_DIRS_DEBUG}" "${LINK_DIRS_RELEASE}" "")
 
 # ---------------------- modules ------------------------------------
@@ -369,86 +163,7 @@ file(GLOB children RELATIVE "${basedir}/${curdir}" "${basedir}/${curdir}/*")
    endforeach()
 endmacro()
 set(metaobject_module_includes "" CACHE INTERNAL "" FORCE)
-function(metaobject_declare_module)
-    set(oneValueArgs NAME)
-    set(multiValueArgs SRC DEPENDS FLAGS CUDA_SRC)
-    cmake_parse_arguments(metaobject_declare_module "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
-    GroupSources("${CMAKE_CURRENT_LIST_DIR}/src/MetaObject/" "/" " ")
-    if(${metaobject_declare_module_CUDA_SRC})
-        cuda_add_library(metaobject_${metaobject_declare_module_NAME} SHARED ${${metaobject_declare_module_CUDA_SRC}})
-    else()
-        if(${metaobject_declare_module_SRC})
-            add_library(metaobject_${metaobject_declare_module_NAME} SHARED ${${metaobject_declare_module_SRC}})
-        else()
-            file(GLOB_RECURSE src "src/*.cpp" "src/*.h" "src/*.hpp")
-            add_library(metaobject_${metaobject_declare_module_NAME} SHARED ${src})
-        endif()
-    endif()
 
-    set(metaobject_modules "${metaobject_modules};metaobject_${metaobject_declare_module_NAME}" CACHE INTERNAL "" FORCE)
-
-    target_compile_definitions(metaobject_${metaobject_declare_module_NAME} PRIVATE -DMetaObject_EXPORTS)
-
-    if(metaobject_declare_module_DEPENDS)
-        rcc_link_lib(metaobject_${metaobject_declare_module_NAME} ${metaobject_declare_module_DEPENDS})
-    endif()
-
-    set_property(TARGET metaobject_${metaobject_declare_module_NAME} PROPERTY CXX_STANDARD 14)
-
-    if(UNIX)
-        target_compile_options(metaobject_${metaobject_declare_module_NAME} PUBLIC "-fPIC;-Wl,--no-undefined")
-    endif()
-    target_include_directories(metaobject_${metaobject_declare_module_NAME}
-        PUBLIC
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
-            $<INSTALL_INTERFACE:include>
-    )
-    set(metaobject_module_includes "${metaobject_module_includes};${CMAKE_CURRENT_LIST_DIR}/src" CACHE INTERNAL "" FORCE)
-
-    set_target_properties(metaobject_${metaobject_declare_module_NAME} PROPERTIES FOLDER Modules)
-    if(metaobject_declare_module_FLAGS)
-        target_compile_options(metaobject_${metaobject_declare_module_NAME} PUBLIC ${metaobject_declare_module_FLAGS})
-    endif()
-
-    export(TARGETS metaobject_${metaobject_declare_module_NAME}
-        FILE "${PROJECT_BINARY_DIR}/MetaObjectTargets-${metaobject_declare_module_NAME}.cmake"
-    )
-    install(TARGETS metaobject_${metaobject_declare_module_NAME}
-        RUNTIME DESTINATION bin
-        LIBRARY DESTINATION lib
-        ARCHIVE DESTINATION lib
-    )
-    install(TARGETS metaobject_${metaobject_declare_module_NAME}
-        DESTINATION lib
-        EXPORT metaobject_${metaobject_declare_module_NAME}Targets
-    )
-    install(DIRECTORY src/
-        DESTINATION include
-        FILES_MATCHING PATTERN "*.h"
-    )
-
-    install(DIRECTORY src/
-        DESTINATION include
-        FILES_MATCHING PATTERN "*.hpp"
-    )
-    install(EXPORT metaobject_${metaobject_declare_module_NAME}Targets DESTINATION "${CMAKE_INSTALL_PREFIX}/share/MetaObject" COMPONENT dev)
-
-    if(RCC_VERBOSE_CONFIG)
-        set(test_lib "")
-        set(test_inc "")
-        set(test_lib "")
-        _target_helper(test_lib test_inc test_lib metaobject_${metaobject_declare_module_NAME} " ")
-        message("---------------")
-        list(REMOVE_DUPLICATES test_lib)
-        foreach(lib ${test_lib})
-            message("  ${lib}")
-        endforeach()
-        list(REMOVE_DUPLICATES test_inc)
-        foreach(inc ${test_inc})
-            message("  ${inc}")
-        endforeach()
-    endif(RCC_VERBOSE_CONFIG)
-endfunction()
 
 SUBDIRLIST(modules "${CMAKE_CURRENT_LIST_DIR}/modules")
 foreach( module ${modules})
@@ -502,29 +217,36 @@ install(DIRECTORY dependencies/cereal/include/
 )
 
 install(DIRECTORY dependencies/cereal/include/
-  DESTINATION include
-  FILES_MATCHING PATTERN "*.h"
+    DESTINATION include
+    FILES_MATCHING PATTERN "*.h"
 )
 
 if(WIN32)
     install(DIRECTORY ${CMAKE_BINARY_DIR}/Debug/
         DESTINATION bin
-        FILES_MATCHING PATTERN "*d.pdb")
+        FILES_MATCHING PATTERN "*d.pdb"
+    )
+
     install(DIRECTORY ${CMAKE_BINARY_DIR}/RelWithDebInfo/
         DESTINATION bin
-        FILES_MATCHING PATTERN "*.pdb")
+        FILES_MATCHING PATTERN "*.pdb"
+    )
 
     install(DIRECTORY ${CMAKE_BINARY_DIR}/Debug/
         DESTINATION lib
-        FILES_MATCHING PATTERN "*d.pdb")
+        FILES_MATCHING PATTERN "*d.pdb"
+    )
+
     install(DIRECTORY ${CMAKE_BINARY_DIR}/RelWithDebInfo/
         DESTINATION lib
-        FILES_MATCHING PATTERN "*.pdb")
+        FILES_MATCHING PATTERN "*.pdb"
+    )
 
 endif(WIN32)
 
 install(DIRECTORY cmake DESTINATION share/MetaObject FILES_MATCHING PATTERN "*.cmake")
 
 install(FILES
-  "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake"
-  DESTINATION "${CMAKE_INSTALL_PREFIX}/share/MetaObject" COMPONENT dev)
+    "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake"
+    DESTINATION "${CMAKE_INSTALL_PREFIX}/share/MetaObject" COMPONENT dev
+)
