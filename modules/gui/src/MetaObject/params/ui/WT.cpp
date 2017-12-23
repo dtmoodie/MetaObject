@@ -55,9 +55,9 @@ wt::WidgetFactory* wt::WidgetFactory::Instance()
 wt::IParamProxy* wt::WidgetFactory::CreateWidget(mo::IParam* param, MainApplication* app,
                                                      Wt::WContainerWidget* container)
 {
-    if (param->checkFlags(mo::Input_e))
+    if (param->checkFlags(mo::ParamFlags::Input_e))
         return nullptr;
-    if (param->checkFlags(mo::Output_e))
+    if (param->checkFlags(mo::ParamFlags::Output_e))
         return nullptr;
     auto itr = _pimpl->_widget_constructors.find(param->getTypeInfo());
     if (itr != _pimpl->_widget_constructors.end())
@@ -84,9 +84,9 @@ void wt::WidgetFactory::RegisterConstructor(const mo::TypeInfo& type,
 wt::IPlotProxy* wt::WidgetFactory::CreatePlot(mo::IParam* param, MainApplication* app,
                               Wt::WContainerWidget* container)
 {
-    if (param->checkFlags(mo::Input_e))
+    if (param->checkFlags(mo::ParamFlags::Input_e))
         return nullptr;
-    if (param->checkFlags(mo::Output_e))
+    if (param->checkFlags(mo::ParamFlags::Output_e))
         return nullptr;
     auto itr = _pimpl->_plot_constructors.find(param->getTypeInfo());
     if (itr != _pimpl->_plot_constructors.end())

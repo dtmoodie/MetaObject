@@ -85,7 +85,7 @@ namespace wt
             _data_proxy()
         {
             auto token = param_->access();
-            _data_proxy.CreateUi(this, token(), param_->checkFlags(State_e));
+            _data_proxy.CreateUi(this, token(), param_->checkFlags(ParamFlags::State_e));
         }
         void SetTooltip(const std::string& tip)
         {
@@ -133,10 +133,10 @@ namespace wt
             auto token = param_->access();
             if(IPlotProxy* parent = dynamic_cast<IPlotProxy*>(parent_))
             {
-                _data_proxy.CreateUi(parent, token(), param_->checkFlags(State_e), param_->getTreeName());
+                _data_proxy.CreateUi(parent, token(), param_->checkFlags(ParamFlags::State_e), param_->getTreeName());
             }else
             {
-                _data_proxy.CreateUi(this, token(), param_->checkFlags(State_e), param_->getTreeName());
+                _data_proxy.CreateUi(this, token(), param_->checkFlags(ParamFlags::State_e), param_->getTreeName());
             }
         }
     protected:
