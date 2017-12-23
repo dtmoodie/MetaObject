@@ -666,25 +666,25 @@ unsigned char* StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t siz
         if (itr->size == size_needed) {
             ptr = itr->ptr;
             this->m_memory_usage += size_needed;
-            current_allocations[ptr] = size_needed;
+            m_current_allocations[ptr] = size_needed;
             m_deallocate_list.erase(itr);
             return ptr;
         }
     }
-    CV_CUDEV_SAFE_CALL(cudaMalloc(&ptr, sizeNeeded));
+    CV_CUDEV_SAFE_CALL(cudaMalloc(&ptr, size_needed));
     this->m_memory_usage += size_needed;
-    current_allocations[ptr] = size_needed;
+    m_current_allocations[ptr] = size_needed;
     return ptr;
 }
 
 template <typename PaddingPolicy>
 void StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::deallocate(unsigned char* ptr, size_t /*num_bytes*/) 
 {
-    auto itr = current_allocations.find(ptr);
-    if (itr != current_allocations.end()) 
+    auto itr = m_current_allocations.find(ptr);
+    if (itr != m_current_allocations.end())
     {
-        current_allocations.erase(itr);
-        m_deallocate_list.emplace_back(ptr, clock(), current_allocations[ptr]);
+        m_current_allocations.erase(itr);
+        m_deallocate_list.emplace_back(ptr, clock(), m_current_allocations[ptr]);
     }
 
     clear();
@@ -735,7 +735,7 @@ bool NonCachingPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(cv::cuda::GpuMa
         CV_CUDEV_SAFE_CALL(cudaMallocPitch(&mat->data, &mat->step, elem_size * cols, rows));
         m_memory_usage += mat->step * rows;
     } else {
-        CV_CUDEV_SAFE_CALL(cudaMalloc(&mat->data, elemSize * cols * rows));
+        CV_CUDEV_SAFE_CALL(cudaMalloc(&mat->data, elem_size * cols * rows));
         m_memory_usage += elem_size* cols * rows;
         mat->step = elem_size * static_cast<size_t>(cols);
     }

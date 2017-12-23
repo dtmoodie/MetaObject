@@ -20,6 +20,9 @@ namespace mo {
 
     class MO_EXPORTS Allocator: virtual public cv::cuda::GpuMat::Allocator, virtual public cv::MatAllocator {
     public:
+        typedef std::shared_ptr<Allocator> Ptr;
+        typedef std::shared_ptr<const Allocator> ConstPtr;
+
         static std::shared_ptr<Allocator>   getThreadSafeAllocator();
         static std::shared_ptr<Allocator>   getThreadSpecificAllocator();
         static void setThreadSpecificAllocator(const std::shared_ptr<Allocator>& allocator);
