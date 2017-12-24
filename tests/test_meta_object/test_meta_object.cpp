@@ -27,19 +27,19 @@
 
 using namespace mo;
 
-struct test_meta_obj_empty: public IMetaObject
+struct test_meta_obj_empty: public MetaObject
 {
     MO_BEGIN(test_meta_obj_empty);
 
     MO_END;
 };
 
-struct test_meta_obj_params: public IMetaObject
+struct test_meta_obj_params: public MetaObject
 {
 
 };
 
-struct test_meta_object_signals: public IMetaObject
+struct test_meta_object_signals: public MetaObject
 {
     MO_BEGIN(test_meta_object_signals);
     MO_SIGNAL(void, test_void);
@@ -47,7 +47,7 @@ struct test_meta_object_signals: public IMetaObject
     MO_END;
 };
 
-struct test_meta_object_slots: public IMetaObject
+struct test_meta_object_slots: public MetaObject
 {
     MO_BEGIN(test_meta_object_slots);
         MO_SLOT(void, test_void);
@@ -65,7 +65,7 @@ void test_meta_object_slots::test_void(int)
 
 }
 
-struct test_meta_object_callback: public IMetaObject
+struct test_meta_object_callback: public MetaObject
 {
     MO_BEGIN(test_meta_object_callback);
         MO_SLOT(int, test_int);
@@ -83,7 +83,7 @@ void test_meta_object_callback::test_void()
 }
 
 
-struct test_meta_object_Param: public IMetaObject
+struct test_meta_object_Param: public MetaObject
 {
     MO_BEGIN(test_meta_object_Param);
         PARAM(int, test_int, 5);
@@ -91,7 +91,7 @@ struct test_meta_object_Param: public IMetaObject
     MO_END;
 };
 
-struct test_meta_object_input: public IMetaObject
+struct test_meta_object_input: public MetaObject
 {
     MO_BEGIN(test_meta_object_input);
         INPUT(int, test_int, nullptr);

@@ -77,13 +77,27 @@ namespace mo
         boost::python::class_<ParamBase, boost::noncopyable>("ParamBase", boost::python::no_init)
             .def("getName", &ParamBase::getTreeName)
             .def("getType", &getDataTypeName)
+            .def("__repr__", &printParam)
             .add_property("data", &getData, &setData);
 
-        boost::python::class_<std::vector<ParamBase*>> param_vec("ParamVec", boost::python::no_init);
+        boost::python::class_<IParam, boost::noncopyable, boost::python::bases<ParamBase>>("IParam", boost::python::no_init);
 
-        boost::python::class_<InputParam, boost::python::bases<ParamBase>, boost::noncopyable> input_param("InputParam", boost::python::no_init);
+        boost::python::implicitly_convertible<IParam*, ParamBase*>();
+
+        boost::python::class_<std::vector<ParamBase*>> param_vec("ParamVec", boost::python::no_init);
+        param_vec.def(boost::python::vector_indexing_suite<std::vector<ParamBase*>>());
+
+        boost::python::class_<std::vector<IParam*>> iparam_vec("IParamVec", boost::python::no_init);
+        iparam_vec.def(boost::python::vector_indexing_suite<std::vector<IParam*>>());
+
+
+        boost::python::class_<InputParam, InputParam*, boost::python::bases<ParamBase>, boost::noncopyable> input_param("InputParam", boost::python::no_init);
+
+        boost::python::implicitly_convertible<InputParam*, IParam*>();
 
         boost::python::class_<std::vector<InputParam*>> input_param_vec("InputParamVec", boost::python::no_init);
+        input_param_vec.def(boost::python::vector_indexing_suite<std::vector<InputParam*>>());
+
 
         //boost::python::class_<ICoordinateSystem, std::shared_ptr<ICoordinateSystem>, boost::noncopyable> cs_obj("ICoordinateSystem", boost::python::no_init);
         //cs_obj.def("getName", &ICoordinateSystem::getName, boost::python::return_value_policy<boost::python::reference_existing_object>());

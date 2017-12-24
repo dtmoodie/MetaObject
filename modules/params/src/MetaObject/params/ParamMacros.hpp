@@ -22,7 +22,7 @@
     mo::TInputParamPtr<mo::argument_type<void(type_)>::type> name##_param;                            \
     void _init_params(bool firstInit, mo::_counter_<__COUNTER__> dummy)                               \
     {                                                                                                 \
-        name##_param.setMtx(_mtx);                                                                    \
+        name##_param.setMtx(&getMutex());                                                                    \
         name##_param.setUserDataPtr(&name);                                                           \
         name##_param.setName(#name);                                                                  \
         addParam(&name##_param);                                                                      \

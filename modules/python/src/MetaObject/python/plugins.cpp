@@ -1,5 +1,6 @@
 #include <boost/python.hpp>
 #include "MetaObject/object/MetaObjectFactory.hpp"
+#include "PythonSetup.hpp"
 #include <boost/optional/optional.hpp>
 
 namespace mo
@@ -11,19 +12,22 @@ namespace mo
     
     int loadPlugins(const std::string& dir)
     {
+
         int nplugins = mo::MetaObjectFactory::instance()->loadPlugins(dir);
-        
-        boost::python::object plugins_module(boost::python::handle<>(boost::python::borrowed(PyImport_AddModule("metaobject.plugins"))));
-        boost::python::import("metaobject").attr("plugins") = plugins_module;
-        // set the current scope to the new sub-module
-        boost::python::scope plugins_scope = plugins_module;
-        auto plugin_names = mo::MetaObjectFactory::instance()->listLoadedPluginInfo();
-        for (auto& name : plugin_names)
         {
-            boost::shared_ptr<PluginInfo> plugin(new PluginInfo(name));
-            boost::python::import("metaobject").attr("plugins").attr(name.getPluginName().c_str()) = plugin;
+            boost::python::object plugins_module(boost::python::handle<>(boost::python::borrowed(PyImport_AddModule("metaobject.plugins"))));
+            boost::python::import("metaobject").attr("plugins") = plugins_module;
+            // set the current scope to the new sub-module
+            boost::python::scope plugins_scope = plugins_module;
+            auto plugin_names = mo::MetaObjectFactory::instance()->listLoadedPluginInfo();
+            for (auto& name : plugin_names)
+            {
+                boost::shared_ptr<PluginInfo> plugin(new PluginInfo(name));
+                boost::python::import("metaobject").attr("plugins").attr(name.getPluginName().c_str()) = plugin;
+            }
         }
-        
+
+        mo::python::registerObjects();
         return nplugins;
     }
 

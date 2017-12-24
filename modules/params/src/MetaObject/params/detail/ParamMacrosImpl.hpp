@@ -31,9 +31,9 @@ struct argument_type<T(U)> {
     {                                                         \
         if (firstInit)                                        \
             name = init;                                      \
-        name##_param.setMtx(_mtx);                            \
+        name##_param.setMtx(&getMutex());                            \
         name##_param.updatePtr(&name);                        \
-        name##_param.setContext(_ctx.get());                  \
+        name##_param.setContext(getContext().get());                  \
         name##_param.setName(#name);                          \
         addParam(&name##_param);                              \
         _init_params(firstInit, --dummy);                     \
@@ -84,9 +84,9 @@ struct argument_type<T(U)> {
         if (firstInit) {                                                                    \
             name.SetValue(ENUM_EXPAND(__VA_ARGS__));                                        \
         }                                                                                   \
-        name##_param.setMtx(_mtx);                                                          \
+        name##_param.setMtx(&getMutex());                                                          \
         name##_param.updatePtr(&name);                                                      \
-        name##_param.setContext(_ctx.get());                                                \
+        name##_param.setContext(getContext().get());                                                \
         name##_param.setName(#name);                                                        \
         addParam(&name##_param);                                                            \
         _init_params(firstInit, --dummy);                                                   \
@@ -102,8 +102,8 @@ struct argument_type<T(U)> {
 #define OUTPUT_(type_, name, init, N)                                                                                                     \
     void _init_params(bool firstInit, mo::_counter_<N> dummy)                                                                             \
     {                                                                                                                                     \
-        name##_param.setMtx(_mtx);                                                                                                        \
-        name##_param.setContext(_ctx.get());                                                                                              \
+        name##_param.setMtx(&getMutex());                                                                                                        \
+        name##_param.setContext(getContext().get());                                                                                              \
         name##_param.setName(#name);                                                                                                      \
         name##_param.updatePtr(&name);                                                                                                    \
         addParam(&name##_param);                                                                                                          \
@@ -145,9 +145,9 @@ struct argument_type<T(U)> {
     {                                                                                                                                    \
         if (firstInit)                                                                                                                   \
             name = init;                                                                                                                 \
-        name##_param.setMtx(_mtx);                                                                                                       \
+        name##_param.setMtx(&getMutex());                                                                                                       \
         name##_param.updatePtr(&name);                                                                                                   \
-        name##_param.setContext(_ctx.get());                                                                                             \
+        name##_param.setContext(getContext().get());                                                                                             \
         name##_param.setName(#name);                                                                                                     \
         name##_param.setFlags(mo::ParamFlags::State_e);                                                                                  \
         addParam(&name##_param);                                                                                                         \

@@ -44,7 +44,7 @@
 
 using namespace mo;
 
-struct serializable_object : public IMetaObject {
+struct serializable_object : public MetaObject {
     MO_BEGIN(serializable_object);
     PARAM(int, test, 5)
     PARAM(int, test2, 6)

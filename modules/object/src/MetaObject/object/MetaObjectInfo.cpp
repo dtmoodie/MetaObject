@@ -13,12 +13,17 @@ using namespace mo;
 #ifdef GetModuleFileName
 #undef GetModuleFileName
 #endif
-std::string IMetaObjectInfo::getObjectTooltip() const{
+
+std::string IMetaObjectInfo::getObjectTooltip() const
+{
     return "";
 }
-std::string IMetaObjectInfo::getObjectHelp() const{
+
+std::string IMetaObjectInfo::getObjectHelp() const
+{
     return "";
 }
+
 std::string IMetaObjectInfo::Print(Verbosity verbosity) const
 {
     std::stringstream ss;

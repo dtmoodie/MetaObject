@@ -34,7 +34,7 @@ using namespace mo;
 
 INSTANTIATE_META_PARAM(int);
 
-struct output_Paramed_object : public IMetaObject {
+struct output_Paramed_object : public MetaObject {
     MO_BEGIN(output_Paramed_object)
     OUTPUT(int, test_output, 0);
     OUTPUT(double, test_double, 0.0);
@@ -44,7 +44,7 @@ struct output_Paramed_object : public IMetaObject {
     }
 };
 
-struct input_Paramed_object : public IMetaObject {
+struct input_Paramed_object : public MetaObject {
     MO_BEGIN(input_Paramed_object)
     INPUT(int, test_input, nullptr)
     MO_END;

@@ -21,7 +21,7 @@
 
 using namespace mo;
 
-struct base: public IMetaObject
+struct base: public MetaObject
 {
 
     MO_BEGIN(base)
@@ -59,6 +59,7 @@ struct derived_signals: virtual public base
     void override_slot(int value);
     int derived_count = 0;
 };
+
 struct multi_derive: virtual public derived_Param, virtual public derived_signals
 {
     MO_DERIVE(multi_derive, derived_Param, derived_signals)
@@ -83,7 +84,7 @@ void derived_signals::override_slot(int value)
     derived_count += 3*value;
 }
 
-struct base1: public TInterface<base1, IMetaObject>
+struct base1: public TInterface<base1, MetaObject>
 {
     MO_BEGIN(base1);
     MO_END;

@@ -11,6 +11,8 @@ class SignalManager;
 class ISlot;
 class ISignalRelay;
 class IMetaObject;
+class MetaObject;
+
 // Signals are simply relays for function calls
 // When a void return callback is Connected to a signal, any call of that callback will
 // be sent to any slot that is Connected to the signal.
@@ -33,6 +35,7 @@ public:
 
 protected:
     friend class IMetaObject;
+    friend class MetaObject;
     void setParent(IMetaObject* parent);
     IMetaObject* _parent = nullptr;
     Context*     _ctx    = nullptr;

@@ -23,7 +23,8 @@ namespace mo
             : m_path(path)
             , m_state(state)
             , m_load_time(time)
-            , m_build_info(info) {
+            , m_build_info(info)
+        {
         }
 
         std::string getPath() const;
@@ -37,10 +38,11 @@ namespace mo
         std::string  m_state;
         unsigned int m_load_time = 0; // total ms to load plugin
         const char*  m_build_info = nullptr;
-        unsigned int m_id;
+        unsigned int m_id = 0;
     };
 
-    class MO_EXPORTS MetaObjectFactory {
+    class MO_EXPORTS MetaObjectFactory
+    {
     public:
         IMetaObject* create(const char* type_name, int interface_id = -1);
         template <class T>
@@ -59,7 +61,9 @@ namespace mo
 
         bool loadPlugin(const std::string& filename);
         int loadPlugins(const std::string& path = "./");
-        enum PluginVerbosity {
+
+        enum PluginVerbosity
+        {
             brief, // plugin path
             info, // brief + load info (load time and load state)
             debug // info + build info
@@ -89,10 +93,12 @@ namespace mo
         bool swapObjects();
         void setCompileCallback(std::function<void(const std::string, int)>& f);
         std::shared_ptr<Connection> connectConstructorAdded(TSlot<void(void)>* slot);
+
         template <class T>
         std::vector<IObjectConstructor*> getConstructors() {
             return getConstructors(T::s_interfaceID);
         }
+
         template <class T>
         std::vector<typename T::InterfaceInfo*> getObjectInfos() {
             auto                                    constructors = getConstructors<T>();
@@ -113,7 +119,8 @@ namespace mo
     };
 
     template <class T>
-    T* MetaObjectFactory::create(const char* type_name) {
+    T* MetaObjectFactory::create(const char* type_name)
+    {
         return static_cast<T*>(create(type_name, T::s_interfaceID));
     }
 } // namespace mo

@@ -660,7 +660,6 @@ template <typename PaddingPolicy>
 unsigned char* StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(size_t size_needed) 
 {
     unsigned char* ptr  = nullptr;
-    auto           time = clock();
     for (auto itr = m_deallocate_list.begin(); itr != m_deallocate_list.end(); ++itr)
     {
         if (itr->size == size_needed) {

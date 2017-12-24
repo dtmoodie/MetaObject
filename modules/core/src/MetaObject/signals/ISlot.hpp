@@ -7,6 +7,7 @@ class ISignal;
 class Context;
 class Connection;
 class IMetaObject;
+class MetaObject;
 class ISignalRelay;
 class MO_EXPORTS ISlot {
 public:
@@ -22,6 +23,7 @@ public:
 
 protected:
     friend class IMetaObject;
+    friend class MetaObject;
     void setParent(IMetaObject* parent);
     IMetaObject* _parent = nullptr;
     Context*     _ctx    = nullptr;

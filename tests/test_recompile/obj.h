@@ -19,7 +19,7 @@ RUNTIME_COMPILER_SOURCEDEPENDENCY_EXT(".cu")
 #endif
 
 using namespace mo;
-struct test_meta_object_signals: public IMetaObject
+struct test_meta_object_signals: public MetaObject
 {
     ~test_meta_object_signals()
     {
@@ -31,7 +31,7 @@ struct test_meta_object_signals: public IMetaObject
     MO_END
 };
 
-struct test_meta_object_slots: public IMetaObject
+struct test_meta_object_slots: public MetaObject
 {
     MO_BEGIN(test_meta_object_slots)
     MO_SLOT(void, test_void)
@@ -40,21 +40,21 @@ struct test_meta_object_slots: public IMetaObject
     MO_END
 };
 
-struct test_meta_object_parameters: public IMetaObject
+struct test_meta_object_parameters: public MetaObject
 {
     MO_BEGIN(test_meta_object_parameters)
     PARAM(int, test, 5)
     MO_END
 };
 
-struct test_meta_object_output: public IMetaObject
+struct test_meta_object_output: public MetaObject
 {
 	MO_BEGIN(test_meta_object_output)
         OUTPUT(int, test_output, 0)
     MO_END
 };
 
-struct test_meta_object_input: public IMetaObject
+struct test_meta_object_input: public MetaObject
 {
 	MO_BEGIN(test_meta_object_input)
 		INPUT(int, test_input, nullptr)
@@ -62,7 +62,7 @@ struct test_meta_object_input: public IMetaObject
 };
 
 #ifdef HAVE_CUDA
-struct test_cuda_object: public IMetaObject
+struct test_cuda_object: public MetaObject
 {
     MO_BEGIN(test_cuda_object)
     PARAM(int, test, 0)

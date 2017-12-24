@@ -26,7 +26,7 @@
 
 using namespace mo;
 
-struct Paramed_object: public IMetaObject
+struct Paramed_object: public MetaObject
 {
     MO_BEGIN(Paramed_object);
         PARAM(int, int_value, 0);

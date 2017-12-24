@@ -53,11 +53,31 @@ namespace mo
         return ptr.get();
     }
 
-    static std::vector<std::function<void(void)>> setup_functions;
-    void registerSetupFunction(std::function<void(void)>&& func)
+    namespace python
     {
-        setup_functions.emplace_back(std::move(func));
+        static std::vector<std::function<void(void)>> setup_functions;
+        static std::vector<std::pair<uint32_t, std::function<void(std::vector<IObjectConstructor*>&)>>> interface_setup_functions;
+
+        void registerSetupFunction(std::function<void(void)>&& func)
+        {
+            setup_functions.emplace_back(std::move(func));
+        }
+
+        void registerInterfaceSetupFunction(uint32_t interface_id, std::function<void(std::vector<IObjectConstructor*>&)>&& func)
+        {
+            interface_setup_functions.emplace_back(interface_id, std::move(func));
+        }
+        void registerObjects()
+        {
+            auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
+            for(const auto& func : mo::python::interface_setup_functions)
+            {
+                func.second(ctrs);
+            }
+        }
+
     }
+
 
     std::vector<std::string> listConstructableObjects()
     {
@@ -105,6 +125,9 @@ namespace mo
 BOOST_PYTHON_MODULE(metaobject)
 {
     mo::pythonSetup("metaobject");
-
+    for(const auto& func : mo::python::setup_functions)
+    {
+        func();
+    }
 }
 
