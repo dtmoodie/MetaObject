@@ -1,18 +1,9 @@
 #ifdef HAVE_OPENCV
 #include "MetaObject/params/MetaParam.hpp"
-#ifdef HAVE_QT
-#include "MetaObject/params/ui/Qt/OpenCV.hpp"
-#include "MetaObject/params/ui/Qt/Containers.hpp"
-#include "MetaObject/params/ui/Qt/TParamProxy.hpp"
-#endif
-#include "MetaObject/params/buffers/CircularBuffer.hpp"
-#include "MetaObject/params/buffers/StreamBuffer.hpp"
-#include "MetaObject/params/buffers/Map.hpp"
-#include "MetaObject/serialization/CerealPolicy.hpp"
-#include "MetaObject/serialization/cvSpecializations.hpp"
-#include "MetaObject/params/detail/MetaParamImpl.hpp"
-#include "cereal/types/vector.hpp"
+#include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include <boost/lexical_cast.hpp>
+#include <cereal/types/vector.hpp>
+
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
 #endif
@@ -54,6 +45,19 @@ namespace Text
 }
 }
 }
+
+namespace cereal
+{
+    template<class AR, class T>
+    void serialize(AR& ar, cv::Rect_<T>& rect)
+    {
+        ar(cereal::make_nvp("x", rect.x));
+        ar(cereal::make_nvp("y", rect.y));
+        ar(cereal::make_nvp("width", rect.width));
+        ar(cereal::make_nvp("height", rect.height));
+    }
+}
+
 
 INSTANTIATE_META_PARAM(cv::Rect);
 INSTANTIATE_META_PARAM(cv::Rect2d);

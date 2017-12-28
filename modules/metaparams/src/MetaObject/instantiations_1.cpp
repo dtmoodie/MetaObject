@@ -1,15 +1,5 @@
 #include "MetaObject/params/MetaParam.hpp"
-#ifdef HAVE_QT
-#include "MetaObject/params/ui/Qt/OpenCV.hpp"
-#include "MetaObject/params/ui/Qt/Containers.hpp"
-#include "MetaObject/params/ui/Qt/TParamProxy.hpp"
-#endif
-#include "MetaObject/params/buffers/CircularBuffer.hpp"
-#include "MetaObject/params/buffers/StreamBuffer.hpp"
-#include "MetaObject/params/buffers/Map.hpp"
-#include "MetaObject/serialization/CerealPolicy.hpp"
-#include "MetaObject/serialization/TextPolicy.hpp"
-#include "MetaObject/serialization/cereal_map.hpp"
+#include "MetaObject/metaparams/MetaParamsInclude.hpp"
 
 #ifdef emit
 #undef emit
@@ -20,8 +10,6 @@
 #include "MetaObject/params/ui/Wt/String.hpp"
 #include "MetaObject/params/ui/Wt/IParamProxy.hpp"
 #endif
-#include <cereal/types/string.hpp>
-#include <cereal/types/map.hpp>
 
 
 #ifdef MO_EXPORTS

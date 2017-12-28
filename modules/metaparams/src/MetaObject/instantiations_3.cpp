@@ -1,18 +1,7 @@
 #ifdef HAVE_OPENCV
 #include "MetaObject/params/MetaParam.hpp"
-#ifdef HAVE_QT
-#include "MetaObject/params/ui/Qt/OpenCV.hpp"
-#include "MetaObject/params/ui/Qt/Containers.hpp"
-#include "MetaObject/params/ui/Qt/TParamProxy.hpp"
-#endif
-#include "MetaObject/params/buffers/CircularBuffer.hpp"
-#include "MetaObject/params/buffers/StreamBuffer.hpp"
-#include "MetaObject/params/buffers/Map.hpp"
-#include "MetaObject/serialization/CerealPolicy.hpp"
-#include "MetaObject/serialization/TextPolicy.hpp"
-#include <boost/lexical_cast.hpp>
-#include "MetaObject/serialization/cvSpecializations.hpp"
-#include "cereal/types/vector.hpp"
+#include "MetaObject/metaparams/MetaParamsInclude.hpp"
+
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
 #endif
@@ -23,7 +12,9 @@
 #else
 #  define MO_EXPORTS
 #endif
-namespace cv{
+
+namespace cv
+{
     template<class T>
     std::ostream& operator<<(std::ostream& os, const cv::Point_<T>& pt){
         os << pt.x << ", " << pt.y;
@@ -36,6 +27,23 @@ namespace cv{
     }
 
 }
+
+namespace cereal
+{
+    template<class AR, class T>
+    void serialize(AR& ar, cv::Point_<T>& pt)
+    {
+        ar(cereal::make_nvp("x", pt.x), cereal::make_nvp("y", pt.y));
+    }
+
+    template<class AR, class T>
+    void serialize(AR& ar, cv::Point3_<T>& pt)
+    {
+        ar(cereal::make_nvp("x", pt.x), cereal::make_nvp("y", pt.y), cereal::make_nvp("z", pt.z));
+    }
+}
+
+
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 INSTANTIATE_META_PARAM(cv::Point2f);
 INSTANTIATE_META_PARAM(cv::Point2d);

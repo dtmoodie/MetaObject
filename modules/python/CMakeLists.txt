@@ -8,5 +8,7 @@ if(HAVE_PYTHON)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/metaobject.py.in ${out_dir}/metaobject.py @ONLY)
         add_custom_target(metaobject.py.in ALL)
     endif(UNIX)
+    set(metaobject_param_include
+    "${metaobject_param_include}\n#include <MetaObject/python/PythonPolicy.hpp>" CACHE INTERNAL "" FORCE)
 
 endif()

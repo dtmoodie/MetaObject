@@ -1,19 +1,6 @@
 #ifdef HAVE_OPENCV
 #include "MetaObject/params/MetaParam.hpp"
-#ifdef HAVE_QT
-#include "MetaObject/params/ui/Qt/Containers.hpp"
-#include "MetaObject/params/ui/Qt/OpenCV.hpp"
-#include "MetaObject/params/ui/Qt/TParamProxy.hpp"
-#endif
-#include "MetaObject/params/buffers/CircularBuffer.hpp"
-#include "MetaObject/params/buffers/Map.hpp"
-#include "MetaObject/params/buffers/StreamBuffer.hpp"
-#include "MetaObject/serialization/CerealPolicy.hpp"
-#include "MetaObject/serialization/cereal_map.hpp"
-#include "MetaObject/serialization/cvSpecializations.hpp"
-#include "cereal/types/map.hpp"
-#include "cereal/types/string.hpp"
-#include <cereal/types/vector.hpp>
+#include "MetaObject/metaparams/MetaParamsInclude.hpp"
 
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
@@ -27,11 +14,16 @@
 #endif
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 #include <boost/lexical_cast.hpp>
+#include <cereal/types/vector.hpp>
 
-namespace mo {
-namespace IO {
-    namespace Text {
-        namespace imp {
+namespace mo
+{
+namespace IO
+{
+    namespace Text
+    {
+        namespace imp
+        {
             void Serialize_imp(std::ostream& os, const cv::Scalar& obj, int) {
                 os << obj.val[0] << ", " << obj.val[1] << ", " << obj.val[2] << ", " << obj.val[3];
             }
@@ -50,14 +42,32 @@ namespace IO {
 #include "MetaObject/serialization/TextPolicy.hpp"
 #define ASSERT_SERIALIZABLE(TYPE) static_assert(mo::IO::Text::imp::stream_serializable<TYPE>::value, "Checking stream serializable for " #TYPE)
 
-namespace cv {
-template <class T>
-std::ostream& operator<<(std::ostream& os, const cv::Scalar_<T>& obj) {
-    ASSERT_SERIALIZABLE(cv::Scalar);
-    os << obj.val[0] << ", " << obj.val[1] << ", " << obj.val[2] << ", " << obj.val[3];
-    return os;
+namespace cv
+{
+    template <class T>
+    std::ostream& operator<<(std::ostream& os, const cv::Scalar_<T>& obj)
+    {
+        ASSERT_SERIALIZABLE(cv::Scalar);
+        os << obj.val[0] << ", " << obj.val[1] << ", " << obj.val[2] << ", " << obj.val[3];
+        return os;
+    }
 }
+
+namespace cereal
+{
+    template<class AR, class T>
+    void serialize(AR& ar, cv::Scalar_<T>& scalar)
+    {
+
+    }
+
+    template<class AR, class T, int N>
+    void serialize(AR& ar, cv::Vec<T, N>& vec)
+    {
+
+    }
 }
+
 INSTANTIATE_META_PARAM(cv::Scalar);
 INSTANTIATE_META_PARAM(cv::Vec2f);
 INSTANTIATE_META_PARAM(cv::Vec3f);

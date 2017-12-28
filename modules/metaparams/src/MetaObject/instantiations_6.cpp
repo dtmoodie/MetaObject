@@ -1,8 +1,13 @@
 #include <MetaObject/params/MetaParam.hpp>
+#include "MetaObject/metaparams/MetaParamsInclude.hpp"
+
 #include <MetaObject/params/ITAccessibleParam.hpp>
 #include "MetaObject/params/Types.hpp"
 #include <MetaObject/params/AccessToken.hpp>
 #include <boost/lexical_cast.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
+
 namespace mo{
 namespace IO{
 namespace Text{
@@ -47,17 +52,6 @@ bool Serialize(ITAccessibleParam<EnumParam>* param, std::stringstream& ss){
 } // namespace IO
 } // namespace mo
 
-#ifdef HAVE_QT
-#include "MetaObject/params/ui/Qt/OpenCV.hpp"
-#include "MetaObject/params/ui/Qt/Containers.hpp"
-#include "MetaObject/params/ui/Qt/TParamProxy.hpp"
-#endif
-#include "MetaObject/params/buffers/CircularBuffer.hpp"
-#include "MetaObject/params/buffers/StreamBuffer.hpp"
-#include "MetaObject/params/buffers/Map.hpp"
-#include "MetaObject/serialization/CerealPolicy.hpp"
-#include "MetaObject/serialization/TextPolicy.hpp"
-
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
 #endif
@@ -71,27 +65,38 @@ bool Serialize(ITAccessibleParam<EnumParam>* param, std::stringstream& ss){
 
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 
-#include <cereal/types/vector.hpp>
-#include <cereal/types/string.hpp>
-
-namespace mo {
-std::ostream& operator<<(std::ostream& os, const mo::EnumParam& obj) {
-    ASSERT_SERIALIZABLE(EnumParam);
-    for(size_t i = 0; i < obj.enumerations.size(); ++i){
-        if(i == obj.currentSelection){
-            os << '>' << obj.enumerations[i] << "<, ";
-        }else{
-            os << obj.enumerations[i] << ", ";
+namespace mo
+{
+    std::ostream& operator<<(std::ostream& os, const mo::EnumParam& obj)
+    {
+        ASSERT_SERIALIZABLE(EnumParam);
+        for(size_t i = 0; i < obj.enumerations.size(); ++i)
+        {
+            if(i == obj.currentSelection)
+            {
+                os << '>' << obj.enumerations[i] << "<, ";
+            }else
+            {
+                os << obj.enumerations[i] << ", ";
+            }
         }
+        return os;
     }
-    return os;
-}
 }
 
 using namespace mo;
-template<class AR> void EnumParam::serialize(AR& ar){
+
+template<class AR>
+void EnumParam::serialize(AR& ar)
+{
     ar(CEREAL_NVP(enumerations), CEREAL_NVP(values), CEREAL_NVP(currentSelection));
 }
+
+namespace cereal
+{
+
+}
+
 INSTANTIATE_META_PARAM(ReadFile);
 INSTANTIATE_META_PARAM(WriteFile);
 INSTANTIATE_META_PARAM(ReadDirectory);
