@@ -22,69 +22,105 @@ https://github.com/dtmoodie/Params
 #include <string>
 #include <boost/filesystem/path.hpp>
 
+namespace mo
+{
+    struct MO_EXPORTS ReadFile : public boost::filesystem::path
+    {
+        ReadFile(const std::string& str = "");
 
-namespace mo {
-struct MO_EXPORTS ReadFile : public boost::filesystem::path {
-    ReadFile(const std::string& str = "");
-    template<class AR> std::string save_minimal(const AR& ar) const{
-        (void)ar;
-        return this->string();
-    }
-    template<class AR> void load_minimal(const AR& ar, const std::string& value){
-        (void)ar;
-        *this = value;
-    }
-};
-struct MO_EXPORTS WriteFile : public boost::filesystem::path {
-    WriteFile(const std::string& file = "");
-    template<class AR> std::string save_minimal(const AR& ar) const{
-        (void)ar;
-        return this->string();
-    }
-    template<class AR> void load_minimal(const AR& ar, const std::string& value){
-        (void)ar;
-        *this = value;
-    }
-};
-struct MO_EXPORTS ReadDirectory : public boost::filesystem::path {
-    ReadDirectory(const std::string& path = "");
-    template<class AR> std::string save_minimal(const AR& ar) const{
-        (void)ar;
-        return this->string();
-    }
-    template<class AR> void load_minimal(const AR& ar, const std::string& value){
-        (void)ar;
-        *this = value;
-    }
-};
-struct MO_EXPORTS WriteDirectory : public boost::filesystem::path {
-    WriteDirectory(const std::string& str = "");
-    template<class AR> std::string save_minimal(const AR& ar) const{
-        (void)ar;
-        return this->string();
-    }
-    template<class AR> void load_minimal(const AR& ar, const std::string& value){
-        (void)ar;
-        *this = value;
-    }
-};
+        template<class AR>
+        void save(AR& ar) const
+        {
+            ar(string());
+        }
 
-class MO_EXPORTS EnumParam {
-public:
-    EnumParam(const EnumParam&) = default;
-    EnumParam(const std::initializer_list<std::pair<const char*, int>>& values);
-    EnumParam();
+        template<class AR>
+        void load(AR& ar)
+        {
+            std::string value;
+            ar(value);
+            *this = value;
+        }
+    };
+
+    struct MO_EXPORTS WriteFile : public boost::filesystem::path
+    {
+        WriteFile(const std::string& file = "");
 
 
-    void SetValue(const std::initializer_list<const char*>& string, const std::initializer_list<int>& values);
+        template<class AR>
+        void save(AR& ar) const
+        {
+            ar(string());
+        }
 
-    void addEnum(int value, const ::std::string& enumeration);
-    int getValue();
-    std::string getEnum();
-    template<typename T> void serialize(T& ar);
+        template<class AR>
+        void load(AR& ar)
+        {
+            std::string value;
+            ar(value);
+            *this = value;
+        }
+    };
 
-    std::vector<std::string> enumerations;
-    std::vector<int>         values;
-    int currentSelection;
-};
+    struct MO_EXPORTS ReadDirectory : public boost::filesystem::path
+    {
+        ReadDirectory(const std::string& path = "");
+
+
+        template<class AR>
+        void save(AR& ar) const
+        {
+            ar(string());
+        }
+
+        template<class AR>
+        void load(AR& ar)
+        {
+            std::string value;
+            ar(value);
+            *this = value;
+        }
+    };
+
+    struct MO_EXPORTS WriteDirectory : public boost::filesystem::path
+    {
+        WriteDirectory(const std::string& str = "");
+
+
+        template<class AR>
+        void save(AR& ar) const
+        {
+            ar(string());
+        }
+
+        template<class AR>
+        void load(AR& ar)
+        {
+            std::string value;
+            ar(value);
+            *this = value;
+        }
+    };
+
+    class MO_EXPORTS EnumParam
+    {
+    public:
+        EnumParam(const EnumParam&) = default;
+        EnumParam(const std::initializer_list<std::pair<const char*, int>>& values);
+        EnumParam();
+
+        void SetValue(const std::initializer_list<const char*>& string, const std::initializer_list<int>& values);
+
+        void addEnum(int value, const ::std::string& enumeration);
+        int getValue() const;
+        std::string getEnum() const;
+
+        template<typename T>
+        void serialize(T& ar);
+
+        std::vector<std::string> enumerations;
+        std::vector<int>         values;
+        int currentSelection;
+    };
 }

@@ -62,16 +62,25 @@ struct RccParamTraitsImplShared {
     {
         //input_storage = Type(std::forward(args)...);
     }
+
     template <class... Args>
     static void nullify(InputStorage_t& input_storage)
     {
         input_storage.Reset();
     }
+
+    static inline ConstTypeRef_t get(const Raw_t& data)
+    {
+        MO_ASSERT(data.get());
+        return *data.get();
+    }
+
     static inline rcc::shared_ptr<Type>& get(Storage_t& value)
     {
         MO_ASSERT(value);
         return value;
     }
+
     static inline const rcc::shared_ptr<const Type>& get(const InputStorage_t& value)
     {
         MO_ASSERT(value);
@@ -83,6 +92,7 @@ struct RccParamTraitsImplShared {
         MO_ASSERT(value);
         return value.get();
     }
+
     static inline const Type* ptr(const InputStorage_t& value)
     {
         MO_ASSERT(value);

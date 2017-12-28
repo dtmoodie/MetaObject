@@ -121,6 +121,8 @@ struct State : public Stamped<T> {
 
 template <typename T>
 class AccessToken;
+template <typename T>
+class ConstAccessToken;
 template <typename T, typename U>
 using enable_if_storage_differs_t = typename std::enable_if<!std::is_same<T, U>::value && !std::is_same<T, typename ParamTraits<T>::Storage_t>::value, ITParam<T>*>::type;
 
@@ -179,6 +181,7 @@ public:
 
 protected:
     friend class AccessToken<T>;
+    friend class ConstAccessToken<T>;
     TSignal<TUpdateSig_t> _typed_update_signal;
     virtual bool updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, const std::shared_ptr<ICoordinateSystem>& cs) = 0;
 

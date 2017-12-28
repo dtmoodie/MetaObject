@@ -51,6 +51,12 @@ AccessToken<T> TParam<T>::access() {
 }
 
 template <typename T>
+ConstAccessToken<T> TParam<T>::access() const {
+    return ConstAccessToken<T>(*this, ParamTraits<T>::get(_data));
+}
+
+
+template <typename T>
 bool TParam<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, const std::shared_ptr<ICoordinateSystem>& cs) {
     _data     = data;
     this->_fn = fn;

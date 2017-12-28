@@ -3,19 +3,27 @@ using namespace mo;
 
 ReadFile::ReadFile(const std::string& str) :
     boost::filesystem::path(str)
-{}
+{
+
+}
 
 WriteFile::WriteFile(const std::string& file) :
     boost::filesystem::path(file)
-{}
+{
+
+}
 
 ReadDirectory::ReadDirectory(const std::string& path) :
     boost::filesystem::path(path)
-{}
+{
+
+}
 
 WriteDirectory::WriteDirectory(const std::string& str) :
     boost::filesystem::path(str)
-{}
+{
+
+}
 
 
 EnumParam::EnumParam(const std::initializer_list<std::pair<const char*, int>>& values)
@@ -28,6 +36,7 @@ EnumParam::EnumParam(const std::initializer_list<std::pair<const char*, int>>& v
         this->values.emplace_back(itr->second);
     }
 }
+
 EnumParam::EnumParam()
 {
     currentSelection = 0;
@@ -51,7 +60,8 @@ void EnumParam::addEnum(int value, const ::std::string& enumeration)
     enumerations.push_back(enumeration);
     values.push_back(value);
 }
-int EnumParam::getValue()
+
+int EnumParam::getValue() const
 {
     if (values.empty() || currentSelection >= values.size())
     {
@@ -59,7 +69,8 @@ int EnumParam::getValue()
     }
     return values[currentSelection];
 }
-std::string EnumParam::getEnum()
+
+std::string EnumParam::getEnum() const
 {
     if (currentSelection >= values.size())
     {

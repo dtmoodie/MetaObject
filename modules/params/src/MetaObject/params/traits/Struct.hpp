@@ -106,6 +106,11 @@ struct ParamTraitsImpl<Type, typename std::enable_if<!std::is_pod<Type>::value>:
         return *value;
     }
 
+    static ConstTypeRef_t get(ConstTypeRef_t value)
+    {
+        return value;
+    }
+
     static inline StoragePtr_t ptr(const Storage_t& data)
     {
         return data.get();

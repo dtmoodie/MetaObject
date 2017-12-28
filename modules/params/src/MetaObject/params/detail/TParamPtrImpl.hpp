@@ -90,6 +90,13 @@ AccessToken<T> TParamPtr<T>::access()
 }
 
 template <typename T>
+ConstAccessToken<T> TParamPtr<T>::access() const
+{
+    MO_ASSERT(ptr);
+    return ConstAccessToken<T>(*this, ParamTraits<T>::get(*ptr));
+}
+
+template <typename T>
 bool TParamPtr<T>::updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, const std::shared_ptr<ICoordinateSystem>& cs) 
 {
     mo::Mutex_t::scoped_lock lock(IParam::mtx());
@@ -142,6 +149,12 @@ template <typename T>
 AccessToken<T> TParamOutput<T>::access() 
 {
     return AccessToken<T>(*this, data);
+}
+
+template <typename T>
+ConstAccessToken<T> TParamOutput<T>::access() const
+{
+    return ConstAccessToken<T>(*this, ParamTraits<T>::get(data));
 }
 
 template <typename T>

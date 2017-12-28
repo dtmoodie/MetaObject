@@ -190,7 +190,8 @@ IParam* IParam::emitUpdate(const IParam& other) {
     return emitUpdate(other.getTimestamp(), other.getContext(), other.getFrameNumber(), other.getCoordinateSystem());
 }
 
-Mutex_t& IParam::mtx() {
+Mutex_t& IParam::mtx() const
+{
     if (_mtx == nullptr) {
         _mtx   = new boost::recursive_timed_mutex();
         //_flags = ParamFlags(_flags | ParamFlags::OwnsMutex_e);

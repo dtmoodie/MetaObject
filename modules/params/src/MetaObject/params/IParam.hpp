@@ -222,7 +222,7 @@ public:
     virtual IParam* emitUpdate(const IParam& other); // commit a Param's value copying metadata info from another parmaeter
     template <class Archive>
     void serialize(Archive& ar); // Used for cereal serialization
-    Mutex_t& mtx(); // Get reference to Param mutex.  If setMtx was called, this will reference the mutex that was set, otherwise one will be created
+    Mutex_t& mtx() const; // Get reference to Param mutex.  If setMtx was called, this will reference the mutex that was set, otherwise one will be created
     void setMtx(Mutex_t* mtx); // Use this to share a mutex with an owning object, ie a parent.
 
     EnumClassBitset<ParamFlags> appendFlags(ParamFlags flags_); // Append a flag to the Param, return previous values
@@ -243,10 +243,10 @@ protected:
     Context*                           _ctx;
     std::string                        _name;
     std::string                        _tree_root;
-    EnumClassBitset<ParamFlags>        _flags;
+    mutable EnumClassBitset<ParamFlags>        _flags;
     UpdateSignal_t                     _update_signal;
     DeleteSignal_t                     _delete_signal;
-    mo::Mutex_t*                       _mtx         = nullptr;
+    mutable mo::Mutex_t*                       _mtx         = nullptr;
     int                                _subscribers = 0;
     bool                               _modified    = false; // Set to true if modified by the user interface etc, set to false by the owning object.
 };

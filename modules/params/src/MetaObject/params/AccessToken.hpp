@@ -99,4 +99,24 @@ namespace mo
         bool valid = false;
     };
 
+    template<class T>
+    struct ConstAccessToken
+    {
+        ConstAccessToken(const ITParam<T>& param, typename ParamTraits<T>::ConstTypeRef_t data) :
+            lock(param.mtx()), _param(param), _data(ParamTraits<T>::get(data))
+        {
+
+        }
+
+        const T& operator()() const
+        {
+            return _data;
+        }
+
+        AccessTokenLock lock;
+        const ITParam<T>& _param;
+        typename ParamTraits<T>::ConstTypeRef_t _data;
+
+    };
+
 }
