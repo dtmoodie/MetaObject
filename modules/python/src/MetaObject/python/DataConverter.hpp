@@ -1,8 +1,15 @@
 #pragma once
+#include "converters.hpp"
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include "MetaObject/params/ITAccessibleParam.hpp"
+#include "MetaObject/python/PythonSetup.hpp"
+#include "MetaObject/core/Demangle.hpp"
+
+#include "CerealPythonArchive.hpp"
+
 #include <boost/python.hpp>
+#include <boost/python/extract.hpp>
 
 #include <map>
 
@@ -16,7 +23,7 @@ namespace mo
             typedef std::function<boost::python::object(const mo::ParamBase*)> Get_t;
          
             static DataConverterRegistry* instance();
-            void registerConverters(const mo::TypeInfo& type, Set_t&& setter, const Get_t&& getter);
+            void registerConverters(const mo::TypeInfo& type, const Set_t& setter, const Get_t& getter);
             Set_t getSetter(const mo::TypeInfo& type);
             Get_t getGetter(const mo::TypeInfo& type);
             std::vector<mo::TypeInfo> listConverters();
@@ -25,39 +32,39 @@ namespace mo
         };
 
         template<class T>
-        struct DataConverter
+        struct ParamConverter
         {
-            DataConverter()
+            ParamConverter()
             {
-                DataConverterRegistry::instance()->registerConverters(mo::TypeInfo(typeid(T)), std::bind(&DataConverter<T>::set, _1, _2), std::bind(&DataConverter<T>::get, _1, _2));
+                DataConverterRegistry::instance()->registerConverters(mo::TypeInfo(typeid(T)),
+                                                                      std::bind(&ParamConverter<T>::set, std::placeholders::_1, std::placeholders::_2),
+                                                                      std::bind(&ParamConverter<T>::get, std::placeholders::_1));
+                //registerSetupFunction(std::bind(&ParamConverter<T>::setupStruct));
             }
 
-            bool set(mo::ParamBase* param, const boost::python::object& obj)
+            static bool set(mo::ParamBase* param, const boost::python::object& obj)
             {
                 if(param->getTypeInfo() == mo::TypeInfo(typeid(T)))
                 {
-                    auto extractor = boost::python::extract<T>(obj);
-                    if(extractor.check())
+                    if (auto typed = dynamic_cast<mo::ITAccessibleParam<T>*>(param))
                     {
-                        if (auto typed = static_cast<mo::ITAccessibleParam<T>*>(param))
-                        {
-                            auto token = typed->access();
-                            token() = extractor();
-                            return true;
-                        }
+                        auto token = typed->access();
+                        mo::python::FromPythonDataConverter<T, void> cvt;
+                        cvt(token(), obj);
+                        return true;
                     }
                 }
                 return false;
             }
 
-            boost::python::object get(const mo::ParamBase* param)
+            static boost::python::object get(const mo::ParamBase* param)
             {
                 if(param->getTypeInfo() == mo::TypeInfo(typeid(T)))
                 {
-                    if(auto typed = static_cast<const mo::ITAccessibleParam<T>*>(param))
+                    if(auto typed = dynamic_cast<const mo::ITAccessibleParam<T>*>(param))
                     {
                         auto token = typed->access();
-                        return token();
+                        return boost::python::object(token());
                     }
                 }
                 return {};

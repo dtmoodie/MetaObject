@@ -1,7 +1,7 @@
 #ifdef HAVE_OPENCV
 #include "MetaObject/params/MetaParam.hpp"
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
-
+#include <opencv2/core/types.hpp>
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
 #endif
@@ -45,10 +45,28 @@ namespace cereal
 
 
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
-INSTANTIATE_META_PARAM(cv::Point2f);
-INSTANTIATE_META_PARAM(cv::Point2d);
-INSTANTIATE_META_PARAM(cv::Point3d);
-INSTANTIATE_META_PARAM(cv::Point3f);
-INSTANTIATE_META_PARAM(cv::Point);
+using namespace cv;
 
+
+namespace mo
+{
+    namespace reflect
+    {
+        REFLECT_TEMPLATED_DATA_START(Point_);
+            REFLECT_DATA_MEMBER(x)
+            REFLECT_DATA_MEMBER(y)
+        REFLECT_DATA_END();
+
+        REFLECT_TEMPLATED_DATA_START(Point3_);
+            REFLECT_DATA_MEMBER(x)
+            REFLECT_DATA_MEMBER(y)
+            REFLECT_DATA_MEMBER(z)
+        REFLECT_DATA_END();
+    }
+}
+INSTANTIATE_META_PARAM(Point2f);
+INSTANTIATE_META_PARAM(Point2d);
+INSTANTIATE_META_PARAM(Point3d);
+INSTANTIATE_META_PARAM(Point3f);
+INSTANTIATE_META_PARAM(Point);
 #endif

@@ -1,5 +1,10 @@
+#include "MetaObject/params/reflect_data.hpp"
+#include <opencv2/core/types.hpp>
+
+
 #include "PythonSetup.hpp"
 #include "DataConverter.hpp"
+#include "PythonPolicy.hpp"
 #include "MetaObject/params/ParamFactory.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/object/MetaObjectFactory.hpp"
@@ -7,7 +12,6 @@
 #include <boost/python.hpp>
 #include <boost/python/default_call_policies.hpp>
 #include <boost/python/raw_function.hpp>
-
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 
 #include <vector>
@@ -57,10 +61,16 @@ namespace mo
     {
         static std::vector<std::function<void(void)>> setup_functions;
         static std::vector<std::pair<uint32_t, std::function<void(std::vector<IObjectConstructor*>&)>>> interface_setup_functions;
-
+        static bool setup = false;
         void registerSetupFunction(std::function<void(void)>&& func)
         {
-            setup_functions.emplace_back(std::move(func));
+            if(!setup)
+            {
+                setup_functions.emplace_back(std::move(func));
+            }else
+            {
+                func();
+            }
         }
 
         void registerInterfaceSetupFunction(uint32_t interface_id, std::function<void(std::vector<IObjectConstructor*>&)>&& func)
@@ -115,7 +125,6 @@ namespace mo
         setupEnums(module_name);
         setupDataTypes(module_name);
         setupPlugins(module_name);
-        
         boost::python::def("listConstructableObjects", &listConstructableObjects);
         boost::python::def("listObjectInfos", &listObjectInfos);
     }
@@ -129,5 +138,6 @@ BOOST_PYTHON_MODULE(metaobject)
     {
         func();
     }
+    mo::python::setup = true;
 }
 

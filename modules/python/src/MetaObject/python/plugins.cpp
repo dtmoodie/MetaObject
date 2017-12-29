@@ -53,5 +53,6 @@ namespace mo
 
         boost::python::def("loadPlugin", &loadPlugin);
         boost::python::def("loadPlugins", &loadPlugins);
+        loadPlugins("./bin/Plugins");
     }
 }

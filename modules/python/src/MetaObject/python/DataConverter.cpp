@@ -10,9 +10,9 @@ namespace python
         return uniqueSingleton<DataConverterRegistry>();
     }
 
-    void DataConverterRegistry::registerConverters(const mo::TypeInfo& type, Set_t&& setter, const Get_t&& getter)
+    void DataConverterRegistry::registerConverters(const mo::TypeInfo& type, const Set_t& setter, const Get_t& getter)
     {
-        m_registered_converters[type] = std::make_pair(std::move(setter), std::move(getter));
+        m_registered_converters[type] = std::make_pair(setter, getter);
     }
 
     DataConverterRegistry::Set_t DataConverterRegistry::getSetter(const mo::TypeInfo& type)

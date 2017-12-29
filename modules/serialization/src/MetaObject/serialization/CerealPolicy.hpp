@@ -69,12 +69,12 @@ template<class T> struct Policy {
 };
 } // namespace Cereal
 } // namespace IO
-/*template<class T> using DetectSerializer = typename std::enable_if<
-    cereal::traits::detail::count_input_serializers<T, cereal::JSONInputArchive>::value != 0 &&
-    cereal::traits::detail::count_input_serializers<T, cereal::XMLInputArchive>::value != 0 &&
+template<class T> using DetectSerializer = typename std::enable_if<
+    cereal::traits::detail::count_input_serializers<T, cereal::JSONInputArchive>::value   != 0 &&
+    cereal::traits::detail::count_input_serializers<T, cereal::XMLInputArchive>::value    != 0 &&
     cereal::traits::detail::count_input_serializers<T, cereal::BinaryInputArchive>::value != 0
-        >::type;*/
-template<class T> using DetectSerializer = void;
+        >::type;
+//template<class T> using DetectSerializer = void;
 
 #define Param_CEREAL_SERIALIZATION_POLICY_INST_(N) \
     template<class T> struct MetaParam<T, N, \
