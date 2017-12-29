@@ -11,10 +11,10 @@ namespace mo
         struct ReflectData;
 
         template<int I, class T>
-        static constexpr inline auto get(T& data) -> decltype(ReflectData<T>::get(data, mo::_counter_<I>()));
+        static constexpr inline auto get(T& data) -> decltype(ReflectData<std::remove_const_t<T>>::get(data, mo::_counter_<I>()));
 
         template<int I, class T>
-        static constexpr inline auto get(const T& data) -> decltype(ReflectData<T>::get(data, mo::_counter_<I>()));
+        static constexpr inline auto get(const T& data) -> decltype(ReflectData<std::remove_const_t<T>>::get(data, mo::_counter_<I>()));
 
         template<int I, class T>
         static constexpr inline auto getValue(const T& data){return get<I, T>(data);}

@@ -53,31 +53,31 @@ namespace mo
         };*/
 
         template<int I, class T>
-        static constexpr inline auto get(T& data) ->decltype(ReflectData<T>::get(data, mo::_counter_<I>()))
+        static constexpr inline auto get(T& data) ->decltype(ReflectData<std::remove_const_t<T>>::get(data, mo::_counter_<I>()))
         {
-            return ReflectData<T>::get(data, mo::_counter_<I>());
+            return ReflectData<std::remove_const_t<T>>::get(data, mo::_counter_<I>());
         }
 
         template<int I, class T>
-        static constexpr inline auto get(const T& data) -> decltype(ReflectData<T>::get(data, mo::_counter_<I>()))
+        static constexpr inline auto get(const T& data) -> decltype(ReflectData<std::remove_const_t<T>>::get(data, mo::_counter_<I>()))
         {
-            return ReflectData<T>::get(data, mo::_counter_<I>());
+            return ReflectData<std::remove_const_t<T>>::get(data, mo::_counter_<I>());
         }
 
         template<int I, class T>
         static constexpr inline const char* getName()
         {
-            return ReflectData<T>::getName(mo::_counter_<I>());
+            return ReflectData<std::remove_const_t<T>>::getName(mo::_counter_<I>());
         }
 
         template<class T>
         constexpr int len()
         {
-            return ReflectData<T>::N;
+            return ReflectData<std::remove_const_t<T>>::N;
         }
 
         template<class T, class T2 = void>
-        using enable_if_reflected = typename std::enable_if<ReflectData<T>::IS_SPECIALIZED, T2>::type;
+        using enable_if_reflected = std::enable_if_t<ReflectData<T>::IS_SPECIALIZED, T2>;
 
         template<class T, class T2 = void>
         using enable_if_not_reflected = typename std::enable_if<!ReflectData<T>::IS_SPECIALIZED, T2>::type;
