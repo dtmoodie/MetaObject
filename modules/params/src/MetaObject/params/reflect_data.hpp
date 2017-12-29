@@ -122,3 +122,25 @@ struct ReflectData<TYPE<T...>, void> \
     static constexpr bool IS_SPECIALIZED = true; \
     typedef TYPE<T...> DType
 
+
+// Internally reflectable type, ie no external declaration of ReflectData
+// Example usage:
+// REFLECT_INTERNAL_START(InternallyReflected)
+//    REFLECT_INTERNAL_MEMBER(float, x)
+//    REFLECT_INTERNAL_MEMBER(float, y)
+//    REFLECT_INTERNAL_MEMBER(float, z)
+// REFLECT_INTERNAL_END();
+
+#define REFLECT_INTERNAL_MEMBER(TYPE, NAME) \
+    TYPE NAME; \
+    REFLECT_DATA_MEMBER(NAME)
+
+#define REFLECT_INTERNAL_START(TYPE) \
+struct TYPE \
+{ \
+    static constexpr int START = __COUNTER__; \
+    typedef TYPE DType; \
+    typedef void INTERNALLY_REFLECTED;
+
+#define REFLECT_INTERNAL_END() static constexpr int N = __COUNTER__ - START - 1; }
+
