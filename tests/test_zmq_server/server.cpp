@@ -1,27 +1,25 @@
 #ifdef HAVE_ZEROMQ
 
-
 #define BOOST_TEST_MAIN
 
+#include "IObjectFactorySystem.h"
+#include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/object/detail/IMetaObjectImpl.hpp"
-#include "MetaObject/signals/TSignal.hpp"
-#include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
-#include "MetaObject/signals/detail/SignalMacros.hpp"
-#include "MetaObject/signals/detail/SlotMacros.hpp"
+#include "MetaObject/params/IO/Policy.hpp"
+#include "MetaObject/params/IO/SerializationFactory.hpp"
 #include "MetaObject/params/ParamMacros.hpp"
-#include "MetaObject/params/TParamPtr.hpp"
+#include "MetaObject/params/ParamServer.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParam.hpp"
-#include "MetaObject/params/IO/SerializationFactory.hpp"
-#include "MetaObject/params/IO/Policy.hpp"
+#include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/VariableManager.h"
-#include "MetaObject/params/ParamServer.hpp"
-#include "cereal/archives/portable_binary.hpp"
+#include "MetaObject/signals/TSignal.hpp"
+#include "MetaObject/signals/detail/SignalMacros.hpp"
+#include "MetaObject/signals/detail/SlotMacros.hpp"
 #include "RuntimeObjectSystem.h"
-#include "IObjectFactorySystem.h"
-
+#include "cereal/archives/portable_binary.hpp"
 
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>
@@ -29,12 +27,11 @@
 #define BOOST_TEST_MODULE __FILE__
 #include <boost/test/included/unit_test.hpp>
 #endif
-#include <iostream>
-#include <sstream>
 #include "zmq.hpp"
 #include "zmq_utils.h"
+#include <iostream>
+#include <sstream>
 using namespace mo;
-
 
 BOOST_AUTO_TEST_CASE(server)
 {
@@ -71,12 +68,7 @@ BOOST_AUTO_TEST_CASE(server)
         socket.send(msg_);
         ++count;
     }*/
-
 }
-
-
-
-
 
 #else
 #include <iostream>

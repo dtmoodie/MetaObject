@@ -1,10 +1,10 @@
 #include "mainwindow.h"
-#include "ui_mainwindow.h"
-#include "MetaObject/params/ui/WidgetFactory.hpp"
-#include "MetaObject/params/ui/Qt/IParamProxy.hpp"
-#include "MetaObject/params/ui/Qt/TParamProxy.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
+#include "MetaObject/params/ui/Qt/IParamProxy.hpp"
+#include "MetaObject/params/ui/Qt/TParamProxy.hpp"
+#include "MetaObject/params/ui/WidgetFactory.hpp"
+#include "ui_mainwindow.h"
 
 // The following lines are commented out to demonstrate user interface instantiation in a different translation unit
 // Since the instantiation library is included, instantiations of several types are registered with the full user
@@ -21,9 +21,7 @@
 //#include "MetaObject/params/RangedParam.hpp"
 #include <MetaObject/MetaParameters.hpp>
 using namespace mo;
-MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent),
-    ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     mo::MetaParams::initialize();
     ui->setupUi(this);
@@ -35,8 +33,7 @@ MainWindow::MainWindow(QWidget *parent) :
         param->GetDataPtr()->push_back(12.0);
         param->GetDataPtr()->push_back(11.0);
         Params.push_back(std::shared_ptr<IParam>(param));*/
-    }
-    {
+    } {
         auto param = new mo::TParam<std::vector<int>>("vector int");
         auto token = param->access();
         token().push_back(15);
@@ -55,7 +52,8 @@ MainWindow::MainWindow(QWidget *parent) :
 #endif
     }
     {
-        auto param = new TParam<std::vector<std::pair<std::string, std::string>>>("Vector std::pair<std::string, std::string>");
+        auto param =
+            new TParam<std::vector<std::pair<std::string, std::string>>>("Vector std::pair<std::string, std::string>");
         auto token = param->access();
         token().push_back(std::pair<std::string, std::string>("asdf", "1234"));
         Params.push_back(std::shared_ptr<IParam>(param));
@@ -102,7 +100,7 @@ MainWindow::MainWindow(QWidget *parent) :
     }
     {
 
-        auto param = new TParam<cv::Matx<double,4,4>>("Mat4x4d");
+        auto param = new TParam<cv::Matx<double, 4, 4>>("Mat4x4d");
         Params.push_back(std::shared_ptr<IParam>(param));
     }
     {
@@ -110,8 +108,7 @@ MainWindow::MainWindow(QWidget *parent) :
         Params.push_back(std::shared_ptr<IParam>(param));
     }
 #endif
-    for (int i = 0; i < Params.size(); ++i)
-    {
+    for (int i = 0; i < Params.size(); ++i) {
         auto proxy = mo::UI::qt::WidgetFactory::Instance()->CreateProxy(Params[i].get());
         ui->widgetLayout->addWidget(proxy->getParamWidget(this));
         proxies.push_back(proxy);
@@ -140,6 +137,4 @@ void MainWindow::on_btnSerialize_clicked()
             Params::Persistence::cv::DeSerialize(&node, Params[i].get());
         }
     }*/
-
 }
-

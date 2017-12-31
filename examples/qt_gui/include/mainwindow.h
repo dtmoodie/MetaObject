@@ -18,22 +18,24 @@ namespace mo
     }
 }
 
-namespace Ui {
-class MainWindow;
+namespace Ui
+{
+    class MainWindow;
 }
 
 class MainWindow : public QMainWindow
 {
     Q_OBJECT
 
-public:
-    explicit MainWindow(QWidget *parent = 0);
+  public:
+    explicit MainWindow(QWidget* parent = 0);
     ~MainWindow();
 
-    public slots:
+  public slots:
     void on_btnSerialize_clicked();
-private:
-    Ui::MainWindow *ui;
+
+  private:
+    Ui::MainWindow* ui;
     std::vector<std::shared_ptr<mo::UI::qt::IParamProxy>> proxies;
     std::vector<std::shared_ptr<mo::IParam>> Params;
 #ifdef HAVE_OPENCV

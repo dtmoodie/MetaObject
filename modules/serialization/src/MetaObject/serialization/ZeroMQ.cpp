@@ -2,10 +2,9 @@
 using namespace mo;
 
 #ifdef HAVE_ZEROMQ
-#include "zmq.hpp"
 #include "MetaObject/IO/Message.hpp"
 #include "MetaObject/IO/ZeroMQImpl.hpp"
-
+#include "zmq.hpp"
 
 ZeroMQContext::ZeroMQContext()
 {
@@ -74,7 +73,6 @@ bool ParamPublisher::AcceptsType(TypeInfo type) const
 
 ZeroMQContext::ZeroMQContext()
 {
-
 }
 
 ZeroMQContext* ZeroMQContext::Instance()
@@ -84,12 +82,10 @@ ZeroMQContext* ZeroMQContext::Instance()
 
 struct ParamPublisher::impl
 {
-
 };
 
 ParamPublisher::ParamPublisher()
 {
-
 }
 
 ParamPublisher::~ParamPublisher()
@@ -132,7 +128,5 @@ bool ParamPublisher::AcceptsType(TypeInfo type) const
 {
     return false;
 }
-
-
 
 #endif

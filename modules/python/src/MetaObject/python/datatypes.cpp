@@ -1,11 +1,11 @@
 #include <boost/python.hpp>
 
-#include "MetaObject/python/DataConverter.hpp"
-#include "MetaObject/params/IParam.hpp"
-#include "MetaObject/params/ICoordinateSystem.hpp"
-#include "MetaObject/params/InputParam.hpp"
 #include "MetaObject/core/Demangle.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
+#include "MetaObject/params/ICoordinateSystem.hpp"
+#include "MetaObject/params/IParam.hpp"
+#include "MetaObject/params/InputParam.hpp"
+#include "MetaObject/python/DataConverter.hpp"
 
 #include <RuntimeObjectSystem/IObjectInfo.h>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -33,7 +33,7 @@ namespace mo
         }
         return ss.str();
     }
-    
+
     std::string printStringVec(const std::vector<std::string>& strs)
     {
         std::stringstream ss;
@@ -63,14 +63,12 @@ namespace mo
         return false;
     }
 
-    std::string getDataTypeName(const mo::ParamBase* param)
-    {
-        return mo::Demangle::typeToName(param->getTypeInfo());
-    }
+    std::string getDataTypeName(const mo::ParamBase* param) { return mo::Demangle::typeToName(param->getTypeInfo()); }
 
     void setupDataTypes(const std::string& module_name)
     {
-        boost::python::object datatype_module(boost::python::handle<>(boost::python::borrowed(PyImport_AddModule((module_name + ".datatypes").c_str()))));
+        boost::python::object datatype_module(
+            boost::python::handle<>(boost::python::borrowed(PyImport_AddModule((module_name + ".datatypes").c_str()))));
         boost::python::scope().attr("datatypes") = datatype_module;
         boost::python::scope datatype_scope = datatype_module;
 
@@ -80,7 +78,8 @@ namespace mo
             .def("__repr__", &printParam)
             .add_property("data", &getData, &setData);
 
-        boost::python::class_<IParam, boost::noncopyable, boost::python::bases<ParamBase>>("IParam", boost::python::no_init);
+        boost::python::class_<IParam, boost::noncopyable, boost::python::bases<ParamBase>>("IParam",
+                                                                                           boost::python::no_init);
 
         boost::python::implicitly_convertible<IParam*, ParamBase*>();
 
@@ -90,17 +89,18 @@ namespace mo
         boost::python::class_<std::vector<IParam*>> iparam_vec("IParamVec", boost::python::no_init);
         iparam_vec.def(boost::python::vector_indexing_suite<std::vector<IParam*>>());
 
-
-        boost::python::class_<InputParam, InputParam*, boost::python::bases<ParamBase>, boost::noncopyable> input_param("InputParam", boost::python::no_init);
+        boost::python::class_<InputParam, InputParam*, boost::python::bases<ParamBase>, boost::noncopyable> input_param(
+            "InputParam", boost::python::no_init);
 
         boost::python::implicitly_convertible<InputParam*, IParam*>();
 
         boost::python::class_<std::vector<InputParam*>> input_param_vec("InputParamVec", boost::python::no_init);
         input_param_vec.def(boost::python::vector_indexing_suite<std::vector<InputParam*>>());
 
-
-        //boost::python::class_<ICoordinateSystem, std::shared_ptr<ICoordinateSystem>, boost::noncopyable> cs_obj("ICoordinateSystem", boost::python::no_init);
-        //cs_obj.def("getName", &ICoordinateSystem::getName, boost::python::return_value_policy<boost::python::reference_existing_object>());
+        // boost::python::class_<ICoordinateSystem, std::shared_ptr<ICoordinateSystem>, boost::noncopyable>
+        // cs_obj("ICoordinateSystem", boost::python::no_init);
+        // cs_obj.def("getName", &ICoordinateSystem::getName,
+        // boost::python::return_value_policy<boost::python::reference_existing_object>());
 
         boost::python::class_<Context, boost::noncopyable>("Context", boost::python::no_init)
             .add_property("getName", &Context::getName)

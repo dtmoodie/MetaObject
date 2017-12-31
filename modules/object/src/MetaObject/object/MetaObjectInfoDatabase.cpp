@@ -20,7 +20,8 @@ MetaObjectInfoDatabase::~MetaObjectInfoDatabase()
 MetaObjectInfoDatabase* MetaObjectInfoDatabase::instance()
 {
     static MetaObjectInfoDatabase* g_inst = nullptr;
-    if(g_inst == nullptr){
+    if (g_inst == nullptr)
+    {
         g_inst = new MetaObjectInfoDatabase();
     }
     return g_inst;
@@ -34,8 +35,7 @@ void MetaObjectInfoDatabase::registerInfo(IMetaObjectInfo* info)
 std::vector<IMetaObjectInfo*> MetaObjectInfoDatabase::getMetaObjectInfo()
 {
     std::vector<IMetaObjectInfo*> output;
-    for(auto& itr : _pimpl->info)
-    {
+    for (auto& itr : _pimpl->info) {
         output.push_back(itr.second);
     }
     return output;
@@ -44,7 +44,7 @@ std::vector<IMetaObjectInfo*> MetaObjectInfoDatabase::getMetaObjectInfo()
 IMetaObjectInfo* MetaObjectInfoDatabase::getMetaObjectInfo(std::string name)
 {
     auto itr = _pimpl->info.find(name);
-    if(itr != _pimpl->info.end())
+    if (itr != _pimpl->info.end())
     {
         return itr->second;
     }

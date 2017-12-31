@@ -14,14 +14,14 @@ THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
 IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-https://github.com/dtmoodie/Params
+https://github.com/dtmoodie/MetaObject
 */
 
-#include "MetaObject/params/ui/WidgetFactory.hpp"
-#include "MetaObject/params/ui/Qt/DefaultProxy.hpp"
-#include "MetaObject/logging/logging.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
+#include "MetaObject/logging/logging.hpp"
 #include "MetaObject/params/IParam.hpp"
+#include "MetaObject/params/ui/Qt/DefaultProxy.hpp"
+#include "MetaObject/params/ui/WidgetFactory.hpp"
 #include <map>
 
 using namespace mo;
@@ -45,9 +45,9 @@ WidgetFactory* WidgetFactory::Instance()
 
 void WidgetFactory::RegisterConstructor(const TypeInfo& type, WidgetFactory::HandlerConstructor_f f)
 {
-    //MO_LOG(trace) << "Registering type " << type.name();
+    // MO_LOG(trace) << "Registering type " << type.name();
     auto itr = _pimpl->registry.find(type);
-    if(itr == _pimpl->registry.end())
+    if (itr == _pimpl->registry.end())
     {
         _pimpl->registry[type] = f;
     }
@@ -55,8 +55,7 @@ void WidgetFactory::RegisterConstructor(const TypeInfo& type, WidgetFactory::Han
 std::string print_types(std::map<TypeInfo, WidgetFactory::HandlerConstructor_f>& registry)
 {
     std::stringstream ss;
-    for(auto& item : registry)
-    {
+    for (auto& item : registry) {
         ss << item.first.name() << ", ";
     }
     return ss.str();
@@ -70,12 +69,11 @@ std::shared_ptr<IParamProxy> WidgetFactory::CreateProxy(IParam* param)
     if (itr == _pimpl->registry.end())
     {
         MO_LOG(debug) << "No Widget Factory registered for type " << typeName
-            << " unable to make widget for Param: " << treeName
-            << ".  Known types: " << print_types(_pimpl->registry);
+                      << " unable to make widget for Param: " << treeName
+                      << ".  Known types: " << print_types(_pimpl->registry);
 
         return std::shared_ptr<IParamProxy>(new DefaultProxy(param));
     }
     MO_LOG(trace) << "Creating handler for " << typeName << " " << treeName;
     return itr->second(param);
 }
-

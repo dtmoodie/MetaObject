@@ -1,24 +1,21 @@
 #pragma once
-#include "ParamFactory.hpp"
 #include "MetaObject/core/detail/Enums.hpp"
+#include "ParamFactory.hpp"
 
-namespace mo {
-    template<class T> 
-    class ParamConstructor 
+namespace mo
+{
+    template <class T>
+    class ParamConstructor
     {
-    public:
-        ParamConstructor() 
+      public:
+        ParamConstructor()
         {
-            ParamFactory::instance()->registerConstructor(TypeInfo(typeid(typename T::ValueType)),
-                    std::bind(&ParamConstructor<T>::create), T::Type);
+            ParamFactory::instance()->registerConstructor(
+                TypeInfo(typeid(typename T::ValueType)), std::bind(&ParamConstructor<T>::create), T::Type);
 
-            ParamFactory::instance()->registerConstructor(TypeInfo(typeid(T)),
-                    std::bind(&ParamConstructor<T>::create));
+            ParamFactory::instance()->registerConstructor(TypeInfo(typeid(T)), std::bind(&ParamConstructor<T>::create));
         }
 
-        static std::shared_ptr<IParam> create() 
-        {
-            return std::make_shared<T>();
-        }
+        static std::shared_ptr<IParam> create() { return std::make_shared<T>(); }
     };
 }

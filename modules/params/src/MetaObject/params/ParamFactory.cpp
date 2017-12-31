@@ -1,7 +1,7 @@
 #include "MetaObject/params/ParamFactory.hpp"
+#include "MetaObject/core/detail/singleton.hpp"
 #include "MetaObject/logging/logging.hpp"
 #include "MetaObject/params/IParam.hpp"
-#include "MetaObject/core/detail/singleton.hpp"
 #include <map>
 
 using namespace mo;
@@ -12,8 +12,7 @@ struct ParamFactory::impl
     std::map<TypeInfo, create_f> _registered_constructors_exact;
 };
 
-ParamFactory::ParamFactory():
-    m_pimpl(std::make_unique<ParamFactory::impl>())
+ParamFactory::ParamFactory() : m_pimpl(std::make_unique<ParamFactory::impl>())
 {
 }
 
@@ -40,14 +39,15 @@ void ParamFactory::registerConstructor(const TypeInfo& param_type, create_f func
 std::shared_ptr<IParam> ParamFactory::create(const TypeInfo& data_type, ParamType param_type)
 {
     auto itr = m_pimpl->_registered_constructors.find(data_type);
-    if(itr != m_pimpl->_registered_constructors.end())
+    if (itr != m_pimpl->_registered_constructors.end())
     {
         auto itr2 = itr->second.find(param_type);
-        if(itr2 != itr->second.end())
+        if (itr2 != itr->second.end())
         {
             return std::shared_ptr<IParam>(itr2->second());
         }
-        MO_LOG(debug) << "Requested datatype (" << data_type.name() << ") exists but the specified Param type : " << param_type << " does not.";
+        MO_LOG(debug) << "Requested datatype (" << data_type.name()
+                      << ") exists but the specified Param type : " << param_type << " does not.";
     }
     MO_LOG(debug) << "Requested datatype (" << data_type.name() << ") does not exist";
     return nullptr;
@@ -56,7 +56,7 @@ std::shared_ptr<IParam> ParamFactory::create(const TypeInfo& data_type, ParamTyp
 std::shared_ptr<IParam> ParamFactory::create(const TypeInfo& param_type)
 {
     auto itr = m_pimpl->_registered_constructors_exact.find(param_type);
-    if(itr != m_pimpl->_registered_constructors_exact.end())
+    if (itr != m_pimpl->_registered_constructors_exact.end())
     {
         return std::shared_ptr<IParam>(itr->second());
     }
@@ -66,11 +66,10 @@ std::shared_ptr<IParam> ParamFactory::create(const TypeInfo& param_type)
 std::vector<TypeInfo> ParamFactory::listConstructableDataTypes(ParamType type)
 {
     std::vector<TypeInfo> output;
-    for(auto itr1 = m_pimpl->_registered_constructors.begin(); itr1 != m_pimpl->_registered_constructors.end(); ++itr1)
+    for (auto itr1 = m_pimpl->_registered_constructors.begin(); itr1 != m_pimpl->_registered_constructors.end(); ++itr1)
     {
-        for(auto itr2 = itr1->second.begin(); itr2 != itr1->second.end(); ++itr2)
-        {
-            if(itr2->first == type)
+        for (auto itr2 = itr1->second.begin(); itr2 != itr1->second.end(); ++itr2) {
+            if (itr2->first == type)
             {
                 output.push_back(itr1->first);
             }
@@ -82,10 +81,9 @@ std::vector<TypeInfo> ParamFactory::listConstructableDataTypes(ParamType type)
 std::vector<std::pair<TypeInfo, ParamType>> ParamFactory::listConstructableDataTypes()
 {
     std::vector<std::pair<TypeInfo, ParamType>> output;
-    for(auto itr1 = m_pimpl->_registered_constructors.begin(); itr1 != m_pimpl->_registered_constructors.end(); ++itr1)
+    for (auto itr1 = m_pimpl->_registered_constructors.begin(); itr1 != m_pimpl->_registered_constructors.end(); ++itr1)
     {
-        for(auto itr2 = itr1->second.begin(); itr2 != itr1->second.end(); ++itr2)
-        {
+        for (auto itr2 = itr1->second.begin(); itr2 != itr1->second.end(); ++itr2) {
             output.emplace_back(itr1->first, itr2->first);
         }
     }

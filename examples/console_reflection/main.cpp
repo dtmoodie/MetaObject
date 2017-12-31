@@ -15,10 +15,9 @@ int main()
     auto constructors = factory->getConstructors(ExampleInterface::s_interfaceID);
 
     // Print static object info
-    for(IObjectConstructor* constructor : constructors)
-    {
+    for (IObjectConstructor* constructor : constructors) {
         IObjectInfo* info = constructor->GetObjectInfo();
-        if(ExampleInterfaceInfo* interface_info = dynamic_cast<ExampleInterfaceInfo*>(info))
+        if (ExampleInterfaceInfo* interface_info = dynamic_cast<ExampleInterfaceInfo*>(info))
         {
             interface_info->PrintHelp();
         }
@@ -28,7 +27,7 @@ int main()
 
     // Construct an object
     mo::IMetaObject* obj = factory->create("ConcreteImplementation");
-    if(ExampleInterface* interface_object = dynamic_cast<ExampleInterface*>(obj))
+    if (ExampleInterface* interface_object = dynamic_cast<ExampleInterface*>(obj))
     {
         interface_object->foo();
     }

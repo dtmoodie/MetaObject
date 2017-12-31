@@ -1,6 +1,6 @@
 #ifdef HAVE_OPENCV
-#include "MetaObject/params/MetaParam.hpp"
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
+#include "MetaObject/params/MetaParam.hpp"
 #include "opencv2/core/types.hpp"
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
@@ -18,29 +18,32 @@
 
 namespace mo
 {
-namespace IO
-{
-    namespace Text
+    namespace IO
     {
-        namespace imp
+        namespace Text
         {
-            void Serialize_imp(std::ostream& os, const cv::Scalar& obj, int) {
-                os << obj.val[0] << ", " << obj.val[1] << ", " << obj.val[2] << ", " << obj.val[3];
-            }
-            void DeSerialize_imp(std::istream& is, cv::Scalar& obj, int) {
-                char c;
-                for (int i = 0; i < 4; ++i) {
-                    is >> obj[i];
-                    is >> c;
+            namespace imp
+            {
+                void Serialize_imp(std::ostream& os, const cv::Scalar& obj, int)
+                {
+                    os << obj.val[0] << ", " << obj.val[1] << ", " << obj.val[2] << ", " << obj.val[3];
+                }
+                void DeSerialize_imp(std::istream& is, cv::Scalar& obj, int)
+                {
+                    char c;
+                    for (int i = 0; i < 4; ++i) {
+                        is >> obj[i];
+                        is >> c;
+                    }
                 }
             }
         }
     }
 }
-}
 
 #include "MetaObject/serialization/TextPolicy.hpp"
-#define ASSERT_SERIALIZABLE(TYPE) static_assert(mo::IO::Text::imp::stream_serializable<TYPE>::value, "Checking stream serializable for " #TYPE)
+#define ASSERT_SERIALIZABLE(TYPE)                                                                                      \
+    static_assert(mo::IO::Text::imp::stream_serializable<TYPE>::value, "Checking stream serializable for " #TYPE)
 
 namespace cv
 {
@@ -55,16 +58,14 @@ namespace cv
 
 namespace cereal
 {
-    template<class AR, class T>
+    template <class AR, class T>
     void serialize(AR& ar, cv::Scalar_<T>& scalar)
     {
-
     }
 
-    template<class AR, class T, int N>
+    template <class AR, class T, int N>
     void serialize(AR& ar, cv::Vec<T, N>& vec)
     {
-
     }
 }
 
@@ -73,26 +74,22 @@ namespace mo
 {
     namespace reflect
     {
-        template<class T, size_t N>
+        template <class T, size_t N>
         struct ArrayAdapter
         {
-            ArrayAdapter(T* ptr_ = nullptr):
-                ptr(ptr_)
-            {
-            }
+            ArrayAdapter(T* ptr_ = nullptr) : ptr(ptr_) {}
 
             T* ptr;
         };
 
-        template<class T, size_t N>
+        template <class T, size_t N>
         std::ostream& operator<<(std::ostream& os, const ArrayAdapter<T, N>& array)
         {
-            if(array.ptr)
+            if (array.ptr)
             {
                 os << "[";
-                for(size_t i = 0; i < N; ++i)
-                {
-                    if(i != 0)
+                for (size_t i = 0; i < N; ++i) {
+                    if (i != 0)
                         os << ',';
                     os << array.ptr[i];
                 }
@@ -100,47 +97,52 @@ namespace mo
             return os;
         }
 
-        template<class T, size_t Rows, size_t Cols>
+        template <class T, size_t Rows, size_t Cols>
         struct MatrixAdapter
         {
-            MatrixAdapter(T* ptr_ = nullptr):
-                ptr(ptr_)
-            {
-            }
+            MatrixAdapter(T* ptr_ = nullptr) : ptr(ptr_) {}
 
             T* ptr;
         };
 
-        template<class T, size_t R, size_t C>
+        template <class T, size_t R, size_t C>
         struct ReflectData<cv::Matx<T, R, C>>
         {
             static constexpr int N = 1;
             static constexpr int IS_SPECIALIZED = true;
-            static constexpr MatrixAdapter<T, R, C> get(cv::Matx<T, R, C>& data, mo::_counter_<0>){ return data.val; }
-            static constexpr MatrixAdapter<const T, R, C> get(const cv::Matx<T, R, C>& data, mo::_counter_<0>){ return data.val; }
+            static constexpr MatrixAdapter<T, R, C> get(cv::Matx<T, R, C>& data, mo::_counter_<0>) { return data.val; }
+            static constexpr MatrixAdapter<const T, R, C> get(const cv::Matx<T, R, C>& data, mo::_counter_<0>)
+            {
+                return data.val;
+            }
             static constexpr const char* getName(mo::_counter_<0>) { return "data"; }
         };
 
-        template<class T, int R>
+        template <class T, int R>
         struct ReflectData<cv::Vec<T, R>>
         {
             static constexpr int N = 1;
             static constexpr int IS_SPECIALIZED = true;
-            static constexpr ArrayAdapter<T, R> get(cv::Vec<T, R>& data, mo::_counter_<0>){ return data.val; }
-            static constexpr ArrayAdapter<const T, R> get(const cv::Vec<T, R>& data, mo::_counter_<0>){ return data.val; }
+            static constexpr ArrayAdapter<T, R> get(cv::Vec<T, R>& data, mo::_counter_<0>) { return data.val; }
+            static constexpr ArrayAdapter<const T, R> get(const cv::Vec<T, R>& data, mo::_counter_<0>)
+            {
+                return data.val;
+            }
             static constexpr const char* getName(mo::_counter_<0>) { return "data"; }
         };
 
-        template<class T>
+        template <class T>
         struct ReflectData<cv::Scalar_<T>>
         {
             static constexpr int N = 1;
             static constexpr int IS_SPECIALIZED = true;
-            static constexpr ArrayAdapter<T, 4> get(cv::Scalar_<T>& data, mo::_counter_<0>){ return &data.val[0]; }
-            static constexpr ArrayAdapter<const T, 4> get(const cv::Scalar_<T>& data, mo::_counter_<0>){ return &data.val[0]; }
+            static constexpr ArrayAdapter<T, 4> get(cv::Scalar_<T>& data, mo::_counter_<0>) { return &data.val[0]; }
+            static constexpr ArrayAdapter<const T, 4> get(const cv::Scalar_<T>& data, mo::_counter_<0>)
+            {
+                return &data.val[0];
+            }
             static constexpr const char* getName(mo::_counter_<0>) { return "data"; }
         };
-
     }
 }
 

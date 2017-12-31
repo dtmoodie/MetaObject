@@ -1,6 +1,6 @@
 #include "MetaObject/signals/ISlot.hpp"
-#include "MetaObject/thread/InterThread.hpp"
 #include "MetaObject/signals/ISignalRelay.hpp"
+#include "MetaObject/thread/InterThread.hpp"
 
 using namespace mo;
 
@@ -22,14 +22,17 @@ IMetaObject* ISlot::getParent() const
 {
     return _parent;
 }
-Context* ISlot::getContext() const{
-    if(_ctx)
+Context* ISlot::getContext() const
+{
+    if (_ctx)
         return _ctx;
-    if(_parent){
-        //return _parent->getContext();
+    if (_parent)
+    {
+        // return _parent->getContext();
     }
     return nullptr;
 }
-void ISlot::setContext(Context* ctx){
+void ISlot::setContext(Context* ctx)
+{
     _ctx = ctx;
 }

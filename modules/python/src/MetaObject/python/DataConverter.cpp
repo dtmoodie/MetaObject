@@ -3,28 +3,25 @@
 
 namespace mo
 {
-namespace python
-{
-    DataConverterRegistry* DataConverterRegistry::instance()
+    namespace python
     {
-        return uniqueSingleton<DataConverterRegistry>();
-    }
+        DataConverterRegistry* DataConverterRegistry::instance() { return uniqueSingleton<DataConverterRegistry>(); }
 
-    void DataConverterRegistry::registerConverters(const mo::TypeInfo& type, const Set_t& setter, const Get_t& getter)
-    {
-        m_registered_converters[type] = std::make_pair(setter, getter);
-    }
+        void
+        DataConverterRegistry::registerConverters(const mo::TypeInfo& type, const Set_t& setter, const Get_t& getter)
+        {
+            m_registered_converters[type] = std::make_pair(setter, getter);
+        }
 
-    DataConverterRegistry::Set_t DataConverterRegistry::getSetter(const mo::TypeInfo& type)
-    {
-        return m_registered_converters[type].first;
-    }
-    
-    DataConverterRegistry::Get_t DataConverterRegistry::getGetter(const mo::TypeInfo& type)
-    {
-        return m_registered_converters[type].second;
-    }
+        DataConverterRegistry::Set_t DataConverterRegistry::getSetter(const mo::TypeInfo& type)
+        {
+            return m_registered_converters[type].first;
+        }
 
+        DataConverterRegistry::Get_t DataConverterRegistry::getGetter(const mo::TypeInfo& type)
+        {
+            return m_registered_converters[type].second;
+        }
 
-} // namespace mo::python
+    } // namespace mo::python
 } // namespace mo

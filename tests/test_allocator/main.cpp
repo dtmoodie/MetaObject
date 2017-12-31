@@ -4,13 +4,13 @@
 #include "MetaObject/core/detail/StlAllocator.hpp"
 #include "MetaObject/logging/profiling.hpp"
 
-#include <boost/log/core.hpp>
-#include <boost/log/trivial.hpp>
-#include <boost/log/expressions.hpp>
-#include <boost/log/sinks.hpp>
 #include <boost/log/attributes.hpp>
 #include <boost/log/common.hpp>
+#include <boost/log/core.hpp>
 #include <boost/log/exceptions.hpp>
+#include <boost/log/expressions.hpp>
+#include <boost/log/sinks.hpp>
+#include <boost/log/trivial.hpp>
 #include <opencv2/cudaarithm.hpp>
 
 #ifdef _MSC_VER
@@ -37,8 +37,8 @@ BOOST_AUTO_TEST_CASE(initialize_global)
     BOOST_REQUIRE(mo::Allocator::getThreadSafeAllocator());
 }
 
-DEFINE_HAS_STATIC_FUNCTION(HasGpuDefaultAllocator, setDefaultThreadAllocator, void(*)(cv::cuda::GpuMat::Allocator*));
-DEFINE_HAS_STATIC_FUNCTION(HasCpuDefaultAllocator, setDefaultThreadAllocator, void(*)(cv::MatAllocator*));
+DEFINE_HAS_STATIC_FUNCTION(HasGpuDefaultAllocator, setDefaultThreadAllocator, void (*)(cv::cuda::GpuMat::Allocator*));
+DEFINE_HAS_STATIC_FUNCTION(HasCpuDefaultAllocator, setDefaultThreadAllocator, void (*)(cv::MatAllocator*));
 
 BOOST_AUTO_TEST_CASE(test_cpu_set_allocator)
 {
@@ -51,8 +51,7 @@ BOOST_AUTO_TEST_CASE(test_gpu_set_allocator)
 BOOST_AUTO_TEST_CASE(test_cpu_pooled_allocation)
 {
     auto start = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         cv::Mat vec(1, 100 * std::min(1000, 1 + rand()), CV_32FC2);
         vec *= 100;
         vec += 10;
@@ -63,8 +62,7 @@ BOOST_AUTO_TEST_CASE(test_cpu_pooled_allocation)
     start = boost::posix_time::microsec_clock::local_time();
     mo::PinnedAllocator pinnedAllocator;
     cv::Mat::setDefaultAllocator(&pinnedAllocator);
-    for(int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         cv::Mat vec(1, 100 * std::min(1000, 1 + rand()), CV_32FC2);
         vec *= 100;
         vec += 10;
@@ -75,8 +73,7 @@ BOOST_AUTO_TEST_CASE(test_cpu_pooled_allocation)
     cv::Mat::setDefaultAllocator(&allocator);
 
     start = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         cv::Mat vec(1, 100 * std::min(1000, 1 + rand()), CV_32FC2);
         vec *= 100;
         vec += 10;
@@ -84,15 +81,12 @@ BOOST_AUTO_TEST_CASE(test_cpu_pooled_allocation)
     end = boost::posix_time::microsec_clock::local_time();
     double pooled_time = boost::posix_time::time_duration(end - start).total_milliseconds();
 
-
-
     // Test the thread safe allocators
     mo::mt_CpuPoolPolicy mtPoolAllocator;
     cv::Mat::setDefaultAllocator(&mtPoolAllocator);
 
     start = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         cv::Mat vec(1, 100 * std::min(1000, 1 + rand()), CV_32FC2);
         vec *= 100;
         vec += 10;
@@ -104,19 +98,17 @@ BOOST_AUTO_TEST_CASE(test_cpu_pooled_allocation)
     BOOST_REQUIRE_LT(pooled_time, non_pooled_time);
     std::cout << "\n ======================================================================== \n";
     std::cout << " Random Allocation Pattern\n";
-    std::cout
-        << " Default Allocator Time: " << non_pinned_time << "\n"
-        << " Pinned Allocator Time:  " << non_pooled_time << "\n"
-        << " Pooled Time:            " << pooled_time << "\n"
-        << " Thead Safe Pooled Time: " << mt_pooled_time;
+    std::cout << " Default Allocator Time: " << non_pinned_time << "\n"
+              << " Pinned Allocator Time:  " << non_pooled_time << "\n"
+              << " Pooled Time:            " << pooled_time << "\n"
+              << " Thead Safe Pooled Time: " << mt_pooled_time;
 }
 
 BOOST_AUTO_TEST_CASE(test_cpu_stack_allocation)
 {
     auto start = boost::posix_time::microsec_clock::local_time();
     cv::Mat zeroAlloc(2000, 2000, CV_32FC2);
-    for (int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         zeroAlloc *= 100;
         zeroAlloc += 10;
     }
@@ -124,8 +116,7 @@ BOOST_AUTO_TEST_CASE(test_cpu_stack_allocation)
     double zero_alloc_time = boost::posix_time::time_duration(end - start).total_milliseconds();
 
     start = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         cv::Mat vec(2000, 2000, CV_32FC2);
         vec *= 100;
         vec += 10;
@@ -136,8 +127,7 @@ BOOST_AUTO_TEST_CASE(test_cpu_stack_allocation)
     start = boost::posix_time::microsec_clock::local_time();
     mo::PinnedAllocator pinnedAllocator;
     cv::Mat::setDefaultAllocator(&pinnedAllocator);
-    for (int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         cv::Mat vec(2000, 2000, CV_32FC2);
         vec *= 100;
         vec += 10;
@@ -148,8 +138,7 @@ BOOST_AUTO_TEST_CASE(test_cpu_stack_allocation)
     cv::Mat::setDefaultAllocator(&allocator);
 
     start = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         cv::Mat vec(2000, 2000, CV_32FC2);
         vec *= 100;
         vec += 10;
@@ -162,8 +151,7 @@ BOOST_AUTO_TEST_CASE(test_cpu_stack_allocation)
     cv::Mat::setDefaultAllocator(&mtPoolAllocator);
 
     start = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         cv::Mat vec(2000, 2000, CV_32FC2);
         vec *= 100;
         vec += 10;
@@ -175,20 +163,18 @@ BOOST_AUTO_TEST_CASE(test_cpu_stack_allocation)
     BOOST_REQUIRE_LT(pooled_time, non_pooled_time);
     std::cout << "\n ======================================================================== \n";
     std::cout << " Fixed Allocation Pattern\n";
-    std::cout
-        << " Default Allocator Time:   " << non_pinned_time << "\n"
-        << " Pinned Allocator Time:    " << non_pooled_time << "\n"
-        << " Pooled Time:              " << pooled_time << "\n"
-        << " Thead Safe Pooled Time:   " << mt_pooled_time << "\n"
-        << " Zero Allocation Time:     " << zero_alloc_time;
+    std::cout << " Default Allocator Time:   " << non_pinned_time << "\n"
+              << " Pinned Allocator Time:    " << non_pooled_time << "\n"
+              << " Pooled Time:              " << pooled_time << "\n"
+              << " Thead Safe Pooled Time:   " << mt_pooled_time << "\n"
+              << " Zero Allocation Time:     " << zero_alloc_time;
 }
 BOOST_AUTO_TEST_CASE(test_cpu_combined_allocation)
 {
     auto allocator = mo::Allocator::getThreadSpecificAllocator();
     cv::Mat::setDefaultAllocator(allocator.get());
     auto start = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         cv::Mat vec(2, std::min(1000, 1 + rand()) * 100, CV_32F);
         vec *= 100;
         vec += 10;
@@ -197,8 +183,7 @@ BOOST_AUTO_TEST_CASE(test_cpu_combined_allocation)
     double random_size = boost::posix_time::time_duration(end - start).total_milliseconds();
 
     start = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         cv::Mat vec(2000, 2000, CV_32F);
         vec *= 100;
         vec += 10;
@@ -209,8 +194,7 @@ BOOST_AUTO_TEST_CASE(test_cpu_combined_allocation)
     allocator = mo::Allocator::getThreadSafeAllocator();
     cv::Mat::setDefaultAllocator(allocator.get());
     start = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         cv::Mat vec(2, std::min(1000, 1 + rand()) * 100, CV_32F);
         vec *= 100;
         vec += 10;
@@ -219,8 +203,7 @@ BOOST_AUTO_TEST_CASE(test_cpu_combined_allocation)
     double mt_random_size = boost::posix_time::time_duration(end - start).total_milliseconds();
 
     start = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         cv::Mat vec(2000, 2000, CV_32F);
         vec *= 100;
         vec += 10;
@@ -228,27 +211,23 @@ BOOST_AUTO_TEST_CASE(test_cpu_combined_allocation)
     end = boost::posix_time::microsec_clock::local_time();
     double mt_set_size = boost::posix_time::time_duration(end - start).total_milliseconds();
 
-
     std::cout << "\n ======================================================================== \n";
-    std::cout
-        << "------------ Thread specifc ---------------\n"
-        << " Random Allocation Pattern: " << random_size << "\n"
-        << " Set Allocation Pattern:    " << set_size << "\n"
-        << "------------ Thread safe ---------------\n"
-        << " Random Allocation Pattern: " << mt_random_size << "\n"
-        << " Set Allocation Pattern:    " << mt_set_size << "\n";
+    std::cout << "------------ Thread specifc ---------------\n"
+              << " Random Allocation Pattern: " << random_size << "\n"
+              << " Set Allocation Pattern:    " << set_size << "\n"
+              << "------------ Thread safe ---------------\n"
+              << " Random Allocation Pattern: " << mt_random_size << "\n"
+              << " Set Allocation Pattern:    " << mt_set_size << "\n";
 }
 
 BOOST_AUTO_TEST_CASE(test_gpu_random_allocation_pattern)
 {
     cv::cuda::Stream stream;
 
-
     cv::cuda::GpuMat X_(1, 1000, CV_32F);
     cv::cuda::GpuMat Y_(1, 1000, CV_32F);
     auto start = boost::posix_time::microsec_clock::local_time();
-    for (int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         int cols = std::min(1000, 1 + rand());
         cv::cuda::GpuMat X = X_.colRange(0, cols);
         cv::cuda::GpuMat Y = Y_.colRange(0, cols);
@@ -260,8 +239,7 @@ BOOST_AUTO_TEST_CASE(test_gpu_random_allocation_pattern)
 
     // Default allocator
     start = boost::posix_time::microsec_clock::local_time();
-    for(int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         cv::cuda::GpuMat X(1, std::min(1000, 1 + rand()), CV_32F);
         cv::cuda::GpuMat Y;
         cv::cuda::multiply(X, cv::Scalar(100), Y, 1, -1, stream);
@@ -274,8 +252,7 @@ BOOST_AUTO_TEST_CASE(test_gpu_random_allocation_pattern)
     ConcreteAllocator<h_PoolAllocator_t, d_TensorPoolAllocator_t> poolAllocator;
     auto defaultAllocator = cv::cuda::GpuMat::defaultAllocator();
     cv::cuda::GpuMat::setDefaultAllocator(&poolAllocator);
-    for(int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         cv::cuda::GpuMat X(1, std::min(1000, 1 + rand()), CV_32F);
         cv::cuda::GpuMat Y;
         cv::cuda::multiply(X, cv::Scalar(100), Y, 1, -1, stream);
@@ -286,17 +263,15 @@ BOOST_AUTO_TEST_CASE(test_gpu_random_allocation_pattern)
     double pool_allocator = boost::posix_time::time_duration(end - start).total_milliseconds();
 
     std::cout << "\n ======================= GPU ============================================ \n";
-    std::cout
-        << "------------ Thread specifc ---------------\n"
-        << " Zero Allocation:   " << zero_allocator << "\n"
-        << " Default Allocator: " << default_allocator << "\n"
-        << " Pool Allocator:    " << pool_allocator << "\n";
+    std::cout << "------------ Thread specifc ---------------\n"
+              << " Zero Allocation:   " << zero_allocator << "\n"
+              << " Default Allocator: " << default_allocator << "\n"
+              << " Pool Allocator:    " << pool_allocator << "\n";
 
     poolAllocator.release();
     cv::cuda::GpuMat::setDefaultAllocator(defaultAllocator);
-    //Allocator::getThreadSpecificAllocator()->Release();
+    // Allocator::getThreadSpecificAllocator()->Release();
 }
-
 
 BOOST_AUTO_TEST_CASE(test_gpu_static_allocation_pattern)
 {
@@ -308,8 +283,7 @@ BOOST_AUTO_TEST_CASE(test_gpu_static_allocation_pattern)
     {
         cv::cuda::GpuMat X(2000, 2000, CV_32F);
         cv::cuda::GpuMat Y(2000, 2000, CV_32F);
-        for (int i = 0; i < 1000; ++i)
-        {
+        for (int i = 0; i < 1000; ++i) {
             cv::cuda::multiply(X, cv::Scalar(100), Y, 1, -1, stream);
             cv::cuda::subtract(Y, cv::Scalar(100), Y, cv::noArray(), -1, stream);
         }
@@ -320,8 +294,7 @@ BOOST_AUTO_TEST_CASE(test_gpu_static_allocation_pattern)
 
     // Default allocator
     start = boost::posix_time::microsec_clock::local_time();
-    for(int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         cv::cuda::GpuMat X(2000, 2000, CV_32F);
         cv::cuda::GpuMat Y;
         cv::cuda::multiply(X, cv::Scalar(100), Y, 1, -1, stream);
@@ -330,14 +303,12 @@ BOOST_AUTO_TEST_CASE(test_gpu_static_allocation_pattern)
     end = boost::posix_time::microsec_clock::local_time();
     double default_allocator = boost::posix_time::time_duration(end - start).total_milliseconds();
 
-
     // Custom allocator
     ConcreteAllocator<h_PoolAllocator_t, d_TextureAllocator_t> poolAllocator;
     auto defaultAllocator = cv::cuda::GpuMat::defaultAllocator();
     cv::cuda::GpuMat::setDefaultAllocator(&poolAllocator);
     start = boost::posix_time::microsec_clock::local_time();
-    for(int i = 0; i < 1000; ++i)
-    {
+    for (int i = 0; i < 1000; ++i) {
         cv::cuda::GpuMat X(2000, 2000, CV_32F);
         cv::cuda::GpuMat Y;
         cv::cuda::multiply(X, cv::Scalar(100), Y, 1, -1, stream);
@@ -348,41 +319,36 @@ BOOST_AUTO_TEST_CASE(test_gpu_static_allocation_pattern)
     double pool_allocator = boost::posix_time::time_duration(end - start).total_milliseconds();
 
     std::cout << "\n ======================= GPU ============================================ \n";
-    std::cout
-        << "------------ Thread specifc ---------------\n"
-        << " Zero Allocation:   " << zero_allocation << "\n"
-        << " Default Allocator: " << default_allocator << "\n"
-        << " Pool Allocator:    " << pool_allocator << "\n";
+    std::cout << "------------ Thread specifc ---------------\n"
+              << " Zero Allocation:   " << zero_allocation << "\n"
+              << " Default Allocator: " << default_allocator << "\n"
+              << " Pool Allocator:    " << pool_allocator << "\n";
 
     poolAllocator.release();
     Allocator::getThreadSpecificAllocator()->release();
     cv::cuda::GpuMat::setDefaultAllocator(defaultAllocator);
 }
 
-
 BOOST_AUTO_TEST_CASE(stl_allocator_pool)
 {
     std::vector<float> zero_allocation;
     zero_allocation.resize(2000);
     auto start = boost::posix_time::microsec_clock::local_time();
-    for(int i = 0; i < 10000; ++i)
-    {
+    for (int i = 0; i < 10000; ++i) {
         int size = std::min(2000, rand() + 1);
-        cv::Mat view(1, size,CV_32F, zero_allocation.data());
+        cv::Mat view(1, size, CV_32F, zero_allocation.data());
         view *= 100;
         view += 10;
     }
     auto end = boost::posix_time::microsec_clock::local_time();
     double zero_allocation_time = boost::posix_time::time_duration(end - start).total_milliseconds();
 
-
     start = boost::posix_time::microsec_clock::local_time();
-    for(int i = 0; i < 10000; ++i)
-    {
+    for (int i = 0; i < 10000; ++i) {
         std::vector<float> vec;
         int size = std::min(2000, rand() + 1);
-        vec.resize(size );
-        cv::Mat view(1, size,CV_32F, vec.data());
+        vec.resize(size);
+        cv::Mat view(1, size, CV_32F, vec.data());
         view *= 100;
         view += 10;
     }
@@ -391,11 +357,10 @@ BOOST_AUTO_TEST_CASE(stl_allocator_pool)
 
     start = boost::posix_time::microsec_clock::local_time();
 #ifndef _MSC_VER
-    for(int i = 0; i < 10000; ++i)
-    {
+    for (int i = 0; i < 10000; ++i) {
         std::vector<float, PinnedStlAllocator<float>> vec;
         int size = std::min(2000, rand() + 1);
-        vec.resize(size );
+        vec.resize(size);
         cv::Mat view(1, size, CV_32F, vec.data());
         view *= 100;
         view += 10;
@@ -406,12 +371,11 @@ BOOST_AUTO_TEST_CASE(stl_allocator_pool)
 
     start = boost::posix_time::microsec_clock::local_time();
 #ifndef _MSC_VER
-    for(int i = 0; i < 10000; ++i)
-    {
+    for (int i = 0; i < 10000; ++i) {
         std::vector<float, PinnedStlAllocatorPoolThread<float>> vec;
         int size = std::min(2000, rand() + 1);
-        vec.resize(size );
-        cv::Mat view(1, size,CV_32F, vec.data());
+        vec.resize(size);
+        cv::Mat view(1, size, CV_32F, vec.data());
         view *= 100;
         view += 10;
     }
@@ -422,7 +386,7 @@ BOOST_AUTO_TEST_CASE(stl_allocator_pool)
     std::cout << "\n ======================= STL ============================================ \n";
     std::cout << "Zero Allocation:    " << zero_allocation_time << "\n"
               << "Default Allocation: " << default_allocation << "\n"
-              << "Pinned Allocation:  " << pinned_allocation  << "\n"
+              << "Pinned Allocation:  " << pinned_allocation << "\n"
               << "Pooled Allocation:  " << pooled_allocation << "\n";
 }
 
@@ -434,8 +398,7 @@ BOOST_AUTO_TEST_CASE(async_transfer_rate_random)
     std::vector<int> sizes;
     sizes.resize(num_iterations);
     std::cout << "\n ======================= H2D -> D2H ============================================ \n";
-    for(int i = 0; i < num_iterations; ++i)
-    {
+    for (int i = 0; i < num_iterations; ++i) {
         int size = std::min(1000, rand() + 1);
         sizes[i] = size;
     }
@@ -448,8 +411,7 @@ BOOST_AUTO_TEST_CASE(async_transfer_rate_random)
         d_data.resize(num_iterations);
         result.resize(num_iterations);
         // Pre allocate
-        for(int i = 0; i < num_iterations; ++i)
-        {
+        for (int i = 0; i < num_iterations; ++i) {
             h_data[i] = cv::Mat(10, sizes[i], CV_32F);
             cv::cuda::createContinuous(10, sizes[i], CV_32F, d_data[i]);
             result[i] = cv::Mat(10, sizes[i], CV_32F);
@@ -457,8 +419,7 @@ BOOST_AUTO_TEST_CASE(async_transfer_rate_random)
         cv::cuda::Stream stream;
         start = boost::posix_time::microsec_clock::local_time();
         mo::scoped_profile profile("zero allocation");
-        for(int i = 0; i < num_iterations; ++i)
-        {
+        for (int i = 0; i < num_iterations; ++i) {
             d_data[i].upload(h_data[i], stream);
             cv::cuda::multiply(d_data[i], cv::Scalar(100), d_data[i], 1, -1, stream);
             cv::cuda::add(d_data[i], cv::Scalar(100), d_data[i], cv::noArray(), -1, stream);
@@ -474,8 +435,7 @@ BOOST_AUTO_TEST_CASE(async_transfer_rate_random)
         cv::cuda::Stream stream;
         start = boost::posix_time::microsec_clock::local_time();
         mo::scoped_profile profile("default allocation");
-        for(int i = 0; i < sizes.size(); ++i)
-        {
+        for (int i = 0; i < sizes.size(); ++i) {
             cv::Mat h_data(10, sizes[i], CV_32F);
             cv::cuda::GpuMat d_data;
             d_data.upload(h_data, stream);
@@ -491,14 +451,13 @@ BOOST_AUTO_TEST_CASE(async_transfer_rate_random)
 
     {
         mo::ConcreteAllocator<mo::CpuStackPolicy, mo::StackPolicy<cv::cuda::GpuMat, mo::ContinuousPolicy>> allocator;
-        //auto defaultAllocator = cv::cuda::GpuMat::defaultAllocator();
+        // auto defaultAllocator = cv::cuda::GpuMat::defaultAllocator();
         cv::cuda::GpuMat::setDefaultAllocator(&allocator);
         cv::Mat::setDefaultAllocator(&allocator);
         cv::cuda::Stream stream;
         start = boost::posix_time::microsec_clock::local_time();
         mo::scoped_profile profile("pool allocation");
-        for(int i = 0; i < sizes.size(); ++i)
-        {
+        for (int i = 0; i < sizes.size(); ++i) {
             cv::Mat h_data(10, sizes[i], CV_32F);
             cv::cuda::GpuMat d_data;
             cv::cuda::createContinuous(10, sizes[i], CV_32F, d_data);
@@ -513,7 +472,3 @@ BOOST_AUTO_TEST_CASE(async_transfer_rate_random)
         std::cout << "Pooled Allocation:  " << pooled_time << "\n";
     }
 }
-
-
-
-

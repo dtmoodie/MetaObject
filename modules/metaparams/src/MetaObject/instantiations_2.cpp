@@ -6,11 +6,11 @@
 #undef MO_EXPORTS
 #endif
 #if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__)
-#  define MO_EXPORTS __declspec(dllexport)
+#define MO_EXPORTS __declspec(dllexport)
 #elif defined __GNUC__ && __GNUC__ >= 4
-#  define MO_EXPORTS __attribute__ ((visibility ("default")))
+#define MO_EXPORTS __attribute__((visibility("default")))
 #else
-#  define MO_EXPORTS
+#define MO_EXPORTS
 #endif
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 INSTANTIATE_META_PARAM(std::vector<int>);

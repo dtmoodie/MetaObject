@@ -14,7 +14,7 @@ THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
 IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-https://github.com/dtmoodie/Params
+https://github.com/dtmoodie/MetaObject
 */
 #pragma once
 #include <MetaObject/detail/Export.hpp>

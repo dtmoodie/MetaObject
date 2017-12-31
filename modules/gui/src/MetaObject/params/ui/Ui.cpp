@@ -39,14 +39,14 @@ void InvalidCallbacks::clear()
     std::lock_guard<std::mutex> lock(mtx);
     invalid_senders.clear();
 }
-        
+
 std::list<void*> InvalidCallbacks::invalid_senders;
 std::mutex InvalidCallbacks::mtx;
 
 UiCallbackService * UiCallbackService::Instance()
 {
     static UiCallbackService instance;
-    return &instance;   
+    return &instance;
 }
 void UiCallbackService::post(std::function<void()> f, std::pair<void*, mo::TypeInfo> source)
 {
@@ -93,7 +93,8 @@ ProcessingThreadCallbackService* ProcessingThreadCallbackService::Instance()
     return &instance;
 }
 
-void ProcessingThreadCallbackService::setCallback(std::function<void(std::function<void(void)>, std::pair<void*, mo::TypeInfo>)> f)
+void ProcessingThreadCallbackService::setCallback(std::function<void(std::function<void(void)>, std::pair<void*,
+mo::TypeInfo>)> f)
 {
     Instance()->user_processing_thread_callback_function = f;
 }

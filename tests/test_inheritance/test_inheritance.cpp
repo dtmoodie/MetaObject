@@ -4,9 +4,9 @@
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
 
+#include "MetaObject/params/ParamInfo.hpp"
 #include "MetaObject/params/ParamMacros.hpp"
 #include "MetaObject/params/TInputParam.hpp"
-#include "MetaObject/params/ParamInfo.hpp"
 
 #include "MetaObject/object/MetaObjectFactory.hpp"
 
@@ -21,46 +21,40 @@
 
 using namespace mo;
 
-struct base: public MetaObject
+struct base : public MetaObject
 {
 
     MO_BEGIN(base)
-        PARAM(int, base_param, 5);
-        MO_SIGNAL(void, base_signal, int);
-        MO_SLOT(void, base_slot, int);
-        MO_SLOT(void, override_slot, int);
+    PARAM(int, base_param, 5);
+    MO_SIGNAL(void, base_signal, int);
+    MO_SLOT(void, base_slot, int);
+    MO_SLOT(void, override_slot, int);
     MO_END;
     int base_count = 0;
 };
 
-struct derived_Param: virtual public base
+struct derived_Param : virtual public base
 {
     MO_DERIVE(derived_Param, base);
-        PARAM(int, derived_param, 10);
+    PARAM(int, derived_param, 10);
     MO_END;
 };
 
-struct derived_signals: virtual public base
+struct derived_signals : virtual public base
 {
-    static std::string GetDescriptionStatic()
-    {
-        return "test description";
-    }
-    static std::string GetTooltipStatic()
-    {
-        return "test tooltip";
-    }
+    static std::string GetDescriptionStatic() { return "test description"; }
+    static std::string GetTooltipStatic() { return "test tooltip"; }
 
     MO_DERIVE(derived_signals, base);
-        MO_SIGNAL(void, derived_signal, int);
-        MO_SLOT(void, derived_slot, int);
+    MO_SIGNAL(void, derived_signal, int);
+    MO_SLOT(void, derived_slot, int);
     MO_END;
 
     void override_slot(int value);
     int derived_count = 0;
 };
 
-struct multi_derive: virtual public derived_Param, virtual public derived_signals
+struct multi_derive : virtual public derived_Param, virtual public derived_signals
 {
     MO_DERIVE(multi_derive, derived_Param, derived_signals)
 
@@ -73,7 +67,7 @@ void base::base_slot(int value)
 }
 void base::override_slot(int value)
 {
-    base_count += value*2;
+    base_count += value * 2;
 }
 void derived_signals::derived_slot(int value)
 {
@@ -81,16 +75,16 @@ void derived_signals::derived_slot(int value)
 }
 void derived_signals::override_slot(int value)
 {
-    derived_count += 3*value;
+    derived_count += 3 * value;
 }
 
-struct base1: public TInterface<base1, MetaObject>
+struct base1 : public TInterface<base1, MetaObject>
 {
     MO_BEGIN(base1);
     MO_END;
 };
 
-struct derived1: public TInterface<derived1, base1>
+struct derived1 : public TInterface<derived1, base1>
 {
     MO_DERIVE(derived1, base1);
     MO_END;
@@ -116,12 +110,13 @@ BOOST_AUTO_TEST_CASE(object_print)
 BOOST_AUTO_TEST_CASE(Param_static)
 {
     auto param_info = derived_Param::getParamInfoStatic();
-    if(param_info.size() == 1)
+    if (param_info.size() == 1)
     {
-        if(param_info[0]->name == "derived_param")
+        if (param_info[0]->name == "derived_param")
         {
             std::cout << "missing base Param \"base_param\"\n";
-        }else
+        }
+        else
         {
             std::cout << "missing derived Param \"derived_param\"\n";
         }
@@ -152,7 +147,6 @@ BOOST_AUTO_TEST_CASE(Param_dynamic)
     BOOST_REQUIRE_EQUAL(derived_obj->base_param, 5);
     BOOST_REQUIRE_EQUAL(derived_obj->derived_param, 10);
 }
-
 
 BOOST_AUTO_TEST_CASE(call_base_slot)
 {
@@ -193,12 +187,11 @@ BOOST_AUTO_TEST_CASE(interface_id_check)
 
 BOOST_AUTO_TEST_CASE(diamond)
 {
-    //auto obj = rcc::shared_ptr<multi_derive>::create();
+    // auto obj = rcc::shared_ptr<multi_derive>::create();
     auto constructor = mo::MetaObjectFactory::instance()->getConstructor("multi_derive");
     BOOST_REQUIRE(constructor);
     auto info = constructor->GetObjectInfo();
     std::cout << info->Print();
-    //auto meta_info = dynamic_cast<MetaObjectInfo*>(info);
-    //BOOST_REQUIRE(meta_info);
-
+    // auto meta_info = dynamic_cast<MetaObjectInfo*>(info);
+    // BOOST_REQUIRE(meta_info);
 }

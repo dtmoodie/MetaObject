@@ -3,31 +3,37 @@
 #include <vector>
 using namespace mo;
 
-#define TYPE_NAME_HELPER(name) {ParamFlags::name##_e, #name }
+#define TYPE_NAME_HELPER(name)                                                                                         \
+    {                                                                                                                  \
+        ParamFlags::name##_e, #name                                                                                    \
+    }
 
-static const std::vector<std::pair<ParamFlags, std::string>> type_flag_map = {
-    TYPE_NAME_HELPER(None),
-    TYPE_NAME_HELPER(Input),
-    TYPE_NAME_HELPER(Output),
-    TYPE_NAME_HELPER(State),
-    TYPE_NAME_HELPER(Control),
-    TYPE_NAME_HELPER(Buffer),
-    TYPE_NAME_HELPER(Optional),
-    TYPE_NAME_HELPER(Unstamped),
-    TYPE_NAME_HELPER(Source),
-    TYPE_NAME_HELPER(Sync),
-    TYPE_NAME_HELPER(RequestBuffered),
-    TYPE_NAME_HELPER(Dynamic),
-    TYPE_NAME_HELPER(Source)
-};
+static const std::vector<std::pair<ParamFlags, std::string>> type_flag_map = {TYPE_NAME_HELPER(None),
+                                                                              TYPE_NAME_HELPER(Input),
+                                                                              TYPE_NAME_HELPER(Output),
+                                                                              TYPE_NAME_HELPER(State),
+                                                                              TYPE_NAME_HELPER(Control),
+                                                                              TYPE_NAME_HELPER(Buffer),
+                                                                              TYPE_NAME_HELPER(Optional),
+                                                                              TYPE_NAME_HELPER(Unstamped),
+                                                                              TYPE_NAME_HELPER(Source),
+                                                                              TYPE_NAME_HELPER(Sync),
+                                                                              TYPE_NAME_HELPER(RequestBuffered),
+                                                                              TYPE_NAME_HELPER(Dynamic),
+                                                                              TYPE_NAME_HELPER(Source)};
 
-std::string mo::paramFlagsToString(EnumClassBitset<ParamFlags> type) {
+std::string mo::paramFlagsToString(EnumClassBitset<ParamFlags> type)
+{
     std::string output;
-    for(const auto& itr : type_flag_map){
-        if(type.test(itr.first)){
-            if(output.empty()){
+    for (const auto& itr : type_flag_map) {
+        if (type.test(itr.first))
+        {
+            if (output.empty())
+            {
                 output = itr.second;
-            }else{
+            }
+            else
+            {
                 output += "|" + itr.second;
             }
         }
@@ -35,30 +41,33 @@ std::string mo::paramFlagsToString(EnumClassBitset<ParamFlags> type) {
     return output;
 }
 
-EnumClassBitset<ParamFlags> mo::stringToParamFlags(const std::string& str) {
+EnumClassBitset<ParamFlags> mo::stringToParamFlags(const std::string& str)
+{
     std::string rest = str;
     EnumClassBitset<ParamFlags> output;
     auto pos = rest.find('|');
-    while(pos != std::string::npos){
+    while (pos != std::string::npos) {
         std::string substr = rest.substr(0, pos);
         rest = rest.substr(pos + 1);
-        for(const auto& itr : type_flag_map){
-            if(substr == itr.second)
-                //output = ParamFlags(itr.first | output);
+        for (const auto& itr : type_flag_map) {
+            if (substr == itr.second)
+                // output = ParamFlags(itr.first | output);
                 output.flip(itr.first);
         }
         pos = rest.find('|');
     }
-    for(const auto& itr : type_flag_map){
-        if(rest == itr.second)
-            //output = ParamFlags(itr.first | output);
+    for (const auto& itr : type_flag_map) {
+        if (rest == itr.second)
+            // output = ParamFlags(itr.first | output);
             output.flip(itr.first);
     }
     return output;
 }
 
-std::string mo::paramTypeToString(ParamType flags) {
-    switch(flags) {
+std::string mo::paramTypeToString(ParamType flags)
+{
+    switch (flags)
+    {
     case TParam_e:
         return "T";
     case CircularBuffer_e:
@@ -87,20 +96,21 @@ std::string mo::paramTypeToString(ParamType flags) {
     return "";
 }
 
-ParamType mo::stringToParamType(const std::string& str) {
-    if(str == "T")
+ParamType mo::stringToParamType(const std::string& str)
+{
+    if (str == "T")
         return TParam_e;
-    else if(str == "circularbuffer")
+    else if (str == "circularbuffer")
         return CircularBuffer_e;
-    else if(str == "constmap")
+    else if (str == "constmap")
         return ConstMap_e;
-    else if(str == "map")
+    else if (str == "map")
         return Map_e;
-    else if(str == "StreamBuffer")
+    else if (str == "StreamBuffer")
         return StreamBuffer_e;
-    else if(str == "BlockingStreamBuffer")
+    else if (str == "BlockingStreamBuffer")
         return BlockingStreamBuffer_e;
-    else if(str == "NNStreamBuffer")
+    else if (str == "NNStreamBuffer")
         return NNStreamBuffer_e;
     THROW(debug) << "Invalid string " << str;
     return TParam_e;

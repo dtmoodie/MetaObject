@@ -22,7 +22,7 @@ void SignalProxy::on_update()
 void SignalProxy::on_update(int val)
 {
     if (lastCallTime.elapsed() > 15)
-    {   
+    {
         lastCallTime.start();
         handler->onUiUpdate(sender(), val);
     }
@@ -31,7 +31,7 @@ void SignalProxy::on_update(int val)
 void SignalProxy::on_update(double val)
 {
     if (lastCallTime.elapsed() > 15)
-    {   
+    {
         lastCallTime.start();
         handler->onUiUpdate(sender(), val);
     }
@@ -40,7 +40,7 @@ void SignalProxy::on_update(double val)
 void SignalProxy::on_update(bool val)
 {
     if (lastCallTime.elapsed() > 15)
-    {   
+    {
         lastCallTime.start();
         handler->onUiUpdate(sender(), val);
     }
@@ -49,7 +49,7 @@ void SignalProxy::on_update(bool val)
 void SignalProxy::on_update(QString val)
 {
     if (lastCallTime.elapsed() > 15)
-    {   
+    {
         lastCallTime.start();
         handler->onUiUpdate(sender(), val);
     }
@@ -58,7 +58,7 @@ void SignalProxy::on_update(QString val)
 void SignalProxy::on_update(int row, int col)
 {
     if (lastCallTime.elapsed() > 15)
-    {   
+    {
         lastCallTime.start();
         handler->onUiUpdate(sender(), row, col);
     }

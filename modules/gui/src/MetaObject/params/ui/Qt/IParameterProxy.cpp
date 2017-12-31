@@ -3,10 +3,8 @@ using namespace mo::UI::qt;
 
 IParamProxy::IParamProxy()
 {
-
 }
 
 IParamProxy::~IParamProxy()
 {
-
 }

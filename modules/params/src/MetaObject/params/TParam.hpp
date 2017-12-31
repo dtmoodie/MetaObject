@@ -14,43 +14,50 @@ THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
 IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-https://github.com/dtmoodie/Params
+https://github.com/dtmoodie/MetaObject
 */
 #pragma once
 #include "ITAccessibleParam.hpp"
 #include "MetaObject/params/MetaParam.hpp"
 #include "ParamConstructor.hpp"
-namespace mo {
-template <typename T>
-class MO_EXPORTS TParam : virtual public ITAccessibleParam<T> {
-public:
-    typedef T                                          ValueType;
-    typedef typename ParamTraits<T>::Storage_t         Storage_t;
-    typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
-    typedef typename ParamTraits<T>::InputStorage_t    InputStorage_t;
-    typedef typename ParamTraits<T>::Input_t           Input_t;
 
-    static const ParamType Type = TParam_e;
-    TParam(const std::string& name, const T& value)
-        : IParam(name) { ParamTraits<T>::reset(_data, value); }
-    TParam(const std::string& name)
-        : IParam(name) {}
-    TParam();
+namespace mo
+{
+    template <typename T>
+    class MO_EXPORTS TParam : virtual public ITAccessibleParam<T>
+    {
+      public:
+        typedef T ValueType;
+        typedef typename ParamTraits<T>::Storage_t Storage_t;
+        typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
+        typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
+        typedef typename ParamTraits<T>::Input_t Input_t;
 
-    virtual bool getData(InputStorage_t& data, const OptionalTime_t& ts = OptionalTime_t(),
-        Context* ctx = nullptr, size_t* fn_ = nullptr);
+        static const ParamType Type = TParam_e;
+        TParam(const std::string& name, const T& value) : IParam(name) { ParamTraits<T>::reset(_data, value); }
+        TParam(const std::string& name) : IParam(name) {}
+        TParam();
 
-    virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
-    virtual AccessToken<T> access();
-    virtual ConstAccessToken<T> access() const;
+        virtual bool getData(InputStorage_t& data,
+                             const OptionalTime_t& ts = OptionalTime_t(),
+                             Context* ctx = nullptr,
+                             size_t* fn_ = nullptr);
 
-protected:
-    virtual bool updateDataImpl(const Storage_t& data, const OptionalTime_t& ts, Context* ctx, size_t fn, const std::shared_ptr<ICoordinateSystem>& cs);
-    Storage_t _data;
+        virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
+        virtual AccessToken<T> access();
+        virtual ConstAccessToken<T> access() const;
 
-private:
-    static ParamConstructor<TParam<T> > _typed_param_constructor;
-    static MetaParam<T, 100> _meta_param;
-};
+      protected:
+        virtual bool updateDataImpl(const Storage_t& data,
+                                    const OptionalTime_t& ts,
+                                    Context* ctx,
+                                    size_t fn,
+                                    const std::shared_ptr<ICoordinateSystem>& cs);
+        Storage_t _data;
+
+      private:
+        static ParamConstructor<TParam<T>> _typed_param_constructor;
+        static MetaParam<T, 100> _meta_param;
+    };
 }
 #include "detail/TParamImpl.hpp"

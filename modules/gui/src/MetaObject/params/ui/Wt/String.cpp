@@ -5,17 +5,15 @@ using namespace mo;
 
 TDataProxy<std::string, void>::TDataProxy()
 {
-
 }
 
 void TDataProxy<std::string, void>::SetTooltip(const std::string& tp)
 {
-
 }
 
 void TDataProxy<std::string, void>::CreateUi(IParamProxy* proxy, std::string& data, bool read_only)
 {
-    if(_line_edit)
+    if (_line_edit)
     {
         delete _line_edit;
         _line_edit = nullptr;
@@ -37,4 +35,3 @@ void TDataProxy<std::string, void>::onUiUpdate(std::string& data)
 }
 
 #endif
-

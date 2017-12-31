@@ -9,7 +9,6 @@ void test_meta_object_slots::test_int(int value)
     call_count += value;
 }
 
-
 MO_REGISTER_OBJECT(test_meta_object_signals);
 MO_REGISTER_OBJECT(test_meta_object_slots);
 MO_REGISTER_OBJECT(test_meta_object_parameters);

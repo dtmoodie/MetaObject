@@ -1,37 +1,27 @@
 #include <MetaObject/params/Types.hpp>
 using namespace mo;
 
-ReadFile::ReadFile(const std::string& str) :
-    boost::filesystem::path(str)
+ReadFile::ReadFile(const std::string& str) : boost::filesystem::path(str)
 {
-
 }
 
-WriteFile::WriteFile(const std::string& file) :
-    boost::filesystem::path(file)
+WriteFile::WriteFile(const std::string& file) : boost::filesystem::path(file)
 {
-
 }
 
-ReadDirectory::ReadDirectory(const std::string& path) :
-    boost::filesystem::path(path)
+ReadDirectory::ReadDirectory(const std::string& path) : boost::filesystem::path(path)
 {
-
 }
 
-WriteDirectory::WriteDirectory(const std::string& str) :
-    boost::filesystem::path(str)
+WriteDirectory::WriteDirectory(const std::string& str) : boost::filesystem::path(str)
 {
-
 }
-
 
 EnumParam::EnumParam(const std::initializer_list<std::pair<const char*, int>>& values)
 {
     enumerations.clear();
     this->values.clear();
-    for (auto itr = values.begin(); itr != values.end(); ++itr)
-    {
+    for (auto itr = values.begin(); itr != values.end(); ++itr) {
         enumerations.emplace_back(itr->first);
         this->values.emplace_back(itr->second);
     }
@@ -48,8 +38,7 @@ void EnumParam::SetValue(const std::initializer_list<const char*>& string, const
     auto nItr = string.begin();
     enumerations.clear();
     this->values.clear();
-    for (; iItr != values.end() && nItr != string.end(); ++iItr, ++nItr)
-    {
+    for (; iItr != values.end() && nItr != string.end(); ++iItr, ++nItr) {
         enumerations.push_back(*nItr);
         this->values.push_back(*iItr);
     }

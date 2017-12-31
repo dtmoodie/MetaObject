@@ -1,35 +1,38 @@
 #pragma once
 
 #if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined metaobject_metaparams_EXPORTS
-  #define METAPARAMTERS_EXPORTS __declspec(dllexport)
+#define METAPARAMTERS_EXPORTS __declspec(dllexport)
 #elif defined __GNUC__ && __GNUC__ >= 4
-  #define METAPARAMTERS_EXPORTS __attribute__ ((visibility ("default")))
+#define METAPARAMTERS_EXPORTS __attribute__((visibility("default")))
 #else
-  #define METAPARAMTERS_EXPORTS
+#define METAPARAMTERS_EXPORTS
 #endif
 
 #ifdef _MSC_VER
-  #ifndef metaobject_metaparams_EXPORTS
-    #ifdef _DEBUG
-      #pragma comment(lib, "metaobject_metaparamsd.lib")
-    #else
-      #pragma comment(lib, "metaobject_metaparams.lib")
-    #endif
-  #endif
+#ifndef metaobject_metaparams_EXPORTS
+#ifdef _DEBUG
+#pragma comment(lib, "metaobject_metaparamsd.lib")
+#else
+#pragma comment(lib, "metaobject_metaparams.lib")
+#endif
+#endif
 #endif
 
-#define META_PARAM_EXTERN(TYPE) \
-    extern template class mo::TInputParamPtr<TYPE>; \
-    extern template class mo::TParamPtr<TYPE>; \
+#define META_PARAM_EXTERN(TYPE)                                                                                        \
+    extern template class mo::TInputParamPtr<TYPE>;                                                                    \
+    extern template class mo::TParamPtr<TYPE>;                                                                         \
     extern template class mo::TParamOutput<TYPE>;
 
 #include <MetaObject/params/TInputParam.hpp>
 #include <MetaObject/params/TParamPtr.hpp>
 #include <MetaObject/params/Types.hpp>
-namespace mo{
-namespace MetaParams{
-    METAPARAMTERS_EXPORTS void initialize();
-}
+
+namespace mo
+{
+    namespace MetaParams
+    {
+        METAPARAMTERS_EXPORTS void initialize();
+    }
 }
 
 META_PARAM_EXTERN(bool)

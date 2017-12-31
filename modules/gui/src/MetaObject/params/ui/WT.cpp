@@ -1,25 +1,24 @@
-#include "MetaObject/params/ui/WidgetFactory.hpp"
 #include "MetaObject/params/IParam.hpp"
+#include "MetaObject/params/ui/WidgetFactory.hpp"
 #include <map>
 using namespace mo;
 using namespace mo::UI;
 #include <map>
 #ifdef HAVE_WT
 #include "MetaObject/params/ui/WT.hpp"
-#include <boost/thread.hpp>
 #include <Wt/WApplication>
-#include <Wt/WServer>
 #include <Wt/WBreak>
 #include <Wt/WContainerWidget>
 #include <Wt/WLineEdit>
 #include <Wt/WPushButton>
+#include <Wt/WServer>
 #include <Wt/WText>
+#include <boost/thread.hpp>
 using namespace Wt;
 
-mo::UI::wt::MainApplication::MainApplication(const WEnvironment& env)
-    : WApplication(env)
+mo::UI::wt::MainApplication::MainApplication(const WEnvironment& env) : WApplication(env)
 {
-    setTitle("EagleEye Web");                               // application title
+    setTitle("EagleEye Web"); // application title
     enableUpdates();
 }
 void mo::UI::wt::MainApplication::requestUpdate()
@@ -52,8 +51,8 @@ wt::WidgetFactory* wt::WidgetFactory::Instance()
     return g_inst;
 }
 
-wt::IParamProxy* wt::WidgetFactory::CreateWidget(mo::IParam* param, MainApplication* app,
-                                                     Wt::WContainerWidget* container)
+wt::IParamProxy*
+wt::WidgetFactory::CreateWidget(mo::IParam* param, MainApplication* app, Wt::WContainerWidget* container)
 {
     if (param->checkFlags(mo::ParamFlags::Input_e))
         return nullptr;
@@ -67,22 +66,19 @@ wt::IParamProxy* wt::WidgetFactory::CreateWidget(mo::IParam* param, MainApplicat
     return nullptr;
 }
 
-void wt::WidgetFactory::RegisterConstructor(const mo::TypeInfo& dtype,
-                                            const WidgetConstructor_f& constructor)
+void wt::WidgetFactory::RegisterConstructor(const mo::TypeInfo& dtype, const WidgetConstructor_f& constructor)
 {
-    if(_pimpl->_widget_constructors.count(dtype) == 0)
-        _pimpl->_widget_constructors[dtype]= constructor;
+    if (_pimpl->_widget_constructors.count(dtype) == 0)
+        _pimpl->_widget_constructors[dtype] = constructor;
 }
 
-void wt::WidgetFactory::RegisterConstructor(const mo::TypeInfo& type,
-                         const PlotConstructor_f& constructor)
+void wt::WidgetFactory::RegisterConstructor(const mo::TypeInfo& type, const PlotConstructor_f& constructor)
 {
-    if(_pimpl->_plot_constructors.count(type) == 0)
+    if (_pimpl->_plot_constructors.count(type) == 0)
         _pimpl->_plot_constructors[type] = constructor;
 }
 
-wt::IPlotProxy* wt::WidgetFactory::CreatePlot(mo::IParam* param, MainApplication* app,
-                              Wt::WContainerWidget* container)
+wt::IPlotProxy* wt::WidgetFactory::CreatePlot(mo::IParam* param, MainApplication* app, Wt::WContainerWidget* container)
 {
     if (param->checkFlags(mo::ParamFlags::Input_e))
         return nullptr;

@@ -94,7 +94,7 @@ namespace mo
         static constexpr int START = __COUNTER__;                                                                      \
         static constexpr bool IS_SPECIALIZED = true;                                                                   \
         static constexpr int I0 = 0;                                                                                   \
-    typedef TYPE DType
+        typedef TYPE DType;
 
 #define REFLECT_DATA_DERIVED(TYPE, BASE)                                                                               \
     template <>                                                                                                        \
@@ -139,7 +139,7 @@ namespace mo
         static constexpr int START = __COUNTER__;                                                                      \
         static constexpr bool IS_SPECIALIZED = true;                                                                   \
         static constexpr int I0 = 0;                                                                                   \
-    typedef TYPE<T...> DType
+        typedef TYPE<T...> DType;
 
 // Internally reflectable type, ie no external declaration of ReflectData
 // Example usage:

@@ -34,17 +34,17 @@ using namespace mo;
 
 INSTANTIATE_META_PARAM(int);
 
-struct output_Paramed_object : public MetaObject {
+struct output_Paramed_object : public MetaObject
+{
     MO_BEGIN(output_Paramed_object)
     OUTPUT(int, test_output, 0);
     OUTPUT(double, test_double, 0.0);
     MO_END;
-    void increment() {
-        test_output++;
-    }
+    void increment() { test_output++; }
 };
 
-struct input_Paramed_object : public MetaObject {
+struct input_Paramed_object : public MetaObject
+{
     MO_BEGIN(input_Paramed_object)
     INPUT(int, test_input, nullptr)
     MO_END;
@@ -54,10 +54,11 @@ MO_REGISTER_OBJECT(input_Paramed_object)
 MO_REGISTER_OBJECT(output_Paramed_object)
 
 BuildCallback* cb = nullptr;
-BOOST_AUTO_TEST_CASE(input_Param_manual) {
+BOOST_AUTO_TEST_CASE(input_Param_manual)
+{
     MetaObjectFactory::instance()->getObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
-    cb          = new BuildCallback();
-    auto input  = input_Paramed_object::create();
+    cb = new BuildCallback();
+    auto input = input_Paramed_object::create();
     auto output = output_Paramed_object::create();
     input->test_input_param.setInput(&output->test_output_param);
     BOOST_REQUIRE(input->test_input);
@@ -65,11 +66,12 @@ BOOST_AUTO_TEST_CASE(input_Param_manual) {
     BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
 }
 
-BOOST_AUTO_TEST_CASE(input_Param_programatic) {
-    auto input  = input_Paramed_object::create();
+BOOST_AUTO_TEST_CASE(input_Param_programatic)
+{
+    auto input = input_Paramed_object::create();
     auto input_ = input->getParamOptional("test_input");
 
-    auto output  = output_Paramed_object::create();
+    auto output = output_Paramed_object::create();
     auto output_ = output->getParamOptional("test_output");
 
     BOOST_REQUIRE(input_);
@@ -82,11 +84,12 @@ BOOST_AUTO_TEST_CASE(input_Param_programatic) {
     BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
 }
 
-BOOST_AUTO_TEST_CASE(buffered_input) {
-    auto input  = input_Paramed_object::create();
+BOOST_AUTO_TEST_CASE(buffered_input)
+{
+    auto input = input_Paramed_object::create();
     auto input_ = input->getParamOptional("test_input");
 
-    auto output  = output_Paramed_object::create();
+    auto output = output_Paramed_object::create();
     auto output_ = output->getParamOptional("test_output");
 
     BOOST_REQUIRE(input_);
@@ -105,11 +108,12 @@ BOOST_AUTO_TEST_CASE(buffered_input) {
     }
 }
 
-BOOST_AUTO_TEST_CASE(threaded_buffered_input) {
-    auto input  = input_Paramed_object::create();
+BOOST_AUTO_TEST_CASE(threaded_buffered_input)
+{
+    auto input = input_Paramed_object::create();
     auto input_ = input->getParamOptional("test_input");
 
-    auto output  = output_Paramed_object::create();
+    auto output = output_Paramed_object::create();
     auto output_ = output->getParamOptional("test_output");
 
     BOOST_REQUIRE(input_);
@@ -120,19 +124,19 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input) {
     BOOST_REQUIRE(cbuffer);
     BOOST_REQUIRE(input_param->setInput(cbuffer));
     output->test_output_param.updateData(0, 0);
-    bool        quit = false;
-    std::thread background_thread(
-        [&quit, &input]() {
-            mo::Time_t ts = mo::Time_t(0 * mo::ms);
-            int        data;
-            while (!quit) {
-                if (input->test_input_param.getData(data, ts)) {
-                    //BOOST_REQUIRE_EQUAL(mo::Time_t(data * mo::ms), mo::Time_t(ts * (10 * mo::ms)));
-                    // TODO FIX
-                    //ts += mo::Time_t(1 * mo::ms);
-                }
+    bool quit = false;
+    std::thread background_thread([&quit, &input]() {
+        mo::Time_t ts = mo::Time_t(0 * mo::ms);
+        int data;
+        while (!quit) {
+            if (input->test_input_param.getData(data, ts))
+            {
+                // BOOST_REQUIRE_EQUAL(mo::Time_t(data * mo::ms), mo::Time_t(ts * (10 * mo::ms)));
+                // TODO FIX
+                // ts += mo::Time_t(1 * mo::ms);
             }
-        });
+        }
+    });
 
     for (int i = 1; i < 100000; ++i) {
         output->test_output_param.updateData(i * 10, mo::Time_t(i * mo::ms));
@@ -141,9 +145,10 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input) {
     background_thread.join();
 }
 
-BOOST_AUTO_TEST_CASE(threaded_stream_buffer) {
-    auto ctx    = mo::Context::create();
-    auto input  = input_Paramed_object::create();
+BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
+{
+    auto ctx = mo::Context::create();
+    auto input = input_Paramed_object::create();
     auto input_ = input->getParamOptional("test_input");
 
     auto output = output_Paramed_object::create();
@@ -159,24 +164,23 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer) {
     BOOST_REQUIRE(input_param->setInput(buffer));
     output->test_output_param.updateData(0, 0);
     volatile bool started = false;
-    volatile int  count   = 0;
-    boost::thread background_thread(
-        [&input, &started, &count]() {
-            ///mo::Context _ctx.get();
-            auto _ctx = mo::Context::create();
-            input->setContext(_ctx);
-            started = true;
-            int data;
-            for (int i = 0; i < 1000; ++i) {
-                bool good = input->test_input_param.getData(data, mo::Time_t(i * mo::ms));
-                while (!good) {
-                    good = input->test_input_param.getData(data, mo::Time_t(i * mo::ms));
-                }
-                ++count;
-                BOOST_REQUIRE_EQUAL(data, i * 10);
-                boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    volatile int count = 0;
+    boost::thread background_thread([&input, &started, &count]() {
+        /// mo::Context _ctx.get();
+        auto _ctx = mo::Context::create();
+        input->setContext(_ctx);
+        started = true;
+        int data;
+        for (int i = 0; i < 1000; ++i) {
+            bool good = input->test_input_param.getData(data, mo::Time_t(i * mo::ms));
+            while (!good) {
+                good = input->test_input_param.getData(data, mo::Time_t(i * mo::ms));
             }
-        });
+            ++count;
+            BOOST_REQUIRE_EQUAL(data, i * 10);
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+        }
+    });
     while (!started) {
         boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
     }
@@ -189,6 +193,7 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer) {
     background_thread.timed_join(boost::posix_time::time_duration(0, 2, 0));
 }
 
-BOOST_AUTO_TEST_CASE(cleanup) {
+BOOST_AUTO_TEST_CASE(cleanup)
+{
     delete cb;
 }

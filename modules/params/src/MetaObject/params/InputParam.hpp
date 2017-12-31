@@ -14,49 +14,49 @@ THIS SOFTWARE IS PROVIDED ``AS IS'' AND WITHOUT ANY EXPRESS OR
 IMPLIED WARRANTIES, INCLUDING, WITHOUT LIMITATION, THE IMPLIED
 WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
-https://github.com/dtmoodie/Params
+https://github.com/dtmoodie/MetaObject
 */
 #pragma once
-#include "MetaObject/detail/TypeInfo.hpp"
+
 #include "MetaObject/detail/Export.hpp"
+#include "MetaObject/detail/TypeInfo.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include <functional>
-#include <string>
 #include <memory>
-namespace mo {
+#include <string>
+namespace mo
+{
+    class MO_EXPORTS InputParam : virtual public IParam
+    {
+      public:
+        typedef std::function<bool(std::weak_ptr<IParam>)> qualifier_f;
+        typedef std::shared_ptr<InputParam> Ptr;
 
-class MO_EXPORTS InputParam: virtual public IParam {
-public:
-    typedef std::function<bool(std::weak_ptr<IParam>)> qualifier_f;
-    typedef std::shared_ptr<InputParam> Ptr;
+        InputParam();
+        virtual ~InputParam();
 
-    InputParam();
-    virtual ~InputParam();
+        // This loads the value at the requested timestamp into the input
+        // Param such that it can be read
+        virtual bool getInput(const OptionalTime_t& ts, size_t* fn = nullptr);
+        virtual bool getInput(size_t fn, OptionalTime_t* ts = nullptr);
+        // This gets a pointer to the variable that feeds into this input
+        virtual IParam* getInputParam() = 0;
 
-    // This loads the value at the requested timestamp into the input
-    // Param such that it can be read
-    virtual bool getInput(const OptionalTime_t& ts, size_t* fn = nullptr);
-    virtual bool getInput(size_t fn, OptionalTime_t* ts = nullptr);
-    // This gets a pointer to the variable that feeds into this input
-    virtual IParam* getInputParam() = 0;
+        virtual bool setInput(std::shared_ptr<IParam> param) = 0;
+        virtual bool setInput(IParam* param = nullptr) = 0;
 
-    virtual bool setInput(std::shared_ptr<IParam> param) = 0;
-    virtual bool setInput(IParam* param = nullptr) = 0;
+        virtual OptionalTime_t getInputTimestamp() = 0;
+        virtual size_t getInputFrameNumber() = 0;
+        virtual bool isInputSet() const = 0;
 
-    virtual OptionalTime_t getInputTimestamp() = 0;
-    virtual size_t getInputFrameNumber() = 0;
-    virtual bool isInputSet() const = 0;
+        virtual bool acceptsInput(IParam* param) const = 0;
+        virtual bool acceptsType(const TypeInfo& type) const = 0;
 
-    virtual bool acceptsInput(IParam* param) const = 0;
-    virtual bool acceptsType(const TypeInfo& type) const = 0;
-
-    void setQualifier(std::function<bool(std::weak_ptr<IParam>)> f) {
-        qualifier = f;
-    }
-protected:
-    InputParam( const InputParam& ) = delete;
-    InputParam& operator=(const InputParam& ) = delete;
-    InputParam& operator=(InputParam&& ) = delete;
-    qualifier_f qualifier;
-};
+        void setQualifier(std::function<bool(std::weak_ptr<IParam>)> f) { qualifier = f; }
+      protected:
+        InputParam(const InputParam&) = delete;
+        InputParam& operator=(const InputParam&) = delete;
+        InputParam& operator=(InputParam&&) = delete;
+        qualifier_f qualifier;
+    };
 }

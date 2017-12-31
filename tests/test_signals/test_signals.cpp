@@ -1,19 +1,18 @@
 #define BOOST_TEST_MAIN
 
-#include "MetaObject/object/IMetaObject.hpp"
-#include "MetaObject/signals/TSignal.hpp"
-#include "MetaObject/object/RelayManager.hpp"
 #include "MetaObject/core/detail/Counter.hpp"
+#include "MetaObject/object/IMetaObject.hpp"
+#include "MetaObject/object/RelayManager.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
+#include "MetaObject/params//ParamMacros.hpp"
+#include "MetaObject/params/TInputParam.hpp"
+#include "MetaObject/params/TParamPtr.hpp"
+#include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
-#include "MetaObject/params//ParamMacros.hpp"
-#include "MetaObject/params/TParamPtr.hpp"
-#include "MetaObject/params/TInputParam.hpp"
 
-#include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
-
+#include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>
@@ -30,10 +29,7 @@ BOOST_AUTO_TEST_CASE(signals)
 {
     TSignal<int(int)> signal;
     {
-        TSlot<int(int)> slot([](int val)
-        {
-            return val * 2;
-        });
+        TSlot<int(int)> slot([](int val) { return val * 2; });
         signal.connect(&slot);
 
         BOOST_CHECK_EQUAL(signal(4), 8);
@@ -43,26 +39,24 @@ BOOST_AUTO_TEST_CASE(signals)
 
 BOOST_AUTO_TEST_CASE(threaded_signal)
 {
-    auto  ctx = mo::Context::create();
+    auto ctx = mo::Context::create();
     auto thread_ctx = mo::Context::create("Thread context");
 
     TSlot<void(int)> slot = TSlot<void(int)>(std::bind(
-        [&thread_ctx](int value)->void
-        {
+        [&thread_ctx](int value) -> void {
             BOOST_REQUIRE_EQUAL(thread_ctx->thread_id, mo::getThisThread());
             BOOST_REQUIRE_EQUAL(5, value);
-        }, std::placeholders::_1));
+        },
+        std::placeholders::_1));
 
     slot.setContext(thread_ctx.get());
 
     TSignal<void(int)> signal;
     auto Connection = slot.connect(&signal);
 
-    boost::thread thread = boost::thread([&thread_ctx]()->void
-    {
+    boost::thread thread = boost::thread([&thread_ctx]() -> void {
         thread_ctx->thread_id = mo::getThisThread();
-        while(!boost::this_thread::interruption_requested())
-        {
+        while (!boost::this_thread::interruption_requested()) {
             ThreadSpecificQueue::run(thread_ctx->thread_id);
         }
     });
@@ -77,6 +71,4 @@ BOOST_AUTO_TEST_CASE(relay_manager)
 {
     auto ctx = mo::Context::create();
     mo::RelayManager manager;
-
-
 }

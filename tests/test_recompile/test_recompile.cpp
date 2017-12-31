@@ -1,8 +1,8 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
 
-#include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
+#include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include "RuntimeObjectSystem/shared_ptr.hpp"
 #include "obj.h"
 
@@ -18,34 +18,36 @@
 
 using namespace mo;
 
-class build_callback: public ITestBuildNotifier
+class build_callback : public ITestBuildNotifier
 {
     virtual bool TestBuildCallback(const char* file, TestBuildResult type)
     {
         std::cout << "[" << file << "] - ";
-        switch(type)
+        switch (type)
         {
         case TESTBUILDRRESULT_SUCCESS:
-            std::cout << "TESTBUILDRRESULT_SUCCESS\n"; break;
+            std::cout << "TESTBUILDRRESULT_SUCCESS\n";
+            break;
         case TESTBUILDRRESULT_NO_FILES_TO_BUILD:
-            std::cout << "TESTBUILDRRESULT_NO_FILES_TO_BUILD\n"; break;
+            std::cout << "TESTBUILDRRESULT_NO_FILES_TO_BUILD\n";
+            break;
         case TESTBUILDRRESULT_BUILD_FILE_GONE:
-            std::cout << "TESTBUILDRRESULT_BUILD_FILE_GONE\n"; break;
+            std::cout << "TESTBUILDRRESULT_BUILD_FILE_GONE\n";
+            break;
         case TESTBUILDRRESULT_BUILD_NOT_STARTED:
-            std::cout << "TESTBUILDRRESULT_BUILD_NOT_STARTED\n"; break;
+            std::cout << "TESTBUILDRRESULT_BUILD_NOT_STARTED\n";
+            break;
         case TESTBUILDRRESULT_BUILD_FAILED:
-            std::cout << "TESTBUILDRRESULT_BUILD_FAILED\n"; break;
+            std::cout << "TESTBUILDRRESULT_BUILD_FAILED\n";
+            break;
         case TESTBUILDRRESULT_OBJECT_SWAP_FAIL:
-            std::cout << "TESTBUILDRRESULT_OBJECT_SWAP_FAIL\n"; break;
+            std::cout << "TESTBUILDRRESULT_OBJECT_SWAP_FAIL\n";
+            break;
         }
         return true;
     }
-    virtual bool TestBuildWaitAndUpdate()
-    {
-        return true;
-    }
+    virtual bool TestBuildWaitAndUpdate() { return true; }
 };
-
 
 build_callback* cb = nullptr;
 BOOST_AUTO_TEST_CASE(test_recompile)
@@ -58,7 +60,8 @@ BOOST_AUTO_TEST_CASE(test_recompile)
 
 BOOST_AUTO_TEST_CASE(test_obj_swap)
 {
-    auto constructor = MetaObjectFactory::instance()->getObjectSystem()->GetObjectFactorySystem()->GetConstructor("test_meta_object_signals");
+    auto constructor = MetaObjectFactory::instance()->getObjectSystem()->GetObjectFactorySystem()->GetConstructor(
+        "test_meta_object_signals");
     auto obj = constructor->Construct();
     BOOST_REQUIRE(obj);
     auto state = constructor->GetState(obj->GetPerTypeId());
@@ -153,7 +156,6 @@ BOOST_AUTO_TEST_CASE(test_pointer_mechanics)
 
     BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 1);
     BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 1);
-
 }
 
 BOOST_AUTO_TEST_CASE(test_creation_function)
@@ -166,9 +168,9 @@ BOOST_AUTO_TEST_CASE(test_reConnect_signals)
 {
     auto signals = test_meta_object_signals::create();
     auto slots = test_meta_object_slots::create();
-    //auto state = signals->getConstructor()->GetState(signals->GetPerTypeId());
+    // auto state = signals->getConstructor()->GetState(signals->GetPerTypeId());
     IMetaObject::connect(signals.get(), "test_int", slots.get(), "test_int");
-    int value  = 5;
+    int value = 5;
     signals->sig_test_int(value);
     BOOST_REQUIRE_EQUAL(slots->call_count, value);
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
@@ -206,8 +208,6 @@ BOOST_AUTO_TEST_CASE(test_Param_persistence_recompile)
     BOOST_REQUIRE_EQUAL(obj->test, 10);
 }
 
-
-
 BOOST_AUTO_TEST_CASE(test_multiple_objects)
 {
     auto obj1 = rcc::shared_ptr<test_meta_object_parameters>::create();
@@ -229,14 +229,11 @@ BOOST_AUTO_TEST_CASE(test_cuda_recompile)
 }
 #endif
 
-
-
 BOOST_AUTO_TEST_CASE(test_object_cleanup)
 {
     AUDynArray<IObjectConstructor*> constructors;
     MetaObjectFactory::instance()->getObjectSystem()->GetObjectFactorySystem()->GetAll(constructors);
-    for(int i = 0; i < constructors.Size(); ++i)
-    {
+    for (int i = 0; i < constructors.Size(); ++i) {
         BOOST_REQUIRE_EQUAL(constructors[i]->GetNumberConstructedObjects(), 0);
     }
     delete cb;
