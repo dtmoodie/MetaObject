@@ -1,10 +1,11 @@
 #ifdef HAVE_OPENCV
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "MetaObject/params/MetaParam.hpp"
+#include "MetaObject/params/detail/MetaParamImpl.hpp"
 #include "MetaObject/params/reflect_data.hpp"
 #include <boost/lexical_cast.hpp>
 #include <cereal/types/vector.hpp>
-
+#include <opencv2/core/types.hpp>
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
 #endif
@@ -18,34 +19,6 @@
 
 namespace mo
 {
-    namespace IO
-    {
-        namespace Text
-        {
-            namespace imp
-            {
-                template <typename T>
-                void Serialize_imp(std::ostream& os, const cv::Rect_<T>& obj, int)
-                {
-                    os << obj.x << ", " << obj.y << ", " << obj.width << ", " << obj.height;
-                }
-                template <typename T>
-                void DeSerialize_imp(std::istream& is, cv::Rect_<T>& obj, int)
-                {
-                    char c;
-                    for (int i = 0; i < 4; ++i)
-                    {
-                        is >> obj[i];
-                        is >> c;
-                    }
-                }
-            }
-        }
-    }
-}
-
-namespace mo
-{
     namespace reflect
     {
         REFLECT_TEMPLATED_DATA_START(cv::Rect_)
@@ -53,14 +26,14 @@ namespace mo
             REFLECT_DATA_MEMBER(y)
             REFLECT_DATA_MEMBER(width)
             REFLECT_DATA_MEMBER(height)
-        REFLECT_DATA_END();
+        REFLECT_DATA_END;
     }
 }
-
-INSTANTIATE_META_PARAM(cv::Rect);
-INSTANTIATE_META_PARAM(cv::Rect2d);
-INSTANTIATE_META_PARAM(cv::Rect2f);
-INSTANTIATE_META_PARAM(std::vector<cv::Rect>);
-INSTANTIATE_META_PARAM(std::vector<cv::Rect2f>);
+using namespace cv;
+INSTANTIATE_META_PARAM(Rect);
+INSTANTIATE_META_PARAM(Rect2d);
+INSTANTIATE_META_PARAM(Rect2f);
+INSTANTIATE_META_PARAM(std::vector<Rect>);
+INSTANTIATE_META_PARAM(std::vector<Rect2f>);
 
 #endif

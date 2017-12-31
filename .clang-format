@@ -58,7 +58,7 @@ IndentWidth:     4
 IndentWrappedFunctionNames: false
 KeepEmptyLinesAtTheStartOfBlocks: true
 MacroBlockBegin: '^REFLECT_DATA_START|REFLECT_DATA_DERIVED|REFLECT_INTERNAL_START|REFLECT_TEMPLATED_DATA_START'
-MacroBlockEnd:   '^REFLECT_DATA_END()|REFLECT_INTERNAL_END()'
+MacroBlockEnd:   '^REFLECT_DATA_END|REFLECT_INTERNAL_END'
 MaxEmptyLinesToKeep: 1
 NamespaceIndentation: All
 ObjCBlockIndentWidth: 2

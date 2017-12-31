@@ -21,8 +21,9 @@ namespace mo
         PluginInfo(const std::string& path = "",
                    const std::string& state = "success",
                    unsigned int time = 0,
-                   const char* info = nullptr)
-            : m_path(path), m_state(state), m_load_time(time), m_build_info(info)
+                   const char* info = nullptr,
+                   unsigned int id = 0)
+            : m_path(path), m_state(state), m_load_time(time), m_build_info(info), m_id(id)
         {
         }
 

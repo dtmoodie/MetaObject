@@ -1,6 +1,23 @@
 #ifdef HAVE_OPENCV
-#include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "MetaObject/params/MetaParam.hpp"
+#include "MetaObject/params/reflect_data.hpp"
+#include <boost/python/object.hpp>
+
+namespace mo
+{
+    namespace reflect
+    {
+        template <class T, size_t N>
+        struct ArrayAdapter;
+    }
+    namespace python
+    {
+        template <class T, size_t N>
+        inline void convertFromPython(mo::reflect::ArrayAdapter<T, N> result, const boost::python::object& obj);
+    }
+}
+
+#include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "opencv2/core/types.hpp"
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
@@ -16,60 +33,6 @@
 #include <boost/lexical_cast.hpp>
 #include <cereal/types/vector.hpp>
 
-namespace mo
-{
-    namespace IO
-    {
-        namespace Text
-        {
-            namespace imp
-            {
-                void Serialize_imp(std::ostream& os, const cv::Scalar& obj, int)
-                {
-                    os << obj.val[0] << ", " << obj.val[1] << ", " << obj.val[2] << ", " << obj.val[3];
-                }
-                void DeSerialize_imp(std::istream& is, cv::Scalar& obj, int)
-                {
-                    char c;
-                    for (int i = 0; i < 4; ++i)
-                    {
-                        is >> obj[i];
-                        is >> c;
-                    }
-                }
-            }
-        }
-    }
-}
-
-#include "MetaObject/serialization/TextPolicy.hpp"
-#define ASSERT_SERIALIZABLE(TYPE)                                                                                      \
-    static_assert(mo::IO::Text::imp::stream_serializable<TYPE>::value, "Checking stream serializable for " #TYPE)
-
-namespace cv
-{
-    template <class T>
-    std::ostream& operator<<(std::ostream& os, const cv::Scalar_<T>& obj)
-    {
-        ASSERT_SERIALIZABLE(cv::Scalar);
-        os << obj.val[0] << ", " << obj.val[1] << ", " << obj.val[2] << ", " << obj.val[3];
-        return os;
-    }
-}
-
-namespace cereal
-{
-    template <class AR, class T>
-    void serialize(AR& ar, cv::Scalar_<T>& scalar)
-    {
-    }
-
-    template <class AR, class T, int N>
-    void serialize(AR& ar, cv::Vec<T, N>& vec)
-    {
-    }
-}
-
 using namespace cv;
 namespace mo
 {
@@ -81,6 +44,18 @@ namespace mo
             ArrayAdapter(T* ptr_ = nullptr) : ptr(ptr_) {}
 
             T* ptr;
+            template <class AR>
+            void serialize(AR& ar)
+            {
+                if (ptr)
+                {
+                    ar(cereal::make_size_tag(N));
+                    for (size_t i = 0; i < N; ++i)
+                    {
+                        ar(ptr[i]);
+                    }
+                }
+            }
         };
 
         template <class T, size_t N>
@@ -99,12 +74,43 @@ namespace mo
             return os;
         }
 
+        template <size_t N>
+        std::ostream& operator<<(std::ostream& os, const ArrayAdapter<const unsigned char, N>& array)
+        {
+            if (array.ptr)
+            {
+                os << "[";
+                for (size_t i = 0; i < N; ++i)
+                {
+                    if (i != 0)
+                        os << ',';
+                    os << int(array.ptr[i]);
+                }
+                os << "]";
+            }
+            return os;
+        }
+
         template <class T, size_t Rows, size_t Cols>
         struct MatrixAdapter
         {
             MatrixAdapter(T* ptr_ = nullptr) : ptr(ptr_) {}
 
             T* ptr;
+
+            template <class AR>
+            void serialize(AR& ar)
+            {
+                if (ptr)
+                {
+                    const size_t N = Rows * Cols;
+                    ar(cereal::make_size_tag(N));
+                    for (int i = 0; i < N; ++i)
+                    {
+                        ar(ptr[i]);
+                    }
+                }
+            }
         };
 
         template <class T, size_t R, size_t C>
@@ -148,18 +154,37 @@ namespace mo
     }
 }
 
+namespace mo
+{
+    namespace python
+    {
+        template <class T, size_t N>
+        inline void convertFromPython(mo::reflect::ArrayAdapter<T, N> result, const boost::python::object& obj)
+        {
+            if (result.ptr)
+            {
+                for (size_t i = 0; i < N; ++i)
+                {
+                    boost::python::extract<T> extractor(obj[i]);
+                    result.ptr[i] = extractor();
+                }
+            }
+        }
+    }
+}
+
 static_assert(mo::reflect::ReflectData<cv::Scalar>::IS_SPECIALIZED, "Specialization not working for cv::Scalar");
 static_assert(mo::reflect::ReflectData<cv::Vec2f>::IS_SPECIALIZED, "Specialization not working for cv::Vec2f");
 static_assert(mo::reflect::ReflectData<cv::Vec2b>::IS_SPECIALIZED, "Specialization not working for cv::Vec2b");
 static_assert(mo::reflect::ReflectData<cv::Vec3f>::IS_SPECIALIZED, "Specialization not working for cv::Vec3f");
 static_assert(mo::reflect::ReflectData<cv::Vec3b>::IS_SPECIALIZED, "Specialization not working for cv::Vec3b");
 
-INSTANTIATE_META_PARAM(cv::Scalar);
-INSTANTIATE_META_PARAM(cv::Vec2f);
-INSTANTIATE_META_PARAM(cv::Vec3f);
-INSTANTIATE_META_PARAM(cv::Vec2b);
-INSTANTIATE_META_PARAM(cv::Vec3b);
-INSTANTIATE_META_PARAM(std::vector<cv::Vec3b>);
-typedef std::map<std::string, cv::Vec3b> ClassColormap_t;
+INSTANTIATE_META_PARAM(Scalar);
+INSTANTIATE_META_PARAM(Vec2f);
+INSTANTIATE_META_PARAM(Vec3f);
+INSTANTIATE_META_PARAM(Vec2b);
+INSTANTIATE_META_PARAM(Vec3b);
+INSTANTIATE_META_PARAM(std::vector<Vec3b>);
+typedef std::map<std::string, Vec3b> ClassColormap_t;
 INSTANTIATE_META_PARAM(ClassColormap_t);
 #endif

@@ -8,58 +8,6 @@
 #include <cereal/types/string.hpp>
 #include <cereal/types/vector.hpp>
 
-namespace mo
-{
-    namespace IO
-    {
-        namespace Text
-        {
-            namespace imp
-            {
-
-                bool DeSerialize(ITAccessibleParam<EnumParam>* param, std::stringstream& ss)
-                {
-                    auto token = param->access();
-                    token().values.clear();
-                    (token)().enumerations.clear();
-                    std::string size;
-                    std::getline(ss, size, '[');
-                    if (size.size())
-                    {
-                        size_t size_ = boost::lexical_cast<size_t>(size);
-                        (token)().values.reserve(size_);
-                        (token)().enumerations.reserve(size_);
-                    }
-                    std::string enumeration;
-                    int value;
-                    char ch;
-                    while (ss >> enumeration >> ch >> value)
-                    {
-                        (token)().addEnum(value, enumeration);
-                        ss >> ch;
-                    }
-                    return true;
-                }
-
-                bool Serialize(ITAccessibleParam<EnumParam>* param, std::stringstream& ss)
-                {
-                    auto token = param->access();
-                    (token)().enumerations.size();
-                    ss << "[";
-                    for (int i = 0; i < (token)().enumerations.size(); ++i)
-                    {
-                        if (i != 0)
-                            ss << ", ";
-                        ss << (token)().enumerations[i] << ":" << (token)().values[i];
-                    }
-                    ss << "]";
-                    return true;
-                }
-            }
-        } // namespace Text
-    }     // namespace IO
-} // namespace mo
-
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
 #endif
@@ -73,33 +21,8 @@ namespace mo
 
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 
-namespace mo
-{
-    std::ostream& operator<<(std::ostream& os, const mo::EnumParam& obj)
-    {
-        ASSERT_SERIALIZABLE(EnumParam);
-        for (size_t i = 0; i < obj.enumerations.size(); ++i)
-        {
-            if (i == obj.currentSelection)
-            {
-                os << '>' << obj.enumerations[i] << "<, ";
-            }
-            else
-            {
-                os << obj.enumerations[i] << ", ";
-            }
-        }
-        return os;
-    }
-}
-
 using namespace mo;
 
-template <class AR>
-void EnumParam::serialize(AR& ar)
-{
-    ar(CEREAL_NVP(enumerations), CEREAL_NVP(values), CEREAL_NVP(currentSelection));
-}
 namespace mo
 {
     namespace reflect
@@ -178,6 +101,23 @@ namespace mo
         {
             return data.string();
         }
+    }
+}
+
+namespace std
+{
+    template <class T>
+    ostream& operator<<(ostream& os, const std::vector<T>& data)
+    {
+        os << '[';
+        for (size_t i = 0; i < data.size(); ++i)
+        {
+            if (i != 0)
+                os << ',';
+            os << data[i];
+        }
+        os << ']';
+        return os;
     }
 }
 

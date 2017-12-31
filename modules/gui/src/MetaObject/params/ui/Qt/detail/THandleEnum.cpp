@@ -19,7 +19,7 @@ void THandler<EnumParam, void>::updateUi(const EnumParam& data)
         {
             enumCombo->addItem(QString::fromStdString(data.enumerations[i]));
         }
-        enumCombo->setCurrentIndex(data.currentSelection);
+        enumCombo->setCurrentIndex(data.current_selection);
     }
 }
 
@@ -27,7 +27,7 @@ void THandler<EnumParam, void>::updateParam(EnumParam& data)
 {
     if (enumCombo)
     {
-        data.currentSelection = enumCombo->currentIndex();
+        data.current_selection = enumCombo->currentIndex();
     }
 }
 

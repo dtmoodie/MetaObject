@@ -1,5 +1,6 @@
 #pragma once
 #include "MetaObject/core/detail/Counter.hpp"
+#include "MetaObject/detail/Export.hpp"
 #include "MetaObject/params/detail/reflect_data.hpp"
 #include <ostream>
 #include <stdint.h>
@@ -96,6 +97,16 @@ namespace cereal
     }
 }
 
+namespace std
+{
+    template <class T>
+    mo::reflect::enable_if_reflected<T, ostream>& operator<<(ostream& os, const T& data)
+    {
+        mo::reflect::printStruct(os, data);
+        return os;
+    }
+}
+
 #define REFLECT_DATA_START(TYPE)                                                                                       \
     template <>                                                                                                        \
     struct ReflectData<TYPE, void>                                                                                     \
@@ -137,9 +148,11 @@ namespace cereal
     static constexpr const auto& get(const DType& data, mo::_counter_<N - START - 1 + I0>) { return data.NAME; }       \
     static constexpr const char* getName(mo::_counter_<N - START - 1 + I0> /*dummy*/) { return #NAME; }
 
-#define REFLECT_DATA_END()                                                                                             \
+#define REFLECT_DATA_END                                                                                               \
     static constexpr int N = __COUNTER__ - START - 1 + I0;                                                             \
     }
+
+#define REFLECTED_EXPORT_DECL MO_EXPORTS
 
 #define REFLECT_TEMPLATED_DATA_START(TYPE)                                                                             \
     template <class... T>                                                                                              \
@@ -156,20 +169,16 @@ namespace cereal
 //    REFLECT_INTERNAL_MEMBER(float, x)
 //    REFLECT_INTERNAL_MEMBER(float, y)
 //    REFLECT_INTERNAL_MEMBER(float, z)
-// REFLECT_INTERNAL_END();
+// REFLECT_INTERNAL_END;
 
 #define REFLECT_INTERNAL_MEMBER(TYPE, NAME)                                                                            \
     TYPE NAME;                                                                                                         \
     REFLECT_DATA_MEMBER(NAME)
 
 #define REFLECT_INTERNAL_START(TYPE)                                                                                   \
-    struct TYPE                                                                                                        \
-    {                                                                                                                  \
-        static constexpr int START = __COUNTER__;                                                                      \
-        typedef TYPE DType;                                                                                            \
-        static constexpr int I0 = 0;                                                                                   \
-        typedef void INTERNALLY_REFLECTED;
+    static constexpr int START = __COUNTER__;                                                                          \
+    typedef TYPE DType;                                                                                                \
+    static constexpr int I0 = 0;                                                                                       \
+    typedef void INTERNALLY_REFLECTED;
 
-#define REFLECT_INTERNAL_END()                                                                                         \
-    static constexpr int N = __COUNTER__ - START - 1 + I0;                                                             \
-    }
+#define REFLECT_INTERNAL_END static constexpr int N = __COUNTER__ - START - 1 + I0

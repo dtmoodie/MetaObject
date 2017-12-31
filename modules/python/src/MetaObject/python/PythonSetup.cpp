@@ -12,6 +12,7 @@
 #include <boost/python/default_call_policies.hpp>
 #include <boost/python/raw_function.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
+#include <boost/thread.hpp>
 
 #include <vector>
 
@@ -41,6 +42,33 @@ namespace mo
 
     inline mo::ICoordinateSystem* get_pointer(const std::shared_ptr<mo::ICoordinateSystem>& ptr) { return ptr.get(); }
 
+    bool recompile(bool async = false)
+    {
+        auto inst = mo::MetaObjectFactory::instance();
+        if (inst->checkCompile())
+        {
+            if (async == false)
+            {
+                while (!inst->isCompileComplete())
+                {
+                    boost::this_thread::sleep_for(boost::chrono::seconds(1));
+                    MO_LOG(info) << "Still compiling";
+                }
+                MO_LOG(info) << "Swapping objects";
+                if (inst->swapObjects())
+                {
+                    MO_LOG(info) << "Swap success";
+                    return true;
+                }
+            }
+        }
+        else
+        {
+            MO_LOG(info) << "Nothing to recompile";
+        }
+        return false;
+    }
+
     namespace python
     {
         static std::vector<std::function<void(void)>> setup_functions;
@@ -64,6 +92,7 @@ namespace mo
         {
             interface_setup_functions.emplace_back(interface_id, std::move(func));
         }
+
         void registerObjects()
         {
             auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
@@ -112,6 +141,7 @@ namespace mo
         setupPlugins(module_name);
         boost::python::def("listConstructableObjects", &listConstructableObjects);
         boost::python::def("listObjectInfos", &listObjectInfos);
+        boost::python::def("recompile", &recompile, (boost::python::arg("async") = false));
     }
 }
 

@@ -5,6 +5,7 @@
 #include <MetaObject/params/IParam.hpp>
 #include <MetaObject/params/MetaParam.hpp>
 #include <MetaObject/params/detail/MetaParamImpl.hpp>
+#include <MetaObject/params/reflect_data.hpp>
 #include <boost/lexical_cast.hpp>
 #include <iomanip>
 #include <map>
@@ -22,6 +23,25 @@ namespace mo
             {
                 inline size_t textSize(const std::string& str);
                 inline size_t textSize(int value);
+
+                template <class T>
+                static inline mo::reflect::enable_if_reflected<T, size_t> textSizeHelper(const T& obj, mo::_counter_<0>)
+                {
+                    return textSize(mo::reflect::get<0>(obj));
+                }
+
+                template <class T, int I>
+                static inline mo::reflect::enable_if_reflected<T, size_t> textSizeHelper(const T& obj, mo::_counter_<I>)
+                {
+                    return textSizeHelper(obj, mo::_counter_<I - 1>()) + textSize(mo::reflect::get<I>(obj));
+                }
+
+                template <class T>
+                static inline mo::reflect::enable_if_reflected<T, size_t> textSize(const T& obj)
+                {
+                    return textSizeHelper(obj, mo::_counter_<mo::reflect::ReflectData<T>::N - 1>());
+                }
+
                 // test if stream serialization of a type is possible
                 template <class T>
                 struct stream_deserializable
@@ -36,7 +56,8 @@ namespace mo
                     {
                         return 0;
                     }
-                    static const bool value = sizeof(check<T>((std::istream*)0, (T*)0)) == sizeof(size_t);
+                    static const bool value = sizeof(check<T>(static_cast<std::istream*>(nullptr),
+                                                              static_cast<T*>(nullptr))) == sizeof(size_t);
                 };
 
                 template <class T>
@@ -52,8 +73,10 @@ namespace mo
                     {
                         return 0;
                     }
-                    static const bool value = sizeof(check<T>((std::ostream*)0, (T*)0)) == sizeof(size_t);
+                    static const bool value = sizeof(check<T>(static_cast<std::ostream*>(nullptr),
+                                                              static_cast<T*>(nullptr))) == sizeof(size_t);
                 };
+
                 template <class T1, class T2>
                 struct stream_serializable<std::pair<T1, T2>>
                 {
@@ -82,12 +105,15 @@ namespace mo
                 // used in containers to determine the number of elements that can be displayed per line
                 ElemsPerLine = 4,
             };
+
             static inline size_t textSize(const T& obj) { return Text::imp::textSize(obj); }
+
             static inline bool serialize(std::ostream& os, const T& obj)
             {
                 os << obj;
                 return true;
             }
+
             static inline bool deserialize(std::istream& is, T& obj)
             {
                 is >> obj;
@@ -105,6 +131,7 @@ namespace mo
                 // used in containers to determine the number of elements that can be displayed per line
                 ElemsPerLine = 4,
             };
+
             static inline size_t textSize(const T& obj) { return Text::imp::textSize(obj); }
             static inline bool serialize(std::ostream& os, const T& obj)
             {
@@ -470,15 +497,16 @@ namespace mo
         } // Text
     }     // IO
 
-#define PARAMETER_TEXT_SERIALIZATION_POLICY_INST_(N)                                                                   \
-    template <class T>                                                                                                 \
-    struct MetaParam<T, N, void> : public MetaParam<T, N - 1, void>                                                    \
-    {                                                                                                                  \
-        static IO::Text::Policy<T> _text_policy;                                                                       \
-        MetaParam(const char* name) : MetaParam<T, N - 1, void>(name) { (void)&_text_policy; }                         \
-    };                                                                                                                 \
-    template <class T>                                                                                                 \
-    IO::Text::Policy<T> MetaParam<T, N, void>::_text_policy;
+    /*#define PARAMETER_TEXT_SERIALIZATION_POLICY_INST_(N) \
+        template <class T> \
+        struct MetaParam<T, N, void> : public MetaParam<T, N - 1, void> \
+        { \
+            static IO::Text::Policy<T> _text_policy; \
+            MetaParam(const char* name) : MetaParam<T, N - 1, void>(name) { (void)&_text_policy; } \
+        }; \
+        template <class T> \
+        IO::Text::Policy<T> MetaParam<T, N, void>::_text_policy;
 
-    PARAMETER_TEXT_SERIALIZATION_POLICY_INST_(__COUNTER__)
+        PARAMETER_TEXT_SERIALIZATION_POLICY_INST_(__COUNTER__)
+    */
 } // mo

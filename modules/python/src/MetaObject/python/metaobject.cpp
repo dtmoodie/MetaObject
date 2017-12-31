@@ -18,10 +18,12 @@ namespace boost
 
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/params/InputParam.hpp"
+
 #include "PythonSetup.hpp"
 #include "lambda.hpp"
 #include "rcc_ptr.hpp"
 #include <RuntimeObjectSystem/IObjectInfo.h>
+#include <RuntimeObjectSystem/RuntimeObjectSystem.h>
 #include <RuntimeObjectSystem/shared_ptr.hpp>
 #include <boost/functional.hpp>
 #include <boost/python.hpp>
@@ -32,6 +34,13 @@ namespace mo
 {
     namespace python
     {
+        namespace detail
+        {
+            std::string getName(const IObjectConstructor* ctr) {}
+            std::string getCompiledPath(const IObjectConstructor* ctr) {}
+            std::vector<std::string> getInludeFiles(const IObjectConstructor* ctr) {}
+            std::vector<std::string> getLinkLibs(const IObjectConstructor* ctr) {}
+        }
         void setupInterface()
         {
 
@@ -63,6 +72,9 @@ namespace mo
                       boost::python::return_internal_reference<>());
 
             bpobj.def("getContext", &IMetaObject::getContext);
+
+            boost::python::class_<IObjectConstructor, IObjectConstructor*, boost::noncopyable> ctrobj(
+                "IObjectConstructor", boost::python::no_init);
         }
 
         rcc::shared_ptr<MetaObject> constructObject(IObjectConstructor* ctr)
@@ -76,6 +88,8 @@ namespace mo
             }
             return output;
         }
+
+        IObjectConstructor* getCtr(IObjectConstructor* ctr) { return ctr; }
 
         void setupObjects(std::vector<IObjectConstructor*>& ctrs)
         {
@@ -98,6 +112,8 @@ namespace mo
                     bpobj.def("__init__",
                               boost::python::make_constructor(
                                   std::function<rcc::shared_ptr<MetaObject>()>(std::bind(&constructObject, *itr))));
+                    // bpobj.add_static_property("ctr", *itr);
+
                     boost::python::import("metaobject").attr("object").attr(info->GetObjectName().c_str()) = bpobj;
                     itr = ctrs.erase(itr);
                 }

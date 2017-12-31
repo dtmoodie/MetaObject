@@ -18,6 +18,7 @@ https://github.com/dtmoodie/MetaObject
 */
 #pragma once
 #include <MetaObject/detail/Export.hpp>
+#include <MetaObject/params/reflect_data.hpp>
 #include <boost/filesystem/path.hpp>
 #include <string>
 #include <vector>
@@ -100,9 +101,8 @@ namespace mo
         }
     };
 
-    class MO_EXPORTS EnumParam
+    struct MO_EXPORTS EnumParam
     {
-      public:
         EnumParam(const EnumParam&) = default;
         EnumParam(const std::initializer_list<std::pair<const char*, int>>& values);
         EnumParam();
@@ -113,11 +113,10 @@ namespace mo
         int getValue() const;
         std::string getEnum() const;
 
-        template <typename T>
-        void serialize(T& ar);
-
-        std::vector<std::string> enumerations;
-        std::vector<int> values;
-        int currentSelection;
+        REFLECT_INTERNAL_START(EnumParam)
+            REFLECT_INTERNAL_MEMBER(std::vector<std::string>, enumerations)
+            REFLECT_INTERNAL_MEMBER(std::vector<int>, values)
+            REFLECT_INTERNAL_MEMBER(size_t, current_selection)
+        REFLECT_INTERNAL_END;
     };
 }

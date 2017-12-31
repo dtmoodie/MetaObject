@@ -30,7 +30,7 @@ EnumParam::EnumParam(const std::initializer_list<std::pair<const char*, int>>& v
 
 EnumParam::EnumParam()
 {
-    currentSelection = 0;
+    current_selection = 0;
 }
 
 void EnumParam::SetValue(const std::initializer_list<const char*>& string, const std::initializer_list<int>& values)
@@ -54,18 +54,18 @@ void EnumParam::addEnum(int value, const ::std::string& enumeration)
 
 int EnumParam::getValue() const
 {
-    if (values.empty() || currentSelection >= values.size())
+    if (values.empty() || current_selection >= values.size())
     {
         throw std::range_error("values.empty() || currentSelection >= values.size()");
     }
-    return values[currentSelection];
+    return values[current_selection];
 }
 
 std::string EnumParam::getEnum() const
 {
-    if (currentSelection >= values.size())
+    if (current_selection >= values.size())
     {
         throw std::range_error("currentSelection >= values.size()");
     }
-    return enumerations[currentSelection];
+    return enumerations[current_selection];
 }

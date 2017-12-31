@@ -8,7 +8,6 @@ set(metaobject_param_include
 #include <MetaObject/params/buffers/StreamBuffer.hpp>
 #include <MetaObject/params/buffers/Map.hpp>
 #include <MetaObject/serialization/CerealPolicy.hpp>
-#include <MetaObject/serialization/TextPolicy.hpp>
 #include <MetaObject/serialization/cereal_map.hpp>
 #include <cereal/archives/xml.hpp>
 #include <cereal/archives/json.hpp>

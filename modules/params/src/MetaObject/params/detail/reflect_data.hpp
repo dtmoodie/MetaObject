@@ -1,7 +1,7 @@
 #pragma once
 #include "MetaObject/params/reflect_data.hpp"
 #include <cereal/cereal.hpp>
-
+#include <type_traits>
 namespace mo
 {
     namespace reflect
@@ -12,11 +12,11 @@ namespace mo
 
         template <int I, class T>
         static constexpr inline auto get(T& data)
-            -> decltype(ReflectData<std::remove_const_t<T>>::get(data, mo::_counter_<I>()));
+            -> decltype(ReflectData<typename std::remove_const<T>::type>::get(data, mo::_counter_<I>()));
 
         template <int I, class T>
         static constexpr inline auto get(const T& data)
-            -> decltype(ReflectData<std::remove_const_t<T>>::get(data, mo::_counter_<I>()));
+            -> decltype(ReflectData<typename std::remove_const<T>::type>::get(data, mo::_counter_<I>()));
 
         template <int I, class T>
         static constexpr inline auto getValue(const T& data)
@@ -33,24 +33,37 @@ namespace mo
         template <int I, class T>
         static constexpr inline const char* getName();
 
+        // Specialization for internally reflected data
         template <class T>
         struct ReflectData<T, decltype(T::get(std::declval<T>(), mo::_counter_<0>()), void())>
         {
             static constexpr bool IS_SPECIALIZED = true;
             static constexpr int N = T::N;
-            static constexpr auto get(const T& data, mo::_counter_<0>) { return T::get(data, mo::_counter_<0>()); }
-            static constexpr auto get(T& data, mo::_counter_<0>) { return T::get(data, mo::_counter_<0>()); }
+
+            static constexpr auto get(const T& data, mo::_counter_<0>) -> decltype(T::get(data, mo::_counter_<0>()))
+            {
+                return T::get(data, mo::_counter_<0>());
+            }
+
+            static constexpr auto get(T& data, mo::_counter_<0>) -> decltype(T::get(data, mo::_counter_<0>()))
+            {
+                return T::get(data, mo::_counter_<0>());
+            }
+
             template <int I>
-            static constexpr auto get(const T& data, mo::_counter_<I>)
+            static constexpr auto get(const T& data, mo::_counter_<I>) -> decltype(T::get(data, mo::_counter_<I>()))
             {
                 return T::get(data, mo::_counter_<I>());
             }
+
             template <int I>
-            static constexpr auto get(T& data, mo::_counter_<I>)
+            static constexpr auto get(T& data, mo::_counter_<I>) -> decltype(T::get(data, mo::_counter_<I>()))
             {
                 return T::get(data, mo::_counter_<I>());
             }
+
             static constexpr const char* getName(mo::_counter_<0> cnt) { return T::getName(cnt); }
+
             template <int I>
             static constexpr const char* getName(mo::_counter_<I> cnt)
             {

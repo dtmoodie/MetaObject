@@ -18,6 +18,14 @@ struct Inherited : public ReflectedStruct
     float w;
 };
 
+struct Composite
+{
+    REFLECT_INTERNAL_START(Composite)
+        REFLECT_INTERNAL_MEMBER(ReflectedStruct, a)
+        REFLECT_INTERNAL_MEMBER(ReflectedStruct, b)
+    REFLECT_INTERNAL_END;
+};
+
 namespace mo
 {
     namespace reflect
@@ -27,7 +35,7 @@ namespace mo
             REFLECT_DATA_MEMBER(y)
             REFLECT_DATA_MEMBER(z)
             REFLECT_DATA_MEMBER(id)
-        REFLECT_DATA_END();
+        REFLECT_DATA_END;
     }
 }
 
@@ -37,15 +45,18 @@ namespace mo
     {
         REFLECT_DATA_DERIVED(Inherited, ReflectedStruct)
             REFLECT_DATA_MEMBER(w)
-        REFLECT_DATA_END();
+        REFLECT_DATA_END;
     }
 }
 
-REFLECT_INTERNAL_START(InternallyReflected)
-    REFLECT_INTERNAL_MEMBER(float, x)
-    REFLECT_INTERNAL_MEMBER(float, y)
-    REFLECT_INTERNAL_MEMBER(float, z)
-REFLECT_INTERNAL_END();
+struct InternallyReflected
+{
+    REFLECT_INTERNAL_START(InternallyReflected)
+        REFLECT_INTERNAL_MEMBER(float, x)
+        REFLECT_INTERNAL_MEMBER(float, y)
+        REFLECT_INTERNAL_MEMBER(float, z)
+    REFLECT_INTERNAL_END;
+};
 
 int main(int argc, char** argv)
 {
@@ -80,5 +91,13 @@ int main(int argc, char** argv)
         ar(test);
     }
     std::cout << std::endl;
+
+    Composite cmp;
+    mo::reflect::printStruct(std::cout, cmp);
+    std::cout << std::endl;
+    {
+        cereal::JSONOutputArchive ar(std::cout);
+        ar(cmp);
+    }
     return 0;
 }

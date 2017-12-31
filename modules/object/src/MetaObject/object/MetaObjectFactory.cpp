@@ -451,7 +451,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
     setupObjectConstructors(interface);
     boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
     _pimpl->plugins.emplace_back(
-        fullPluginPath, "success", (end - start).total_milliseconds(), info ? info() : nullptr);
+        fullPluginPath, "success", (end - start).total_milliseconds(), info ? info() : nullptr, id);
     mo::setThisThreadName(old_name);
     return true;
 }

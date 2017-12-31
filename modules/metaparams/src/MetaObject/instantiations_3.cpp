@@ -52,17 +52,15 @@ namespace mo
     namespace reflect
     {
         REFLECT_TEMPLATED_DATA_START(Point_)
-            ;
             REFLECT_DATA_MEMBER(x)
             REFLECT_DATA_MEMBER(y)
-        REFLECT_DATA_END();
+        REFLECT_DATA_END;
 
         REFLECT_TEMPLATED_DATA_START(Point3_)
-            ;
             REFLECT_DATA_MEMBER(x)
             REFLECT_DATA_MEMBER(y)
             REFLECT_DATA_MEMBER(z)
-        REFLECT_DATA_END();
+        REFLECT_DATA_END;
     }
 }
 INSTANTIATE_META_PARAM(Point2f);

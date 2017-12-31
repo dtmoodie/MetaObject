@@ -52,7 +52,7 @@ void TParamProxy<EnumParam, void>::onUiChanged()
     {
         if (enums[i] == _combo_box->currentText())
         {
-            token().currentSelection = i;
+            token().current_selection = i;
             return;
         }
     }
