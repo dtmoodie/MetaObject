@@ -15,7 +15,8 @@ void THandler<EnumParam, void>::updateUi(const EnumParam& data)
     if (enumCombo)
     {
         enumCombo->clear();
-        for (int i = 0; i < data.enumerations.size(); ++i) {
+        for (int i = 0; i < data.enumerations.size(); ++i)
+        {
             enumCombo->addItem(QString::fromStdString(data.enumerations[i]));
         }
         enumCombo->setCurrentIndex(data.currentSelection);

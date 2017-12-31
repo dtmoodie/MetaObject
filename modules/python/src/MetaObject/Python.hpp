@@ -6,18 +6,19 @@
 
 #include <functional>
 
-
 namespace mo
 {
-    template<class T, int N, typename Enable = void> struct MetaObjectPolicy;
-	class MO_EXPORTS PythonClassRegistry
-	{
-	public:
-		static void SetupPythonModule();
-		static void RegisterPythonSetupFunction(const char* name, std::function<void(void)> f);
-	};
+    template <class T, int N, typename Enable = void>
+    struct MetaObjectPolicy;
+    class MO_EXPORTS PythonClassRegistry
+    {
+      public:
+        static void SetupPythonModule();
+        static void RegisterPythonSetupFunction(const char* name, std::function<void(void)> f);
+    };
 
-    template<class T> struct PythonPolicy
+    template <class T>
+    struct PythonPolicy
     {
         PythonPolicy(const char* name)
         {
@@ -30,15 +31,13 @@ namespace mo
         }
     };
 
-#define INSTANTIATE_PYTHON_POLICY_(N) \
-template<class T> struct MetaObjectPolicy<T, N, void>: public mo::MetaObjectPolicy<T, N - 1, void>, public mo::PythonPolicy<T> \
-{ \
-    MetaObjectPolicy(): \
-        PythonPolicy<T>(T::GetTypeNameStatic()) \
-    { \
-    } \
-};
+#define INSTANTIATE_PYTHON_POLICY_(N)                                                                                  \
+    template <class T>                                                                                                 \
+    struct MetaObjectPolicy<T, N, void> : public mo::MetaObjectPolicy<T, N - 1, void>, public mo::PythonPolicy<T>      \
+    {                                                                                                                  \
+        MetaObjectPolicy() : PythonPolicy<T>(T::GetTypeNameStatic()) {}                                                \
+    };
 
-INSTANTIATE_PYTHON_POLICY_(__COUNTER__)
+    INSTANTIATE_PYTHON_POLICY_(__COUNTER__)
 }
 #endif

@@ -13,7 +13,8 @@ TParamProxy<EnumParam, void>::TParamProxy(ITAccessibleParam<EnumParam>* param_,
     mo::ParamTraits<EnumParam>::InputStorage_t data;
     if (param_->getData(data))
     {
-        for (auto& name : data->enumerations) {
+        for (auto& name : data->enumerations)
+        {
             _combo_box->addItem(name);
         }
     }
@@ -35,7 +36,8 @@ void TParamProxy<EnumParam, void>::onParamUpdate(mo::Context* ctx, mo::IParam* p
     mo::ParamTraits<EnumParam>::InputStorage_t data;
     if (_param->getData(data))
     {
-        for (auto& name : data->enumerations) {
+        for (auto& name : data->enumerations)
+        {
             _combo_box->addItem(name);
         }
     }
@@ -46,7 +48,8 @@ void TParamProxy<EnumParam, void>::onUiChanged()
 {
     auto token = _param->access();
     std::vector<std::string>& enums = token().enumerations;
-    for (int i = 0; i < enums.size(); ++i) {
+    for (int i = 0; i < enums.size(); ++i)
+    {
         if (enums[i] == _combo_box->currentText())
         {
             token().currentSelection = i;

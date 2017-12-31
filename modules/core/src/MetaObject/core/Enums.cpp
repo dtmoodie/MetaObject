@@ -25,7 +25,8 @@ static const std::vector<std::pair<ParamFlags, std::string>> type_flag_map = {TY
 std::string mo::paramFlagsToString(EnumClassBitset<ParamFlags> type)
 {
     std::string output;
-    for (const auto& itr : type_flag_map) {
+    for (const auto& itr : type_flag_map)
+    {
         if (type.test(itr.first))
         {
             if (output.empty())
@@ -46,17 +47,20 @@ EnumClassBitset<ParamFlags> mo::stringToParamFlags(const std::string& str)
     std::string rest = str;
     EnumClassBitset<ParamFlags> output;
     auto pos = rest.find('|');
-    while (pos != std::string::npos) {
+    while (pos != std::string::npos)
+    {
         std::string substr = rest.substr(0, pos);
         rest = rest.substr(pos + 1);
-        for (const auto& itr : type_flag_map) {
+        for (const auto& itr : type_flag_map)
+        {
             if (substr == itr.second)
                 // output = ParamFlags(itr.first | output);
                 output.flip(itr.first);
         }
         pos = rest.find('|');
     }
-    for (const auto& itr : type_flag_map) {
+    for (const auto& itr : type_flag_map)
+    {
         if (rest == itr.second)
             // output = ParamFlags(itr.first | output);
             output.flip(itr.first);

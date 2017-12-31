@@ -60,7 +60,7 @@ int main(int argc, char** argv)
     static_assert(std::is_same<mo::reflect::enable_if_reflected<ReflectedStruct>, void>::value, "test1");
     {
         cereal::JSONOutputArchive ar(std::cout);
-        mo::reflect::serialize(ar, data);
+        ar(data);
     }
     std::cout << std::endl;
     data2.x = 5;
@@ -77,7 +77,7 @@ int main(int argc, char** argv)
     std::cout << std::endl;
     {
         cereal::JSONOutputArchive ar(std::cout);
-        mo::reflect::serialize(ar, test);
+        ar(test);
     }
     std::cout << std::endl;
     return 0;

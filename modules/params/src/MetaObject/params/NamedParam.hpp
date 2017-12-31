@@ -18,7 +18,8 @@
             }                                                                                                          \
             static VoidType GetPtr(const boost::optional<Type>& arg)                                                   \
             {                                                                                                          \
-                if (arg) return arg.get_ptr();                                                                         \
+                if (arg)                                                                                               \
+                    return arg.get_ptr();                                                                              \
                 return nullptr;                                                                                        \
             }                                                                                                          \
             static VoidType GetPtr(const Type& arg) { return &arg; }                                                   \
@@ -49,7 +50,8 @@
             }                                                                                                          \
             static VoidType GetPtr(boost::optional<Type>& arg)                                                         \
             {                                                                                                          \
-                if (arg) return arg.get_ptr();                                                                         \
+                if (arg)                                                                                               \
+                    return arg.get_ptr();                                                                              \
                 return nullptr;                                                                                        \
             }                                                                                                          \
             static VoidType GetPtr(Type& arg) { return &arg; }                                                         \
@@ -92,7 +94,8 @@ namespace mo
             explicit TaggedArgument(typename Tag::StorageType val) : arg(&val) {}
             explicit TaggedArgument(const boost::optional<typename Tag::Type>& val)
             {
-                if (val) {
+                if (val)
+                {
                     arg = &(*val);
                 }
                 else
@@ -200,7 +203,8 @@ namespace mo
     typename Tag::ConstRef GetKeywordInputDefault(typename Tag::ConstRef def, const Args&... args)
     {
         const void* ptr = GetKeyImpl<Tag>(args...);
-        if (ptr) return *static_cast<const typename Tag::Type*>(ptr);
+        if (ptr)
+            return *static_cast<const typename Tag::Type*>(ptr);
         return def;
     }
 
@@ -208,7 +212,8 @@ namespace mo
     const typename Tag::Type* GetKeywordInputOptional(const Args&... args)
     {
         const void* ptr = GetKeyImpl<Tag>(args...);
-        if (ptr) return static_cast<const typename Tag::Type*>(ptr);
+        if (ptr)
+            return static_cast<const typename Tag::Type*>(ptr);
         return nullptr;
     }
 
@@ -226,7 +231,8 @@ namespace mo
     {
         static_assert(!std::is_const<typename Tag::VoidType>::value, "Tag type is not an output tag");
         void* ptr = GetKeyImpl<Tag>(args...);
-        if (ptr) return (static_cast<typename Tag::Type*>(ptr));
+        if (ptr)
+            return (static_cast<typename Tag::Type*>(ptr));
         return nullptr;
     }
 }

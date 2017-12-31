@@ -1,7 +1,7 @@
 #pragma once
 #include <MetaObject/params/ui/WT.hpp>
-#include <Wt/WContainerWidget>
 #include <Wt/WComboBox>
+#include <Wt/WContainerWidget>
 #include <Wt/WText>
 namespace mo
 {
@@ -11,21 +11,15 @@ namespace mo
         {
             class IParamInputProxy : public Wt::WContainerWidget
             {
-            public:
-                IParamInputProxy(InputParam* param_, MainApplication* app_,
-                    WContainerWidget *parent_ = 0) :
-                    Wt::WContainerWidget(parent_),
-                    _input_param(param_),
-                    _app(app_),
-                    _combo_box(new Wt::WComboBox(this)),
-                    _item_text(new Wt::WText(this))
+              public:
+                IParamInputProxy(InputParam* param_, MainApplication* app_, WContainerWidget* parent_ = 0)
+                    : Wt::WContainerWidget(parent_), _input_param(param_), _app(app_),
+                      _combo_box(new Wt::WComboBox(this)), _item_text(new Wt::WText(this))
 
                 {
                     _item_text->setText(param_->getTreeName());
                     _item_text->setToolTip(mo::Demangle::typeToName(param_->getTypeInfo()));
-                    _combo_box->changed().connect(
-                        std::bind([this]()
-                    {
+                    _combo_box->changed().connect(std::bind([this]() {
                         if (onInputSelected)
                             onInputSelected(_combo_box->currentText());
                     }));
@@ -55,7 +49,8 @@ namespace mo
                 {
                     onInputSelected = cb;
                 }
-            protected:
+
+              protected:
                 InputParam* _input_param;
                 MainApplication* _app;
                 Wt::WComboBox* _combo_box;
@@ -63,5 +58,5 @@ namespace mo
                 std::function<void(const Wt::WString&)> onInputSelected;
             };
         } // wt
-    } // UI
+    }     // UI
 } // mo

@@ -87,6 +87,15 @@ namespace mo
     }
 }
 
+namespace cereal
+{
+    template <class AR, class T>
+    mo::reflect::enable_if_reflected<T> serialize(AR& ar, T& data)
+    {
+        mo::reflect::serialize(ar, data);
+    }
+}
+
 #define REFLECT_DATA_START(TYPE)                                                                                       \
     template <>                                                                                                        \
     struct ReflectData<TYPE, void>                                                                                     \

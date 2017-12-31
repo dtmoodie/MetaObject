@@ -62,7 +62,8 @@ struct impl
         void RemoveFromQueue(void* obj)
         {
             std::unique_lock<std::mutex> lock(mtx);
-            for (auto& queue : queues) {
+            for (auto& queue : queues)
+            {
                 queue.second.remove(obj);
             }
         }
@@ -72,8 +73,10 @@ struct impl
             Event ev;
             if (id == 0)
             {
-                for (auto& itr : queues) {
-                    while (itr.second.pop(ev)) {
+                for (auto& itr : queues)
+                {
+                    while (itr.second.pop(ev))
+                    {
                     }
                 }
             }
@@ -82,7 +85,8 @@ struct impl
                 auto itr = queues.find(id);
                 if (itr != queues.end())
                 {
-                    while (itr->second.pop(ev)) {
+                    while (itr->second.pop(ev))
+                    {
                     }
                 }
             }
@@ -118,7 +122,8 @@ struct impl
         auto queue = QueueRegistery::Instance().GetQueue(id);
         Event ev;
         int count = 0;
-        while (queue->pop(ev)) {
+        while (queue->pop(ev))
+        {
             ev.function();
             ++count;
         }

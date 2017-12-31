@@ -51,7 +51,8 @@ std::shared_ptr<Connection> RelayManager::connect(ISignal* signal, const std::st
 void RelayManager::connectSignal(IMetaObject* obj, const std::string& signal_name)
 {
     auto signals = obj->getSignals(signal_name);
-    for (auto signal : signals) {
+    for (auto signal : signals)
+    {
         auto connection = connect(signal, signal_name, obj);
         if (connection)
         {
@@ -63,7 +64,8 @@ void RelayManager::connectSignal(IMetaObject* obj, const std::string& signal_nam
 void RelayManager::connectSlot(IMetaObject* obj, const std::string& slot_name)
 {
     auto slots = obj->getSlots(slot_name);
-    for (auto slot : slots) {
+    for (auto slot : slots)
+    {
         auto connection = connect(slot, slot_name, obj);
         if (connection)
         {
@@ -104,7 +106,8 @@ int RelayManager::connectSignals(IMetaObject* obj, const std::string& name)
 {
     int count = 0;
     auto signals = obj->getSignals(name);
-    for (auto signal : signals) {
+    for (auto signal : signals)
+    {
         count += connect(signal, name, obj) ? 1 : 0;
     }
     return count;
@@ -114,7 +117,8 @@ int RelayManager::connectSignals(IMetaObject* obj, const TypeInfo& type)
 {
     int count = 0;
     auto signals = obj->getSignals(type);
-    for (auto signal : signals) {
+    for (auto signal : signals)
+    {
         count += connect(signal.first, signal.second, obj) ? 1 : 0;
     }
     return count;
@@ -124,7 +128,8 @@ int RelayManager::connectSignals(IMetaObject* obj)
 {
     int count = 0;
     auto signals = obj->getSignals();
-    for (auto signal : signals) {
+    for (auto signal : signals)
+    {
         count += connect(signal.first, signal.second, obj) ? 1 : 0;
     }
     return count;
@@ -134,7 +139,8 @@ int RelayManager::connectSlots(IMetaObject* obj, const std::string& name)
 {
     int count = 0;
     auto slots = obj->getSlots(name);
-    for (auto& slot : slots) {
+    for (auto& slot : slots)
+    {
         count += connect(slot, name, obj) ? 1 : 0;
     }
     return count;
@@ -144,7 +150,8 @@ int RelayManager::connectSlots(IMetaObject* obj, const TypeInfo& type)
 {
     int count = 0;
     auto all_slots = obj->getSlots(type);
-    for (auto& slot : all_slots) {
+    for (auto& slot : all_slots)
+    {
         count += connect(slot.first, slot.second, obj) ? 1 : 0;
     }
     return count;
@@ -154,7 +161,8 @@ int RelayManager::connectSlots(IMetaObject* obj)
 {
     int count = 0;
     auto all_slots = obj->getSlots();
-    for (auto& slot : all_slots) {
+    for (auto& slot : all_slots)
+    {
         count += connect(slot.first, slot.second, obj) ? 1 : 0;
     }
     return count;
@@ -164,7 +172,8 @@ std::vector<std::shared_ptr<ISignalRelay>> RelayManager::getRelays(const std::st
 {
     std::lock_guard<std::mutex> lock(mtx);
     std::vector<std::shared_ptr<ISignalRelay>> relays;
-    for (auto& types : _pimpl->relays) {
+    for (auto& types : _pimpl->relays)
+    {
         if (name.size())
         {
             auto itr = types.second.find(name);
@@ -175,7 +184,8 @@ std::vector<std::shared_ptr<ISignalRelay>> RelayManager::getRelays(const std::st
         }
         else
         {
-            for (auto& relay : types.second) {
+            for (auto& relay : types.second)
+            {
                 relays.push_back(relay.second);
             }
         }
@@ -186,8 +196,10 @@ std::vector<std::pair<std::shared_ptr<ISignalRelay>, std::string>> RelayManager:
 {
     std::lock_guard<std::mutex> lock(mtx);
     std::vector<std::pair<std::shared_ptr<ISignalRelay>, std::string>> output;
-    for (auto& types : _pimpl->relays) {
-        for (auto& relay : types.second) {
+    for (auto& types : _pimpl->relays)
+    {
+        for (auto& relay : types.second)
+        {
             output.emplace_back(relay.second, relay.first);
         }
     }

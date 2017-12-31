@@ -214,7 +214,8 @@ bool mo::Serialize(cereal::BinaryOutputArchive& ar, const IMetaObject* obj)
         auto params = obj->getParams();
         std::string type = obj->GetTypeName();
         ar(cereal::make_nvp("TypeName", type));
-        for (auto& param : params) {
+        for (auto& param : params)
+        {
             auto func1 = SerializationFactory::instance()->getBinarySerializationFunction(param->getTypeInfo());
             if (func1)
             {
@@ -252,7 +253,8 @@ bool mo::Serialize(cereal::XMLOutputArchive& ar, const IMetaObject* obj)
         auto params = obj->getParams();
         std::string type = obj->GetTypeName();
         ar(cereal::make_nvp("TypeName", type));
-        for (auto& param : params) {
+        for (auto& param : params)
+        {
             auto func1 = SerializationFactory::instance()->getXmlSerializationFunction(param->getTypeInfo());
             if (func1)
             {
@@ -293,7 +295,8 @@ bool mo::Serialize(cereal::JSONOutputArchive& ar, const IMetaObject* obj)
         ar(cereal::make_nvp("TypeId", id.m_ConstructorId));
         ar(cereal::make_nvp("InstanceId", id.m_PerTypeId));
         ar(cereal::make_nvp("TypeName", type));
-        for (auto& param : params) {
+        for (auto& param : params)
+        {
             if (param->checkFlags(mo::ParamFlags::Input_e))
             {
                 InputParam* input = dynamic_cast<InputParam*>(param);
@@ -340,7 +343,8 @@ bool mo::DeSerialize(cereal::JSONInputArchive& ar, IMetaObject* obj)
     {
         MO_LOG(debug) << "No object specific serialization function found for " << obj->GetTypeName();
         auto params = obj->getParams();
-        for (auto& param : params) {
+        for (auto& param : params)
+        {
             if (param->checkFlags(mo::ParamFlags::Output_e))
                 continue;
             auto func1 = SerializationFactory::instance()->getJsonDeSerializationFunction(param->getTypeInfo());

@@ -33,7 +33,8 @@ namespace mo
                     std::string enumeration;
                     int value;
                     char ch;
-                    while (ss >> enumeration >> ch >> value) {
+                    while (ss >> enumeration >> ch >> value)
+                    {
                         (token)().addEnum(value, enumeration);
                         ss >> ch;
                     }
@@ -45,7 +46,8 @@ namespace mo
                     auto token = param->access();
                     (token)().enumerations.size();
                     ss << "[";
-                    for (int i = 0; i < (token)().enumerations.size(); ++i) {
+                    for (int i = 0; i < (token)().enumerations.size(); ++i)
+                    {
                         if (i != 0)
                             ss << ", ";
                         ss << (token)().enumerations[i] << ":" << (token)().values[i];
@@ -76,7 +78,8 @@ namespace mo
     std::ostream& operator<<(std::ostream& os, const mo::EnumParam& obj)
     {
         ASSERT_SERIALIZABLE(EnumParam);
-        for (size_t i = 0; i < obj.enumerations.size(); ++i) {
+        for (size_t i = 0; i < obj.enumerations.size(); ++i)
+        {
             if (i == obj.currentSelection)
             {
                 os << '>' << obj.enumerations[i] << "<, ";

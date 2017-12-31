@@ -1,33 +1,38 @@
 #pragma once
 #ifdef HAVE_QT5
-#include <MetaObject/params/IParam.hpp>
-#include "qwidget.h"
 #include "qgridlayout.h"
-#include "qpushbutton.h"
 #include "qlabel.h"
+#include "qpushbutton.h"
+#include "qwidget.h"
+#include <MetaObject/params/IParam.hpp>
 
-namespace mo{
-    template<class T> class ITRangedParam;
-    namespace UI{
-        namespace qt{
-            template<typename T> 
-            ParamProxy<T>::~ParamProxy(){
-                
+namespace mo
+{
+    template <class T>
+    class ITRangedParam;
+    namespace UI
+    {
+        namespace qt
+        {
+            template <typename T>
+            ParamProxy<T>::~ParamProxy()
+            {
             }
 
-            template<typename T> 
-            void ParamProxy<T>::onUiUpdate(){
+            template <typename T>
+            void ParamProxy<T>::onUiUpdate()
+            {
                 param->access
-                //TODO Notify Param of update on the processing thread.
-                //Param->_modified = true;
-                //Param->OnUpdate(nullptr);
+                // TODO Notify Param of update on the processing thread.
+                // Param->_modified = true;
+                // Param->OnUpdate(nullptr);
             }
-            
+
             // Guaranteed to be called on the GUI thread thanks to the signal Connection configuration
-            template<typename T> 
+            template <typename T>
             void ParamProxy<T>::onParamUpdate(Context* ctx, IParam* param)
             {
-                auto dataPtr = Param->Data();    
+                auto dataPtr = Param->Data();
                 if (dataPtr)
                 {
                     if (THandler<T>::UiUpdateRequired())
@@ -36,30 +41,30 @@ namespace mo{
                     }
                 }
             }
-            
-            template<typename T> 
+
+            template <typename T>
             void ParamProxy<T>::onParamDelete(IParam const* param)
             {
-                if(param == Param)
+                if (param == Param)
                 {
                     Param = nullptr;
                     paramHandler.SetParamMtx(nullptr);
                 }
             }
 
-            template<typename T> 
+            template <typename T>
             ParamProxy<T>::ParamProxy(IParam* param)
             {
                 setParam(param);
             }
-            
-            template<typename T> 
+
+            template <typename T>
             bool ParamProxy<T>::checkParam(IParam* param)
             {
                 return param == Param;
             }
-            
-            template<typename T> 
+
+            template <typename T>
             QWidget* ParamProxy<T>::getParamWidget(QWidget* parent)
             {
                 QWidget* output = new QWidget(parent);
@@ -83,7 +88,7 @@ namespace mo{
                         layout->addWidget(*itr, 0, count);
                     }
                     // Correct the tab order of the widgets
-                    for(size_t i = widgets.size() - 1; i > 0; --i)
+                    for (size_t i = widgets.size() - 1; i > 0; --i)
                     {
                         QWidget::setTabOrder(widgets[i], widgets[i - 1]);
                     }
@@ -92,10 +97,10 @@ namespace mo{
                 return output;
             }
 
-            template<typename T> 
+            template <typename T>
             bool ParamProxy<T>::setParam(IParam* param)
             {
-                if(param->getTypeInfo() != TypeInfo(typeid(T)))
+                if (param->getTypeInfo() != TypeInfo(typeid(T)))
                     return false;
                 auto TParam = dynamic_cast<ITParam<T>*>(param);
                 if (TParam)
@@ -105,8 +110,9 @@ namespace mo{
                     paramHandler.setParamMtx(&Param->_mtx);
                     paramHandler.setData(Param->GetDataPtr());
                     paramHandler.IHandler::GetOnUpdate() = std::bind(&ParamProxy<T>::onUiUpdate, this);
-                    //Connection = Param->update_signal.connect(std::bind(&ParamProxy<T>::onParamUpdate, this, std::placeholders::_1), Signals::GUI, true, this);
-                    //delete_Connection = Param->delete_signal.connect(std::bind(&ParamProxy<T>::onParamDelete, this));
+                    // Connection = Param->update_signal.connect(std::bind(&ParamProxy<T>::onParamUpdate, this,
+                    // std::placeholders::_1), Signals::GUI, true, this);
+                    // delete_Connection = Param->delete_signal.connect(std::bind(&ParamProxy<T>::onParamDelete, this));
                     return true;
                 }
                 return false;

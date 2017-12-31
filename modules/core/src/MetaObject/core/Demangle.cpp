@@ -29,7 +29,8 @@ const TypeInfo& Demangle::nameToType(const std::string& name)
 {
     static TypeInfo default_type = TypeInfo(typeid(void));
     std::map<TypeInfo, std::string>& reg = registry();
-    for (const auto& itr : reg) {
+    for (const auto& itr : reg)
+    {
         if (itr.second == name)
         {
             return itr.first;
@@ -69,7 +70,8 @@ void Demangle::getTypeMapBinary(std::ostream& stream)
     cereal::BinaryOutputArchive ar(stream);
     std::map<std::string, size_t> lut;
     auto& reg = registry();
-    for (auto& itr : reg) {
+    for (auto& itr : reg)
+    {
         if (itr.second.size())
         {
             lut[itr.second] = itr.first.get().hash_code();

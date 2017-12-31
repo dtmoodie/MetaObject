@@ -176,7 +176,8 @@ static std::string MakeFunctionNameStandOut(std::string origName)
         // we parse the function name from the end; escape nested <> and ()
         // We look for the end and start of the function name itself (without namespace qualifiers),
         // and for commas separating function arguments.
-        for (size_t i = name.size(); i-- > 0;) {
+        for (size_t i = name.size(); i-- > 0;)
+        {
             // account for nested <> and ()
             if (name[i] == '>')
                 angleDepth++;
@@ -272,7 +273,8 @@ void mo::collectCallstack(size_t skipLevels,
 
     // format and emit
     size_t firstFrame = skipLevels + 1; // skip CollectCallStack()
-    for (size_t i = firstFrame; i < frames; i++) {
+    for (size_t i = firstFrame; i < frames; i++)
+    {
         if (i == firstFrame)
             write("    > ");
         else
@@ -306,13 +308,15 @@ void mo::collectCallstack(size_t skipLevels,
     unsigned int numFrames = backtrace(backtraceAddresses, MAX_NUM_FRAMES);
     char** symbolList = backtrace_symbols(backtraceAddresses, numFrames);
 
-    for (size_t i = skipLevels; i < numFrames; i++) {
+    for (size_t i = skipLevels; i < numFrames; i++)
+    {
         char* beginName = NULL;
         char* beginOffset = NULL;
         char* beginAddress = NULL;
 
         // Find parentheses and +address offset surrounding the mangled name
-        for (char* p = symbolList[i]; *p; ++p) {
+        for (char* p = symbolList[i]; *p; ++p)
+        {
             if (*p == '(') // function name begins here
                 beginName = p;
             else if (*p == '+') // relative address ofset

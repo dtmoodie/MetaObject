@@ -21,9 +21,7 @@ namespace mo
     class IMetaObject;
     struct MO_EXPORTS ConnectionInfo
     {
-        ConnectionInfo()
-        {
-        }
+        ConnectionInfo() {}
         ConnectionInfo(const ConnectionInfo& info)
         {
             signal_name = info.signal_name;
@@ -41,11 +39,11 @@ namespace mo
 
     struct MO_EXPORTS ParamConnectionInfo
     {
-        ParamConnectionInfo(const rcc::weak_ptr<IMetaObject>& obj, const std::string& output, const std::string& input, ParamType type)
-            : output_object(obj)
-            , output_param(output)
-            , input_param(input)
-            , connection_type(type)
+        ParamConnectionInfo(const rcc::weak_ptr<IMetaObject>& obj,
+                            const std::string& output,
+                            const std::string& input,
+                            ParamType type)
+            : output_object(obj), output_param(output), input_param(input), connection_type(type)
         {
         }
         rcc::weak_ptr<IMetaObject> output_object;
@@ -63,12 +61,12 @@ namespace mo
             _signals["param_added"][_sig_param_updated.getSignature()] = &_sig_param_added;
         }
 
-        std::map<std::string, std::map<TypeInfo, ISignal*> > _signals;
-        std::map<std::string, std::map<TypeInfo, ISlot*> > _slots;
+        std::map<std::string, std::map<TypeInfo, ISignal*>> _signals;
+        std::map<std::string, std::map<TypeInfo, ISlot*>> _slots;
 
         std::map<std::string, IParam*> _params; // statically defined in object
 
-        std::map<std::string, std::shared_ptr<IParam> > _implicit_params; // Can be changed at runtime
+        std::map<std::string, std::shared_ptr<IParam>> _implicit_params; // Can be changed at runtime
         std::list<ConnectionInfo> _connections;
         std::list<ParamConnectionInfo> _param_connections;
 

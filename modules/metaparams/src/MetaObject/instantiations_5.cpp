@@ -1,6 +1,7 @@
 #ifdef HAVE_OPENCV
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "MetaObject/params/MetaParam.hpp"
+#include "MetaObject/params/reflect_data.hpp"
 #include <boost/lexical_cast.hpp>
 #include <cereal/types/vector.hpp>
 
@@ -32,7 +33,8 @@ namespace mo
                 void DeSerialize_imp(std::istream& is, cv::Rect_<T>& obj, int)
                 {
                     char c;
-                    for (int i = 0; i < 4; ++i) {
+                    for (int i = 0; i < 4; ++i)
+                    {
                         is >> obj[i];
                         is >> c;
                     }

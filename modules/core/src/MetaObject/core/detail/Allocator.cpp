@@ -25,7 +25,8 @@ namespace mo
         {
             int index = 0;
             unsigned char* ptr;
-            for (auto& block : m_blocks) {
+            for (auto& block : m_blocks)
+            {
                 ptr = block->allocate(total, elemSize);
                 if (ptr)
                 {
@@ -49,7 +50,8 @@ namespace mo
         {
             int index = 0;
             unsigned char* ptr;
-            for (auto& block : m_blocks) {
+            for (auto& block : m_blocks)
+            {
                 ptr = block->allocate(num_bytes, sizeof(uchar));
                 if (ptr)
                 {
@@ -68,7 +70,8 @@ namespace mo
 
         bool deallocate(void* ptr, size_t total)
         {
-            for (const auto& itr : m_blocks) {
+            for (const auto& itr : m_blocks)
+            {
                 if (ptr >= itr->begin() && ptr < itr->end())
                 {
                     if (itr->deAllocate(static_cast<unsigned char*>(ptr)))
@@ -142,7 +145,8 @@ namespace mo
         bool allocate(void** ptr, size_t total, size_t elemSize)
         {
             (void)elemSize;
-            for (auto itr = deallocate_stack.begin(); itr != deallocate_stack.end(); ++itr) {
+            for (auto itr = deallocate_stack.begin(); itr != deallocate_stack.end(); ++itr)
+            {
                 if (std::get<2>(*itr) == total)
                 {
                     *ptr = std::get<0>(*itr);
@@ -157,7 +161,8 @@ namespace mo
 
         uchar* allocate(size_t total)
         {
-            for (auto itr = deallocate_stack.begin(); itr != deallocate_stack.end(); ++itr) {
+            for (auto itr = deallocate_stack.begin(); itr != deallocate_stack.end(); ++itr)
+            {
                 if (std::get<2>(*itr) == total)
                 {
                     deallocate_stack.erase(itr);
@@ -185,7 +190,8 @@ namespace mo
             auto time = clock();
             if (force)
                 time = 0;
-            for (auto itr = deallocate_stack.begin(); itr != deallocate_stack.end();) {
+            for (auto itr = deallocate_stack.begin(); itr != deallocate_stack.end();)
+            {
                 if ((time - std::get<1>(*itr)) > deallocation_delay)
                 {
                     total_usage -= std::get<2>(*itr);
@@ -273,7 +279,8 @@ namespace mo
         int dims, const int* sizes, int type, void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
     {
         size_t total = CV_ELEM_SIZE(type);
-        for (int i = dims - 1; i >= 0; i--) {
+        for (int i = dims - 1; i >= 0; i--)
+        {
             if (step)
             {
                 if (data && step[i] != CV_AUTOSTEP)
@@ -351,7 +358,8 @@ namespace mo
         (void)flags;
         (void)usageFlags;
         size_t total = CV_ELEM_SIZE(type);
-        for (int i = dims - 1; i >= 0; i--) {
+        for (int i = dims - 1; i >= 0; i--)
+        {
             if (step)
             {
                 if (data && step[i] != CV_AUTOSTEP)
@@ -423,7 +431,8 @@ namespace mo
         (void)flags;
         (void)usageFlags;
         size_t total = CV_ELEM_SIZE(type);
-        for (int i = dims - 1; i >= 0; i--) {
+        for (int i = dims - 1; i >= 0; i--)
+        {
             if (step)
             {
                 if (data && step[i] != CV_AUTOSTEP)
@@ -502,7 +511,8 @@ namespace mo
         (void)flags;
         (void)usageFlags;
         size_t total = CV_ELEM_SIZE(type);
-        for (int i = dims - 1; i >= 0; i--) {
+        for (int i = dims - 1; i >= 0; i--)
+        {
             if (step)
             {
                 if (data && step[i] != CV_AUTOSTEP)
@@ -572,7 +582,8 @@ namespace mo
         (void)flags;
         (void)usageFlags;
         size_t total = CV_ELEM_SIZE(type);
-        for (int i = dims - 1; i >= 0; i--) {
+        for (int i = dims - 1; i >= 0; i--)
+        {
             if (step)
             {
                 if (data && step[i] != CV_AUTOSTEP)

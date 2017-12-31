@@ -3,21 +3,21 @@
 
 namespace mo
 {
-    template<class T> class BufferConstructor
+    template <class T>
+    class BufferConstructor
     {
-    public:
+      public:
         BufferConstructor()
         {
             static_assert(T::Type != TParam_e, "T Param not a buffer");
-            Buffer::BufferFactory::RegisterFunction(
-                TypeInfo(typeid(typename T::ValueType)),
-                std::bind(&BufferConstructor<T>::create, std::placeholders::_1), 
-                T::Type);
+            Buffer::BufferFactory::RegisterFunction(TypeInfo(typeid(typename T::ValueType)),
+                                                    std::bind(&BufferConstructor<T>::create, std::placeholders::_1),
+                                                    T::Type);
         }
         static IParam* create(IParam* input)
         {
             T* ptr = new T();
-            if(ptr->setInput(input))
+            if (ptr->setInput(input))
             {
                 return ptr;
             }

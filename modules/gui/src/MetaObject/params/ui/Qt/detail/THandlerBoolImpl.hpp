@@ -2,7 +2,7 @@
 
 namespace mo
 {
-    
+
     namespace UI
     {
         namespace qt

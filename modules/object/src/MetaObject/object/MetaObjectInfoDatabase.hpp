@@ -1,20 +1,21 @@
 #pragma once
 #include "MetaObject/detail/Export.hpp"
-#include <vector>
 #include <string>
+#include <vector>
 namespace mo
 {
     class IMetaObjectInfo;
     class MO_EXPORTS MetaObjectInfoDatabase
     {
-    public:
+      public:
         static MetaObjectInfoDatabase* instance();
 
         void registerInfo(IMetaObjectInfo* info);
 
         std::vector<IMetaObjectInfo*> getMetaObjectInfo();
         IMetaObjectInfo* getMetaObjectInfo(std::string name);
-    private:
+
+      private:
         MetaObjectInfoDatabase();
         ~MetaObjectInfoDatabase();
         struct impl;

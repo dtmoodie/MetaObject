@@ -45,8 +45,10 @@ namespace mo
         auto my_signals = sender->getSignals(signal_name);
         auto my_slots = receiver->getSlots(slot_name);
 
-        for (auto signal : my_signals) {
-            for (auto slot : my_slots) {
+        for (auto signal : my_signals)
+        {
+            for (auto slot : my_slots)
+            {
                 if (signal->getSignature() == slot->getSignature())
                 {
                     auto connection = slot->connect(signal);
@@ -111,7 +113,8 @@ namespace mo
         if (_pimpl->_variable_manager)
         {
             auto params = getParams();
-            for (auto param : params) {
+            for (auto param : params)
+            {
                 _pimpl->_variable_manager->removeParam(param);
             }
         }
@@ -129,7 +132,8 @@ namespace mo
         bindSlots(firstInit);
         initCustom(firstInit);
         auto params = getParams();
-        for (auto param : params) {
+        for (auto param : params)
+        {
             auto update_slot = getSlot<mo::UpdateSig_t>("on_" + param->getName() + "_modified");
             if (update_slot)
             {
@@ -162,7 +166,8 @@ namespace mo
         {
             auto connections_copy = _pimpl->_param_connections;
             _pimpl->_param_connections.clear();
-            for (auto& param_connection : connections_copy) {
+            for (auto& param_connection : connections_copy)
+            {
                 rcc::shared_ptr<IMetaObject> obj(param_connection.output_object);
                 if (obj)
                 {
@@ -208,7 +213,8 @@ namespace mo
                 }
             }
             // Rebuild Connections
-            for (auto& connection : _pimpl->_connections) {
+            for (auto& connection : _pimpl->_connections)
+            {
                 if (!connection.obj.empty())
                 {
                     auto signal = this->getSignal(connection.signal_name, connection.signature);
@@ -255,8 +261,10 @@ namespace mo
     {
         _sig_manager = manager;
         int count = 0;
-        for (auto& my_slots : _pimpl->_slots) {
-            for (auto& slot : my_slots.second) {
+        for (auto& my_slots : _pimpl->_slots)
+        {
+            for (auto& slot : my_slots.second)
+            {
                 ConnectionInfo info;
                 info.connection = manager->connect(slot.second, my_slots.first, this);
                 info.slot_name = my_slots.first;
@@ -266,8 +274,10 @@ namespace mo
             }
         }
 
-        for (auto& my_signals : _pimpl->_signals) {
-            for (auto& signal : my_signals.second) {
+        for (auto& my_signals : _pimpl->_signals)
+        {
+            for (auto& signal : my_signals.second)
+            {
                 auto Connection = manager->connect(signal.second, my_signals.first, this);
                 ConnectionInfo info;
                 info.signal_name = my_signals.first;
@@ -291,11 +301,13 @@ namespace mo
         }
         _pimpl->_variable_manager = manager;
         int count = 0;
-        for (auto& param : _pimpl->_implicit_params) {
+        for (auto& param : _pimpl->_implicit_params)
+        {
             manager->addParam(param.second.get());
             ++count;
         }
-        for (auto& param : _pimpl->_params) {
+        for (auto& param : _pimpl->_params)
+        {
             manager->addParam(param.second);
             ++count;
         }
@@ -305,11 +317,13 @@ namespace mo
     int MetaObject::removeVariableManager(IVariableManager* mgr)
     {
         int count = 0;
-        for (auto& param : _pimpl->_implicit_params) {
+        for (auto& param : _pimpl->_implicit_params)
+        {
             mgr->removeParam(param.second.get());
             ++count;
         }
-        for (auto& param : _pimpl->_params) {
+        for (auto& param : _pimpl->_params)
+        {
             mgr->removeParam(param.second);
             ++count;
         }
@@ -344,10 +358,12 @@ namespace mo
         if (ctx == nullptr)
             MO_LOG(info) << "Setting context to nullptr";
         _ctx = ctx;
-        for (auto& param : _pimpl->_implicit_params) {
+        for (auto& param : _pimpl->_implicit_params)
+        {
             param.second->setContext(ctx.get());
         }
-        for (auto& param : _pimpl->_params) {
+        for (auto& param : _pimpl->_params)
+        {
             param.second->setContext(ctx.get());
         }
     }
@@ -356,7 +372,8 @@ namespace mo
     {
         auto my_signals = this->getSignals(name);
         int count = 0;
-        for (auto& sig : my_signals) {
+        for (auto& sig : my_signals)
+        {
             count += sig->disconnect() ? 1 : 0;
         }
         return count;
@@ -368,7 +385,8 @@ namespace mo
     {
         auto obj_signals = obj->getSignals();
         int count = 0;
-        for (auto signal : obj_signals) {
+        for (auto signal : obj_signals)
+        {
             count += disconnect(signal.first) ? 1 : 0;
         }
         return count;
@@ -377,10 +395,12 @@ namespace mo
     std::vector<IParam*> MetaObject::getDisplayParams() const
     {
         std::vector<IParam*> output;
-        for (auto& param : _pimpl->_params) {
+        for (auto& param : _pimpl->_params)
+        {
             output.push_back(param.second);
         }
-        for (auto& param : _pimpl->_implicit_params) {
+        for (auto& param : _pimpl->_implicit_params)
+        {
             output.push_back(param.second.get());
         }
         return output;
@@ -407,7 +427,8 @@ namespace mo
     std::vector<IParam*> MetaObject::getParams(const std::string& filter) const
     {
         std::vector<IParam*> output;
-        for (auto& itr : _pimpl->_params) {
+        for (auto& itr : _pimpl->_params)
+        {
             if (filter.size())
             {
                 if (itr.first.find(filter) != std::string::npos)
@@ -418,7 +439,8 @@ namespace mo
                 output.push_back(itr.second);
             }
         }
-        for (auto& itr : _pimpl->_implicit_params) {
+        for (auto& itr : _pimpl->_implicit_params)
+        {
             if (filter.size())
             {
                 if (itr.first.find(filter) != std::string::npos)
@@ -435,11 +457,13 @@ namespace mo
     std::vector<IParam*> MetaObject::getParams(const TypeInfo& filter) const
     {
         std::vector<IParam*> output;
-        for (auto& itr : _pimpl->_params) {
+        for (auto& itr : _pimpl->_params)
+        {
             if (itr.second->getTypeInfo() == filter)
                 output.push_back(itr.second);
         }
-        for (auto& itr : _pimpl->_implicit_params) {
+        for (auto& itr : _pimpl->_implicit_params)
+        {
             if (itr.second->getTypeInfo() == filter)
                 output.push_back(itr.second.get());
         }
@@ -449,7 +473,8 @@ namespace mo
     std::vector<std::shared_ptr<IParam>> MetaObject::getImplicitParams() const
     {
         std::vector<std::shared_ptr<IParam>> output;
-        for (const auto& param : _pimpl->_implicit_params) output.emplace_back(param.second);
+        for (const auto& param : _pimpl->_implicit_params)
+            output.emplace_back(param.second);
         return output;
     }
 
@@ -484,7 +509,8 @@ namespace mo
     std::vector<InputParam*> MetaObject::getInputs(const std::string& name_filter) const
     {
         std::vector<InputParam*> output;
-        for (auto param : _pimpl->_input_Params) {
+        for (auto param : _pimpl->_input_Params)
+        {
             if (name_filter.size())
             {
                 if (param.second->getName().find(name_filter) != std::string::npos)
@@ -501,7 +527,8 @@ namespace mo
     std::vector<InputParam*> MetaObject::getInputs(const TypeInfo& type_filter, const std::string& name_filter) const
     {
         std::vector<InputParam*> output;
-        for (auto param : _pimpl->_params) {
+        for (auto param : _pimpl->_params)
+        {
             if (param.second->checkFlags(ParamFlags::Input_e))
             {
                 if (param.second->getTypeInfo() == type_filter)
@@ -520,7 +547,8 @@ namespace mo
                 }
             }
         }
-        for (auto param : _pimpl->_implicit_params) {
+        for (auto param : _pimpl->_implicit_params)
+        {
             if (param.second->checkFlags(ParamFlags::Input_e))
             {
                 if (param.second->getTypeInfo() == type_filter)
@@ -557,13 +585,15 @@ namespace mo
             return itr2->second.get();
         }
         // to a pass through all params to see if the param was renamed
-        for (const auto& itr : _pimpl->_params) {
+        for (const auto& itr : _pimpl->_params)
+        {
             if (itr.second->getName() == name)
             {
                 return itr.second;
             }
         }
-        for (const auto& itr : _pimpl->_implicit_params) {
+        for (const auto& itr : _pimpl->_implicit_params)
+        {
             if (itr.second->getName() == name)
             {
                 return itr.second.get();
@@ -577,7 +607,8 @@ namespace mo
     std::vector<IParam*> MetaObject::getOutputs(const std::string& name_filter) const
     {
         std::vector<IParam*> output;
-        for (auto param : _pimpl->_params) {
+        for (auto param : _pimpl->_params)
+        {
             if (param.second->checkFlags(ParamFlags::Output_e))
             {
                 if (name_filter.size())
@@ -593,7 +624,8 @@ namespace mo
                 }
             }
         }
-        for (auto param : _pimpl->_implicit_params) {
+        for (auto param : _pimpl->_implicit_params)
+        {
             if (param.second->checkFlags(ParamFlags::Output_e))
             {
                 if (name_filter.size())
@@ -620,7 +652,8 @@ namespace mo
     std::vector<IParam*> MetaObject::getOutputs(const TypeInfo& type_filter, const std::string& name_filter) const
     {
         std::vector<IParam*> output;
-        for (auto param : _pimpl->_params) {
+        for (auto param : _pimpl->_params)
+        {
             if (param.second->checkFlags(ParamFlags::Output_e))
             {
                 if (name_filter.size())
@@ -638,7 +671,8 @@ namespace mo
                 }
             }
         }
-        for (auto param : _pimpl->_implicit_params) {
+        for (auto param : _pimpl->_implicit_params)
+        {
             if (param.second->checkFlags(ParamFlags::Output_e))
             {
                 if (name_filter.size())
@@ -677,7 +711,8 @@ namespace mo
         auto inputs = getInputs();
         auto print_inputs = [inputs]() -> std::string {
             std::stringstream ss;
-            for (auto _input : inputs) {
+            for (auto _input : inputs)
+            {
                 ss << dynamic_cast<IParam*>(_input)->getName() << ", ";
             }
             return ss.str();
@@ -816,7 +851,8 @@ namespace mo
         param->setMtx(&getMutex());
         param->setContext(_ctx.get());
 #ifdef _DEBUG
-        for (auto& param_ : _pimpl->_params) {
+        for (auto& param_ : _pimpl->_params)
+        {
             if (param_.second == param.get())
             {
                 MO_LOG(debug) << "Trying to add a Param a second time";
@@ -841,7 +877,8 @@ namespace mo
         param->setMtx(&getMutex());
         param->setContext(_ctx.get());
 #ifdef _DEBUG
-        for (auto& param_ : _pimpl->_params) {
+        for (auto& param_ : _pimpl->_params)
+        {
             if (param_.second == param)
             {
                 MO_LOG(debug) << "Trying to add a Param a second time";
@@ -866,10 +903,12 @@ namespace mo
 
     void MetaObject::setParamRoot(const std::string& root)
     {
-        for (auto& param : _pimpl->_params) {
+        for (auto& param : _pimpl->_params)
+        {
             param.second->setTreeRoot(root);
         }
-        for (auto& param : _pimpl->_implicit_params) {
+        for (auto& param : _pimpl->_implicit_params)
+        {
             param.second->setTreeRoot(root);
         }
     }
@@ -917,7 +956,8 @@ namespace mo
         std::vector<SlotInfo*> tmp;
         getSlotInfo(tmp);
         std::vector<SlotInfo*> output;
-        for (auto& itr : tmp) {
+        for (auto& itr : tmp)
+        {
             if (itr->name.find(name) != std::string::npos)
                 output.push_back(itr);
         }
@@ -928,8 +968,10 @@ namespace mo
     std::vector<std::pair<ISlot*, std::string>> MetaObject::getSlots() const
     {
         std::vector<std::pair<ISlot*, std::string>> my_slots;
-        for (auto itr1 : _pimpl->_slots) {
-            for (auto itr2 : itr1.second) {
+        for (auto itr1 : _pimpl->_slots)
+        {
+            for (auto itr2 : itr1.second)
+            {
                 my_slots.push_back(std::make_pair(itr2.second, itr1.first));
             }
         }
@@ -942,7 +984,8 @@ namespace mo
         auto itr = _pimpl->_slots.find(name);
         if (itr != _pimpl->_slots.end())
         {
-            for (auto slot : itr->second) {
+            for (auto slot : itr->second)
+            {
                 output.push_back(slot.second);
             }
         }
@@ -952,7 +995,8 @@ namespace mo
     std::vector<std::pair<ISlot*, std::string>> MetaObject::getSlots(const TypeInfo& signature) const
     {
         std::vector<std::pair<ISlot*, std::string>> output;
-        for (auto& type : _pimpl->_slots) {
+        for (auto& type : _pimpl->_slots)
+        {
             auto itr = type.second.find(signature);
             if (itr != type.second.end())
             {
@@ -1027,8 +1071,10 @@ namespace mo
         int count = 0;
         auto my_signals = getSignals(signal_name);
         auto my_slots = receiver->getSlots(slot_name);
-        for (auto signal : my_signals) {
-            for (auto slot : my_slots) {
+        for (auto signal : my_signals)
+        {
+            for (auto slot : my_slots)
+            {
                 if (signal->getSignature() == slot->getSignature())
                 {
                     auto connection = slot->connect(signal);
@@ -1067,7 +1113,8 @@ namespace mo
     {
         auto my_signals = getSignalInfo();
         int count = 0;
-        for (auto& signal : my_signals) {
+        for (auto& signal : my_signals)
+        {
             count += connectByName(signal->name, mgr);
         }
         return count;
@@ -1088,8 +1135,10 @@ namespace mo
     std::vector<std::pair<ISignal*, std::string>> MetaObject::getSignals() const
     {
         std::vector<std::pair<ISignal*, std::string>> my_signals;
-        for (auto& name_itr : _pimpl->_signals) {
-            for (auto& sig_itr : name_itr.second) {
+        for (auto& name_itr : _pimpl->_signals)
+        {
+            for (auto& sig_itr : name_itr.second)
+            {
                 my_signals.push_back(std::make_pair(sig_itr.second, name_itr.first));
             }
         }
@@ -1102,7 +1151,8 @@ namespace mo
         auto itr = _pimpl->_signals.find(name);
         if (itr != _pimpl->_signals.end())
         {
-            for (auto& sig_itr : itr->second) {
+            for (auto& sig_itr : itr->second)
+            {
                 my_signals.push_back(sig_itr.second);
             }
         }
@@ -1112,7 +1162,8 @@ namespace mo
     std::vector<std::pair<ISignal*, std::string>> MetaObject::getSignals(const TypeInfo& type) const
     {
         std::vector<std::pair<ISignal*, std::string>> my_signals;
-        for (auto& name_itr : _pimpl->_signals) {
+        for (auto& name_itr : _pimpl->_signals)
+        {
             auto type_itr = name_itr.second.find(type);
             if (type_itr != name_itr.second.end())
             {

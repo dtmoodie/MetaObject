@@ -37,7 +37,8 @@ namespace mo
     std::string printStringVec(const std::vector<std::string>& strs)
     {
         std::stringstream ss;
-        for (const auto& itr : strs) {
+        for (const auto& itr : strs)
+        {
             ss << itr << "\n";
         }
         return ss.str();

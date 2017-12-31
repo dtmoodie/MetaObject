@@ -1,14 +1,12 @@
 #pragma once
 #include "MetaObjectMacrosImpl.hpp"
 
-
 /*
    These two macros (MO_BEGIN kept for backwards compatibility) are used to define an
    interface base class.
 */
 #define MO_BEGIN(CLASS_NAME) MO_BEGIN_1(CLASS_NAME, __COUNTER__)
 #define MO_BASE(CLASS_NAME) MO_BEGIN_1(CLASS_NAME, __COUNTER__)
-
 
 /*
     These two macros are used for defining a concrete class that has a valid implementation
@@ -26,7 +24,3 @@
     This macro is used for marking the end of a class definition block
 */
 #define MO_END MO_END_(__COUNTER__)
-
-
-
-

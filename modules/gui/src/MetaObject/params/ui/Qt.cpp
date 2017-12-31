@@ -55,7 +55,8 @@ void WidgetFactory::RegisterConstructor(const TypeInfo& type, WidgetFactory::Han
 std::string print_types(std::map<TypeInfo, WidgetFactory::HandlerConstructor_f>& registry)
 {
     std::stringstream ss;
-    for (auto& item : registry) {
+    for (auto& item : registry)
+    {
         ss << item.first.name() << ", ";
     }
     return ss.str();

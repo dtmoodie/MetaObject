@@ -1,22 +1,24 @@
 #pragma once
+#include "BufferFactory.hpp"
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
-#include "BufferFactory.hpp"
 
 namespace mo
 {
     class IParam;
     namespace Buffer
     {
-        template<typename T> class Proxy;
-        
-        template<typename T> struct BufferConstructor
+        template <typename T>
+        class Proxy;
+
+        template <typename T>
+        struct BufferConstructor
         {
-			BufferConstructor()
+            BufferConstructor()
             {
                 BufferFactory::RegisterFunction(TypeInfo(typeid(typename T::ValueType)),
-					std::bind(&BufferConstructor<T>::create_buffer, std::placeholders::_1),
-					T::BufferType);
+                                                std::bind(&BufferConstructor<T>::create_buffer, std::placeholders::_1),
+                                                T::BufferType);
             }
             static IParam* create_buffer(IParam* input)
             {

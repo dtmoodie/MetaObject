@@ -4,19 +4,16 @@ namespace mo
 {
     namespace python
     {
-        
+
         // Converts raw data
-        template<class T>
+        template <class T>
         struct DataConverter
         {
-        
         };
         // Converts a parameter
-        template<class T>
+        template <class T>
         struct ParamConverter
         {
-            
         };
     }
 }
-

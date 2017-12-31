@@ -8,26 +8,25 @@
 
 namespace mo
 {
-namespace UI
-{
-namespace wt
-{
-
-    template<>
-    class TParamProxy<EnumParam, void> : public IParamProxy
+    namespace UI
     {
-    public:
-        TParamProxy(ITAccessibleParam<EnumParam>* param_,
-            MainApplication* app_,
-            WContainerWidget* parent_ = 0);
-    protected:
-        void SetTooltip(const std::string& tip);
-        void onParamUpdate(mo::Context* ctx, mo::IParam* param);
-        void onUiChanged();
+        namespace wt
+        {
 
-        ITAccessibleParam<EnumParam>* _param;
-        Wt::WComboBox* _combo_box;
-    };
-}
-}
+            template <>
+            class TParamProxy<EnumParam, void> : public IParamProxy
+            {
+              public:
+                TParamProxy(ITAccessibleParam<EnumParam>* param_, MainApplication* app_, WContainerWidget* parent_ = 0);
+
+              protected:
+                void SetTooltip(const std::string& tip);
+                void onParamUpdate(mo::Context* ctx, mo::IParam* param);
+                void onUiChanged();
+
+                ITAccessibleParam<EnumParam>* _param;
+                Wt::WComboBox* _combo_box;
+            };
+        }
+    }
 }

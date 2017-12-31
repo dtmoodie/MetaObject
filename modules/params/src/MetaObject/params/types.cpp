@@ -21,7 +21,8 @@ EnumParam::EnumParam(const std::initializer_list<std::pair<const char*, int>>& v
 {
     enumerations.clear();
     this->values.clear();
-    for (auto itr = values.begin(); itr != values.end(); ++itr) {
+    for (auto itr = values.begin(); itr != values.end(); ++itr)
+    {
         enumerations.emplace_back(itr->first);
         this->values.emplace_back(itr->second);
     }
@@ -38,7 +39,8 @@ void EnumParam::SetValue(const std::initializer_list<const char*>& string, const
     auto nItr = string.begin();
     enumerations.clear();
     this->values.clear();
-    for (; iItr != values.end() && nItr != string.end(); ++iItr, ++nItr) {
+    for (; iItr != values.end() && nItr != string.end(); ++iItr, ++nItr)
+    {
         enumerations.push_back(*nItr);
         this->values.push_back(*iItr);
     }

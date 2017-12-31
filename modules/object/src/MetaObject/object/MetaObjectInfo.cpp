@@ -34,7 +34,8 @@ std::string IMetaObjectInfo::Print(Verbosity verbosity) const
     ss << " ***** ";
     ss << name << " ";
     if (name.size() < 20)
-        for (int i = 0; i < 20 - static_cast<int>(name.size()); ++i) ss << "*";
+        for (int i = 0; i < 20 - static_cast<int>(name.size()); ++i)
+            ss << "*";
     ss << "\n";
     IObjectConstructor* ctr = GetConstructor();
     if (verbosity >= DEBUG)
@@ -49,7 +50,8 @@ std::string IMetaObjectInfo::Print(Verbosity verbosity) const
         ss << "Num constructed objects: " << ctr->GetNumberConstructedObjects() << '\n';
         unsigned short pid = ctr->GetProjectId();
         ss << "\nIncludes:\n";
-        for (size_t i = 0; i < ctr->GetMaxNumIncludeFiles(); ++i) {
+        for (size_t i = 0; i < ctr->GetMaxNumIncludeFiles(); ++i)
+        {
             const char* file = ctr->GetIncludeFile(i);
             if (file)
                 ss << file << '\n';
@@ -58,19 +60,22 @@ std::string IMetaObjectInfo::Print(Verbosity verbosity) const
             MetaObjectFactory::instance()->getObjectSystem()->GetIncludeDirList(pid);
         if (inlcude_paths.size())
         {
-            for (FileSystemUtils::Path& path : inlcude_paths) {
+            for (FileSystemUtils::Path& path : inlcude_paths)
+            {
                 ss << path.m_string << '\n';
             }
         }
 
         ss << "\nLink libs:\n";
-        for (size_t i = 0; i < ctr->GetMaxNumLinkLibraries(); ++i) {
+        for (size_t i = 0; i < ctr->GetMaxNumLinkLibraries(); ++i)
+        {
             const char* lib = ctr->GetLinkLibrary(i);
             if (lib)
                 ss << lib << '\n';
         }
         ss << "\nSource dependencies:\n";
-        for (size_t i = 0; i < ctr->GetMaxNumSourceDependencies(); ++i) {
+        for (size_t i = 0; i < ctr->GetMaxNumSourceDependencies(); ++i)
+        {
             SourceDependencyInfo info = ctr->GetSourceDependency(i);
             if (info.filename)
                 ss << info.filename << '\n';
@@ -81,7 +86,8 @@ std::string IMetaObjectInfo::Print(Verbosity verbosity) const
         if (link_paths.size())
         {
             ss << "\nLink dirs:\n";
-            for (FileSystemUtils::Path& path : link_paths) {
+            for (FileSystemUtils::Path& path : link_paths)
+            {
                 ss << path.m_string << '\n';
             }
         }
@@ -99,11 +105,14 @@ std::string IMetaObjectInfo::Print(Verbosity verbosity) const
     {
         ss << "----------- Params ------------- \n";
         int longest_name = 0;
-        for (auto& slot : params) longest_name = std::max<int>(longest_name, static_cast<int>(slot->name.size()));
+        for (auto& slot : params)
+            longest_name = std::max<int>(longest_name, static_cast<int>(slot->name.size()));
         longest_name += 1;
-        for (auto& param : params) {
+        for (auto& param : params)
+        {
             ss << param->name;
-            for (int i = 0; i < longest_name - static_cast<int>(param->name.size()); ++i) ss << " ";
+            for (int i = 0; i < longest_name - static_cast<int>(param->name.size()); ++i)
+                ss << " ";
             if (param->type_flags.test(ParamFlags::Control_e))
                 ss << "C";
             if (param->type_flags.test(ParamFlags::Input_e))
@@ -125,11 +134,14 @@ std::string IMetaObjectInfo::Print(Verbosity verbosity) const
     {
         ss << "\n----------- Signals ---------------- \n";
         int longest_name = 0;
-        for (auto& slot : sigs) longest_name = std::max<int>(longest_name, static_cast<int>(slot->name.size()));
+        for (auto& slot : sigs)
+            longest_name = std::max<int>(longest_name, static_cast<int>(slot->name.size()));
         longest_name += 1;
-        for (auto& sig : sigs) {
+        for (auto& sig : sigs)
+        {
             ss << sig->name;
-            for (int i = 0; i < longest_name - static_cast<int>(sig->name.size()); ++i) ss << " ";
+            for (int i = 0; i < longest_name - static_cast<int>(sig->name.size()); ++i)
+                ss << " ";
             ss << " [" << sig->signature.name() << "]\n";
             if (sig->tooltip.size())
                 ss << "    " << sig->tooltip << "\n";
@@ -143,11 +155,14 @@ std::string IMetaObjectInfo::Print(Verbosity verbosity) const
     {
         ss << "\n----------- Slots ---------------- \n";
         int longest_name = 0;
-        for (auto& slot : my_slots) longest_name = std::max<int>(longest_name, static_cast<int>(slot->name.size()));
+        for (auto& slot : my_slots)
+            longest_name = std::max<int>(longest_name, static_cast<int>(slot->name.size()));
         longest_name += 1;
-        for (auto& slot : my_slots) {
+        for (auto& slot : my_slots)
+        {
             ss << slot->name;
-            for (int i = 0; i < longest_name - static_cast<int>(slot->name.size()); ++i) ss << " ";
+            for (int i = 0; i < longest_name - static_cast<int>(slot->name.size()); ++i)
+                ss << " ";
             ss << " [" << slot->signature.name() << "]\n";
             if (slot->tooltip.size())
                 ss << "    " << slot->tooltip << "\n";

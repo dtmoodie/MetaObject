@@ -3,10 +3,9 @@
 
 namespace rcc
 {
-    template<class T>
+    template <class T>
     T* get_pointer(const rcc::shared_ptr<T>& ptr)
     {
         return ptr.get();
     }
-
 }

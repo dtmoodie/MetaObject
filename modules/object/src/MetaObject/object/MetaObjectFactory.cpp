@@ -123,7 +123,8 @@ IMetaObject* MetaObjectFactory::get(ObjectId id, const char* type_name)
             MO_LOG(debug) << "Requested type \"" << type_name << "\" does not match constructor type \""
                           << constructors[id.m_ConstructorId]->GetName() << "\" for given ID";
             std::string str_type_name(type_name);
-            for (size_t i = 0; i < constructors.Size(); ++i) {
+            for (size_t i = 0; i < constructors.Size(); ++i)
+            {
                 if (std::string(constructors[i]->GetName()) == str_type_name)
                 {
                     IObject* obj = constructors[i]->GetConstructedObject(id.m_PerTypeId);
@@ -148,7 +149,8 @@ std::vector<std::string> MetaObjectFactory::listConstructableObjects(int interfa
     std::vector<std::string> output;
     AUDynArray<IObjectConstructor*> constructors;
     _pimpl->obj_system.GetObjectFactorySystem()->GetAll(constructors);
-    for (size_t i = 0; i < constructors.Size(); ++i) {
+    for (size_t i = 0; i < constructors.Size(); ++i)
+    {
         if (interface_id == -1)
             output.emplace_back(constructors[i]->GetName());
         else if (constructors[i]->GetInterfaceId() == static_cast<uint32_t>(interface_id))
@@ -162,7 +164,8 @@ std::string MetaObjectFactory::printAllObjectInfo(int64_t interface_id) const
     std::stringstream ss;
     AUDynArray<IObjectConstructor*> constructors;
     _pimpl->obj_system.GetObjectFactorySystem()->GetAll(constructors);
-    for (size_t i = 0; i < constructors.Size(); ++i) {
+    for (size_t i = 0; i < constructors.Size(); ++i)
+    {
         if (auto info = constructors[i]->GetObjectInfo())
         {
             if (interface_id == -1)
@@ -191,7 +194,8 @@ std::vector<IObjectConstructor*> MetaObjectFactory::getConstructors(int64_t inte
     std::vector<IObjectConstructor*> output;
     AUDynArray<IObjectConstructor*> constructors;
     _pimpl->obj_system.GetObjectFactorySystem()->GetAll(constructors);
-    for (size_t i = 0; i < constructors.Size(); ++i) {
+    for (size_t i = 0; i < constructors.Size(); ++i)
+    {
         if (interface_id == -1)
             output.emplace_back(constructors[i]);
         else if (constructors[i]->GetInterfaceId() == interface_id)
@@ -214,7 +218,8 @@ std::vector<IObjectInfo*> MetaObjectFactory::getAllObjectInfo() const
     std::vector<IObjectInfo*> output;
     AUDynArray<IObjectConstructor*> constructors;
     _pimpl->obj_system.GetObjectFactorySystem()->GetAll(constructors);
-    for (size_t i = 0; i < constructors.Size(); ++i) {
+    for (size_t i = 0; i < constructors.Size(); ++i)
+    {
         output.push_back(constructors[i]->GetObjectInfo());
     }
     return output;
@@ -227,7 +232,8 @@ void MetaObjectFactory::setupObjectConstructors(IPerModuleInterface* pPerModuleI
 std::vector<std::string> MetaObjectFactory::listLoadedPlugins(PluginVerbosity verbosity) const
 {
     std::vector<std::string> output;
-    for (size_t i = 0; i < _pimpl->plugins.size(); ++i) {
+    for (size_t i = 0; i < _pimpl->plugins.size(); ++i)
+    {
         std::stringstream ss;
         switch (verbosity)
         {
@@ -259,7 +265,8 @@ int MetaObjectFactory::loadPlugins(const std::string& path_)
 {
     boost::filesystem::path path(boost::filesystem::current_path().string() + "/" + path_);
     int count = 0;
-    for (boost::filesystem::directory_iterator itr(path); itr != boost::filesystem::directory_iterator(); ++itr) {
+    for (boost::filesystem::directory_iterator itr(path); itr != boost::filesystem::directory_iterator(); ++itr)
+    {
 #ifdef _MSC_VER
         if (itr->path().extension().string() == ".dll")
 #else

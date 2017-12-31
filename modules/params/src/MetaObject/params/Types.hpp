@@ -18,9 +18,9 @@ https://github.com/dtmoodie/MetaObject
 */
 #pragma once
 #include <MetaObject/detail/Export.hpp>
-#include <vector>
-#include <string>
 #include <boost/filesystem/path.hpp>
+#include <string>
+#include <vector>
 
 namespace mo
 {
@@ -28,13 +28,13 @@ namespace mo
     {
         ReadFile(const std::string& str = "");
 
-        template<class AR>
+        template <class AR>
         void save(AR& ar) const
         {
             ar(string());
         }
 
-        template<class AR>
+        template <class AR>
         void load(AR& ar)
         {
             std::string value;
@@ -47,14 +47,13 @@ namespace mo
     {
         WriteFile(const std::string& file = "");
 
-
-        template<class AR>
+        template <class AR>
         void save(AR& ar) const
         {
             ar(string());
         }
 
-        template<class AR>
+        template <class AR>
         void load(AR& ar)
         {
             std::string value;
@@ -67,14 +66,13 @@ namespace mo
     {
         ReadDirectory(const std::string& path = "");
 
-
-        template<class AR>
+        template <class AR>
         void save(AR& ar) const
         {
             ar(string());
         }
 
-        template<class AR>
+        template <class AR>
         void load(AR& ar)
         {
             std::string value;
@@ -87,14 +85,13 @@ namespace mo
     {
         WriteDirectory(const std::string& str = "");
 
-
-        template<class AR>
+        template <class AR>
         void save(AR& ar) const
         {
             ar(string());
         }
 
-        template<class AR>
+        template <class AR>
         void load(AR& ar)
         {
             std::string value;
@@ -105,7 +102,7 @@ namespace mo
 
     class MO_EXPORTS EnumParam
     {
-    public:
+      public:
         EnumParam(const EnumParam&) = default;
         EnumParam(const std::initializer_list<std::pair<const char*, int>>& values);
         EnumParam();
@@ -116,11 +113,11 @@ namespace mo
         int getValue() const;
         std::string getEnum() const;
 
-        template<typename T>
+        template <typename T>
         void serialize(T& ar);
 
         std::vector<std::string> enumerations;
-        std::vector<int>         values;
+        std::vector<int> values;
         int currentSelection;
     };
 }

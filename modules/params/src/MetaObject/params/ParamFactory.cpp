@@ -68,7 +68,8 @@ std::vector<TypeInfo> ParamFactory::listConstructableDataTypes(ParamType type)
     std::vector<TypeInfo> output;
     for (auto itr1 = m_pimpl->_registered_constructors.begin(); itr1 != m_pimpl->_registered_constructors.end(); ++itr1)
     {
-        for (auto itr2 = itr1->second.begin(); itr2 != itr1->second.end(); ++itr2) {
+        for (auto itr2 = itr1->second.begin(); itr2 != itr1->second.end(); ++itr2)
+        {
             if (itr2->first == type)
             {
                 output.push_back(itr1->first);
@@ -83,7 +84,8 @@ std::vector<std::pair<TypeInfo, ParamType>> ParamFactory::listConstructableDataT
     std::vector<std::pair<TypeInfo, ParamType>> output;
     for (auto itr1 = m_pimpl->_registered_constructors.begin(); itr1 != m_pimpl->_registered_constructors.end(); ++itr1)
     {
-        for (auto itr2 = itr1->second.begin(); itr2 != itr1->second.end(); ++itr2) {
+        for (auto itr2 = itr1->second.begin(); itr2 != itr1->second.end(); ++itr2)
+        {
             output.emplace_back(itr1->first, itr2->first);
         }
     }

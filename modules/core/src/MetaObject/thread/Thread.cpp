@@ -36,7 +36,8 @@ void Thread::stop()
     _run = false;
     _thread.interrupt();
     int wait_count = 0;
-    while (!_paused) {
+    while (!_paused)
+    {
         boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
         ++wait_count;
         if (wait_count % 1000 == 0)
@@ -141,9 +142,11 @@ struct mo::Thread::ThreadSanitizer
         _cv.notify_all();
         mo::ThreadSpecificQueue::cleanup();
         std::function<void(void)> f;
-        while (m_thread._work_queue.try_dequeue(f)) {
+        while (m_thread._work_queue.try_dequeue(f))
+        {
         }
-        while (m_thread._event_queue.try_dequeue(f)) {
+        while (m_thread._event_queue.try_dequeue(f))
+        {
         }
     }
     volatile bool& _paused_flag;
@@ -168,7 +171,8 @@ void Thread::main()
         _on_start();
     }
 
-    while (!_quit) {
+    while (!_quit)
+    {
         // Execute any events
         try
         {
@@ -194,7 +198,8 @@ void Thread::main()
                 const auto start_time = mo::getCurrentTime();
                 auto delta = mo::Time_t(mo::getCurrentTime() - start_time);
                 bool processed_work = false;
-                while (delta < mo::Time_t(mo::ms * delay)) {
+                while (delta < mo::Time_t(mo::ms * delay))
+                {
                     if (_work_queue.try_dequeue(f))
                     {
                         processed_work = true;

@@ -1,6 +1,6 @@
 #pragma once
-#include <cstddef>
 #include "MetaObject/detail/Export.hpp"
+#include <cstddef>
 #include <string>
 namespace boost
 {

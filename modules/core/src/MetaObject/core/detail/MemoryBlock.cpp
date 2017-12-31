@@ -51,7 +51,8 @@ unsigned char* MemoryBlock<XPU>::allocate(size_t size_, size_t elem_size_)
     unsigned char* prev_end = m_begin;
     if (m_allocated_blocks.size())
     {
-        for (auto itr : m_allocated_blocks) {
+        for (auto itr : m_allocated_blocks)
+        {
             if (static_cast<size_t>(itr.first - prev_end) > size_)
             {
                 auto alignment = alignmentOffset(prev_end, elem_size_);

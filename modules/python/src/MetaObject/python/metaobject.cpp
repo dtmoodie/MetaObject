@@ -85,7 +85,8 @@ namespace mo
             boost::python::import("metaobject").attr("object") = module;
             boost::python::scope plugins_scope = module;
 
-            for (auto itr = ctrs.begin(); itr != ctrs.end();) {
+            for (auto itr = ctrs.begin(); itr != ctrs.end();)
+            {
                 IObjectInfo* info = (*itr)->GetObjectInfo();
                 if (info->InheritsFrom(IMetaObject::s_interfaceID))
                 {

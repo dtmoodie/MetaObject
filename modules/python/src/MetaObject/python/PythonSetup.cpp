@@ -67,7 +67,8 @@ namespace mo
         void registerObjects()
         {
             auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
-            for (const auto& func : mo::python::interface_setup_functions) {
+            for (const auto& func : mo::python::interface_setup_functions)
+            {
                 func.second(ctrs);
             }
         }
@@ -77,7 +78,8 @@ namespace mo
     {
         auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
         std::vector<std::string> output;
-        for (auto ctr : ctrs) {
+        for (auto ctr : ctrs)
+        {
             auto info = ctr->GetObjectInfo();
             if (info)
             {
@@ -91,7 +93,8 @@ namespace mo
     {
         auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
         std::vector<IObjectInfo*> output;
-        for (auto ctr : ctrs) {
+        for (auto ctr : ctrs)
+        {
             auto info = ctr->GetObjectInfo();
             if (info)
             {
@@ -115,7 +118,8 @@ namespace mo
 BOOST_PYTHON_MODULE(metaobject)
 {
     mo::pythonSetup("metaobject");
-    for (const auto& func : mo::python::setup_functions) {
+    for (const auto& func : mo::python::setup_functions)
+    {
         func();
     }
     mo::python::setup = true;

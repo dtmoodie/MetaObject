@@ -18,7 +18,8 @@ ThreadPool* ThreadPool::instance()
 
 ThreadHandle ThreadPool::requestThread()
 {
-    for (auto& thread : _threads) {
+    for (auto& thread : _threads)
+    {
         if (thread.available)
         {
             thread.ref_count = 0;
@@ -36,7 +37,8 @@ void ThreadPool::cleanup()
 
 void ThreadPool::returnThread(Thread* thread_)
 {
-    for (auto& thread : _threads) {
+    for (auto& thread : _threads)
+    {
         if (thread.thread == thread_)
         {
             thread.available = true;

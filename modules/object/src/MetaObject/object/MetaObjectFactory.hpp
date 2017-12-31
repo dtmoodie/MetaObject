@@ -9,21 +9,20 @@ struct IRuntimeObjectSystem;
 struct IObjectInfo;
 struct IObjectConstructor;
 
-namespace mo 
+namespace mo
 {
     class IMetaObject;
     template <class Sig>
     class TSlot;
     class Connection;
 
-    struct MO_EXPORTS PluginInfo 
+    struct MO_EXPORTS PluginInfo
     {
-        PluginInfo(const std::string& path = "", const std::string& state = "success",
-            unsigned int time = 0, const char* info = nullptr)
-            : m_path(path)
-            , m_state(state)
-            , m_load_time(time)
-            , m_build_info(info)
+        PluginInfo(const std::string& path = "",
+                   const std::string& state = "success",
+                   unsigned int time = 0,
+                   const char* info = nullptr)
+            : m_path(path), m_state(state), m_load_time(time), m_build_info(info)
         {
         }
 
@@ -34,16 +33,16 @@ namespace mo
         unsigned int getId() const;
         std::string getPluginName() const;
 
-        std::string  m_path;
-        std::string  m_state;
+        std::string m_path;
+        std::string m_state;
         unsigned int m_load_time = 0; // total ms to load plugin
-        const char*  m_build_info = nullptr;
+        const char* m_build_info = nullptr;
         unsigned int m_id = 0;
     };
 
     class MO_EXPORTS MetaObjectFactory
     {
-    public:
+      public:
         IMetaObject* create(const char* type_name, int interface_id = -1);
         template <class T>
         T* create(const char* type_name);
@@ -65,23 +64,21 @@ namespace mo
         enum PluginVerbosity
         {
             brief, // plugin path
-            info, // brief + load info (load time and load state)
-            debug // info + build info
+            info,  // brief + load info (load time and load state)
+            debug  // info + build info
         };
 
         /*!
              * \brief listLoadedPlugins with their load status
-             * \param verbosity 
-             * \return 
+             * \param verbosity
+             * \return
              */
         std::vector<std::string> listLoadedPlugins(PluginVerbosity verbosity = brief) const;
         std::vector<PluginInfo> listLoadedPluginInfo() const;
 
         // This function is inlined to guarantee it exists in the calling translation unit, which
         // thus makes certain to load the correct PerModuleInterface instance
-        inline void registerTranslationUnit() {
-            setupObjectConstructors(PerModuleInterface::GetInstance());
-        }
+        inline void registerTranslationUnit() { setupObjectConstructors(PerModuleInterface::GetInstance()); }
         void setupObjectConstructors(IPerModuleInterface* pPerModuleInterface);
         IRuntimeObjectSystem* getObjectSystem();
 
@@ -95,23 +92,27 @@ namespace mo
         std::shared_ptr<Connection> connectConstructorAdded(TSlot<void(void)>* slot);
 
         template <class T>
-        std::vector<IObjectConstructor*> getConstructors() {
+        std::vector<IObjectConstructor*> getConstructors()
+        {
             return getConstructors(T::s_interfaceID);
         }
 
         template <class T>
-        std::vector<typename T::InterfaceInfo*> getObjectInfos() {
-            auto                                    constructors = getConstructors<T>();
+        std::vector<typename T::InterfaceInfo*> getObjectInfos()
+        {
+            auto constructors = getConstructors<T>();
             std::vector<typename T::InterfaceInfo*> output;
-            for (auto constructor : constructors) {
-                typename T::InterfaceInfo* info = dynamic_cast<typename T::InterfaceInfo*>(constructor->GetObjectInfo());
+            for (auto constructor : constructors)
+            {
+                typename T::InterfaceInfo* info =
+                    dynamic_cast<typename T::InterfaceInfo*>(constructor->GetObjectInfo());
                 if (info)
                     output.push_back(info);
             }
             return output;
         }
 
-    private:
+      private:
         MetaObjectFactory(SystemTable* system_table);
         ~MetaObjectFactory();
         struct impl;

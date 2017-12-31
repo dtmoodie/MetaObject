@@ -35,7 +35,8 @@ void MetaObjectInfoDatabase::registerInfo(IMetaObjectInfo* info)
 std::vector<IMetaObjectInfo*> MetaObjectInfoDatabase::getMetaObjectInfo()
 {
     std::vector<IMetaObjectInfo*> output;
-    for (auto& itr : _pimpl->info) {
+    for (auto& itr : _pimpl->info)
+    {
         output.push_back(itr.second);
     }
     return output;

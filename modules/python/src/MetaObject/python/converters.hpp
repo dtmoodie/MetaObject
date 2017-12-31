@@ -7,14 +7,18 @@ namespace mo
 {
     namespace python
     {
-        template<class T, class Enable = void>
-        struct FromPythonDataConverter{};
+        template <class T, class Enable = void>
+        struct FromPythonDataConverter
+        {
+        };
 
-        template<class T, class Enable = void>
-        struct ToPythonDataConverter{};
+        template <class T, class Enable = void>
+        struct ToPythonDataConverter
+        {
+        };
 
-        template<class T>
-        struct ToPythonDataConverter<T, mo::reflect::enable_if_reflected<T> >
+        template <class T>
+        struct ToPythonDataConverter<T, mo::reflect::enable_if_reflected<T>>
         {
             ToPythonDataConverter()
             {
@@ -22,8 +26,8 @@ namespace mo
             }
         };
 
-        template<class T>
-        struct ToPythonDataConverter<std::vector<T>, mo::reflect::enable_if_reflected<T> >
+        template <class T>
+        struct ToPythonDataConverter<std::vector<T>, mo::reflect::enable_if_reflected<T>>
         {
             ToPythonDataConverter()
             {
@@ -31,7 +35,7 @@ namespace mo
             }
         };
 
-        template<>
+        template <>
         struct FromPythonDataConverter<std::string, void>
         {
             void operator()(std::string& result, const boost::python::object& obj)
@@ -41,7 +45,7 @@ namespace mo
             }
         };
 
-        template<class K, class T>
+        template <class K, class T>
         struct FromPythonDataConverter<std::map<K, T>, void>
         {
             void operator()(std::map<K, T>& result, const boost::python::object& obj)
@@ -51,8 +55,10 @@ namespace mo
             }
         };
 
-        template<class T>
-        struct FromPythonDataConverter<T, std::enable_if_t<!mo::reflect::ReflectData<T>::IS_SPECIALIZED && !mo::reflect::is_container<T>::value>>
+        template <class T>
+        struct FromPythonDataConverter<
+            T,
+            std::enable_if_t<!mo::reflect::ReflectData<T>::IS_SPECIALIZED && !mo::reflect::is_container<T>::value>>
         {
             T operator()(const boost::python::object& obj)
             {
@@ -68,7 +74,7 @@ namespace mo
         };
 
         // read a python object into a c++ struct
-        template<class T>
+        template <class T>
         struct FromPythonDataConverter<T, mo::reflect::enable_if_reflected<T>>
         {
             void operator()(T& result, const boost::python::object& obj)
@@ -84,14 +90,14 @@ namespace mo
             }
         };
 
-        template<class T>
+        template <class T>
         struct FromPythonDataConverter<std::vector<T>, void>
         {
             void operator()(std::vector<T>& result, const boost::python::object& obj)
             {
                 const ssize_t len = boost::python::len(obj);
                 result.resize(len);
-                for(ssize_t i = 0; i < len; ++i)
+                for (ssize_t i = 0; i < len; ++i)
                 {
                     FromPythonDataConverter<T, void> cvt;
                     cvt(result[i], boost::python::object(obj[i]));

@@ -3,18 +3,18 @@
 
 #if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__)
 #ifdef metaobject_qtgui_EXPORTS
-#  define MO_QTGUI_EXPORTS __declspec(dllexport)
+#define MO_QTGUI_EXPORTS __declspec(dllexport)
 #else
-#  define MO_QTGUI_EXPORTS __declspec(dllimport)
+#define MO_QTGUI_EXPORTS __declspec(dllimport)
 #endif
 #elif defined __GNUC__ && __GNUC__ >= 4
-#  define MO_QTGUI_EXPORTS __attribute__ ((visibility ("default")))
+#define MO_QTGUI_EXPORTS __attribute__((visibility("default")))
 #else
-#  define MO_QTGUI_EXPORTS
+#define MO_QTGUI_EXPORTS
 #endif
 
-#include <qobject.h>
 #include <qdatetime.h>
+#include <qobject.h>
 
 namespace mo
 {
@@ -31,10 +31,11 @@ namespace mo
                 Q_OBJECT
                 IHandler* handler;
                 QTime lastCallTime;
-            public:
+
+              public:
                 SignalProxy(IHandler* handler_);
 
-            public slots:
+              public slots:
                 void on_update();
                 void on_update(int);
                 void on_update(double);

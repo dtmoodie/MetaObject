@@ -31,7 +31,8 @@ namespace mo
                 void DeSerialize_imp(std::istream& is, cv::Scalar& obj, int)
                 {
                     char c;
-                    for (int i = 0; i < 4; ++i) {
+                    for (int i = 0; i < 4; ++i)
+                    {
                         is >> obj[i];
                         is >> c;
                     }
@@ -88,7 +89,8 @@ namespace mo
             if (array.ptr)
             {
                 os << "[";
-                for (size_t i = 0; i < N; ++i) {
+                for (size_t i = 0; i < N; ++i)
+                {
                     if (i != 0)
                         os << ',';
                     os << array.ptr[i];

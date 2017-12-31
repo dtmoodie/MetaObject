@@ -3,19 +3,23 @@
 #include <MetaObject/detail/TypeInfo.hpp>
 #include <Wt/WApplication>
 
-namespace mo{
+namespace mo
+{
     class IParam;
-    namespace UI{
-        namespace wt{
+    namespace UI
+    {
+        namespace wt
+        {
             class IParamProxy;
             class IParamInputProxy;
             class IParamOutputProxy;
             class MO_EXPORTS MainApplication : public Wt::WApplication
             {
-            public:
+              public:
                 MainApplication(const Wt::WEnvironment& env);
                 void requestUpdate();
-            private:
+
+              private:
                 void greet();
                 bool _dirty;
                 boost::posix_time::ptime _last_update_time;

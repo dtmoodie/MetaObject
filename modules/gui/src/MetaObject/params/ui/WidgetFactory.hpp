@@ -18,8 +18,8 @@ https://github.com/dtmoodie/MetaObject
 */
 #pragma once
 #include "MetaObject/detail/Export.hpp"
-#include <memory>
 #include <functional>
+#include <memory>
 class QWidget;
 namespace Wt
 {
@@ -27,71 +27,71 @@ namespace Wt
 }
 namespace mo
 {
-class TypeInfo;
-class IParam;
-namespace UI
-{
-namespace qt
-{
-    class IHandler;
-    class IParamProxy;
-    // *****************************************************************************
-    //                                WidgetFactory
-    // *****************************************************************************
-
-    class MO_EXPORTS WidgetFactory
+    class TypeInfo;
+    class IParam;
+    namespace UI
     {
-    public:
-        typedef std::function<std::shared_ptr<IParamProxy>(IParam*)> HandlerConstructor_f;
+        namespace qt
+        {
+            class IHandler;
+            class IParamProxy;
+            // *****************************************************************************
+            //                                WidgetFactory
+            // *****************************************************************************
 
-        static WidgetFactory* Instance();
+            class MO_EXPORTS WidgetFactory
+            {
+              public:
+                typedef std::function<std::shared_ptr<IParamProxy>(IParam*)> HandlerConstructor_f;
 
-        void RegisterConstructor(const TypeInfo& type, HandlerConstructor_f f);
-        std::shared_ptr<IParamProxy> CreateProxy(IParam* param);
-    private:
-        WidgetFactory();
-        struct impl;
-        impl* _pimpl;
-    };
-} /* namespace qt */
-namespace wt
-{
-class MainApplication;
-class IParamProxy;
-class IPlotProxy;
-class MO_EXPORTS WidgetFactory
-{
-public:
-    enum WidgetType
-    {
-        Control,
-        Display
-    };
+                static WidgetFactory* Instance();
 
-    typedef std::function<IParamProxy*(mo::IParam*, MainApplication*,
-                                           Wt::WContainerWidget*)> WidgetConstructor_f;
-    typedef std::function<IPlotProxy*(mo::IParam*, MainApplication*,
-                                           Wt::WContainerWidget*)> PlotConstructor_f;
+                void RegisterConstructor(const TypeInfo& type, HandlerConstructor_f f);
+                std::shared_ptr<IParamProxy> CreateProxy(IParam* param);
 
-    static WidgetFactory* Instance();
-    IParamProxy* CreateWidget(mo::IParam* param, MainApplication* app,
-                                  Wt::WContainerWidget* container = nullptr);
-    bool CanPlot(mo::IParam* param);
-    IPlotProxy* CreatePlot(mo::IParam* param, MainApplication* app,
-                                  Wt::WContainerWidget* container = nullptr);
+              private:
+                WidgetFactory();
+                struct impl;
+                impl* _pimpl;
+            };
+        } /* namespace qt */
+        namespace wt
+        {
+            class MainApplication;
+            class IParamProxy;
+            class IPlotProxy;
+            class MO_EXPORTS WidgetFactory
+            {
+              public:
+                enum WidgetType
+                {
+                    Control,
+                    Display
+                };
 
-    void RegisterConstructor(const mo::TypeInfo& type,
-                             const WidgetConstructor_f& constructor);
+                typedef std::function<IParamProxy*(mo::IParam*, MainApplication*, Wt::WContainerWidget*)>
+                    WidgetConstructor_f;
+                typedef std::function<IPlotProxy*(mo::IParam*, MainApplication*, Wt::WContainerWidget*)>
+                    PlotConstructor_f;
 
-    void RegisterConstructor(const mo::TypeInfo& type,
-                             const PlotConstructor_f& constructor);
-private:
-    WidgetFactory();
-    struct impl;
-    impl* _pimpl;
-};
+                static WidgetFactory* Instance();
+                IParamProxy*
+                CreateWidget(mo::IParam* param, MainApplication* app, Wt::WContainerWidget* container = nullptr);
+                bool CanPlot(mo::IParam* param);
+                IPlotProxy*
+                CreatePlot(mo::IParam* param, MainApplication* app, Wt::WContainerWidget* container = nullptr);
 
-} /* namespace wt */
+                void RegisterConstructor(const mo::TypeInfo& type, const WidgetConstructor_f& constructor);
 
-} /* namespace UI */
+                void RegisterConstructor(const mo::TypeInfo& type, const PlotConstructor_f& constructor);
+
+              private:
+                WidgetFactory();
+                struct impl;
+                impl* _pimpl;
+            };
+
+        } /* namespace wt */
+
+    } /* namespace UI */
 } /* namespace Perameters */

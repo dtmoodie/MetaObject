@@ -18,7 +18,8 @@ namespace mo
             // set the current scope to the new sub-module
             boost::python::scope plugins_scope = plugins_module;
             auto plugin_names = mo::MetaObjectFactory::instance()->listLoadedPluginInfo();
-            for (auto& name : plugin_names) {
+            for (auto& name : plugin_names)
+            {
                 boost::shared_ptr<PluginInfo> plugin(new PluginInfo(name));
                 boost::python::import("metaobject").attr("plugins").attr(name.getPluginName().c_str()) = plugin;
             }

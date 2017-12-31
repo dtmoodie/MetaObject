@@ -33,7 +33,8 @@ void VariableManager::removeParam(IParam* param)
 std::vector<IParam*> VariableManager::getOutputParams(TypeInfo type)
 {
     std::vector<IParam*> valid_outputs;
-    for (auto itr = pimpl->_Params.begin(); itr != pimpl->_Params.end(); ++itr) {
+    for (auto itr = pimpl->_Params.begin(); itr != pimpl->_Params.end(); ++itr)
+    {
         if (itr->second->getTypeInfo() == type && itr->second->checkFlags(ParamFlags::Output_e))
         {
             valid_outputs.push_back(itr->second);
@@ -44,7 +45,8 @@ std::vector<IParam*> VariableManager::getOutputParams(TypeInfo type)
 std::vector<IParam*> VariableManager::getAllParms()
 {
     std::vector<IParam*> output;
-    for (auto& itr : pimpl->_Params) {
+    for (auto& itr : pimpl->_Params)
+    {
         output.push_back(itr.second);
     }
     return output;
@@ -52,7 +54,8 @@ std::vector<IParam*> VariableManager::getAllParms()
 std::vector<IParam*> VariableManager::getAllOutputParams()
 {
     std::vector<IParam*> output;
-    for (auto& itr : pimpl->_Params) {
+    for (auto& itr : pimpl->_Params)
+    {
         if (itr.second->checkFlags(ParamFlags::Output_e))
         {
             output.push_back(itr.second);
@@ -79,7 +82,8 @@ IParam* VariableManager::getOutputParam(std::string name)
     }
     // Check if the passed in value is the item specific name
     std::vector<IParam*> potentials;
-    for (auto& itr : pimpl->_Params) {
+    for (auto& itr : pimpl->_Params)
+    {
         if (itr.first.find(name) != std::string::npos)
         {
             potentials.push_back(itr.second);
@@ -90,7 +94,8 @@ IParam* VariableManager::getOutputParam(std::string name)
         if (potentials.size() > 1)
         {
             std::stringstream ss;
-            for (auto potential : potentials) ss << potential->getTreeName() << "\n";
+            for (auto potential : potentials)
+                ss << potential->getTreeName() << "\n";
             MO_LOG(debug) << "Warning ambiguous name \"" << name << "\" passed in, multiple potential matches\n "
                           << ss.str();
         }

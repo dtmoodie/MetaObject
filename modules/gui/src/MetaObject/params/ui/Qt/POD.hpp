@@ -1,9 +1,9 @@
 #pragma once
 #ifdef HAVE_QT5
 #include "MetaObject/detail/Export.hpp"
+#include "MetaObject/params/ui/Qt/SignalProxy.hpp"
 #include "THandler.hpp"
 #include "UiUpdateHandler.hpp"
-#include "MetaObject/params/ui/Qt/SignalProxy.hpp"
 
 #include <qcombobox.h>
 #include <qspinbox.h>
@@ -25,13 +25,16 @@ namespace mo
             // **********************************************************************************
             // *************************** Bool ************************************************
             // **********************************************************************************
-            template<> class MO_EXPORTS THandler<bool, void> : public UiUpdateHandler {
+            template <>
+            class MO_EXPORTS THandler<bool, void> : public UiUpdateHandler
+            {
                 QCheckBox* chkBox;
-            public:
+
+              public:
                 THandler(IParamProxy& parent);
                 void updateUi(const bool& data);
                 void updateParam(bool& data);
-                virtual std::vector < QWidget*> getUiWidgets(QWidget* parent_);
+                virtual std::vector<QWidget*> getUiWidgets(QWidget* parent_);
                 static bool uiUpdateRequired();
             };
 
@@ -39,13 +42,16 @@ namespace mo
             // *************************** std::string ******************************************
             // **********************************************************************************
 
-            template<> class MO_EXPORTS THandler<std::string, void> : public UiUpdateHandler {
+            template <>
+            class MO_EXPORTS THandler<std::string, void> : public UiUpdateHandler
+            {
                 QLineEdit* lineEdit;
-            public:
+
+              public:
                 THandler(IParamProxy& parent);
                 void updateUi(const std::string& data);
                 void updateParam(std::string& data);
-                
+
                 std::vector<QWidget*> getUiWidgets(QWidget* parent);
             };
 
@@ -53,10 +59,13 @@ namespace mo
             // *************************** std::function<void(void)> **************************
             // **********************************************************************************
 
-            template<> class MO_EXPORTS THandler<std::function<void(void)>, void> : public UiUpdateHandler {
+            template <>
+            class MO_EXPORTS THandler<std::function<void(void)>, void> : public UiUpdateHandler
+            {
                 std::function<void(void)>* funcData;
                 QPushButton* btn;
-            public:
+
+              public:
                 THandler(IParamProxy& parent);
                 void updateUi(const std::function<void(void)>& data);
                 void updateParam(std::function<void(void)>& data);
@@ -67,25 +76,31 @@ namespace mo
             // *************************** floating point data **********************************
             // **********************************************************************************
 
-            template<typename T>
-            class THandler<T, typename std::enable_if<std::is_floating_point<T>::value, void>::type> : public UiUpdateHandler {
+            template <typename T>
+            class THandler<T, typename std::enable_if<std::is_floating_point<T>::value, void>::type>
+                : public UiUpdateHandler
+            {
                 QDoubleSpinBox* box;
-            public:
-                THandler(IParamProxy& parent) : box(nullptr), UiUpdateHandler(parent){}
-                
-                void updateUi(const T& data) { 
+
+              public:
+                THandler(IParamProxy& parent) : box(nullptr), UiUpdateHandler(parent) {}
+
+                void updateUi(const T& data)
+                {
                     _updating = true;
-                    if(box)
-                        box->setValue(data); 
+                    if (box)
+                        box->setValue(data);
                     _updating = false;
                 }
-                
-                void updateParam(T& data) { data = box->value();}
-                
-                std::vector<QWidget*> getUiWidgets(QWidget* parent){    
+
+                void updateParam(T& data) { data = box->value(); }
+
+                std::vector<QWidget*> getUiWidgets(QWidget* parent)
+                {
                     std::vector<QWidget*> output;
                     _parent_widget = parent;
-                    if (box == nullptr){
+                    if (box == nullptr)
+                    {
                         box = new QDoubleSpinBox(parent);
                         box->setMaximumWidth(100);
                         box->setMinimum(std::numeric_limits<T>::min());
@@ -101,25 +116,30 @@ namespace mo
             // *************************** integers *********************************************
             // **********************************************************************************
 
-            template<typename T>
-            class THandler<T, typename std::enable_if<std::is_integral<T>::value, void>::type> : public UiUpdateHandler {
+            template <typename T>
+            class THandler<T, typename std::enable_if<std::is_integral<T>::value, void>::type> : public UiUpdateHandler
+            {
                 QSpinBox* box;
-            public:
-                THandler(IParamProxy& parent) : 
-                    box(nullptr), UiUpdateHandler(parent){}
 
-                void updateUi(const T& data){
-                    if(box)
+              public:
+                THandler(IParamProxy& parent) : box(nullptr), UiUpdateHandler(parent) {}
+
+                void updateUi(const T& data)
+                {
+                    if (box)
                         box->setValue(data);
                 }
-                void updateParam(T& data){
-                    if(box)
+                void updateParam(T& data)
+                {
+                    if (box)
                         data = box->value();
                 }
-                std::vector<QWidget*> getUiWidgets(QWidget* parent){
+                std::vector<QWidget*> getUiWidgets(QWidget* parent)
+                {
                     std::vector<QWidget*> output;
                     _parent_widget = parent;
-                    if (box == nullptr){
+                    if (box == nullptr)
+                    {
                         box = new QSpinBox(parent);
                         box->setMaximumWidth(100);
                         box->setMaximum(std::max<int>(std::numeric_limits<T>::max(), std::numeric_limits<int>::max()));
@@ -135,12 +155,15 @@ namespace mo
             // **********************************************************************************
             // *************************** Enums ************************************************
             // **********************************************************************************
-            template<> class MO_EXPORTS THandler<EnumParam, void> : public UiUpdateHandler {
+            template <>
+            class MO_EXPORTS THandler<EnumParam, void> : public UiUpdateHandler
+            {
                 QComboBox* enumCombo;
                 bool _updating;
-            public:
+
+              public:
                 THandler(IParamProxy& parent);
-                void updateUi( const EnumParam& data);
+                void updateUi(const EnumParam& data);
                 void updateParam(EnumParam& data);
                 std::vector<QWidget*> getUiWidgets(QWidget* parent);
             };
@@ -149,35 +172,47 @@ namespace mo
             // *************************** Files ************************************************
             // **********************************************************************************
 
-            template<> class MO_EXPORTS THandler<WriteDirectory, void> : public UiUpdateHandler {
+            template <>
+            class MO_EXPORTS THandler<WriteDirectory, void> : public UiUpdateHandler
+            {
                 QPushButton* btn;
                 QWidget* parent;
-            public:
+
+              public:
                 THandler(IParamProxy& parent);
                 void updateUi(const WriteDirectory& data);
                 void updateParam(WriteDirectory& data);
                 std::vector<QWidget*> getUiWidgets(QWidget* parent_);
             };
-            template<> class MO_EXPORTS THandler<ReadDirectory, void> : public UiUpdateHandler {
+            template <>
+            class MO_EXPORTS THandler<ReadDirectory, void> : public UiUpdateHandler
+            {
                 QPushButton* btn;
                 QWidget* parent;
-            public:
+
+              public:
                 THandler(IParamProxy& parent);
                 void updateUi(const ReadDirectory& data);
                 void updateParam(ReadDirectory& data);
                 std::vector<QWidget*> getUiWidgets(QWidget* parent_);
             };
-            template<> class MO_EXPORTS THandler<WriteFile, void> : public UiUpdateHandler {
+            template <>
+            class MO_EXPORTS THandler<WriteFile, void> : public UiUpdateHandler
+            {
                 QPushButton* btn;
-            public:
+
+              public:
                 THandler(IParamProxy& parent);
-                void updateUi( const WriteFile& data);
+                void updateUi(const WriteFile& data);
                 void updateParam(WriteFile& data);
                 std::vector<QWidget*> getUiWidgets(QWidget* parent_);
             };
-            template<> class MO_EXPORTS THandler<ReadFile, void> : public UiUpdateHandler {
+            template <>
+            class MO_EXPORTS THandler<ReadFile, void> : public UiUpdateHandler
+            {
                 QPushButton* btn;
-            public:
+
+              public:
                 THandler(IParamProxy& parent);
                 void updateUi(const ReadFile& data);
                 void updateParam(ReadFile& data);

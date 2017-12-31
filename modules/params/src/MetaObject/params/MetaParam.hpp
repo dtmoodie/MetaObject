@@ -16,7 +16,8 @@ namespace mo
     {
         MetaParam(const char* name = nullptr)
         {
-            if (name) {
+            if (name)
+            {
                 mo::Demangle::registerName(mo::TypeInfo(typeid(T)), name);
             }
         }

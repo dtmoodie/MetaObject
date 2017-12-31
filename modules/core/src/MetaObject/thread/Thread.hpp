@@ -9,63 +9,66 @@
 #include <functional>
 #include <queue>
 
-namespace mo {
-class ThreadPool;
-class Context;
-class ThreadHandle;
-class ISlot;
-class MO_EXPORTS Thread {
-public:
-    // Events have to be handled by this thread
-    void pushEventQueue(const std::function<void(void)>& f);
-    // Work can be stolen and can exist on any thread
-    void pushWork(const std::function<void(void)>& f);
-    void               start();
-    void               stop();
-    size_t             getId() const;
-    bool               isOnThread() const;
-    const std::string& getThreadName() const;
+namespace mo
+{
+    class ThreadPool;
+    class Context;
+    class ThreadHandle;
+    class ISlot;
+    class MO_EXPORTS Thread
+    {
+      public:
+        // Events have to be handled by this thread
+        void pushEventQueue(const std::function<void(void)>& f);
+        // Work can be stolen and can exist on any thread
+        void pushWork(const std::function<void(void)>& f);
+        void start();
+        void stop();
+        size_t getId() const;
+        bool isOnThread() const;
+        const std::string& getThreadName() const;
 
-    void setExitCallback(const std::function<void(void)>& f);
-    void setStartCallback(const std::function<void(void)>& f);
-    void setName(const std::string& name);
-    std::shared_ptr<Connection> setInnerLoop(TSlot<int(void)>* slot);
-    ThreadPool*  getPool() const;
-    ContextPtr_t getContext();
+        void setExitCallback(const std::function<void(void)>& f);
+        void setStartCallback(const std::function<void(void)>& f);
+        void setName(const std::string& name);
+        std::shared_ptr<Connection> setInnerLoop(TSlot<int(void)>* slot);
+        ThreadPool* getPool() const;
+        ContextPtr_t getContext();
 
-protected:
-    struct ThreadSanitizer;
-    friend class ThreadPool;
-    friend class ThreadHandle;
-    friend struct ThreadSanitizer;
+      protected:
+        struct ThreadSanitizer;
+        friend class ThreadPool;
+        friend class ThreadHandle;
+        friend struct ThreadSanitizer;
 
-    Thread();
-    Thread(ThreadPool* pool);
-    ~Thread();
-    void main();
+        Thread();
+        Thread(ThreadPool* pool);
+        ~Thread();
+        void main();
 
-    Thread& operator=(const Thread&) = delete;
-    Thread(const Thread&)            = delete;
+        Thread& operator=(const Thread&) = delete;
+        Thread(const Thread&) = delete;
 
-    boost::thread                                 _thread;
-    std::shared_ptr<mo::TSignalRelay<int(void)> > _inner_loop;
+        boost::thread _thread;
+        std::shared_ptr<mo::TSignalRelay<int(void)>> _inner_loop;
 
-    std::function<void(void)>     _on_start;
-    std::function<void(void)>     _on_exit;
-    ContextPtr_t                  _ctx;
-    ThreadPool*                   _pool;
-    boost::condition_variable_any _cv;
-    boost::recursive_timed_mutex  _mtx;
-    // if _run == true, execute the main inner loop
-    volatile bool _run;
-    // if _quit == true, cleanup and exit the thread
-    volatile bool _quit;
-    // Set by work thread, if true then it is not executing the inner loop
-    volatile bool _paused;
-    // Set by the thread handle, set this flag to skip executing the event loop because inner loop needs to run again asap
-    volatile bool                                           _run_inner_loop;
-    moodycamel::ConcurrentQueue<std::function<void(void)> > _work_queue;
-    moodycamel::ConcurrentQueue<std::function<void(void)> > _event_queue;
-    std::string                                             _name;
-};
+        std::function<void(void)> _on_start;
+        std::function<void(void)> _on_exit;
+        ContextPtr_t _ctx;
+        ThreadPool* _pool;
+        boost::condition_variable_any _cv;
+        boost::recursive_timed_mutex _mtx;
+        // if _run == true, execute the main inner loop
+        volatile bool _run;
+        // if _quit == true, cleanup and exit the thread
+        volatile bool _quit;
+        // Set by work thread, if true then it is not executing the inner loop
+        volatile bool _paused;
+        // Set by the thread handle, set this flag to skip executing the event loop because inner loop needs to run
+        // again asap
+        volatile bool _run_inner_loop;
+        moodycamel::ConcurrentQueue<std::function<void(void)>> _work_queue;
+        moodycamel::ConcurrentQueue<std::function<void(void)>> _event_queue;
+        std::string _name;
+    };
 }
