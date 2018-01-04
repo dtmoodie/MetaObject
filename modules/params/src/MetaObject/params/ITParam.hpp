@@ -182,6 +182,8 @@ namespace mo
                 ts = *tsptr;
             if (auto ctx_ = GetKeywordInputDefault<tag::context>(nullptr, args...))
                 ctx = ctx_;
+            if(!ctx)
+                ctx = this->_ctx;
             if (auto cs_ =
                     GetKeywordInputDefault<tag::coordinate_system>(std::shared_ptr<ICoordinateSystem>(), args...))
                 cs = cs_;
