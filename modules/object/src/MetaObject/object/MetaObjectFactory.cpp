@@ -446,6 +446,11 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
 
     if (id >= 0)
     {
+#ifdef _DEBUG
+        _pimpl->obj_system.SetOptimizationLevel(RCCPPOPTIMIZATIONLEVEL_DEBUG, id);
+#else
+        _pimpl->obj_system.SetOptimizationLevel(RCCPPOPTIMIZATIONLEVEL_PERF, id);
+#endif
         interface->SetProjectIdForAllConstructors(static_cast<unsigned short>(id));
     }
     setupObjectConstructors(interface);
