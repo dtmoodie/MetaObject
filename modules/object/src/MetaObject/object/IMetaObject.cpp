@@ -191,12 +191,13 @@ namespace mo
                     {
                         if (this->connectInput(input, obj.get(), output, param_connection.connection_type))
                         {
-                            MO_LOG(debug) << "ReConnected " << GetTypeName() << ":" << param_connection.input_param
+                            input->getInput(mo::OptionalTime_t());
+                            MO_LOG(debug) << "Reconnected " << GetTypeName() << ":" << param_connection.input_param
                                           << " to " << obj->GetTypeName() << ":" << param_connection.output_param;
                         }
                         else
                         {
-                            MO_LOG(info) << "ReConnect FAILED " << GetTypeName() << ":" << param_connection.input_param
+                            MO_LOG(info) << "Reconnect FAILED " << GetTypeName() << ":" << param_connection.input_param
                                          << " to " << obj->GetTypeName() << ":" << param_connection.output_param;
                         }
                     }
@@ -865,7 +866,7 @@ namespace mo
         {
             _pimpl->_input_Params[param->getName()] = dynamic_cast<InputParam*>(param.get());
         }
-        param->registerUpdateNotifier(&(this->_pimpl->_slot_param_updated));
+        auto connection = param->registerUpdateNotifier(&(this->_pimpl->_slot_param_updated));
         _pimpl->_sig_param_added(this, param.get());
         return param.get();
     }
