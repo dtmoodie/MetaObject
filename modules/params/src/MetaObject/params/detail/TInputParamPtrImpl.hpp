@@ -100,6 +100,8 @@ namespace mo
             if (_user_var)
             {
                 *_user_var = ParamTraits<T>::ptr(_current_data);
+                ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
+                IParam::emitUpdate(ts, ctx, fn, cs, fg);
             }
         }
     }
