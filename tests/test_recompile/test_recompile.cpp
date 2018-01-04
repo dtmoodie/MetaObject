@@ -55,6 +55,8 @@ BOOST_AUTO_TEST_CASE(test_recompile)
     cb = new build_callback;
     MO_LOG(info) << "Current working directory " << boost::filesystem::current_path().string();
     MetaObjectFactory::instance()->registerTranslationUnit();
+    BOOST_REQUIRE(MetaObjectFactory::instance()->loadPlugin("./libtest_recompile_objectd.so"));
+
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
 }
 
@@ -164,42 +166,57 @@ BOOST_AUTO_TEST_CASE(test_creation_function)
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
 }
 
-BOOST_AUTO_TEST_CASE(test_reConnect_signals)
+BOOST_AUTO_TEST_CASE(test_reconnect_signals)
 {
-    auto signals = test_meta_object_signals::create();
-    auto slots = test_meta_object_slots::create();
+    auto emitter = test_meta_object_signals::create();
+    auto receiver = test_meta_object_slots::create();
     // auto state = signals->getConstructor()->GetState(signals->GetPerTypeId());
-    IMetaObject::connect(signals.get(), "test_int", slots.get(), "test_int");
+    IMetaObject::connect(emitter.get(), "test_int", receiver.get(), "test_int");
     int value = 5;
-    signals->sig_test_int(value);
-    BOOST_REQUIRE_EQUAL(slots->call_count, value);
+    emitter->sig_test_int(value);
+    BOOST_REQUIRE_EQUAL(receiver->call_count, value);
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
 
-    signals->sig_test_int(value);
-    BOOST_REQUIRE_EQUAL(slots->call_count, 10);
+    emitter->sig_test_int(value);
+    BOOST_REQUIRE_EQUAL(receiver->call_count, 10);
+
+    emitter->sig_test_int(value);
+    BOOST_REQUIRE_EQUAL(receiver->call_count, 15);
 }
 
-BOOST_AUTO_TEST_CASE(test_input_output_Param)
+BOOST_AUTO_TEST_CASE(test_input_output_param)
 {
+    auto ctx = mo::Context::create("test_input_output_param");
     auto output = rcc::shared_ptr<test_meta_object_output>::create();
     auto input = rcc::shared_ptr<test_meta_object_input>::create();
+    input->setContext(ctx);
+    output->setContext(ctx);
     auto output_param = output->getOutput("test_output");
     BOOST_REQUIRE(output_param);
     auto input_param = input->getInput("test_input");
     BOOST_REQUIRE(input_param);
-
+    BOOST_REQUIRE_EQUAL(input->param_update_call_count, 0);
+    BOOST_REQUIRE_EQUAL(output->param_update_call_count, 0);
     BOOST_REQUIRE(IMetaObject::connectInput(output.get(), output_param, input.get(), input_param));
-    output->test_output = 5;
+    BOOST_REQUIRE_EQUAL(input->param_update_call_count, 1);
+    BOOST_REQUIRE_EQUAL(output->param_update_call_count, 0);
+    output->test_output_param.updateData(5);
+    BOOST_REQUIRE_EQUAL(output->param_update_call_count, 1);
+    BOOST_REQUIRE_EQUAL(input->param_update_call_count, 2);
     BOOST_REQUIRE(input->test_input);
+    BOOST_REQUIRE(input->test_input_param.getInput(mo::OptionalTime_t()));
     BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
-    output->test_output = 10;
+    BOOST_REQUIRE_EQUAL(input->param_update_call_count, 1);
+    output->test_output_param.updateData(10);
+    BOOST_REQUIRE_EQUAL(input->param_update_call_count, 2);
+    BOOST_REQUIRE(input->test_input_param.getInput(mo::OptionalTime_t()));
     BOOST_REQUIRE(input->test_input);
     BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
     BOOST_REQUIRE_EQUAL(*input->test_input, 10);
 }
 
-BOOST_AUTO_TEST_CASE(test_Param_persistence_recompile)
+BOOST_AUTO_TEST_CASE(test_param_persistence_recompile)
 {
     auto obj = test_meta_object_parameters::create();
     BOOST_REQUIRE_EQUAL(obj->test, 5);

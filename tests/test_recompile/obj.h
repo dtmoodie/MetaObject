@@ -1,4 +1,8 @@
 #pragma once
+#ifdef MetaObject_EXPORTS
+#undef MetaObject_EXPORTS
+#endif
+
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
@@ -49,13 +53,25 @@ struct test_meta_object_output : public MetaObject
     MO_BEGIN(test_meta_object_output)
     OUTPUT(int, test_output, 0)
     MO_END
+    int param_update_call_count = 0;
+    virtual void onParamUpdate(
+        IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags) override
+    {
+        ++param_update_call_count;
+    }
 };
 
 struct test_meta_object_input : public MetaObject
 {
     MO_BEGIN(test_meta_object_input)
-    INPUT(int, test_input, nullptr)
+        INPUT(int, test_input, nullptr)
     MO_END
+    int param_update_call_count = 0;
+    virtual void onParamUpdate(
+        IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags) override
+    {
+        ++param_update_call_count;
+    }
 };
 
 #ifdef HAVE_CUDA
