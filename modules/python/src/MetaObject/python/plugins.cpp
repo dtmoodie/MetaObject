@@ -96,6 +96,10 @@ namespace mo
 
         boost::python::def("loadPlugin", &loadPlugin);
         boost::python::def("loadPlugins", &loadPlugins);
+#ifdef _MSC_VER
+        loadPlugins("./Plugins");
+#else
         loadPlugins("./bin/Plugins");
+#endif
     }
 }
