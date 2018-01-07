@@ -7,7 +7,6 @@ TARGET_LINK_LIBRARIES(test_recompile_object
     metaobject_params
 )
 RCC_TARGET_CONFIG(test_recompile_object deb rel)
-print_target_properties(test_recompile_object)
 
 add_executable(test_recompile test_recompile.cpp)
 add_dependencies(test_recompile test_recompile_object)
