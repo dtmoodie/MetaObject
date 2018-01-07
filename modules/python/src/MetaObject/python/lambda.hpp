@@ -1,4 +1,5 @@
 #pragma once
+#ifndef _MSC_VER
 #include <boost/mpl/erase.hpp>
 #include <boost/mpl/vector.hpp>
 #include <type_traits>
@@ -42,3 +43,5 @@ namespace boost
         }
     }
 }
+
+#endif // ndef _MSC_VER

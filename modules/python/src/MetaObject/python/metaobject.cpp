@@ -36,10 +36,38 @@ namespace mo
     {
         namespace detail
         {
-            std::string getName(const IObjectConstructor* ctr) {}
-            std::string getCompiledPath(const IObjectConstructor* ctr) {}
-            std::vector<std::string> getInludeFiles(const IObjectConstructor* ctr) {}
-            std::vector<std::string> getLinkLibs(const IObjectConstructor* ctr) {}
+			std::string getName(IObjectConstructor* ctr) { return ctr->GetName(); }
+			std::string getCompiledPath(IObjectConstructor* ctr) { return ctr->GetCompiledPath(); }
+            std::vector<std::string> getInludeFiles(const IObjectConstructor* ctr) 
+			{
+				std::vector<std::string> output;
+				const size_t cnt = ctr->GetMaxNumIncludeFiles();
+				for (size_t i = 0; i < cnt; ++i)
+				{
+					output.emplace_back(ctr->GetIncludeFile(i));
+				}
+				return output;
+			}
+            std::vector<std::string> getLinkLibs(const IObjectConstructor* ctr) 
+			{
+				std::vector<std::string> output;
+				const size_t cnt = ctr->GetMaxNumLinkLibraries();
+				for (size_t i = 0; i < cnt; ++i)
+				{
+					output.emplace_back(ctr->GetLinkLibrary(i));
+				}
+				return output;
+			}
+			/*std::vector<std::string> getSourceDependencies(const IObjectConstructor* ctr)
+			{
+				std::vector<std::string> output;
+				const size_t cnt = ctr->GetMaxNumSourceDependencies();
+				for (size_t i = 0; i < cnt; ++i)
+				{
+					output.emplace_back(ctr->GetSourceDependency(i));
+				}
+				return output;
+			}*/
         }
         void setupInterface()
         {

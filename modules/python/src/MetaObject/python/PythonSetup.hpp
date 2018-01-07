@@ -5,7 +5,7 @@
 #include <functional>
 #include <vector>
 
-class IObjectConstructor;
+struct IObjectConstructor;
 
 namespace mo
 {
