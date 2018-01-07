@@ -10,7 +10,7 @@ namespace mo
         BufferConstructor()
         {
             static_assert(T::Type != TParam_e, "T Param not a buffer");
-            Buffer::BufferFactory::RegisterFunction(TypeInfo(typeid(typename T::ValueType)),
+            Buffer::BufferFactory::registerFunction(TypeInfo(typeid(typename T::ValueType)),
                                                     std::bind(&BufferConstructor<T>::create, std::placeholders::_1),
                                                     T::Type);
         }

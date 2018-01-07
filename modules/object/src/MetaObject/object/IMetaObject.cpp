@@ -747,7 +747,7 @@ namespace mo
                 output->checkFlags(mo::ParamFlags::RequestBuffered_e))
             {
                 type_ = ParamType(type_ & ~ForceBufferedConnection_e);
-                auto buffer = Buffer::BufferFactory::CreateProxy(output, type_);
+                auto buffer = Buffer::BufferFactory::createProxy(output, type_);
                 if (!buffer)
                 {
                     MO_LOG(warning) << "Unable to create " << paramTypeToString(type_) << " for datatype "
@@ -774,7 +774,7 @@ namespace mo
             {
                 if (output_ctx->thread_id != _ctx.get()->thread_id)
                 {
-                    auto buffer = Buffer::BufferFactory::CreateProxy(output, type_);
+                    auto buffer = Buffer::BufferFactory::createProxy(output, type_);
                     if (buffer)
                     {
                         buffer->setName(output->getTreeName() + " buffer for " + input->getTreeName());

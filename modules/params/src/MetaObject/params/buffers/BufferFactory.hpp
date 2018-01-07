@@ -15,8 +15,8 @@ namespace mo
           public:
             typedef std::function<IParam*(IParam*)> create_buffer_f;
 
-            static void RegisterFunction(TypeInfo type, const create_buffer_f& func, ParamType buffer_type_);
-            static std::shared_ptr<IParam> CreateProxy(IParam* param, ParamType buffer_type_);
+            static void registerFunction(TypeInfo type, const create_buffer_f& func, ParamType buffer_type_);
+            static std::shared_ptr<IParam> createProxy(IParam* param, ParamType buffer_type_);
         };
     }
 }
