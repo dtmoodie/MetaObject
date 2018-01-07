@@ -24,6 +24,7 @@ if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
                     ${MetaObject_LIBRARIES}
                     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
                     metaobject_params
+					metaobject_core
                 )
 
                 if(OpenCV_FOUND)

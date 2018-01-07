@@ -1,22 +1,22 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
-#include "IObjectFactorySystem.h"
-#include "MetaObject/Detail/Counter.hpp"
-#include "MetaObject/Detail/MetaObjectMacros.hpp"
-#include "MetaObject/IMetaObject.hpp"
+#include "RuntimeObjectSystem/IObjectFactorySystem.h"
+#include "MetaObject/core/detail/Counter.hpp"
+#include "MetaObject/object/detail/MetaObjectMacros.hpp"
+#include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/Logging/CompileLogger.hpp"
-#include "MetaObject/Parameters//ParameterMacros.hpp"
-#include "MetaObject/Parameters/Buffers/BufferFactory.hpp"
-#include "MetaObject/Parameters/Buffers/CircularBuffer.hpp"
-#include "MetaObject/Parameters/Buffers/Map.hpp"
-#include "MetaObject/Parameters/Buffers/StreamBuffer.hpp"
-#include "MetaObject/Parameters/MetaParameter.hpp"
-#include "MetaObject/Parameters/TypedInputParameter.hpp"
-#include "MetaObject/Parameters/TypedParameterPtr.hpp"
-#include "MetaObject/Signals/TypedSignal.hpp"
+#include "MetaObject/params/ParamMacros.hpp"
+#include "MetaObject/params/Buffers/BufferFactory.hpp"
+#include "MetaObject/params/Buffers/CircularBuffer.hpp"
+#include "MetaObject/params/Buffers/Map.hpp"
+#include "MetaObject/params/Buffers/StreamBuffer.hpp"
+#include "MetaObject/params/detail/MetaParamImpl.hpp"
+#include "MetaObject/params/TInputParam.hpp"
+#include "MetaObject/params/TParamPtr.hpp"
+#include "MetaObject/Signals/TSignal.hpp"
 #include "MetaObject/Signals/detail/SignalMacros.hpp"
 #include "MetaObject/Signals/detail/SlotMacros.hpp"
-#include "RuntimeObjectSystem.h"
+#include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MODULE "parameter"
@@ -26,9 +26,9 @@
 
 using namespace mo;
 
-INSTANTIATE_META_PARAMETER(int);
+INSTANTIATE_META_PARAM(int);
 
-struct output_parametered_object : public IMetaObject
+struct output_parametered_object : public MetaObject
 {
     MO_BEGIN(output_parametered_object)
     OUTPUT(int, test_output, 0);
@@ -37,7 +37,7 @@ struct output_parametered_object : public IMetaObject
     void increment() { test_output++; }
 };
 
-struct input_parametered_object : public IMetaObject
+struct input_parametered_object : public MetaObject
 {
     MO_BEGIN(input_parametered_object)
     INPUT(int, test_input, nullptr)
@@ -51,12 +51,10 @@ CompileLogger* logger = nullptr;
 BuildCallback* cb = nullptr;
 BOOST_AUTO_TEST_CASE(input_parameter_manual)
 {
-    logger = new CompileLogger;
-    cb = new BuildCallback();
-    IRuntimeObjectSystem::Instance()->Initialise(logger, nullptr);
-    auto input = input_parametered_object::Create();
-    auto output = output_parametered_object::Create();
-    input->test_input_param.SetInput(&output->test_output_param);
+	mo::MetaObjectFactory::instance();
+    auto input = input_parametered_object::create();
+    auto output = output_parametered_object::create();
+    input->test_input_param.setInput(&output->test_output_param);
     BOOST_REQUIRE(input->test_input);
     BOOST_REQUIRE_EQUAL(input->test_input, &output->test_output);
     BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
@@ -64,17 +62,17 @@ BOOST_AUTO_TEST_CASE(input_parameter_manual)
 
 BOOST_AUTO_TEST_CASE(input_parameter_programatic)
 {
-    auto input = input_parametered_object::Create();
-    auto input_ = input->GetParameterOptional("test_input");
+    auto input = input_parametered_object::create();
+    auto input_ = input->getParamOptional("test_input");
 
-    auto output = output_parametered_object::Create();
-    auto output_ = output->GetParameterOptional("test_output");
+    auto output = output_parametered_object::create();
+    auto output_ = output->getParamOptional("test_output");
 
     BOOST_REQUIRE(input_);
     BOOST_REQUIRE(output_);
-    auto input_param = dynamic_cast<InputParameter*>(input_);
+    auto input_param = dynamic_cast<InputParam*>(input_);
     BOOST_REQUIRE(input_param);
-    BOOST_REQUIRE(input_param->SetInput(output_));
+    BOOST_REQUIRE(input_param->setInput(output_));
     BOOST_REQUIRE(input->test_input);
     BOOST_REQUIRE_EQUAL(input->test_input, &output->test_output);
     BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
@@ -82,51 +80,51 @@ BOOST_AUTO_TEST_CASE(input_parameter_programatic)
 
 BOOST_AUTO_TEST_CASE(buffered_input)
 {
-    rcc::shared_ptr<input_parametered_object> input = input_parametered_object::Create();
-    auto input_ = input->GetParameterOptional("test_input");
+    rcc::shared_ptr<input_parametered_object> input = input_parametered_object::create();
+    auto input_ = input->getParamOptional("test_input");
 
-    auto output = output_parametered_object::Create();
-    auto output_ = output->GetParameterOptional("test_output");
+    auto output = output_parametered_object::create();
+    auto output_ = output->getParamOptional("test_output");
 
     BOOST_REQUIRE(input_);
     BOOST_REQUIRE(output_);
-    auto input_param = dynamic_cast<InputParameter*>(input_);
+    auto input_param = dynamic_cast<InputParam*>(input_);
 
-    auto cbuffer = Buffer::BufferFactory::CreateProxy(output_, Buffer::BufferFactory::cbuffer);
+    auto cbuffer = Buffer::BufferFactory::createProxy(output_, mo::ParamType::CircularBuffer_e);
     BOOST_REQUIRE(cbuffer);
-    BOOST_REQUIRE(input_param->SetInput(cbuffer));
-    output->test_output_param.UpdateData(0, 0);
+    BOOST_REQUIRE(input_param->setInput(cbuffer));
+    output->test_output_param.updateData(0, 0);
     for (int i = 1; i < 100000; ++i) {
-        output->test_output_param.UpdateData(i * 10, i);
+        output->test_output_param.updateData(i * 10, i);
         int data;
-        BOOST_REQUIRE(input->test_input_param.GetData(data, i - 1));
+        BOOST_REQUIRE(input->test_input_param.getData(data, i - 1));
         BOOST_REQUIRE_EQUAL(data, (i - 1) * 10);
     }
 }
 
 BOOST_AUTO_TEST_CASE(threaded_buffered_input)
 {
-    auto input = input_parametered_object::Create();
-    auto input_ = input->GetParameterOptional("test_input");
+    auto input = input_parametered_object::create();
+    auto input_ = input->getParamOptional("test_input");
 
-    auto output = output_parametered_object::Create();
-    auto output_ = output->GetParameterOptional("test_output");
+    auto output = output_parametered_object::create();
+    auto output_ = output->getParamOptional("test_output");
 
     BOOST_REQUIRE(input_);
     BOOST_REQUIRE(output_);
-    auto input_param = dynamic_cast<InputParameter*>(input_);
+    auto input_param = dynamic_cast<InputParam*>(input_);
 
-    auto cbuffer = Buffer::BufferFactory::CreateProxy(output_, Buffer::BufferFactory::cbuffer);
+    auto cbuffer = Buffer::BufferFactory::createProxy(output_, mo::ParamType::CircularBuffer_e);
     BOOST_REQUIRE(cbuffer);
-    BOOST_REQUIRE(input_param->SetInput(cbuffer));
-    output->test_output_param.UpdateData(0, 0);
+    BOOST_REQUIRE(input_param->setInput(cbuffer));
+    output->test_output_param.updateData(0, 0);
 
     bool quit = false;
     std::thread background_thread([&quit, &input]() {
         int ts = 0;
         int data;
         while (!quit) {
-            if (input->test_input_param.GetData(data, ts))
+            if (input->test_input_param.getData(data, ts))
             {
                 BOOST_REQUIRE_EQUAL(data, ts * 10);
                 ++ts;
@@ -135,7 +133,7 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
     });
 
     for (int i = 1; i < 100000; ++i) {
-        output->test_output_param.UpdateData(i * 10, i);
+        output->test_output_param.updateData(i * 10, i);
     }
     quit = true;
     background_thread.join();
@@ -143,27 +141,27 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
 
 BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
 {
-    auto input = input_parametered_object::Create();
-    auto input_ = input->GetParameterOptional("test_input");
+    auto input = input_parametered_object::create();
+    auto input_ = input->getParamOptional("test_input");
 
-    auto output = output_parametered_object::Create();
-    auto output_ = output->GetParameterOptional("test_output");
+    auto output = output_parametered_object::create();
+    auto output_ = output->getParamOptional("test_output");
 
     BOOST_REQUIRE(input_);
     BOOST_REQUIRE(output_);
-    auto input_param = dynamic_cast<InputParameter*>(input_);
+    auto input_param = dynamic_cast<InputParam*>(input_);
 
-    auto buffer = Buffer::BufferFactory::CreateProxy(output_, Buffer::BufferFactory::StreamBuffer);
+    auto buffer = Buffer::BufferFactory::createProxy(output_, mo::StreamBuffer_e);
     BOOST_REQUIRE(buffer);
-    BOOST_REQUIRE(input_param->SetInput(buffer));
-    output->test_output_param.UpdateData(0, 0);
+    BOOST_REQUIRE(input_param->setInput(buffer));
+    output->test_output_param.updateData(0, 0);
 
     std::thread background_thread([&input]() {
         int data;
         for (int i = 0; i < 1000; ++i) {
-            bool good = input->test_input_param.GetData(data, i);
+            bool good = input->test_input_param.getData(data, i);
             while (!good) {
-                good = input->test_input_param.GetData(data, i);
+                good = input->test_input_param.getData(data, i);
             }
             BOOST_REQUIRE_EQUAL(data, i * 10);
             boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
@@ -171,14 +169,12 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
     });
 
     for (int i = 1; i < 1000; ++i) {
-        output->test_output_param.UpdateData(i * 10, i);
+        output->test_output_param.updateData(i * 10, i);
     }
     background_thread.join();
 }
 
 BOOST_AUTO_TEST_CASE(cleanup)
 {
-    delete IRuntimeObjectSystem::Instance();
-    delete cb;
-    delete logger;
+    
 }

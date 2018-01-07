@@ -109,7 +109,7 @@ static const mo::ParamType buffer_test_cases[] = {
 BOOST_AUTO_PARAM_TEST_CASE(buffer_test, buffer_test_cases, end(buffer_test_cases))
 {
     std::cout << "Testing " << mo::paramTypeToString(param) << std::endl;
-    auto buffer = mo::Buffer::BufferFactory::CreateProxy(&output_param, param);
+    auto buffer = mo::Buffer::BufferFactory::createProxy(&output_param, param);
     BOOST_REQUIRE(buffer);
     auto buf = std::dynamic_pointer_cast<mo::Buffer::IBuffer>(buffer);
     BOOST_REQUIRE(buf);
