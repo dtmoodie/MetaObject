@@ -22,7 +22,7 @@ namespace mo
     template <class T>
     Time_t operator*(const TimePrefix<T>& /*lhs*/, double rhs)
     {
-        return TimePrefix<T>::convert(rhs);
+        return TimePrefix<T>::convert(static_cast<unsigned long>(rhs));
     }
 
     template <class T>

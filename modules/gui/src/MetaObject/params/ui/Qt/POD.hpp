@@ -13,7 +13,7 @@ class QCheckBox;
 class QPushButton;
 namespace mo
 {
-    class EnumParam;
+    struct EnumParam;
     struct WriteDirectory;
     struct ReadDirectory;
     struct WriteFile;

@@ -62,7 +62,7 @@ namespace mo
                 {
                     if (data.size())
                     {
-                        index->setMaximum(data.size());
+                        index->setMaximum(static_cast<int>(data.size()));
                         if (index->value() < data.size())
                             _data_handler.updateUi(data[index->value()]);
                     }

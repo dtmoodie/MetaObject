@@ -117,7 +117,7 @@ namespace mo
     template <typename T>
     class AccessToken;
     template <typename T>
-    class ConstAccessToken;
+    struct ConstAccessToken;
     template <typename T, typename U>
     using enable_if_storage_differs_t =
         typename std::enable_if<!std::is_same<T, U>::value &&
@@ -193,7 +193,7 @@ namespace mo
 
       protected:
         friend class AccessToken<T>;
-        friend class ConstAccessToken<T>;
+        friend struct ConstAccessToken<T>;
         TSignal<TUpdateSig_t> _typed_update_signal;
         virtual bool updateDataImpl(const Storage_t& data,
                                     const OptionalTime_t& ts,
