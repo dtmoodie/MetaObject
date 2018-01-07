@@ -78,12 +78,17 @@ void test_meta_object_callback::test_void()
 {
 }
 
-struct test_meta_object_Param : public MetaObject
+struct test_meta_object_param : public MetaObject
 {
-    MO_BEGIN(test_meta_object_Param);
+    MO_BEGIN(test_meta_object_param);
     PARAM(int, test_int, 5);
     TOOLTIP(test_int, "test tooltip")
     MO_END;
+    virtual void onParamUpdate(IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>& , UpdateFlags) override
+    {
+        ++update_count;
+    }
+    int update_count = 0;
 };
 
 struct test_meta_object_input : public MetaObject
@@ -96,7 +101,7 @@ struct test_meta_object_input : public MetaObject
 MO_REGISTER_OBJECT(test_meta_object_signals)
 MO_REGISTER_OBJECT(test_meta_object_slots)
 MO_REGISTER_OBJECT(test_meta_object_callback)
-MO_REGISTER_OBJECT(test_meta_object_Param)
+MO_REGISTER_OBJECT(test_meta_object_param)
 MO_REGISTER_OBJECT(test_meta_object_input)
 
 // RuntimeObjectSystem obj_sys;
@@ -274,25 +279,28 @@ BOOST_AUTO_TEST_CASE(rest)
         delete slot;
     }
     {
-        auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_Param");
+        auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_param");
         auto obj = constructor->Construct();
         obj->Init(true);
         // test_meta_object_Param* ptr = static_cast<test_meta_object_Param*>(obj);
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_Params)
+BOOST_AUTO_TEST_CASE(test_params)
 {
     RelayManager mgr;
-    auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_Param");
+    auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_param");
     auto obj = constructor->Construct();
     obj->Init(true);
-    test_meta_object_Param* ptr = static_cast<test_meta_object_Param*>(obj);
+    test_meta_object_param* ptr = static_cast<test_meta_object_param*>(obj);
     ptr->setupSignals(&mgr);
     constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_input");
     obj = constructor->Construct();
     obj->Init(true);
     test_meta_object_input* input = static_cast<test_meta_object_input*>(obj);
     input->setupSignals(&mgr);
+    BOOST_REQUIRE_EQUAL(ptr->update_count, 0);
+    input->test_int_param.updateData(10);
+    BOOST_REQUIRE_EQUAL(ptr->update_count, 1);
     delete obj;
 }
