@@ -9,7 +9,8 @@ namespace mo
 
         template <class T, class Enable = void>
         struct ReflectData;
-
+		// MSVC doesn't like these to be forward declared
+#ifndef _MSC_VER
         template <int I, class T>
         static constexpr inline auto get(T& data)
             -> decltype(ReflectData<typename std::remove_const<T>::type>::get(data, mo::_counter_<I>()));
@@ -17,7 +18,7 @@ namespace mo
         template <int I, class T>
         static constexpr inline auto get(const T& data)
             -> decltype(ReflectData<typename std::remove_const<T>::type>::get(data, mo::_counter_<I>()));
-
+#endif
         template <int I, class T>
         static constexpr inline auto getValue(const T& data)
         {
