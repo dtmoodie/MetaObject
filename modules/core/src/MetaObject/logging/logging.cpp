@@ -59,10 +59,7 @@ void mo::InitLogging()
     }
     boost::log::core::get()->add_global_attribute("Scope", boost::log::attributes::named_scope());
     // https://gist.github.com/xiongjia/e23b9572d3fc3d677e3d
-
-    auto consoleFmtTimeStamp =
-        boost::log::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%M:%S.%f");
-
+    
     auto fmtThreadId = boost::log::expressions::attr<boost::log::attributes::current_thread_id::value_type>("ThreadID");
 
     auto fmtSeverity = boost::log::expressions::attr<boost::log::trivial::severity_level>("Severity");
@@ -78,12 +75,9 @@ void mo::InitLogging()
 
     auto consoleSink = boost::log::add_console_log(std::clog);
     consoleSink->set_formatter(consoleFmt);
-
-    auto fmtTimeStamp =
-        boost::log::expressions::format_date_time<boost::posix_time::ptime>("TimeStamp", "%Y-%m-%d %H:%M:%S.%f");
-
+    
     // File sink
-    boost::log::formatter logFmt = boost::log::expressions::format("[%1%] (%2%) [%3%] [%4%] %5%") % fmtTimeStamp %
+    boost::log::formatter logFmt = boost::log::expressions::format("[%1%] (%2%) [%3%] [%4%]") %
                                    fmtThreadId % fmtSeverity % fmtScope % boost::log::expressions::smessage;
 
     auto fsSink = boost::log::add_file_log(boost::log::keywords::file_name = "./logs/%Y-%m-%d_%H-%M-%S.%N.log",

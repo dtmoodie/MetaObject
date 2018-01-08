@@ -16,3 +16,6 @@ TARGET_LINK_LIBRARIES(test_recompile
     metaobject_params
     test_recompile_object
 )
+
+set_target_properties(test_recompile_object PROPERTIES FOLDER Tests/MetaObject)
+set_target_properties(test_recompile PROPERTIES FOLDER Tests/MetaObject)

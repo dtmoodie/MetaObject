@@ -18,11 +18,17 @@
 #endif
 #endif
 
+#ifdef _MSC_VER
+#define META_PARAM_EXTERN(TYPE)                                                                                        \
+    template class mo::TInputParamPtr<TYPE>;                                                                    \
+    template class mo::TParamPtr<TYPE>;                                                                         \
+    template class mo::TParamOutput<TYPE>;
+#else
 #define META_PARAM_EXTERN(TYPE)                                                                                        \
     extern template class mo::TInputParamPtr<TYPE>;                                                                    \
     extern template class mo::TParamPtr<TYPE>;                                                                         \
     extern template class mo::TParamOutput<TYPE>;
-
+#endif
 #include <MetaObject/params/TInputParam.hpp>
 #include <MetaObject/params/TParamPtr.hpp>
 #include <MetaObject/params/Types.hpp>

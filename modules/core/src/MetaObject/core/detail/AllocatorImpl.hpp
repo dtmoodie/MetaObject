@@ -540,7 +540,7 @@ namespace mo
     PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elem_size)
     {
         size_t size_needed, stride;
-        PaddingPolicy::sizeNeeded(rows, cols, elem_size, size_needed, stride);
+        PaddingPolicy::sizeNeeded(rows, cols, static_cast<int>(elem_size), size_needed, stride);
         unsigned char* ptr;
         for (auto& itr : m_blocks)
         {
@@ -643,7 +643,7 @@ namespace mo
     {
         size_t size_needed, stride;
 
-        PaddingPolicy::sizeNeeded(rows, cols, elemSize, size_needed, stride);
+        PaddingPolicy::sizeNeeded(rows, cols, static_cast<int>(elemSize), size_needed, stride);
         typedef typename std::list<typename StackPolicy<cv::cuda::GpuMat, PaddingPolicy>::FreeMemory>::iterator Itr;
         std::vector<std::pair<clock_t, Itr>> candidates;
         clock_t time = clock();

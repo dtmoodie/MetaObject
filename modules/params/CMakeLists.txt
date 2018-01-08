@@ -17,6 +17,7 @@ set(metaobject_param_include
 
 add_executable(test_reflect_pod tests/reflect_pod.cpp)
 target_link_libraries(test_reflect_pod metaobject_params)
+set_target_properties(test_reflect_pod PROPERTIES FOLDER Tests/MetaObject)
 
 IF(Qt5_FOUND)
   TARGET_LINK_LIBRARIES(metaobject_params Qt5::Core)

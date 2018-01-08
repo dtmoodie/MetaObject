@@ -361,7 +361,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
     mo::Time_t end = mo::getCurrentTime();
     //_pimpl->plugins.push_back(plugin_name + " - success");
     plugin_info.m_state = "success";
-    plugin_info.m_load_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
+    plugin_info.m_load_time = static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
     _pimpl->plugins.push_back(plugin_info);
     return true;
 }
