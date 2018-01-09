@@ -55,7 +55,11 @@ BOOST_AUTO_TEST_CASE(test_recompile)
     cb = new build_callback;
     MO_LOG(info) << "Current working directory " << boost::filesystem::current_path().string();
     MetaObjectFactory::instance()->registerTranslationUnit();
+#ifdef _MSC_VER
+    BOOST_REQUIRE(MetaObjectFactory::instance()->loadPlugin("./test_recompile_objectd.dll"));
+#else
     BOOST_REQUIRE(MetaObjectFactory::instance()->loadPlugin("./libtest_recompile_objectd.so"));
+#endif
 
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
 }
@@ -254,4 +258,5 @@ BOOST_AUTO_TEST_CASE(test_object_cleanup)
         BOOST_REQUIRE_EQUAL(constructors[i]->GetNumberConstructedObjects(), 0);
     }
     delete cb;
+    mo::Context::setDefaultThreadContext({});
 }

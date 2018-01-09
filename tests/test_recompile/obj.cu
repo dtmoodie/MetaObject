@@ -1,6 +1,9 @@
 #ifdef HAVE_CUDA
-
+#ifdef MetaObject_EXPORTS
+#undef MetaObject_EXPORTS
+#endif
 #include "obj.h"
+
 #include <thrust/device_vector.h>
 #include <thrust/fill.h>
 

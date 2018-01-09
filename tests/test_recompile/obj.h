@@ -1,7 +1,4 @@
 #pragma once
-#ifdef MetaObject_EXPORTS
-#undef MetaObject_EXPORTS
-#endif
 
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
@@ -22,8 +19,16 @@ RUNTIME_MODIFIABLE_INCLUDE
 RUNTIME_COMPILER_SOURCEDEPENDENCY_EXT(".cu")
 #endif
 
+#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined(test_recompile_object_EXPORTS)
+#define DLL_EXPORTS __declspec(dllexport)
+#elif defined __GNUC__ && __GNUC__ >= 4
+#define DLL_EXPORTS  __attribute__((visibility("default")))
+#else
+#define DLL_EXPORTS 
+#endif
+
 using namespace mo;
-struct test_meta_object_signals : public MetaObject
+struct DLL_EXPORTS test_meta_object_signals : public MetaObject
 {
     ~test_meta_object_signals() { std::cout << "Deleting object\n"; }
     MO_BEGIN(test_meta_object_signals)
@@ -32,7 +37,7 @@ struct test_meta_object_signals : public MetaObject
     MO_END
 };
 
-struct test_meta_object_slots : public MetaObject
+struct DLL_EXPORTS test_meta_object_slots : public MetaObject
 {
     MO_BEGIN(test_meta_object_slots)
     MO_SLOT(void, test_void)
@@ -41,14 +46,14 @@ struct test_meta_object_slots : public MetaObject
     MO_END
 };
 
-struct test_meta_object_parameters : public MetaObject
+struct DLL_EXPORTS test_meta_object_parameters : public MetaObject
 {
     MO_BEGIN(test_meta_object_parameters)
     PARAM(int, test, 5)
     MO_END
 };
 
-struct test_meta_object_output : public MetaObject
+struct DLL_EXPORTS test_meta_object_output : public MetaObject
 {
     MO_BEGIN(test_meta_object_output)
     OUTPUT(int, test_output, 0)
@@ -61,7 +66,7 @@ struct test_meta_object_output : public MetaObject
     }
 };
 
-struct test_meta_object_input : public MetaObject
+struct DLL_EXPORTS test_meta_object_input : public MetaObject
 {
     MO_BEGIN(test_meta_object_input)
         INPUT(int, test_input, nullptr)
@@ -75,7 +80,7 @@ struct test_meta_object_input : public MetaObject
 };
 
 #ifdef HAVE_CUDA
-struct test_cuda_object : public MetaObject
+struct DLL_EXPORTS test_cuda_object : public MetaObject
 {
     MO_BEGIN(test_cuda_object)
     PARAM(int, test, 0)
