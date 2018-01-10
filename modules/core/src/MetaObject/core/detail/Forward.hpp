@@ -1,4 +1,5 @@
 #pragma once
+#include "Time.hpp"
 #include <vector>
 namespace std
 {
@@ -24,6 +25,8 @@ namespace mo
     class TypeInfo;
     class IVariableManager;
     class IMetaObjectInfo;
+    class IMetaObject;
+    class MetaObject;
     class ISignalRelay;
     class TypeInfo;
     class IParam;
@@ -45,13 +48,22 @@ namespace mo
     typedef std::vector<ParamInfo*> ParamInfoVec_t;
     typedef std::vector<SignalInfo*> SignalInfoVec_t;
     typedef std::vector<SlotInfo*> SlotInfoVec_t;
+    typedef std::vector<InputParam*> InputParamVec_t;
     typedef boost::recursive_timed_mutex Mutex_t;
     typedef std::shared_ptr<Context> ContextPtr_t;
+    typedef std::shared_ptr<ICoordinateSystem> CoordinateSystemPtr_t;
+    typedef std::shared_ptr<Connection> ConnectionPtr_t;
+    typedef std::shared_ptr<IParam> IParamPtr_t;
 
     template <class T>
     class TSignal;
+
     template <class T>
     class TSlot;
+
     template <class T>
     class TSignalRelay;
+
+    typedef TSlot<void(IParam*, Context*, OptionalTime_t, size_t, const CoordinateSystemPtr_t&, UpdateFlags)>
+        UpdateSlot_t;
 }

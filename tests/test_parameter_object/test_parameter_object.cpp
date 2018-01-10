@@ -1,21 +1,21 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
-#include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "MetaObject/core/detail/Counter.hpp"
-#include "MetaObject/object/detail/MetaObjectMacros.hpp"
+#include "MetaObject/logging/CompileLogger.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
-#include "MetaObject/Logging/CompileLogger.hpp"
+#include "MetaObject/object/detail/MetaObjectMacros.hpp"
 #include "MetaObject/params/ParamMacros.hpp"
-#include "MetaObject/params/Buffers/BufferFactory.hpp"
-#include "MetaObject/params/Buffers/CircularBuffer.hpp"
-#include "MetaObject/params/Buffers/Map.hpp"
-#include "MetaObject/params/Buffers/StreamBuffer.hpp"
-#include "MetaObject/params/detail/MetaParamImpl.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
-#include "MetaObject/Signals/TSignal.hpp"
-#include "MetaObject/Signals/detail/SignalMacros.hpp"
-#include "MetaObject/Signals/detail/SlotMacros.hpp"
+#include "MetaObject/params/buffers/BufferFactory.hpp"
+#include "MetaObject/params/buffers/CircularBuffer.hpp"
+#include "MetaObject/params/buffers/Map.hpp"
+#include "MetaObject/params/buffers/StreamBuffer.hpp"
+#include "MetaObject/params/detail/MetaParamImpl.hpp"
+#include "MetaObject/signals/TSignal.hpp"
+#include "MetaObject/signals/detail/SignalMacros.hpp"
+#include "MetaObject/signals/detail/SlotMacros.hpp"
+#include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 
 #define BOOST_TEST_DYN_LINK
@@ -23,7 +23,7 @@
 #include <boost/test/unit_test.hpp>
 #include <boost/thread.hpp>
 #include <iostream>
-
+#include <thread>
 using namespace mo;
 
 INSTANTIATE_META_PARAM(int);
@@ -51,7 +51,7 @@ CompileLogger* logger = nullptr;
 BuildCallback* cb = nullptr;
 BOOST_AUTO_TEST_CASE(input_parameter_manual)
 {
-	mo::MetaObjectFactory::instance();
+    mo::MetaObjectFactory::instance();
     auto input = input_parametered_object::create();
     auto output = output_parametered_object::create();
     input->test_input_param.setInput(&output->test_output_param);
@@ -94,7 +94,8 @@ BOOST_AUTO_TEST_CASE(buffered_input)
     BOOST_REQUIRE(cbuffer);
     BOOST_REQUIRE(input_param->setInput(cbuffer));
     output->test_output_param.updateData(0, 0);
-    for (int i = 1; i < 100000; ++i) {
+    for (int i = 1; i < 100000; ++i)
+    {
         output->test_output_param.updateData(i * 10, i);
         int data;
         BOOST_REQUIRE(input->test_input_param.getData(data, i - 1));
@@ -123,7 +124,8 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
     std::thread background_thread([&quit, &input]() {
         int ts = 0;
         int data;
-        while (!quit) {
+        while (!quit)
+        {
             if (input->test_input_param.getData(data, ts))
             {
                 BOOST_REQUIRE_EQUAL(data, ts * 10);
@@ -132,7 +134,8 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
         }
     });
 
-    for (int i = 1; i < 100000; ++i) {
+    for (int i = 1; i < 100000; ++i)
+    {
         output->test_output_param.updateData(i * 10, i);
     }
     quit = true;
@@ -158,9 +161,11 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
 
     std::thread background_thread([&input]() {
         int data;
-        for (int i = 0; i < 1000; ++i) {
+        for (int i = 0; i < 1000; ++i)
+        {
             bool good = input->test_input_param.getData(data, i);
-            while (!good) {
+            while (!good)
+            {
                 good = input->test_input_param.getData(data, i);
             }
             BOOST_REQUIRE_EQUAL(data, i * 10);
@@ -168,7 +173,8 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
         }
     });
 
-    for (int i = 1; i < 1000; ++i) {
+    for (int i = 1; i < 1000; ++i)
+    {
         output->test_output_param.updateData(i * 10, i);
     }
     background_thread.join();
@@ -176,5 +182,4 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
 
 BOOST_AUTO_TEST_CASE(cleanup)
 {
-    
 }

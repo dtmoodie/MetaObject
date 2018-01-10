@@ -2,10 +2,10 @@
 #include "BufferFactory.hpp"
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
+#include "MetaObject/params/ITParam.hpp"
 
 namespace mo
 {
-    class IParam;
     namespace Buffer
     {
         template <typename T>
@@ -16,7 +16,7 @@ namespace mo
         {
             BufferConstructor()
             {
-                BufferFactory::RegisterFunction(TypeInfo(typeid(typename T::ValueType)),
+                BufferFactory::registerFunction(TypeInfo(typeid(typename T::ValueType)),
                                                 std::bind(&BufferConstructor<T>::create_buffer, std::placeholders::_1),
                                                 T::BufferType);
             }
