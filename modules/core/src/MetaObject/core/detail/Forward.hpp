@@ -1,5 +1,6 @@
 #pragma once
 #include "Time.hpp"
+#include "Enums.hpp"
 #include <vector>
 namespace std
 {

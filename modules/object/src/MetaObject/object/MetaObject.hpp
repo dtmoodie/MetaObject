@@ -21,26 +21,29 @@ namespace mo
         virtual int setupSignals(RelayManager* mgr) override;
         virtual int setupVariableManager(IVariableManager* mgr) override;
         virtual int removeVariableManager(IVariableManager* mgr) override;
-        virtual void bindSlots(bool firstInit) override = 0;
+        
         virtual void Init(bool firstInit) override; // inherited from RCC, thus the PascalCase
         virtual void initCustom(bool firstInit) override;
-        virtual void initParams(bool firstInit) override = 0;
-        virtual int initSignals(bool firstInit) override = 0;
-        virtual void initOutputs() override = 0;
+        //virtual void initParams(bool firstInit) = 0;
+        //virtual void bindSlots(bool firstInit) = 0;
+        //virtual int initSignals(bool firstInit) = 0;
+        //virtual void initOutputs() override = 0;
 
         virtual void Serialize(ISimpleSerializer* pSerializer) override; // Inherit from RCC's IObject
         virtual void serializeConnections(ISimpleSerializer* pSerializer) override;
-        virtual void serializeParams(ISimpleSerializer* pSerializer) override;
 
         // ------- Introspection
         // Get vector of info objects for each corresponding introspection class
         // optional name Param can be used to get information for corresponding exact matches
+        virtual void getParamInfo(ParamInfoVec_t& info) const override = 0;
         virtual ParamInfoVec_t getParamInfo(const std::string& name_filter) const override;
         virtual ParamInfoVec_t getParamInfo() const override;
 
+        virtual void getSignalInfo(SignalInfoVec_t& info) const override = 0;
         virtual SignalInfoVec_t getSignalInfo(const std::string& name_filter) const override;
         virtual SignalInfoVec_t getSignalInfo() const override;
 
+        virtual void getSlotInfo(SlotInfoVec_t& info) const override = 0;
         virtual SlotInfoVec_t getSlotInfo(const std::string& name_filter) const override;
         virtual SlotInfoVec_t getSlotInfo() const override;
 

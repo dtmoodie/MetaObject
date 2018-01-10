@@ -46,7 +46,7 @@ namespace mo
         getSignalInfoStatic(info);                                                                                     \
         return info;                                                                                                   \
     }                                                                                                                  \
-    void getSignalInfo(std::vector<mo::SignalInfo*>& info) const { getSignalInfoStatic(info); }
+    virtual void getSignalInfo(std::vector<mo::SignalInfo*>& info) const override { getSignalInfoStatic(info); }
 
 // ---------------- SIGNALS ------------
 #define SIGNALS_START(N_)                                                                                              \
@@ -96,7 +96,7 @@ namespace mo
         getSlotInfoStatic(info);                                                                                       \
         return info;                                                                                                   \
     }                                                                                                                  \
-    void getSlotInfo(std::vector<mo::SlotInfo*>& info) const { getSlotInfoStatic(info); }
+    virtual void getSlotInfo(std::vector<mo::SlotInfo*>& info) const override { getSlotInfoStatic(info); }
 
 // ---------------- ParamS INFO ------------
 
@@ -126,7 +126,7 @@ namespace mo
         getParamInfoStatic(info);                                                                                      \
         return info;                                                                                                   \
     }                                                                                                                  \
-    void getParamInfo(std::vector<mo::ParamInfo*>& info) const { getParamInfoStatic(info); }
+    virtual void getParamInfo(std::vector<mo::ParamInfo*>& info) const override { getParamInfoStatic(info); }
 
 // ---------------- Params ------------
 #define PARAM_START(N_)                                                                                                \
@@ -222,7 +222,7 @@ namespace mo
     }
 
 #define SLOT_END(N_)                                                                                                   \
-    void bindSlots(bool firstInit)                                                                                     \
+    virtual void bindSlots(bool firstInit) override                                                                                     \
     {                                                                                                                  \
         _bind_parent_slots(firstInit);                                                                                 \
         _bind_slots(firstInit, mo::_counter_<N_ - 1>());                                                               \

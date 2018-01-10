@@ -3,9 +3,9 @@
 #include "MetaObject/logging/logging.hpp"
 #include "MetaObject/params/ITParam.hpp"
 #include "MetaObject/params/TParam.hpp"
+#include "MetaObject/object/MetaObject.hpp"
 namespace mo
 {
-
     class IMetaObject;
 
     template <class T>

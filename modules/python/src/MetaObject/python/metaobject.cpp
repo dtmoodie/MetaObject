@@ -16,7 +16,7 @@ namespace boost
     }
 }
 
-#include "MetaObject/object/IMetaObject.hpp"
+#include "MetaObject/object/MetaObject.hpp"
 #include "MetaObject/params/InputParam.hpp"
 
 #include "PythonSetup.hpp"

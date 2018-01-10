@@ -348,8 +348,6 @@ namespace mo
         SERIALIZE(_sig_manager);
     }
 
-    void MetaObject::serializeParams(ISimpleSerializer* pSerializer) {}
-
     void IMetaObject::setContext(const std::shared_ptr<Context>& ctx, bool overwrite) {}
 
     void MetaObject::setContext(const std::shared_ptr<Context>& ctx, bool overwrite)
