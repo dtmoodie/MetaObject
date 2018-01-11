@@ -12,6 +12,8 @@ if(HAVE_PYTHON)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/metaobject.py.in.win32 ${out_dir}/Debug/metaobject.py @ONLY)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/metaobject.py.in.win32 ${out_dir}/RelWithDebInfo/metaobject.py @ONLY)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/metaobject.py.in.win32 ${out_dir}/Release/metaobject.py @ONLY)
+        configure_file(${CMAKE_CURRENT_LIST_DIR}/tests/test_python.py ${out_dir}/Debug/metaobject_python_test.py @ONLY)
+        configure_file(${CMAKE_CURRENT_LIST_DIR}/tests/test_python.py ${out_dir}/RelWithDebInfo/metaobject_python_test.py @ONLY)
     endif(UNIX)
     set(metaobject_param_include
         "${metaobject_param_include}\n#include <MetaObject/python/PythonPolicy.hpp>" CACHE INTERNAL "" FORCE)

@@ -2,7 +2,7 @@
 #define BOOST_TEST_MAIN
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/logging/CompileLogger.hpp"
-#include "MetaObject/object/IMetaObject.hpp"
+#include "MetaObject/object/MetaObject.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
 #include "MetaObject/params/ParamMacros.hpp"
 #include "MetaObject/params/TInputParam.hpp"

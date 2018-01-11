@@ -9,6 +9,7 @@
 
 using namespace mo;
 
+
 void test_cuda_object::run_kernel()
 {
     thrust::device_vector<int> D(10,1);

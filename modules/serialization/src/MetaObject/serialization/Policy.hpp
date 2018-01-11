@@ -31,7 +31,7 @@ namespace mo
         }
         static void SerializeBinary(const IMetaObject* obj, cereal::BinaryOutputArchive& ar)
         {
-            const T* typed = static_cast<const T*>(obj);
+            const T* typed = dynamic_cast<const T*>(obj);
             if (typed)
             {
                 ar(*typed);
@@ -39,7 +39,7 @@ namespace mo
         }
         static void DeSerializeBinary(IMetaObject* obj, cereal::BinaryInputArchive& ar)
         {
-            T* typed = static_cast<T*>(obj);
+            T* typed = dynamic_cast<T*>(obj);
             if (typed)
             {
                 ar(*typed);
@@ -47,7 +47,7 @@ namespace mo
         }
         static void SerializeXml(const IMetaObject* obj, cereal::XMLOutputArchive& ar)
         {
-            const T* typed = static_cast<const T*>(obj);
+            const T* typed = dynamic_cast<const T*>(obj);
             if (typed)
             {
                 ar(*typed);
@@ -55,7 +55,7 @@ namespace mo
         }
         static void DeSerializeXml(IMetaObject* obj, cereal::XMLInputArchive& ar)
         {
-            T* typed = static_cast<T*>(obj);
+            T* typed = dynamic_cast<T*>(obj);
             if (typed)
             {
                 ar(*typed);

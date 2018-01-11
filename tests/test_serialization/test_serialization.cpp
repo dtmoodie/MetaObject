@@ -4,7 +4,7 @@
 #include "MetaObject/MetaParameters.hpp"
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/logging/CompileLogger.hpp"
-#include "MetaObject/object/IMetaObject.hpp"
+#include "MetaObject/object/MetaObject.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
 #include "MetaObject/params/MetaParam.hpp"
 #include "MetaObject/params/ParamMacros.hpp"

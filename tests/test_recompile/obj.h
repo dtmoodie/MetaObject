@@ -1,7 +1,7 @@
 #pragma once
 
 #include "MetaObject/core/detail/Counter.hpp"
-#include "MetaObject/object/IMetaObject.hpp"
+#include "MetaObject/object/MetaObject.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
 #include "MetaObject/params/ParamMacros.hpp"
 #include "MetaObject/signals/TSignal.hpp"

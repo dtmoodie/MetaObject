@@ -1,6 +1,6 @@
 import metaobject as mo
 
-mo.plugins.loadPlugins('./bin/Plugins')
+mo.plugins.loadPlugins('./Plugins')
 
 obj = mo.object.ExportRegionsOfInterest()
 

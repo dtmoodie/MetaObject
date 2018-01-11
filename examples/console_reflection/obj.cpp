@@ -1,5 +1,6 @@
 #include "obj.hpp"
 #include "MetaObject/object/MetaObjectInfo.hpp"
+#include <MetaObject/params/ParamMacros.hpp>
 
 class ConcreteImplementation : public ExampleInterface
 {

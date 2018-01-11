@@ -6,9 +6,9 @@
 
 namespace mo
 {
-    bool loadPlugin(const std::string& str) { return mo::MetaObjectFactory::instance()->loadPlugin(str); }
+    bool loadPlugin(std::string str) { return mo::MetaObjectFactory::instance()->loadPlugin(str); }
 
-    int loadPlugins(const std::string& dir)
+    int loadPlugins(std::string dir)
     {
         int nplugins = mo::MetaObjectFactory::instance()->loadPlugins(dir);
         {
