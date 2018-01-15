@@ -18,7 +18,7 @@ https://github.com/dtmoodie/MetaObject
 */
 #pragma once
 #include <MetaObject/detail/Export.hpp>
-#include <MetaObject/params/reflect_data.hpp>
+#include <ct/reflect/reflect_data.hpp>
 #include <boost/filesystem/path.hpp>
 #include <string>
 #include <vector>

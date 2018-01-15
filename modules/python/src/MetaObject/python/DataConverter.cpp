@@ -15,12 +15,32 @@ namespace mo
 
         DataConverterRegistry::Set_t DataConverterRegistry::getSetter(const mo::TypeInfo& type)
         {
-            return m_registered_converters[type].first;
+            auto itr = m_registered_converters.find(type);
+            if (itr != m_registered_converters.end())
+            {
+                return itr->second.first;
+            }
+            return {};
         }
 
         DataConverterRegistry::Get_t DataConverterRegistry::getGetter(const mo::TypeInfo& type)
         {
-            return m_registered_converters[type].second;
+            auto itr = m_registered_converters.find(type);
+            if (itr != m_registered_converters.end())
+            {
+                return itr->second.second;
+            }
+            return {};
+        }
+
+        std::vector<mo::TypeInfo> DataConverterRegistry::listConverters()
+        {
+            std::vector<mo::TypeInfo> types;
+            for (const auto& itr : m_registered_converters)
+            {
+                types.push_back(itr.first);
+            }
+            return types;
         }
 
     } // namespace mo::python

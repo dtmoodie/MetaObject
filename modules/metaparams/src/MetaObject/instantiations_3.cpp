@@ -1,6 +1,8 @@
 #ifdef HAVE_OPENCV
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "MetaObject/params/MetaParam.hpp"
+#include "ct/reflect/reflect_data.hpp"
+#include "ct/reflect/cereal.hpp"
 #include <opencv2/core/types.hpp>
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
@@ -47,7 +49,7 @@ namespace cereal
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 using namespace cv;
 
-namespace mo
+namespace ct
 {
     namespace reflect
     {

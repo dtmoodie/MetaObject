@@ -25,21 +25,21 @@ namespace mo
                 inline size_t textSize(int value);
 
                 template <class T>
-                static inline mo::reflect::enable_if_reflected<T, size_t> textSizeHelper(const T& obj, mo::_counter_<0>)
+                static inline ct::reflect::enable_if_reflected<T, size_t> textSizeHelper(const T& obj, mo::_counter_<0>)
                 {
-                    return textSize(mo::reflect::get<0>(obj));
+                    return textSize(ct::reflect::get<0>(obj));
                 }
 
                 template <class T, int I>
-                static inline mo::reflect::enable_if_reflected<T, size_t> textSizeHelper(const T& obj, mo::_counter_<I>)
+                static inline ct::reflect::enable_if_reflected<T, size_t> textSizeHelper(const T& obj, mo::_counter_<I>)
                 {
-                    return textSizeHelper(obj, mo::_counter_<I - 1>()) + textSize(mo::reflect::get<I>(obj));
+                    return textSizeHelper(obj, mo::_counter_<I - 1>()) + textSize(ct::reflect::get<I>(obj));
                 }
 
                 template <class T>
-                static inline mo::reflect::enable_if_reflected<T, size_t> textSize(const T& obj)
+                static inline ct::reflect::enable_if_reflected<T, size_t> textSize(const T& obj)
                 {
-                    return textSizeHelper(obj, mo::_counter_<mo::reflect::ReflectData<T>::N - 1>());
+                    return textSizeHelper(obj, mo::_counter_<ct::reflect::ReflectData<T>::N - 1>());
                 }
 
                 // test if stream serialization of a type is possible

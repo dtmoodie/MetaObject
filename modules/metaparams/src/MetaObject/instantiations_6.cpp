@@ -23,7 +23,7 @@
 
 using namespace mo;
 
-namespace mo
+namespace ct
 {
     namespace reflect
     {

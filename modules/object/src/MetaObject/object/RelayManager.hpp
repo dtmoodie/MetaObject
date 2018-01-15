@@ -27,8 +27,8 @@ namespace mo
       public:
         RelayManager();
         ~RelayManager();
-        static RelayManager* Instance();
-        static void SetInstance(RelayManager* inst);
+        static std::shared_ptr<RelayManager> instance();
+        
 
         std::shared_ptr<Connection> connect(ISlot* slot, const std::string& name, IMetaObject* obj = nullptr);
         std::shared_ptr<Connection> connect(ISignal* signal, const std::string& name, IMetaObject* obj = nullptr);

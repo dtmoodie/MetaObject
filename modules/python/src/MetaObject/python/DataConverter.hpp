@@ -41,7 +41,6 @@ namespace mo
                     mo::TypeInfo(typeid(T)),
                     std::bind(&ParamConverter<T>::set, std::placeholders::_1, std::placeholders::_2),
                     std::bind(&ParamConverter<T>::get, std::placeholders::_1));
-                // registerSetupFunction(std::bind(&ParamConverter<T>::setupStruct));
             }
 
             static bool set(mo::ParamBase* param, const boost::python::object& obj)
@@ -67,6 +66,14 @@ namespace mo
                         auto token = typed->access();
                         return boost::python::object(token());
                     }
+                    else
+                    {
+                        MO_LOG(trace) << "Failed to cast parameter (" << mo::Demangle::typeToName(param->getTypeInfo()) << ") to the correct type for " << mo::Demangle::typeToName(mo::TypeInfo(typeid(T)));
+                    }
+                }
+                else
+                {
+                    MO_LOG(trace) << "Incorrect datatype input " << mo::Demangle::typeToName(param->getTypeInfo()) << " expcted " << mo::Demangle::typeToName(mo::TypeInfo(typeid(T)));
                 }
                 return {};
             }

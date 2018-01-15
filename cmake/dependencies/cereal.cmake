@@ -3,3 +3,6 @@ set(cereal_INCLUDE_DIRS "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include
 set(PROJECT_BIN_DIRS_RELWITHDEBINFO "")
 set(PROJECT_BIN_DIRS_RELEASE "")
 set(PROJECT_BIN_DIRS_DEBUG "")
+file(GLOB_RECURSE hdr "${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal/include/*.h*")
+add_custom_target(cereal SOURCES ${hdr})
+set_target_properties(cereal PROPERTIES FOLDER Dependencies)

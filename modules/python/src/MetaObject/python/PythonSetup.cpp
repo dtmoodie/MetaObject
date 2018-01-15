@@ -13,7 +13,7 @@
 #include <boost/python/raw_function.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/thread.hpp>
-
+#include <boost/log/expressions.hpp>
 #include <vector>
 
 namespace boost
@@ -41,6 +41,22 @@ namespace mo
     inline const mo::ICoordinateSystem* get_pointer(const mo::ICoordinateSystem* cs) { return cs; }
 
     inline mo::ICoordinateSystem* get_pointer(const std::shared_ptr<mo::ICoordinateSystem>& ptr) { return ptr.get(); }
+
+    void setLogLevel(const std::string& level)
+    {
+        if (level == "trace")
+            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
+        if (level == "debug")
+            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
+        if (level == "info")
+            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
+        if (level == "warning")
+            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::warning);
+        if (level == "error")
+            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::error);
+        if (level == "fatal")
+            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::fatal);
+    }
 
     bool recompile(bool async = false)
     {
@@ -142,6 +158,7 @@ namespace mo
         boost::python::def("listConstructableObjects", &listConstructableObjects);
         boost::python::def("listObjectInfos", &listObjectInfos);
         boost::python::def("recompile", &recompile, (boost::python::arg("async") = false));
+        boost::python::def("log", &setLogLevel);
     }
 }
 

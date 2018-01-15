@@ -2,7 +2,8 @@
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "MetaObject/params/MetaParam.hpp"
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
-#include "MetaObject/params/reflect_data.hpp"
+#include "ct/reflect/reflect_data.hpp"
+#include "ct/reflect/cereal.hpp"
 #include <boost/lexical_cast.hpp>
 #include <cereal/types/vector.hpp>
 #include <opencv2/core/types.hpp>
@@ -17,7 +18,7 @@
 #define MO_EXPORTS
 #endif
 
-namespace mo
+namespace ct
 {
     namespace reflect
     {

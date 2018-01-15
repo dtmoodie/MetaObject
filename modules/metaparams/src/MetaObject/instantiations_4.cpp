@@ -1,19 +1,24 @@
 #ifdef HAVE_OPENCV
 #include "MetaObject/params/MetaParam.hpp"
-#include "MetaObject/params/reflect_data.hpp"
+#include "ct/reflect/reflect_data.hpp"
+#include "ct/reflect/cereal.hpp"
 #include <boost/python/object.hpp>
 
-namespace mo
+namespace ct
 {
     namespace reflect
     {
         template <class T, size_t N>
         struct ArrayAdapter;
     }
+}
+
+namespace mo
+{
     namespace python
     {
         template <class T, size_t N>
-        inline void convertFromPython(mo::reflect::ArrayAdapter<T, N> result, const boost::python::object& obj);
+        inline void convertFromPython(ct::reflect::ArrayAdapter<T, N> result, const boost::python::object& obj);
     }
 }
 
@@ -34,7 +39,7 @@ namespace mo
 #include <cereal/types/vector.hpp>
 
 using namespace cv;
-namespace mo
+namespace ct
 {
     namespace reflect
     {
@@ -118,12 +123,12 @@ namespace mo
         {
             static constexpr int N = 1;
             static constexpr int IS_SPECIALIZED = true;
-            static constexpr MatrixAdapter<T, R, C> get(cv::Matx<T, R, C>& data, mo::_counter_<0>) { return data.val; }
-            static constexpr MatrixAdapter<const T, R, C> get(const cv::Matx<T, R, C>& data, mo::_counter_<0>)
+            static constexpr MatrixAdapter<T, R, C> get(cv::Matx<T, R, C>& data, _counter_<0>) { return data.val; }
+            static constexpr MatrixAdapter<const T, R, C> get(const cv::Matx<T, R, C>& data, _counter_<0>)
             {
                 return data.val;
             }
-            static constexpr const char* getName(mo::_counter_<0>) { return "data"; }
+            static constexpr const char* getName(_counter_<0>) { return "data"; }
         };
 
         template <class T, int R>
@@ -131,12 +136,12 @@ namespace mo
         {
             static constexpr int N = 1;
             static constexpr int IS_SPECIALIZED = true;
-            static constexpr ArrayAdapter<T, R> get(cv::Vec<T, R>& data, mo::_counter_<0>) { return data.val; }
-            static constexpr ArrayAdapter<const T, R> get(const cv::Vec<T, R>& data, mo::_counter_<0>)
+            static constexpr ArrayAdapter<T, R> get(cv::Vec<T, R>& data, _counter_<0>) { return data.val; }
+            static constexpr ArrayAdapter<const T, R> get(const cv::Vec<T, R>& data, _counter_<0>)
             {
                 return data.val;
             }
-            static constexpr const char* getName(mo::_counter_<0>) { return "data"; }
+            static constexpr const char* getName(_counter_<0>) { return "data"; }
         };
 
         template <class T>
@@ -144,12 +149,12 @@ namespace mo
         {
             static constexpr int N = 1;
             static constexpr int IS_SPECIALIZED = true;
-            static constexpr ArrayAdapter<T, 4> get(cv::Scalar_<T>& data, mo::_counter_<0>) { return &data.val[0]; }
-            static constexpr ArrayAdapter<const T, 4> get(const cv::Scalar_<T>& data, mo::_counter_<0>)
+            static constexpr ArrayAdapter<T, 4> get(cv::Scalar_<T>& data, _counter_<0>) { return &data.val[0]; }
+            static constexpr ArrayAdapter<const T, 4> get(const cv::Scalar_<T>& data, _counter_<0>)
             {
                 return &data.val[0];
             }
-            static constexpr const char* getName(mo::_counter_<0>) { return "data"; }
+            static constexpr const char* getName(_counter_<0>) { return "data"; }
         };
     }
 }
@@ -159,7 +164,7 @@ namespace mo
     namespace python
     {
         template <class T, size_t N>
-        inline void convertFromPython(mo::reflect::ArrayAdapter<T, N> result, const boost::python::object& obj)
+        inline void convertFromPython(ct::reflect::ArrayAdapter<T, N> result, const boost::python::object& obj)
         {
             if (result.ptr)
             {
@@ -173,11 +178,11 @@ namespace mo
     }
 }
 
-static_assert(mo::reflect::ReflectData<cv::Scalar>::IS_SPECIALIZED, "Specialization not working for cv::Scalar");
-static_assert(mo::reflect::ReflectData<cv::Vec2f>::IS_SPECIALIZED, "Specialization not working for cv::Vec2f");
-static_assert(mo::reflect::ReflectData<cv::Vec2b>::IS_SPECIALIZED, "Specialization not working for cv::Vec2b");
-static_assert(mo::reflect::ReflectData<cv::Vec3f>::IS_SPECIALIZED, "Specialization not working for cv::Vec3f");
-static_assert(mo::reflect::ReflectData<cv::Vec3b>::IS_SPECIALIZED, "Specialization not working for cv::Vec3b");
+static_assert(ct::reflect::ReflectData<cv::Scalar>::IS_SPECIALIZED, "Specialization not working for cv::Scalar");
+static_assert(ct::reflect::ReflectData<cv::Vec2f>::IS_SPECIALIZED, "Specialization not working for cv::Vec2f");
+static_assert(ct::reflect::ReflectData<cv::Vec2b>::IS_SPECIALIZED, "Specialization not working for cv::Vec2b");
+static_assert(ct::reflect::ReflectData<cv::Vec3f>::IS_SPECIALIZED, "Specialization not working for cv::Vec3f");
+static_assert(ct::reflect::ReflectData<cv::Vec3b>::IS_SPECIALIZED, "Specialization not working for cv::Vec3b");
 
 INSTANTIATE_META_PARAM(Scalar);
 INSTANTIATE_META_PARAM(Vec2f);

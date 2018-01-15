@@ -44,6 +44,17 @@ namespace mo
         return ss.str();
     }
 
+    std::string printTypes()
+    {
+        auto types = mo::python::DataConverterRegistry::instance()->listConverters();
+        std::stringstream ss;
+        for (auto& type : types)
+        {
+            ss << mo::Demangle::typeToName(type) << "\n";
+        }
+        return ss.str();
+    }
+
     boost::python::object getData(const mo::ParamBase* param)
     {
         auto getter = mo::python::DataConverterRegistry::instance()->getGetter(param->getTypeInfo());
@@ -51,6 +62,7 @@ namespace mo
         {
             return getter(param);
         }
+        MO_LOG(trace) << "Accessor function not found for for " << mo::Demangle::typeToName(param->getTypeInfo()) << " Available converters:\n" << printTypes();
         return boost::python::object();
     }
 
@@ -61,6 +73,7 @@ namespace mo
         {
             return setter(param, obj);
         }
+        MO_LOG(trace) << "Setter function not found for " << mo::Demangle::typeToName(param->getTypeInfo());
         return false;
     }
 

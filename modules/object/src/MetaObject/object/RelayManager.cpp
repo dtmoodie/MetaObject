@@ -1,3 +1,4 @@
+#include "MetaObject/core/singletons.hpp"
 #include "MetaObject/object/RelayManager.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/signals/ISignal.hpp"
@@ -23,17 +24,9 @@ RelayManager::~RelayManager()
     delete _pimpl;
 }
 
-RelayManager* g_inst = nullptr;
-RelayManager* RelayManager::Instance()
+std::shared_ptr<RelayManager> RelayManager::instance()
 {
-    if (g_inst == nullptr)
-        g_inst = new RelayManager();
-    return g_inst;
-}
-
-void RelayManager::SetInstance(RelayManager* inst)
-{
-    g_inst = inst;
+    return mo::getSingleton<RelayManager>();
 }
 
 std::shared_ptr<Connection> RelayManager::connect(ISlot* slot, const std::string& name, IMetaObject* obj)

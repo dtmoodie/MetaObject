@@ -1,7 +1,7 @@
 if(HAVE_PYTHON)
     metaobject_declare_module(NAME python DEPENDS metaobject_core metaobject_object)
     target_include_directories(metaobject_python PUBLIC $<BUILD_INTERFACE:${PYTHON_INCLUDE_DIR}>)
-    target_link_libraries(metaobject_python ${Boost_PYTHON_LIBRARY_RELEASE} ${PYTHON_LIBRARY})
+    target_link_libraries(metaobject_python optimized;${Boost_PYTHON_LIBRARY_RELEASE};debug;${Boost_PYTHON_LIBRARY_DEBUG} ${PYTHON_LIBRARY})
 
     if(UNIX)
         get_target_property(out_dir metaobject_python ARCHIVE_OUTPUT_DIRECTORY)

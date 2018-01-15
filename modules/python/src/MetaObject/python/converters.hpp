@@ -1,7 +1,8 @@
 #pragma once
 #include "MetaObject/core/Demangle.hpp"
-#include "MetaObject/params/reflect_data.hpp"
-#include "MetaObject/params/reflect_data.hpp"
+#include "MetaObject/core/detail/Counter.hpp"
+#include "ct/reflect/reflect_data.hpp"
+#include "ct/reflect/printer.hpp"
 #include "MetaObject/python/converters.hpp"
 #include "PythonSetup.hpp"
 #include "boost/python.hpp"
@@ -25,7 +26,7 @@ namespace mo
         };
 
         template <class T>
-        struct ToPythonDataConverter<T, mo::reflect::enable_if_reflected<T>>
+        struct ToPythonDataConverter<T, ct::reflect::enable_if_reflected<T>>
         {
             ToPythonDataConverter()
             {
@@ -34,7 +35,7 @@ namespace mo
         };
 
         template <class T>
-        struct ToPythonDataConverter<std::vector<T>, mo::reflect::enable_if_reflected<T>>
+        struct ToPythonDataConverter<std::vector<T>, ct::reflect::enable_if_reflected<T>>
         {
             ToPythonDataConverter()
             {
@@ -48,10 +49,10 @@ namespace mo
         inline void convertFromPython(std::map<K, T>& result, const boost::python::object& obj);
 
         template <class T>
-        inline mo::reflect::enable_if_not_reflected<T> convertFromPython(T& result, const boost::python::object& obj);
+        inline ct::reflect::enable_if_not_reflected<T> convertFromPython(T& result, const boost::python::object& obj);
 
         template <class T>
-        inline mo::reflect::enable_if_reflected<T> convertFromPython(T& result, const boost::python::object& obj);
+        inline ct::reflect::enable_if_reflected<T> convertFromPython(T& result, const boost::python::object& obj);
 
         template <class T>
         inline void convertFromPython(std::vector<T>& result, const boost::python::object& obj);
@@ -61,17 +62,17 @@ namespace mo
             template <class T, class BP>
             void addPropertyHelper(BP& bpobj, mo::_counter_<0>)
             {
-                using Return_t = std::decay_t<decltype(mo::reflect::get<0, T>(std::declval<T const>()))>;
-                bpobj.add_property(mo::reflect::getName<0, T>(),
-                                   static_cast<Return_t (*)(const T&)>(&mo::reflect::getValue<0, T>));
+                using Return_t = std::decay_t<decltype(ct::reflect::get<0, T>(std::declval<T const>()))>;
+                bpobj.add_property(ct::reflect::getName<0, T>(),
+                                   static_cast<Return_t (*)(const T&)>(&ct::reflect::getValue<0, T>));
             }
 
             template <class T, int I, class BP>
             void addPropertyHelper(BP& bpobj, mo::_counter_<I>)
             {
-                using Return_t = std::decay_t<decltype(mo::reflect::get<I, T>(std::declval<T const>()))>;
-                bpobj.add_property(mo::reflect::getName<I, T>(),
-                                   static_cast<Return_t (*)(const T&)>(&mo::reflect::getValue<I, T>));
+                using Return_t = std::decay_t<decltype(ct::reflect::get<I, T>(std::declval<T const>()))>;
+                bpobj.add_property(ct::reflect::getName<I, T>(),
+                                   static_cast<Return_t (*)(const T&)>(&ct::reflect::getValue<I, T>));
                 addPropertyHelper<T>(bpobj, mo::_counter_<I - 1>());
             }
 
@@ -80,9 +81,9 @@ namespace mo
             {
                 auto ptr = bpobj.ptr();
                 boost::python::object python_member;
-                if (PyObject_HasAttrString(ptr, mo::reflect::getName<0, T>()))
+                if (PyObject_HasAttrString(ptr, ct::reflect::getName<0, T>()))
                 {
-                    python_member = bpobj.attr(mo::reflect::getName<0, T>());
+                    python_member = bpobj.attr(ct::reflect::getName<0, T>());
                 }
                 else
                 {
@@ -93,7 +94,7 @@ namespace mo
                 }
                 if (python_member)
                 {
-                    convertFromPython(mo::reflect::get<0>(obj), python_member);
+                    convertFromPython(ct::reflect::get<0>(obj), python_member);
                 }
             }
 
@@ -102,9 +103,9 @@ namespace mo
             {
                 auto ptr = bpobj.ptr();
                 boost::python::object python_member;
-                if (PyObject_HasAttrString(ptr, mo::reflect::getName<I, T>()))
+                if (PyObject_HasAttrString(ptr, ct::reflect::getName<I, T>()))
                 {
-                    python_member = bpobj.attr(mo::reflect::getName<I, T>());
+                    python_member = bpobj.attr(ct::reflect::getName<I, T>());
                 }
                 else
                 {
@@ -115,26 +116,26 @@ namespace mo
                 }
                 if (python_member)
                 {
-                    convertFromPython(mo::reflect::get<I>(obj), python_member);
+                    convertFromPython(ct::reflect::get<I>(obj), python_member);
                 }
                 extract(obj, bpobj, mo::_counter_<I - 1>());
             }
 
             template <class T>
-            mo::reflect::enable_if_not_reflected<T> pythonizeDataHelper(const char* name = nullptr, const T* = nullptr)
+            ct::reflect::enable_if_not_reflected<T> pythonizeDataHelper(const char* name = nullptr, const T* = nullptr)
             {
             }
 
             template <class T>
-            mo::reflect::enable_if_reflected<T, std::string> repr(const T& data)
+            ct::reflect::enable_if_reflected<T, std::string> repr(const T& data)
             {
                 std::stringstream ss;
-                mo::reflect::printStruct(ss, data);
+                ct::reflect::printStruct(ss, data);
                 return ss.str();
             }
 
             template <class T>
-            mo::reflect::enable_if_reflected<T, std::string> reprVec(const std::vector<T>& data)
+            ct::reflect::enable_if_reflected<T, std::string> reprVec(const std::vector<T>& data)
             {
                 std::stringstream ss;
                 ss << '[';
@@ -142,22 +143,22 @@ namespace mo
                 {
                     if (i != 0)
                         ss << ", ";
-                    mo::reflect::printStruct(ss, data[i]);
+                    ct::reflect::printStruct(ss, data[i]);
                 }
                 ss << ']';
                 return ss.str();
             }
 
             template <class T>
-            mo::reflect::enable_if_reflected<T> pythonizeDataHelper(const char* name = nullptr, const T* = nullptr)
+            ct::reflect::enable_if_reflected<T> pythonizeDataHelper(const char* name = nullptr, const T* = nullptr)
             {
                 boost::python::class_<T> bpobj(name ? name : mo::Demangle::typeToName(mo::TypeInfo(typeid(T))).c_str());
-                detail::addPropertyHelper<T>(bpobj, mo::_counter_<mo::reflect::ReflectData<T>::N - 1>());
+                detail::addPropertyHelper<T>(bpobj, mo::_counter_<ct::reflect::ReflectData<T>::N - 1>());
                 bpobj.def("__repr__", &repr<T>);
             }
 
             template <class T>
-            mo::reflect::enable_if_reflected<T> pythonizeDataHelper(const char* name_ = nullptr,
+            ct::reflect::enable_if_reflected<T> pythonizeDataHelper(const char* name_ = nullptr,
                                                                     const std::vector<T>* = nullptr)
             {
                 pythonizeDataHelper<T>(name_, static_cast<const T*>(nullptr));
@@ -173,7 +174,7 @@ namespace mo
             }
 
             template <class K, class T>
-            mo::reflect::enable_if_reflected<T> pythonizeDataHelper(const char* name = nullptr,
+            ct::reflect::enable_if_reflected<T> pythonizeDataHelper(const char* name = nullptr,
                                                                     const std::map<K, T>* = nullptr)
             {
                 pythonizeDataHelper<T>(name, static_cast<const T*>(nullptr));
@@ -208,16 +209,16 @@ namespace mo
         }
 
         template <class T>
-        inline mo::reflect::enable_if_not_reflected<T> convertFromPython(T& result, const boost::python::object& obj)
+        inline ct::reflect::enable_if_not_reflected<T> convertFromPython(T& result, const boost::python::object& obj)
         {
             boost::python::extract<T> extractor(obj);
             result = extractor();
         }
 
         template <class T>
-        inline mo::reflect::enable_if_reflected<T> convertFromPython(T& result, const boost::python::object& obj)
+        inline ct::reflect::enable_if_reflected<T> convertFromPython(T& result, const boost::python::object& obj)
         {
-            detail::extract(result, obj, mo::_counter_<mo::reflect::ReflectData<T>::N - 1>());
+            detail::extract(result, obj, mo::_counter_<ct::reflect::ReflectData<T>::N - 1>());
         }
 
         template <class T>
