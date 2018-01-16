@@ -5,7 +5,7 @@
 #include <MetaObject/params/IParam.hpp>
 #include <MetaObject/params/MetaParam.hpp>
 #include <MetaObject/params/detail/MetaParamImpl.hpp>
-#include <MetaObject/params/reflect_data.hpp>
+#include <ct/reflect/reflect_data.hpp>
 #include <boost/lexical_cast.hpp>
 #include <iomanip>
 #include <map>
