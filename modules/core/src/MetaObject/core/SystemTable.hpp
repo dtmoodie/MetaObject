@@ -26,14 +26,13 @@ struct TIObjectSingletonContainer : public ISingletonContainer
 
     rcc::shared_ptr<T> ptr;
 };
-struct MO_EXPORTS SystemTable: protected std::enable_shared_from_this<SystemTable>
+struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
 {
-private:
-
-
-public:
+  public:
     static std::shared_ptr<SystemTable> instance();
-    
+    SystemTable();
+    virtual ~SystemTable();
+
     template <typename T>
     std::enable_if_t<!std::is_base_of<IObject, T>::value, std::shared_ptr<T>> getSingleton()
     {
@@ -57,14 +56,16 @@ public:
     }
 
     template <typename T>
-    typename std::enable_if<!std::is_base_of<IObject, T>::value, T>::type* setSingleton(const std::shared_ptr<T>& singleton)
+    typename std::enable_if<!std::is_base_of<IObject, T>::value, T>::type*
+    setSingleton(const std::shared_ptr<T>& singleton)
     {
         g_singletons[mo::TypeInfo(typeid(T))] = std::make_shared<TSingletonContainer<T>>(singleton);
         return singleton.get();
     }
 
     template <typename T>
-    typename std::enable_if<std::is_base_of<IObject, T>::value, T>::type* setSingleton(const rcc::shared_ptr<T>& singleton)
+    typename std::enable_if<std::is_base_of<IObject, T>::value, T>::type*
+    setSingleton(const rcc::shared_ptr<T>& singleton)
     {
         g_singletons[mo::TypeInfo(typeid(T))] = std::shared_ptr<TIObjectSingletonContainer<T>>(singleton);
         return singleton.get();
@@ -77,22 +78,16 @@ public:
     {
         deleteSingleton(mo::TypeInfo(typeid(T)));
     }
-protected:
-    // not sure if this is msvc specific
-    friend class std::_Ref_count_obj<SystemTable>;
-    friend class std::enable_shared_from_this<SystemTable>;
 
-    SystemTable();
-    virtual ~SystemTable();
-    static void set(std::weak_ptr<SystemTable> table);
-    
+  protected:
     static std::weak_ptr<SystemTable> inst;
-private:      
+
+  private:
     std::map<mo::TypeInfo, std::shared_ptr<ISingletonContainer>> g_singletons;
 };
 
-template<class Derived>
-struct TDerivedSystemTable: public SystemTable
+template <class Derived>
+struct TDerivedSystemTable : public SystemTable
 {
     static std::shared_ptr<Derived> instance()
     {
@@ -101,11 +96,11 @@ struct TDerivedSystemTable: public SystemTable
         if (!output)
         {
             output = std::make_shared<Derived>();
-            SystemTable::set(output);
         }
         return output;
     }
-protected:
+
+  protected:
     TDerivedSystemTable() {}
     ~TDerivedSystemTable() {}
 };

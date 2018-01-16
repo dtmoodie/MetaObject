@@ -1,4 +1,5 @@
 #include "SystemTable.hpp"
+#include "MetaObject/logging/logging.hpp"
 #include "singletons.hpp"
 
 std::weak_ptr<SystemTable> SystemTable::inst;
@@ -14,23 +15,20 @@ std::shared_ptr<SystemTable> SystemTable::instance()
     return output;
 }
 
-void SystemTable::set(std::weak_ptr<SystemTable> table)
-{
-    SystemTable::inst = table;
-}
-
 SystemTable::SystemTable()
 {
-    
+    if (auto inst = SystemTable::inst.lock())
+    {
+        THROW(warning) << "Can only create one system table per process";
+    }
+    SystemTable::inst = this->shared_from_this();
 }
 
 SystemTable::~SystemTable()
 {
-
 }
 
 void SystemTable::deleteSingleton(mo::TypeInfo type)
 {
     g_singletons.erase(type);
 }
-
