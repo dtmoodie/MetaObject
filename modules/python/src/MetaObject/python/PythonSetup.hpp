@@ -16,6 +16,7 @@ namespace mo
         void MO_EXPORTS registerInterfaceSetupFunction(uint32_t interface_id,
                                                        std::function<void(std::vector<IObjectConstructor*>&)>&& func);
         void MO_EXPORTS registerObjects();
+        extern MO_EXPORTS std::string module_name;
         template <class T>
         struct RegisterInterface
         {

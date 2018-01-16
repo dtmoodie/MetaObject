@@ -1,4 +1,4 @@
-#include "MetaObject/params/reflect_data.hpp"
+#include "ct/reflect/reflect_data.hpp"
 #include <opencv2/core/types.hpp>
 
 #include "DataConverter.hpp"
@@ -84,41 +84,6 @@ namespace mo
         }
         return false;
     }
-
-    namespace python
-    {
-        static std::vector<std::function<void(void)>> setup_functions;
-        static std::vector<std::pair<uint32_t, std::function<void(std::vector<IObjectConstructor*>&)>>>
-            interface_setup_functions;
-        static bool setup = false;
-        void registerSetupFunction(std::function<void(void)>&& func)
-        {
-            if (!setup)
-            {
-                setup_functions.emplace_back(std::move(func));
-            }
-            else
-            {
-                func();
-            }
-        }
-
-        void registerInterfaceSetupFunction(uint32_t interface_id,
-                                            std::function<void(std::vector<IObjectConstructor*>&)>&& func)
-        {
-            interface_setup_functions.emplace_back(interface_id, std::move(func));
-        }
-
-        void registerObjects()
-        {
-            auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
-            for (const auto& func : mo::python::interface_setup_functions)
-            {
-                func.second(ctrs);
-            }
-        }
-    }
-
     std::vector<std::string> listConstructableObjects()
     {
         auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
@@ -149,25 +114,65 @@ namespace mo
         return output;
     }
 
-    void pythonSetup(const char* module_name_)
+    namespace python
     {
-        std::string module_name(module_name_);
-        setupEnums(module_name);
-        setupDataTypes(module_name);
-        setupPlugins(module_name);
-        boost::python::def("listConstructableObjects", &listConstructableObjects);
-        boost::python::def("listObjectInfos", &listObjectInfos);
-        boost::python::def("recompile", &recompile, (boost::python::arg("async") = false));
-        boost::python::def("log", &setLogLevel);
+        static std::vector<std::function<void(void)>> setup_functions;
+        static std::vector<std::pair<uint32_t, std::function<void(std::vector<IObjectConstructor*>&)>>>
+            interface_setup_functions;
+        static bool setup = false;
+        static std::string module_name;
+        void registerSetupFunction(std::function<void(void)>&& func)
+        {
+            if (!setup)
+            {
+                setup_functions.emplace_back(std::move(func));
+            }
+            else
+            {
+                func();
+            }
+        }
+
+        void registerInterfaceSetupFunction(uint32_t interface_id,
+                                            std::function<void(std::vector<IObjectConstructor*>&)>&& func)
+        {
+            interface_setup_functions.emplace_back(interface_id, std::move(func));
+        }
+
+        void registerObjects()
+        {
+            auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
+            for (const auto& func : mo::python::interface_setup_functions)
+            {
+                func.second(ctrs);
+            }
+        }
+        void pythonSetup(const char* module_name_)
+        {
+            std::string module_name(module_name_);
+            mo::python::module_name = module_name;
+            setupEnums(module_name);
+            setupDataTypes(module_name);
+            setupPlugins(module_name);
+            boost::python::def("listConstructableObjects", &listConstructableObjects);
+            boost::python::def("listObjectInfos", &listObjectInfos);
+            boost::python::def("recompile", &recompile, (boost::python::arg("async") = false));
+            boost::python::def("log", &setLogLevel);
+            for (const auto& func : mo::python::setup_functions)
+            {
+                func();
+            }
+            mo::python::setup = true;
+        }
     }
+
+
+
+
 }
 
 BOOST_PYTHON_MODULE(metaobject)
 {
-    mo::pythonSetup("metaobject");
-    for (const auto& func : mo::python::setup_functions)
-    {
-        func();
-    }
-    mo::python::setup = true;
+    mo::python::pythonSetup("metaobject");
+
 }
