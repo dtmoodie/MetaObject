@@ -26,6 +26,7 @@ struct TIObjectSingletonContainer : public ISingletonContainer
 
     rcc::shared_ptr<T> ptr;
 };
+
 struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
 {
   public:

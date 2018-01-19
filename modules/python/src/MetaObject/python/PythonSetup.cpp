@@ -8,12 +8,12 @@
 #include "PythonPolicy.hpp"
 #include "PythonSetup.hpp"
 
+#include <boost/log/expressions.hpp>
 #include <boost/python.hpp>
 #include <boost/python/default_call_policies.hpp>
 #include <boost/python/raw_function.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/thread.hpp>
-#include <boost/log/expressions.hpp>
 #include <vector>
 
 namespace boost
@@ -120,7 +120,8 @@ namespace mo
         static std::vector<std::pair<uint32_t, std::function<void(std::vector<IObjectConstructor*>&)>>>
             interface_setup_functions;
         static bool setup = false;
-        static std::string module_name;
+        MO_EXPORTS std::string module_name;
+
         void registerSetupFunction(std::function<void(void)>&& func)
         {
             if (!setup)
@@ -165,14 +166,9 @@ namespace mo
             mo::python::setup = true;
         }
     }
-
-
-
-
 }
 
 BOOST_PYTHON_MODULE(metaobject)
 {
     mo::python::pythonSetup("metaobject");
-
 }
