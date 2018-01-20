@@ -10,10 +10,10 @@
 
 #include "PythonSetup.hpp"
 
-#include "boost/python.hpp"
 #include <boost/python.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+#include <boost/python/args.hpp>
 
 namespace mo
 {
@@ -113,21 +113,51 @@ namespace mo
             template<class ... Args>
             struct CreateDataObject{};
 
+            template<class T>
+            void populateKwargs(std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N>& kwargs, ct::_counter_<0>)
+            {
+                kwargs[0] = (boost::python::arg(ct::reflect::getName<0, T>()) = boost::python::object());
+            }
+
+            template<class T, int I>
+            void populateKwargs(std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N>& kwargs, ct::_counter_<I>)
+            {
+                kwargs[I] = (boost::python::arg(ct::reflect::getName<I, T>()) = boost::python::object());
+                populateKwargs<T>(kwargs, ct::_counter_<I - 1>());
+            }
+
+            template<class T>
+            std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N> makeKeywordArgs()
+            {
+                std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N> kwargs;
+                populateKwargs<T>(kwargs, ct::_counter_<ct::reflect::ReflectData<T>::N - 1>());
+                return kwargs;
+            }
+
             template<class T, class ... Args>
             struct CreateDataObject<T, ce::variadic_typedef<Args...>>
             {
+                static const int size = ct::reflect::ReflectData<T>::N - 1;
                 static T* create(Args... args)
                 {
                     T* obj = new T();
                     initDataMembers(*obj, args...);
                     return obj;
                 }
+
+                static boost::python::detail::keyword_range range()
+                {
+                    static std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N> s_keywords = makeKeywordArgs<T>();
+                    return  std::make_pair<boost::python::detail::keyword const*, boost::python::detail::keyword const*>( &s_keywords[0], &s_keywords[0] + ct::reflect::ReflectData<T>::N);
+                }
             };
 
             template<class T, class BP>
             void addInit(BP& bpobj)
             {
-                bpobj.def("__init__", boost::python::make_constructor(CreateDataObject<T, FunctionSignatureBuilder<boost::python::object, ct::reflect::ReflectData<T>::N - 1>::VariadicTypedef_t>::create, boost::python::default_call_policies()));
+                typedef CreateDataObject<T, FunctionSignatureBuilder<boost::python::object, ct::reflect::ReflectData<T>::N - 1>::VariadicTypedef_t> Creator_t;
+                bpobj.def("__init__", 
+                    boost::python::make_constructor(Creator_t::create, boost::python::default_call_policies(), Creator_t()));
             }
 
             template <class T>
@@ -296,5 +326,21 @@ namespace mo
         }
     }
 }
+
+namespace boost
+{
+    namespace python
+    {
+        namespace detail
+        {
+            template<class ... T>
+            struct is_keywords<mo::python::detail::CreateDataObject<T...> >
+            {
+                static const bool value = true;
+            };
+        }
+    }
+}
+
 
 #include "detail/converters.hpp"
