@@ -1,7 +1,7 @@
 if(HAVE_PYTHON)
     metaobject_declare_module(NAME python DEPENDS metaobject_core metaobject_object)
     target_include_directories(metaobject_python PUBLIC $<BUILD_INTERFACE:${PYTHON_INCLUDE_DIR}>)
-    target_link_libraries(metaobject_python optimized;${Boost_PYTHON_LIBRARY_RELEASE};debug;${Boost_PYTHON_LIBRARY_DEBUG} ${PYTHON_LIBRARY})
+    target_link_libraries(metaobject_python optimized;${Boost_PYTHON_LIBRARY_RELEASE};debug;${Boost_PYTHON_LIBRARY_DEBUG} ${PYTHON_LIBRARY} ce)
 
     if(UNIX)
         get_target_property(out_dir metaobject_python ARCHIVE_OUTPUT_DIRECTORY)
@@ -17,5 +17,7 @@ if(HAVE_PYTHON)
     endif(UNIX)
     set(metaobject_param_include
         "${metaobject_param_include}\n#include <MetaObject/python/PythonPolicy.hpp>" CACHE INTERNAL "" FORCE)
-
+    add_executable(test_mo_python_init tests/python_init_param_setter.cpp)
+    set_target_properties(test_mo_python_init PROPERTIES FOLDER Tests/MetaObject/python)
+    target_link_libraries(test_mo_python_init ce ct metaobject_python)
 endif()

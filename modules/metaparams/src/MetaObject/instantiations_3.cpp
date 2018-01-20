@@ -15,37 +15,6 @@
 #define MO_EXPORTS
 #endif
 
-namespace cv
-{
-    template <class T>
-    std::ostream& operator<<(std::ostream& os, const cv::Point_<T>& pt)
-    {
-        os << pt.x << ", " << pt.y;
-        return os;
-    }
-    template <class T>
-    std::ostream& operator<<(std::ostream& os, const cv::Point3_<T>& pt)
-    {
-        os << pt.x << ", " << pt.y << ", " << pt.z;
-        return os;
-    }
-}
-
-namespace cereal
-{
-    template <class AR, class T>
-    void serialize(AR& ar, cv::Point_<T>& pt)
-    {
-        ar(cereal::make_nvp("x", pt.x), cereal::make_nvp("y", pt.y));
-    }
-
-    template <class AR, class T>
-    void serialize(AR& ar, cv::Point3_<T>& pt)
-    {
-        ar(cereal::make_nvp("x", pt.x), cereal::make_nvp("y", pt.y), cereal::make_nvp("z", pt.z));
-    }
-}
-
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 using namespace cv;
 

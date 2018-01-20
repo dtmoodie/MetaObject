@@ -36,71 +36,47 @@ namespace ct
         {
             static constexpr int N = 1;
             static constexpr bool IS_SPECIALIZED = true;
-            static std::string get(const T& data, mo::_counter_<0>) { return data.string(); }
-            static constexpr const char* getName(mo::_counter_<0>) { return "path"; }
+            static std::string get(const T& data, _counter_<0>) { return data.string(); }
+            static constexpr const char* getName(_counter_<0>) { return "path"; }
         };
 
-        template <int I, class T>
+        template <int I>
         static constexpr inline
-            typename std::enable_if<std::is_same<ReadFile, T>::value || std::is_same<WriteFile, T>::value ||
-                                        std::is_same<ReadDirectory, T>::value || std::is_same<WriteDirectory, T>::value,
-                                    std::string>::type
-            getValue(const T& data)
-        {
-            return data.string();
-        }
+            std::string 
+            getValue(const mo::ReadFile& data){return data.string();}
 
-        template <int I, class T>
+        template <int I>
         static constexpr inline
-            typename std::enable_if<std::is_same<ReadFile, T>::value || std::is_same<WriteFile, T>::value ||
-                                        std::is_same<ReadDirectory, T>::value || std::is_same<WriteDirectory, T>::value,
-                                    std::string>::type
-            setValue(const T& data, const std::string& value)
-        {
-            data = T(value);
-        }
+            void setValue(const mo::ReadFile& data, const std::string& path){data = mo::ReadFile(path);}
 
         template <int I>
-        std::string get(const ReadFile& data)
-        {
-            return data.string();
-        }
-        template <int I>
-        std::string get(const WriteFile& data)
-        {
-            return data.string();
-        }
-        template <int I>
-        std::string get(const ReadDirectory& data)
-        {
-            return data.string();
-        }
-        template <int I>
-        std::string get(const WriteDirectory& data)
-        {
-            return data.string();
-        }
+        static constexpr inline
+            std::string
+            getValue(const mo::WriteFile& data) { return data.string(); }
 
         template <int I>
-        std::string get(ReadFile& data)
-        {
-            return data.string();
-        }
+        static constexpr inline
+            void setValue(const mo::WriteFile& data, const std::string& path) { data = mo::WriteFile(path); }
+
         template <int I>
-        std::string get(WriteFile& data)
-        {
-            return data.string();
-        }
+        static constexpr inline
+            std::string
+            getValue(const mo::ReadDirectory& data) { return data.string(); }
+
         template <int I>
-        std::string get(ReadDirectory& data)
-        {
-            return data.string();
-        }
+        static constexpr inline
+            void setValue(const mo::ReadDirectory& data, const std::string& path) { data = mo::ReadDirectory(path); }
+
         template <int I>
-        std::string get(WriteDirectory& data)
-        {
-            return data.string();
-        }
+        static constexpr inline
+            std::string
+            getValue(const mo::WriteDirectory& data) { return data.string(); }
+
+        template <int I>
+        static constexpr inline
+            void setValue(const mo::WriteDirectory& data, const std::string& path) { data = mo::WriteDirectory(path); }
+
+
     }
 }
 
@@ -121,8 +97,8 @@ namespace std
     }
 }
 
-// INSTANTIATE_META_PARAM(ReadFile);
-// INSTANTIATE_META_PARAM(WriteFile);
-// INSTANTIATE_META_PARAM(ReadDirectory);
-// INSTANTIATE_META_PARAM(WriteDirectory);
+INSTANTIATE_META_PARAM(ReadFile);
+INSTANTIATE_META_PARAM(WriteFile);
+INSTANTIATE_META_PARAM(ReadDirectory);
+INSTANTIATE_META_PARAM(WriteDirectory);
 INSTANTIATE_META_PARAM(EnumParam);

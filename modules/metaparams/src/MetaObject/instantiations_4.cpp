@@ -75,6 +75,7 @@ namespace ct
                         os << ',';
                     os << array.ptr[i];
                 }
+                os << "]";
             }
             return os;
         }

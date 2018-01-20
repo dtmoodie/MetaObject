@@ -7,6 +7,7 @@
 #include <cereal/types/map.hpp>
 #include <cereal/types/string.hpp>
 #include <fstream>
+
 using namespace mo;
 std::map<TypeInfo, std::string>& registry()
 {
