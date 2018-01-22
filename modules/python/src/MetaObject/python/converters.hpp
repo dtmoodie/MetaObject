@@ -7,6 +7,7 @@
 
 #include "ct/reflect/reflect_data.hpp"
 #include "ct/reflect/printer.hpp"
+#include "ce/VariadicTypedef.hpp"
 
 #include "PythonSetup.hpp"
 
@@ -76,6 +77,7 @@ namespace mo
                 bpobj.add_property(ct::reflect::getName<I, T>(), &ct::reflect::getValue<I, T>, &ct::reflect::setValue<I, T>);
                 addPropertyHelper<T>(bpobj, mo::_counter_<I - 1>());
             }
+
             template<class T, class V>
             V inferSetterType(void(*)(T&, V))
             {

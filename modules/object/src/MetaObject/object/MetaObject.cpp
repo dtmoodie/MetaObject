@@ -407,17 +407,9 @@ namespace mo
 
     IParam* MetaObject::getParam(const std::string& name) const
     {
-        auto itr = _pimpl->_params.find(name);
-        if (itr != _pimpl->_params.end())
-        {
-            return itr->second;
-        }
-        auto itr2 = _pimpl->_implicit_params.find(name);
-        if (itr2 != _pimpl->_implicit_params.end())
-        {
-            return itr2->second.get();
-        }
-        THROW(debug) << "Param with name \"" << name << "\" not found";
+        auto param = this->getParamOptional(name);
+        if(!param)
+            THROW(debug) << "Param with name \"" << name << "\" not found";
         return nullptr;
     }
 

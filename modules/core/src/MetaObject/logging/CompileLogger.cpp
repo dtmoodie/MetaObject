@@ -35,17 +35,21 @@ void CompileLogger::LogInternal(int severity, const char* format, va_list args)
     m_buff[LOGSYSTEM_MAX_BUFFER - 1] = '\0';
     if (severity == 0)
     {
-        BOOST_LOG_TRIVIAL(debug) << m_buff;
+        BOOST_LOG_TRIVIAL(trace) << m_buff;
     }
     if (severity == 1)
     {
-        BOOST_LOG_TRIVIAL(info) << m_buff;
+        BOOST_LOG_TRIVIAL(debug) << m_buff;
     }
     if (severity == 2)
     {
-        BOOST_LOG_TRIVIAL(warning) << m_buff;
+        BOOST_LOG_TRIVIAL(info) << m_buff;
     }
     if (severity == 3)
+    {
+        BOOST_LOG_TRIVIAL(warning) << m_buff;
+    }
+    if (severity == 4)
     {
         BOOST_LOG_TRIVIAL(error) << m_buff;
     }

@@ -1,5 +1,6 @@
 #include <boost/mpl/vector.hpp>
 #include <functional>
+
 namespace boost
 {
     namespace python
@@ -16,8 +17,12 @@ namespace boost
     }
 }
 
+#include "MetaObject.hpp"
 #include "MetaObject/object/MetaObject.hpp"
+#include "MetaObject/object/IMetaObjectInfo.hpp"
 #include "MetaObject/params/InputParam.hpp"
+#include "MetaObject/params/ParamInfo.hpp"
+#include "MetaObject/python/DataConverter.hpp"
 
 #include "PythonSetup.hpp"
 #include "lambda.hpp"
@@ -74,14 +79,17 @@ namespace mo
 
             boost::python::class_<IMetaObject, rcc::shared_ptr<IMetaObject>, boost::noncopyable> bpobj(
                 "IMetaObject", boost::python::no_init);
+            
             bpobj.def(
                 "getParams",
                 static_cast<std::vector<IParam*> (IMetaObject::*)(const std::string&) const>(&IMetaObject::getParams),
                 (boost::python::arg("name_filter") = ""));
+            
             bpobj.def("getInputs",
                       static_cast<std::vector<InputParam*> (IMetaObject::*)(const std::string&) const>(
                           &IMetaObject::getInputs),
                       (boost::python::arg("name_filter") = ""));
+            
             bpobj.def("getOutputs",
                       static_cast<ParamVec_t (IMetaObject::*)(const std::string&) const>(&IMetaObject::getOutputs),
                       (boost::python::arg("name_filter") = ""));
@@ -90,16 +98,20 @@ namespace mo
                       static_cast<IParam* (IMetaObject::*)(const std::string&)const>(&IMetaObject::getParam),
                       (boost::python::arg("name")),
                       boost::python::return_internal_reference<>());
+            
             bpobj.def("getInput",
                       static_cast<InputParam* (IMetaObject::*)(const std::string&)const>(&IMetaObject::getInput),
                       (boost::python::arg("name")),
                       boost::python::return_internal_reference<>());
+
             bpobj.def("getOutput",
                       static_cast<IParam* (IMetaObject::*)(const std::string&)const>(&IMetaObject::getOutput),
                       (boost::python::arg("name")),
                       boost::python::return_internal_reference<>());
 
             bpobj.def("getContext", &IMetaObject::getContext);
+            bpobj.def("setContext", &IMetaObject::setContext);
+
 
             boost::python::class_<IObjectConstructor, IObjectConstructor*, boost::noncopyable> ctrobj(
                 "IObjectConstructor", boost::python::no_init);
@@ -119,12 +131,36 @@ namespace mo
 
         IObjectConstructor* getCtr(IObjectConstructor* ctr) { return ctr; }
 
+        template<class T>
+        bool setParamHelper(python::DataConverterRegistry::Set_t setter, std::string name,
+                            T& obj, const boost::python::object& python_obj)
+        {
+            auto param = obj.getParamOptional(name);
+            if (param)
+            {
+                return setter(param, python_obj);
+            }
+            return false;
+        }
+
+        template<class T>
+        boost::python::object getParamHelper(python::DataConverterRegistry::Get_t getter, std::string name,
+            const T& obj)
+        {
+            auto param = obj.getParamOptional(name);
+            if (param)
+            {
+                return getter(param);
+            }
+            return {};
+        }
+
         void setupObjects(std::vector<IObjectConstructor*>& ctrs)
         {
             boost::python::object module(
-                boost::python::handle<>(boost::python::borrowed(PyImport_AddModule("metaobject.object"))));
+                boost::python::handle<>(boost::python::borrowed(PyImport_AddModule((mo::python::module_name + ".object").c_str()))));
 
-            boost::python::import("metaobject").attr("object") = module;
+            boost::python::import(mo::python::module_name.c_str()).attr("object") = module;
             boost::python::scope plugins_scope = module;
 
             for (auto itr = ctrs.begin(); itr != ctrs.end();)
@@ -140,9 +176,29 @@ namespace mo
                     bpobj.def("__init__",
                               boost::python::make_constructor(
                                   std::function<rcc::shared_ptr<MetaObject>()>(std::bind(&constructObject, *itr))));
-                    // bpobj.add_static_property("ctr", *itr);
-
-                    boost::python::import("metaobject").attr("object").attr(info->GetObjectName().c_str()) = bpobj;
+                    boost::python::object ctr = mo::makeConstructor<IMetaObject>(*itr);
+                    if (ctr)
+                    {
+                        bpobj.def("__init__", ctr);
+                    }
+                    
+                    auto minfo = dynamic_cast<IMetaObjectInfo*>(info);
+                    if (minfo)
+                    {
+                        std::vector<ParamInfo*> param_infos = minfo->getParamInfo();
+                        for (auto param_info : param_infos)
+                        {
+                            auto setter = python::DataConverterRegistry::instance()->getSetter(param_info->data_type);
+                            auto getter = python::DataConverterRegistry::instance()->getGetter(param_info->data_type);
+                            if (setter && getter)
+                            {
+                                bpobj.def(("get_" + param_info->name).c_str(), std::function<boost::python::object(const MetaObject&)>(std::bind(getParamHelper<MetaObject>, getter, param_info->name, std::placeholders::_1)));
+                                bpobj.def(("set_" + param_info->name).c_str(), std::function<bool(MetaObject&, const boost::python::object&)>(std::bind(setParamHelper<MetaObject>, setter, param_info->name, std::placeholders::_1, std::placeholders::_2)));
+                            }
+                        }
+                    }
+                    
+                    boost::python::import(mo::python::module_name.c_str()).attr("object").attr(info->GetObjectName().c_str()) = bpobj;
                     itr = ctrs.erase(itr);
                 }
                 else
@@ -150,6 +206,8 @@ namespace mo
                     ++itr;
                 }
             }
+            boost::python::implicitly_convertible<MetaObject*, IMetaObject*>();
+            boost::python::implicitly_convertible<rcc::shared_ptr<MetaObject>, rcc::shared_ptr<IMetaObject>>();
         }
 
         static RegisterInterface<IMetaObject> g_register(&setupInterface, &setupObjects);

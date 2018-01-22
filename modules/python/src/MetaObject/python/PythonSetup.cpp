@@ -148,13 +148,14 @@ namespace mo
                 func.second(ctrs);
             }
         }
+
         void pythonSetup(const char* module_name_)
         {
+            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
             std::string module_name(module_name_);
             mo::python::module_name = module_name;
             setupEnums(module_name);
             setupDataTypes(module_name);
-            setupPlugins(module_name);
             boost::python::def("listConstructableObjects", &listConstructableObjects);
             boost::python::def("listObjectInfos", &listObjectInfos);
             boost::python::def("recompile", &recompile, (boost::python::arg("async") = false));
@@ -163,6 +164,7 @@ namespace mo
             {
                 func();
             }
+            setupPlugins(module_name);
             mo::python::setup = true;
         }
     }
