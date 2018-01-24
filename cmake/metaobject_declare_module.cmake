@@ -13,7 +13,9 @@ function(metaobject_declare_module)
             add_library(metaobject_${metaobject_declare_module_NAME} SHARED ${src})
         endif()
     endif()
-
+    
+    set_target_properties(metaobject_${metaobject_declare_module_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+    
     set(metaobject_modules "${metaobject_modules};metaobject_${metaobject_declare_module_NAME}" CACHE INTERNAL "" FORCE)
 
     target_compile_definitions(metaobject_${metaobject_declare_module_NAME} PRIVATE -DMetaObject_EXPORTS)
