@@ -3,7 +3,7 @@
 #include "MetaObject/core/detail/HelperMacros.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
-#include "MetaObject/params/Types.hpp"
+#include "MetaObject/types/file_types.hpp"
 #include "MetaObject/params/detail/ParamMacrosImpl.hpp"
 
 #define PARAM(type_, name, init)                                                                                       \

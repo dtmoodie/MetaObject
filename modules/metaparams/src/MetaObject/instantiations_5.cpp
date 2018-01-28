@@ -1,4 +1,5 @@
 #ifdef HAVE_OPENCV
+#include "MetaObject/metaparams/reflect/cv_types.hpp"
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "MetaObject/params/MetaParam.hpp"
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
@@ -18,18 +19,6 @@
 #define MO_EXPORTS
 #endif
 
-namespace ct
-{
-    namespace reflect
-    {
-        REFLECT_TEMPLATED_DATA_START(cv::Rect_)
-            REFLECT_DATA_MEMBER(x)
-            REFLECT_DATA_MEMBER(y)
-            REFLECT_DATA_MEMBER(width)
-            REFLECT_DATA_MEMBER(height)
-        REFLECT_DATA_END;
-    }
-}
 using namespace cv;
 INSTANTIATE_META_PARAM(Rect);
 INSTANTIATE_META_PARAM(Rect2d);

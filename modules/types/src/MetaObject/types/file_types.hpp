@@ -107,7 +107,7 @@ namespace mo
         EnumParam(const std::initializer_list<std::pair<const char*, int>>& values);
         EnumParam();
 
-        void SetValue(const std::initializer_list<const char*>& string, const std::initializer_list<int>& values);
+        void setValue(const std::initializer_list<const char*>& string, const std::initializer_list<int>& values);
 
         void addEnum(int value, const ::std::string& enumeration);
         int getValue() const;

@@ -8,6 +8,7 @@
 #include "ct/reflect/reflect_data.hpp"
 #include "ct/reflect/printer.hpp"
 #include "ce/VariadicTypedef.hpp"
+#include <ct/detail/TypeTraits.hpp>
 
 #include "PythonSetup.hpp"
 
@@ -65,18 +66,6 @@ namespace mo
 
         namespace detail
         {
-            template <class T, class BP>
-            void addPropertyHelper(BP& bpobj, mo::_counter_<0>)
-            {
-                bpobj.add_property(ct::reflect::getName<0, T>(),&ct::reflect::getValue<0, T>, &ct::reflect::setValue<0, T>);
-            }
-
-            template <class T, int I, class BP>
-            void addPropertyHelper(BP& bpobj, mo::_counter_<I>)
-            {
-                bpobj.add_property(ct::reflect::getName<I, T>(), &ct::reflect::getValue<I, T>, &ct::reflect::setValue<I, T>);
-                addPropertyHelper<T>(bpobj, mo::_counter_<I - 1>());
-            }
 
             template<class T, class V>
             V inferSetterType(void(*)(T&, V))
@@ -84,8 +73,44 @@ namespace mo
 
             }
 
+            template<class T, class V>
+            V inferGetterType(V(*)(T&))
+            {
+
+            }
+
             template<int I, class T>
             using SetValue_t = decltype(inferSetterType(ct::reflect::setValue<I, T>));
+
+            template<int I, class T>
+            using GetValue_t = decltype(inferGetterType(ct::reflect::getValue<I, T>));
+
+
+            template <class T, class BP>
+            typename std::enable_if<!std::is_pointer<GetValue_t<0, T>>::value>::type addPropertyHelper(BP& bpobj, mo::_counter_<0>)
+            {
+                bpobj.add_property(ct::reflect::getName<0, T>(),&ct::reflect::getValue<0, T>, &ct::reflect::setValue<0, T>);
+            }
+
+            template <class T, class BP>
+            typename std::enable_if<std::is_pointer<GetValue_t<0, T>>::value>::type addPropertyHelper(BP& bpobj, mo::_counter_<0>)
+            {
+                //bpobj.add_property(ct::reflect::getName<0, T>(), &ct::reflect::getValue<0, T>, &ct::reflect::setValue<0, T>);
+            }
+
+            template <class T, int I, class BP>
+            typename std::enable_if<!std::is_pointer<GetValue_t<I, T>>::value>::type addPropertyHelper(BP& bpobj, mo::_counter_<I>)
+            {
+                bpobj.add_property(ct::reflect::getName<I, T>(), &ct::reflect::getValue<I, T>, &ct::reflect::setValue<I, T>);
+                addPropertyHelper<T>(bpobj, mo::_counter_<I - 1>());
+            }
+
+            template <class T, int I, class BP>
+            typename std::enable_if<std::is_pointer<GetValue_t<I, T>>::value>::type addPropertyHelper(BP& bpobj, mo::_counter_<I>)
+            {
+                //bpobj.add_property(ct::reflect::getName<I, T>(), &ct::reflect::getValue<I, T>, &ct::reflect::setValue<I, T>);
+                addPropertyHelper<T>(bpobj, mo::_counter_<I - 1>());
+            }
 
             template<class T>
             void initDataMembers(T& data, boost::python::object& value)
@@ -155,11 +180,16 @@ namespace mo
             };
 
             template<class T, class BP>
-            void addInit(BP& bpobj)
+            std::enable_if_t<ct::is_default_constructible<T>::value> addInit(BP& bpobj)
             {
                 typedef CreateDataObject<T, FunctionSignatureBuilder<boost::python::object, ct::reflect::ReflectData<T>::N - 1>::VariadicTypedef_t> Creator_t;
                 bpobj.def("__init__", 
                     boost::python::make_constructor(Creator_t::create, boost::python::default_call_policies(), Creator_t()));
+            }
+
+            template<class T, class BP>
+            std::enable_if_t<!ct::is_default_constructible<T>::value> addInit(BP& bpobj)
+            {
             }
 
             template <class T>
@@ -241,7 +271,7 @@ namespace mo
                 static bool registered = false;
                 if (registered)
                     return;
-                boost::python::class_<T> bpobj(name ? name : mo::Demangle::typeToName(mo::TypeInfo(typeid(T))).c_str());
+                boost::python::class_<T> bpobj(name ? name : mo::Demangle::typeToName(mo::TypeInfo(typeid(T))).c_str(), boost::python::no_init);
                 addPropertyHelper<T>(bpobj, mo::_counter_<ct::reflect::ReflectData<T>::N - 1>());
                 addInit<T>(bpobj);
                 bpobj.def("__repr__", &repr<T>);

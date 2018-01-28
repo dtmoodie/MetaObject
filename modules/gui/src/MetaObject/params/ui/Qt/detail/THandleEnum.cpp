@@ -1,5 +1,5 @@
 #ifdef HAVE_QT5
-#include "MetaObject/params/Types.hpp"
+#include "MetaObject/types/file_types.hpp"
 #include "MetaObject/params/ui/Qt/POD.hpp"
 #include <boost/thread/recursive_mutex.hpp>
 using namespace mo;

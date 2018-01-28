@@ -5,7 +5,7 @@ if(Qt5_FOUND)
     QT5_WRAP_CPP(MOC "src/MetaObject/params/ui/Qt/SignalProxy.hpp")
     set(src "${src};${MOC};${hdr}")
     metaobject_declare_module(NAME qtgui SRC src DEPENDS ${OpenCV_LIBS}
-        Qt5::Core Qt5::Widgets metaobject_core metaobject_params
+        Qt5::Core Qt5::Widgets metaobject_core metaobject_params metaobject_types
     )
     target_compile_definitions(metaobject_qtgui PUBLIC "-DHAVE_QT")
 endif(Qt5_FOUND)

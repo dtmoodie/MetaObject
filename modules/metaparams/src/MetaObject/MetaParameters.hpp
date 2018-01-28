@@ -31,7 +31,7 @@
 #endif
 #include <MetaObject/params/TInputParam.hpp>
 #include <MetaObject/params/TParamPtr.hpp>
-#include <MetaObject/params/Types.hpp>
+#include <MetaObject/types/file_types.hpp>
 
 namespace mo
 {
