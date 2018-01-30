@@ -28,7 +28,10 @@ namespace mo
             size_t size;
             ar(cereal::make_size_tag(size));
             MO_ASSERT(size == m_size);
-            ar(cereal::binary_data(m_ptr, m_size * sizeof(T)));
+            for (size_t i = 0; i < m_size; ++i)
+            {
+                ar(m_ptr[i]);
+            }
         }
         template<class AR>
         void save(AR& ar) const
@@ -36,7 +39,10 @@ namespace mo
             if (m_size)
             {
                 ar(cereal::make_size_tag(m_size));
-                ar(cereal::binary_data(m_ptr, m_size * sizeof(T)));
+                for (size_t i = 0; i < m_size; ++i)
+                {
+                    ar(m_ptr[i]);
+                }
             }
         }
     private:
