@@ -69,6 +69,7 @@ namespace mo
                                    const std::shared_ptr<ICoordinateSystem>&,
                                    UpdateFlags);
     };
+
 }
 #include "MetaObject/params/detail/TInputParamImpl.hpp"
 #include "detail/TInputParamPtrImpl.hpp"

@@ -89,7 +89,7 @@ namespace mo
     {                                                                                                                  \
         if (firstInit)                                                                                                 \
         {                                                                                                              \
-            name.SetValue(ENUM_EXPAND(__VA_ARGS__));                                                                   \
+            name.setValue(ENUM_EXPAND(__VA_ARGS__));                                                                   \
         }                                                                                                              \
         name##_param.setMtx(&getMutex());                                                                              \
         name##_param.updatePtr(&name);                                                                                 \
