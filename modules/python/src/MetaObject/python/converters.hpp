@@ -1,21 +1,21 @@
 #pragma once
 #include "MetaObject/core/Demangle.hpp"
 #include "MetaObject/core/detail/Counter.hpp"
+#include "MetaObject/logging/logging.hpp"
+#include "MetaObject/python/FunctionSignatureBuilder.hpp"
 #include "MetaObject/python/converters.hpp"
-#include "MetaObject/python/MetaObject.hpp"
-#include <MetaObject/logging/logging.hpp>
 
-#include "ct/reflect/reflect_data.hpp"
-#include "ct/reflect/printer.hpp"
 #include "ce/VariadicTypedef.hpp"
+#include "ct/reflect/printer.hpp"
+#include "ct/reflect/reflect_data.hpp"
 #include <ct/detail/TypeTraits.hpp>
 
 #include "PythonSetup.hpp"
 
 #include <boost/python.hpp>
+#include <boost/python/args.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
-#include <boost/python/args.hpp>
 
 namespace mo
 {
@@ -67,52 +67,43 @@ namespace mo
         namespace detail
         {
 
-            template<class T, class V>
-            V inferSetterType(void(*)(T&, V))
+            template <class T, class V>
+            V inferSetterType(void (*)(T&, V))
             {
-
             }
 
-            template<class T, class V>
-            V inferGetterType(V(*)(T&))
+            template <class T, class V>
+            V inferGetterType(V (*)(T&))
             {
-
             }
 
-            template<int I, class T>
-            using SetValue_t = decltype(inferSetterType(ct::reflect::setValue<I, T>));
+            template <int I, class T>
+            using SetValue_t = decltype(inferSetterType<T>(ct::reflect::setValue<I, T>));
 
-            template<int I, class T>
-            using GetValue_t = decltype(inferGetterType(ct::reflect::getValue<I, T>));
+            template <int I, class T>
+            using GetValue_t = decltype(inferGetterType<T>(ct::reflect::getValue<I, T>));
 
-
-            template <class T, class BP>
-            typename std::enable_if<!std::is_pointer<GetValue_t<0, T>>::value>::type addPropertyHelper(BP& bpobj, mo::_counter_<0>)
+            template <class T, int I, class BP>
+            void addPropertyImpl(BP& bpobj)
             {
-                bpobj.add_property(ct::reflect::getName<0, T>(),&ct::reflect::getValue<0, T>, &ct::reflect::setValue<0, T>);
+                bpobj.add_property(
+                    ct::reflect::getName<I, T>(), &ct::reflect::getValue<I, T>, &ct::reflect::setValue<I, T>);
             }
 
             template <class T, class BP>
-            typename std::enable_if<std::is_pointer<GetValue_t<0, T>>::value>::type addPropertyHelper(BP& bpobj, mo::_counter_<0>)
+            void addPropertyHelper(BP& bpobj, mo::_counter_<0>)
             {
-                //bpobj.add_property(ct::reflect::getName<0, T>(), &ct::reflect::getValue<0, T>, &ct::reflect::setValue<0, T>);
+                addPropertyImpl<T, 0>(bpobj);
             }
 
             template <class T, int I, class BP>
-            typename std::enable_if<!std::is_pointer<GetValue_t<I, T>>::value>::type addPropertyHelper(BP& bpobj, mo::_counter_<I>)
+            void addPropertyHelper(BP& bpobj, mo::_counter_<I>)
             {
-                bpobj.add_property(ct::reflect::getName<I, T>(), &ct::reflect::getValue<I, T>, &ct::reflect::setValue<I, T>);
+                addPropertyImpl<T, I>(bpobj);
                 addPropertyHelper<T>(bpobj, mo::_counter_<I - 1>());
             }
 
-            template <class T, int I, class BP>
-            typename std::enable_if<std::is_pointer<GetValue_t<I, T>>::value>::type addPropertyHelper(BP& bpobj, mo::_counter_<I>)
-            {
-                //bpobj.add_property(ct::reflect::getName<I, T>(), &ct::reflect::getValue<I, T>, &ct::reflect::setValue<I, T>);
-                addPropertyHelper<T>(bpobj, mo::_counter_<I - 1>());
-            }
-
-            template<class T>
+            template <class T>
             void initDataMembers(T& data, boost::python::object& value)
             {
                 typedef std::decay_t<SetValue_t<ct::reflect::ReflectData<T>::N - 1, T>> Type;
@@ -124,36 +115,40 @@ namespace mo
                 }
             }
 
-            template<class T, class... Args>
+            template <class T, class... Args>
             void initDataMembers(T& data, boost::python::object& value, Args... args)
             {
-                typedef std::decay_t<SetValue_t<ct::reflect::ReflectData<T>::N - sizeof...(args) - 1, T>> Type;
+                typedef std::decay_t<SetValue_t<ct::reflect::ReflectData<T>::N - sizeof...(args)-1, T>> Type;
                 boost::python::extract<Type> ext(value);
                 if (ext.check())
                 {
                     Type value = ext();
-                    ct::reflect::setValue<ct::reflect::ReflectData<T>::N - sizeof...(args) - 1>(data, value);
+                    ct::reflect::setValue<ct::reflect::ReflectData<T>::N - sizeof...(args)-1>(data, value);
                 }
                 initDataMembers(data, args...);
             }
 
-            template<class ... Args>
-            struct CreateDataObject{};
-
-            template<class T>
-            void populateKwargs(std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N>& kwargs, ct::_counter_<0>)
+            template <class... Args>
+            struct CreateDataObject
             {
-                kwargs[0] = (boost::python::arg(ct::reflect::getName<0, T>()) = boost::python::object());
-            }
+            };
 
-            template<class T, int I>
-            void populateKwargs(std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N>& kwargs, ct::_counter_<I>)
+            template <class T, int I>
+            void populateKwargs(std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N>& kwargs,
+                                ct::_counter_<I>)
             {
                 kwargs[I] = (boost::python::arg(ct::reflect::getName<I, T>()) = boost::python::object());
                 populateKwargs<T>(kwargs, ct::_counter_<I - 1>());
             }
 
-            template<class T>
+            template <class T>
+            void populateKwargs(std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N>& kwargs,
+                                ct::_counter_<0>)
+            {
+                kwargs[0] = (boost::python::arg(ct::reflect::getName<0, T>()) = boost::python::object());
+            }
+
+            template <class T>
             std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N> makeKeywordArgs()
             {
                 std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N> kwargs;
@@ -161,7 +156,7 @@ namespace mo
                 return kwargs;
             }
 
-            template<class T, class ... Args>
+            template <class T, class... Args>
             struct CreateDataObject<T, ce::variadic_typedef<Args...>>
             {
                 static const int size = ct::reflect::ReflectData<T>::N - 1;
@@ -174,20 +169,27 @@ namespace mo
 
                 static boost::python::detail::keyword_range range()
                 {
-                    static std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N> s_keywords = makeKeywordArgs<T>();
-                    return  std::make_pair<boost::python::detail::keyword const*, boost::python::detail::keyword const*>( &s_keywords[0], &s_keywords[0] + ct::reflect::ReflectData<T>::N);
+                    static std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N> s_keywords =
+                        makeKeywordArgs<T>();
+                    return std::make_pair<boost::python::detail::keyword const*, boost::python::detail::keyword const*>(
+                        &s_keywords[0], &s_keywords[0] + ct::reflect::ReflectData<T>::N);
                 }
             };
 
-            template<class T, class BP>
+            template <class T, class BP>
             std::enable_if_t<ct::is_default_constructible<T>::value> addInit(BP& bpobj)
             {
-                typedef CreateDataObject<T, FunctionSignatureBuilder<boost::python::object, ct::reflect::ReflectData<T>::N - 1>::VariadicTypedef_t> Creator_t;
-                bpobj.def("__init__", 
-                    boost::python::make_constructor(Creator_t::create, boost::python::default_call_policies(), Creator_t()));
+                typedef CreateDataObject<
+                    T,
+                    typename FunctionSignatureBuilder<boost::python::object,
+                                                      ct::reflect::ReflectData<T>::N - 1>::VariadicTypedef_t>
+                    Creator_t;
+                bpobj.def("__init__",
+                          boost::python::make_constructor(
+                              Creator_t::create, boost::python::default_call_policies(), Creator_t()));
             }
 
-            template<class T, class BP>
+            template <class T, class BP>
             std::enable_if_t<!ct::is_default_constructible<T>::value> addInit(BP& bpobj)
             {
             }
@@ -271,7 +273,8 @@ namespace mo
                 static bool registered = false;
                 if (registered)
                     return;
-                boost::python::class_<T> bpobj(name ? name : mo::Demangle::typeToName(mo::TypeInfo(typeid(T))).c_str(), boost::python::no_init);
+                boost::python::class_<T> bpobj(name ? name : mo::Demangle::typeToName(mo::TypeInfo(typeid(T))).c_str(),
+                                               boost::python::no_init);
                 addPropertyHelper<T>(bpobj, mo::_counter_<ct::reflect::ReflectData<T>::N - 1>());
                 addInit<T>(bpobj);
                 bpobj.def("__repr__", &repr<T>);
@@ -365,14 +368,13 @@ namespace boost
     {
         namespace detail
         {
-            template<class ... T>
-            struct is_keywords<mo::python::detail::CreateDataObject<T...> >
+            template <class... T>
+            struct is_keywords<mo::python::detail::CreateDataObject<T...>>
             {
                 static const bool value = true;
             };
         }
     }
 }
-
 
 #include "detail/converters.hpp"

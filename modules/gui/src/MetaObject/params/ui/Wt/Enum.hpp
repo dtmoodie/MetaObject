@@ -2,7 +2,7 @@
 
 #include "IParamProxy.hpp"
 #include <MetaObject/params/ITParam.hpp>
-#include <MetaObject/params/Types.hpp>
+#include <MetaObject/types/file_types.hpp>
 
 #include <Wt/WComboBox>
 

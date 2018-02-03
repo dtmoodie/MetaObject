@@ -1,5 +1,6 @@
 #pragma once
 #include "ct/reflect/reflect_data.hpp"
+#include <cereal/cereal.hpp>
 #include <opencv2/core/types.hpp>
 
 namespace ct
@@ -81,7 +82,7 @@ namespace ct
                 }
             }
         };
-       
+
         template <class T, size_t R, size_t C>
         struct ReflectData<cv::Matx<T, R, C>>
         {
@@ -101,10 +102,7 @@ namespace ct
             static constexpr int N = 1;
             static constexpr int IS_SPECIALIZED = true;
             static constexpr ArrayAdapter<T, R> get(cv::Vec<T, R>& data, _counter_<0>) { return data.val; }
-            static constexpr ArrayAdapter<const T, R> get(const cv::Vec<T, R>& data, _counter_<0>)
-            {
-                return data.val;
-            }
+            static constexpr ArrayAdapter<const T, R> get(const cv::Vec<T, R>& data, _counter_<0>) { return data.val; }
             static constexpr const char* getName(_counter_<0>) { return "data"; }
         };
 
@@ -139,5 +137,4 @@ namespace ct
             REFLECT_DATA_MEMBER(z)
         REFLECT_DATA_END;
     }
-
 }

@@ -26,5 +26,6 @@ if(Wt_FOUND)
         debug;${Wt_DEBUG_LIBRARY}
         optimized;${Wt_LIBRARY}
         optimized;${Wt_HTTP_LIBRARY}
+        metaobject_types
     )
 endif(Wt_FOUND)
