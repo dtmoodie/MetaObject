@@ -54,14 +54,14 @@ namespace mo
     {
         SmallVecDataWrapper(T* begin, T* end)
         {
-            m_ptr = begin;
-            m_size = end - begin;
+            this->m_ptr = begin;
+            this->m_size = end - begin;
         }
 
         SmallVecDataWrapper(T* begin, size_t size)
         {
-            m_ptr = begin;
-            m_size = size;
+            this->m_ptr = begin;
+            this->m_size = size;
         }
     };
 }

@@ -46,9 +46,9 @@ namespace mo
             }
         }
     private:
-        template<class T, int N>
+        template<class U, int N>
         friend struct SmallVecStorage;
-        template<class T>
+        template<class U>
         friend struct SmallVecDataWrapper;
         T* m_ptr = nullptr;
         size_t m_size = 0;

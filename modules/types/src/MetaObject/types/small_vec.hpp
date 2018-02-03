@@ -19,7 +19,7 @@ namespace mo
             const size_t size = vec.size();
             if (size)
             {
-                assign(&vec[0], &vec[0] + size);
+                SmallVecStorage<T, N>::assign(&vec[0], &vec[0] + size);
             }
         }
 
@@ -28,7 +28,7 @@ namespace mo
             const size_t size = vec.size();
             if (size)
             {
-                assign(&vec[0], &vec[0] + size);
+                SmallVecStorage<T, N>::assign(&vec[0], &vec[0] + size);
             }
             return *this;
         }

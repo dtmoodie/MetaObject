@@ -50,23 +50,22 @@ namespace mo
             }
         };
 
-        inline void convertFromPython(std::string& result, const boost::python::object& obj);
+        inline std::string convertFromPython(const boost::python::object& obj, std::string* = nullptr);
 
         template <class K, class T>
-        inline void convertFromPython(std::map<K, T>& result, const boost::python::object& obj);
+        inline std::map<K, T> convertFromPython(const boost::python::object& obj, std::map<K, T>* = nullptr);
 
         template <class T>
-        inline ct::reflect::enable_if_not_reflected<T> convertFromPython(T& result, const boost::python::object& obj);
+        inline T convertFromPython(const boost::python::object& obj, ct::reflect::enable_if_not_reflected<T>* = nullptr);
 
         template <class T>
-        inline ct::reflect::enable_if_reflected<T> convertFromPython(T& result, const boost::python::object& obj);
+        inline T convertFromPython(const boost::python::object& obj, ct::reflect::enable_if_reflected<T>* = nullptr);
 
         template <class T>
-        inline void convertFromPython(std::vector<T>& result, const boost::python::object& obj);
+        inline std::vector<T> convertFromPython(const boost::python::object& obj, std::vector<T>* = nullptr);
 
         namespace detail
         {
-
             template <class T, class V>
             V inferSetterType(void (*)(T&, V))
             {
@@ -133,19 +132,19 @@ namespace mo
             {
             };
 
+            template <class T>
+            void populateKwargs(std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N>& kwargs,
+                                ct::_counter_<0> cnt)
+            {
+                kwargs[0] = (boost::python::arg(ct::reflect::getName<0, T>()) = boost::python::object());
+            }
+
             template <class T, int I>
             void populateKwargs(std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N>& kwargs,
-                                ct::_counter_<I>)
+                                ct::_counter_<I> cnt, typename std::enable_if<I != 0>::type* = 0)
             {
                 kwargs[I] = (boost::python::arg(ct::reflect::getName<I, T>()) = boost::python::object());
                 populateKwargs<T>(kwargs, ct::_counter_<I - 1>());
-            }
-
-            template <class T>
-            void populateKwargs(std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N>& kwargs,
-                                ct::_counter_<0>)
-            {
-                kwargs[0] = (boost::python::arg(ct::reflect::getName<0, T>()) = boost::python::object());
             }
 
             template <class T>
@@ -219,6 +218,7 @@ namespace mo
             template <class T, int I>
             void extract(T& obj, const boost::python::object& bpobj, mo::_counter_<I>)
             {
+
                 auto ptr = bpobj.ptr();
                 boost::python::object python_member;
                 if (PyObject_HasAttrString(ptr, ct::reflect::getName<I, T>()))
@@ -234,7 +234,8 @@ namespace mo
                 }
                 if (python_member)
                 {
-                    convertFromPython(ct::reflect::get<I>(obj), python_member);
+                    typedef typename std::decay<SetValue_t< I, T>>::type DType;
+                    ct::reflect::setValue<I>(obj, convertFromPython(python_member, static_cast<DType*>(nullptr)));
                 }
                 extract(obj, bpobj, mo::_counter_<I - 1>());
             }
@@ -323,41 +324,40 @@ namespace mo
             }
         } // namespace mo::python::detail
 
-        inline void convertFromPython(std::string& result, const boost::python::object& obj)
-        {
-            boost::python::extract<std::string> extractor(obj);
-            result = extractor();
-        }
 
         template <class K, class T>
-        inline void convertFromPython(std::map<K, T>& result, const boost::python::object& obj)
+        inline std::map<K, T>* convertFromPython(const boost::python::object& obj, std::map<K, T>*)
         {
             boost::python::extract<std::map<K, T>> extractor(obj);
-            result = extractor();
+            return extractor();
         }
 
         template <class T>
-        inline ct::reflect::enable_if_not_reflected<T> convertFromPython(T& result, const boost::python::object& obj)
+        inline T convertFromPython(const boost::python::object& obj, ct::reflect::enable_if_not_reflected<T>*)
         {
             boost::python::extract<T> extractor(obj);
-            result = extractor();
+            return extractor();
         }
 
         template <class T>
-        inline ct::reflect::enable_if_reflected<T> convertFromPython(T& result, const boost::python::object& obj)
+        inline T convertFromPython(const boost::python::object& obj, ct::reflect::enable_if_reflected<T>*)
         {
+            T result;
             detail::extract(result, obj, mo::_counter_<ct::reflect::ReflectData<T>::N - 1>());
+            return result;
         }
 
         template <class T>
-        inline void convertFromPython(std::vector<T>& result, const boost::python::object& obj)
+        inline std::vector<T> convertFromPython(const boost::python::object& obj, std::vector<T>*)
         {
             const ssize_t len = boost::python::len(obj);
+            std::vector<T> result;
             result.resize(len);
             for (ssize_t i = 0; i < len; ++i)
             {
-                convertFromPython(result[i], boost::python::object(obj[i]));
+                result[i] = convertFromPython(boost::python::object(obj[i]), static_cast<T*>(nullptr));
             }
+            return result;
         }
     }
 }
