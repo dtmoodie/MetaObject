@@ -176,36 +176,38 @@ namespace mo
         return false;
     }
 
-
-
-    template<typename T>
+    template <typename T>
     class MO_EXPORTS TInputParamPtr<std::shared_ptr<T>> : virtual public ITInputParam<T>
     {
-    public:
+      public:
         typedef typename ParamTraits<T>::Storage_t Storage_t;
         typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
         typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
         typedef typename ParamTraits<T>::Input_t Input_t;
+
         typedef void(TUpdateSig_t)(ConstStorageRef_t,
-            IParam*,
-            Context*,
-            OptionalTime_t,
-            size_t,
-            const std::shared_ptr<ICoordinateSystem>&,
-            UpdateFlags);
+                                   IParam*,
+                                   Context*,
+                                   OptionalTime_t,
+                                   size_t,
+                                   const std::shared_ptr<ICoordinateSystem>&,
+                                   UpdateFlags);
         typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
         typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
 
-        TInputParamPtr(const std::string& name = "", std::shared_ptr<Input_t>* userVar_ = nullptr, Context* ctx = nullptr)
+        TInputParamPtr(const std::string& name = "",
+                       std::shared_ptr<Input_t>* user_var_ = nullptr,
+                       Context* ctx = nullptr)
             : _user_var(user_var_), ITInputParam<T>(name, ctx), IParam(name, mo::ParamFlags::Input_e)
         {
-            static_assert(std::is_same<InputStorage_t, std::shared_ptr<Input_t>>::value, "std::is_same<InputStorage_t, std::shared_ptr<Input_t>>::value");
+            static_assert(std::is_same<InputStorage_t, std::shared_ptr<Input_t>>::value,
+                          "std::is_same<InputStorage_t, std::shared_ptr<Input_t>>::value");
         }
 
         bool setInput(std::shared_ptr<IParam> input)
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
-            if (ITInputParam<T>::setInput(param))
+            if (ITInputParam<T>::setInput(input))
             {
                 if (_user_var)
                 {
@@ -233,7 +235,7 @@ namespace mo
         bool setInput(IParam* input)
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
-            if (ITInputParam<T>::setInput(param))
+            if (ITInputParam<T>::setInput(input))
             {
                 if (_user_var)
                 {
@@ -262,7 +264,7 @@ namespace mo
             _user_var = user_var_;
         }
 
-        bool getInput(const OptionalTime_t& ts, size_t* fn = nullptr)
+        bool getInput(const OptionalTime_t& ts, size_t* fn_)
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             if (_user_var && (ITInputParam<T>::_shared_input || ITInputParam<T>::_input))
@@ -296,7 +298,7 @@ namespace mo
             return false;
         }
 
-        bool getInput(size_t fn, OptionalTime_t* ts = nullptr)
+        bool getInput(size_t fn, OptionalTime_t* ts_)
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             if (_user_var && (ITInputParam<T>::_shared_input || ITInputParam<T>::_input))
@@ -330,20 +332,20 @@ namespace mo
             return false;
         }
 
-    protected:
+      protected:
         virtual bool updateDataImpl(
             const Storage_t&, const OptionalTime_t&, Context*, size_t, const std::shared_ptr<ICoordinateSystem>&)
         {
             return true;
         }
 
-        virtual void onInputUpdate(ConstStorageRef_t,
-            IParam*,
-            Context*,
-            OptionalTime_t,
-            size_t,
-            const std::shared_ptr<ICoordinateSystem>&,
-            UpdateFlags)
+        virtual void onInputUpdate(ConstStorageRef_t data,
+                                   IParam* param,
+                                   Context* ctx,
+                                   OptionalTime_t ts,
+                                   size_t fn,
+                                   const std::shared_ptr<ICoordinateSystem>& cs,
+                                   UpdateFlags fg)
         {
             if (fg == mo::BufferUpdated_e && param->checkFlags(mo::ParamFlags::Buffer_e))
             {
@@ -368,6 +370,5 @@ namespace mo
         std::shared_ptr<Input_t>* _user_var; // Pointer to the user space pointer variable of type T
         InputStorage_t _current_data;
     };
-
 }
 #endif
