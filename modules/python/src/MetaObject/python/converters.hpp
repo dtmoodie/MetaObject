@@ -17,10 +17,14 @@
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
+#include <type_traits>
+
 namespace mo
 {
     namespace python
     {
+        template <class T>
+        constexpr bool is_pointer_v = std::is_pointer<T>::value;
         namespace detail
         {
             template <class T>
@@ -56,7 +60,8 @@ namespace mo
         inline std::map<K, T> convertFromPython(const boost::python::object& obj, std::map<K, T>* = nullptr);
 
         template <class T>
-        inline T convertFromPython(const boost::python::object& obj, ct::reflect::enable_if_not_reflected<T>* = nullptr);
+        inline T convertFromPython(const boost::python::object& obj,
+                                   ct::reflect::enable_if_not_reflected<T>* = nullptr);
 
         template <class T>
         inline T convertFromPython(const boost::python::object& obj, ct::reflect::enable_if_reflected<T>* = nullptr);
@@ -83,10 +88,19 @@ namespace mo
             using GetValue_t = decltype(inferGetterType<T>(ct::reflect::getValue<I, T>));
 
             template <class T, int I, class BP>
-            void addPropertyImpl(BP& bpobj)
+            auto addPropertyImpl(BP& bpobj)
+                -> std::enable_if_t<!is_pointer_v<decltype(ct::reflect::getValue<I>(std::declval<T>()))>>
             {
                 bpobj.add_property(
                     ct::reflect::getName<I, T>(), &ct::reflect::getValue<I, T>, &ct::reflect::setValue<I, T>);
+            }
+
+            template <class T, int I, class BP>
+            auto addPropertyImpl(BP& bpobj)
+                -> std::enable_if_t<is_pointer_v<decltype(ct::reflect::getValue<I>(std::declval<T>()))>>
+            {
+                // bpobj.add_property(
+                //    ct::reflect::getName<I, T>(), &ct::reflect::getValue<I, T>, &ct::reflect::setValue<I, T>);
             }
 
             template <class T, class BP>
@@ -110,7 +124,7 @@ namespace mo
                 if (ext.check())
                 {
                     Type value = ext();
-                    ct::reflect::setValue<ct::reflect::ReflectData<T>::N - 1>(data, value);
+                    ct::reflect::setValue<ct::reflect::ReflectData<T>::N - 1>(data, std::move(value));
                 }
             }
 
@@ -122,7 +136,7 @@ namespace mo
                 if (ext.check())
                 {
                     Type value = ext();
-                    ct::reflect::setValue<ct::reflect::ReflectData<T>::N - sizeof...(args)-1>(data, value);
+                    ct::reflect::setValue<ct::reflect::ReflectData<T>::N - sizeof...(args)-1>(data, std::move(value));
                 }
                 initDataMembers(data, args...);
             }
@@ -141,7 +155,8 @@ namespace mo
 
             template <class T, int I>
             void populateKwargs(std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N>& kwargs,
-                                ct::_counter_<I> cnt, typename std::enable_if<I != 0>::type* = 0)
+                                ct::_counter_<I> cnt,
+                                typename std::enable_if<I != 0>::type* = 0)
             {
                 kwargs[I] = (boost::python::arg(ct::reflect::getName<I, T>()) = boost::python::object());
                 populateKwargs<T>(kwargs, ct::_counter_<I - 1>());
@@ -211,7 +226,10 @@ namespace mo
                 }
                 if (python_member)
                 {
-                    convertFromPython(ct::reflect::get<0>(obj), python_member);
+                    typedef typename std::decay<SetValue_t<0, T>>::type DType;
+                    ct::reflect::setValue<0>(obj,
+                                             convertFromPython<DType>(python_member, static_cast<DType*>(nullptr)));
+                    // convertFromPython(ct::reflect::get<0>(obj), python_member);
                 }
             }
 
@@ -234,8 +252,9 @@ namespace mo
                 }
                 if (python_member)
                 {
-                    typedef typename std::decay<SetValue_t< I, T>>::type DType;
-                    ct::reflect::setValue<I>(obj, convertFromPython(python_member, static_cast<DType*>(nullptr)));
+                    typedef typename std::decay<SetValue_t<I, T>>::type DType;
+                    ct::reflect::setValue<I>(obj,
+                                             convertFromPython<DType>(python_member, static_cast<DType*>(nullptr)));
                 }
                 extract(obj, bpobj, mo::_counter_<I - 1>());
             }
@@ -324,7 +343,6 @@ namespace mo
             }
         } // namespace mo::python::detail
 
-
         template <class K, class T>
         inline std::map<K, T>* convertFromPython(const boost::python::object& obj, std::map<K, T>*)
         {
@@ -355,7 +373,7 @@ namespace mo
             result.resize(len);
             for (ssize_t i = 0; i < len; ++i)
             {
-                result[i] = convertFromPython(boost::python::object(obj[i]), static_cast<T*>(nullptr));
+                result[i] = convertFromPython<T>(boost::python::object(obj[i]), static_cast<T*>(nullptr));
             }
             return result;
         }

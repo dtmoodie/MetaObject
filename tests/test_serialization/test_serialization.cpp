@@ -23,7 +23,7 @@
 #include "RuntimeObjectSystem/shared_ptr.hpp"
 #include "cereal/archives/portable_binary.hpp"
 #include "cereal/archives/xml.hpp"
-#include <MetaObject/params/Types.hpp>
+#include "MetaObject/types/file_types.hpp"
 #include <MetaObject/serialization/SerializationFactory.hpp>
 
 #include <fstream>
@@ -231,7 +231,8 @@ BOOST_AUTO_TEST_CASE(deserialize_text_vector)
     ss << "[0, 1, 2, 3, 4, 5, 6, 7]";
     deserialization_function(&param, ss);
     BOOST_REQUIRE(data.size() == 8);
-    for (int expected_value = 0; expected_value < 8; ++expected_value) {
+    for (int expected_value = 0; expected_value < 8; ++expected_value)
+    {
         BOOST_REQUIRE_EQUAL(data[expected_value], expected_value);
     }
 }

@@ -7,13 +7,13 @@
 #include "MetaObject/params/ParamMacros.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
-#include "MetaObject/params/Types.hpp"
 #include "MetaObject/params/buffers/BufferFactory.hpp"
 #include "MetaObject/params/buffers/IBuffer.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
 #include "MetaObject/thread/ThreadPool.hpp"
+#include "MetaObject/types/file_types.hpp"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include <boost/any.hpp>
@@ -126,11 +126,14 @@ BOOST_AUTO_PARAM_TEST_CASE(buffer_test, buffer_test_cases, end(buffer_test_cases
             process_queue.push_back(*ts);
     });
     auto connection = input_param.registerUpdateNotifier(&slot);
-    for (int j = 0; j < 5; ++j) {
-        for (int i = 50 * j; i < 50 + 50 * j; ++i) {
+    for (int j = 0; j < 5; ++j)
+    {
+        for (int i = 50 * j; i < 50 + 50 * j; ++i)
+        {
             output_param.updateData(i, mo::tag::_timestamp = mo::Time_t(i * mo::ms));
         }
-        for (auto itr = process_queue.begin(); itr != process_queue.end();) {
+        for (auto itr = process_queue.begin(); itr != process_queue.end();)
+        {
             int data;
             BOOST_REQUIRE(input_param.getData(data, *itr));
             BOOST_REQUIRE_EQUAL(mo::Time_t(data * mo::ms), *itr);
@@ -138,12 +141,15 @@ BOOST_AUTO_PARAM_TEST_CASE(buffer_test, buffer_test_cases, end(buffer_test_cases
         }
     }
 
-    for (int j = 0; j < 5; ++j) {
-        for (int i = 50 * j; i < 50 + 50 * j; ++i) {
+    for (int j = 0; j < 5; ++j)
+    {
+        for (int i = 50 * j; i < 50 + 50 * j; ++i)
+        {
             output = i * 2;
             output_param.emitUpdate(mo::OptionalTime_t(i * mo::ms));
         }
-        for (auto itr = process_queue.begin(); itr != process_queue.end();) {
+        for (auto itr = process_queue.begin(); itr != process_queue.end();)
+        {
             int data;
             BOOST_REQUIRE(input_param.getData(data, *itr));
             BOOST_REQUIRE_EQUAL(mo::Time_t((data / 2) * mo::ms), *itr);

@@ -41,42 +41,52 @@ namespace ct
         };
 
         template <int I>
-        static constexpr inline
-            std::string 
-            getValue(const mo::ReadFile& data){return data.string();}
+        static constexpr inline std::string getValue(const mo::ReadFile& data)
+        {
+            return data.string();
+        }
 
         template <int I>
-        static constexpr inline
-            void setValue(const mo::ReadFile& data, const std::string& path){data = mo::ReadFile(path);}
+        static constexpr inline void setValue(const mo::ReadFile& data, std::string&& path)
+        {
+            data = mo::ReadFile(std::move(path));
+        }
 
         template <int I>
-        static constexpr inline
-            std::string
-            getValue(const mo::WriteFile& data) { return data.string(); }
+        static constexpr inline std::string getValue(const mo::WriteFile& data)
+        {
+            return data.string();
+        }
 
         template <int I>
-        static constexpr inline
-            void setValue(const mo::WriteFile& data, const std::string& path) { data = mo::WriteFile(path); }
+        static constexpr inline void setValue(const mo::WriteFile& data, std::string&& path)
+        {
+            data = mo::WriteFile(std::move(path));
+        }
 
         template <int I>
-        static constexpr inline
-            std::string
-            getValue(const mo::ReadDirectory& data) { return data.string(); }
+        static constexpr inline std::string getValue(const mo::ReadDirectory& data)
+        {
+            return data.string();
+        }
 
         template <int I>
-        static constexpr inline
-            void setValue(const mo::ReadDirectory& data, const std::string& path) { data = mo::ReadDirectory(path); }
+        static constexpr inline void setValue(const mo::ReadDirectory& data, std::string&& path)
+        {
+            data = mo::ReadDirectory(std::move(path));
+        }
 
         template <int I>
-        static constexpr inline
-            std::string
-            getValue(const mo::WriteDirectory& data) { return data.string(); }
+        static constexpr inline std::string getValue(const mo::WriteDirectory& data)
+        {
+            return data.string();
+        }
 
         template <int I>
-        static constexpr inline
-            void setValue(const mo::WriteDirectory& data, const std::string& path) { data = mo::WriteDirectory(path); }
-
-
+        static constexpr inline void setValue(const mo::WriteDirectory& data, std::string&& path)
+        {
+            data = mo::WriteDirectory(std::move(path));
+        }
     }
 }
 

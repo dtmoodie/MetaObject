@@ -51,7 +51,7 @@ namespace mo
                     {
                         auto token = typed->access();
 
-                        token() = mo::python::convertFromPython(obj, static_cast<T*>(nullptr));
+                        token() = mo::python::convertFromPython<T>(obj, static_cast<T*>(nullptr));
                         return true;
                     }
                 }
@@ -69,12 +69,15 @@ namespace mo
                     }
                     else
                     {
-                        MO_LOG(trace) << "Failed to cast parameter (" << mo::Demangle::typeToName(param->getTypeInfo()) << ") to the correct type for " << mo::Demangle::typeToName(mo::TypeInfo(typeid(T)));
+                        MO_LOG(trace) << "Failed to cast parameter (" << mo::Demangle::typeToName(param->getTypeInfo())
+                                      << ") to the correct type for "
+                                      << mo::Demangle::typeToName(mo::TypeInfo(typeid(T)));
                     }
                 }
                 else
                 {
-                    MO_LOG(trace) << "Incorrect datatype input " << mo::Demangle::typeToName(param->getTypeInfo()) << " expcted " << mo::Demangle::typeToName(mo::TypeInfo(typeid(T)));
+                    MO_LOG(trace) << "Incorrect datatype input " << mo::Demangle::typeToName(param->getTypeInfo())
+                                  << " expcted " << mo::Demangle::typeToName(mo::TypeInfo(typeid(T)));
                 }
                 return {};
             }
