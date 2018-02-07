@@ -47,7 +47,7 @@ namespace ct
         }
 
         template <int I>
-        static constexpr inline void setValue(const mo::ReadFile& data, std::string&& path)
+        static constexpr inline void setValue(const mo::ReadFile& data, const std::string& path)
         {
             data = mo::ReadFile(std::move(path));
         }
@@ -59,7 +59,7 @@ namespace ct
         }
 
         template <int I>
-        static constexpr inline void setValue(const mo::WriteFile& data, std::string&& path)
+        static constexpr inline void setValue(const mo::WriteFile& data, const std::string& path)
         {
             data = mo::WriteFile(std::move(path));
         }
@@ -71,7 +71,7 @@ namespace ct
         }
 
         template <int I>
-        static constexpr inline void setValue(const mo::ReadDirectory& data, std::string&& path)
+        static constexpr inline void setValue(const mo::ReadDirectory& data, const std::string& path)
         {
             data = mo::ReadDirectory(std::move(path));
         }
@@ -83,7 +83,7 @@ namespace ct
         }
 
         template <int I>
-        static constexpr inline void setValue(const mo::WriteDirectory& data, std::string&& path)
+        static constexpr inline void setValue(const mo::WriteDirectory& data, const std::string& path)
         {
             data = mo::WriteDirectory(std::move(path));
         }
