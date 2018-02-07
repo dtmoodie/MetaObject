@@ -19,7 +19,7 @@
 #define RANGED_PARAM(type, name, init, min, max)
 
 #define INPUT(type_, name, init)                                                                                       \
-    const mo::argument_type<void(type_)>::type* name = init;                                                           \
+    mo::TInputParamPtr<mo::argument_type<void(type_)>::type>::Input_t name = init;                                                           \
     mo::TInputParamPtr<mo::argument_type<void(type_)>::type> name##_param;                                             \
     void _init_params(bool firstInit, mo::_counter_<__COUNTER__> dummy)                                                \
     {                                                                                                                  \

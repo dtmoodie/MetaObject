@@ -183,7 +183,8 @@ namespace mo
         typedef typename ParamTraits<T>::Storage_t Storage_t;
         typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
         typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
-        typedef typename ParamTraits<T>::Input_t Input_t;
+        //typedef typename ParamTraits<T>::Input_t Input_t;
+        typedef std::shared_ptr<const T> Input_t;
 
         typedef void(TUpdateSig_t)(ConstStorageRef_t,
                                    IParam*,
@@ -196,12 +197,12 @@ namespace mo
         typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
 
         TInputParamPtr(const std::string& name = "",
-                       std::shared_ptr<Input_t>* user_var_ = nullptr,
+                       std::shared_ptr<T>* user_var_ = nullptr,
                        Context* ctx = nullptr)
             : _user_var(user_var_), ITInputParam<T>(name, ctx), IParam(name, mo::ParamFlags::Input_e)
         {
-            static_assert(std::is_same<InputStorage_t, std::shared_ptr<Input_t>>::value,
-                          "std::is_same<InputStorage_t, std::shared_ptr<Input_t>>::value");
+            //static_assert(std::is_same<InputStorage_t, std::shared_ptr<Input_t>>::value,
+            //              "std::is_same<InputStorage_t, std::shared_ptr<Input_t>>::value");
         }
 
         bool setInput(std::shared_ptr<IParam> input)
@@ -216,14 +217,14 @@ namespace mo
                         if (this->_input->getData(data))
                         {
                             _current_data = data;
-                            *_user_var = ParamTraits<T>::ptr(_current_data);
+                            *_user_var = _current_data;
                             return true;
                         }
                     if (this->_shared_input)
                         if (this->_shared_input->getData(data))
                         {
                             _current_data = data;
-                            *_user_var = ParamTraits<T>::ptr(_current_data);
+                            *_user_var = _current_data;
                             return true;
                         }
                 }
@@ -244,13 +245,13 @@ namespace mo
                         if (ITInputParam<T>::_input->getData(data))
                         {
                             _current_data = data;
-                            *_user_var = ParamTraits<T>::ptr(_current_data);
+                            *_user_var = _current_data;
                         }
                     if (ITInputParam<T>::_shared_input)
                         if (ITInputParam<T>::_shared_input->getData(data))
                         {
                             _current_data = data;
-                            *_user_var = ParamTraits<T>::ptr(_current_data);
+                            *_user_var = _current_data;
                         }
                 }
                 return true;
@@ -258,7 +259,7 @@ namespace mo
             return false;
         }
 
-        void setUserDataPtr(std::shared_ptr<Input_t>* user_var_)
+        void setUserDataPtr(std::shared_ptr<T>* user_var_)
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             _user_var = user_var_;
@@ -360,14 +361,14 @@ namespace mo
                 this->_fn = fn;
                 if (_user_var)
                 {
-                    *_user_var = ParamTraits<T>::ptr(_current_data);
+                    *_user_var = _current_data;
                     ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
                     IParam::emitUpdate(ts, ctx, fn, cs, fg);
                 }
             }
         }
 
-        std::shared_ptr<Input_t>* _user_var; // Pointer to the user space pointer variable of type T
+        std::shared_ptr<T>* _user_var; // Pointer to the user space pointer variable of type T
         InputStorage_t _current_data;
     };
 }
