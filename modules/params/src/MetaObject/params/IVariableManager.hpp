@@ -9,12 +9,14 @@ namespace mo
 {
     template <typename T>
     class TInputParam;
+    class IMetaObject;
     class MO_EXPORTS IVariableManager
     {
       public:
-        virtual void addParam(IParam* param) = 0;
+        virtual void addParam(IMetaObject* obj, IParam* param) = 0;
 
-        virtual void removeParam(IParam* param) = 0;
+        virtual void removeParam(IMetaObject* obj, IParam* param) = 0;
+        virtual void removeParam(const IMetaObject* obj) = 0;
 
         template <typename T>
         std::vector<IParam*> getOutputParams();

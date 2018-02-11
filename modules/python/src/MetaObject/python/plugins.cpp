@@ -8,7 +8,7 @@ namespace mo
 {
     bool loadPlugin(std::string str) { return mo::MetaObjectFactory::instance()->loadPlugin(str); }
 
-    int loadPlugins(std::string dir)
+    int loadPluginsInternal(std::string dir)
     {
         int nplugins = mo::MetaObjectFactory::instance()->loadPlugins(dir);
         {
@@ -24,7 +24,12 @@ namespace mo
                 boost::python::import(python::module_name.c_str()).attr("plugins").attr(name.getPluginName().c_str()) = plugin;
             }
         }
+        return nplugins;
+    }
 
+    int loadPlugins(std::string dir)
+    {
+        auto nplugins = loadPluginsInternal(dir);
         mo::python::registerObjects();
         return nplugins;
     }
@@ -97,9 +102,11 @@ namespace mo
         boost::python::def("loadPlugin", &loadPlugin);
         boost::python::def("loadPlugins", &loadPlugins);
 #ifdef _MSC_VER
-        loadPlugins("./Plugins");
+        loadPluginsInternal("./Plugins");
 #else
-        loadPlugins("./bin/Plugins");
+        loadPluginsInternal("./bin/Plugins");
 #endif
+        mo::python::registerInterfaces();
+        mo::python::registerObjects();
     }
 }

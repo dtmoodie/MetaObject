@@ -6,6 +6,7 @@ set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 CMAKE_POLICY(SET CMP0020 NEW)
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/CMakeMacros.cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
+list(REVERSE CMAKE_MODULE_PATH)
 
 set(link_libs "")
 

@@ -12,8 +12,9 @@ namespace mo
       public:
         VariableManager();
         ~VariableManager();
-        virtual void addParam(IParam* param);
-        virtual void removeParam(IParam* param);
+        virtual void addParam(IMetaObject* obj, IParam* param);
+        virtual void removeParam(IMetaObject* obj, IParam* param);
+        virtual void removeParam(const IMetaObject* obj);
 
         virtual std::vector<IParam*> getOutputParams(TypeInfo type);
         virtual std::vector<IParam*> getAllParms();

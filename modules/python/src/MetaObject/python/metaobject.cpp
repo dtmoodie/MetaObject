@@ -1,22 +1,3 @@
-#include <boost/mpl/vector.hpp>
-#include <functional>
-
-namespace boost
-{
-    namespace python
-    {
-        namespace detail
-        {
-
-            template <class T, class... Args>
-            inline boost::mpl::vector<T, Args...> get_signature(std::function<T(Args...)>, void* = 0)
-            {
-                return boost::mpl::vector<T, Args...>();
-            }
-        }
-    }
-}
-
 #include "MetaObject.hpp"
 #include "MetaObject/object/MetaObject.hpp"
 #include "MetaObject/object/IMetaObjectInfo.hpp"
@@ -117,43 +98,8 @@ namespace mo
                 "IObjectConstructor", boost::python::no_init);
         }
 
-        rcc::shared_ptr<MetaObject> constructObject(IObjectConstructor* ctr)
-        {
-            rcc::shared_ptr<MetaObject> output;
-            auto obj = ctr->Construct();
-            if (obj)
-            {
-                output = obj;
-                output->Init(true);
-            }
-            return output;
-        }
-
         IObjectConstructor* getCtr(IObjectConstructor* ctr) { return ctr; }
 
-        template<class T>
-        bool setParamHelper(python::DataConverterRegistry::Set_t setter, std::string name,
-                            T& obj, const boost::python::object& python_obj)
-        {
-            auto param = obj.getParamOptional(name);
-            if (param)
-            {
-                return setter(param, python_obj);
-            }
-            return false;
-        }
-
-        template<class T>
-        boost::python::object getParamHelper(python::DataConverterRegistry::Get_t getter, std::string name,
-            const T& obj)
-        {
-            auto param = obj.getParamOptional(name);
-            if (param)
-            {
-                return getter(param);
-            }
-            return {};
-        }
 
         void setupObjects(std::vector<IObjectConstructor*>& ctrs)
         {
@@ -175,7 +121,7 @@ namespace mo
                         bpobj(info->GetObjectName().c_str(), info->Print().c_str(), boost::python::no_init);
                     bpobj.def("__init__",
                               boost::python::make_constructor(
-                                  std::function<rcc::shared_ptr<MetaObject>()>(std::bind(&constructObject, *itr))));
+                                  std::function<rcc::shared_ptr<MetaObject>()>(std::bind(&constructObject<MetaObject>, *itr))));
                     boost::python::object ctr = mo::makeConstructor<IMetaObject>(*itr);
                     if (ctr)
                     {
@@ -185,17 +131,7 @@ namespace mo
                     auto minfo = dynamic_cast<IMetaObjectInfo*>(info);
                     if (minfo)
                     {
-                        std::vector<ParamInfo*> param_infos = minfo->getParamInfo();
-                        for (auto param_info : param_infos)
-                        {
-                            auto setter = python::DataConverterRegistry::instance()->getSetter(param_info->data_type);
-                            auto getter = python::DataConverterRegistry::instance()->getGetter(param_info->data_type);
-                            if (setter && getter)
-                            {
-                                bpobj.def(("get_" + param_info->name).c_str(), std::function<boost::python::object(const MetaObject&)>(std::bind(getParamHelper<MetaObject>, getter, param_info->name, std::placeholders::_1)));
-                                bpobj.def(("set_" + param_info->name).c_str(), std::function<bool(MetaObject&, const boost::python::object&)>(std::bind(setParamHelper<MetaObject>, setter, param_info->name, std::placeholders::_1, std::placeholders::_2)));
-                            }
-                        }
+                        addParamAccessors<MetaObject>(bpobj, minfo);
                     }
                     
                     boost::python::import(mo::python::module_name.c_str()).attr("object").attr(info->GetObjectName().c_str()) = bpobj;
@@ -210,6 +146,6 @@ namespace mo
             boost::python::implicitly_convertible<rcc::shared_ptr<MetaObject>, rcc::shared_ptr<IMetaObject>>();
         }
 
-        static RegisterInterface<IMetaObject> g_register(&setupInterface, &setupObjects);
+        //static RegisterInterface<IMetaObject> g_register(&setupInterface, &setupObjects);
     }
 }

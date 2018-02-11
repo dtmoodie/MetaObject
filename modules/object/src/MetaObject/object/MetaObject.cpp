@@ -22,18 +22,6 @@
 
 namespace mo
 {
-    bool IMetaObject::InheritsFrom(InterfaceID iid)
-    {
-        if (iid == s_interfaceID)
-        {
-            return true;
-        }
-        else
-        {
-            return IObject::InheritsFrom(iid);
-        }
-    }
-
     IMetaObject::~IMetaObject() {}
 
     int IMetaObject::connect(IMetaObject* sender,
@@ -112,11 +100,7 @@ namespace mo
     {
         if (_pimpl->_variable_manager)
         {
-            auto params = getParams();
-            for (auto param : params)
-            {
-                _pimpl->_variable_manager->removeParam(param);
-            }
+            _pimpl->_variable_manager->removeParam(this);
         }
         delete _pimpl;
     }
@@ -304,12 +288,12 @@ namespace mo
         int count = 0;
         for (auto& param : _pimpl->_implicit_params)
         {
-            manager->addParam(param.second.get());
+            manager->addParam(this, param.second.get());
             ++count;
         }
         for (auto& param : _pimpl->_params)
         {
-            manager->addParam(param.second);
+            manager->addParam(this, param.second);
             ++count;
         }
         return count;
@@ -318,16 +302,7 @@ namespace mo
     int MetaObject::removeVariableManager(IVariableManager* mgr)
     {
         int count = 0;
-        for (auto& param : _pimpl->_implicit_params)
-        {
-            mgr->removeParam(param.second.get());
-            ++count;
-        }
-        for (auto& param : _pimpl->_params)
-        {
-            mgr->removeParam(param.second);
-            ++count;
-        }
+        mgr->removeParam(this);
         return count;
     }
 

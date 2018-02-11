@@ -1,7 +1,8 @@
 #pragma once
+#include <RuntimeObjectSystem/shared_ptr.hpp>
 #include <MetaObject/detail/Export.hpp>
 #include <MetaObject/detail/TypeInfo.hpp>
-#include <RuntimeObjectSystem/shared_ptr.hpp>
+
 #include <map>
 #include <memory>
 
@@ -105,3 +106,4 @@ struct TDerivedSystemTable : public SystemTable
     TDerivedSystemTable() {}
     ~TDerivedSystemTable() {}
 };
+

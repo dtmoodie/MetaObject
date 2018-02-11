@@ -7,6 +7,11 @@
 #include "MetaObject/params/ParamFactory.hpp"
 #include "PythonPolicy.hpp"
 #include "PythonSetup.hpp"
+#include "MetaObject.hpp"
+
+#include <RuntimeObjectSystem/IRuntimeObjectSystem.h>
+#include <RuntimeObjectSystem/InterfaceDatabase.hpp>
+#include <RuntimeObjectSystem/InheritanceGraph.hpp>
 
 #include <boost/log/expressions.hpp>
 #include <boost/python.hpp>
@@ -117,8 +122,12 @@ namespace mo
     namespace python
     {
         static std::vector<std::function<void(void)>> setup_functions;
-        static std::vector<std::pair<uint32_t, std::function<void(std::vector<IObjectConstructor*>&)>>>
-            interface_setup_functions;
+
+        std::map<uint32_t, std::pair<std::function<void(void)>, std::function<void(std::vector<IObjectConstructor*>&)>>>& interfaceSetupFunctions()
+        {
+            static std::map<uint32_t, std::pair<std::function<void(void)>, std::function<void(std::vector<IObjectConstructor*>&)>>> data;
+            return data;
+        }
         static bool setup = false;
         MO_EXPORTS std::string module_name;
 
@@ -135,18 +144,127 @@ namespace mo
         }
 
         void registerInterfaceSetupFunction(uint32_t interface_id,
+                                            std::function<void(void)>&& interface_func,
                                             std::function<void(std::vector<IObjectConstructor*>&)>&& func)
         {
-            interface_setup_functions.emplace_back(interface_id, std::move(func));
+            auto& data = interfaceSetupFunctions();
+            if(data.find(interface_id) == data.end())
+            {
+                data[interface_id] = {std::move(interface_func), std::move(func)};
+            }
+        }
+
+        void registerObjectsHelper(rcc::InheritanceGraph& graph, std::vector<IObjectConstructor*>& ctrs,
+                                   std::map<uint32_t, std::function<void(std::vector<IObjectConstructor*>&)>> setup_functions)
+        {
+            for( auto itr = graph.interfaces.begin(); itr != graph.interfaces.end(); )
+            {
+                if(itr->second.children.empty())
+                {
+                    auto func_itr = setup_functions.find(itr->first);
+                    for(unsigned int iid : itr->second.parents)
+                    {
+                        graph.interfaces[iid].children.erase(itr->first);
+                    }
+                    if(func_itr != setup_functions.end())
+                    {
+                        func_itr->second(ctrs);
+                    }
+                    itr = graph.interfaces.erase(itr);
+                }else
+                {
+                    ++itr;
+                }
+            }
+            if(!graph.interfaces.empty())
+            {
+                registerObjectsHelper(graph, ctrs, setup_functions);
+            }
+        }
+
+        rcc::InheritanceGraph createGraph()
+        {
+            rcc::InheritanceGraph graph;
+            auto system = mo::MetaObjectFactory::instance()->getObjectSystem();
+            auto ifaces = system->GetInterfaces();
+            //graph.interfaces.resize(ifaces.size());
+            size_t i = 0;
+            for(auto& info : ifaces)
+            {
+                graph.interfaces[info.iid].name = info.name;
+                ++i;
+            }
+
+
+            for(i = 0; i < ifaces.size(); ++i)
+            {
+                auto& info = ifaces[i];
+                for(size_t j = 0; j < ifaces.size(); ++j)
+                {
+                    if(i != j)
+                    {
+                        if(info.direct_inheritance_f(ifaces[j].iid))
+                        {
+                            graph.interfaces[ifaces[i].iid].parents.insert(ifaces[j].iid);
+                            graph.interfaces[ifaces[j].iid].children.insert(ifaces[i].iid);
+                        }
+                    }
+                }
+            }
+            return graph;
         }
 
         void registerObjects()
         {
+            auto graph = createGraph();
             auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
-            for (const auto& func : mo::python::interface_setup_functions)
+            auto funcs = interfaceSetupFunctions();
+            std::map<uint32_t, std::function<void(std::vector<IObjectConstructor*>&)>> func_map;
+            for(auto& func : funcs)
             {
-                func.second(ctrs);
+                func_map[func.first] = func.second.second;
             }
+            registerObjectsHelper(graph, ctrs, func_map);
+        }
+
+        void registerInterfacesHelper(rcc::InheritanceGraph& graph,
+                                                             std::map<uint32_t, std::function<void()>> setup_functions)
+        {
+            for( auto itr = graph.interfaces.begin(); itr != graph.interfaces.end(); )
+            {
+                if(itr->second.parents.empty())
+                {
+                    auto func_itr = setup_functions.find(itr->first);
+                    for(unsigned int iid : itr->second.children)
+                    {
+                        graph.interfaces[iid].parents.erase(itr->first);
+                    }
+                    if(func_itr != setup_functions.end())
+                    {
+                        func_itr->second();
+                    }
+                    itr = graph.interfaces.erase(itr);
+                }else
+                {
+                    ++itr;
+                }
+            }
+            if(!graph.interfaces.empty())
+            {
+                registerInterfacesHelper(graph, setup_functions);
+            }
+        }
+
+        void registerInterfaces()
+        {
+            auto graph = createGraph();
+            auto funcs = interfaceSetupFunctions();
+            std::map<uint32_t, std::function<void()>> func_map;
+            for(auto& func : funcs)
+            {
+                func_map[func.first] = func.second.first;
+            }
+            registerInterfacesHelper(graph, func_map);
         }
 
         void pythonSetup(const char* module_name_)
@@ -160,10 +278,12 @@ namespace mo
             boost::python::def("listObjectInfos", &listObjectInfos);
             boost::python::def("recompile", &recompile, (boost::python::arg("async") = false));
             boost::python::def("log", &setLogLevel);
+
             for (const auto& func : mo::python::setup_functions)
             {
                 func();
             }
+            RegisterInterface<IMetaObject> metaobject(&mo::python::setupInterface, &mo::python::setupObjects);
             setupPlugins(module_name);
             mo::python::setup = true;
         }

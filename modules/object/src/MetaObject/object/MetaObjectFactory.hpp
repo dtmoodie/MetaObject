@@ -4,13 +4,13 @@
 #include <functional>
 #include <memory>
 
-struct SystemTable;
 struct IRuntimeObjectSystem;
 struct IObjectInfo;
 struct IObjectConstructor;
+struct SystemTable;
 
 namespace mo
-{
+{    
     class IMetaObject;
     template <class Sig>
     class TSlot;

@@ -5,6 +5,7 @@
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/TSlot.hpp"
+#include "MetaObject/core/SystemTable.hpp"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include <MetaObject/thread/boost_thread.hpp>

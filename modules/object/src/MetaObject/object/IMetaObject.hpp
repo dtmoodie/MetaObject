@@ -41,9 +41,6 @@ namespace mo
         typedef rcc::shared_ptr<IMetaObject> Ptr;
         typedef rcc::shared_ptr<const IMetaObject> ConstPtr;
 
-        static const InterfaceID s_interfaceID = ct::ctcrc32("IMetaObject");
-        static bool InheritsFrom(InterfaceID iid);
-
         static int connect(IMetaObject* sender,
                            const std::string& signal_name,
                            IMetaObject* receiver,
