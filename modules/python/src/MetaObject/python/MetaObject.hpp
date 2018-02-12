@@ -83,6 +83,15 @@ namespace mo
         }
     }
 
+    template <class R, class... Args, int... Is>
+    std::function<R(Args...)> ctrBind(R (*p)(IObjectConstructor* ctr, std::vector<std::string>, Args...),
+                                      IObjectConstructor* ctr,
+                                      std::vector<std::string> param_names,
+                                      int_sequence<Is...>)
+    {
+        return std::bind(p, ctr, param_names, placeholder_template<Is>{}...);
+    }
+
     template <int N, class T, class Storage, class... Args>
     struct CreateMetaObject<N, T, Storage, ce::variadic_typedef<Args...>>
     {
@@ -107,6 +116,11 @@ namespace mo
             return ptr;
         }
 
+        static std::function<ConstructedType(Args...)> bind(IObjectConstructor* ctr, std::vector<std::string> param_names)
+        {
+            return ctrBind(&CreateMetaObject<N, T, Storage, ce::variadic_typedef<Args...>>::create, ctr, param_names, make_int_sequence<N>{});
+        }
+
         boost::python::detail::keyword_range range() const
         {
             return std::make_pair<boost::python::detail::keyword const*, boost::python::detail::keyword const*>(
@@ -116,24 +130,14 @@ namespace mo
         std::array<boost::python::detail::keyword, N> m_keywords;
     };
 
-    template <class R, class... Args, int... Is>
-    std::function<R(Args...)> ctrBind(R (*p)(IObjectConstructor* ctr, std::vector<std::string>, Args...),
-                                      IObjectConstructor* ctr,
-                                      std::vector<std::string> param_names,
-                                      int_sequence<Is...>)
-    {
-        return std::bind(p, ctr, param_names, placeholder_template<Is>{}...);
-    }
-
-    template <class T, int N, class Storage, template <int N, class T, class S, class... Args> class Creator = CreateMetaObject>
+    template <class T, int N, class Storage, template <int N1, class T1, class S, class... Args> class Creator = CreateMetaObject>
     boost::python::object makeConstructorHelper(IObjectConstructor* ctr, const std::vector<std::string>& param_names)
     {
         typedef typename FunctionSignatureBuilder<boost::python::object, N - 1>::VariadicTypedef_t Signature_t;
         typedef Creator<N, T, Storage, Signature_t> Creator_t;
-        typedef typename Creator_t::ConstructedType ReturnType;
         Creator_t creator(param_names);
         return boost::python::make_constructor(
-            ctrBind<ReturnType>(Creator_t::create, ctr, param_names, make_int_sequence<N>{}),
+            Creator_t::bind(ctr, param_names),
             boost::python::default_call_policies(),
             creator);
     }
@@ -191,16 +195,25 @@ namespace mo
         }
     }
 
-    template <class T, class Storage = rcc::shared_ptr<T>, template <int N, class T, class Storage, class... Args> class Creator = CreateMetaObject>
-    boost::python::object makeConstructor(IObjectConstructor* ctr)
+    struct DefaultParamPolicy
+    {
+        std::vector<std::string> operator()(const std::vector<ParamInfo*>& param_info)
+        {
+            std::vector<std::string> param_names;
+            for (ParamInfo* pinfo : param_info)
+            {
+                param_names.push_back(pinfo->name);
+            }
+            return param_names;
+        }
+    };
+
+    template <class T, class Storage = rcc::shared_ptr<T>, template <int N, class T1, class Storage, class... Args> class Creator = CreateMetaObject, class ParamPolicy = DefaultParamPolicy>
+    boost::python::object makeConstructor(IObjectConstructor* ctr, ParamPolicy policy = ParamPolicy())
     {
         IMetaObjectInfo* minfo = dynamic_cast<IMetaObjectInfo*>(ctr->GetObjectInfo());
         std::vector<ParamInfo*> param_info = minfo->getParamInfo();
-        std::vector<std::string> param_names;
-        for (ParamInfo* pinfo : param_info)
-        {
-            param_names.push_back(pinfo->name);
-        }
+        auto param_names = policy(param_info);
         switch (param_names.size())
         {
         case 0:
