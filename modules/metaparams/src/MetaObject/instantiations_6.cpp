@@ -89,6 +89,29 @@ namespace ct
         }
     }
 }
+namespace mo
+{
+    namespace python
+    {
+
+        inline EnumParam convertFromPython(const boost::python::object& obj, EnumParam*)
+        {
+            EnumParam param;
+            boost::python::extract<std::string> str_ext(obj);
+            if (str_ext.check())
+            {
+                auto string = str_ext();
+            }
+            else
+            {
+                boost::python::extract<int> int_ext(obj);
+                MO_ASSERT(int_ext.check());
+                int val = int_ext();
+            }
+            return param;
+        }
+    }
+}
 
 namespace std
 {

@@ -56,7 +56,7 @@
             #ifdef NDEBUG
                 RUNTIME_COMPILER_LINKLIBRARY("-lmetaobject_" METAOBJECT_MODULE)
             #else
-                RUNTIME_COMPILER_LINKLIBRARY("-lmetaobject_" METAOBJECT_MODULE)
+                RUNTIME_COMPILER_LINKLIBRARY("-lmetaobject_" METAOBJECT_MODULE "d")
             #endif
         #endif // WIN32
     #endif // MetaObject_EXPORTS

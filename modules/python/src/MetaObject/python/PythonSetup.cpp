@@ -2,16 +2,16 @@
 #include <opencv2/core/types.hpp>
 
 #include "DataConverter.hpp"
+#include "MetaObject.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/object/MetaObjectFactory.hpp"
 #include "MetaObject/params/ParamFactory.hpp"
 #include "PythonPolicy.hpp"
 #include "PythonSetup.hpp"
-#include "MetaObject.hpp"
 
 #include <RuntimeObjectSystem/IRuntimeObjectSystem.h>
-#include <RuntimeObjectSystem/InterfaceDatabase.hpp>
 #include <RuntimeObjectSystem/InheritanceGraph.hpp>
+#include <RuntimeObjectSystem/InterfaceDatabase.hpp>
 
 #include <boost/log/expressions.hpp>
 #include <boost/python.hpp>
@@ -68,6 +68,7 @@ namespace mo
         auto inst = mo::MetaObjectFactory::instance();
         if (inst->checkCompile())
         {
+            MO_LOG(info) << "Currently compiling";
             if (async == false)
             {
                 while (!inst->isCompileComplete())
@@ -123,9 +124,14 @@ namespace mo
     {
         static std::vector<std::function<void(void)>> setup_functions;
 
-        std::map<uint32_t, std::pair<std::function<void(void)>, std::function<void(std::vector<IObjectConstructor*>&)>>>& interfaceSetupFunctions()
+        std::map<uint32_t,
+                 std::pair<std::function<void(void)>, std::function<void(std::vector<IObjectConstructor*>&)>>>&
+        interfaceSetupFunctions()
         {
-            static std::map<uint32_t, std::pair<std::function<void(void)>, std::function<void(std::vector<IObjectConstructor*>&)>>> data;
+            static std::map<
+                uint32_t,
+                std::pair<std::function<void(void)>, std::function<void(std::vector<IObjectConstructor*>&)>>>
+                data;
             return data;
         }
         static bool setup = false;
@@ -148,35 +154,38 @@ namespace mo
                                             std::function<void(std::vector<IObjectConstructor*>&)>&& func)
         {
             auto& data = interfaceSetupFunctions();
-            if(data.find(interface_id) == data.end())
+            if (data.find(interface_id) == data.end())
             {
                 data[interface_id] = {std::move(interface_func), std::move(func)};
             }
         }
 
-        void registerObjectsHelper(rcc::InheritanceGraph& graph, std::vector<IObjectConstructor*>& ctrs,
-                                   std::map<uint32_t, std::function<void(std::vector<IObjectConstructor*>&)>> setup_functions)
+        void registerObjectsHelper(
+            rcc::InheritanceGraph& graph,
+            std::vector<IObjectConstructor*>& ctrs,
+            std::map<uint32_t, std::function<void(std::vector<IObjectConstructor*>&)>> setup_functions)
         {
-            for( auto itr = graph.interfaces.begin(); itr != graph.interfaces.end(); )
+            for (auto itr = graph.interfaces.begin(); itr != graph.interfaces.end();)
             {
-                if(itr->second.children.empty())
+                if (itr->second.children.empty())
                 {
                     auto func_itr = setup_functions.find(itr->first);
-                    for(unsigned int iid : itr->second.parents)
+                    for (unsigned int iid : itr->second.parents)
                     {
                         graph.interfaces[iid].children.erase(itr->first);
                     }
-                    if(func_itr != setup_functions.end())
+                    if (func_itr != setup_functions.end())
                     {
                         func_itr->second(ctrs);
                     }
                     itr = graph.interfaces.erase(itr);
-                }else
+                }
+                else
                 {
                     ++itr;
                 }
             }
-            if(!graph.interfaces.empty())
+            if (!graph.interfaces.empty())
             {
                 registerObjectsHelper(graph, ctrs, setup_functions);
             }
@@ -187,23 +196,22 @@ namespace mo
             rcc::InheritanceGraph graph;
             auto system = mo::MetaObjectFactory::instance()->getObjectSystem();
             auto ifaces = system->GetInterfaces();
-            //graph.interfaces.resize(ifaces.size());
+            // graph.interfaces.resize(ifaces.size());
             size_t i = 0;
-            for(auto& info : ifaces)
+            for (auto& info : ifaces)
             {
                 graph.interfaces[info.iid].name = info.name;
                 ++i;
             }
 
-
-            for(i = 0; i < ifaces.size(); ++i)
+            for (i = 0; i < ifaces.size(); ++i)
             {
                 auto& info = ifaces[i];
-                for(size_t j = 0; j < ifaces.size(); ++j)
+                for (size_t j = 0; j < ifaces.size(); ++j)
                 {
-                    if(i != j)
+                    if (i != j)
                     {
-                        if(info.direct_inheritance_f(ifaces[j].iid))
+                        if (info.direct_inheritance_f(ifaces[j].iid))
                         {
                             graph.interfaces[ifaces[i].iid].parents.insert(ifaces[j].iid);
                             graph.interfaces[ifaces[j].iid].children.insert(ifaces[i].iid);
@@ -220,7 +228,7 @@ namespace mo
             auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
             auto funcs = interfaceSetupFunctions();
             std::map<uint32_t, std::function<void(std::vector<IObjectConstructor*>&)>> func_map;
-            for(auto& func : funcs)
+            for (auto& func : funcs)
             {
                 func_map[func.first] = func.second.second;
             }
@@ -228,28 +236,29 @@ namespace mo
         }
 
         void registerInterfacesHelper(rcc::InheritanceGraph& graph,
-                                                             std::map<uint32_t, std::function<void()>> setup_functions)
+                                      std::map<uint32_t, std::function<void()>> setup_functions)
         {
-            for( auto itr = graph.interfaces.begin(); itr != graph.interfaces.end(); )
+            for (auto itr = graph.interfaces.begin(); itr != graph.interfaces.end();)
             {
-                if(itr->second.parents.empty())
+                if (itr->second.parents.empty())
                 {
                     auto func_itr = setup_functions.find(itr->first);
-                    for(unsigned int iid : itr->second.children)
+                    for (unsigned int iid : itr->second.children)
                     {
                         graph.interfaces[iid].parents.erase(itr->first);
                     }
-                    if(func_itr != setup_functions.end())
+                    if (func_itr != setup_functions.end())
                     {
                         func_itr->second();
                     }
                     itr = graph.interfaces.erase(itr);
-                }else
+                }
+                else
                 {
                     ++itr;
                 }
             }
-            if(!graph.interfaces.empty())
+            if (!graph.interfaces.empty())
             {
                 registerInterfacesHelper(graph, setup_functions);
             }
@@ -260,7 +269,7 @@ namespace mo
             auto graph = createGraph();
             auto funcs = interfaceSetupFunctions();
             std::map<uint32_t, std::function<void()>> func_map;
-            for(auto& func : funcs)
+            for (auto& func : funcs)
             {
                 func_map[func.first] = func.second.first;
             }
