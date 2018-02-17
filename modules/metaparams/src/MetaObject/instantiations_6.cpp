@@ -27,7 +27,7 @@ namespace ct
 {
     namespace reflect
     {
-        template <class T>
+        /*template <class T>
         struct ReflectData<
             T,
             typename std::enable_if<std::is_same<ReadFile, T>::value || std::is_same<WriteFile, T>::value ||
@@ -41,27 +41,27 @@ namespace ct
         };
 
         template <int I>
-        static constexpr inline std::string getValue(const mo::ReadFile& data)
+        static inline std::string getValue(const mo::ReadFile& data)
         {
             return data.string();
         }
 
         template <int I>
-        static constexpr inline void setValue(const mo::ReadFile& data, const std::string& path)
+        static constexpr inline void setValue(mo::ReadFile& data, const std::string& path)
         {
-            data = mo::ReadFile(std::move(path));
+            data = mo::ReadFile(path);
         }
 
         template <int I>
-        static constexpr inline std::string getValue(const mo::WriteFile& data)
+        static inline std::string getValue(const mo::WriteFile& data)
         {
             return data.string();
         }
 
         template <int I>
-        static constexpr inline void setValue(const mo::WriteFile& data, const std::string& path)
+        static constexpr inline void setValue(mo::WriteFile& data, const std::string& path)
         {
-            data = mo::WriteFile(std::move(path));
+            data = mo::WriteFile(path);
         }
 
         template <int I>
@@ -71,22 +71,22 @@ namespace ct
         }
 
         template <int I>
-        static constexpr inline void setValue(const mo::ReadDirectory& data, const std::string& path)
+        static constexpr inline void setValue(mo::ReadDirectory& data, const std::string& path)
         {
-            data = mo::ReadDirectory(std::move(path));
+            data = mo::ReadDirectory(path);
         }
 
         template <int I>
-        static constexpr inline std::string getValue(const mo::WriteDirectory& data)
+        static inline std::string getValue(const mo::WriteDirectory& data)
         {
             return data.string();
         }
 
         template <int I>
-        static constexpr inline void setValue(const mo::WriteDirectory& data, const std::string& path)
+        static constexpr inline void setValue(mo::WriteDirectory& data, const std::string& path)
         {
-            data = mo::WriteDirectory(std::move(path));
-        }
+            data = mo::WriteDirectory(path);
+        }*/
     }
 }
 namespace mo
@@ -94,9 +94,8 @@ namespace mo
     namespace python
     {
 
-        inline EnumParam convertFromPython(const boost::python::object& obj, EnumParam*)
+        inline void convertFromPython(const boost::python::object& obj, EnumParam& param)
         {
-            EnumParam param;
             boost::python::extract<std::string> str_ext(obj);
             if (str_ext.check())
             {
@@ -108,7 +107,6 @@ namespace mo
                 MO_ASSERT(int_ext.check());
                 int val = int_ext();
             }
-            return param;
         }
     }
 }

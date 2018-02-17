@@ -1,6 +1,6 @@
 #ifdef HAVE_OPENCV
-#include "MetaObject/params/MetaParam.hpp"
 #include "MetaObject/metaparams/reflect/cv_types.hpp"
+#include "MetaObject/params/MetaParam.hpp"
 #include "ct/reflect/cereal.hpp"
 #include <boost/python/object.hpp>
 
@@ -42,6 +42,11 @@ namespace mo
 {
     namespace python
     {
+        template <class T, size_t N>
+        struct PythonConverter<ct::reflect::ArrayAdapter<T, N>, void>
+        {
+            static inline void fromPython(const boost::python::object& obj, ct::reflect::ArrayAdapter<T, N> array) {}
+        };
         template <class T, size_t N>
         inline void convertFromPython(ct::reflect::ArrayAdapter<T, N> result, const boost::python::object& obj)
         {

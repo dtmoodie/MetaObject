@@ -10,9 +10,26 @@ namespace ct
         template <class T, size_t N>
         struct ArrayAdapter
         {
+            typedef T value_type;
+            typedef size_t size_type;
+            typedef void allocator_type;
+            typedef T* iterator;
+            typedef const T* const_iterator;
+
             ArrayAdapter(T* ptr_ = nullptr) : ptr(ptr_) {}
 
+            constexpr size_t size() const { return N; }
+
+            T* begin() { return ptr; }
+
+            T* end() { return ptr + N; }
+
+            const T* cbegin() const { return ptr; }
+
+            const T* cend() const { return ptr + N; }
+
             T* ptr;
+
             template <class AR>
             void serialize(AR& ar)
             {

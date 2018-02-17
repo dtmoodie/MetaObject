@@ -1,10 +1,10 @@
 #ifdef HAVE_OPENCV
-#include "MetaObject/metaparams/reflect/cv_types.hpp"
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
+#include "MetaObject/metaparams/reflect/cv_types.hpp"
 #include "MetaObject/params/MetaParam.hpp"
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
-#include "ct/reflect/reflect_data.hpp"
 #include "ct/reflect/cereal.hpp"
+#include "ct/reflect/reflect_data.hpp"
 #include <boost/lexical_cast.hpp>
 #include <cereal/types/vector.hpp>
 #include <opencv2/core/types.hpp>
@@ -20,6 +20,8 @@
 #endif
 
 using namespace cv;
+static_assert(ct::reflect::ReflectData<cv::Rect>::IS_SPECIALIZED, "Specialization not working for cv::Rect");
+
 INSTANTIATE_META_PARAM(Rect);
 INSTANTIATE_META_PARAM(Rect2d);
 INSTANTIATE_META_PARAM(Rect2f);
