@@ -1,4 +1,6 @@
 #pragma once
+
+#include "MetaObject/serialization.hpp"
 #include "SerializationFactory.hpp"
 #include <MetaObject/params/IParam.hpp>
 #include <MetaObject/params/ITAccessibleParam.hpp>

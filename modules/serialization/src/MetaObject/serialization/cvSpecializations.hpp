@@ -1,7 +1,9 @@
 #pragma once
+#include "MetaObject/serialization.hpp"
 #include <cereal/cereal.hpp>
 #include <opencv2/core/types.hpp>
 #include <ostream>
+
 namespace cereal
 {
     template <class AR, class T>

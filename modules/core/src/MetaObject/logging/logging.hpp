@@ -1,5 +1,5 @@
 #pragma once
-#include "MetaObject/detail/Export.hpp"
+#include "MetaObject/core.hpp"
 #include "MetaObject/logging/logging_macros.hpp"
 #include <boost/log/trivial.hpp>
 #include <functional>

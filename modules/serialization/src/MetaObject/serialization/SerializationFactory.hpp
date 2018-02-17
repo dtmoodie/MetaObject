@@ -1,5 +1,5 @@
 #pragma once
-#include "MetaObject/detail/Export.hpp"
+#include "MetaObject/serialization.hpp"
 #include <functional>
 
 namespace cereal

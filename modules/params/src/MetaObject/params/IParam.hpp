@@ -17,11 +17,8 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/MetaObject
 */
 #pragma once
-#include "MetaObject/core/Context.hpp"
+#include "MetaObject/core.hpp"
 #include "MetaObject/core/detail/Enums.hpp"
-#include "MetaObject/core/detail/Forward.hpp"
-#include "MetaObject/core/detail/Time.hpp"
-#include "MetaObject/detail/Export.hpp"
 #include "MetaObject/params/NamedParam.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 
@@ -33,24 +30,6 @@ https://github.com/dtmoodie/MetaObject
 
 #include <memory>
 #include <string>
-
-#ifndef MetaObject_EXPORTS
-#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
-#ifdef WIN32
-#pragma comment(lib, "Advapi32.lib")
-#ifdef _DEBUG
-RUNTIME_COMPILER_LINKLIBRARY("metaobject_paramsd.lib")
-#else
-RUNTIME_COMPILER_LINKLIBRARY("metaobject_params.lib")
-#endif
-#else // Unix
-#ifdef NDEBUG
-RUNTIME_COMPILER_LINKLIBRARY("-lmetaobject_params")
-#else
-RUNTIME_COMPILER_LINKLIBRARY("-lmetaobject_paramsd")
-#endif // NDEBUG
-#endif // WIN32
-#endif // MetaObject_EXPORTS
 
 namespace mo
 {

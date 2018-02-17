@@ -17,9 +17,9 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/MetaObject
 */
 #pragma once
-#include <MetaObject/detail/Export.hpp>
-#include <ct/reflect/reflect_data.hpp>
+#include "MetaObject/types.hpp"
 #include <boost/filesystem/path.hpp>
+#include <ct/reflect/reflect_data.hpp>
 #include <string>
 #include <vector>
 

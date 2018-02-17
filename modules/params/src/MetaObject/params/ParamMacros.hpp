@@ -1,10 +1,11 @@
 #pragma once
 #ifndef __CUDACC__
 #include "MetaObject/core/detail/HelperMacros.hpp"
+#include "MetaObject/params/IParam.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
-#include "MetaObject/types/file_types.hpp"
 #include "MetaObject/params/detail/ParamMacrosImpl.hpp"
+#include "MetaObject/types/file_types.hpp"
 
 #define PARAM(type_, name, init)                                                                                       \
     mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param;                                                  \
@@ -19,7 +20,7 @@
 #define RANGED_PARAM(type, name, init, min, max)
 
 #define INPUT(type_, name, init)                                                                                       \
-    mo::TInputParamPtr<mo::argument_type<void(type_)>::type>::Input_t name = init;                                                           \
+    mo::TInputParamPtr<mo::argument_type<void(type_)>::type>::Input_t name = init;                                     \
     mo::TInputParamPtr<mo::argument_type<void(type_)>::type> name##_param;                                             \
     void _init_params(bool firstInit, mo::_counter_<__COUNTER__> dummy)                                                \
     {                                                                                                                  \
