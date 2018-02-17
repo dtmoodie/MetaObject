@@ -51,7 +51,7 @@ namespace mo
                     {
                         auto token = typed->access();
 
-                        token() = mo::python::convertFromPython<T>(obj, static_cast<T*>(nullptr));
+                        mo::python::convertFromPython<T>(obj, token());
                         return true;
                     }
                 }

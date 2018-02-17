@@ -23,92 +23,30 @@
 
 using namespace mo;
 
-namespace ct
-{
-    namespace reflect
-    {
-        template <class T>
-        struct ReflectData<
-            T,
-            typename std::enable_if<std::is_same<ReadFile, T>::value || std::is_same<WriteFile, T>::value ||
-                                        std::is_same<ReadDirectory, T>::value || std::is_same<WriteDirectory, T>::value,
-                                    void>::type>
-        {
-            static constexpr int N = 1;
-            static constexpr bool IS_SPECIALIZED = true;
-            static std::string get(const T& data, _counter_<0>) { return data.string(); }
-            static constexpr const char* getName(_counter_<0>) { return "path"; }
-        };
-
-        template <int I>
-        static constexpr inline std::string getValue(const mo::ReadFile& data)
-        {
-            return data.string();
-        }
-
-        template <int I>
-        static constexpr inline void setValue(const mo::ReadFile& data, const std::string& path)
-        {
-            data = mo::ReadFile(std::move(path));
-        }
-
-        template <int I>
-        static constexpr inline std::string getValue(const mo::WriteFile& data)
-        {
-            return data.string();
-        }
-
-        template <int I>
-        static constexpr inline void setValue(const mo::WriteFile& data, const std::string& path)
-        {
-            data = mo::WriteFile(std::move(path));
-        }
-
-        template <int I>
-        static constexpr inline std::string getValue(const mo::ReadDirectory& data)
-        {
-            return data.string();
-        }
-
-        template <int I>
-        static constexpr inline void setValue(const mo::ReadDirectory& data, const std::string& path)
-        {
-            data = mo::ReadDirectory(std::move(path));
-        }
-
-        template <int I>
-        static constexpr inline std::string getValue(const mo::WriteDirectory& data)
-        {
-            return data.string();
-        }
-
-        template <int I>
-        static constexpr inline void setValue(const mo::WriteDirectory& data, const std::string& path)
-        {
-            data = mo::WriteDirectory(std::move(path));
-        }
-    }
-}
 namespace mo
 {
     namespace python
     {
 
-        inline EnumParam convertFromPython(const boost::python::object& obj, EnumParam*)
+        inline void convertFromPython(const boost::python::object& obj, EnumParam& param)
         {
-            EnumParam param;
             boost::python::extract<std::string> str_ext(obj);
             if (str_ext.check())
             {
                 auto string = str_ext();
+                auto itr = std::find(param.enumerations.begin(), param.enumerations.end(), string);
+                if (itr != param.enumerations.end())
+                {
+                    param.current_selection = itr - param.enumerations.begin();
+                }
             }
             else
             {
                 boost::python::extract<int> int_ext(obj);
                 MO_ASSERT(int_ext.check());
                 int val = int_ext();
+                param.current_selection = static_cast<size_t>(val);
             }
-            return param;
         }
     }
 }
