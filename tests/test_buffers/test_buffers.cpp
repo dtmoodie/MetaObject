@@ -92,8 +92,8 @@ struct BufferFixture
     {
         output_param.updatePtr(&output);
         input_param.setUserDataPtr(&input);
-        output_param.setContext(mo::Context::getDefaultThreadContext().get());
-        input_param.setContext(mo::Context::getDefaultThreadContext().get());
+        output_param.setContext(mo::Context::getCurrent());
+        input_param.setContext(mo::Context::getCurrent());
     }
     mo::TParamPtr<int> output_param;
     int output;

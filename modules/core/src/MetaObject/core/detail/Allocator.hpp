@@ -23,10 +23,9 @@ namespace mo
       public:
         typedef std::shared_ptr<Allocator> Ptr;
         typedef std::shared_ptr<const Allocator> ConstPtr;
-
-        static std::shared_ptr<Allocator> getThreadSafeAllocator();
-        static std::shared_ptr<Allocator> getThreadSpecificAllocator();
-        static void setThreadSpecificAllocator(const std::shared_ptr<Allocator>& allocator);
+        static std::shared_ptr<Allocator> createAllocator();
+        static void setDefaultAllocator(const std::shared_ptr<Allocator>& allocator);
+        static std::shared_ptr<Allocator> getDefaultAllocator();
 
         // Used for stl allocators
         virtual unsigned char* allocateGpu(size_t num_bytes) = 0;
@@ -41,6 +40,7 @@ namespace mo
         const std::string& getName() { return m_name; }
       private:
         std::string m_name;
+        static std::weak_ptr<Allocator> default_allocator;
     };
 
 } // namespace mo

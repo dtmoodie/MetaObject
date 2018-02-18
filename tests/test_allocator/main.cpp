@@ -27,14 +27,14 @@ using namespace mo;
 BOOST_AUTO_TEST_CASE(initialize_thread)
 {
     boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::warning);
-    BOOST_REQUIRE(mo::Allocator::getThreadSpecificAllocator());
+    BOOST_REQUIRE(mo::Allocator::getDefaultAllocator());
     mo::InitLogging();
     mo::initProfiling();
 }
 
 BOOST_AUTO_TEST_CASE(initialize_global)
 {
-    BOOST_REQUIRE(mo::Allocator::getThreadSafeAllocator());
+    BOOST_REQUIRE(mo::Allocator::getDefaultAllocator());
 }
 
 DEFINE_HAS_STATIC_FUNCTION(HasGpuDefaultAllocator, setDefaultThreadAllocator, void (*)(cv::cuda::GpuMat::Allocator*));
@@ -171,7 +171,7 @@ BOOST_AUTO_TEST_CASE(test_cpu_stack_allocation)
 }
 BOOST_AUTO_TEST_CASE(test_cpu_combined_allocation)
 {
-    auto allocator = mo::Allocator::getThreadSpecificAllocator();
+    auto allocator = mo::Allocator::getDefaultAllocator();
     cv::Mat::setDefaultAllocator(allocator.get());
     auto start = boost::posix_time::microsec_clock::local_time();
     for (int i = 0; i < 1000; ++i) {
@@ -191,7 +191,7 @@ BOOST_AUTO_TEST_CASE(test_cpu_combined_allocation)
     end = boost::posix_time::microsec_clock::local_time();
     double set_size = boost::posix_time::time_duration(end - start).total_milliseconds();
 
-    allocator = mo::Allocator::getThreadSafeAllocator();
+    allocator = mo::Allocator::getDefaultAllocator();
     cv::Mat::setDefaultAllocator(allocator.get());
     start = boost::posix_time::microsec_clock::local_time();
     for (int i = 0; i < 1000; ++i) {
@@ -325,7 +325,7 @@ BOOST_AUTO_TEST_CASE(test_gpu_static_allocation_pattern)
               << " Pool Allocator:    " << pool_allocator << "\n";
 
     poolAllocator.release();
-    Allocator::getThreadSpecificAllocator()->release();
+    Allocator::getDefaultAllocator()->release();
     cv::cuda::GpuMat::setDefaultAllocator(defaultAllocator);
 }
 

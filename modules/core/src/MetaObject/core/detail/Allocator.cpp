@@ -258,28 +258,27 @@ namespace mo
         return g_inst.get();
     }
 
-    std::shared_ptr<Allocator> Allocator::getThreadSafeAllocator()
+    std::shared_ptr<Allocator> Allocator::createAllocator()
     {
-        return sharedSingleton<mt_UniversalAllocator_t>();
+        return std::make_shared<mt_UniversalAllocator_t>();
+    }
+    std::weak_ptr<Allocator> Allocator::default_allocator;
+
+    void Allocator::setDefaultAllocator(const std::shared_ptr<Allocator>& allocator)
+    {
+        Allocator::default_allocator = allocator;
     }
 
-    thread_local std::shared_ptr<Allocator> t_allocator;
-
-    std::shared_ptr<Allocator> Allocator::getThreadSpecificAllocator()
+    std::shared_ptr<Allocator> Allocator::getDefaultAllocator()
     {
-        if (t_allocator)
+        auto out = default_allocator.lock();
+        if(!out)
         {
-            return t_allocator;
+            out = createAllocator();
+            default_allocator = out;
         }
-        auto table = SystemTable::instance();
-        if (!table->allocator)
-        {
-            table->allocator = sharedThreadSpecificSingleton<mt_UniversalAllocator_t>();
-        }
-        return table->allocator;
+        return out;
     }
-
-    void Allocator::setThreadSpecificAllocator(const std::shared_ptr<Allocator>& allocator) { t_allocator = allocator; }
 
     // ================================================================
     // CpuStackPolicy

@@ -221,7 +221,7 @@ namespace mo
         // commit changes to a Param, updates underlying meta info and emits signals accordingly
         virtual IParam* emitUpdate(
             const OptionalTime_t& ts_ = OptionalTime_t(),             // The timestamp of the new data
-            Context* ctx_ = Context::getDefaultThreadContext().get(), // The context from which the data was updated
+            Context* ctx_ = mo::Context::getCurrent(), // The context from which the data was updated
             const boost::optional<size_t>& fn_ = boost::optional<size_t>(), // The frame number of the update
             const std::shared_ptr<ICoordinateSystem>& cs_ =
                 std::shared_ptr<ICoordinateSystem>(), // The coordinate system of the data

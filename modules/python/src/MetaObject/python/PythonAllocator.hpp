@@ -9,7 +9,7 @@ namespace mo
     class NumpyAllocator : virtual public Allocator
     {
       public:
-        NumpyAllocator(std::shared_ptr<Allocator> default_allocator_ = Allocator::getThreadSafeAllocator());
+        NumpyAllocator(std::shared_ptr<Allocator> default_allocator_ = Allocator::getDefaultAllocator());
         ~NumpyAllocator();
 
         cv::UMatData* allocate(PyObject* o, int dims, const int* sizes, int type, size_t* step) const;

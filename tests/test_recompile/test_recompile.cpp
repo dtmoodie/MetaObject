@@ -258,5 +258,4 @@ BOOST_AUTO_TEST_CASE(test_object_cleanup)
         BOOST_REQUIRE_EQUAL(constructors[i]->GetNumberConstructedObjects(), 0);
     }
     delete cb;
-    mo::Context::setDefaultThreadContext({});
 }

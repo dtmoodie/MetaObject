@@ -167,7 +167,6 @@ void Thread::main()
         lock.unlock();
         _cv.notify_all();
     }
-    mo::Context::setDefaultThreadContext(_ctx);
     if (_on_start)
     {
         _on_start();

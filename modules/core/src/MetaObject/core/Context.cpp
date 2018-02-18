@@ -12,41 +12,40 @@
 #include <boost/thread/tss.hpp>
 using namespace mo;
 
-thread_local std::shared_ptr<Context> thread_set_context = nullptr;
+thread_local Context* Context::current_context = nullptr;
+
+Context* Context::getCurrent()
+{
+    return Context::current_context;
+}
+
+void Context::setCurrent(Context* ctx)
+{
+    Context::current_context = ctx;
+}
+
 
 std::shared_ptr<Context> mo::Context::create(const std::string& name, int priority)
 {
-    Context* ctx = nullptr;
+    std::shared_ptr<Context> ctx;
 #ifdef HAVE_OPENCV
-    ctx = new CvContext(priority);
+    ctx = std::make_shared<CvContext>(priority);
 #else
 #ifdef HAVE_CUDA
-    ctx = new CudaContext(priority);
+    ctx = std::make_shared<CudaContext>(priority);
 #else
-    ctx = new Context();
+    ctx = std::make_shared<Context>();
 #endif
 #endif
     ctx->setName(name);
-    std::shared_ptr<Context> output(ctx);
-    if (thread_set_context == nullptr)
-        thread_set_context = output;
-    return output;
+    setCurrent(ctx.get());
+    return ctx;
 }
 
 Context::Context()
 {
     thread_id = getThisThread();
-    allocator = Allocator::getThreadSpecificAllocator();
-}
-
-std::shared_ptr<Context> Context::getDefaultThreadContext()
-{
-    return thread_set_context;
-}
-
-void Context::setDefaultThreadContext(const std::shared_ptr<Context>& ctx)
-{
-    thread_set_context = ctx;
+    allocator = Allocator::getDefaultAllocator();
 }
 
 void Context::setName(const std::string& name)
@@ -75,15 +74,16 @@ cv::cuda::Stream& Context::getStream()
     THROW(warning) << "Not a gpu context";
     return *static_cast<cv::cuda::Stream*>(nullptr);
 }
+
 cudaStream_t Context::getCudaStream() const
 {
     return nullptr;
 }
-void Context::setStream(const cv::cuda::Stream& stream)
+
+void Context::setStream(const cv::cuda::Stream& /*stream*/)
 {
-    (void)stream;
 }
-void Context::setStream(cudaStream_t stream)
+
+void Context::setStream(cudaStream_t /*stream*/)
 {
-    (void)stream;
 }

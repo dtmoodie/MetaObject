@@ -33,7 +33,9 @@ namespace mo
         THROW(warning) << "Not a cv::cuda::Stream context";
         return *static_cast<cv::cuda::Stream*>(nullptr);
     }
+
     cudaStream_t CudaContext::getCudaStream() const { return m_cuda_stream; }
+
     void CudaContext::setStream(const cv::cuda::Stream& stream)
     {
         if (this->m_cuda_stream)
@@ -42,6 +44,7 @@ namespace mo
         }
         this->m_cuda_stream = cv::cuda::StreamAccessor::getStream(stream);
     }
+
     void CudaContext::setStream(cudaStream_t stream)
     {
         if (this->m_cuda_stream)

@@ -16,22 +16,24 @@ namespace mo
     class MO_EXPORTS Context
     {
       public:
-        static std::shared_ptr<Context> getDefaultThreadContext();
-        static void setDefaultThreadContext(const std::shared_ptr<Context>& ctx);
         /*!
-             * \brief creates a Context based on the underlying hardware
-             * \param name of the context
-             * \param priority of the created cuda stream
-             * \return shared ptr to created context
-             */
+         * \brief creates a Context based on the underlying hardware
+         * \param name of the context
+         * \param priority of the created cuda stream
+         * \return shared ptr to created context
+         */
         static std::shared_ptr<Context> create(const std::string& name = "", int priority = 5);
+        static Context* getCurrent();
+        static void setCurrent(Context* ctx);
 
         virtual ~Context();
-        virtual void setName(const std::string& name);
         virtual cv::cuda::Stream& getStream();
         virtual cudaStream_t getCudaStream() const;
+
         virtual void setStream(const cv::cuda::Stream& stream);
         virtual void setStream(cudaStream_t stream);
+
+        virtual void setName(const std::string& name);
         std::string getName() const { return name; }
         size_t getThreadId() const { return thread_id; }
 
@@ -43,5 +45,6 @@ namespace mo
       protected:
         Context();
         std::string name;
+        static thread_local Context* current_context;
     }; // class mo::Context
 } // namespace mo

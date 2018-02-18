@@ -15,7 +15,7 @@ namespace mo
         {
             m_cv_stream.waitForCompletion();
         }
-        catch (cv::Exception& e)
+        catch (cv::Exception& /*e*/)
         {
             MO_LOG(error) << "Trying to delete a context after cuda context destruction.  This could be caused by forgetting to cleanup any thread_local contexts.  Fix this by calling mo::Context::setDefaultThreadContext({}); before program exit to cleanup any dangling contexts before driver shutdown.";
         }
@@ -37,6 +37,7 @@ namespace mo
         this->m_cv_stream = stream;
         mo::setStreamName(name.c_str(), getCudaStream());
     }
+
     void CvContext::setStream(cudaStream_t stream)
     {
         CudaContext::setStream(stream);

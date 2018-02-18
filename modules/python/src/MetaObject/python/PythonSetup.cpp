@@ -295,7 +295,7 @@ namespace mo
                     allocator = std::make_shared<mo::NumpyAllocator>(current_allocator);
                 else
                 {
-                    auto default_allocator = Allocator::getThreadSafeAllocator();
+                    auto default_allocator = Allocator::getDefaultAllocator();
                     allocator = std::make_shared<mo::NumpyAllocator>(default_allocator);
                 }
 

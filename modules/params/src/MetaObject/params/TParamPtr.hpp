@@ -57,7 +57,7 @@ namespace mo
         virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 
         virtual IParam* emitUpdate(const OptionalTime_t& ts_ = OptionalTime_t(),
-                                   Context* ctx_ = Context::getDefaultThreadContext().get(),
+                                   Context* ctx_ = mo::Context::getCurrent(),
                                    const boost::optional<size_t>& fn_ = boost::optional<size_t>(),
                                    const std::shared_ptr<ICoordinateSystem>& cs_ = std::shared_ptr<ICoordinateSystem>(),
                                    UpdateFlags flags_ = ValueUpdated_e);
@@ -113,7 +113,7 @@ namespace mo
         virtual ConstAccessToken<T> access() const;
 
         virtual IParam* emitUpdate(const OptionalTime_t& ts_ = OptionalTime_t(),
-                                   Context* ctx_ = Context::getDefaultThreadContext().get(),
+                                   Context* ctx_ = mo::Context::getCurrent(),
                                    const boost::optional<size_t>& fn_ = boost::optional<size_t>(),
                                    const std::shared_ptr<ICoordinateSystem>& cs_ = std::shared_ptr<ICoordinateSystem>(),
                                    UpdateFlags flags_ = ValueUpdated_e);
