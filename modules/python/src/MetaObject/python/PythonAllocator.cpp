@@ -8,7 +8,7 @@ namespace mo
 {
     struct NumpyDeallocator
     {
-        NumpyDeallocator(void* data_, size_t size_, const NumpyAllocator* allocator_)
+        NumpyDeallocator(cv::UMatData* data_, size_t size_, const NumpyAllocator* allocator_)
             : data(data_), size(size_), allocator(allocator_)
         {
         }
@@ -19,7 +19,7 @@ namespace mo
                 // allocator->deallocateCpu(static_cast<uchar*>(data), size);
             }
         }
-        void* data;
+        cv::UMatData* data;
         size_t size;
         const NumpyAllocator* allocator;
     };
@@ -101,7 +101,7 @@ namespace mo
         MO_ASSERT(ret);
         PyObject* o = PyArray_SimpleNewFromData(dims, _sizes, typenum, ret->data);
         MO_ASSERT(o);
-        boost::python::object base(NumpyDeallocator(ret->data, total_size, this));
+        boost::python::object base(NumpyDeallocator(ret, total_size, this));
         PyArray_BASE(o) = base.ptr();
         // cv::UMatData* u = new cv::UMatData(this);
 

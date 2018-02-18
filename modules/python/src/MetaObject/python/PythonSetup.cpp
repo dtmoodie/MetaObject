@@ -308,10 +308,11 @@ namespace mo
 
         void pythonSetup(const char* module_name_)
         {
-            boost::shared_ptr<LibGuard> libGuard(new LibGuard());
             boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
             std::string module_name(module_name_);
             mo::python::module_name = module_name;
+            setupAllocator();
+            boost::shared_ptr<LibGuard> libGuard(new LibGuard());
             setupEnums(module_name);
             setupDataTypes(module_name);
             boost::python::def("listConstructableObjects", &listConstructableObjects);
