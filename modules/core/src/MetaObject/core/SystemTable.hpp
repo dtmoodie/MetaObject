@@ -1,7 +1,8 @@
 #pragma once
-#include <RuntimeObjectSystem/shared_ptr.hpp>
+#include <MetaObject/core/detail/Allocator.hpp>
 #include <MetaObject/detail/Export.hpp>
 #include <MetaObject/detail/TypeInfo.hpp>
+#include <RuntimeObjectSystem/shared_ptr.hpp>
 
 #include <map>
 #include <memory>
@@ -28,12 +29,19 @@ struct TIObjectSingletonContainer : public ISingletonContainer
     rcc::shared_ptr<T> ptr;
 };
 
+template <class Derived>
+struct TDerivedSystemTable;
+
 struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
 {
   public:
     static std::shared_ptr<SystemTable> instance();
+    static bool checkInstance();
+
     SystemTable();
     virtual ~SystemTable();
+
+    std::shared_ptr<mo::Allocator> allocator;
 
     template <typename T>
     std::enable_if_t<!std::is_base_of<IObject, T>::value, std::shared_ptr<T>> getSingleton()
@@ -84,6 +92,9 @@ struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
   protected:
     static std::weak_ptr<SystemTable> inst;
 
+    template <class Derived>
+    friend struct TDerivedSystemTable;
+
   private:
     std::map<mo::TypeInfo, std::shared_ptr<ISingletonContainer>> g_singletons;
 };
@@ -98,6 +109,7 @@ struct TDerivedSystemTable : public SystemTable
         if (!output)
         {
             output = std::make_shared<Derived>();
+            SystemTable::inst = output;
         }
         return output;
     }
@@ -106,4 +118,3 @@ struct TDerivedSystemTable : public SystemTable
     TDerivedSystemTable() {}
     ~TDerivedSystemTable() {}
 };
-

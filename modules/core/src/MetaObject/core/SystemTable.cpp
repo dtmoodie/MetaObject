@@ -15,13 +15,18 @@ std::shared_ptr<SystemTable> SystemTable::instance()
     return output;
 }
 
+bool SystemTable::checkInstance()
+{
+    auto inst = SystemTable::inst.lock();
+    return static_cast<bool>(inst);
+}
+
 SystemTable::SystemTable()
 {
     if (auto inst = SystemTable::inst.lock())
     {
         THROW(warning) << "Can only create one system table per process";
     }
-    SystemTable::inst = this->shared_from_this();
 }
 
 SystemTable::~SystemTable()

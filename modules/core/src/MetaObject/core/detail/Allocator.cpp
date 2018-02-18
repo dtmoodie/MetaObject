@@ -1,5 +1,8 @@
 #include "MetaObject/core/detail/AllocatorImpl.hpp"
 #include "MetaObject/thread/cuda.hpp"
+#include <MetaObject/core/SystemTable.hpp>
+#include <RuntimeObjectSystem/ObjectInterfacePerModule.h>
+
 #include "singleton.hpp"
 #include <ctime>
 
@@ -268,7 +271,12 @@ namespace mo
         {
             return t_allocator;
         }
-        return sharedThreadSpecificSingleton<mt_UniversalAllocator_t>();
+        auto table = SystemTable::instance();
+        if (!table->allocator)
+        {
+            table->allocator = sharedThreadSpecificSingleton<mt_UniversalAllocator_t>();
+        }
+        return table->allocator;
     }
 
     void Allocator::setThreadSpecificAllocator(const std::shared_ptr<Allocator>& allocator) { t_allocator = allocator; }

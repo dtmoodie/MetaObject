@@ -102,6 +102,7 @@ Thread::Thread()
     _quit = false;
     _thread = boost::thread(&Thread::main, this);
     _paused = false;
+    _run = true;
 }
 
 Thread::Thread(ThreadPool* pool)
@@ -109,6 +110,7 @@ Thread::Thread(ThreadPool* pool)
     _inner_loop.reset(new mo::TSignalRelay<int(void)>());
     _pool = pool;
     _quit = false;
+    _run = true;
     _thread = boost::thread(&Thread::main, this);
 }
 

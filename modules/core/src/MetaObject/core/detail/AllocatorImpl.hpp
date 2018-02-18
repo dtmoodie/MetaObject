@@ -532,7 +532,7 @@ namespace mo
     PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::PoolPolicy(size_t initial_block_size)
         : m_initial_block_size(initial_block_size)
     {
-        m_blocks.push_back(std::make_unique<GpuMemoryBlock>(initial_block_size));
+        m_blocks.emplace_back(std::make_unique<GpuMemoryBlock>(initial_block_size));
     }
 
     template <typename PaddingPolicy>

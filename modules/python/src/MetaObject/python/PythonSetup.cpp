@@ -3,9 +3,12 @@
 
 #include "DataConverter.hpp"
 #include "MetaObject.hpp"
+#include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/object/MetaObjectFactory.hpp"
 #include "MetaObject/params/ParamFactory.hpp"
+
+#include "PythonAllocator.hpp"
 #include "PythonPolicy.hpp"
 #include "PythonSetup.hpp"
 
@@ -276,8 +279,36 @@ namespace mo
             registerInterfacesHelper(graph, func_map);
         }
 
+        struct LibGuard
+        {
+            LibGuard()
+            {
+                int devices = cv::cuda::getCudaEnabledDeviceCount();
+                MO_ASSERT(devices);
+                cv::cuda::GpuMat mat(10, 10, CV_32F);
+                system_table = SystemTable::instance();
+                mo::MetaObjectFactory::instance(system_table.get());
+                auto current_allocator = system_table->allocator;
+                std::shared_ptr<mo::NumpyAllocator> allocator;
+
+                if (current_allocator)
+                    allocator = std::make_shared<mo::NumpyAllocator>(current_allocator);
+                else
+                {
+                    auto default_allocator = Allocator::getThreadSafeAllocator();
+                    allocator = std::make_shared<mo::NumpyAllocator>(default_allocator);
+                }
+
+                system_table->allocator = allocator;
+            }
+            ~LibGuard() {}
+
+            std::shared_ptr<SystemTable> system_table;
+        };
+
         void pythonSetup(const char* module_name_)
         {
+            boost::shared_ptr<LibGuard> libGuard(new LibGuard());
             boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
             std::string module_name(module_name_);
             mo::python::module_name = module_name;
@@ -295,6 +326,10 @@ namespace mo
             RegisterInterface<IMetaObject> metaobject(&mo::python::setupInterface, &mo::python::setupObjects);
             setupPlugins(module_name);
             mo::python::setup = true;
+
+            boost::python::class_<LibGuard, boost::shared_ptr<LibGuard>, boost::noncopyable>("LibGuard",
+                                                                                             boost::python::no_init);
+            boost::python::scope().attr("__libguard") = libGuard;
         }
     }
 }
