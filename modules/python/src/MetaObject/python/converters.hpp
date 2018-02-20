@@ -333,11 +333,11 @@ namespace mo
             template <class T>
             void pythonizeData(const char* name)
             {
-                boost::python::object plugins_module(
-                    boost::python::handle<>(boost::python::borrowed(PyImport_AddModule("metaobject.datatypes"))));
-                boost::python::scope().attr("datatypes") = plugins_module;
+                boost::python::object datatype_module(boost::python::handle<>(
+                    boost::python::borrowed(PyImport_AddModule((module_name + ".datatypes").c_str()))));
+                // boost::python::scope().attr("datatypes") = datatype_module;
                 // set the current scope to the new sub-module
-                boost::python::scope plugins_scope = plugins_module;
+                boost::python::scope plugins_scope = datatype_module;
 
                 pythonizeDataHelper(name, static_cast<const T*>(nullptr));
             }

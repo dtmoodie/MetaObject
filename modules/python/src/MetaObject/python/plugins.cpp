@@ -12,8 +12,8 @@ namespace mo
     {
         int nplugins = mo::MetaObjectFactory::instance()->loadPlugins(dir);
         {
-            boost::python::object plugins_module(
-                boost::python::handle<>(boost::python::borrowed(PyImport_AddModule((python::module_name + ".plugins").c_str()))));
+            boost::python::object plugins_module(boost::python::handle<>(
+                boost::python::borrowed(PyImport_AddModule((python::module_name + ".plugins").c_str()))));
             boost::python::import(python::module_name.c_str()).attr("plugins") = plugins_module;
             // set the current scope to the new sub-module
             boost::python::scope plugins_scope = plugins_module;
@@ -21,7 +21,8 @@ namespace mo
             for (auto& name : plugin_names)
             {
                 boost::shared_ptr<PluginInfo> plugin(new PluginInfo(name));
-                boost::python::import(python::module_name.c_str()).attr("plugins").attr(name.getPluginName().c_str()) = plugin;
+                boost::python::import(python::module_name.c_str()).attr("plugins").attr(name.getPluginName().c_str()) =
+                    plugin;
             }
         }
         return nplugins;
@@ -30,6 +31,8 @@ namespace mo
     int loadPlugins(std::string dir)
     {
         auto nplugins = loadPluginsInternal(dir);
+        mo::python::registerInterfaces();
+
         mo::python::registerObjects();
         return nplugins;
     }
@@ -102,9 +105,9 @@ namespace mo
         boost::python::def("loadPlugin", &loadPlugin);
         boost::python::def("loadPlugins", &loadPlugins);
 #ifdef _MSC_VER
-        loadPluginsInternal("./Plugins");
+// loadPluginsInternal("./plugins");
 #else
-        loadPluginsInternal("./bin/Plugins");
+// loadPluginsInternal("./bin/plugins");
 #endif
         mo::python::registerInterfaces();
         mo::python::registerObjects();
