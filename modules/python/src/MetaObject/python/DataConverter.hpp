@@ -50,7 +50,6 @@ namespace mo
                     if (auto typed = dynamic_cast<mo::ITAccessibleParam<T>*>(param))
                     {
                         auto token = typed->access();
-
                         mo::python::convertFromPython<T>(obj, token());
                         return true;
                     }
@@ -65,7 +64,7 @@ namespace mo
                     if (auto typed = dynamic_cast<const mo::ITAccessibleParam<T>*>(param))
                     {
                         auto token = typed->access();
-                        return boost::python::object(token());
+                        return convertToPython(token());
                     }
                     else
                     {

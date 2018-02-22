@@ -30,6 +30,8 @@ namespace mo
             template <class T>
             void pythonizeData(const char* name);
         }
+        template <class T, class Enable = void>
+        struct PythonConverter;
 
         template <class T, class Enable = void>
         struct ToPythonDataConverter
@@ -53,6 +55,23 @@ namespace mo
                 python::registerSetupFunction(std::bind(&python::detail::pythonizeData<std::vector<T>>, nullptr));
             }
         };
+
+        template <class T>
+        inline auto convertToPython(const T& obj) -> boost::python::object
+        {
+            return boost::python::object(obj);
+        }
+
+        template <class T>
+        inline auto convertToPython(const std::vector<T>& vec) -> boost::python::object
+        {
+            boost::python::list list;
+            for (const auto& item : vec)
+            {
+                list.append(convertToPython(item));
+            }
+            return list;
+        }
 
         inline void convertFromPython(const boost::python::object& obj, std::string& result);
 
@@ -256,7 +275,8 @@ namespace mo
             }
 
             template <class T>
-            ct::reflect::enable_if_not_reflected<T> pythonizeDataHelper(const char* name = nullptr, const T* = nullptr)
+            ct::reflect::enable_if_not_reflected<T> pythonizeDataHelper(const char* /*name*/ = nullptr,
+                                                                        const T* = nullptr)
             {
             }
 
@@ -329,11 +349,11 @@ namespace mo
             template <class T>
             void pythonizeData(const char* name)
             {
-                boost::python::object plugins_module(
-                    boost::python::handle<>(boost::python::borrowed(PyImport_AddModule("metaobject.datatypes"))));
-                boost::python::scope().attr("datatypes") = plugins_module;
+                boost::python::object datatype_module(boost::python::handle<>(
+                    boost::python::borrowed(PyImport_AddModule((module_name + ".datatypes").c_str()))));
+                // boost::python::scope().attr("datatypes") = datatype_module;
                 // set the current scope to the new sub-module
-                boost::python::scope plugins_scope = plugins_module;
+                boost::python::scope plugins_scope = datatype_module;
 
                 pythonizeDataHelper(name, static_cast<const T*>(nullptr));
             }
@@ -361,6 +381,17 @@ namespace mo
             detail::extract(result, obj, mo::_counter_<ct::reflect::ReflectData<T>::N - 1>());
         }
 
+        inline void convertFromPython(const boost::python::object& obj, std::string& result)
+        {
+            result = boost::python::extract<std::string>(obj)();
+        }
+
+        template <class T>
+        inline void convertFromPython(const boost::python::object& obj, ct::reflect::enable_if_reflected<T>& result)
+        {
+            detail::extract(result, obj, mo::_counter_<ct::reflect::ReflectData<T>::N - 1>());
+        }
+
         template <class T>
         inline void convertFromPython(const boost::python::object& obj, std::vector<T>& result)
         {
@@ -370,10 +401,6 @@ namespace mo
             {
                 convertFromPython(boost::python::object(obj[i]), result[i]);
             }
-        }
-        inline void convertFromPython(const boost::python::object& obj, std::string& result)
-        {
-            result = boost::python::extract<std::string>(obj)();
         }
     }
 }
