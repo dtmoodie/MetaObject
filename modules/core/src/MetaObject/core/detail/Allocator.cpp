@@ -258,10 +258,7 @@ namespace mo
         return g_inst.get();
     }
 
-    std::shared_ptr<Allocator> Allocator::createAllocator()
-    {
-        return std::make_shared<mt_UniversalAllocator_t>();
-    }
+    std::shared_ptr<Allocator> Allocator::createAllocator() { return std::make_shared<mt_UniversalAllocator_t>(); }
     std::weak_ptr<Allocator> Allocator::default_allocator;
 
     void Allocator::setDefaultAllocator(const std::shared_ptr<Allocator>& allocator)
@@ -272,7 +269,7 @@ namespace mo
     std::shared_ptr<Allocator> Allocator::getDefaultAllocator()
     {
         auto out = default_allocator.lock();
-        if(!out)
+        if (!out)
         {
             out = createAllocator();
             default_allocator = out;
@@ -316,6 +313,7 @@ namespace mo
         {
             void* ptr = 0;
             CpuMemoryStack::threadInstance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
+            CV_Assert(ptr);
 
             u->data = u->origdata = static_cast<uchar*>(ptr);
         }

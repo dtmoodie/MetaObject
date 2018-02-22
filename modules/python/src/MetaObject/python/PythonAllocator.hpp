@@ -1,10 +1,17 @@
 #pragma once
+#include "converters.hpp"
+#include "numpy/ndarraytypes.h"
 #include <MetaObject/Python.hpp>
 #include <MetaObject/core/detail/Allocator.hpp>
 #include <Python.h>
 
 namespace mo
 {
+    namespace python
+    {
+        template <>
+        boost::python::object convertToPython(const cv::Mat& mat);
+    }
     void setupAllocator();
     class NumpyAllocator : virtual public Allocator
     {
@@ -12,7 +19,9 @@ namespace mo
         NumpyAllocator(std::shared_ptr<Allocator> default_allocator_ = Allocator::getDefaultAllocator());
         ~NumpyAllocator();
 
-        cv::UMatData* allocate(PyObject* o, int dims, const int* sizes, int type, size_t* step) const;
+        cv::Mat fromPython(PyObject* arr) const;
+
+        PyObject* toPython(const cv::Mat& mat) const;
 
         virtual cv::UMatData* allocate(int dims0,
                                        const int* sizes,

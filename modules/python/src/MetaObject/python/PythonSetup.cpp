@@ -300,6 +300,8 @@ namespace mo
                 }
 
                 system_table->allocator = allocator;
+                cv::Mat::setDefaultAllocator(allocator.get());
+                cv::cuda::GpuMat::setDefaultAllocator(allocator.get());
             }
             ~LibGuard() {}
 

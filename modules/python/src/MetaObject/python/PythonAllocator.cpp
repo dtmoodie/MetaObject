@@ -4,19 +4,48 @@
 #include <numpy/ndarrayobject.h>
 
 #include <boost/python.hpp>
+
 namespace mo
 {
+    namespace python
+    {
+        template <>
+        boost::python::object convertToPython(const cv::Mat& mat)
+        {
+            if (!mat.empty())
+            {
+                const NumpyAllocator* alloc = dynamic_cast<const NumpyAllocator*>(mat.u->currAllocator);
+                if (alloc)
+                {
+                    auto arr = alloc->toPython(mat);
+                    if (arr)
+                    {
+                        return boost::python::object(boost::python::handle<>(arr));
+                    }
+                }
+            }
+            return {};
+        }
+    }
     struct NumpyDeallocator
     {
         NumpyDeallocator(cv::UMatData* data_, size_t size_, const NumpyAllocator* allocator_)
             : data(data_), size(size_), allocator(allocator_)
         {
+            CV_XADD(&data_->refcount, 1);
         }
         ~NumpyDeallocator()
         {
             if (allocator)
             {
+                // This is called when the numpy array is deleted, thus we need to check if the cv::Mat's still hold a
+                // reference to this memory
                 // allocator->deallocateCpu(static_cast<uchar*>(data), size);
+                if (data && CV_XADD(&data->refcount, -1) == 1)
+                {
+                    (data->currAllocator ? data->currAllocator : allocator ? allocator : cv::Mat::getDefaultAllocator())
+                        ->unmap(data);
+                }
             }
         }
         cv::UMatData* data;
@@ -26,7 +55,9 @@ namespace mo
 
     void setupAllocator()
     {
-        boost::python::class_<NumpyDeallocator, boost::noncopyable>("NumpyDallocator", boost::python::no_init);
+        boost::python::class_<NumpyDeallocator, boost::shared_ptr<NumpyDeallocator>, boost::noncopyable>(
+            "NumpyDallocator", boost::python::no_init);
+        import_array();
     }
 
     class PyEnsureGIL
@@ -38,36 +69,18 @@ namespace mo
         PyGILState_STATE _state;
     };
 
-    NumpyAllocator::NumpyAllocator(std::shared_ptr<Allocator> default_allocator_) {}
+    NumpyAllocator::NumpyAllocator(std::shared_ptr<Allocator> default_allocator_)
+        : default_allocator(default_allocator_)
+    {
+    }
 
     NumpyAllocator::~NumpyAllocator() {}
 
-    cv::UMatData* NumpyAllocator::allocate(PyObject* o, int dims, const int* sizes, int type, size_t* step) const
+    cv::Mat NumpyAllocator::fromPython(PyObject* arr) const {}
+
+    PyObject* NumpyAllocator::toPython(const cv::Mat& mat) const
     {
-        cv::UMatData* u = new cv::UMatData(this);
-        u->data = u->origdata = (uchar*)PyArray_DATA((PyArrayObject*)o);
-        npy_intp* _strides = PyArray_STRIDES((PyArrayObject*)o);
-        for (int i = 0; i < dims - 1; i++)
-            step[i] = (size_t)_strides[i];
-        step[dims - 1] = CV_ELEM_SIZE(type);
-        u->size = sizes[0] * step[0];
-        u->userdata = o;
-        return u;
-    }
-
-    cv::UMatData* NumpyAllocator::allocate(
-        int dims0, const int* sizes, int type, void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
-    {
-        if (data != 0)
-        {
-            // issue #6969: CV_Error(Error::StsAssert, "The data should normally be NULL!");
-            // probably this is safe to do in such extreme case
-
-            return static_cast<cv::MatAllocator*>(default_allocator.get())
-                ->allocate(dims0, sizes, type, data, step, flags, usageFlags);
-        }
-        PyEnsureGIL gil;
-
+        int type = mat.type();
         int depth = CV_MAT_DEPTH(type);
         int cn = CV_MAT_CN(type);
         const int f = (int)(sizeof(size_t) / 8);
@@ -84,40 +97,57 @@ namespace mo
                                                                                                ? NPY_DOUBLE
                                                                                                : f * NPY_ULONGLONG +
                                                                                                      (f ^ 1) * NPY_UINT;
-        int i, dims = dims0;
+        int dims = 0;
+        if (mat.rows == 1 || mat.cols == 1)
+            dims += 1;
+        else
+            dims += 2;
+        if (cn != 1)
+            dims += 1;
+
         size_t total_size = 0;
-        cv::AutoBuffer<npy_intp> _sizes(dims + 1);
-        for (i = 0; i < dims; i++)
+        cv::AutoBuffer<npy_intp, 10> _sizes(dims + 1);
+        int i = 0;
+        if (mat.rows > 1)
         {
-            _sizes[i] = sizes[i];
-            total_size += sizes[i];
+            _sizes[i] = mat.rows;
+            total_size += mat.rows;
+            ++i;
+        }
+        if (mat.cols > 1)
+        {
+            _sizes[i] = mat.cols;
+            total_size += mat.cols;
+            ++i;
         }
         if (cn > 1)
-            _sizes[dims++] = cn;
-
-        cv::UMatData* ret = static_cast<cv::MatAllocator*>(default_allocator.get())
-                                ->allocate(dims0, sizes, type, data, step, flags, usageFlags);
-
-        MO_ASSERT(ret);
-        PyObject* o = PyArray_SimpleNewFromData(dims, _sizes, typenum, ret->data);
-        MO_ASSERT(o);
-        boost::python::object base(NumpyDeallocator(ret, total_size, this));
+        {
+            _sizes[i] = cn;
+            total_size += cn;
+        }
+        auto u = mat.u;
+        PyEnsureGIL gil;
+        PyObject* o = PyArray_SimpleNewFromData(dims, _sizes, typenum, mat.data);
+        // PyObject* o = PyArray_SimpleNew(dims, _sizes, typenum);
+        boost::python::object base(boost::shared_ptr<NumpyDeallocator>(new NumpyDeallocator(u, total_size, this)));
         PyArray_BASE(o) = base.ptr();
-        // cv::UMatData* u = new cv::UMatData(this);
+        Py_INCREF(base.ptr());
+        u->userdata = o;
+        return o;
+    }
 
-        // ret->data = u->origdata = (uchar*)PyArray_DATA((PyArrayObject*)o);
-        // npy_intp* _strides = PyArray_STRIDES((PyArrayObject*)o);
-        // for (int i = 0; i < dims - 1; i++)
-        //    step[i] = (size_t)_strides[i];
-        // step[dims - 1] = CV_ELEM_SIZE(type);
-        // ret->size = sizes[0] * step[0];
-        ret->userdata = o;
+    cv::UMatData* NumpyAllocator::allocate(
+        int dims0, const int* sizes, int type, void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
+    {
+        if (data != 0)
+        {
+            return static_cast<cv::MatAllocator*>(default_allocator.get())
+                ->allocate(dims0, sizes, type, data, step, flags, usageFlags);
+        }
+        auto ret = static_cast<cv::MatAllocator*>(default_allocator.get())
+                       ->allocate(dims0, sizes, type, data, step, flags, usageFlags);
         ret->currAllocator = this;
         return ret;
-        // PyObject* o = PyArray_SimpleNew(dims, _sizes, typenum);
-        // if (!o)
-        //    CV_Error_(Error::StsError, ("The numpy array of typenum=%d, ndims=%d can not be created", typenum, dims));
-        // return allocate(o, dims0, sizes, type, step);
     }
 
     bool NumpyAllocator::allocate(cv::UMatData* u, int accessFlags, cv::UMatUsageFlags usageFlags) const
