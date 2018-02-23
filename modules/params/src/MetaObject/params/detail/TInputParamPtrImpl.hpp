@@ -177,13 +177,20 @@ namespace mo
     }
 
     template <typename T>
-    class MO_EXPORTS TInputParamPtr<std::shared_ptr<T>> : virtual public ITInputParam<T>
+    ConstAccessToken<T> TInputParamPtr<T>::access() const
+    {
+        return ConstAccessToken<T>(*this, ParamTraits<T>::get(_current_data));
+    }
+
+    template <typename T>
+    class MO_EXPORTS TInputParamPtr<std::shared_ptr<T>> : virtual public ITInputParam<T>,
+                                                          virtual public ITConstAccessibleParam<T>
     {
       public:
         typedef typename ParamTraits<T>::Storage_t Storage_t;
         typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
         typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
-        //typedef typename ParamTraits<T>::Input_t Input_t;
+        // typedef typename ParamTraits<T>::Input_t Input_t;
         typedef std::shared_ptr<const T> Input_t;
 
         typedef void(TUpdateSig_t)(ConstStorageRef_t,
@@ -196,12 +203,10 @@ namespace mo
         typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
         typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
 
-        TInputParamPtr(const std::string& name = "",
-                       std::shared_ptr<T>* user_var_ = nullptr,
-                       Context* ctx = nullptr)
+        TInputParamPtr(const std::string& name = "", std::shared_ptr<T>* user_var_ = nullptr, Context* ctx = nullptr)
             : _user_var(user_var_), ITInputParam<T>(name, ctx), IParam(name, mo::ParamFlags::Input_e)
         {
-            //static_assert(std::is_same<InputStorage_t, std::shared_ptr<Input_t>>::value,
+            // static_assert(std::is_same<InputStorage_t, std::shared_ptr<Input_t>>::value,
             //              "std::is_same<InputStorage_t, std::shared_ptr<Input_t>>::value");
         }
 
@@ -332,6 +337,8 @@ namespace mo
             }
             return false;
         }
+
+        ConstAccessToken<T> access() const { return ConstAccessToken<T>(*this, ParamTraits<T>::get(_current_data)); }
 
       protected:
         virtual bool updateDataImpl(

@@ -26,7 +26,22 @@ namespace mo
             }
             return {};
         }
+
+        template <>
+        inline void convertFromPython(const boost::python::object& obj, cv::Mat& result)
+        {
+            PyObject* o = obj.ptr();
+            if (PyArray_Check(o))
+            {
+                NumpyAllocator* alloc = dynamic_cast<NumpyAllocator*>(cv::Mat::getDefaultAllocator());
+                if (alloc)
+                {
+                    result = alloc->fromPython(o);
+                }
+            }
+        }
     }
+
     struct NumpyDeallocator
     {
         NumpyDeallocator(cv::UMatData* data_, size_t size_, const NumpyAllocator* allocator_)
@@ -34,6 +49,7 @@ namespace mo
         {
             CV_XADD(&data_->refcount, 1);
         }
+
         ~NumpyDeallocator()
         {
             if (allocator)
@@ -48,6 +64,7 @@ namespace mo
                 }
             }
         }
+
         cv::UMatData* data;
         size_t size;
         const NumpyAllocator* allocator;
@@ -76,7 +93,188 @@ namespace mo
 
     NumpyAllocator::~NumpyAllocator() {}
 
-    cv::Mat NumpyAllocator::fromPython(PyObject* arr) const {}
+    cv::Mat NumpyAllocator::fromPython(PyObject* o) const
+    {
+        cv::Mat m;
+
+        bool allowND = true;
+        if (!o || o == Py_None)
+        {
+            if (!m.data)
+                m.allocator = const_cast<NumpyAllocator*>(this);
+            return m;
+        }
+
+        if (PyInt_Check(o))
+        {
+            double v[] = {static_cast<double>(PyInt_AsLong((PyObject*)o)), 0., 0., 0.};
+            m = cv::Mat(4, 1, CV_64F, v).clone();
+            return m;
+        }
+        if (PyFloat_Check(o))
+        {
+            double v[] = {PyFloat_AsDouble((PyObject*)o), 0., 0., 0.};
+            m = cv::Mat(4, 1, CV_64F, v).clone();
+            return m;
+        }
+        if (PyTuple_Check(o))
+        {
+            int i, sz = (int)PyTuple_Size((PyObject *)o);
+            m = cv::Mat(sz, 1, CV_64F);
+            for (i = 0; i < sz; i++)
+            {
+                PyObject* oi = PyTuple_GET_ITEM(o, i);
+                if (PyInt_Check(oi))
+                    m.at<double>(i) = (double)PyInt_AsLong(oi);
+                else if (PyFloat_Check(oi))
+                    m.at<double>(i) = (double)PyFloat_AsDouble(oi);
+                else
+                {
+                    m.release();
+                    return m;
+                }
+            }
+            return m;
+        }
+
+        if (!PyArray_Check(o))
+        {
+            return m;
+        }
+
+        PyArrayObject* oarr = (PyArrayObject*)o;
+
+        bool needcopy = false, needcast = false;
+        int typenum = PyArray_TYPE(oarr), new_typenum = typenum;
+        int type =
+            typenum == NPY_UBYTE ? CV_8U : typenum == NPY_BYTE
+                                               ? CV_8S
+                                               : typenum == NPY_USHORT
+                                                     ? CV_16U
+                                                     : typenum == NPY_SHORT
+                                                           ? CV_16S
+                                                           : typenum == NPY_INT
+                                                                 ? CV_32S
+                                                                 : typenum == NPY_INT32
+                                                                       ? CV_32S
+                                                                       : typenum == NPY_FLOAT
+                                                                             ? CV_32F
+                                                                             : typenum == NPY_DOUBLE ? CV_64F : -1;
+
+        if (type < 0)
+        {
+            if (typenum == NPY_INT64 || typenum == NPY_UINT64 || typenum == NPY_LONG)
+            {
+                needcopy = needcast = true;
+                new_typenum = NPY_INT;
+                type = CV_32S;
+            }
+            else
+            {
+                return m;
+            }
+        }
+
+#ifndef CV_MAX_DIM
+        const int CV_MAX_DIM = 32;
+#endif
+
+        int ndims = PyArray_NDIM(oarr);
+        if (ndims >= CV_MAX_DIM)
+        {
+            return m;
+        }
+
+        int size[CV_MAX_DIM + 1];
+        size_t step[CV_MAX_DIM + 1];
+        size_t elemsize = CV_ELEM_SIZE1(type);
+        const npy_intp* _sizes = PyArray_DIMS(oarr);
+        const npy_intp* _strides = PyArray_STRIDES(oarr);
+        bool ismultichannel = ndims == 3 && _sizes[2] <= CV_CN_MAX;
+
+        for (int i = ndims - 1; i >= 0 && !needcopy; i--)
+        {
+            // these checks handle cases of
+            //  a) multi-dimensional (ndims > 2) arrays, as well as simpler 1- and 2-dimensional cases
+            //  b) transposed arrays, where _strides[] elements go in non-descending order
+            //  c) flipped arrays, where some of _strides[] elements are negative
+            // the _sizes[i] > 1 is needed to avoid spurious copies when NPY_RELAXED_STRIDES is set
+            if ((i == ndims - 1 && _sizes[i] > 1 && (size_t)_strides[i] != elemsize) ||
+                (i < ndims - 1 && _sizes[i] > 1 && _strides[i] < _strides[i + 1]))
+                needcopy = true;
+        }
+
+        if (ismultichannel && _strides[1] != (npy_intp)elemsize * _sizes[2])
+            needcopy = true;
+
+        if (needcopy)
+        {
+            if (needcast)
+            {
+                o = PyArray_Cast(oarr, new_typenum);
+                oarr = (PyArrayObject*)o;
+            }
+            else
+            {
+                oarr = PyArray_GETCONTIGUOUS(oarr);
+                o = (PyObject*)oarr;
+            }
+
+            _strides = PyArray_STRIDES(oarr);
+        }
+
+        // Normalize strides in case NPY_RELAXED_STRIDES is set
+        size_t default_step = elemsize;
+        for (int i = ndims - 1; i >= 0; --i)
+        {
+            size[i] = (int)_sizes[i];
+            if (size[i] > 1)
+            {
+                step[i] = (size_t)_strides[i];
+                default_step = step[i] * size[i];
+            }
+            else
+            {
+                step[i] = default_step;
+                default_step *= size[i];
+            }
+        }
+
+        // handle degenerate case
+        if (ndims == 0)
+        {
+            size[ndims] = 1;
+            step[ndims] = elemsize;
+            ndims++;
+        }
+
+        if (ismultichannel)
+        {
+            ndims--;
+            type |= CV_MAKETYPE(0, size[2]);
+        }
+
+        if (ndims > 2 && !allowND)
+        {
+            return m;
+        }
+
+        m = cv::Mat(ndims, size, type, PyArray_DATA(oarr), step);
+        cv::UMatData* u = new cv::UMatData(this);
+        u->data = u->origdata = (uchar*)PyArray_DATA((PyArrayObject*)o);
+        for (int i = 0; i < ndims - 1; i++)
+            step[i] = (size_t)_strides[i];
+        step[ndims - 1] = CV_ELEM_SIZE(type);
+        u->size = size[0] * step[0];
+        u->userdata = o;
+        m.addref();
+
+        if (!needcopy)
+        {
+            Py_INCREF(o);
+        }
+        m.allocator = const_cast<NumpyAllocator*>(this);
+    }
 
     PyObject* NumpyAllocator::toPython(const cv::Mat& mat) const
     {
@@ -128,11 +326,10 @@ namespace mo
         auto u = mat.u;
         PyEnsureGIL gil;
         PyObject* o = PyArray_SimpleNewFromData(dims, _sizes, typenum, mat.data);
-        // PyObject* o = PyArray_SimpleNew(dims, _sizes, typenum);
         boost::python::object base(boost::shared_ptr<NumpyDeallocator>(new NumpyDeallocator(u, total_size, this)));
         PyArray_BASE(o) = base.ptr();
         Py_INCREF(base.ptr());
-        u->userdata = o;
+        u->userdata = nullptr;
         return o;
     }
 
@@ -160,11 +357,13 @@ namespace mo
         if (u->userdata && u->currAllocator == this)
         {
             PyObject* o = static_cast<PyObject*>(u->userdata);
+            // May needa  GIL lock here, not sure.  If we crash, we crash...
+            Py_DECREF(o);
         }
         else
         {
+            default_allocator->deallocate(u);
         }
-        default_allocator->deallocate(u);
     }
 
     // Used for stl allocators

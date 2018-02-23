@@ -61,7 +61,7 @@ namespace mo
             {
                 if (param->getTypeInfo() == mo::TypeInfo(typeid(T)))
                 {
-                    if (auto typed = dynamic_cast<const mo::ITAccessibleParam<T>*>(param))
+                    if (auto typed = dynamic_cast<const mo::ITConstAccessibleParam<T>*>(param))
                     {
                         auto token = typed->access();
                         return convertToPython(token());

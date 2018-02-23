@@ -17,6 +17,7 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/MetaObject
 */
 #pragma once
+#include "ITAccessibleParam.hpp"
 #include "ITInputParam.hpp"
 #include "MetaParam.hpp"
 #include "ParamConstructor.hpp"
@@ -29,7 +30,7 @@ namespace mo
     // auto TParam = TInputParamPtr(&myVar); // TInputParam now updates myvar to point to whatever the
     // input variable is for TParam.
     template <typename T>
-    class MO_EXPORTS TInputParamPtr : virtual public ITInputParam<T>
+    class MO_EXPORTS TInputParamPtr : virtual public ITInputParam<T>, virtual public ITConstAccessibleParam<T>
     {
       public:
         typedef typename ParamTraits<T>::Storage_t Storage_t;
@@ -53,6 +54,8 @@ namespace mo
         bool getInput(const OptionalTime_t& ts, size_t* fn = nullptr);
         bool getInput(size_t fn, OptionalTime_t* ts = nullptr);
 
+        virtual ConstAccessToken<T> access() const;
+
       protected:
         virtual bool updateDataImpl(
             const Storage_t&, const OptionalTime_t&, Context*, size_t, const std::shared_ptr<ICoordinateSystem>&)
@@ -69,7 +72,6 @@ namespace mo
                                    const std::shared_ptr<ICoordinateSystem>&,
                                    UpdateFlags);
     };
-
 }
 #include "MetaObject/params/detail/TInputParamImpl.hpp"
 #include "detail/TInputParamPtrImpl.hpp"

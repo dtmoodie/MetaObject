@@ -11,7 +11,11 @@ namespace mo
     {
         template <>
         boost::python::object convertToPython(const cv::Mat& mat);
+
+        template <>
+        inline void convertFromPython(const boost::python::object& obj, cv::Mat& result);
     }
+
     void setupAllocator();
     class NumpyAllocator : virtual public Allocator
     {
