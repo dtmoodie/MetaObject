@@ -142,8 +142,10 @@ namespace mo
                     {
                         box = new QSpinBox(parent);
                         box->setMaximumWidth(100);
-                        box->setMaximum(std::max<int>(std::numeric_limits<T>::max(), std::numeric_limits<int>::max()));
-                        box->setMinimum(std::min<int>(std::numeric_limits<T>::min(), std::numeric_limits<int>::min()));
+                        box->setMaximum(static_cast<int>(
+                            std::max<ssize_t>(std::numeric_limits<T>::max(), std::numeric_limits<int>::max())));
+                        box->setMinimum(static_cast<int>(
+                            std::min<ssize_t>(std::numeric_limits<T>::min(), std::numeric_limits<int>::min())));
                     }
 
                     box->connect(box, SIGNAL(valueChanged(int)), proxy, SLOT(on_update(int)));
