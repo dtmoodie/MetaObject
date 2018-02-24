@@ -1,6 +1,6 @@
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include "PythonAllocator.hpp"
 #include "MetaObject/logging/logging.hpp"
-
 #include <numpy/ndarrayobject.h>
 
 #include <boost/python.hpp>
@@ -274,6 +274,7 @@ namespace mo
             Py_INCREF(o);
         }
         m.allocator = const_cast<NumpyAllocator*>(this);
+        return m;
     }
 
     PyObject* NumpyAllocator::toPython(const cv::Mat& mat) const
@@ -325,9 +326,12 @@ namespace mo
         }
         auto u = mat.u;
         PyEnsureGIL gil;
+
         PyObject* o = PyArray_SimpleNewFromData(dims, _sizes, typenum, mat.data);
         boost::python::object base(boost::shared_ptr<NumpyDeallocator>(new NumpyDeallocator(u, total_size, this)));
-        PyArray_BASE(o) = base.ptr();
+
+        ((PyArrayObject_fields*)o)->base = base.ptr();
+        // PyArray_BASE(o) = base.ptr();
         Py_INCREF(base.ptr());
         u->userdata = nullptr;
         return o;
