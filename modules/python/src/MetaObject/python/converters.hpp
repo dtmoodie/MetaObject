@@ -349,6 +349,7 @@ namespace mo
             template <class T>
             void pythonizeData(const char* name)
             {
+                auto module_name = getModuleName();
                 boost::python::object datatype_module(boost::python::handle<>(
                     boost::python::borrowed(PyImport_AddModule((module_name + ".datatypes").c_str()))));
                 // boost::python::scope().attr("datatypes") = datatype_module;
