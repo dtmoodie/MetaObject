@@ -324,7 +324,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
     if (handle == nullptr)
     {
         auto err = GetLastError();
-        MO_LOG(debug) << "Failed to load " << plugin_name << " due to: [" << err << "] " << GetLastErrorAsString();
+        MO_LOG(warning) << "Failed to load " << plugin_name << " due to: [" << err << "] " << GetLastErrorAsString();
         plugin_info.m_state = "failed";
         _pimpl->plugins.push_back(plugin_info);
         return false;
@@ -358,13 +358,14 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
         }
         plugin_info.m_id = id;
         setupObjectConstructors(moduleInterface);
+        mo::Time_t end = mo::getCurrentTime();
+        //_pimpl->plugins.push_back(plugin_name + " - success");
+        plugin_info.m_state = "success";
+        plugin_info.m_load_time = static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+        _pimpl->plugins.push_back(plugin_info);
+        return true;
     }
-    mo::Time_t end = mo::getCurrentTime();
-    //_pimpl->plugins.push_back(plugin_name + " - success");
-    plugin_info.m_state = "success";
-    plugin_info.m_load_time = static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
-    _pimpl->plugins.push_back(plugin_info);
-    return true;
+    return false;
 }
 #else
 #include "dlfcn.h"
