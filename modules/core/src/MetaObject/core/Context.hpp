@@ -45,6 +45,5 @@ namespace mo
       protected:
         Context();
         std::string name;
-        static thread_local Context* current_context;
     }; // class mo::Context
 } // namespace mo

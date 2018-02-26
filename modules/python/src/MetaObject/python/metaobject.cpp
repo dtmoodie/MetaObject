@@ -103,10 +103,11 @@ namespace mo
 
         void setupObjects(std::vector<IObjectConstructor*>& ctrs)
         {
+            auto module_name = mo::python::getModuleName();
             boost::python::object module(
-                boost::python::handle<>(boost::python::borrowed(PyImport_AddModule((mo::python::module_name + ".object").c_str()))));
+                boost::python::handle<>(boost::python::borrowed(PyImport_AddModule((module_name + ".object").c_str()))));
 
-            boost::python::import(mo::python::module_name.c_str()).attr("object") = module;
+            boost::python::import(module_name.c_str()).attr("object") = module;
             boost::python::scope plugins_scope = module;
 
             for (auto itr = ctrs.begin(); itr != ctrs.end();)
@@ -134,7 +135,7 @@ namespace mo
                         addParamAccessors<MetaObject>(bpobj, minfo);
                     }
                     
-                    boost::python::import(mo::python::module_name.c_str()).attr("object").attr(info->GetObjectName().c_str()) = bpobj;
+                    boost::python::import(module_name.c_str()).attr("object").attr(info->GetObjectName().c_str()) = bpobj;
                     itr = ctrs.erase(itr);
                 }
                 else

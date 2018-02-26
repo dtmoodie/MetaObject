@@ -12,16 +12,16 @@
 #include <boost/thread/tss.hpp>
 using namespace mo;
 
-thread_local Context* Context::current_context = nullptr;
+thread_local Context* current_context = nullptr;
 
 Context* Context::getCurrent()
 {
-    return Context::current_context;
+    return current_context;
 }
 
 void Context::setCurrent(Context* ctx)
 {
-    Context::current_context = ctx;
+    current_context = ctx;
 }
 
 

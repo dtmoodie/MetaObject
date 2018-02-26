@@ -93,6 +93,7 @@ namespace mo
         }
         return false;
     }
+
     std::vector<std::string> listConstructableObjects()
     {
         auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
@@ -138,7 +139,17 @@ namespace mo
             return data;
         }
         static bool setup = false;
-        MO_EXPORTS std::string module_name;
+        static std::string module_name;
+        
+        std::string getModuleName()
+        {
+            return module_name;
+        }
+
+        void setModuleName(const std::string& name)
+        {
+            module_name = name;
+        }
 
         void registerSetupFunction(std::function<void(void)>&& func)
         {

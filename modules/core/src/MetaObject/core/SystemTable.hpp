@@ -36,6 +36,7 @@ struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
 {
   public:
     static std::shared_ptr<SystemTable> instance();
+    static void setInstance(const std::shared_ptr<SystemTable>& table);
     static bool checkInstance();
 
     SystemTable();
@@ -90,7 +91,6 @@ struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
     }
 
   protected:
-    static std::weak_ptr<SystemTable> inst;
 
     template <class Derived>
     friend struct TDerivedSystemTable;
@@ -109,7 +109,7 @@ struct TDerivedSystemTable : public SystemTable
         if (!output)
         {
             output = std::make_shared<Derived>();
-            SystemTable::inst = output;
+            SystemTable::setInstance(output);
         }
         return output;
     }
