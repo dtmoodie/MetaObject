@@ -66,34 +66,6 @@ namespace mo
             boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::fatal);
     }
 
-    bool recompile(bool async = false)
-    {
-        auto inst = mo::MetaObjectFactory::instance();
-        if (inst->checkCompile())
-        {
-            MO_LOG(info) << "Currently compiling";
-            if (async == false)
-            {
-                while (!inst->isCompileComplete())
-                {
-                    boost::this_thread::sleep_for(boost::chrono::seconds(1));
-                    MO_LOG(info) << "Still compiling";
-                }
-                MO_LOG(info) << "Swapping objects";
-                if (inst->swapObjects())
-                {
-                    MO_LOG(info) << "Swap success";
-                    return true;
-                }
-            }
-        }
-        else
-        {
-            MO_LOG(info) << "Nothing to recompile";
-        }
-        return false;
-    }
-
     std::vector<std::string> listConstructableObjects()
     {
         auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
@@ -140,16 +112,10 @@ namespace mo
         }
         static bool setup = false;
         static std::string module_name;
-        
-        std::string getModuleName()
-        {
-            return module_name;
-        }
 
-        void setModuleName(const std::string& name)
-        {
-            module_name = name;
-        }
+        std::string getModuleName() { return module_name; }
+
+        void setModuleName(const std::string& name) { module_name = name; }
 
         void registerSetupFunction(std::function<void(void)>&& func)
         {
@@ -330,7 +296,6 @@ namespace mo
             setupDataTypes(module_name);
             boost::python::def("listConstructableObjects", &listConstructableObjects);
             boost::python::def("listObjectInfos", &listObjectInfos);
-            boost::python::def("recompile", &recompile, (boost::python::arg("async") = false));
             boost::python::def("log", &setLogLevel);
 
             for (const auto& func : mo::python::setup_functions)

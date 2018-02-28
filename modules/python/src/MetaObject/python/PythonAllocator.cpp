@@ -44,8 +44,7 @@ namespace mo
 
     struct NumpyDeallocator
     {
-        NumpyDeallocator(cv::UMatData* data_, size_t size_, const NumpyAllocator* allocator_)
-            : data(data_), size(size_), allocator(allocator_)
+        NumpyDeallocator(cv::UMatData* data_, const NumpyAllocator* allocator_) : data(data_), allocator(allocator_)
         {
             CV_XADD(&data_->refcount, 1);
         }
@@ -54,9 +53,6 @@ namespace mo
         {
             if (allocator)
             {
-                // This is called when the numpy array is deleted, thus we need to check if the cv::Mat's still hold a
-                // reference to this memory
-                // allocator->deallocateCpu(static_cast<uchar*>(data), size);
                 if (data && CV_XADD(&data->refcount, -1) == 1)
                 {
                     (data->currAllocator ? data->currAllocator : allocator ? allocator : cv::Mat::getDefaultAllocator())
@@ -66,7 +62,6 @@ namespace mo
         }
 
         cv::UMatData* data;
-        size_t size;
         const NumpyAllocator* allocator;
     };
 
@@ -328,7 +323,7 @@ namespace mo
         PyEnsureGIL gil;
 
         PyObject* o = PyArray_SimpleNewFromData(dims, _sizes, typenum, mat.data);
-        boost::python::object base(boost::shared_ptr<NumpyDeallocator>(new NumpyDeallocator(u, total_size, this)));
+        boost::python::object base(boost::shared_ptr<NumpyDeallocator>(new NumpyDeallocator(u, this)));
 
         ((PyArrayObject_fields*)o)->base = base.ptr();
         // PyArray_BASE(o) = base.ptr();
