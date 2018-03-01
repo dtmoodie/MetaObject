@@ -16,9 +16,9 @@ namespace mo
     };
 }
 
-#define PARAM_(type_, name, init, N)                                                                                   \
+#define PARAM_(type_, name, N, ...)                                                                                    \
     LOAD_SAVE_(name, N)                                                                                                \
-    INIT_SET_(name, init, N)                                                                                           \
+    INIT_SET_(name, N, __VA_ARGS__)                                                                                    \
     static void _list_param_info(std::vector<mo::ParamInfo*>& info, mo::_counter_<N> dummy)                            \
     {                                                                                                                  \
         static mo::ParamInfo s_info(mo::TypeInfo(typeid(mo::argument_type<void(type_)>::type)),                        \
@@ -26,17 +26,17 @@ namespace mo
                                     "",                                                                                \
                                     "",                                                                                \
                                     mo::ParamFlags::Control_e,                                                         \
-                                    #init);                                                                            \
+                                    #__VA_ARGS__);                                                                     \
         info.push_back(&s_info);                                                                                       \
         _list_param_info(info, --dummy);                                                                               \
     }                                                                                                                  \
     SERIALIZE_(name, N)
 
-#define INIT_SET_(name, init, N)                                                                                       \
+#define INIT_SET_(name, N, ...)                                                                                        \
     void _init_params(bool firstInit, mo::_counter_<N> dummy)                                                          \
     {                                                                                                                  \
         if (firstInit)                                                                                                 \
-            name = init;                                                                                               \
+            name = __VA_ARGS__;                                                                                        \
         name##_param.setMtx(&getMutex());                                                                              \
         name##_param.updatePtr(&name);                                                                                 \
         name##_param.setContext(getContext().get());                                                                   \
@@ -45,11 +45,11 @@ namespace mo
         _init_params(firstInit, --dummy);                                                                              \
     }
 
-#define SET_(name, init, N)                                                                                            \
+#define SET_(name, N, ...)                                                                                             \
     void _init_params(bool firstInit, mo::_counter_<N> dummy)                                                          \
     {                                                                                                                  \
         if (firstInit)                                                                                                 \
-            name = init;                                                                                               \
+            name = __VA_ARGS__;                                                                                        \
         _init_params(firstInit, --dummy);                                                                              \
     }
 

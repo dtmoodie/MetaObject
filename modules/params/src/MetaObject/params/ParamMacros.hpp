@@ -7,10 +7,10 @@
 #include "MetaObject/params/detail/ParamMacrosImpl.hpp"
 #include "MetaObject/types/file_types.hpp"
 
-#define PARAM(type_, name, init)                                                                                       \
+#define PARAM(type_, name, ...)                                                                                        \
     mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param;                                                  \
-    mo::argument_type<void(type_)>::type name = init;                                                                  \
-    PARAM_(type_, name, init, __COUNTER__)
+    mo::argument_type<void(type_)>::type name = __VA_ARGS__;                                                           \
+    PARAM_(type_, name, __COUNTER__, __VA_ARGS__)
 
 #define ENUM_PARAM(name, ...)                                                                                          \
     mo::TParamPtr<mo::EnumParam> name##_param;                                                                         \

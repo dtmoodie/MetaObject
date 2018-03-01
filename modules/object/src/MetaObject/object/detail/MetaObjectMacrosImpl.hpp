@@ -63,7 +63,7 @@ namespace mo
     }
 
 #define SIGNALS_END(N_)                                                                                                \
-    virtual int initSignals(bool firstInit)                                                                            \
+    virtual int initSignals(bool firstInit) override                                                                   \
     {                                                                                                                  \
         int count = _init_parent_signals(firstInit);                                                                   \
         return _init_signals(firstInit, mo::_counter_<N_ - 1>()) + count;                                              \
@@ -180,17 +180,17 @@ namespace mo
     }
 
 #define PARAM_END(N_)                                                                                                  \
-    void initParams(bool firstInit)                                                                                    \
+    virtual void initParams(bool firstInit) override                                                                   \
     {                                                                                                                  \
         _init_params(firstInit, mo::_counter_<N_ - 1>());                                                              \
         _init_parent_params(firstInit);                                                                                \
     }                                                                                                                  \
-    void serializeParams(ISimpleSerializer* pSerializer)                                                               \
+    virtual void serializeParams(ISimpleSerializer* pSerializer) override                                              \
     {                                                                                                                  \
         _serialize_params(pSerializer, mo::_counter_<N_ - 1>());                                                       \
         _serialize_parent_params(pSerializer);                                                                         \
     }                                                                                                                  \
-    void initOutputs()                                                                                                 \
+    virtual void initOutputs() override                                                                                \
     {                                                                                                                  \
         _init_outputs(mo::_counter_<N_ - 1>());                                                                        \
         _init_parent_outputs();                                                                                        \
@@ -222,7 +222,7 @@ namespace mo
     }
 
 #define SLOT_END(N_)                                                                                                   \
-    virtual void bindSlots(bool firstInit) override                                                                                     \
+    virtual void bindSlots(bool firstInit) override                                                                    \
     {                                                                                                                  \
         _bind_parent_slots(firstInit);                                                                                 \
         _bind_slots(firstInit, mo::_counter_<N_ - 1>());                                                               \

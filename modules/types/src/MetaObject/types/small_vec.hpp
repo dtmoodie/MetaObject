@@ -10,6 +10,11 @@ namespace mo
     {
         SmallVec() : SmallVecStorage<T, N>(*static_cast<SmallVecBase<T>*>(this)) {}
 
+        SmallVec(const SmallVecBase<T>& other) : SmallVecStorage<T, N>(*static_cast<SmallVecBase<T>*>(this))
+        {
+            SmallVecStorage<T, N>::assign(other.begin(), other.end());
+        }
+
         SmallVec(const std::vector<T>& vec) : SmallVecStorage<T, N>(*static_cast<SmallVecBase<T>*>(this))
         {
             const size_t size = vec.size();
@@ -17,6 +22,11 @@ namespace mo
             {
                 SmallVecStorage<T, N>::assign(&vec[0], &vec[0] + size);
             }
+        }
+        ~SmallVec()
+        {
+            SmallVecStorage<T, N>::~SmallVecStorage();
+            SmallVecBase<T>::~SmallVecBase();
         }
 
         SmallVec<T, N>& operator=(const std::vector<T>& vec)

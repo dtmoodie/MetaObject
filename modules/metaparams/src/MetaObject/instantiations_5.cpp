@@ -22,6 +22,7 @@
 using namespace cv;
 static_assert(ct::reflect::ReflectData<cv::Rect>::IS_SPECIALIZED, "Specialization not working for cv::Rect");
 
+INSTANTIATE_META_PARAM(Size);
 INSTANTIATE_META_PARAM(Rect);
 INSTANTIATE_META_PARAM(Rect2d);
 INSTANTIATE_META_PARAM(Rect2f);

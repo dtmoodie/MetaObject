@@ -25,9 +25,10 @@ using namespace mo;
 
 namespace mo
 {
+#ifdef MO_HAVE_PYTHON
     namespace python
     {
-
+        template <>
         inline void convertFromPython(const boost::python::object& obj, EnumParam& param)
         {
             boost::python::extract<std::string> str_ext(obj);
@@ -48,7 +49,21 @@ namespace mo
                 param.current_selection = static_cast<size_t>(val);
             }
         }
+        template <>
+        inline void convertFromPython(const boost::python::object& obj, ReadFile& result)
+        {
+            boost::python::extract<std::string> extractor(obj);
+            result = extractor();
+        }
+
+        template <>
+        inline void convertFromPython(const boost::python::object& obj, WriteFile& result)
+        {
+            boost::python::extract<std::string> extractor(obj);
+            result = extractor();
+        }
     }
+#endif
 }
 
 namespace std

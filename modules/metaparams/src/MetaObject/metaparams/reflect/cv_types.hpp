@@ -153,5 +153,10 @@ namespace ct
             REFLECT_DATA_MEMBER(y)
             REFLECT_DATA_MEMBER(z)
         REFLECT_DATA_END;
+
+        REFLECT_TEMPLATED_DATA_START(cv::Size_)
+            REFLECT_DATA_MEMBER(width)
+            REFLECT_DATA_MEMBER(height)
+        REFLECT_DATA_END;
     }
 }

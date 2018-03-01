@@ -4,14 +4,10 @@
 
 namespace mo
 {
-    template<class T, int N>
+    template <class T, int N>
     struct SmallVecStorage
     {
-        SmallVecStorage(SmallVecBase<T>& base) :
-            m_base(base)
-        {
-
-        }
+        SmallVecStorage(SmallVecBase<T>& base) : m_base(base) {}
 
         ~SmallVecStorage()
         {
@@ -37,6 +33,7 @@ namespace mo
             }
             m_base.m_size = size;
         }
+
         void assign(const T* begin, const T* end)
         {
             const size_t size = end - begin;
@@ -44,13 +41,13 @@ namespace mo
             memcpy(m_base.m_ptr, begin, size * sizeof(T));
         }
 
-    private:
+      private:
         T m_data[N];
         SmallVecBase<T>& m_base;
     };
 
-    template<class T>
-    struct SmallVecDataWrapper: public SmallVecBase<T>
+    template <class T>
+    struct SmallVecDataWrapper : public SmallVecBase<T>
     {
         SmallVecDataWrapper(T* begin, T* end)
         {
