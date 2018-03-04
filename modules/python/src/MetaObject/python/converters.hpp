@@ -5,7 +5,7 @@
 #include "MetaObject/python/FunctionSignatureBuilder.hpp"
 #include "MetaObject/python/converters.hpp"
 
-#include "ce/VariadicTypedef.hpp"
+#include "ct/VariadicTypedef.hpp"
 #include "ct/reflect/printer.hpp"
 #include "ct/reflect/reflect_data.hpp"
 #include <ct/detail/TypeTraits.hpp>
@@ -109,7 +109,7 @@ namespace mo
 
             template <class T, int I, class BP>
             auto addPropertyImpl(BP& bpobj)
-                -> std::enable_if_t<!is_pointer_v<decltype(ct::reflect::getValue<I>(std::declval<T>()))>>
+                -> typename std::enable_if<!is_pointer_v<decltype(ct::reflect::getValue<I>(std::declval<T>()))>>::type
             {
                 bpobj.add_property(
                     ct::reflect::getName<I, T>(), &ct::reflect::getValue<I, T>, &ct::reflect::setValue<I, T>);
@@ -117,7 +117,7 @@ namespace mo
 
             template <class T, int I, class BP>
             auto addPropertyImpl(BP& bpobj)
-                -> std::enable_if_t<is_pointer_v<decltype(ct::reflect::getValue<I>(std::declval<T>()))>>
+                -> typename std::enable_if<is_pointer_v<decltype(ct::reflect::getValue<I>(std::declval<T>()))>>::type
             {
                 // bpobj.add_property(
                 //    ct::reflect::getName<I, T>(), &ct::reflect::getValue<I, T>, &ct::reflect::setValue<I, T>);
@@ -139,7 +139,7 @@ namespace mo
             template <class T>
             void initDataMembers(T& data, boost::python::object& value)
             {
-                typedef std::decay_t<SetValue_t<ct::reflect::ReflectData<T>::N - 1, T>> Type;
+                typedef typename std::decay<SetValue_t<ct::reflect::ReflectData<T>::N - 1, T>>::type Type;
                 boost::python::extract<Type> ext(value);
                 if (ext.check())
                 {
@@ -151,7 +151,7 @@ namespace mo
             template <class T, class... Args>
             void initDataMembers(T& data, boost::python::object& value, Args... args)
             {
-                typedef std::decay_t<SetValue_t<ct::reflect::ReflectData<T>::N - sizeof...(args)-1, T>> Type;
+                typedef typename std::decay<SetValue_t<ct::reflect::ReflectData<T>::N - sizeof...(args)-1, T>>::type Type;
                 boost::python::extract<Type> ext(value);
                 if (ext.check())
                 {
@@ -191,7 +191,7 @@ namespace mo
             }
 
             template <class T, class... Args>
-            struct CreateDataObject<T, ce::variadic_typedef<Args...>>
+            struct CreateDataObject<T, ct::variadic_typedef<Args...>>
             {
                 static const int size = ct::reflect::ReflectData<T>::N - 1;
                 static T* create(Args... args)
@@ -211,7 +211,7 @@ namespace mo
             };
 
             template <class T, class BP>
-            std::enable_if_t<ct::is_default_constructible<T>::value> addInit(BP& bpobj)
+            typename std::enable_if<ct::is_default_constructible<T>::value>::type addInit(BP& bpobj)
             {
                 typedef CreateDataObject<
                     T,
@@ -224,7 +224,7 @@ namespace mo
             }
 
             template <class T, class BP>
-            std::enable_if_t<!ct::is_default_constructible<T>::value> addInit(BP& bpobj)
+            typename std::enable_if<!ct::is_default_constructible<T>::value>::type addInit(BP& )
             {
             }
 

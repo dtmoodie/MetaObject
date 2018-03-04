@@ -2,9 +2,6 @@
 
 namespace mo
 {
-
-
-
     ReadFile::ReadFile(const std::string& str) : boost::filesystem::path(str)
     {
     }

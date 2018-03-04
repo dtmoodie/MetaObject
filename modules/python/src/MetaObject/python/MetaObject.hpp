@@ -93,7 +93,7 @@ namespace mo
     }
 
     template <int N, class T, class Storage, class... Args>
-    struct CreateMetaObject<N, T, Storage, ce::variadic_typedef<Args...>>
+    struct CreateMetaObject<N, T, Storage, ct::variadic_typedef<Args...>>
     {
         static const int size = N;
         typedef Storage ConstructedType;
@@ -118,7 +118,7 @@ namespace mo
 
         static std::function<ConstructedType(Args...)> bind(IObjectConstructor* ctr, std::vector<std::string> param_names)
         {
-            return ctrBind(&CreateMetaObject<N, T, Storage, ce::variadic_typedef<Args...>>::create, ctr, param_names, make_int_sequence<N>{});
+            return ctrBind(&CreateMetaObject<N, T, Storage, ct::variadic_typedef<Args...>>::create, ctr, param_names, make_int_sequence<N>{});
         }
 
         boost::python::detail::keyword_range range() const

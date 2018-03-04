@@ -8,7 +8,7 @@ if(HAVE_PYTHON)
                 $<BUILD_INTERFACE:${PYTHON_INCLUDE_DIR}>
                 $<BUILD_INTERFACE:${NUMPY_INCLUDE_DIR}>
             )
-        target_link_libraries(metaobject_python optimized;${Boost_PYTHON_LIBRARY_RELEASE};debug;${Boost_PYTHON_LIBRARY_DEBUG} ${PYTHON_LIBRARY} ce)
+        target_link_libraries(metaobject_python optimized;${Boost_PYTHON_LIBRARY_RELEASE};debug;${Boost_PYTHON_LIBRARY_DEBUG} ${PYTHON_LIBRARY} ct)
 
         if(UNIX)
             set(POSTFIX "")
@@ -30,6 +30,6 @@ if(HAVE_PYTHON)
             "${metaobject_param_include}\n#include <MetaObject/python/PythonPolicy.hpp>\n#define MO_HAVE_PYTHON" CACHE INTERNAL "" FORCE)
         add_executable(test_mo_python_init tests/python_init_param_setter.cpp)
         set_target_properties(test_mo_python_init PROPERTIES FOLDER Tests/MetaObject/python)
-        target_link_libraries(test_mo_python_init ce ct metaobject_python)
+        target_link_libraries(test_mo_python_init ct metaobject_python)
     endif(NUMPY_FOUND)
 endif()

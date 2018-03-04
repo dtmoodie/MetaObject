@@ -112,11 +112,20 @@ namespace mo
         void addEnum(int value, const ::std::string& enumeration);
         int getValue() const;
         std::string getEnum() const;
-
-        REFLECT_INTERNAL_START(EnumParam)
-            REFLECT_INTERNAL_MEMBER(std::vector<std::string>, enumerations)
-            REFLECT_INTERNAL_MEMBER(std::vector<int>, values)
-            REFLECT_INTERNAL_MEMBER(size_t, current_selection)
-        REFLECT_INTERNAL_END;
+        std::vector<std::string> enumerations;
+        std::vector<int> values;
+        int current_selection = 0;
     };
+}
+
+namespace ct
+{
+    namespace reflect
+    {
+        REFLECT_DATA_START(mo::EnumParam)
+            REFLECT_DATA_MEMBER(enumerations)
+            REFLECT_DATA_MEMBER(values)
+            REFLECT_DATA_MEMBER(current_selection)
+        REFLECT_DATA_END;
+    }
 }

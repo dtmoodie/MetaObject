@@ -45,7 +45,7 @@ struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
     std::shared_ptr<mo::Allocator> allocator;
 
     template <typename T>
-    std::enable_if_t<!std::is_base_of<IObject, T>::value, std::shared_ptr<T>> getSingleton()
+    typename std::enable_if<!std::is_base_of<IObject, T>::value, std::shared_ptr<T>>::type getSingleton()
     {
         auto g_itr = g_singletons.find(mo::TypeInfo(typeid(T)));
         if (g_itr != g_singletons.end())
@@ -56,7 +56,7 @@ struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
     }
 
     template <typename T>
-    std::enable_if_t<std::is_base_of<IObject, T>::value, rcc::shared_ptr<T>> getSingleton()
+    typename std::enable_if<std::is_base_of<IObject, T>::value, rcc::shared_ptr<T>>::type getSingleton()
     {
         auto g_itr = g_singletons.find(mo::TypeInfo(typeid(T)));
         if (g_itr != g_singletons.end())
