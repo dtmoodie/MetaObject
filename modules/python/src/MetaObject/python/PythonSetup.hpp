@@ -27,7 +27,7 @@ namespace mo
         {
             RegisterInterface(void (*setup)(), void (*construct)(std::vector<IObjectConstructor*>&))
             {
-                registerInterfaceSetupFunction(T::s_interfaceID, setup, construct);
+                registerInterfaceSetupFunction(T::getHash(), setup, construct);
             }
         };
     }

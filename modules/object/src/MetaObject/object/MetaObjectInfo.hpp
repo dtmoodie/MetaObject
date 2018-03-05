@@ -62,7 +62,7 @@ namespace mo
 
         std::string GetObjectName() const { return T::GetTypeNameStatic(); }
 
-        unsigned int GetInterfaceId() const { return T::s_interfaceID; }
+        unsigned int GetInterfaceId() const { return T::getHash(); }
 
         virtual std::string GetInterfaceName() const { return T::GetInterfaceName(); }
 
