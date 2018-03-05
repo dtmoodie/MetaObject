@@ -11,7 +11,7 @@ namespace mo
     constexpr bool is_base_of_v = std::is_base_of<Base, Derived>::value;
 
     template <class T>
-    std::enable_if_t<is_base_of_v<IObject, T>, rcc::shared_ptr<T>> getSingleton()
+    typename std::enable_if<is_base_of_v<IObject, T>, rcc::shared_ptr<T>>::type getSingleton()
     {
         // TODO
         static rcc::weak_ptr<T> inst;
@@ -22,7 +22,7 @@ namespace mo
     }
 
     template <class T, class... Args>
-    std::enable_if_t<!is_base_of_v<IObject, T>, std::shared_ptr<T>> getSingleton(Args&&... args)
+    typename std::enable_if<!is_base_of_v<IObject, T>, std::shared_ptr<T>>::type getSingleton(Args&&... args)
     {
         static std::weak_ptr<T> inst;
         std::shared_ptr<T> output = inst.lock();
@@ -35,7 +35,7 @@ namespace mo
     }
 
     template <class T>
-    std::enable_if_t<!is_base_of_v<IObject, T>, std::shared_ptr<T>> getSystemTableSingleton()
+    typename std::enable_if<!is_base_of_v<IObject, T>, std::shared_ptr<T>>::type getSystemTableSingleton()
     {
         auto table = PerModuleInterface::GetInstance()->GetSystemTable();
         auto instance = table->getSingleton<T>();
@@ -48,7 +48,7 @@ namespace mo
     }
 
     template <class T>
-    std::enable_if_t<is_base_of_v<IObject, T>, rcc::shared_ptr<T>> getSystemTableSingleton()
+    typename std::enable_if_t<is_base_of_v<IObject, T>, rcc::shared_ptr<T>>::type getSystemTableSingleton()
     {
         // TODO
         /*auto table = PerModuleInterface::GetInstance()->GetSystemTable();
