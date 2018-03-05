@@ -532,7 +532,7 @@ namespace mo
     PoolPolicy<cv::cuda::GpuMat, PaddingPolicy>::PoolPolicy(size_t initial_block_size)
         : m_initial_block_size(initial_block_size)
     {
-        m_blocks.emplace_back(std::make_unique<GpuMemoryBlock>(initial_block_size));
+        m_blocks.emplace_back(std::unique_ptr<GpuMemoryBlock>(new GpuMemoryBlock(initial_block_size)));
     }
 
     template <typename PaddingPolicy>
@@ -555,7 +555,7 @@ namespace mo
             }
         }
         // If we get to this point, then no memory was found, need to allocate new memory
-        m_blocks.push_back(std::make_unique<GpuMemoryBlock>(std::max(m_initial_block_size / 2, size_needed)));
+        m_blocks.push_back(std::unique_ptr<GpuMemoryBlock>(new GpuMemoryBlock(std::max(m_initial_block_size / 2, size_needed))));
         MO_LOG(trace) << "[GPU] Expanding memory pool by "
                       << std::max(m_initial_block_size / 2, size_needed) / (1024 * 1024) << " MB";
         if (unsigned char* ptr = (*m_blocks.rbegin())->allocate(size_needed, elem_size))
@@ -598,7 +598,7 @@ namespace mo
             }
         }
         // If we get to this point, then no memory was found, need to allocate new memory
-        m_blocks.push_back(std::make_unique<GpuMemoryBlock>(std::max(m_initial_block_size / 2, size_needed)));
+        m_blocks.push_back(std::unique_ptr<GpuMemoryBlock>(new GpuMemoryBlock(std::max(m_initial_block_size / 2, size_needed))));
         if (unsigned char* ptr = (*m_blocks.rbegin())->allocate(size_needed, 1))
         {
             m_memory_usage += size_needed;

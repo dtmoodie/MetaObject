@@ -21,7 +21,7 @@ namespace mo
       public:
         CpuMemoryPoolImpl(size_t initial_size = 1e8) : m_total_usage(0), m_initial_block_size(initial_size)
         {
-            m_blocks.emplace_back(std::make_unique<CpuMemoryBlock>(m_initial_block_size));
+            m_blocks.emplace_back(std::unique_ptr<CpuMemoryBlock>(new CpuMemoryBlock(m_initial_block_size)));
         }
 
         bool allocate(void** ptr_out, size_t total, size_t elemSize)
@@ -39,7 +39,7 @@ namespace mo
                 ++index;
             }
             MO_LOG(trace) << "Creating new block of page locked memory for allocation.";
-            m_blocks.push_back(std::make_unique<mo::CpuMemoryBlock>(std::max(m_initial_block_size / 2, total)));
+            m_blocks.push_back(std::unique_ptr<mo::CpuMemoryBlock>(new mo::CpuMemoryBlock(std::max(m_initial_block_size / 2, total))));
             ptr = (*m_blocks.rbegin())->allocate(total, elemSize);
             if (ptr)
             {
@@ -62,7 +62,7 @@ namespace mo
                 }
                 ++index;
             }
-            m_blocks.push_back(std::make_unique<mo::CpuMemoryBlock>(std::max(m_initial_block_size / 2, num_bytes)));
+            m_blocks.push_back(std::unique_ptr<mo::CpuMemoryBlock>(new mo::CpuMemoryBlock(std::max(m_initial_block_size / 2, num_bytes))));
             ptr = (*m_blocks.rbegin())->allocate(num_bytes, sizeof(uchar));
             if (ptr)
             {

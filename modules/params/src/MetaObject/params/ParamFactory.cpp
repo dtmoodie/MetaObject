@@ -12,7 +12,7 @@ struct ParamFactory::impl
     std::map<TypeInfo, create_f> _registered_constructors_exact;
 };
 
-ParamFactory::ParamFactory() : m_pimpl(std::make_unique<ParamFactory::impl>())
+ParamFactory::ParamFactory() : m_pimpl(std::unique_ptr<ParamFactory::impl>(new ParamFactory::impl()))
 {
 }
 

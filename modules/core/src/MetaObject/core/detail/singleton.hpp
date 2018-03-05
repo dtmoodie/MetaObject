@@ -6,7 +6,7 @@ namespace mo
     template <class T>
     T* uniqueSingleton()
     {
-        static std::unique_ptr<T> inst = std::make_unique<T>();
+        static std::unique_ptr<T> inst = std::unique_ptr<T>(new T());
         return inst.get();
     }
 
