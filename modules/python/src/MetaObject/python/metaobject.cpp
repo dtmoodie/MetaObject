@@ -113,7 +113,7 @@ namespace mo
             for (auto itr = ctrs.begin(); itr != ctrs.end();)
             {
                 IObjectInfo* info = (*itr)->GetObjectInfo();
-                if (info->InheritsFrom(IMetaObject::s_interfaceID))
+                if (info->InheritsFrom(IMetaObject::getHash()))
                 {
                     boost::python::class_<MetaObject,
                                           rcc::shared_ptr<MetaObject>,

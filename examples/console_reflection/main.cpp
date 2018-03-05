@@ -12,7 +12,7 @@ int main()
     factory->registerTranslationUnit();
 
     // Get a list of objects that inherit from ExampleInterface
-    auto constructors = factory->getConstructors(ExampleInterface::s_interfaceID);
+    auto constructors = factory->getConstructors(ExampleInterface::getHash());
 
     // Print static object info
     for (IObjectConstructor* constructor : constructors) {
