@@ -7,6 +7,3 @@
 [submodule "dependencies/cppzmq"]
 	path = dependencies/cppzmq
 	url = https://github.com/zeromq/cppzmq
-[submodule "dependencies/cache-engine"]
-	path = dependencies/cache-engine
-	url = ../cache-engine
