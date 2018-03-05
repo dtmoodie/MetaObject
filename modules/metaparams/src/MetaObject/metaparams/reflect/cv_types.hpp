@@ -35,8 +35,7 @@ namespace ct
             {
                 if (ptr)
                 {
-                    cereal::size_type size = N;
-                    ar(cereal::make_size_tag(size));
+                    ar(cereal::make_size_tag(N));
                     for (size_t i = 0; i < N; ++i)
                     {
                         ar(ptr[i]);
