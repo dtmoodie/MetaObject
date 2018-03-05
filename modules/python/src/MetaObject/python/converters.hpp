@@ -23,8 +23,6 @@ namespace mo
 {
     namespace python
     {
-        template <class T>
-        constexpr bool is_pointer_v = std::is_pointer<T>::value;
         namespace detail
         {
             template <class T>
@@ -109,7 +107,7 @@ namespace mo
 
             template <class T, int I, class BP>
             auto addPropertyImpl(BP& bpobj)
-                -> typename std::enable_if<!is_pointer_v<decltype(ct::reflect::getValue<I>(std::declval<T>()))>>::type
+                -> typename std::enable_if<!std::is_pointer<decltype(ct::reflect::getValue<I>(std::declval<T>()))>::value>::type
             {
                 bpobj.add_property(
                     ct::reflect::getName<I, T>(), &ct::reflect::getValue<I, T>, &ct::reflect::setValue<I, T>);
@@ -117,7 +115,7 @@ namespace mo
 
             template <class T, int I, class BP>
             auto addPropertyImpl(BP& bpobj)
-                -> typename std::enable_if<is_pointer_v<decltype(ct::reflect::getValue<I>(std::declval<T>()))>>::type
+                -> typename std::enable_if<std::is_pointer<decltype(ct::reflect::getValue<I>(std::declval<T>()))>::value>::type
             {
                 // bpobj.add_property(
                 //    ct::reflect::getName<I, T>(), &ct::reflect::getValue<I, T>, &ct::reflect::setValue<I, T>);
