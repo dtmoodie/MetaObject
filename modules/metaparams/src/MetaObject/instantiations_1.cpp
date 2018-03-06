@@ -1,5 +1,6 @@
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "MetaObject/params/MetaParam.hpp"
+#include <stdint.h>
 
 #ifdef emit
 #undef emit
@@ -31,7 +32,9 @@ INSTANTIATE_META_PARAM(char);
 INSTANTIATE_META_PARAM(unsigned char);
 INSTANTIATE_META_PARAM(long);
 INSTANTIATE_META_PARAM(long long);
+#ifndef __arm__
 INSTANTIATE_META_PARAM(size_t);
+#endif
 INSTANTIATE_META_PARAM(float);
 INSTANTIATE_META_PARAM(double);
 INSTANTIATE_META_PARAM(std::string);
