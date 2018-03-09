@@ -75,7 +75,7 @@ namespace mo
                                     const std::shared_ptr<ICoordinateSystem>& cs);
         Raw_t* ptr;
         bool ownsData;
-        static MetaParam<T, 100> _meta_Param;
+        static MetaParam<T, 100> _meta_param;
     };
 
     /*!

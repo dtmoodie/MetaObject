@@ -22,6 +22,7 @@ namespace mo
         inline size_t size() const { return m_size; }
         inline T& operator[](size_t i) { return begin()[i]; }
         inline const T& operator[](size_t i) const { return m_ptr[i]; }
+
         template<class AR>
         void load(AR& ar)
         {
@@ -33,6 +34,7 @@ namespace mo
                 ar(m_ptr[i]);
             }
         }
+
         template<class AR>
         void save(AR& ar) const
         {

@@ -7,7 +7,7 @@ namespace mo
     template <class T, int N>
     struct SmallVecStorage
     {
-        SmallVecStorage(SmallVecBase<T>& base) : m_base(base) {}
+        SmallVecStorage(SmallVecBase<T>& base) : m_base(base) { m_base.m_ptr = m_data; }
 
         ~SmallVecStorage()
         {
@@ -39,6 +39,31 @@ namespace mo
             const size_t size = end - begin;
             resize(size);
             memcpy(m_base.m_ptr, begin, size * sizeof(T));
+        }
+
+        void append(const T& data)
+        {
+            if (m_base.m_size < N)
+            {
+                m_data[m_base.m_size] = data;
+                ++m_base.m_size;
+            }
+            else
+            {
+                // allocate memory
+            }
+        }
+        void append(T&& data)
+        {
+            if (m_base.m_size < N)
+            {
+                m_data[m_base.m_size] = std::move(data);
+                ++m_base.m_size;
+            }
+            else
+            {
+                // allocate memory
+            }
         }
 
       private:

@@ -10,7 +10,8 @@ namespace mo
      *  share one object using std::shared_ptr<const Type> between the output, inputs, and buffers
      */
     template <class Type>
-    struct ParamTraitsImpl<Type, typename std::enable_if<!std::is_pod<Type>::value && !std::is_const<Type>::value>::type>
+    struct ParamTraitsImpl<Type,
+                           typename std::enable_if<!std::is_pod<Type>::value && !std::is_const<Type>::value>::type>
     {
         enum
         {
@@ -43,7 +44,7 @@ namespace mo
 
         static inline Storage_t copy(ConstStorageRef_t value)
         {
-            return value; // copy constructor in Storage_t
+            return std::make_shared<Type>(get(value)); // copy constructor in Storage_t
         }
 
         // deep copy if possible
@@ -123,8 +124,8 @@ namespace mo
         // Raw original datatype. Used in TParamPtr when userspace variable is wrapped by a param
         typedef Type Raw_t;
         typedef std::shared_ptr<Type> Storage_t; // Used in output wrapping parameters
-                                                 // Used by output parameters where the member is really just a reference to what
-                                                 // is owned as a Storage_t by the parameter
+        // Used by output parameters where the member is really just a reference to what
+        // is owned as a Storage_t by the parameter
         typedef Type& TypeRef_t;
         typedef const Type& ConstTypeRef_t;
 

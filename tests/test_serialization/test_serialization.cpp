@@ -1,6 +1,5 @@
 #define BOOST_TEST_MAIN
 // clang-format off
-#include <MetaObject/serialization/TextPolicy.hpp>
 #include "MetaObject/MetaParameters.hpp"
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/logging/CompileLogger.hpp"
@@ -13,7 +12,6 @@
 #include "MetaObject/params/buffers/BufferFactory.hpp"
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 #include "MetaObject/serialization/Policy.hpp"
-#include "MetaObject/serialization/TextPolicy.hpp"
 #include "MetaObject/serialization/memory.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
@@ -54,16 +52,6 @@ struct serializable_object : public MetaObject
 
 BuildCallback* cb = nullptr;
 MO_REGISTER_OBJECT(serializable_object);
-
-#define ASSERT_SERIALIZABLE(TYPE)                                                                                      \
-    static_assert(mo::IO::Text::imp::stream_serializable<TYPE>::value, "Checking stream serializable for " #TYPE)
-
-BOOST_AUTO_TEST_CASE(test_serialization)
-{
-    ASSERT_SERIALIZABLE(std::string);
-    ASSERT_SERIALIZABLE(size_t);
-    BOOST_REQUIRE(!mo::IO::Text::imp::stream_serializable<rcc::shared_ptr<serializable_object>>::value);
-}
 
 BOOST_AUTO_TEST_CASE(serialize_manual_xml)
 {
