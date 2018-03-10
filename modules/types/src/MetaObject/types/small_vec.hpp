@@ -6,37 +6,249 @@
 namespace mo
 {
     template <class T, int N>
-    struct SmallVec : public SmallVecBase<T>, public SmallVecStorage<T, N>
+    struct SmallVec
     {
-        SmallVec() : SmallVecStorage<T, N>(*static_cast<SmallVecBase<T>*>(this)) {}
+        SmallVec(){}
 
-        SmallVec(const SmallVecBase<T>& other) : SmallVecStorage<T, N>(*static_cast<SmallVecBase<T>*>(this))
+        SmallVec(const T& obj)
         {
-            SmallVecStorage<T, N>::assign(other.begin(), other.end());
+            assign(&obj, &obj + 1);
         }
 
-        SmallVec(const std::vector<T>& vec) : SmallVecStorage<T, N>(*static_cast<SmallVecBase<T>*>(this))
+        SmallVec(const SmallVec& other)
         {
-            const size_t size = vec.size();
-            if (size)
+            assign(other.begin(), other.end());
+        }
+
+        template<int N1>
+        SmallVec(const SmallVec<T, N1>& other)
+        {
+            assign(other.begin(), other.end());
+        }
+
+        template<int N1>
+        SmallVec(SmallVec<T, N1>&& other)
+        {
+            if(other.m_data != other.m_ptr)
             {
-                SmallVecStorage<T, N>::assign(&vec[0], &vec[0] + size);
+                m_ptr = other.m_ptr;
+                m_size = other.m_size;
+                other.m_ptr = other.m_data;
+                other.m_size = 0;
+            }else
+            {
+                assign(other.begin(), other.end());
             }
+            m_owns_data = true;
         }
+
+        SmallVec(const std::vector<T>& vec)
+        {
+            assign(vec.begin(), vec.end());
+        }
+
         ~SmallVec()
         {
-            SmallVecStorage<T, N>::~SmallVecStorage();
-            SmallVecBase<T>::~SmallVecBase();
+            if(m_ptr != m_data && m_owns_data)
+            {
+                delete[] m_ptr;
+                m_ptr = nullptr;
+            }
         }
 
         SmallVec<T, N>& operator=(const std::vector<T>& vec)
         {
-            const size_t size = vec.size();
-            if (size)
+            assign(&(*vec.begin()), &(*vec.end()));
+            return *this;
+        }
+
+        template<int N1>
+        SmallVec<T, N>& operator=(const SmallVec<T, N1>& vec)
+        {
+            assign(vec.begin(), vec.end());
+            return *this;
+        }
+
+        SmallVec<T, N>& operator=(const SmallVec& vec)
+        {
+            assign(vec.begin(), vec.end());
+            return *this;
+        }
+
+
+        template<class T1, int N1>
+        SmallVec<T, N>& operator=(SmallVec<T1, N1>&& vec)
+        {
+            if(vec.m_data != vec.m_ptr)
             {
-                SmallVecStorage<T, N>::assign(&vec[0], &vec[0] + size);
+                m_ptr = vec.m_ptr;
+                m_size = vec.m_size;
+                vec.m_ptr = vec.m_data;
+                vec.m_size = 0;
+            }else
+            {
+                assign(vec.begin(), vec.end());
             }
             return *this;
         }
+
+        void resize(unsigned char size)
+        {
+            if(size > N)
+            {
+                if(m_ptr != m_data)
+                {
+                    T* current = m_ptr;
+                    m_ptr = static_cast<T*>(std::malloc(size * sizeof(T)));
+                    if(m_size)
+                        std::memcpy(m_ptr, current, m_size * sizeof(T));
+                    m_size = size;
+                    if(m_owns_data)
+                    {
+                        delete[] current;
+                    }
+                    m_owns_data = true;
+                }else
+                {
+                    m_ptr = static_cast<T*>(std::malloc(size * sizeof(T)));
+                    if(m_size)
+                    {
+                        std::memcpy(m_ptr, m_data, m_size * sizeof(T));
+                    }
+                    m_size = size;
+                    m_owns_data = true;
+                }
+            }else
+            {
+                if(m_ptr != m_data)
+                {
+                    if(m_size)
+                        std::memcpy(m_data, m_ptr, std::min<int>(m_size, N) * sizeof(N));
+                    if(m_owns_data)
+                        delete[] m_ptr;
+                    m_ptr = m_data;
+                }
+                m_size = size;
+            }
+        }
+
+        void assign(const T* begin, const T* end)
+        {
+            resize(end - begin);
+            std::memcpy(m_ptr, begin, (end - begin) * sizeof(T));
+        }
+
+        void wrap(T* begin, T* end)
+        {
+            if(m_ptr != m_data && m_owns_data)
+                delete[] m_ptr;
+            m_ptr = begin;
+            m_size = end - begin;
+            m_owns_data = false;
+        }
+
+        void append(const T& data)
+        {
+            if (m_size + 1 < N)
+            {
+                m_data[m_size] = data;
+                ++m_size;
+            }
+            else
+            {
+                resize(m_size + 1);
+                m_ptr[m_size] = data;
+                ++m_size;
+            }
+        }
+
+        void append(T&& data)
+        {
+            if (m_size < N)
+            {
+                m_data[m_size] = std::move(data);
+                ++m_size;
+            }
+            else
+            {
+                resize(m_size + 1);
+                m_ptr[m_size] = std::move(data);
+                ++m_size;
+            }
+        }
+
+        T* begin(){return m_ptr;}
+        T* end(){return m_ptr + m_size;}
+        const T* begin() const{return m_ptr;}
+        const T* end() const{return m_ptr + m_size;}
+        unsigned char size() const{return m_size;}
+        const T& operator[](int i) const
+        {
+            if(i >= 0)
+            {
+                return begin()[i];
+            }else
+            {
+                return end()[i];
+            }
+        }
+        T& operator[](int i )
+        {
+            if(i >= 0)
+            {
+                return begin()[i];
+            }else
+            {
+                return end()[i];
+            }
+        }
+
+        template<class AR>
+        void load(AR& ar)
+        {
+            size_t size;
+            ar(cereal::make_size_tag(size));
+            resize(size);
+            for (size_t i = 0; i < m_size; ++i)
+            {
+                ar(m_ptr[i]);
+            }
+        }
+
+        template<class AR>
+        void save(AR& ar) const
+        {
+            if (m_size)
+            {
+                ar(cereal::make_size_tag(m_size));
+                for (size_t i = 0; i < m_size; ++i)
+                {
+                    ar(m_ptr[i]);
+                }
+            }
+        }
+    private:
+        T* m_ptr = m_data;
+        unsigned char m_size = 0;
+        bool m_owns_data = true;
+        T m_data[N];
     };
+
+    template<class T, int N>
+    std::ostream& operator<<(std::ostream& os, const SmallVec<T, N>& vec)
+    {
+        const size_t size = vec.size();
+        if (size)
+        {
+            os << '[';
+            for (size_t i = 0; i < size; ++i)
+            {
+                if (i != 0)
+                    os << ", ";
+                os << vec[i];
+            }
+            os << ']';
+        }
+        return os;
+    }
 }

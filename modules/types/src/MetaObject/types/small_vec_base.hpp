@@ -15,6 +15,18 @@ namespace mo
     template<class T>
     struct SmallVecBase
     {
+        SmallVecBase()
+        {
+        }
+
+        SmallVecBase(SmallVecBase<T>&& )
+        {
+        }
+
+        SmallVecBase& operator=(SmallVecBase&& )
+        {
+        }
+
         inline T* begin() { return m_ptr; }
         inline T* end() { return m_ptr + m_size; }
         inline const T* begin() const { return m_ptr; }
