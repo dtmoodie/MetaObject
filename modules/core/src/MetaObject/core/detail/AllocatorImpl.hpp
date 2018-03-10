@@ -1239,6 +1239,52 @@ namespace mo
         }
     };
 
+    template <class CPUAllocator>
+    class ConcreteCPUAllocator : virtual public CPUAllocator, virtual public mo::Allocator
+    {
+      public:
+        // GpuMat allocate
+        bool allocate(cv::cuda::GpuMat*, int , int , size_t )
+        {
+            return false;
+        }
+
+        void free(cv::cuda::GpuMat* ) { }
+
+        // Thrust allocate
+        unsigned char* allocateGpu(size_t ) { return nullptr; }
+
+        void deallocateGpu(unsigned char* , size_t ) { }
+
+        unsigned char* allocateCpu(size_t num_bytes) { return CPUAllocator::allocate(num_bytes); }
+
+        void deallocateCpu(unsigned char* ptr, size_t num_bytes) { CPUAllocator::deallocate(ptr, num_bytes); }
+
+        // CPU allocate
+        cv::UMatData* allocate(int dims,
+                               const int* sizes,
+                               int type,
+                               void* data,
+                               size_t* step,
+                               int flags,
+                               cv::UMatUsageFlags usageFlags) const
+        {
+            return CPUAllocator::allocate(dims, sizes, type, data, step, flags, usageFlags);
+        }
+
+        bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const
+        {
+            return CPUAllocator::allocate(data, accessflags, usageFlags);
+        }
+
+        void deallocate(cv::UMatData* data) const { CPUAllocator::deallocate(data); }
+
+        void release()
+        {
+            CPUAllocator::release();
+        }
+    };
+
     typedef PoolPolicy<cv::cuda::GpuMat, PitchedPolicy> d_TensorPoolAllocator_t;
     typedef LockPolicy<d_TensorPoolAllocator_t> d_mt_TensorPoolAllocator_t;
 
@@ -1268,4 +1314,6 @@ namespace mo
 
     typedef ConcreteAllocator<h_UniversalAllocator_t, d_UniversalAllocator_t> UniversalAllocator_t;
     typedef ConcreteAllocator<h_mt_UniversalAllocator_t, d_mt_UniversalAllocator_t> mt_UniversalAllocator_t;
+
+    typedef ConcreteCPUAllocator<h_mt_UniversalAllocator_t> mt_CPUAllocator_t;
 }

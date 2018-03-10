@@ -39,6 +39,7 @@ namespace mo
 
         size_t process_id = 0;
         size_t thread_id = 0;
+        int device_id = -1;
         std::string host_name;
         std::shared_ptr<Allocator> allocator;
 

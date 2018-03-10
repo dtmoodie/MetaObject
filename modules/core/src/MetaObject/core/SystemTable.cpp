@@ -1,7 +1,9 @@
 #include "SystemTable.hpp"
 #include "MetaObject/logging/logging.hpp"
 #include "singletons.hpp"
-
+#ifdef HAVE_CUDA
+#include <cuda_runtime_api.h>
+#endif
 std::weak_ptr<SystemTable> inst;
 
 std::shared_ptr<SystemTable> SystemTable::instance()
@@ -34,6 +36,18 @@ SystemTable::SystemTable()
     {
         THROW(warning) << "Can only create one system table per process";
     }
+#ifdef HAVE_CUDA
+    int count = 0;
+    cudaError_t err = cudaGetDeviceCount(&count);
+    if(err != cudaSuccess || count == 0 || std::getenv("AQUILA_CPU_ONLY"))
+    {
+        system_info.have_cuda = false;
+    }else
+    {
+        system_info.have_cuda = true;
+    }
+
+#endif
 }
 
 SystemTable::~SystemTable()

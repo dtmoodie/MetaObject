@@ -258,7 +258,23 @@ namespace mo
         return g_inst.get();
     }
 
-    std::shared_ptr<Allocator> Allocator::createAllocator() { return std::make_shared<mt_UniversalAllocator_t>(); }
+    std::shared_ptr<Allocator> Allocator::createAllocator()
+    {
+        auto table = SystemTable::instance();
+        if(table)
+        {
+            if(table->system_info.have_cuda)
+            {
+                return std::make_shared<mt_UniversalAllocator_t>();
+            }else
+            {
+                return std::make_shared<mt_CPUAllocator_t>();
+                // TODO CPU only allocator
+            }
+        }
+
+        return std::make_shared<mt_UniversalAllocator_t>();
+    }
     std::weak_ptr<Allocator> Allocator::default_allocator;
 
     void Allocator::setDefaultAllocator(const std::shared_ptr<Allocator>& allocator)

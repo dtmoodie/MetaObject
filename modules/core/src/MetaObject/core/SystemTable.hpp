@@ -32,6 +32,11 @@ struct TIObjectSingletonContainer : public ISingletonContainer
 template <class Derived>
 struct TDerivedSystemTable;
 
+struct SystemInfo
+{
+    bool have_cuda = false;
+};
+
 struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
 {
   public:
@@ -43,6 +48,7 @@ struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
     virtual ~SystemTable();
 
     std::shared_ptr<mo::Allocator> allocator;
+    SystemInfo system_info;
 
     template <typename T>
     typename std::enable_if<!std::is_base_of<IObject, T>::value, std::shared_ptr<T>>::type getSingleton()

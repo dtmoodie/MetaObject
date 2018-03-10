@@ -8,6 +8,7 @@
 #include "MetaObject/logging/profiling.hpp"
 #include "MetaObject/thread/ThreadRegistry.hpp"
 #include "MetaObject/thread/ThreadRegistry.hpp"
+#include "MetaObject/core/SystemTable.hpp"
 #include "boost/lexical_cast.hpp"
 #include <boost/thread/tss.hpp>
 using namespace mo;
@@ -27,16 +28,27 @@ void Context::setCurrent(Context* ctx)
 
 std::shared_ptr<Context> mo::Context::create(const std::string& name, int priority)
 {
+    auto table = SystemTable::instance();
     std::shared_ptr<Context> ctx;
+    if(table)
+    {
+        if(table->system_info.have_cuda)
+        {
 #ifdef HAVE_OPENCV
-    ctx = std::make_shared<CvContext>(priority);
+            ctx = std::make_shared<CvContext>(priority);
 #else
 #ifdef HAVE_CUDA
-    ctx = std::make_shared<CudaContext>(priority);
+            ctx = std::make_shared<CudaContext>(priority);
 #else
-    ctx = std::make_shared<Context>();
+            ctx = std::make_shared<Context>();
 #endif
 #endif
+
+        }else
+        {
+            ctx.reset(new Context());
+        }
+    }
     ctx->setName(name);
     setCurrent(ctx.get());
     return ctx;
@@ -46,6 +58,7 @@ Context::Context()
 {
     thread_id = getThisThread();
     allocator = Allocator::getDefaultAllocator();
+    device_id = -1;
 }
 
 void Context::setName(const std::string& name)

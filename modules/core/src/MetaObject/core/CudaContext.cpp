@@ -20,14 +20,22 @@ namespace mo
 
     CudaContext::CudaContext(int priority) : m_priority(priority)
     {
-        CUDA_ERROR_CHECK(cudaStreamCreateWithPriority(&m_cuda_stream, cudaStreamNonBlocking, priority))
-            << " error creating stream";
+        {
+            CUDA_ERROR_CHECK(cudaStreamCreateWithPriority(&m_cuda_stream, cudaStreamNonBlocking, priority))
+                << " error creating stream";
+        }
+        {
+            CUDA_ERROR_CHECK(cudaGetDevice(&device_id));
+        }
+
     }
+
     void CudaContext::setName(const std::string& name)
     {
         mo::setStreamName(name.c_str(), getCudaStream());
         Context::setName(name);
     }
+
     cv::cuda::Stream& CudaContext::getStream()
     {
         THROW(warning) << "Not a cv::cuda::Stream context";
