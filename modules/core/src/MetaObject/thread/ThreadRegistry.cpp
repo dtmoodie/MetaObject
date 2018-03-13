@@ -59,12 +59,17 @@ size_t ThreadRegistry::getThread(int type)
     {
         if (itr->second.size())
         {
-            if (std::count(itr->second.begin(), itr->second.end(), current_thread) ==
-                0) // If the current thread is not of appropriate type
+            if (std::count(itr->second.begin(), itr->second.end(), current_thread) == 0)
+            {
                 return itr->second.back();
+            }
+            else
+            {
+                return current_thread;
+            }
         }
     }
-    return current_thread;
+    return 0;
 }
 
 ThreadRegistry* ThreadRegistry::instance()
