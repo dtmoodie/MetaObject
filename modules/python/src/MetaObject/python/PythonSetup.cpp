@@ -7,10 +7,12 @@
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/object/MetaObjectFactory.hpp"
 #include "MetaObject/params/ParamFactory.hpp"
+#include <MetaObject/logging/logging.hpp>
 
 #include "PythonAllocator.hpp"
 #include "PythonPolicy.hpp"
 #include "PythonSetup.hpp"
+#include <signal.h> // SIGINT, etc
 
 #include <RuntimeObjectSystem/IRuntimeObjectSystem.h>
 #include <RuntimeObjectSystem/InheritanceGraph.hpp>
@@ -255,11 +257,55 @@ namespace mo
             }
             registerInterfacesHelper(graph, func_map);
         }
+        void sig_handler(int s)
+        {
+            switch (s)
+            {
+            case SIGSEGV:
+            {
+                std::cout << "Caught SIGSEGV " << mo::printCallstack(2, true);
+                break;
+            }
+            case SIGINT:
+            {
+                std::cout << "Caught SIGINT, shutting down" << std::endl;
+                static int count = 0;
+                ++count;
+                if (count > 2)
+                {
+                    std::terminate();
+                }
+                return;
+            }
+            case SIGILL:
+            {
+                std::cout << "Caught SIGILL " << std::endl;
+                break;
+            }
+            case SIGTERM:
+            {
+                std::cout << "Caught SIGTERM " << std::endl;
+                break;
+            }
+#ifndef _MSC_VER
+            case SIGKILL:
+            {
+                std::cout << "Caught SIGKILL " << std::endl;
+                break;
+            }
+#endif
+            default:
+            {
+                std::cout << "Caught signal " << s << std::endl;
+            }
+            }
+        }
 
         struct LibGuard
         {
             LibGuard()
             {
+                signal(SIGINT, sig_handler);
                 int devices = cv::cuda::getCudaEnabledDeviceCount();
                 MO_ASSERT(devices);
                 cv::cuda::GpuMat mat(10, 10, CV_32F);
