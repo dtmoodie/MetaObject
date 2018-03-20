@@ -18,7 +18,7 @@ option(WITH_QT "Enable QT support" ON)
 option(WITH_PYTHON "Enable Python bindings" ON)
 option(WITH_OPENCV "Enable OpenCV types" ON )
 option(WITH_CUDA "Enable CUDA recompilation" ON)
-option(WITH_WT "Enable WT support" ON)
+option(WITH_WT "Enable WT support" OFF)
 option(WITH_ZEROMQ "Enable ZEROMQ support" OFF)
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -222,11 +222,11 @@ else(Qt5_FOUND)
     set(MO_QT5 OFF)
 endif(Qt5_FOUND)
 
-if(Wt_FOUND)
+if(Wt_FOUND AND WITH_WT)
     set(MO_WT ON)
-else(Wt_FOUND)
+else(Wt_FOUND AND WITH_WT)
     set(MO_WT OFF)
-endif(Wt_FOUND)
+endif(Wt_FOUND AND WITH_WT)
 
 install(DIRECTORY dependencies/cereal/include/
     DESTINATION include

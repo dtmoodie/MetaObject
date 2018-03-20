@@ -10,7 +10,7 @@ if(Qt5_FOUND)
     target_compile_definitions(metaobject_qtgui PUBLIC "-DHAVE_QT")
 endif(Qt5_FOUND)
 
-if(Wt_FOUND)
+if(MO_WT)
     file(GLOB_RECURSE hdr "src/*.hpp")
     file(GLOB_RECURSE src "src/MetaObject/params/ui/Wt/*.cpp")
     list(APPEND src "src/MetaObject/params/ui/WT.cpp")
@@ -28,4 +28,4 @@ if(Wt_FOUND)
         optimized;${Wt_HTTP_LIBRARY}
         metaobject_types
     )
-endif(Wt_FOUND)
+endif(MO_WT)
