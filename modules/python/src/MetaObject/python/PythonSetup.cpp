@@ -257,6 +257,7 @@ namespace mo
             }
             registerInterfacesHelper(graph, func_map);
         }
+
         void sig_handler(int s)
         {
             switch (s)
@@ -305,7 +306,16 @@ namespace mo
         {
             LibGuard()
             {
-                signal(SIGINT, sig_handler);
+                auto ret = signal(SIGINT, sig_handler);
+                if (ret == SIG_ERR)
+                {
+                    MO_LOG(warning) << "Error setting signal handler for SIGINT";
+                }
+                ret = signal(SIGSEGV, sig_handler);
+                if (ret == SIG_ERR)
+                {
+                    MO_LOG(warning) << "Error setting signal handler for SIGSEGV";
+                }
                 int devices = cv::cuda::getCudaEnabledDeviceCount();
                 MO_ASSERT(devices);
                 cv::cuda::GpuMat mat(10, 10, CV_32F);
