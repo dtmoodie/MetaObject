@@ -265,6 +265,7 @@ namespace mo
             case SIGSEGV:
             {
                 std::cout << "Caught SIGSEGV " << mo::printCallstack(2, true);
+                std::terminate();
                 break;
             }
             case SIGINT:
