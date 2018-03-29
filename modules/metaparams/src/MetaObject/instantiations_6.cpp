@@ -62,6 +62,12 @@ namespace mo
             boost::python::extract<std::string> extractor(obj);
             result = extractor();
         }
+
+        template <>
+        inline boost::python::object convertToPython(const ReadFile& file)
+        {
+            return boost::python::object(file.string());
+        }
     }
 #endif
 }
