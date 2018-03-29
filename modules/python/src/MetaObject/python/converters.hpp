@@ -106,16 +106,16 @@ namespace mo
             using GetValue_t = decltype(inferGetterType<T>(ct::reflect::getValue<I, T>));
 
             template <class T, int I, class BP>
-            auto addPropertyImpl(BP& bpobj)
-                -> typename std::enable_if<!std::is_pointer<decltype(ct::reflect::getValue<I>(std::declval<T>()))>::value>::type
+            auto addPropertyImpl(BP& bpobj) -> typename std::enable_if<
+                !std::is_pointer<decltype(ct::reflect::getValue<I>(std::declval<T>()))>::value>::type
             {
                 bpobj.add_property(
                     ct::reflect::getName<I, T>(), &ct::reflect::getValue<I, T>, &ct::reflect::setValue<I, T>);
             }
 
             template <class T, int I, class BP>
-            auto addPropertyImpl(BP& bpobj)
-                -> typename std::enable_if<std::is_pointer<decltype(ct::reflect::getValue<I>(std::declval<T>()))>::value>::type
+            auto addPropertyImpl(BP& bpobj) -> typename std::enable_if<
+                std::is_pointer<decltype(ct::reflect::getValue<I>(std::declval<T>()))>::value>::type
             {
                 // bpobj.add_property(
                 //    ct::reflect::getName<I, T>(), &ct::reflect::getValue<I, T>, &ct::reflect::setValue<I, T>);
@@ -149,7 +149,8 @@ namespace mo
             template <class T, class... Args>
             void initDataMembers(T& data, boost::python::object& value, Args... args)
             {
-                typedef typename std::decay<SetValue_t<ct::reflect::ReflectData<T>::N - sizeof...(args)-1, T>>::type Type;
+                typedef
+                    typename std::decay<SetValue_t<ct::reflect::ReflectData<T>::N - sizeof...(args)-1, T>>::type Type;
                 boost::python::extract<Type> ext(value);
                 if (ext.check())
                 {
@@ -222,7 +223,7 @@ namespace mo
             }
 
             template <class T, class BP>
-            typename std::enable_if<!ct::is_default_constructible<T>::value>::type addInit(BP& )
+            typename std::enable_if<!ct::is_default_constructible<T>::value>::type addInit(BP&)
             {
             }
 
