@@ -51,6 +51,12 @@ namespace mo
         {
             return std::dynamic_pointer_cast<TSignalRelay<Sig>>(getRelay(TypeInfo(typeid(Sig)), name));
         }
+
+        template <class Sig>
+        TSignalRelay<Sig>* getRelayOptional(const std::string& name)
+        {
+            return dynamic_cast<TSignalRelay<Sig>*>(getRelayOptional(TypeInfo(typeid(Sig)), name));
+        }
         ISignalRelay* getRelayOptional(const TypeInfo& type, const std::string& name) const;
 
       protected:
