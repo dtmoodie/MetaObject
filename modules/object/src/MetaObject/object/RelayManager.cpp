@@ -1,5 +1,5 @@
-#include "MetaObject/core/singletons.hpp"
 #include "MetaObject/object/RelayManager.hpp"
+#include "MetaObject/core/singletons.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/signals/ISignal.hpp"
 #include "MetaObject/signals/ISignalRelay.hpp"
@@ -197,6 +197,21 @@ std::vector<std::pair<std::shared_ptr<ISignalRelay>, std::string>> RelayManager:
         }
     }
     return output;
+}
+
+ISignalRelay* RelayManager::getRelayOptional(const TypeInfo& type, const std::string& name) const
+{
+    std::lock_guard<std::mutex> lock(mtx);
+    auto itr = _pimpl->relays.find(type);
+    if (itr != _pimpl->relays.end())
+    {
+        auto itr2 = itr->second.find(name);
+        if (itr2 != itr->second.end())
+        {
+            return itr2->second.get();
+        }
+    }
+    return nullptr;
 }
 
 std::shared_ptr<ISignalRelay>& RelayManager::getRelay(const TypeInfo& type, const std::string& name)

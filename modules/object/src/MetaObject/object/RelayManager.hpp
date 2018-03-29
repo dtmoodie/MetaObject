@@ -28,7 +28,6 @@ namespace mo
         RelayManager();
         ~RelayManager();
         static std::shared_ptr<RelayManager> instance();
-        
 
         std::shared_ptr<Connection> connect(ISlot* slot, const std::string& name, IMetaObject* obj = nullptr);
         std::shared_ptr<Connection> connect(ISignal* signal, const std::string& name, IMetaObject* obj = nullptr);
@@ -52,6 +51,7 @@ namespace mo
         {
             return std::dynamic_pointer_cast<TSignalRelay<Sig>>(getRelay(TypeInfo(typeid(Sig)), name));
         }
+        ISignalRelay* getRelayOptional(const TypeInfo& type, const std::string& name) const;
 
       protected:
         std::shared_ptr<ISignalRelay>& getRelay(const TypeInfo& type, const std::string& name);
@@ -61,6 +61,6 @@ namespace mo
       private:
         struct impl;
         impl* _pimpl;
-        std::mutex mtx;
+        mutable std::mutex mtx;
     };
 } // namespace Signals
