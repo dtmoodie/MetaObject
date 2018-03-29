@@ -53,7 +53,7 @@ namespace mo
         }
 
         template <class Sig>
-        TSignalRelay<Sig>* getRelayOptional(const std::string& name)
+        TSignalRelay<Sig>* getRelayOptional(const std::string& name) const
         {
             return dynamic_cast<TSignalRelay<Sig>*>(getRelayOptional(TypeInfo(typeid(Sig)), name));
         }
