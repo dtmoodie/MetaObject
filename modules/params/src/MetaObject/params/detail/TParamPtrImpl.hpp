@@ -274,6 +274,10 @@ namespace mo
         if (!ts || ts == this->_ts)
         {
             data = this->data;
+            if (fn_)
+            {
+                *fn_ = this->_fn;
+            }
             return true;
         }
         return false;
@@ -285,6 +289,10 @@ namespace mo
         if (fn == this->_fn)
         {
             data = this->data;
+            if (ts_)
+            {
+                *ts_ = this->_ts;
+            }
             return true;
         }
         return false;

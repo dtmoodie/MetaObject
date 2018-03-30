@@ -34,7 +34,7 @@ OptionalTime_t InputParamAny::getInputTimestamp()
     return {};
 }
 
-IParam* InputParamAny::getInputParam()
+IParam* InputParamAny::getInputParam() const
 {
     return input;
 }

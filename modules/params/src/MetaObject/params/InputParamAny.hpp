@@ -14,7 +14,7 @@ namespace mo
         OptionalTime_t getInputTimestamp();
 
         // This gets a pointer to the variable that feeds into this input
-        virtual IParam* getInputParam();
+        virtual IParam* getInputParam() const override;
         virtual bool isInputSet() const;
         virtual bool setInput(std::shared_ptr<mo::IParam> param);
         virtual bool setInput(mo::IParam* param = nullptr);

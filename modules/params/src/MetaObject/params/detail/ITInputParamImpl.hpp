@@ -149,7 +149,7 @@ namespace mo
     }
 
     template <class T>
-    IParam* ITInputParam<T>::getInputParam()
+    IParam* ITInputParam<T>::getInputParam() const
     {
         if (_shared_input)
             return _shared_input.get();

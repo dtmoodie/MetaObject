@@ -34,7 +34,7 @@ namespace mo
         virtual bool acceptsInput(IParam* param) const;
         virtual bool acceptsType(const TypeInfo& type) const;
 
-        IParam* getInputParam();
+        IParam* getInputParam() const;
         OptionalTime_t getInputTimestamp();
         size_t getInputFrameNumber();
 

@@ -40,7 +40,7 @@ namespace mo
         virtual bool getInput(const OptionalTime_t& ts, size_t* fn = nullptr);
         virtual bool getInput(size_t fn, OptionalTime_t* ts = nullptr);
         // This gets a pointer to the variable that feeds into this input
-        virtual IParam* getInputParam() = 0;
+        virtual IParam* getInputParam() const = 0;
 
         virtual bool setInput(std::shared_ptr<IParam> param) = 0;
         virtual bool setInput(IParam* param = nullptr) = 0;
