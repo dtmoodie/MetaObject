@@ -31,6 +31,24 @@ namespace mo
         {
             ss << " " << cs->getName();
         }
+        auto ctx = param->getContext();
+        if (ctx)
+        {
+            ss << "<" << ctx->getName() << ">";
+        }
+        return ss.str();
+    }
+
+    std::string printInputParam(const mo::InputParam* param)
+    {
+        std::stringstream ss;
+        ss << printParam(param);
+        ss << "\n";
+        auto input = param->getInputParam();
+        if (input)
+        {
+            ss << printParam(input);
+        }
         return ss.str();
     }
 
@@ -62,7 +80,9 @@ namespace mo
         {
             return getter(param);
         }
-        MO_LOG(trace) << "Accessor function not found for for " << mo::Demangle::typeToName(param->getTypeInfo()) << " Available converters:\n" << printTypes();
+        MO_LOG(trace) << "Accessor function not found for for " << mo::Demangle::typeToName(param->getTypeInfo())
+                      << " Available converters:\n"
+                      << printTypes();
         return boost::python::object();
     }
 
@@ -105,6 +125,7 @@ namespace mo
 
         boost::python::class_<InputParam, InputParam*, boost::python::bases<ParamBase>, boost::noncopyable> input_param(
             "InputParam", boost::python::no_init);
+        input_param.def("__repr__", &printInputParam);
 
         boost::python::implicitly_convertible<InputParam*, IParam*>();
 
