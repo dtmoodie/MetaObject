@@ -66,7 +66,7 @@ namespace mo
         virtual int setupSignals(RelayManager* mgr) = 0;
         virtual int setupVariableManager(IVariableManager* mgr) = 0;
         virtual int removeVariableManager(IVariableManager* mgr) = 0;
-        
+
         virtual void Init(bool firstInit) = 0; // inherited from RCC, thus the PascalCase
         virtual void initCustom(bool firstInit) = 0;
         virtual void bindSlots(bool firstInit) = 0;
@@ -155,18 +155,18 @@ namespace mo
         virtual bool connectInput(const std::string& input_name,
                                   IMetaObject* output_object,
                                   IParam* output_param,
-                                  ParamType type = StreamBuffer_e) = 0;
+                                  ParamType type = Default_e) = 0;
 
         virtual bool connectInput(InputParam* input,
                                   IMetaObject* output_object,
                                   IParam* output_param,
-                                  ParamType type = StreamBuffer_e) = 0;
+                                  ParamType type = Default_e) = 0;
 
         static bool connectInput(IMetaObject* output_object,
                                  IParam* output_Param,
                                  IMetaObject* input_object,
                                  InputParam* input_param,
-                                 ParamType type = StreamBuffer_e);
+                                 ParamType type = Default_e);
 
         virtual Mutex_t& getMutex() const = 0;
 

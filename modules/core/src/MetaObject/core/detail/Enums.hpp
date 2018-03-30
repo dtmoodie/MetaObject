@@ -4,7 +4,7 @@
 #include <string>
 namespace mo
 {
-
+    class Context;
     template <typename T>
     struct EnumTraits;
 
@@ -95,6 +95,7 @@ namespace mo
 
     enum ParamType
     {
+        Default_e = -1,
         TParam_e = 0,
         CircularBuffer_e,
         ConstMap_e,
@@ -108,6 +109,10 @@ namespace mo
         ForceBufferedConnection_e = 1024,
         ForceDirectConnection_e = 2048
     };
+
     MO_EXPORTS std::string paramTypeToString(ParamType type);
     MO_EXPORTS ParamType stringToParamType(const std::string& str);
+
+    MO_EXPORTS ParamType getDefaultBufferType(const Context* source, const Context* dest);
+    MO_EXPORTS void setDefaultBufferType(const Context* source, const Context* dest, ParamType type);
 }

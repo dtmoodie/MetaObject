@@ -1,6 +1,8 @@
 #include "MetaObject/core/detail/Enums.hpp"
 #include "MetaObject/logging/logging.hpp"
+#include <map>
 #include <vector>
+
 using namespace mo;
 
 #define TYPE_NAME_HELPER(name)                                                                                         \
@@ -118,4 +120,38 @@ ParamType mo::stringToParamType(const std::string& str)
         return NNStreamBuffer_e;
     THROW(debug) << "Invalid string " << str;
     return TParam_e;
+}
+
+static std::map<const Context*, std::map<const Context*, ParamType>> connection_map;
+static ParamType default_connection_type = BlockingStreamBuffer_e;
+
+ParamType mo::getDefaultBufferType(const Context* source, const Context* dest)
+{
+    auto itr = connection_map.find(source);
+    if (itr != connection_map.end())
+    {
+        auto itr2 = itr->second.find(dest);
+        if (itr2 != itr->second.end())
+        {
+            return itr2->second;
+        }
+        itr2 = itr->second.find(nullptr);
+        if (itr2 != itr->second.end())
+        {
+            return itr2->second;
+        }
+    }
+    return default_connection_type;
+}
+
+void mo::setDefaultBufferType(const Context* source, const Context* dest, ParamType type)
+{
+    if (source == nullptr && dest == nullptr)
+    {
+        default_connection_type = type;
+    }
+    else
+    {
+        connection_map[source][dest] = type;
+    }
 }

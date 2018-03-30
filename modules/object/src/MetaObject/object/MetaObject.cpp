@@ -383,7 +383,7 @@ namespace mo
     IParam* MetaObject::getParam(const std::string& name) const
     {
         auto param = this->getParamOptional(name);
-        if(!param)
+        if (!param)
             THROW(debug) << "Param with name \"" << name << "\" not found";
         return nullptr;
     }
@@ -688,6 +688,7 @@ namespace mo
         return false;
     }
 
+    // Overriden below for MetaObject
     bool IMetaObject::connectInput(InputParam* /*input*/,
                                    IMetaObject* /*output_object*/,
                                    IParam* /*output*/,
@@ -708,6 +709,11 @@ namespace mo
         {
             // Check contexts to see if a buffer needs to be setup
             auto output_ctx = output->getContext();
+            auto input_context = input->getContext();
+            if (type_ == Default_e && output_ctx != input_context)
+            {
+                type_ = getDefaultBufferType(output_ctx, input_context);
+            }
             if (type_ & ForceBufferedConnection_e || input->checkFlags(mo::ParamFlags::RequestBuffered_e) ||
                 output->checkFlags(mo::ParamFlags::RequestBuffered_e))
             {
