@@ -85,32 +85,70 @@ namespace mo
             size_t _size;
             boost::condition_variable_any _cv;
         };
+
+        template <class T>
+        class MO_EXPORTS DroppingStreamBuffer : public BlockingStreamBuffer<T>
+        {
+          public:
+            typedef T ValueType;
+            typedef typename ParamTraits<T>::Storage_t Storage_t;
+            typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
+            typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
+            typedef typename ParamTraits<T>::Input_t Input_t;
+            static const ParamType Type = DroppingStreamBuffer_e;
+
+            DroppingStreamBuffer(const std::string& name = "");
+            virtual ParamType getBufferType() const { return Type; }
+
+          protected:
+            bool updateDataImpl(const T& data,
+                                const OptionalTime_t& ts,
+                                const ContextPtr_t& ctx,
+                                size_t fn,
+                                const std::shared_ptr<ICoordinateSystem>& cs);
+            virtual void onInputUpdate(ConstStorageRef_t,
+                                       IParam*,
+                                       Context*,
+                                       OptionalTime_t,
+                                       size_t,
+                                       const std::shared_ptr<ICoordinateSystem>&,
+                                       UpdateFlags);
+        };
     }
 
-#define MO_METAParam_INSTANCE_SBUFFER_(N)                                                                              \
+#define MO_METAPARAM_INSTANCE_SBUFFER_(N)                                                                              \
     template <class T>                                                                                                 \
     struct MetaParam<T, N> : public MetaParam<T, N - 1, void>                                                          \
     {                                                                                                                  \
         static BufferConstructor<Buffer::StreamBuffer<T>> _stream_buffer_constructor;                                  \
         static BufferConstructor<Buffer::BlockingStreamBuffer<T>> _blocking_stream_buffer_constructor;                 \
-        static ParamConstructor<Buffer::StreamBuffer<T>> _stream_buffer_Param_constructor;                             \
-        static ParamConstructor<Buffer::BlockingStreamBuffer<T>> _blocking_stream_buffer_Param_constructor;            \
+        static BufferConstructor<Buffer::DroppingStreamBuffer<T>> _dropping_stream_buffer_constructor;                 \
+        static ParamConstructor<Buffer::StreamBuffer<T>> _stream_buffer_param_constructor;                             \
+        static ParamConstructor<Buffer::BlockingStreamBuffer<T>> _blocking_stream_buffer_param_constructor;            \
+        static ParamConstructor<Buffer::DroppingStreamBuffer<T>> _dropping_stream_buffer_param_constructor;            \
         MetaParam<T, N>(const char* name) : MetaParam<T, N - 1>(name)                                                  \
         {                                                                                                              \
             (void)&_stream_buffer_constructor;                                                                         \
-            (void)&_stream_buffer_Param_constructor;                                                                   \
-            (void)&_blocking_stream_buffer_Param_constructor;                                                          \
+            (void)&_stream_buffer_param_constructor;                                                                   \
+            (void)&_blocking_stream_buffer_param_constructor;                                                          \
             (void)&_blocking_stream_buffer_constructor;                                                                \
+            (void)&_dropping_stream_buffer_constructor;                                                                \
+            (void)&_dropping_stream_buffer_param_constructor;                                                          \
         }                                                                                                              \
     };                                                                                                                 \
     template <class T>                                                                                                 \
     BufferConstructor<Buffer::StreamBuffer<T>> MetaParam<T, N>::_stream_buffer_constructor;                            \
     template <class T>                                                                                                 \
-    ParamConstructor<Buffer::StreamBuffer<T>> MetaParam<T, N>::_stream_buffer_Param_constructor;                       \
+    ParamConstructor<Buffer::StreamBuffer<T>> MetaParam<T, N>::_stream_buffer_param_constructor;                       \
     template <class T>                                                                                                 \
     BufferConstructor<Buffer::BlockingStreamBuffer<T>> MetaParam<T, N>::_blocking_stream_buffer_constructor;           \
     template <class T>                                                                                                 \
-    ParamConstructor<Buffer::BlockingStreamBuffer<T>> MetaParam<T, N>::_blocking_stream_buffer_Param_constructor;
-    MO_METAParam_INSTANCE_SBUFFER_(__COUNTER__)
+    ParamConstructor<Buffer::BlockingStreamBuffer<T>> MetaParam<T, N>::_blocking_stream_buffer_param_constructor;      \
+    template <class T>                                                                                                 \
+    BufferConstructor<Buffer::DroppingStreamBuffer<T>> MetaParam<T, N>::_dropping_stream_buffer_constructor;           \
+    template <class T>                                                                                                 \
+    ParamConstructor<Buffer::DroppingStreamBuffer<T>> MetaParam<T, N>::_dropping_stream_buffer_param_constructor;
+
+    MO_METAPARAM_INSTANCE_SBUFFER_(__COUNTER__)
 }
 #include "detail/StreamBufferImpl.hpp"

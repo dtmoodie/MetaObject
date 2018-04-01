@@ -102,6 +102,7 @@ namespace mo
         Map_e,
         StreamBuffer_e,
         BlockingStreamBuffer_e,
+        DroppingStreamBuffer_e,
         NNStreamBuffer_e,
         Queue_e,
         BlockingQueue_e,

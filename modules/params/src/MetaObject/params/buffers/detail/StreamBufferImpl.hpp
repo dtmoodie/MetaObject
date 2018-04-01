@@ -174,6 +174,7 @@ namespace mo
             lock.unlock();
             _cv.notify_all();
         }
+
         template <class T>
         void BlockingStreamBuffer<T>::onInputUpdate(ConstStorageRef_t data,
                                                     IParam* input,
@@ -197,6 +198,57 @@ namespace mo
                 ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
                 if (!lock)
                     lock.lock();
+            }
+            if (!lock)
+                lock.lock();
+            this->_data_buffer[{ts, fn, cs, ctx}] = data;
+            IParam::_modified = true;
+            lock.unlock();
+            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+        }
+
+        template <class T>
+        DroppingStreamBuffer<T>::DroppingStreamBuffer(const std::string& name) : BlockingStreamBuffer<T>(name)
+        {
+        }
+
+        template <class T>
+        bool DroppingStreamBuffer<T>::updateDataImpl(const T& data_,
+                                                     const OptionalTime_t& ts,
+                                                     const ContextPtr_t& ctx,
+                                                     size_t fn,
+                                                     const std::shared_ptr<ICoordinateSystem>& cs)
+        {
+            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            if (this->_data_buffer.size() > this->_size)
+            {
+                return false;
+            }
+            if (!lock)
+                lock.lock();
+            Map<T>::_data_buffer[{ts, fn, cs, ctx}] = data_;
+            IParam::_modified = true;
+            lock.unlock();
+            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            ITParam<T>::_typed_update_signal(data_, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            return true;
+        }
+
+        template <class T>
+        void DroppingStreamBuffer<T>::onInputUpdate(ConstStorageRef_t data,
+                                                    IParam* input,
+                                                    Context* ctx,
+                                                    OptionalTime_t ts,
+                                                    size_t fn,
+                                                    const std::shared_ptr<ICoordinateSystem>& cs,
+                                                    UpdateFlags)
+        {
+
+            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            if (this->_data_buffer.size() > this->_size)
+            {
+                return;
             }
             if (!lock)
                 lock.lock();
