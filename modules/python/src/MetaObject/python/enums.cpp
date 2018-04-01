@@ -15,6 +15,7 @@ namespace mo
             .value("DEBUG", IObjectInfo::DEBUG)
             .value("RCC", IObjectInfo::RCC);
         boost::python::enum_<mo::ParamType>("ParamType")
+            .value("Default", mo::ParamType::Default_e)
             .value("TParam", mo::ParamType::TParam_e)
             .value("CircularBuffer", mo::ParamType::CircularBuffer_e)
             .value("ConstMap", mo::ParamType::ConstMap_e)

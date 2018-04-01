@@ -9,6 +9,7 @@
 
 #include <RuntimeObjectSystem/IObjectInfo.h>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
+
 namespace mo
 {
     std::string printParam(const mo::ParamBase* param)
@@ -99,6 +100,13 @@ namespace mo
 
     std::string getDataTypeName(const mo::ParamBase* param) { return mo::Demangle::typeToName(param->getTypeInfo()); }
 
+    /*void setDefaultBufferType(const std::shared_ptr<Context>& source,
+                              const std::shared_ptr<Context>& dest,
+                              mo::ParamType type)
+    {
+        setDefaultBufferType(source.get(), dest.get(), type);
+    }*/
+
     void setupDataTypes(const std::string& module_name)
     {
         boost::python::object datatype_module(
@@ -110,6 +118,7 @@ namespace mo
             .def("getName", &ParamBase::getTreeName)
             .def("getType", &getDataTypeName)
             .def("__repr__", &printParam)
+            //.def("getContext", &ParamBase::getContext, boost::python::return_internal_reference<>())
             .add_property("data", &getData, &setData);
 
         boost::python::class_<IParam, boost::noncopyable, boost::python::bases<ParamBase>>("IParam",
@@ -137,9 +146,11 @@ namespace mo
         // cs_obj.def("getName", &ICoordinateSystem::getName,
         // boost::python::return_value_policy<boost::python::reference_existing_object>());
 
-        boost::python::class_<Context, boost::noncopyable>("Context", boost::python::no_init)
-            .add_property("getName", &Context::getName)
+        boost::python::class_<Context, std::shared_ptr<Context>, boost::noncopyable>("Context", boost::python::no_init)
+            .add_property("name", &Context::getName)
             .add_property("thread_id", &Context::getThreadId);
+
+        boost::python::def("setDefaultBufferType", &setDefaultBufferType);
 
         boost::python::class_<IMetaObject, boost::noncopyable> metaobject("IMetaObject", boost::python::no_init);
 
