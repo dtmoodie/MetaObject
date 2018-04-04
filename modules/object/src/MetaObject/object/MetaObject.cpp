@@ -543,26 +543,38 @@ namespace mo
         auto itr = _pimpl->_params.find(name);
         if (itr != _pimpl->_params.end())
         {
-            return itr->second;
+            if (itr->second->checkFlags(mo::ParamFlags::Output_e))
+            {
+                return itr->second;
+            }
         }
         auto itr2 = _pimpl->_implicit_params.find(name);
         if (itr2 != _pimpl->_implicit_params.end())
         {
-            return itr2->second.get();
+            if (itr->second->checkFlags(mo::ParamFlags::Output_e))
+            {
+                return itr2->second.get();
+            }
         }
         // to a pass through all params to see if the param was renamed
         for (const auto& itr : _pimpl->_params)
         {
             if (itr.second->getName() == name)
             {
-                return itr.second;
+                if (itr.second->checkFlags(mo::ParamFlags::Output_e))
+                {
+                    return itr.second;
+                }
             }
         }
         for (const auto& itr : _pimpl->_implicit_params)
         {
             if (itr.second->getName() == name)
             {
-                return itr.second.get();
+                if (itr.second->checkFlags(mo::ParamFlags::Output_e))
+                {
+                    return itr.second.get();
+                }
             }
         }
         return nullptr;
