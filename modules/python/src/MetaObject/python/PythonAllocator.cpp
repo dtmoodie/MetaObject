@@ -28,7 +28,7 @@ namespace mo
         }
 
         template <>
-        inline void convertFromPython(const boost::python::object& obj, cv::Mat& result)
+        void convertFromPython(const boost::python::object& obj, cv::Mat& result)
         {
             PyObject* o = obj.ptr();
             if (PyArray_Check(o))
@@ -65,11 +65,13 @@ namespace mo
         const NumpyAllocator* allocator;
     };
 
+    int importNumpy() { import_array1(0); }
+
     void setupAllocator()
     {
         boost::python::class_<NumpyDeallocator, boost::shared_ptr<NumpyDeallocator>, boost::noncopyable>(
             "NumpyDallocator", boost::python::no_init);
-        import_array();
+        importNumpy();
     }
 
     class PyEnsureGIL
@@ -100,9 +102,9 @@ namespace mo
             return m;
         }
 
-        if (PyInt_Check(o))
+        if (PyLong_Check(o))
         {
-            double v[] = {static_cast<double>(PyInt_AsLong((PyObject*)o)), 0., 0., 0.};
+            double v[] = {static_cast<double>(PyLong_AsLong((PyObject*)o)), 0., 0., 0.};
             m = cv::Mat(4, 1, CV_64F, v).clone();
             return m;
         }
@@ -119,8 +121,8 @@ namespace mo
             for (i = 0; i < sz; i++)
             {
                 PyObject* oi = PyTuple_GET_ITEM(o, i);
-                if (PyInt_Check(oi))
-                    m.at<double>(i) = (double)PyInt_AsLong(oi);
+                if (PyLong_Check(oi))
+                    m.at<double>(i) = (double)PyLong_AsLong(oi);
                 else if (PyFloat_Check(oi))
                     m.at<double>(i) = (double)PyFloat_AsDouble(oi);
                 else

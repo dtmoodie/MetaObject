@@ -13,7 +13,7 @@ namespace mo
         boost::python::object convertToPython(const cv::Mat& mat);
 
         template <>
-        inline void convertFromPython(const boost::python::object& obj, cv::Mat& result);
+        void convertFromPython(const boost::python::object& obj, cv::Mat& result);
     }
 
     void setupAllocator();
