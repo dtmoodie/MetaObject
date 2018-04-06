@@ -19,7 +19,6 @@ namespace boost
     }
 }
 
-
 #include <MetaObject/object/IMetaObjectInfo.hpp>
 #include <MetaObject/params/ParamInfo.hpp>
 #include <MetaObject/python/DataConverter.hpp>
@@ -37,6 +36,26 @@ namespace mo
         void MO_EXPORTS setupInterface();
     }
 
+    template <class T>
+    std::string printObject(const T* obj)
+    {
+        if (!obj)
+        {
+            return "NULL";
+        }
+        auto params = obj->getParams();
+        std::stringstream ss;
+        for (auto param : params)
+        {
+            auto getter = python::DataConverterRegistry::instance()->getGetter(param->getTypeInfo());
+            boost::python::object obj = getter(param);
+            if (obj)
+            {
+                ss << param->getName() << ':' << PyObject_REPR(obj.ptr()) << '\n';
+            }
+        }
+        return ss.str();
+    }
 
     template <int N, class Type, class Storage, class... Args>
     struct CreateMetaObject
@@ -116,9 +135,13 @@ namespace mo
             return ptr;
         }
 
-        static std::function<ConstructedType(Args...)> bind(IObjectConstructor* ctr, std::vector<std::string> param_names)
+        static std::function<ConstructedType(Args...)> bind(IObjectConstructor* ctr,
+                                                            std::vector<std::string> param_names)
         {
-            return ctrBind(&CreateMetaObject<N, T, Storage, ct::variadic_typedef<Args...>>::create, ctr, param_names, make_int_sequence<N>{});
+            return ctrBind(&CreateMetaObject<N, T, Storage, ct::variadic_typedef<Args...>>::create,
+                           ctr,
+                           param_names,
+                           make_int_sequence<N>{});
         }
 
         boost::python::detail::keyword_range range() const
@@ -130,19 +153,20 @@ namespace mo
         std::array<boost::python::detail::keyword, N> m_keywords;
     };
 
-    template <class T, int N, class Storage, template <int N1, class T1, class S, class... Args> class Creator = CreateMetaObject>
+    template <class T,
+              int N,
+              class Storage,
+              template <int N1, class T1, class S, class... Args> class Creator = CreateMetaObject>
     boost::python::object makeConstructorHelper(IObjectConstructor* ctr, const std::vector<std::string>& param_names)
     {
         typedef typename FunctionSignatureBuilder<boost::python::object, N - 1>::VariadicTypedef_t Signature_t;
         typedef Creator<N, T, Storage, Signature_t> Creator_t;
         Creator_t creator(param_names);
         return boost::python::make_constructor(
-            Creator_t::bind(ctr, param_names),
-            boost::python::default_call_policies(),
-            creator);
+            Creator_t::bind(ctr, param_names), boost::python::default_call_policies(), creator);
     }
 
-    template<class T>
+    template <class T>
     rcc::shared_ptr<T> constructObject(IObjectConstructor* ctr)
     {
         rcc::shared_ptr<T> output;
@@ -155,9 +179,11 @@ namespace mo
         return output;
     }
 
-    template<class T>
-    bool setParamHelper(python::DataConverterRegistry::Set_t setter, std::string name,
-                        T& obj, const boost::python::object& python_obj)
+    template <class T>
+    bool setParamHelper(python::DataConverterRegistry::Set_t setter,
+                        std::string name,
+                        T& obj,
+                        const boost::python::object& python_obj)
     {
         auto param = obj.getParamOptional(name);
         if (param)
@@ -167,9 +193,8 @@ namespace mo
         return false;
     }
 
-    template<class T>
-    boost::python::object getParamHelper(python::DataConverterRegistry::Get_t getter, std::string name,
-        const T& obj)
+    template <class T>
+    boost::python::object getParamHelper(python::DataConverterRegistry::Get_t getter, std::string name, const T& obj)
     {
         auto param = obj.getParamOptional(name);
         if (param)
@@ -179,7 +204,7 @@ namespace mo
         return {};
     }
 
-    template<class T, class BP>
+    template <class T, class BP>
     void addParamAccessors(BP& bpobj, IMetaObjectInfo* minfo)
     {
         std::vector<ParamInfo*> param_infos = minfo->getParamInfo();
@@ -189,8 +214,13 @@ namespace mo
             auto getter = python::DataConverterRegistry::instance()->getGetter(param_info->data_type);
             if (setter && getter)
             {
-                bpobj.def(("get_" + param_info->name).c_str(), std::function<boost::python::object(const T&)>(std::bind(getParamHelper<T>, getter, param_info->name, std::placeholders::_1)));
-                bpobj.def(("set_" + param_info->name).c_str(), std::function<bool(T&, const boost::python::object&)>(std::bind(setParamHelper<T>, setter, param_info->name, std::placeholders::_1, std::placeholders::_2)));
+                bpobj.def(("get_" + param_info->name).c_str(),
+                          std::function<boost::python::object(const T&)>(
+                              std::bind(getParamHelper<T>, getter, param_info->name, std::placeholders::_1)));
+                bpobj.def(
+                    ("set_" + param_info->name).c_str(),
+                    std::function<bool(T&, const boost::python::object&)>(std::bind(
+                        setParamHelper<T>, setter, param_info->name, std::placeholders::_1, std::placeholders::_2)));
             }
         }
     }
@@ -208,7 +238,10 @@ namespace mo
         }
     };
 
-    template <class T, class Storage = rcc::shared_ptr<T>, template <int N, class T1, class Storage, class... Args> class Creator = CreateMetaObject, class ParamPolicy = DefaultParamPolicy>
+    template <class T,
+              class Storage = rcc::shared_ptr<T>,
+              template <int N, class T1, class Storage, class... Args> class Creator = CreateMetaObject,
+              class ParamPolicy = DefaultParamPolicy>
     boost::python::object makeConstructor(IObjectConstructor* ctr, ParamPolicy policy = ParamPolicy())
     {
         IMetaObjectInfo* minfo = dynamic_cast<IMetaObjectInfo*>(ctr->GetObjectInfo());
