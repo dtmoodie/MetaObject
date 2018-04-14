@@ -64,7 +64,39 @@ namespace mo
         }
 
         template <>
+        inline void convertFromPython(const boost::python::object& obj, WriteDirectory& result)
+        {
+            boost::python::extract<std::string> extractor(obj);
+            result = extractor();
+        }
+
+        template <>
+        inline void convertFromPython(const boost::python::object& obj, ReadDirectory& result)
+        {
+            boost::python::extract<std::string> extractor(obj);
+            result = extractor();
+        }
+
+        template <>
         inline boost::python::object convertToPython(const ReadFile& file)
+        {
+            return boost::python::object(file.string());
+        }
+
+        template <>
+        inline boost::python::object convertToPython(const WriteFile& file)
+        {
+            return boost::python::object(file.string());
+        }
+
+        template <>
+        inline boost::python::object convertToPython(const ReadDirectory& file)
+        {
+            return boost::python::object(file.string());
+        }
+
+        template <>
+        inline boost::python::object convertToPython(const WriteDirectory& file)
         {
             return boost::python::object(file.string());
         }
