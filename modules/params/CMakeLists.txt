@@ -28,5 +28,7 @@ IF(Qt5_FOUND)
 " CACHE INTERNAL "" FORCE)
 ENDIF()
 
-
+add_executable(mo_test_polymorphic_input tests/polymorphic_input.cpp)
+target_link_libraries(mo_test_polymorphic_input metaobject_params)
+set_property(TARGET mo_test_polymorphic_input PROPERTY CXX_STANDARD 11)
 
