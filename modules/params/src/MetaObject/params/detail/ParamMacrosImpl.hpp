@@ -37,11 +37,11 @@ namespace mo
     {                                                                                                                  \
         if (firstInit)                                                                                                 \
             name = __VA_ARGS__;                                                                                        \
-        name##_param.setMtx(&getMutex());                                                                              \
+        name##_param.setMtx(&(this->getMutex()));                                                                      \
         name##_param.updatePtr(&name);                                                                                 \
-        name##_param.setContext(getContext().get());                                                                   \
+        name##_param.setContext(this->getContext().get());                                                             \
         name##_param.setName(#name);                                                                                   \
-        addParam(&name##_param);                                                                                       \
+        this->addParam(&name##_param);                                                                                 \
         _init_params(firstInit, --dummy);                                                                              \
     }
 
@@ -60,7 +60,7 @@ namespace mo
         name##_param.updatePtr(&name);                                                                                 \
         name##_param.setContext(_ctx.get());                                                                           \
         name##_param.setName(#name);                                                                                   \
-        addParam(&name##_param);                                                                                       \
+        this->addParam(&name##_param);                                                                                 \
         _init_params(firstInit, --dummy);                                                                              \
     }
 

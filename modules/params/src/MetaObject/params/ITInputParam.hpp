@@ -71,13 +71,12 @@ namespace mo
                                    const std::shared_ptr<ICoordinateSystem>&,
                                    UpdateFlags);
 
-        std::shared_ptr<ITParam<T>> _shared_input;
+        std::shared_ptr<IParam> _shared_input;
         ITParam<T>* _input;
 
       private:
         TUpdateSlot_t _update_slot;
         TSlot<void(IParam const*)> _delete_slot;
-        bool setInputImpl(IParam* param);
     };
 }
 #include "detail/ITInputParamImpl.hpp"

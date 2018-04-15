@@ -183,8 +183,8 @@ namespace mo
         IParam* setName(const std::string& name_); // Get the name of this Param
         IParam* setTreeRoot(
             const std::string& tree_root_); // Set the root to the name of this Param. IE objname:paramanme, set objname
-        IParam* setContext(Context* ctx);   // Set the compute context of this Param
-        IParam* setFrameNumber(size_t fn);  // Set the frame number for this Param
+        virtual IParam* setContext(Context* ctx);   // Set the compute context of this Param
+        IParam* setFrameNumber(size_t fn);          // Set the frame number for this Param
         IParam* setTimestamp(const mo::Time_t& ts); // Set the timestamp for this Param
         // Set the coordinate system for this Param
         IParam* setCoordinateSystem(const std::shared_ptr<ICoordinateSystem>& cs_);
@@ -233,7 +233,7 @@ namespace mo
         void serialize(Archive& ar); // Used for cereal serialization
         Mutex_t& mtx() const; // Get reference to Param mutex.  If setMtx was called, this will reference the mutex that
                               // was set, otherwise one will be created
-        void setMtx(Mutex_t* mtx); // Use this to share a mutex with an owning object, ie a parent.
+        virtual void setMtx(Mutex_t* mtx); // Use this to share a mutex with an owning object, ie a parent.
 
         EnumClassBitset<ParamFlags>
         appendFlags(ParamFlags flags_); // Append a flag to the Param, return previous values

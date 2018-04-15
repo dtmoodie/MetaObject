@@ -1,6 +1,8 @@
 #pragma once
 #ifndef __CUDACC__
 #include "MetaObject/params/MetaParam.hpp"
+#include "MetaObject/params/TInputParam.hpp"
+
 #include <boost/thread/recursive_mutex.hpp>
 namespace mo
 {
@@ -24,19 +26,14 @@ namespace mo
             {
                 InputStorage_t data;
                 if (this->_input)
+                {
                     if (this->_input->getData(data))
                     {
                         _current_data = data;
                         *_user_var = ParamTraits<T>::ptr(_current_data);
                         return true;
                     }
-                if (this->_shared_input)
-                    if (this->_shared_input->getData(data))
-                    {
-                        _current_data = data;
-                        *_user_var = ParamTraits<T>::ptr(_current_data);
-                        return true;
-                    }
+                }
             }
             return true;
         }
@@ -52,18 +49,11 @@ namespace mo
             if (_user_var)
             {
                 InputStorage_t data;
-                if (ITInputParam<T>::_input)
-                    if (ITInputParam<T>::_input->getData(data))
-                    {
-                        _current_data = data;
-                        *_user_var = ParamTraits<T>::ptr(_current_data);
-                    }
-                if (ITInputParam<T>::_shared_input)
-                    if (ITInputParam<T>::_shared_input->getData(data))
-                    {
-                        _current_data = data;
-                        *_user_var = ParamTraits<T>::ptr(_current_data);
-                    }
+                if (ITInputParam<T>::_input && ITInputParam<T>::_input->getData(data))
+                {
+                    _current_data = data;
+                    *_user_var = ParamTraits<T>::ptr(_current_data);
+                }
             }
             return true;
         }
@@ -114,14 +104,6 @@ namespace mo
         {
             size_t fn;
             std::shared_ptr<ICoordinateSystem> cs;
-            if (ITInputParam<T>::_shared_input)
-            {
-                if (!ITInputParam<T>::_shared_input->getData(_current_data, ts, this->_ctx, &fn))
-                {
-                    return false;
-                }
-                cs = ITInputParam<T>::_shared_input->getCoordinateSystem();
-            }
             if (ITInputParam<T>::_input)
             {
                 if (!ITInputParam<T>::_input->getData(_current_data, ts, this->_ctx, &fn))
@@ -148,26 +130,19 @@ namespace mo
         if (_user_var && (ITInputParam<T>::_shared_input || ITInputParam<T>::_input))
         {
             OptionalTime_t ts;
-            std::shared_ptr<ICoordinateSystem> cs;
-            if (ITInputParam<T>::_shared_input)
-            {
-                if (!ITInputParam<T>::_shared_input->getData(_current_data, fn, this->_ctx, &ts))
-                {
-                    return false;
-                }
-                cs = ITInputParam<T>::_shared_input->getCoordinateSystem();
-            }
             if (ITInputParam<T>::_input)
             {
                 if (!this->_input->getData(_current_data, fn, this->_ctx, &ts))
                 {
                     return false;
                 }
-                cs = ITInputParam<T>::_input->getCoordinateSystem();
             }
+            auto cs = ITInputParam<T>::_input->getCoordinateSystem();
             *_user_var = ParamTraits<T>::ptr(_current_data);
             if (ts_)
+            {
                 *ts_ = ts;
+            }
             this->_ts = ts;
             this->_fn = fn;
             this->setCoordinateSystem(cs);
@@ -218,20 +193,12 @@ namespace mo
                 if (_user_var)
                 {
                     InputStorage_t data;
-                    if (this->_input)
-                        if (this->_input->getData(data))
-                        {
-                            _current_data = data;
-                            *_user_var = _current_data;
-                            return true;
-                        }
-                    if (this->_shared_input)
-                        if (this->_shared_input->getData(data))
-                        {
-                            _current_data = data;
-                            *_user_var = _current_data;
-                            return true;
-                        }
+                    if (this->_input && this->_input->getData(data))
+                    {
+                        _current_data = data;
+                        *_user_var = _current_data;
+                        return true;
+                    }
                 }
                 return true;
             }
@@ -246,18 +213,11 @@ namespace mo
                 if (_user_var)
                 {
                     InputStorage_t data;
-                    if (ITInputParam<T>::_input)
-                        if (ITInputParam<T>::_input->getData(data))
-                        {
-                            _current_data = data;
-                            *_user_var = _current_data;
-                        }
-                    if (ITInputParam<T>::_shared_input)
-                        if (ITInputParam<T>::_shared_input->getData(data))
-                        {
-                            _current_data = data;
-                            *_user_var = _current_data;
-                        }
+                    if (ITInputParam<T>::_input && ITInputParam<T>::_input->getData(data))
+                    {
+                        _current_data = data;
+                        *_user_var = _current_data;
+                    }
                 }
                 return true;
             }
@@ -277,14 +237,6 @@ namespace mo
             {
                 size_t fn;
                 std::shared_ptr<ICoordinateSystem> cs;
-                if (ITInputParam<T>::_shared_input)
-                {
-                    if (!ITInputParam<T>::_shared_input->getData(_current_data, ts, this->_ctx, &fn))
-                    {
-                        return false;
-                    }
-                    cs = ITInputParam<T>::_shared_input->getCoordinateSystem();
-                }
                 if (ITInputParam<T>::_input)
                 {
                     if (!ITInputParam<T>::_input->getData(_current_data, ts, this->_ctx, &fn))
@@ -295,7 +247,9 @@ namespace mo
                 }
                 *_user_var = _current_data;
                 if (fn_)
+                {
                     *fn_ = fn;
+                }
                 this->_ts = ts;
                 this->_fn = fn;
                 this->setCoordinateSystem(cs);
@@ -310,23 +264,14 @@ namespace mo
             if (_user_var && (ITInputParam<T>::_shared_input || ITInputParam<T>::_input))
             {
                 OptionalTime_t ts;
-                std::shared_ptr<ICoordinateSystem> cs;
-                if (ITInputParam<T>::_shared_input)
-                {
-                    if (!ITInputParam<T>::_shared_input->getData(_current_data, fn, this->_ctx, &ts))
-                    {
-                        return false;
-                    }
-                    cs = ITInputParam<T>::_shared_input->getCoordinateSystem();
-                }
                 if (ITInputParam<T>::_input)
                 {
                     if (!this->_input->getData(_current_data, fn, this->_ctx, &ts))
                     {
                         return false;
                     }
-                    cs = ITInputParam<T>::_input->getCoordinateSystem();
                 }
+                auto cs = ITInputParam<T>::_input->getCoordinateSystem();
                 *_user_var = _current_data;
                 if (ts_)
                     *ts_ = ts;

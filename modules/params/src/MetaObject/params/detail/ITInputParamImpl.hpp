@@ -1,15 +1,13 @@
 #pragma once
 #ifndef __CUDACC__
 #include "MetaObject/logging/logging.hpp"
+#include "MetaObject/params/ITInputParam.hpp"
 #include <boost/thread/recursive_mutex.hpp>
 #include <functional>
 #include <memory>
 
 namespace mo
 {
-    template <class T>
-    class ITInputParam;
-
     template <class T>
     ITInputParam<T>::ITInputParam(const std::string& name, Context* ctx) : _input(nullptr)
     {
@@ -37,33 +35,10 @@ namespace mo
     template <class T>
     bool ITInputParam<T>::setInput(std::shared_ptr<IParam> param)
     {
-        mo::Mutex_t::scoped_lock lock(this->mtx());
-        if (setInputImpl(param.get()))
+        if (setInput(param.get()))
         {
-            if (param)
-            {
-                this->_shared_input = std::dynamic_pointer_cast<ITParam<T>>(param);
-                if (this->_shared_input)
-                {
-                    lock.unlock();
-                    this->emitUpdate(param->getTimestamp(),
-                                     param->getContext(),
-                                     param->getFrameNumber(),
-                                     param->getCoordinateSystem(),
-                                     InputSet_e);
-                    return true;
-                }
-            }
-            else
-            {
-                lock.unlock();
-                this->emitUpdate(this->getTimestamp(),
-                                 this->getContext(),
-                                 this->getFrameNumber(),
-                                 this->getCoordinateSystem(),
-                                 InputCleared_e);
-                return true;
-            }
+            _shared_input = param;
+            return true;
         }
         return false;
     }
@@ -72,46 +47,9 @@ namespace mo
     bool ITInputParam<T>::setInput(IParam* param)
     {
         mo::Mutex_t::scoped_lock lock(this->mtx());
-        if (setInputImpl(param))
-        {
-            if (param)
-            {
-                this->_input = dynamic_cast<ITParam<T>*>(param);
-                if (this->_input)
-                {
-                    lock.unlock();
-                    this->emitUpdate(param->getTimestamp(),
-                                     param->getContext(),
-                                     param->getFrameNumber(),
-                                     param->getCoordinateSystem(),
-                                     InputSet_e);
-                    return true;
-                }
-            }
-            else
-            {
-                lock.unlock();
-                this->emitUpdate(this->getTimestamp(),
-                                 this->getContext(),
-                                 this->getFrameNumber(),
-                                 this->getCoordinateSystem(),
-                                 InputCleared_e);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    template <class T>
-    bool ITInputParam<T>::setInputImpl(IParam* param)
-    {
         if (param == nullptr)
         {
-            if (_shared_input)
-            {
-                _shared_input->unsubscribe();
-            }
-            else if (_input)
+            if (_input)
             {
                 _input->unsubscribe();
             }
@@ -119,19 +57,33 @@ namespace mo
             _delete_slot.clear();
             _input = nullptr;
             _shared_input.reset();
+            _shared_input.reset();
+            lock.unlock();
+            this->emitUpdate(this->getTimestamp(),
+                             this->getContext(),
+                             this->getFrameNumber(),
+                             this->getCoordinateSystem(),
+                             InputCleared_e);
             return true;
         }
-
         if (param->getTypeInfo() == this->getTypeInfo())
         {
             if (_input)
                 _input->unsubscribe();
-            if (_shared_input)
-                _shared_input->unsubscribe();
-            param->subscribe();
-            param->registerUpdateNotifier(&_update_slot);
-            param->registerDeleteNotifier(&_delete_slot);
-            return true;
+            this->_input = dynamic_cast<ITParam<T>*>(param);
+            if (this->_input)
+            {
+                param->subscribe();
+                param->registerUpdateNotifier(&_update_slot);
+                param->registerDeleteNotifier(&_delete_slot);
+                lock.unlock();
+                this->emitUpdate(param->getTimestamp(),
+                                 param->getContext(),
+                                 param->getFrameNumber(),
+                                 param->getCoordinateSystem(),
+                                 InputSet_e);
+                return true;
+            }
         }
         return false;
     }
@@ -159,11 +111,7 @@ namespace mo
     template <class T>
     bool ITInputParam<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_)
     {
-        if (this->_shared_input)
-        {
-            return this->_shared_input->getData(data, ts, ctx, fn_);
-        }
-        else if (this->_input)
+        if (this->_input)
         {
             return this->_input->getData(data, ts, ctx, fn_);
         }
@@ -173,11 +121,7 @@ namespace mo
     template <class T>
     bool ITInputParam<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_)
     {
-        if (this->_shared_input)
-        {
-            return this->_shared_input->getData(data, fn, ctx, ts_);
-        }
-        else if (this->_input)
+        if (this->_input)
         {
             return this->_input->getData(data, fn, ctx, ts_);
         }
