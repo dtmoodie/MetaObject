@@ -1,6 +1,10 @@
+#pragma once
+#include <MetaObject/core/metaobject_config.hpp>
+#if MO_OPENCV_HAVE_CUDA
+#include <opencv2/core/cuda.hpp>
+#if MO_HAVE_CUDA
 #include "Context.hpp"
 #include "CudaContext.hpp"
-#include <opencv2/core/cuda.hpp>
 namespace mo
 {
     class CvContext : public CudaContext
@@ -18,3 +22,5 @@ namespace mo
         cv::cuda::Stream m_cv_stream;
     };
 }
+#endif
+#endif

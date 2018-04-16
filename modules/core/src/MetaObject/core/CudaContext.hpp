@@ -1,4 +1,6 @@
 #pragma once
+#include <MetaObject/core/metaobject_config.hpp>
+#if MO_HAVE_CUDA
 #include "Context.hpp"
 
 namespace mo
@@ -19,3 +21,4 @@ namespace mo
         int m_priority;
     };
 }
+#endif

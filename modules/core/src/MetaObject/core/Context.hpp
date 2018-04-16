@@ -26,6 +26,7 @@ namespace mo
         static Context* getCurrent();
         static void setCurrent(Context* ctx);
 
+        Context();
         virtual ~Context();
         virtual cv::cuda::Stream& getStream();
         virtual cudaStream_t getCudaStream() const;
@@ -36,6 +37,7 @@ namespace mo
         virtual void setName(const std::string& name);
         std::string getName() const { return name; }
         size_t getThreadId() const { return thread_id; }
+        inline bool isDeviceContext() { return device_id != -1; }
 
         size_t process_id = 0;
         size_t thread_id = 0;
@@ -44,7 +46,6 @@ namespace mo
         std::shared_ptr<Allocator> allocator;
 
       protected:
-        Context();
         std::string name;
     }; // class mo::Context
 } // namespace mo
