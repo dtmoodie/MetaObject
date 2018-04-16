@@ -10,14 +10,14 @@ namespace mo
     namespace python
     {
         template <>
-        boost::python::object convertToPython(const cv::Mat& mat);
+        MO_EXPORTS boost::python::object convertToPython(const cv::Mat& mat);
 
         template <>
-        void convertFromPython(const boost::python::object& obj, cv::Mat& result);
+        MO_EXPORTS void convertFromPython(const boost::python::object& obj, cv::Mat& result);
     }
 
     void setupAllocator();
-    class NumpyAllocator : virtual public Allocator
+    class MO_EXPORTS NumpyAllocator : virtual public Allocator
     {
       public:
         NumpyAllocator(std::shared_ptr<Allocator> default_allocator_ = Allocator::getDefaultAllocator());
