@@ -23,6 +23,7 @@ typedef struct CUstream_st *CUstream;
 
 using namespace mo;
 
+
 typedef int (*push_f)(const char*);
 typedef int (*pop_f)();
 typedef void (*nvtx_name_thread_f)(uint32_t, const char*);

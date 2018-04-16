@@ -1,5 +1,9 @@
 set(CUDA_NVCC_FLAGS "-std=c++11")
-cuda_add_library(test_recompile_object obj.cpp obj.cu SHARED)
+if(HAVE_CUDA)
+    cuda_add_library(test_recompile_object SHARED obj.cpp obj.cu)
+else()
+    add_library(test_recompile_object SHARED obj.cpp)
+endif()
 
 TARGET_LINK_LIBRARIES(test_recompile_object
     ${MetaObject_LIBRARIES}

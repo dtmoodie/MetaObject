@@ -1,32 +1,29 @@
 #pragma once
 #include "MetaObject/detail/Export.hpp"
-#include <map>
+#include <unordered_map>
 
 namespace mo
 {
-    class MO_EXPORTS GPUMemory
-    {
-      protected:
-        inline void _allocate(unsigned char** data, size_t size);
-        inline void _deallocate(unsigned char* data);
-    };
+    struct CPU;
+    struct GPU;
 
-    class MO_EXPORTS CPUMemory
+    template<class XPU> 
+    class MO_EXPORTS Memory
     {
-      protected:
-        inline void _allocate(unsigned char** data, size_t size);
-        inline void _deallocate(unsigned char* data);
+    public:
+        static void allocate(unsigned char** data, size_t size);
+        static void deallocate(unsigned char* data);
     };
 
     template <class XPU>
-    class MO_EXPORTS MemoryBlock : public XPU
+    class MO_EXPORTS MemoryBlock
     {
       public:
         MemoryBlock(size_t size_);
         ~MemoryBlock();
 
         unsigned char* allocate(size_t size_, size_t elemSize_);
-        bool deAllocate(unsigned char* ptr);
+        bool deAllocate(unsigned char* ptr, size_t size);
         const unsigned char* begin() const;
         const unsigned char* end() const;
         unsigned char* begin();
@@ -36,9 +33,11 @@ namespace mo
       protected:
         unsigned char* m_begin;
         unsigned char* m_end;
-        std::map<unsigned char*, unsigned char*> m_allocated_blocks;
+        std::unordered_map<unsigned char*, unsigned char*> m_allocated_blocks;
     };
 
-    typedef MemoryBlock<GPUMemory> GpuMemoryBlock;
-    typedef MemoryBlock<CPUMemory> CpuMemoryBlock;
+    using GPUMemory = Memory<GPU>;
+    using CPUMemory = Memory<CPU>;
+    typedef MemoryBlock<GPU> GpuMemoryBlock;
+    typedef MemoryBlock<CPU> CpuMemoryBlock;
 }

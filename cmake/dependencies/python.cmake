@@ -17,6 +17,7 @@ if(WITH_PYTHON)
                 endforeach()
                 include_directories(${PYTHON_INCLUDE_DIR})
                 add_definitions(-DHAVE_BOOST_PYTHON)
+                set(MO_HAVE_PYTHON ON)
             endif()
         else(WIN32)
             # Find the matching boost python implementation

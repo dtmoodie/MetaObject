@@ -1,4 +1,5 @@
 #include "CvContext.hpp"
+#if MO_OPENCV_HAVE_CUDA
 #include <MetaObject/logging/profiling.hpp>
 #include <opencv2/core/cuda_stream_accessor.hpp>
 #include <MetaObject/logging/logging.hpp>
@@ -45,3 +46,4 @@ namespace mo
         mo::setStreamName(name.c_str(), stream);
     }
 }
+#endif
