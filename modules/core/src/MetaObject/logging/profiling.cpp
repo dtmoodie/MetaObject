@@ -12,6 +12,8 @@
 #ifdef HAVE_OPENCV
 #include <opencv2/core/cuda_stream_accessor.hpp>
 #endif
+#else
+typedef struct CUstream_st *CUstream;
 #endif
 #if WIN32
 #include "Windows.h"
