@@ -1,6 +1,4 @@
 #pragma once
-
-#include "InputParamAny.hpp"
 #include "TInputParam.hpp"
 #include "TypeSelector.hpp"
 
@@ -37,8 +35,20 @@ namespace mo
         return std::get<IDX>(tuple);
     }
 
+    template <class T>
+    struct AcceptInputRedirect
+    {
+        AcceptInputRedirect(const T& func) : m_func(func) {}
+        template <class Type, class... Args>
+        void apply(Args&&... args)
+        {
+            m_func.template acceptsInput<Type>(std::forward<Args>(args)...);
+        }
+        const T& m_func;
+    };
+
     template <class... Types>
-    class TMultiInput : public InputParamAny
+    class TMultiInput : public InputParam
     {
       public:
         void setUserDataPtr(std::tuple<const Types*...>* user_var_) { typeLoop<Types...>(*this, user_var_); }
@@ -101,12 +111,48 @@ namespace mo
         {
             if (m_current_input == nullptr)
             {
-                return InputParamAny::getTypeInfo();
+                return _void_type_info;
             }
             else
             {
                 return m_current_input->getTypeInfo();
             }
+        }
+
+        mo::IParam* getInputParam() const { return m_current_input; }
+
+        OptionalTime_t getInputTimestamp()
+        {
+            if (m_current_input)
+                return m_current_input->getTimestamp();
+            return {};
+        }
+
+        size_t getInputFrameNumber()
+        {
+            if (m_current_input)
+            {
+                return m_current_input->getFrameNumber();
+            }
+            return std::numeric_limits<size_t>::max();
+        }
+
+        bool isInputSet() const { return m_current_input != nullptr; }
+
+        bool acceptsInput(IParam* input) const
+        {
+            AcceptInputRedirect<TMultiInput<Types...>> redirect(*this);
+            bool success = false;
+            selectType<Types...>(redirect, input->getTypeInfo(), input, &success);
+            return success;
+        }
+
+        bool acceptsType(const TypeInfo& type) const
+        {
+            AcceptInputRedirect<TMultiInput<Types...>> redirect(*this);
+            bool success = false;
+            selectType<Types...>(redirect, type, type, &success);
+            return success;
         }
 
         template <class T>
@@ -151,8 +197,24 @@ namespace mo
             *success = get<TInputParamPtr<T>>(m_inputs).getInput(fn, ts);
         }
 
+        template <class T>
+        void acceptsInput(IParam* input, bool* success) const
+        {
+            *success = get<TInputParamPtr<T>>(m_inputs).acceptsInput(input);
+        }
+
+        template <class T>
+        void acceptsInput(const TypeInfo& type, bool* success) const
+        {
+            *success = get<TInputParamPtr<T>>(m_inputs).acceptsType(type);
+        }
+
       private:
+        static mo::TypeInfo _void_type_info;
         std::tuple<TInputParamPtr<Types>...> m_inputs;
-        mo::IParam* m_current_input;
+        mo::IParam* m_current_input = nullptr;
     };
+
+    template <class... T>
+    mo::TypeInfo TMultiInput<T...>::_void_type_info = mo::TypeInfo(typeid(void));
 }

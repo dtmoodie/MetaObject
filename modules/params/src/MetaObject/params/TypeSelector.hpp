@@ -27,6 +27,7 @@ namespace mo
             if (mo::TypeInfo(typeid(Type)) == type)
             {
                 m_func.template apply<Type>(std::forward<Args>(args)...);
+                return true;
             }
             return false;
         }
@@ -39,11 +40,13 @@ namespace mo
             if (mo::TypeInfo(typeid(Type)) == type)
             {
                 m_func.template apply<Type>(std::forward<Args>(args)...);
+                return true;
             }
             else
             {
                 return applyImpl(--cnt, type, std::forward<Args>(args)...);
             }
+            return false;
         }
 
         F& m_func;
