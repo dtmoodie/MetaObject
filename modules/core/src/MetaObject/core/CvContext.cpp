@@ -8,6 +8,7 @@ namespace mo
     CvContext::CvContext(int priority)
         : CudaContext(priority), m_cv_stream(cv::cuda::StreamAccessor::wrapStream(this->m_cuda_stream))
     {
+        context_type = mo::TypeInfo(typeid(CvContext));
     }
 
     CvContext::~CvContext() 

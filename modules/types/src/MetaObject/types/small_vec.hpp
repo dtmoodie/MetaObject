@@ -6,7 +6,7 @@
 namespace mo
 {
     template <class T, int N>
-    struct SmallVec
+    struct MO_EXPORTS SmallVec
     {
         SmallVec(){}
 

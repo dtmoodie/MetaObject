@@ -1,5 +1,7 @@
 #pragma once
+#include <MetaObject/core/metaobject_config.hpp>
 #include "MetaObject/core.hpp"
+#include "MetaObject/detail/TypeInfo.hpp"
 #include <memory>
 #include <string>
 typedef struct CUstream_st* cudaStream_t;
@@ -12,6 +14,14 @@ namespace cv
 } // namespace cv
 namespace mo
 {
+    class Context;
+    class CvContext;
+
+#if MO_OPENCV_HAVE_CUDA
+    using ContexTypes = std::tuple<Context, CvContext>;
+#else
+    using ContexTypes = std::tuple<Context>;
+#endif
     class Allocator;
     class MO_EXPORTS Context
     {
@@ -44,6 +54,8 @@ namespace mo
         int device_id = -1;
         std::string host_name;
         std::shared_ptr<Allocator> allocator;
+        // Type of derived class, used for type switch
+        mo::TypeInfo context_type;
 
       protected:
         std::string name;

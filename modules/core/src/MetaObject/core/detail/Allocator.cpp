@@ -57,7 +57,9 @@ namespace mo
         allocator = std::make_shared<Allocator_t>();
 #if MO_HAVE_OPENCV
         cv::Mat::setDefaultAllocator(allocator.get());
+#if MO_OPENCV_HAVE_CUDA
         cv::cuda::GpuMat::setDefaultAllocator(allocator.get());
+#endif
 #endif
         return allocator;
     }

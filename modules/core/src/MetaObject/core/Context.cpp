@@ -57,7 +57,13 @@ Context::Context()
 {
     thread_id = getThisThread();
     allocator = Allocator::getDefaultAllocator();
+    if (!allocator)
+    {
+        allocator = Allocator::createAllocator();
+        Allocator::setDefaultAllocator(allocator);
+    }
     device_id = -1;
+    context_type = mo::TypeInfo(typeid(Context));
 }
 
 void Context::setName(const std::string& name)

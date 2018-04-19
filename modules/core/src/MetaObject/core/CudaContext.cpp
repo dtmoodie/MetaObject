@@ -29,6 +29,7 @@ namespace mo
         {
             CUDA_ERROR_CHECK(cudaGetDevice(&device_id));
         }
+        context_type = mo::TypeInfo(typeid(CudaContext));
 
     }
 

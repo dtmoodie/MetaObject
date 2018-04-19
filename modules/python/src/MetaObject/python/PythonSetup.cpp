@@ -323,6 +323,7 @@ namespace mo
                 system_table = SystemTable::instance();
                 mo::MetaObjectFactory::instance(system_table.get());
                 auto current_allocator = system_table->allocator;
+                cv::cuda::GpuMat::setDefaultAllocator(dynamic_cast<cv::cuda::GpuMat::Allocator*>(current_allocator.get()));
                 std::shared_ptr<mo::NumpyAllocator> allocator;
 
                 if (current_allocator)
@@ -333,13 +334,14 @@ namespace mo
                     allocator = std::make_shared<mo::NumpyAllocator>(default_allocator);
                 }
 
-                system_table->allocator = allocator;
+                numpy_allocator = std::move(allocator);
                 cv::Mat::setDefaultAllocator(allocator.get());
-                cv::cuda::GpuMat::setDefaultAllocator(allocator.get());
+                
             }
             ~LibGuard() {}
 
             std::shared_ptr<SystemTable> system_table;
+            std::shared_ptr<mo::NumpyAllocator> numpy_allocator;
         };
 
         void pythonSetup(const char* module_name_)

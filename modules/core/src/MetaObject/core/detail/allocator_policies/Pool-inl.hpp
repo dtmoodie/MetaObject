@@ -4,7 +4,8 @@
 namespace mo
 {
     template<class XPU>
-    PoolPolicy<XPU>::PoolPolicy()
+    PoolPolicy<XPU>::PoolPolicy():
+        m_initial_block_size(20*1024*1024)
     {
 
     }
@@ -12,7 +13,7 @@ namespace mo
     template<class XPU>
     unsigned char* PoolPolicy<XPU>::allocate(size_t num_bytes, size_t elem_size)
     {
-        unsigned char* ptr;
+        unsigned char* ptr = nullptr;
         for (auto& itr : m_blocks)
         {
             ptr = itr->allocate(num_bytes, elem_size);
@@ -23,7 +24,8 @@ namespace mo
         }
         // If we get to this point, then no memory was found, need to allocate new memory
         m_blocks.push_back(std::unique_ptr<MemoryBlock<XPU>>(new MemoryBlock<XPU>(std::max(m_initial_block_size / 2, num_bytes))));
-        if (unsigned char* ptr = (*m_blocks.rbegin())->allocate(num_bytes, elem_size))
+        ptr = (*m_blocks.rbegin())->allocate(num_bytes, elem_size);
+        if (ptr)
         {
             return ptr;
         }

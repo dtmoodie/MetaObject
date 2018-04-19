@@ -339,10 +339,10 @@ namespace mo
     {
         if (data != 0)
         {
-            return static_cast<cv::MatAllocator*>(default_allocator.get())
+            return dynamic_cast<cv::MatAllocator*>(default_allocator.get())
                 ->allocate(dims0, sizes, type, data, step, flags, usageFlags);
         }
-        auto ret = static_cast<cv::MatAllocator*>(default_allocator.get())
+        auto ret = dynamic_cast<cv::MatAllocator*>(default_allocator.get())
                        ->allocate(dims0, sizes, type, data, step, flags, usageFlags);
         ret->currAllocator = this;
         return ret;
@@ -350,7 +350,7 @@ namespace mo
 
     bool NumpyAllocator::allocate(cv::UMatData* u, int accessFlags, cv::UMatUsageFlags usageFlags) const
     {
-        return static_cast<cv::MatAllocator*>(default_allocator.get())->allocate(u, accessFlags, usageFlags);
+        return dynamic_cast<cv::MatAllocator*>(default_allocator.get())->allocate(u, accessFlags, usageFlags);
     }
 
     void NumpyAllocator::deallocate(cv::UMatData* u) const
@@ -363,24 +363,7 @@ namespace mo
         }
         else
         {
-            default_allocator->deallocate(u);
+            dynamic_cast<cv::MatAllocator*>(default_allocator.get())->deallocate(u);
         }
-    }
-
-    // Used for stl allocators
-    unsigned char* NumpyAllocator::allocateGpu(size_t num_bytes) { return default_allocator->allocateGpu(num_bytes); }
-    void NumpyAllocator::deallocateGpu(uchar* ptr, size_t numBytes) { default_allocator->deallocateGpu(ptr, numBytes); }
-
-    unsigned char* NumpyAllocator::allocateCpu(size_t num_bytes) { return default_allocator->allocateCpu(num_bytes); }
-    void NumpyAllocator::deallocateCpu(uchar* ptr, size_t numBytes) { default_allocator->deallocateCpu(ptr, numBytes); }
-
-    bool NumpyAllocator::allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize)
-    {
-        return static_cast<cv::cuda::GpuMat::Allocator*>(default_allocator.get())->allocate(mat, rows, cols, elemSize);
-    }
-
-    void NumpyAllocator::free(cv::cuda::GpuMat* mat)
-    {
-        static_cast<cv::cuda::GpuMat::Allocator*>(default_allocator.get())->free(mat);
     }
 }
