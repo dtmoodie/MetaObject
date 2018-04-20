@@ -1,4 +1,5 @@
 #include "CvContext.hpp"
+#if MO_OPENCV_HAVE_CUDA
 #include <MetaObject/logging/profiling.hpp>
 #include <opencv2/core/cuda_stream_accessor.hpp>
 #include <MetaObject/logging/logging.hpp>
@@ -7,6 +8,7 @@ namespace mo
     CvContext::CvContext(int priority)
         : CudaContext(priority), m_cv_stream(cv::cuda::StreamAccessor::wrapStream(this->m_cuda_stream))
     {
+        context_type = mo::TypeInfo(typeid(CvContext));
     }
 
     CvContext::~CvContext() 
@@ -45,3 +47,4 @@ namespace mo
         mo::setStreamName(name.c_str(), stream);
     }
 }
+#endif

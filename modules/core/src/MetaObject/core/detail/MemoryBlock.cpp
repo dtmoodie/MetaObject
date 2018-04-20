@@ -1,43 +1,73 @@
 #include "MetaObject/core/detail/MemoryBlock.hpp"
-#include "MetaObject/core/detail/AllocatorImpl.hpp"
+#include "MetaObject/core/detail/Allocator.hpp"
+#include <MetaObject/logging/logging.hpp>
 #include <algorithm>
-#include <cuda_runtime.h>
-#include <opencv2/cudev/common.hpp>
 #include <utility>
 #include <vector>
+#ifdef HAVE_CUDA
+#include <cuda_runtime.h>
+#include "AllocatorImpl.hpp"
+#endif
 
 using namespace mo;
 
-void GPUMemory::_allocate(unsigned char** ptr, size_t size)
+template<>
+class Memory<GPU>
 {
-    CV_CUDEV_SAFE_CALL(cudaMalloc(ptr, size));
-}
-void GPUMemory::_deallocate(unsigned char* ptr)
-{
-    CV_CUDEV_SAFE_CALL(cudaFree(ptr));
-}
+public:
+    static void allocate(unsigned char** data, size_t size)
+    {
+#ifdef HAVE_CUDA
+        MO_CUDA_ERROR_CHECK(cudaMalloc(data, size), "");
+#else
+        THROW(warning) << "Not built with CUDA";
+#endif
+    }
+    static void deallocate(unsigned char* data)
+    {
+#ifdef HAVE_CUDA
+        MO_CUDA_ERROR_CHECK(cudaFree(data), "");
+#else
+        THROW(warning) << "Not built with CUDA";
+#endif
 
-void CPUMemory::_allocate(unsigned char** ptr, size_t size)
-{
-    CV_CUDEV_SAFE_CALL(cudaMallocHost(ptr, size));
-}
+    }
+};
 
-void CPUMemory::_deallocate(unsigned char* ptr)
+template<>
+class Memory<CPU>
 {
-    CV_CUDEV_SAFE_CALL(cudaFreeHost(ptr));
-}
+public:
+    static void allocate(unsigned char** data, size_t size)
+    {
+#ifdef HAVE_CUDA
+        MO_CUDA_ERROR_CHECK(cudaMallocHost(data, size), "");
+#else
+        *data = reinterpret_cast<unsigned char*>(malloc(size));
+#endif
+    }
+    static void deallocate(unsigned char* data)
+    {
+#ifdef HAVE_CUDA
+        MO_CUDA_ERROR_CHECK(cudaFreeHost(data), "");
+#else
+        free(data);
+#endif
+    }
+};
+
 
 template <class XPU>
 MemoryBlock<XPU>::MemoryBlock(size_t size_)
 {
-    XPU::_allocate(&m_begin, size_);
+    Memory<XPU>::allocate(&m_begin, size_);
     m_end = m_begin + size_;
 }
 
 template <class XPU>
 MemoryBlock<XPU>::~MemoryBlock()
 {
-    XPU::_deallocate(m_begin);
+    Memory<XPU>::deallocate(m_begin);
 }
 
 template <class XPU>
@@ -88,7 +118,7 @@ unsigned char* MemoryBlock<XPU>::allocate(size_t size_, size_t elem_size_)
 }
 
 template <class XPU>
-bool MemoryBlock<XPU>::deAllocate(unsigned char* ptr)
+bool MemoryBlock<XPU>::deAllocate(unsigned char* ptr, size_t /*size*/)
 {
     if (ptr < m_begin || ptr > m_end)
         return false;
@@ -131,5 +161,7 @@ size_t MemoryBlock<XPU>::size() const
     return m_end - m_begin;
 }
 
-template class MemoryBlock<CPUMemory>;
-template class MemoryBlock<GPUMemory>;
+template class Memory<CPU>;
+template class Memory<GPU>;
+template class MemoryBlock<CPU>;
+template class MemoryBlock<GPU>;

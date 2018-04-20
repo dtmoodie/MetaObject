@@ -2,7 +2,9 @@
 #include "MetaObject/metaparams/reflect/cv_types.hpp"
 #include "MetaObject/params/MetaParam.hpp"
 #include "ct/reflect/cereal.hpp"
+#ifdef HAVE_BOOST_PYTHON
 #include <boost/python/object.hpp>
+#endif
 
 namespace ct
 {
@@ -12,7 +14,7 @@ namespace ct
         struct ArrayAdapter;
     }
 }
-
+#ifdef HAVE_BOOST_PYTHON
 namespace mo
 {
     namespace python
@@ -21,6 +23,7 @@ namespace mo
         inline void convertFromPython(const boost::python::object& obj, ct::reflect::ArrayAdapter<T, N> result);
     }
 }
+#endif
 
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "opencv2/core/types.hpp"
@@ -37,7 +40,7 @@ namespace mo
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 #include <boost/lexical_cast.hpp>
 #include <cereal/types/vector.hpp>
-
+#ifdef HAVE_BOOST_PYTHON
 namespace mo
 {
     namespace python
@@ -56,6 +59,7 @@ namespace mo
         }
     }
 }
+#endif
 
 static_assert(ct::reflect::ReflectData<cv::Scalar>::IS_SPECIALIZED, "Specialization not working for cv::Scalar");
 static_assert(ct::reflect::ReflectData<cv::Vec2f>::IS_SPECIALIZED, "Specialization not working for cv::Vec2f");

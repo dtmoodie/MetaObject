@@ -7,6 +7,10 @@
 #include "MetaObject/signals/TSlot.hpp"
 #include "MetaObject/thread/ThreadRegistry.hpp"
 #include "MetaObject/thread/boost_thread.hpp"
+#include <opencv2/core.hpp>
+#ifdef HAVE_CUDA
+#include <cuda_runtime_api.h>
+#endif
 #include <future>
 
 using namespace mo;
@@ -138,7 +142,9 @@ struct mo::Thread::ThreadSanitizer
     ~ThreadSanitizer()
     {
         MO_LOG(info) << m_thread._name << " exiting";
-        m_thread.getContext()->getStream().waitForCompletion();
+#if defined( HAVE_CUDA )
+        cudaStreamSynchronize(m_thread.getContext()->getCudaStream());
+#endif
         mo::ThreadSpecificQueue::run();
         _paused_flag = true;
         _cv.notify_all();

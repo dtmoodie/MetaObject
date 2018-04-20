@@ -34,16 +34,15 @@ std::shared_ptr<Context> mo::Context::create(const std::string& name, int priori
     {
         if(table->system_info.have_cuda)
         {
-#ifdef HAVE_OPENCV
+#if MO_OPENCV_HAVE_CUDA
             ctx = std::make_shared<CvContext>(priority);
 #else
-#ifdef HAVE_CUDA
+    #if MO_HAVE_CUDA
             ctx = std::make_shared<CudaContext>(priority);
-#else
+    #else
             ctx = std::make_shared<Context>();
+    #endif
 #endif
-#endif
-
         }else
         {
             ctx.reset(new Context());
@@ -58,7 +57,13 @@ Context::Context()
 {
     thread_id = getThisThread();
     allocator = Allocator::getDefaultAllocator();
+    if (!allocator)
+    {
+        allocator = Allocator::createAllocator();
+        Allocator::setDefaultAllocator(allocator);
+    }
     device_id = -1;
+    context_type = mo::TypeInfo(typeid(Context));
 }
 
 void Context::setName(const std::string& name)

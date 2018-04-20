@@ -1,10 +1,12 @@
 #include "CudaContext.hpp"
+#if MO_HAVE_CUDA
 #include "MetaObject/logging/logging.hpp"
 #include <MetaObject/logging/profiling.hpp>
 #include <cuda_runtime_api.h>
-#ifdef HAVE_OPENCV
-#include <opencv2/core/cuda_stream_accessor.hpp>
-#endif
+    #ifdef MO_HAVE_OPENCV
+        #include <opencv2/core/cuda_stream_accessor.hpp>
+    #endif
+
 namespace mo
 {
     CudaContext::~CudaContext()
@@ -27,6 +29,7 @@ namespace mo
         {
             CUDA_ERROR_CHECK(cudaGetDevice(&device_id));
         }
+        context_type = mo::TypeInfo(typeid(CudaContext));
 
     }
 
@@ -50,7 +53,11 @@ namespace mo
         {
             CUDA_ERROR_CHECK(cudaStreamDestroy(this->m_cuda_stream)) << "Unable to cleanup stream";
         }
+#if MO_OPENCV_HAVE_CUDA
         this->m_cuda_stream = cv::cuda::StreamAccessor::getStream(stream);
+#else
+        THROW(warning) << "Not built against opencv that's compatible with CUDA";
+#endif
     }
 
     void CudaContext::setStream(cudaStream_t stream)
@@ -62,3 +69,4 @@ namespace mo
         this->m_cuda_stream = stream;
     }
 }
+#endif
