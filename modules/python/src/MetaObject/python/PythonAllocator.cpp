@@ -65,7 +65,11 @@ namespace mo
         const NumpyAllocator* allocator;
     };
 
-    int importNumpy() { import_array1(0); }
+    int importNumpy()
+    {
+        import_array1(0);
+        return 1;
+    }
 
     void setupAllocator()
     {

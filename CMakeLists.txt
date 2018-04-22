@@ -33,15 +33,15 @@ set(compile_flags "")
 
 set(HAVE_PYTHON OFF)
 
-set(MO_HAVE_OPENCV 0)
-set(MO_HAVE_CUDA 0)
-set(MO_HAVE_CEREAL 0)
-set(MO_HAVE_PYTHON 0)
+set(MO_HAVE_OPENCV 0 CACHE BOOL INTERNAL FORCE)
+set(MO_HAVE_CUDA 0 CACHE BOOL INTERNAL FORCE)
+set(MO_HAVE_CEREAL 0 CACHE BOOL INTERNAL FORCE)
+set(MO_HAVE_PYTHON 0 CACHE BOOL INTERNAL FORCE)
 
 include(cmake/metaobject_dependencies.cmake)
 
 if(MO_HAVE_PYTHON)
-    set(MO_HAVE_PYTHON 1)
+    set(MO_HAVE_PYTHON 1 CACHE BOOL INTERNAL FORCE)
 endif(MO_HAVE_PYTHON)
 
 configure_file(metaobject_config.hpp.in ${CMAKE_BINARY_DIR}/include/MetaObject/core/metaobject_config.hpp @ONLY)

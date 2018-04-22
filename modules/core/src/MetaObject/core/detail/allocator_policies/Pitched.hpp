@@ -1,5 +1,6 @@
 #pragma once
 #include <MetaObject/detail/Export.hpp>
+#include <stddef.h>
 namespace mo
 {
     /*!

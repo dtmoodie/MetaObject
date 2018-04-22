@@ -1,6 +1,6 @@
 find_package(OpenCV 3.0 REQUIRED COMPONENTS core)
 include_directories(${OpenCV_INCLUDE_DIRS})
-set(MO_HAVE_OPENCV 1)
+set(MO_HAVE_OPENCV 1 CACHE BOOL INTERNAL FORCE)
 if(OpenCV_CUDA_VERSION)
     set(WITH_CUDA ON)
 endif()

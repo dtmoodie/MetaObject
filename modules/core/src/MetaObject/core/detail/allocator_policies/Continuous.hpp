@@ -1,5 +1,6 @@
 #pragma once
 #include <MetaObject/detail/Export.hpp>
+#include <stddef.h>
 namespace mo
 {
     /*!
@@ -9,7 +10,7 @@ namespace mo
     */
     class MO_EXPORTS ContinuousPolicy
     {
-    public:
-        void sizeNeeded(int rows, int cols, int elemSize, size_t& size_needed, size_t& stride);
+      public:
+        static void sizeNeeded(int rows, int cols, int elemSize, size_t& size_needed, size_t& stride);
     };
 }

@@ -1,5 +1,6 @@
 #pragma once
 #ifndef __CUDACC__
+#include "../TParamPtr.hpp"
 #include "MetaObject/logging/logging.hpp"
 #include <MetaObject/params/AccessToken.hpp>
 #include <boost/thread/recursive_mutex.hpp>
