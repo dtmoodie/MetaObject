@@ -4,7 +4,7 @@
 #ifdef HAVE_CUDA
 #include <cuda_runtime_api.h>
 #endif
-std::weak_ptr<SystemTable> inst;
+static std::weak_ptr<SystemTable> inst;
 
 std::shared_ptr<SystemTable> SystemTable::instance()
 {
@@ -39,10 +39,11 @@ SystemTable::SystemTable()
 #ifdef HAVE_CUDA
     int count = 0;
     cudaError_t err = cudaGetDeviceCount(&count);
-    if(err != cudaSuccess || count == 0 || std::getenv("AQUILA_CPU_ONLY"))
+    if (err != cudaSuccess || count == 0 || std::getenv("AQUILA_CPU_ONLY"))
     {
         system_info.have_cuda = false;
-    }else
+    }
+    else
     {
         system_info.have_cuda = true;
     }

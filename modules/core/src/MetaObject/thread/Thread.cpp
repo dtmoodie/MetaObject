@@ -68,11 +68,9 @@ void Thread::setName(const std::string& name)
 }
 
 std::shared_ptr<Connection> Thread::setInnerLoop(TSlot<int(void)>* slot)
-
 {
-    if (_run && mo::getThisThread() != getId())
+    if (mo::getThisThread() != getId())
     {
-
         std::promise<std::shared_ptr<Connection>> promise;
         std::future<std::shared_ptr<Connection>> future = promise.get_future();
         this->_event_queue.enqueue([slot, &promise, this]() { promise.set_value(slot->connect(_inner_loop)); });
@@ -142,7 +140,7 @@ struct mo::Thread::ThreadSanitizer
     ~ThreadSanitizer()
     {
         MO_LOG(info) << m_thread._name << " exiting";
-#if defined( HAVE_CUDA )
+#if defined(HAVE_CUDA)
         cudaStreamSynchronize(m_thread.getContext()->getCudaStream());
 #endif
         mo::ThreadSpecificQueue::run();

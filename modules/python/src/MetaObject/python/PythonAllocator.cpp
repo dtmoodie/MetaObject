@@ -87,10 +87,7 @@ namespace mo
         PyGILState_STATE _state;
     };
 
-    NumpyAllocator::NumpyAllocator(std::shared_ptr<Allocator> default_allocator_)
-        : default_allocator(default_allocator_)
-    {
-    }
+    NumpyAllocator::NumpyAllocator(cv::MatAllocator* default_allocator_) : default_allocator(default_allocator_) {}
 
     NumpyAllocator::~NumpyAllocator() {}
 
@@ -343,18 +340,16 @@ namespace mo
     {
         if (data != 0)
         {
-            return dynamic_cast<cv::MatAllocator*>(default_allocator.get())
-                ->allocate(dims0, sizes, type, data, step, flags, usageFlags);
+            return default_allocator->allocate(dims0, sizes, type, data, step, flags, usageFlags);
         }
-        auto ret = dynamic_cast<cv::MatAllocator*>(default_allocator.get())
-                       ->allocate(dims0, sizes, type, data, step, flags, usageFlags);
+        auto ret = default_allocator->allocate(dims0, sizes, type, data, step, flags, usageFlags);
         ret->currAllocator = this;
         return ret;
     }
 
     bool NumpyAllocator::allocate(cv::UMatData* u, int accessFlags, cv::UMatUsageFlags usageFlags) const
     {
-        return dynamic_cast<cv::MatAllocator*>(default_allocator.get())->allocate(u, accessFlags, usageFlags);
+        return default_allocator->allocate(u, accessFlags, usageFlags);
     }
 
     void NumpyAllocator::deallocate(cv::UMatData* u) const
@@ -367,7 +362,7 @@ namespace mo
         }
         else
         {
-            dynamic_cast<cv::MatAllocator*>(default_allocator.get())->deallocate(u);
+            default_allocator->deallocate(u);
         }
     }
 }

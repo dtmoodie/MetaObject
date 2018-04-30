@@ -7,11 +7,11 @@
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/object/MetaObjectFactory.hpp"
 #include "MetaObject/params/ParamFactory.hpp"
-#include <MetaObject/logging/logging.hpp>
-
 #include "PythonAllocator.hpp"
 #include "PythonPolicy.hpp"
 #include "PythonSetup.hpp"
+#include <MetaObject/core/detail/opencv_allocator.hpp>
+#include <MetaObject/logging/logging.hpp>
 #include <signal.h> // SIGINT, etc
 
 #include <RuntimeObjectSystem/IRuntimeObjectSystem.h>
@@ -306,7 +306,12 @@ namespace mo
         struct LibGuard
         {
             LibGuard()
+                : m_system_table(SystemTable::instance()), m_allocator(mo::Allocator::createAllocator()),
+                  m_cpu_allocator(m_allocator), m_gpu_allocator(m_allocator), m_numpy_allocator(&m_cpu_allocator)
             {
+                m_system_table->allocator = m_allocator;
+                m_allocator->setDefaultAllocator(m_allocator);
+
                 auto ret = signal(SIGINT, sig_handler);
                 if (ret == SIG_ERR)
                 {
@@ -320,28 +325,19 @@ namespace mo
                 int devices = cv::cuda::getCudaEnabledDeviceCount();
                 MO_ASSERT(devices);
                 cv::cuda::GpuMat mat(10, 10, CV_32F);
-                system_table = SystemTable::instance();
-                mo::MetaObjectFactory::instance(system_table.get());
-                auto current_allocator = system_table->allocator;
-                cv::cuda::GpuMat::setDefaultAllocator(dynamic_cast<cv::cuda::GpuMat::Allocator*>(current_allocator.get()));
-                std::shared_ptr<mo::NumpyAllocator> allocator;
 
-                if (current_allocator)
-                    allocator = std::make_shared<mo::NumpyAllocator>(current_allocator);
-                else
-                {
-                    auto default_allocator = Allocator::getDefaultAllocator();
-                    allocator = std::make_shared<mo::NumpyAllocator>(default_allocator);
-                }
-
-                numpy_allocator = std::move(allocator);
-                cv::Mat::setDefaultAllocator(allocator.get());
-                
+                mo::MetaObjectFactory::instance(m_system_table.get());
+                cv::Mat::setDefaultAllocator(&m_cpu_allocator);
+                cv::cuda::GpuMat::setDefaultAllocator(&m_gpu_allocator);
             }
             ~LibGuard() {}
 
-            std::shared_ptr<SystemTable> system_table;
-            std::shared_ptr<mo::NumpyAllocator> numpy_allocator;
+            std::shared_ptr<SystemTable> m_system_table;
+            std::shared_ptr<mo::Allocator> m_allocator;
+            CvAllocatorProxy<CPU> m_cpu_allocator;
+            CvAllocatorProxy<GPU> m_gpu_allocator;
+
+            mo::NumpyAllocator m_numpy_allocator;
         };
 
         void pythonSetup(const char* module_name_)

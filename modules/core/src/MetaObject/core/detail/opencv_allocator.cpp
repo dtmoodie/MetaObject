@@ -16,6 +16,11 @@ namespace mo
         if (ptr)
         {
             mat->refcount = static_cast<int*>(cv::fastMalloc(sizeof(int)));
+            mat->data = ptr;
+            mat->datastart = ptr;
+            mat->rows = rows;
+            mat->cols = cols;
+            mat->step = stride;
             return true;
         }
         return false;

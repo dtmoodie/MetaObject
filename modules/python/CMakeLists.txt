@@ -1,35 +1,33 @@
-if(HAVE_PYTHON)
+if(MO_HAVE_PYTHON)
     LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
-    find_package(NumPy 1.7.1)
-    if(NUMPY_FOUND)
-        metaobject_declare_module(NAME python DEPENDS metaobject_core metaobject_object)
-        target_include_directories(metaobject_python
-            PUBLIC
-                $<BUILD_INTERFACE:${PYTHON_INCLUDE_DIR}>
-                $<BUILD_INTERFACE:${NUMPY_INCLUDE_DIR}>
-            )
-        target_link_libraries(metaobject_python optimized;${Boost_PYTHON_LIBRARY_RELEASE};debug;${Boost_PYTHON_LIBRARY_DEBUG} ${PYTHON_LIBRARY} ct)
+    metaobject_declare_module(NAME python DEPENDS metaobject_core metaobject_object)
+    target_include_directories(metaobject_python
+        PUBLIC
+            $<BUILD_INTERFACE:${PYTHON_INCLUDE_DIR}>
+            $<BUILD_INTERFACE:${NUMPY_INCLUDE_DIR}>
+            $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
+        )
+    target_link_libraries(metaobject_python optimized;${Boost_PYTHON_LIBRARY_RELEASE};debug;${Boost_PYTHON_LIBRARY_DEBUG} ${PYTHON_LIBRARY} ct)
 
-        if(UNIX)
-            set(POSTFIX "")
-            if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-                set(POSTFIX "${CMAKE_DEBUG_POSTFIX}")
-            endif()
-            get_target_property(out_dir metaobject_python ARCHIVE_OUTPUT_DIRECTORY)
-            configure_file(${CMAKE_CURRENT_LIST_DIR}/metaobject.py.in.unix ${out_dir}/metaobject.py @ONLY)
-            add_custom_target(metaobject.py.in.unix ALL)
-        else()
-            get_target_property(out_dir metaobject_python ARCHIVE_OUTPUT_DIRECTORY)
-            configure_file(${CMAKE_CURRENT_LIST_DIR}/metaobject.py.in.win32 ${out_dir}/Debug/metaobject.py @ONLY)
-            configure_file(${CMAKE_CURRENT_LIST_DIR}/metaobject.py.in.win32 ${out_dir}/RelWithDebInfo/metaobject.py @ONLY)
-            configure_file(${CMAKE_CURRENT_LIST_DIR}/metaobject.py.in.win32 ${out_dir}/Release/metaobject.py @ONLY)
-            configure_file(${CMAKE_CURRENT_LIST_DIR}/tests/test_python.py ${out_dir}/Debug/metaobject_python_test.py @ONLY)
-            configure_file(${CMAKE_CURRENT_LIST_DIR}/tests/test_python.py ${out_dir}/RelWithDebInfo/metaobject_python_test.py @ONLY)
-        endif(UNIX)
-        set(metaobject_param_include
-            "${metaobject_param_include}\n#ifdef slots\n#undef slots\n#endif\n#include <MetaObject/python/PythonPolicy.hpp>\n" CACHE INTERNAL "" FORCE)
-        add_executable(test_mo_python_init tests/python_init_param_setter.cpp)
-        set_target_properties(test_mo_python_init PROPERTIES FOLDER Tests/MetaObject/python)
-        target_link_libraries(test_mo_python_init ct metaobject_python)
-    endif(NUMPY_FOUND)
+    if(UNIX)
+        set(POSTFIX "")
+        if(CMAKE_BUILD_TYPE STREQUAL "Debug")
+            set(POSTFIX "${CMAKE_DEBUG_POSTFIX}")
+        endif()
+        get_target_property(out_dir metaobject_python ARCHIVE_OUTPUT_DIRECTORY)
+        configure_file(${CMAKE_CURRENT_LIST_DIR}/metaobject.py.in.unix ${out_dir}/metaobject.py @ONLY)
+        add_custom_target(metaobject.py.in.unix ALL)
+    else()
+        get_target_property(out_dir metaobject_python ARCHIVE_OUTPUT_DIRECTORY)
+        configure_file(${CMAKE_CURRENT_LIST_DIR}/metaobject.py.in.win32 ${out_dir}/Debug/metaobject.py @ONLY)
+        configure_file(${CMAKE_CURRENT_LIST_DIR}/metaobject.py.in.win32 ${out_dir}/RelWithDebInfo/metaobject.py @ONLY)
+        configure_file(${CMAKE_CURRENT_LIST_DIR}/metaobject.py.in.win32 ${out_dir}/Release/metaobject.py @ONLY)
+        configure_file(${CMAKE_CURRENT_LIST_DIR}/tests/test_python.py ${out_dir}/Debug/metaobject_python_test.py @ONLY)
+        configure_file(${CMAKE_CURRENT_LIST_DIR}/tests/test_python.py ${out_dir}/RelWithDebInfo/metaobject_python_test.py @ONLY)
+    endif(UNIX)
+    set(metaobject_param_include
+        "${metaobject_param_include}\n#ifdef slots\n#undef slots\n#endif\n#include <MetaObject/python/PythonPolicy.hpp>\n" CACHE INTERNAL "" FORCE)
+    add_executable(test_mo_python_init tests/python_init_param_setter.cpp)
+    set_target_properties(test_mo_python_init PROPERTIES FOLDER Tests/MetaObject/python)
+    target_link_libraries(test_mo_python_init ct metaobject_python)
 endif()

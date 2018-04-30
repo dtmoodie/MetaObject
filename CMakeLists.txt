@@ -31,18 +31,12 @@ set(link_dirs_deb "")
 set(link_dirs_rel "")
 set(compile_flags "")
 
-set(HAVE_PYTHON OFF)
-
 set(MO_HAVE_OPENCV 0 CACHE BOOL INTERNAL FORCE)
 set(MO_HAVE_CUDA 0 CACHE BOOL INTERNAL FORCE)
 set(MO_HAVE_CEREAL 0 CACHE BOOL INTERNAL FORCE)
 set(MO_HAVE_PYTHON 0 CACHE BOOL INTERNAL FORCE)
 
 include(cmake/metaobject_dependencies.cmake)
-
-if(MO_HAVE_PYTHON)
-    set(MO_HAVE_PYTHON 1 CACHE BOOL INTERNAL FORCE)
-endif(MO_HAVE_PYTHON)
 
 configure_file(metaobject_config.hpp.in ${CMAKE_BINARY_DIR}/include/MetaObject/core/metaobject_config.hpp @ONLY)
 include_directories(${CMAKE_BINARY_DIR}/include)
@@ -188,7 +182,7 @@ message(STATUS
     "  C++ Deb flags\t${CMAKE_CXX_FLAGS_DEBUG}\n"
     "  OpenCV\t\t${OpenCV_VERSION} - ${OpenCV_DIR}\n"
     "  Qt5\t\t${Qt5_VERSION}\n"
-    "  Python\t\t${HAVE_PYTHON}\n"
+    "  Python\t\t${PYTHONLIBS_VERSION_STRING}\n"
     "  Wt\t\t${Wt_FOUND}\n"
     "  ZeroMQ\t\t${ZeroMQ_FOUND}\n"
     "  Tests\t\t${Boost_UNIT_TEST_FRAMEWORK_FOUND}\n"
