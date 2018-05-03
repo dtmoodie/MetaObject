@@ -314,6 +314,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
     MO_LOG(info) << "Loading plugin " << fullPluginPath;
     if (!boost::filesystem::is_regular_file(fullPluginPath))
     {
+        MO_LOG(warning) << fullPluginPath << " does not exist";
         return false;
     }
     PluginInfo plugin_info;
