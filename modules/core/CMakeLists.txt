@@ -28,6 +28,6 @@ target_include_directories(metaobject_core
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
 )
-if(${CUDA_FOUND})
+if(${MO_HAVE_CUDA})
     target_link_libraries(metaobject_core ${CUDA_CUDART_LIBRARY})
-endif(${CUDA_FOUND})
+endif(${MO_HAVE_CUDA})
