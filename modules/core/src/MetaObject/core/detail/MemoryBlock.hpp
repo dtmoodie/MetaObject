@@ -5,12 +5,13 @@
 namespace mo
 {
     struct CPU;
-    struct GPU;
+    struct CUDA;
+    using GPU = CUDA;
 
-    template<class XPU> 
+    template <class XPU>
     class MO_EXPORTS Memory
     {
-    public:
+      public:
         static void allocate(unsigned char** data, size_t size);
         static void deallocate(unsigned char* data);
     };

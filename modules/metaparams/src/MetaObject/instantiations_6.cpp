@@ -1,3 +1,4 @@
+#include "MetaObject/core/metaobject_config.hpp"
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include <MetaObject/params/MetaParam.hpp>
 
@@ -25,7 +26,8 @@ using namespace mo;
 
 namespace mo
 {
-#ifdef MO_HAVE_PYTHON
+#if MO_HAVE_PYTHON
+#include <boost/python.hpp>
     namespace python
     {
         template <>

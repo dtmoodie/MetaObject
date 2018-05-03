@@ -23,6 +23,7 @@ namespace boost
 #include <MetaObject/params/ParamInfo.hpp>
 #include <MetaObject/python/DataConverter.hpp>
 
+#include <Python.h>
 #include <RuntimeObjectSystem/ObjectInterface.h>
 #include <boost/python.hpp>
 
@@ -51,7 +52,7 @@ namespace mo
             boost::python::object obj = getter(param);
             if (obj)
             {
-                ss << param->getName() << ':' << PyObject_REPR(obj.ptr()) << '\n';
+                ss << param->getName() << ':' << PyObject_Repr(obj.ptr()) << '\n';
             }
         }
         return ss.str();

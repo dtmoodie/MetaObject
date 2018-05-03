@@ -4,8 +4,8 @@
 #include <MetaObject/Python.hpp>
 #include <MetaObject/core/detail/Allocator.hpp>
 #include <MetaObject/core/detail/opencv_allocator.hpp>
-#include <opencv2/core/mat.hpp>
 #include <Python.h>
+#include <opencv2/core/mat.hpp>
 
 namespace mo
 {
@@ -22,7 +22,7 @@ namespace mo
     class MO_EXPORTS NumpyAllocator : virtual public cv::MatAllocator
     {
       public:
-        NumpyAllocator(std::shared_ptr<Allocator> default_allocator_ = Allocator::getDefaultAllocator());
+        NumpyAllocator(cv::MatAllocator* default_allocator_ = nullptr);
         ~NumpyAllocator();
 
         cv::Mat fromPython(PyObject* arr) const;
@@ -41,6 +41,6 @@ namespace mo
 
         void deallocate(cv::UMatData* u) const override;
 
-        std::shared_ptr<Allocator> default_allocator;
+        cv::MatAllocator* default_allocator;
     };
 }

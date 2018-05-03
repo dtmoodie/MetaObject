@@ -1,4 +1,5 @@
-#ifdef HAVE_CUDA
+#include "MetaObject/core/metaobject_config.hpp"
+#if MO_HAVE_CUDA
 #ifdef MetaObject_EXPORTS
 #undef MetaObject_EXPORTS
 #endif

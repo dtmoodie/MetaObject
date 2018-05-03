@@ -1,4 +1,5 @@
 # ----------------------- tests -----------------------------------
+find_package(OpenCV QUIET COMPONENTS cudaarithm)
 if(Boost_UNIT_TEST_FRAMEWORK_FOUND AND BUILD_TESTS)
     include(CTest)
     enable_testing()

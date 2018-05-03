@@ -54,5 +54,3 @@ if(NUMPY_FOUND)
   message(STATUS "NumPy ver. ${NUMPY_VERSION} found (include: ${NUMPY_INCLUDE_DIR})")
 endif()
 
-#caffe_clear_vars(__result __output __error_value __values __ver_check __error_value)
-

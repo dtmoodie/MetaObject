@@ -23,16 +23,15 @@ namespace mo
     }
 
     template <class T, class... Ts>
-    T& get(std::tuple<Ts...>& tuple)
+    inline T& get(std::tuple<Ts...>& tuple)
     {
         return std::get<indexOf<T, Ts...>()>(tuple);
     }
 
     template <class T, class... Ts>
-    const T& get(const std::tuple<Ts...>& tuple)
+    inline const T& get(const std::tuple<Ts...>& tuple)
     {
-        static const int IDX = indexOf<T, Ts...>();
-        return std::get<IDX>(tuple);
+        return std::get<indexOf<T, Ts...>()>(tuple);
     }
 
     template <class T>
@@ -107,7 +106,7 @@ namespace mo
 
         virtual void setMtx(Mutex_t* mtx) override { typeLoop<Types...>(*this, mtx); }
 
-        const mo::TypeInfo& getTypeInfo() const
+        virtual const mo::TypeInfo& getTypeInfo() const override
         {
             if (m_current_input == nullptr)
             {
@@ -119,16 +118,16 @@ namespace mo
             }
         }
 
-        mo::IParam* getInputParam() const { return m_current_input; }
+        virtual mo::IParam* getInputParam() const override { return m_current_input; }
 
-        OptionalTime_t getInputTimestamp()
+        virtual OptionalTime_t getInputTimestamp() override
         {
             if (m_current_input)
                 return m_current_input->getTimestamp();
             return {};
         }
 
-        size_t getInputFrameNumber()
+        virtual size_t getInputFrameNumber() override
         {
             if (m_current_input)
             {
@@ -137,9 +136,9 @@ namespace mo
             return std::numeric_limits<size_t>::max();
         }
 
-        bool isInputSet() const { return m_current_input != nullptr; }
+        virtual bool isInputSet() const override { return m_current_input != nullptr; }
 
-        bool acceptsInput(IParam* input) const
+        virtual bool acceptsInput(IParam* input) const override
         {
             AcceptInputRedirect<TMultiInput<Types...>> redirect(*this);
             bool success = false;
@@ -147,7 +146,7 @@ namespace mo
             return success;
         }
 
-        bool acceptsType(const TypeInfo& type) const
+        virtual bool acceptsType(const TypeInfo& type) const override
         {
             AcceptInputRedirect<TMultiInput<Types...>> redirect(*this);
             bool success = false;
@@ -156,55 +155,55 @@ namespace mo
         }
 
         template <class T>
-        void apply(std::shared_ptr<IParam> input, bool* success)
+        inline void apply(std::shared_ptr<IParam> input, bool* success)
         {
             *success = get<TInputParamPtr<T>>(m_inputs).setInput(input);
         }
 
         template <class T>
-        void apply(IParam* input, bool* success)
+        inline void apply(IParam* input, bool* success)
         {
             *success = get<TInputParamPtr<T>>(m_inputs).setInput(input);
         }
 
         template <class T>
-        void apply(std::tuple<const Types*...>* user_var_)
+        inline void apply(std::tuple<const Types*...>* user_var_)
         {
             get<TInputParamPtr<T>>(m_inputs).setUserDataPtr(&get<const T*>(*user_var_));
         }
 
         template <class T>
-        void apply(Mutex_t* mtx)
+        inline void apply(Mutex_t* mtx)
         {
             get<TInputParamPtr<T>>(m_inputs).setMtx(mtx);
         }
 
         template <class T>
-        void apply(Context* ctx)
+        inline void apply(Context* ctx)
         {
             get<TInputParamPtr<T>>(m_inputs).setContext(ctx);
         }
 
         template <class T>
-        void apply(const OptionalTime_t& ts, size_t* fn, bool* success)
+        inline void apply(const OptionalTime_t& ts, size_t* fn, bool* success)
         {
             *success = get<TInputParamPtr<T>>(m_inputs).getInput(ts, fn);
         }
 
         template <class T>
-        void apply(size_t fn, OptionalTime_t* ts, bool* success)
+        inline void apply(size_t fn, OptionalTime_t* ts, bool* success)
         {
             *success = get<TInputParamPtr<T>>(m_inputs).getInput(fn, ts);
         }
 
         template <class T>
-        void acceptsInput(IParam* input, bool* success) const
+        inline void acceptsInput(IParam* input, bool* success) const
         {
             *success = get<TInputParamPtr<T>>(m_inputs).acceptsInput(input);
         }
 
         template <class T>
-        void acceptsInput(const TypeInfo& type, bool* success) const
+        inline void acceptsInput(const TypeInfo& type, bool* success) const
         {
             *success = get<TInputParamPtr<T>>(m_inputs).acceptsType(type);
         }

@@ -8,6 +8,6 @@ if(TARGET metaobject_wtgui)
   TARGET_LINK_LIBRARIES(metaobject_metaparams metaobject_wtgui)
 endif()
 
-if(HAVE_PYTHON)
+if(MO_HAVE_PYTHON)
     TARGET_LINK_LIBRARIES(metaobject_metaparams metaobject_python)
 endif()
