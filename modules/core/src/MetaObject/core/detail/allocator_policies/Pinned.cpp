@@ -15,7 +15,7 @@ namespace mo
         MO_CUDA_ERROR_CHECK(cudaMallocHost(&ptr, num_bytes), " tried to allocate " << num_bytes);
         return static_cast<unsigned char*>(ptr);
 #else
-        return malloc(num_bytes);
+        return static_cast<unsigned char*>(malloc(num_bytes));
 #endif
     }
 
