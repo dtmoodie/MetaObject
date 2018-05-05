@@ -42,13 +42,13 @@ namespace cereal
             ar(cereal::make_nvp("TypeId", id.m_ConstructorId));
             ar(cereal::make_nvp("InstanceId", id.m_PerTypeId));
             ar(make_nvp("TypeName", type));
-            if (auto obj = mo::MetaObjectFactory::instance()->get(id, type.c_str()))
+            if (auto obj = mo::MetaObjectFactory::instance().get(id, type.c_str()))
             {
                 m = obj;
             }
             else
             {
-                m = mo::MetaObjectFactory::instance()->create(type.c_str());
+                m = mo::MetaObjectFactory::instance().create(type.c_str());
             }
             if (mo::CheckHasBeenSerialized(m->GetObjectId()))
                 return;
@@ -75,6 +75,6 @@ namespace cereal
         ar(cereal::make_nvp("TypeId", id.m_ConstructorId));
         ar(cereal::make_nvp("InstanceId", id.m_PerTypeId));
         ar(make_nvp("TypeName", type));
-        m = mo::MetaObjectFactory::instance()->get(id, type.c_str());
+        m = mo::MetaObjectFactory::instance().get(id, type.c_str());
     }
 }

@@ -4,6 +4,10 @@
 #ifdef HAVE_CUDA
 #include <cuda_runtime_api.h>
 #endif
+
+ISingletonContainer::~ISingletonContainer()
+{
+}
 static std::weak_ptr<SystemTable> inst;
 
 std::shared_ptr<SystemTable> SystemTable::instance()
@@ -57,5 +61,5 @@ SystemTable::~SystemTable()
 
 void SystemTable::deleteSingleton(mo::TypeInfo type)
 {
-    g_singletons.erase(type);
+    m_singletons.erase(type);
 }

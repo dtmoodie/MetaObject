@@ -5,17 +5,20 @@ int main()
     /*!
      * \brief factory is a pointer to the global object factory
      */
-    auto factory = mo::MetaObjectFactory::instance();
+
+    SystemTable table;
+    mo::MetaObjectFactory factory(&table);
 
     // call the inlined register translation unit function to register ConcreteImplementation
     // to the global object registry
-    factory->registerTranslationUnit();
+    factory.registerTranslationUnit();
 
     // Get a list of objects that inherit from ExampleInterface
-    auto constructors = factory->getConstructors(ExampleInterface::getHash());
+    auto constructors = factory.getConstructors(ExampleInterface::getHash());
 
     // Print static object info
-    for (IObjectConstructor* constructor : constructors) {
+    for (IObjectConstructor* constructor : constructors)
+    {
         IObjectInfo* info = constructor->GetObjectInfo();
         if (ExampleInterfaceInfo* interface_info = dynamic_cast<ExampleInterfaceInfo*>(info))
         {
@@ -26,7 +29,7 @@ int main()
     }
 
     // Construct an object
-    mo::IMetaObject* obj = factory->create("ConcreteImplementation");
+    mo::IMetaObject* obj = factory.create("ConcreteImplementation");
     if (ExampleInterface* interface_object = dynamic_cast<ExampleInterface*>(obj))
     {
         interface_object->foo();

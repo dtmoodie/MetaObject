@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE(input_param)
 
 BOOST_AUTO_TEST_CASE(access_Param)
 {
-    MetaObjectFactory::instance()->registerTranslationUnit();
+    MetaObjectFactory::instance().registerTranslationUnit();
 
     auto obj = rcc::shared_ptr<Paramed_object>::create();
     obj->getParam<int>("int_value");

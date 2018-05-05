@@ -19,22 +19,23 @@ int main()
     {
         MO_LOG(debug) << "Exception caught in the wrong handler";
     }
-
-    auto factory = mo::MetaObjectFactory::instance(); // ->registerTranslationUnit();
-    factory->registerTranslationUnit();
+    SystemTable table;
+    mo::MetaObjectFactory factory(&table); // ->registerTranslationUnit();
+    factory.registerTranslationUnit();
     auto obj = rcc::shared_ptr<printable>::create();
 
     bool recompiling = false;
-    while (1) {
+    while (1)
+    {
         obj->print();
 
-        if (factory->checkCompile())
+        if (factory.checkCompile())
         {
             recompiling = true;
         }
         if (recompiling)
         {
-            if (factory->swapObjects())
+            if (factory.swapObjects())
             {
                 recompiling = false;
             }

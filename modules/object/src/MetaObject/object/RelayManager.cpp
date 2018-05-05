@@ -24,11 +24,6 @@ RelayManager::~RelayManager()
     delete _pimpl;
 }
 
-std::shared_ptr<RelayManager> RelayManager::instance()
-{
-    return mo::getSingleton<RelayManager>();
-}
-
 std::shared_ptr<Connection> RelayManager::connect(ISlot* slot, const std::string& name, IMetaObject* obj)
 {
     auto& relay = getRelay(slot->getSignature(), name);

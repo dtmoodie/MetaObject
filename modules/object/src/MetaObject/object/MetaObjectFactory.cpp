@@ -1,11 +1,11 @@
 #include "MetaObject/object/MetaObjectFactory.hpp"
+#include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/core/detail/Time.hpp"
 #include "MetaObject/logging/CompileLogger.hpp"
 #include "MetaObject/logging/logging.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/TSlot.hpp"
-#include "MetaObject/core/SystemTable.hpp"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include <MetaObject/thread/boost_thread.hpp>
@@ -59,12 +59,14 @@ struct MetaObjectFactory::impl
 
 MetaObjectFactory::MetaObjectFactory(SystemTable* table)
 {
-    _pimpl = new impl(table);
+    MO_ASSERT(table);
+    MO_ASSERT(table->metaobject_factory == nullptr);
+    _pimpl.reset(new impl(table));
+    table->metaobject_factory = this;
 }
 
 MetaObjectFactory::~MetaObjectFactory()
 {
-    delete _pimpl;
 }
 
 IRuntimeObjectSystem* MetaObjectFactory::getObjectSystem()
@@ -72,13 +74,7 @@ IRuntimeObjectSystem* MetaObjectFactory::getObjectSystem()
     return &_pimpl->obj_system;
 }
 
-MetaObjectFactory* MetaObjectFactory::instance(SystemTable* table)
-{
-    static MetaObjectFactory g_inst(table);
-    return &g_inst;
-}
-
-IMetaObject* MetaObjectFactory::create(const char* type_name, int interface_id)
+IMetaObject* MetaObjectFactory::create(const char* type_name, int64_t interface_id)
 {
     auto constructor = _pimpl->obj_system.GetObjectFactorySystem()->GetConstructor(type_name);
     if (constructor)
@@ -362,7 +358,8 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
         mo::Time_t end = mo::getCurrentTime();
         //_pimpl->plugins.push_back(plugin_name + " - success");
         plugin_info.m_state = "success";
-        plugin_info.m_load_time = static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
+        plugin_info.m_load_time =
+            static_cast<unsigned int>(std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count());
         _pimpl->plugins.push_back(plugin_info);
         return true;
     }
@@ -379,7 +376,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
     std::string base = path.stem().replace_extension("").string();
     mo::setThisThreadName(base.substr(3));
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
-    void* handle = dlopen(fullPluginPath.c_str(), RTLD_NOW | RTLD_GLOBAL);
+    void* handle = dlopen(fullPluginPath.c_str(), RTLD_LAZY | RTLD_LOCAL);
     // Fallback on old module
     if (handle == nullptr)
     {

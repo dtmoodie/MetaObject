@@ -176,7 +176,7 @@ rcc::shared_ptr<IMetaObject> SerializerFactory::DeSerialize(std::istream& os, Se
         ar(CEREAL_NVP(ObjectType));
         if (ObjectType.size())
         {
-            obj = MetaObjectFactory::instance()->create(ObjectType.c_str());
+            obj = MetaObjectFactory::instance().create(ObjectType.c_str());
             auto func_itr = _binary_deserialization_functions.find(obj->GetTypeName());
             if (func_itr != _binary_deserialization_functions.end())
             {
@@ -189,7 +189,7 @@ rcc::shared_ptr<IMetaObject> SerializerFactory::DeSerialize(std::istream& os, Se
         cereal::XMLInputArchive ar(os);
         std::string ObjectType;
         ar(CEREAL_NVP(ObjectType));
-        obj = MetaObjectFactory::instance()->create(ObjectType.c_str());
+        obj = MetaObjectFactory::instance().create(ObjectType.c_str());
         if (obj)
         {
             auto func_itr = _xml_deserialization_functions.find(obj->GetTypeName());

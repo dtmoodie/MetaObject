@@ -98,12 +98,12 @@ MO_REGISTER_OBJECT(multi_derive);
 BOOST_AUTO_TEST_CASE(initialize)
 {
     mo::MetaObjectFactory::instance();
-    mo::MetaObjectFactory::instance()->registerTranslationUnit();
+    mo::MetaObjectFactory::instance().registerTranslationUnit();
 }
 
 BOOST_AUTO_TEST_CASE(object_print)
 {
-    auto info = mo::MetaObjectFactory::instance()->getObjectInfo("derived_signals");
+    auto info = mo::MetaObjectFactory::instance().getObjectInfo("derived_signals");
     info->Print();
 }
 
@@ -180,7 +180,7 @@ BOOST_AUTO_TEST_CASE(call_overloaded_slot)
 
 BOOST_AUTO_TEST_CASE(interface_id_check)
 {
-    auto constructor = mo::MetaObjectFactory::instance()->getConstructor("derived1");
+    auto constructor = mo::MetaObjectFactory::instance().getConstructor("derived1");
     BOOST_REQUIRE(constructor);
     BOOST_REQUIRE_EQUAL(constructor->GetInterfaceId(), 1);
 }
@@ -188,7 +188,7 @@ BOOST_AUTO_TEST_CASE(interface_id_check)
 BOOST_AUTO_TEST_CASE(diamond)
 {
     // auto obj = rcc::shared_ptr<multi_derive>::create();
-    auto constructor = mo::MetaObjectFactory::instance()->getConstructor("multi_derive");
+    auto constructor = mo::MetaObjectFactory::instance().getConstructor("multi_derive");
     BOOST_REQUIRE(constructor);
     auto info = constructor->GetObjectInfo();
     std::cout << info->Print();

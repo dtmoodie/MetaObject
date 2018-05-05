@@ -376,7 +376,7 @@ namespace mo
     static ::mo::MetaObjectPolicy<TActual<TYPE>, __COUNTER__, void> TYPE##_policy;                                     \
     ::rcc::shared_ptr<TYPE> TYPE::create()                                                                             \
     {                                                                                                                  \
-        auto obj = ::mo::MetaObjectFactory::instance()->create(#TYPE);                                                 \
+        auto obj = ::mo::MetaObjectFactory::instance().create(#TYPE);                                                 \
         return ::rcc::shared_ptr<TYPE>(obj);                                                                           \
     }                                                                                                                  \
     REGISTERCLASS(TYPE, &TYPE##_info);

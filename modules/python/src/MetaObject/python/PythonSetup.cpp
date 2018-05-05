@@ -70,7 +70,7 @@ namespace mo
 
     std::vector<std::string> listConstructableObjects()
     {
-        auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
+        auto ctrs = mo::MetaObjectFactory::instance().getConstructors();
         std::vector<std::string> output;
         for (auto ctr : ctrs)
         {
@@ -85,7 +85,7 @@ namespace mo
 
     std::vector<IObjectInfo*> listObjectInfos()
     {
-        auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
+        auto ctrs = mo::MetaObjectFactory::instance().getConstructors();
         std::vector<IObjectInfo*> output;
         for (auto ctr : ctrs)
         {
@@ -176,7 +176,7 @@ namespace mo
         rcc::InheritanceGraph createGraph()
         {
             rcc::InheritanceGraph graph;
-            auto system = mo::MetaObjectFactory::instance()->getObjectSystem();
+            auto system = mo::MetaObjectFactory::instance().getObjectSystem();
             auto ifaces = system->GetInterfaces();
             // graph.interfaces.resize(ifaces.size());
             size_t i = 0;
@@ -207,7 +207,7 @@ namespace mo
         void registerObjects()
         {
             auto graph = createGraph();
-            auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
+            auto ctrs = mo::MetaObjectFactory::instance().getConstructors();
             auto funcs = interfaceSetupFunctions();
             std::map<uint32_t, std::function<void(std::vector<IObjectConstructor*>&)>> func_map;
             for (auto& func : funcs)
@@ -306,12 +306,13 @@ namespace mo
         struct LibGuard
         {
             LibGuard()
-                : m_system_table(SystemTable::instance()), m_allocator(mo::Allocator::createAllocator()),
-                  m_cpu_allocator(m_allocator), m_gpu_allocator(m_allocator), m_numpy_allocator(&m_cpu_allocator)
+                : m_system_table(SystemTable::instance()), m_factory(m_system_table.get()),
+                  m_allocator(mo::Allocator::createAllocator()), m_cpu_allocator(m_allocator),
+                  m_gpu_allocator(m_allocator), m_numpy_allocator(&m_cpu_allocator)
             {
                 m_system_table->allocator = m_allocator;
                 m_allocator->setDefaultAllocator(m_allocator);
-
+                m_factory.registerTranslationUnit();
                 auto ret = signal(SIGINT, sig_handler);
                 if (ret == SIG_ERR)
                 {
@@ -325,22 +326,20 @@ namespace mo
                 int devices = cv::cuda::getCudaEnabledDeviceCount();
                 MO_ASSERT(devices);
                 cv::cuda::GpuMat mat(10, 10, CV_32F);
-
-                mo::MetaObjectFactory::instance(m_system_table.get());
                 cv::Mat::setDefaultAllocator(&m_cpu_allocator);
                 cv::cuda::GpuMat::setDefaultAllocator(&m_gpu_allocator);
             }
             ~LibGuard() {}
 
             std::shared_ptr<SystemTable> m_system_table;
+            mo::MetaObjectFactory m_factory;
             std::shared_ptr<mo::Allocator> m_allocator;
             CvAllocatorProxy<CPU> m_cpu_allocator;
             CvAllocatorProxy<GPU> m_gpu_allocator;
-
             mo::NumpyAllocator m_numpy_allocator;
         };
 
-        void pythonSetup(const char* module_name_)
+        std::shared_ptr<SystemTable> pythonSetup(const char* module_name_)
         {
             boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
             std::string module_name(module_name_);
@@ -364,6 +363,7 @@ namespace mo
             boost::python::class_<LibGuard, boost::shared_ptr<LibGuard>, boost::noncopyable>("LibGuard",
                                                                                              boost::python::no_init);
             boost::python::scope().attr("__libguard") = libGuard;
+            return libGuard->m_system_table;
         }
     }
 }

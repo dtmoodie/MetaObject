@@ -6,11 +6,11 @@
 
 namespace mo
 {
-    bool loadPlugin(std::string str) { return mo::MetaObjectFactory::instance()->loadPlugin(str); }
+    bool loadPlugin(std::string str) { return mo::MetaObjectFactory::instance().loadPlugin(str); }
 
     int loadPluginsInternal(std::string dir)
     {
-        int nplugins = mo::MetaObjectFactory::instance()->loadPlugins(dir);
+        int nplugins = mo::MetaObjectFactory::instance().loadPlugins(dir);
         {
             auto module_name = python::getModuleName();
             boost::python::object plugins_module(boost::python::handle<>(
@@ -18,7 +18,7 @@ namespace mo
             boost::python::import(module_name.c_str()).attr("plugins") = plugins_module;
             // set the current scope to the new sub-module
             boost::python::scope plugins_scope = plugins_module;
-            auto plugin_names = mo::MetaObjectFactory::instance()->listLoadedPluginInfo();
+            auto plugin_names = mo::MetaObjectFactory::instance().listLoadedPluginInfo();
             for (auto& name : plugin_names)
             {
                 boost::shared_ptr<PluginInfo> plugin(new PluginInfo(name));
@@ -41,7 +41,7 @@ namespace mo
     std::vector<std::string> getPluginIncludeDirs(const PluginInfo& plugin)
     {
         std::vector<FileSystemUtils::Path>& paths =
-            mo::MetaObjectFactory::instance()->getObjectSystem()->GetIncludeDirList(plugin.m_id);
+            mo::MetaObjectFactory::instance().getObjectSystem()->GetIncludeDirList(plugin.m_id);
         std::vector<std::string> output;
         for (const auto& path : paths)
             output.push_back(path.m_string);
@@ -50,13 +50,13 @@ namespace mo
 
     void addIncludeDir(const PluginInfo& plugin, const std::string& str)
     {
-        mo::MetaObjectFactory::instance()->getObjectSystem()->AddIncludeDir(str.c_str(), plugin.m_id);
+        mo::MetaObjectFactory::instance().getObjectSystem()->AddIncludeDir(str.c_str(), plugin.m_id);
     }
 
     std::vector<std::string> getPluginLinkDirs(const PluginInfo& plugin)
     {
         std::vector<FileSystemUtils::Path>& paths =
-            mo::MetaObjectFactory::instance()->getObjectSystem()->GetLinkDirList(plugin.m_id);
+            mo::MetaObjectFactory::instance().getObjectSystem()->GetLinkDirList(plugin.m_id);
         std::vector<std::string> output;
         for (const auto& path : paths)
             output.push_back(path.m_string);
@@ -65,21 +65,21 @@ namespace mo
 
     void addLinkDir(const PluginInfo& plugin, const std::string& str)
     {
-        mo::MetaObjectFactory::instance()->getObjectSystem()->AddLibraryDir(str.c_str(), plugin.m_id);
+        mo::MetaObjectFactory::instance().getObjectSystem()->AddLibraryDir(str.c_str(), plugin.m_id);
     }
 
     std::string getCompileOptions(const PluginInfo& plugin)
     {
         return std::string(
-            mo::MetaObjectFactory::instance()->getObjectSystem()->GetAdditionalCompileOptions(plugin.m_id));
+            mo::MetaObjectFactory::instance().getObjectSystem()->GetAdditionalCompileOptions(plugin.m_id));
     }
 
     void addCompileOptions(const PluginInfo& plugin, const std::string& str)
     {
-        mo::MetaObjectFactory::instance()->getObjectSystem()->AppendAdditionalCompileOptions(str.c_str(), plugin.m_id);
+        mo::MetaObjectFactory::instance().getObjectSystem()->AppendAdditionalCompileOptions(str.c_str(), plugin.m_id);
     }
 
-    std::vector<std::string> listLoadedPlugins() { return mo::MetaObjectFactory::instance()->listLoadedPlugins(); }
+    std::vector<std::string> listLoadedPlugins() { return mo::MetaObjectFactory::instance().listLoadedPlugins(); }
 
     void setupPlugins(const std::string& module_name)
     {

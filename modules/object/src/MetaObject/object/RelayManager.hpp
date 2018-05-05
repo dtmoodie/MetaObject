@@ -1,4 +1,5 @@
 #pragma once
+#include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
 #include <memory>
@@ -27,7 +28,7 @@ namespace mo
       public:
         RelayManager();
         ~RelayManager();
-        static std::shared_ptr<RelayManager> instance();
+        static inline RelayManager* instance();
 
         std::shared_ptr<Connection> connect(ISlot* slot, const std::string& name, IMetaObject* obj = nullptr);
         std::shared_ptr<Connection> connect(ISignal* signal, const std::string& name, IMetaObject* obj = nullptr);
@@ -69,4 +70,5 @@ namespace mo
         impl* _pimpl;
         mutable std::mutex mtx;
     };
+    RelayManager* RelayManager::instance() { return singleton<RelayManager>(); }
 } // namespace Signals

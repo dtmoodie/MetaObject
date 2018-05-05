@@ -1,8 +1,17 @@
 #pragma once
+
 #include "MetaObject/detail/Export.hpp"
+#include "MetaObject/logging/logging.hpp"
+
 #include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
+
 #include <functional>
 #include <memory>
+#ifdef _MSC_VER
+#define MO_INLINE __forceinline
+#else
+#define MO_INLINE inline __attribute__((always_inline))
+#endif
 
 struct IRuntimeObjectSystem;
 struct IObjectInfo;
@@ -10,7 +19,7 @@ struct IObjectConstructor;
 struct SystemTable;
 
 namespace mo
-{    
+{
     class IMetaObject;
     template <class Sig>
     class TSlot;
@@ -44,12 +53,14 @@ namespace mo
     class MO_EXPORTS MetaObjectFactory
     {
       public:
-        IMetaObject* create(const char* type_name, int interface_id = -1);
+        MO_INLINE static MetaObjectFactory& instance();
+        MetaObjectFactory(SystemTable* system_table);
+        ~MetaObjectFactory();
+
+        IMetaObject* create(const char* type_name, int64_t interface_id = -1);
         template <class T>
         T* create(const char* type_name);
         IMetaObject* get(ObjectId id, const char* type_name);
-
-        static MetaObjectFactory* instance(SystemTable* system_table = nullptr);
 
         std::vector<std::string> listConstructableObjects(int interface_id = -1) const;
         std::string printAllObjectInfo(int64_t interface_id = -1) const;
@@ -69,17 +80,12 @@ namespace mo
             debug  // info + build info
         };
 
-        /*!
-             * \brief listLoadedPlugins with their load status
-             * \param verbosity
-             * \return
-             */
         std::vector<std::string> listLoadedPlugins(PluginVerbosity verbosity = brief) const;
         std::vector<PluginInfo> listLoadedPluginInfo() const;
 
         // This function is inlined to guarantee it exists in the calling translation unit, which
         // thus makes certain to load the correct PerModuleInterface instance
-        inline void registerTranslationUnit() { setupObjectConstructors(PerModuleInterface::GetInstance()); }
+        MO_INLINE void registerTranslationUnit();
         void setupObjectConstructors(IPerModuleInterface* pPerModuleInterface);
         IRuntimeObjectSystem* getObjectSystem();
 
@@ -93,36 +99,15 @@ namespace mo
         std::shared_ptr<Connection> connectConstructorAdded(TSlot<void(void)>* slot);
 
         template <class T>
-        std::vector<IObjectConstructor*> getConstructors()
-        {
-            return getConstructors(T::s_interfaceID);
-        }
+        std::vector<IObjectConstructor*> getConstructors();
 
         template <class T>
-        std::vector<typename T::InterfaceInfo*> getObjectInfos()
-        {
-            auto constructors = getConstructors<T>();
-            std::vector<typename T::InterfaceInfo*> output;
-            for (auto constructor : constructors)
-            {
-                typename T::InterfaceInfo* info =
-                    dynamic_cast<typename T::InterfaceInfo*>(constructor->GetObjectInfo());
-                if (info)
-                    output.push_back(info);
-            }
-            return output;
-        }
+        std::vector<typename T::InterfaceInfo*> getObjectInfos();
 
       private:
-        MetaObjectFactory(SystemTable* system_table);
-        ~MetaObjectFactory();
         struct impl;
-        impl* _pimpl;
+        std::unique_ptr<impl> _pimpl;
     };
 
-    template <class T>
-    T* MetaObjectFactory::create(const char* type_name)
-    {
-        return static_cast<T*>(create(type_name, T::s_interfaceID));
-    }
 } // namespace mo
+#include "MetaObjectFactory-inl.hpp"

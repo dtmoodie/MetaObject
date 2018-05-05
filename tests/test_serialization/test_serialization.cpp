@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE(serialize_manual_xml)
 {
     cb = new BuildCallback();
     mo::MetaParams::initialize();
-    MetaObjectFactory::instance()->getObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
+    MetaObjectFactory::instance().getObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
     rcc::shared_ptr<serializable_object> obj = serializable_object::create();
     {
         std::ofstream ofs("test.xml");

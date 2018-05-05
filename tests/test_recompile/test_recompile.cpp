@@ -54,19 +54,19 @@ BOOST_AUTO_TEST_CASE(test_recompile)
 {
     cb = new build_callback;
     MO_LOG(info) << "Current working directory " << boost::filesystem::current_path().string();
-    MetaObjectFactory::instance()->registerTranslationUnit();
+    MetaObjectFactory::instance().registerTranslationUnit();
 #ifdef _MSC_VER
-    BOOST_REQUIRE(MetaObjectFactory::instance()->loadPlugin("./test_recompile_objectd.dll"));
+    BOOST_REQUIRE(MetaObjectFactory::instance().loadPlugin("./test_recompile_objectd.dll"));
 #else
-    BOOST_REQUIRE(MetaObjectFactory::instance()->loadPlugin("./libtest_recompile_objectd.so"));
+    BOOST_REQUIRE(MetaObjectFactory::instance().loadPlugin("./libtest_recompile_objectd.so"));
 #endif
 
-    BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
+    BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance().getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_obj_swap)
 {
-    auto constructor = MetaObjectFactory::instance()->getObjectSystem()->GetObjectFactorySystem()->GetConstructor(
+    auto constructor = MetaObjectFactory::instance().getObjectSystem()->GetObjectFactorySystem()->GetConstructor(
         "test_meta_object_signals");
     auto obj = constructor->Construct();
     BOOST_REQUIRE(obj);
@@ -75,7 +75,7 @@ BOOST_AUTO_TEST_CASE(test_obj_swap)
     auto ptr = state->GetSharedPtr();
     rcc::shared_ptr<test_meta_object_signals> T_ptr(ptr);
     BOOST_REQUIRE(!T_ptr.empty());
-    BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
+    BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance().getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
     BOOST_REQUIRE(!T_ptr.empty());
     std::vector<SignalInfo*> signals;
     T_ptr->getSignalInfo(signals);
@@ -167,7 +167,7 @@ BOOST_AUTO_TEST_CASE(test_pointer_mechanics)
 BOOST_AUTO_TEST_CASE(test_creation_function)
 {
     auto obj = test_meta_object_signals::create();
-    BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
+    BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance().getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_reconnect_signals)
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(test_reconnect_signals)
     int value = 5;
     emitter->sig_test_int(value);
     BOOST_REQUIRE_EQUAL(receiver->call_count, value);
-    BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
+    BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance().getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
 
     emitter->sig_test_int(value);
     BOOST_REQUIRE_EQUAL(receiver->call_count, 10);
@@ -210,7 +210,7 @@ BOOST_AUTO_TEST_CASE(test_input_output_param)
     BOOST_REQUIRE(input->test_input);
     BOOST_REQUIRE(input->test_input_param.getInput(mo::OptionalTime_t()));
     BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
-    BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
+    BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance().getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
     BOOST_REQUIRE_EQUAL(input->param_update_call_count, 1);
     output->test_output_param.updateData(10);
     BOOST_REQUIRE_EQUAL(input->param_update_call_count, 2);
@@ -225,7 +225,7 @@ BOOST_AUTO_TEST_CASE(test_param_persistence_recompile)
     auto obj = test_meta_object_parameters::create();
     BOOST_REQUIRE_EQUAL(obj->test, 5);
     obj->test = 10;
-    BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
+    BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance().getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
     BOOST_REQUIRE_EQUAL(obj->test, 10);
 }
 
@@ -235,7 +235,7 @@ BOOST_AUTO_TEST_CASE(test_multiple_objects)
     auto obj2 = rcc::shared_ptr<test_meta_object_parameters>::create();
     obj1->test = 1;
     obj2->test = 2;
-    BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
+    BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance().getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
     BOOST_REQUIRE_EQUAL(obj1->test, 1);
     BOOST_REQUIRE_EQUAL(obj2->test, 2);
 }
@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE(test_cuda_recompile)
 {
     auto obj = rcc::shared_ptr<test_cuda_object>::create();
     obj->run_kernel();
-    BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
+    BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance().getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
     obj->run_kernel();
 }
 #endif
@@ -253,7 +253,7 @@ BOOST_AUTO_TEST_CASE(test_cuda_recompile)
 BOOST_AUTO_TEST_CASE(test_object_cleanup)
 {
     AUDynArray<IObjectConstructor*> constructors;
-    MetaObjectFactory::instance()->getObjectSystem()->GetObjectFactorySystem()->GetAll(constructors);
+    MetaObjectFactory::instance().getObjectSystem()->GetObjectFactorySystem()->GetAll(constructors);
     for (int i = 0; i < constructors.Size(); ++i) {
         BOOST_REQUIRE_EQUAL(constructors[i]->GetNumberConstructedObjects(), 0);
     }
