@@ -6,8 +6,6 @@
 #include "MetaObject/python/PythonSetup.hpp"
 #include "converters.hpp"
 
-#include "CerealPythonArchive.hpp"
-
 #include <boost/python.hpp>
 #include <boost/python/extract.hpp>
 

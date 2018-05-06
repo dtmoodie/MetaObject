@@ -257,6 +257,7 @@ namespace mo
             }
             registerInterfacesHelper(graph, func_map);
         }
+        void cvErrorHandler() {}
 
         void sig_handler(int s)
         {
@@ -305,11 +306,18 @@ namespace mo
 
         struct LibGuard
         {
+            enum AllocatorMode
+            {
+                DEFAULT,
+                POOLED
+            };
             LibGuard()
                 : m_system_table(SystemTable::instance()), m_factory(m_system_table.get()),
                   m_allocator(mo::Allocator::createAllocator()), m_cpu_allocator(m_allocator),
                   m_gpu_allocator(m_allocator), m_numpy_allocator(&m_cpu_allocator)
             {
+                m_default_opencv_allocator = cv::Mat::getStdAllocator();
+                m_default_opencv_gpu_allocator = cv::cuda::GpuMat::defaultAllocator();
                 m_system_table->allocator = m_allocator;
                 m_allocator->setDefaultAllocator(m_allocator);
                 m_factory.registerTranslationUnit();
@@ -326,9 +334,19 @@ namespace mo
                 int devices = cv::cuda::getCudaEnabledDeviceCount();
                 MO_ASSERT(devices);
                 cv::cuda::GpuMat mat(10, 10, CV_32F);
-                cv::Mat::setDefaultAllocator(&m_cpu_allocator);
+                cv::Mat::setDefaultAllocator(&m_numpy_allocator);
                 cv::cuda::GpuMat::setDefaultAllocator(&m_gpu_allocator);
             }
+
+            void setAllocator(AllocatorMode mode)
+            {
+                if (mode == DEFAULT)
+                {
+                    m_numpy_allocator.default_allocator = m_default_opencv_allocator;
+                    cv::cuda::GpuMat::setDefaultAllocator(m_default_opencv_gpu_allocator);
+                }
+            }
+
             ~LibGuard() {}
 
             std::shared_ptr<SystemTable> m_system_table;
@@ -337,6 +355,8 @@ namespace mo
             CvAllocatorProxy<CPU> m_cpu_allocator;
             CvAllocatorProxy<GPU> m_gpu_allocator;
             mo::NumpyAllocator m_numpy_allocator;
+            cv::MatAllocator* m_default_opencv_allocator = nullptr;
+            cv::cuda::GpuMat::Allocator* m_default_opencv_gpu_allocator = nullptr;
         };
 
         std::shared_ptr<SystemTable> pythonSetup(const char* module_name_)
@@ -360,8 +380,13 @@ namespace mo
             setupPlugins(module_name);
             mo::python::setup = true;
 
-            boost::python::class_<LibGuard, boost::shared_ptr<LibGuard>, boost::noncopyable>("LibGuard",
-                                                                                             boost::python::no_init);
+            boost::python::enum_<LibGuard::AllocatorMode>("AllocatorMode")
+                .value("Default", LibGuard::DEFAULT)
+                .value("Managed", LibGuard::POOLED);
+
+            boost::python::class_<LibGuard, boost::shared_ptr<LibGuard>, boost::noncopyable> libguardobj(
+                "LibGuard", boost::python::no_init);
+            libguardobj.def("setAllocator", &LibGuard::setAllocator);
             boost::python::scope().attr("__libguard") = libGuard;
             return libGuard->m_system_table;
         }
