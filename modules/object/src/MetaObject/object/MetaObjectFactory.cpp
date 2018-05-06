@@ -376,7 +376,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
     std::string base = path.stem().replace_extension("").string();
     mo::setThisThreadName(base.substr(3));
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
-    void* handle = dlopen(fullPluginPath.c_str(), RTLD_LAZY | RTLD_LOCAL);
+    void* handle = dlopen(fullPluginPath.c_str(), RTLD_NOW | RTLD_GLOBAL);
     // Fallback on old module
     if (handle == nullptr)
     {
