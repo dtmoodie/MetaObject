@@ -70,6 +70,9 @@ namespace mo
 struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
 {
   public:
+      SystemTable(const SystemTable& other) = delete;
+      SystemTable& operator=(const SystemTable& other) = delete;
+
     static std::shared_ptr<SystemTable> instance();
     static void setInstance(const std::shared_ptr<SystemTable>& table);
     static bool checkInstance();
