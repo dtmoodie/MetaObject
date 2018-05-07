@@ -1,5 +1,6 @@
 #include <MetaObject/params/TMultiInput.hpp>
 #include <MetaObject/params/TParamPtr.hpp>
+#include <iostream>
 
 void printInputs(const std::tuple<const int*, const float*, const double*>& inputs)
 {
