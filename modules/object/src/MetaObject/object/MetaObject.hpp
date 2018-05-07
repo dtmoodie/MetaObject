@@ -19,6 +19,7 @@ namespace mo
         virtual void setContext(const ContextPtr_t& ctx, bool overwrite = false) override;
         virtual ContextPtr_t getContext() override;
         virtual int setupSignals(RelayManager* mgr) override;
+        RelayManager* getRelayManager();
         virtual int setupVariableManager(IVariableManager* mgr) override;
         virtual int removeVariableManager(IVariableManager* mgr) override;
         

@@ -276,6 +276,11 @@ namespace mo
         return count;
     }
 
+    RelayManager* MetaObject::getRelayManager()
+    {
+        return _sig_manager;
+    }
+
     int IMetaObject::setupVariableManager(IVariableManager* /*manager*/) { return 0; }
 
     int MetaObject::setupVariableManager(IVariableManager* manager)
@@ -1114,6 +1119,15 @@ namespace mo
     {
         _pimpl->_signals[name][sig->getSignature()] = sig;
         sig->setParent(this);
+        if (_sig_manager)
+        {
+            auto Connection = _sig_manager->connect(sig, name, this);
+            ConnectionInfo info;
+            info.signal_name = name;
+            info.signature = sig->getSignature();
+            info.connection = Connection;
+            _pimpl->_connections.push_back(info);
+        }
     }
 
     std::vector<std::pair<ISignal*, std::string>> MetaObject::getSignals() const
