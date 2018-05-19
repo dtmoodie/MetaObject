@@ -8,48 +8,40 @@ namespace mo
     template <class T, int N>
     struct MO_EXPORTS SmallVec
     {
-        SmallVec(){}
+        SmallVec() {}
 
-        SmallVec(const T& obj)
-        {
-            assign(&obj, &obj + 1);
-        }
+        SmallVec(const T& obj) { assign(&obj, &obj + 1); }
 
-        SmallVec(const SmallVec& other)
-        {
-            assign(other.begin(), other.end());
-        }
+        SmallVec(const SmallVec& other) { assign(other.begin(), other.end()); }
 
-        template<int N1>
+        template <int N1>
         SmallVec(const SmallVec<T, N1>& other)
         {
             assign(other.begin(), other.end());
         }
 
-        template<int N1>
+        template <int N1>
         SmallVec(SmallVec<T, N1>&& other)
         {
-            if(other.m_data != other.m_ptr)
+            if (other.m_data != other.m_ptr)
             {
                 m_ptr = other.m_ptr;
                 m_size = other.m_size;
                 other.m_ptr = other.m_data;
                 other.m_size = 0;
-            }else
+            }
+            else
             {
                 assign(other.begin(), other.end());
             }
             m_owns_data = true;
         }
 
-        SmallVec(const std::vector<T>& vec)
-        {
-            assign(vec.begin(), vec.end());
-        }
+        SmallVec(const std::vector<T>& vec) { assign(vec.begin(), vec.end()); }
 
         ~SmallVec()
         {
-            if(m_ptr != m_data && m_owns_data)
+            if (m_ptr != m_data && m_owns_data)
             {
                 delete[] m_ptr;
                 m_ptr = nullptr;
@@ -62,7 +54,7 @@ namespace mo
             return *this;
         }
 
-        template<int N1>
+        template <int N1>
         SmallVec<T, N>& operator=(const SmallVec<T, N1>& vec)
         {
             assign(vec.begin(), vec.end());
@@ -75,17 +67,23 @@ namespace mo
             return *this;
         }
 
+        SmallVec<T, N>& operator=(const T& obj)
+        {
+            assign(&obj, &obj + 1);
+            return *this;
+        }
 
-        template<class T1, int N1>
+        template <class T1, int N1>
         SmallVec<T, N>& operator=(SmallVec<T1, N1>&& vec)
         {
-            if(vec.m_data != vec.m_ptr)
+            if (vec.m_data != vec.m_ptr)
             {
                 m_ptr = vec.m_ptr;
                 m_size = vec.m_size;
                 vec.m_ptr = vec.m_data;
                 vec.m_size = 0;
-            }else
+            }
+            else
             {
                 assign(vec.begin(), vec.end());
             }
@@ -94,37 +92,39 @@ namespace mo
 
         void resize(unsigned char size)
         {
-            if(size > N)
+            if (size > N)
             {
-                if(m_ptr != m_data)
+                if (m_ptr != m_data)
                 {
                     T* current = m_ptr;
                     m_ptr = static_cast<T*>(std::malloc(size * sizeof(T)));
-                    if(m_size)
+                    if (m_size)
                         std::memcpy(m_ptr, current, m_size * sizeof(T));
                     m_size = size;
-                    if(m_owns_data)
+                    if (m_owns_data)
                     {
                         delete[] current;
                     }
                     m_owns_data = true;
-                }else
+                }
+                else
                 {
                     m_ptr = static_cast<T*>(std::malloc(size * sizeof(T)));
-                    if(m_size)
+                    if (m_size)
                     {
                         std::memcpy(m_ptr, m_data, m_size * sizeof(T));
                     }
                     m_size = size;
                     m_owns_data = true;
                 }
-            }else
+            }
+            else
             {
-                if(m_ptr != m_data)
+                if (m_ptr != m_data)
                 {
-                    if(m_size)
+                    if (m_size)
                         std::memcpy(m_data, m_ptr, std::min<int>(m_size, N) * sizeof(N));
-                    if(m_owns_data)
+                    if (m_owns_data)
                         delete[] m_ptr;
                     m_ptr = m_data;
                 }
@@ -140,7 +140,7 @@ namespace mo
 
         void wrap(T* begin, T* end)
         {
-            if(m_ptr != m_data && m_owns_data)
+            if (m_ptr != m_data && m_owns_data)
                 delete[] m_ptr;
             m_ptr = begin;
             m_size = end - begin;
@@ -177,33 +177,35 @@ namespace mo
             }
         }
 
-        T* begin(){return m_ptr;}
-        T* end(){return m_ptr + m_size;}
-        const T* begin() const{return m_ptr;}
-        const T* end() const{return m_ptr + m_size;}
-        unsigned char size() const{return m_size;}
+        T* begin() { return m_ptr; }
+        T* end() { return m_ptr + m_size; }
+        const T* begin() const { return m_ptr; }
+        const T* end() const { return m_ptr + m_size; }
+        unsigned char size() const { return m_size; }
         const T& operator[](int i) const
         {
-            if(i >= 0)
+            if (i >= 0)
             {
                 return begin()[i];
-            }else
+            }
+            else
             {
                 return end()[i];
             }
         }
-        T& operator[](int i )
+        T& operator[](int i)
         {
-            if(i >= 0)
+            if (i >= 0)
             {
                 return begin()[i];
-            }else
+            }
+            else
             {
                 return end()[i];
             }
         }
 
-        template<class AR>
+        template <class AR>
         void load(AR& ar)
         {
             size_t size;
@@ -215,7 +217,7 @@ namespace mo
             }
         }
 
-        template<class AR>
+        template <class AR>
         void save(AR& ar) const
         {
             if (m_size)
@@ -227,14 +229,15 @@ namespace mo
                 }
             }
         }
-    private:
+
+      private:
         T* m_ptr = m_data;
         unsigned char m_size = 0;
         bool m_owns_data = true;
         T m_data[N];
     };
 
-    template<class T, int N>
+    template <class T, int N>
     std::ostream& operator<<(std::ostream& os, const SmallVec<T, N>& vec)
     {
         const size_t size = vec.size();
