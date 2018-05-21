@@ -22,6 +22,8 @@ namespace boost
 #include <MetaObject/object/IMetaObjectInfo.hpp>
 #include <MetaObject/params/ParamInfo.hpp>
 #include <MetaObject/python/DataConverter.hpp>
+#include <MetaObject/python/SlotInvoker.hpp>
+#include <MetaObject/signals/SlotInfo.hpp>
 
 #include <Python.h>
 #include <RuntimeObjectSystem/ObjectInterface.h>
@@ -222,6 +224,39 @@ namespace mo
                     ("set_" + param_info->name).c_str(),
                     std::function<bool(T&, const boost::python::object&)>(std::bind(
                         setParamHelper<T>, setter, param_info->name, std::placeholders::_1, std::placeholders::_2)));
+            }
+        }
+    }
+
+    template <class R, class T, class... Args, int... Is>
+    std::function<R(T&, const Args&...)>
+    slotBind(R (*p)(const std::string&, T&, const Args&...), const std::string& slot_name, int_sequence<Is...>)
+    {
+        return std::bind(p, slot_name, placeholder_template<Is>{}...);
+    }
+
+    template <class R, class T, int... Is>
+    std::function<R(T&)> slotBind(R (*p)(const std::string&, T&), const std::string& slot_name, int_sequence<1>)
+    {
+        return std::bind(p, slot_name, std::placeholders::_1);
+    }
+
+    template <class T, class R, class... Args, class BP>
+    void addSlotAccessors(BP& bpobj, IMetaObjectInfo* minfo)
+    {
+        std::vector<SlotInfo*> slot_infos = minfo->getSlotInfo();
+        for (SlotInfo* slot_info : slot_infos)
+        {
+            if (slot_info->signature == TypeInfo(typeid(R(Args...))))
+            {
+                /*bpobj.def(slot_info->name.c_str(),
+                          std::function<void(const T&, Args...)>(std::bind(
+                              mo::python::SlotInvoker<T, void(Args...)>::invoke, slot_info->name,
+                   std::placeholders::_1)));*/
+                bpobj.def(slot_info->name.c_str(),
+                          std::function<R(T&, const Args&...)>(slotBind(&mo::python::SlotInvoker<T, R(Args...)>::invoke,
+                                                                        slot_info->name,
+                                                                        make_int_sequence<sizeof...(Args) + 1>{})));
             }
         }
     }

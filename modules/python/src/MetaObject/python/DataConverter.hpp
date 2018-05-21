@@ -48,7 +48,7 @@ namespace mo
                     if (auto typed = dynamic_cast<mo::ITAccessibleParam<T>*>(param))
                     {
                         auto token = typed->access();
-                        mo::python::convertFromPython<T>(obj, token());
+                        mo::python::convertFromPython(obj, token());
                         return true;
                     }
                 }
