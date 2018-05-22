@@ -4,16 +4,32 @@
 
 namespace mo
 {
-    struct CPU;
-    struct CUDA;
+    struct MO_EXPORTS CPU
+    {
+        static void allocate(unsigned char** data, size_t size);
+        static void deallocate(unsigned char* data);
+    };
+
+    struct MO_EXPORTS CUDA
+    {
+        static void allocate(unsigned char** data, size_t size);
+        static void deallocate(unsigned char* data);
+    };
+
     using GPU = CUDA;
 
     template <class XPU>
     class MO_EXPORTS Memory
     {
       public:
-        static void allocate(unsigned char** data, size_t size);
-        static void deallocate(unsigned char* data);
+        static void allocate(unsigned char** data, size_t size)
+        {
+            XPU::allocate(data, size);
+        }
+        static void deallocate(unsigned char* data)
+        {
+            XPU::deallocate(data);
+        }
     };
 
     template <class XPU>
@@ -37,7 +53,7 @@ namespace mo
         std::unordered_map<unsigned char*, unsigned char*> m_allocated_blocks;
     };
 
-    using GPUMemory = Memory<GPU>;
+    using GPUMemory = Memory<CUDA>;
     using CPUMemory = Memory<CPU>;
     typedef MemoryBlock<GPU> GpuMemoryBlock;
     typedef MemoryBlock<CPU> CpuMemoryBlock;

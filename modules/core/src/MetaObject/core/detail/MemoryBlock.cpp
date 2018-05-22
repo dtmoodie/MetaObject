@@ -12,11 +12,7 @@
 namespace mo
 {
 
-    template <>
-    class Memory<GPU>
-    {
-      public:
-        static void allocate(unsigned char** data, size_t size)
+        void CUDA::allocate(unsigned char** data, size_t size)
         {
 #ifdef HAVE_CUDA
             MO_CUDA_ERROR_CHECK(cudaMalloc(data, size), " unable to allocate " << size << " bytes");
@@ -24,7 +20,8 @@ namespace mo
             THROW(warning) << "Not built with CUDA";
 #endif
         }
-        static void deallocate(unsigned char* data)
+
+        void CUDA::deallocate(unsigned char* data)
         {
 #ifdef HAVE_CUDA
             MO_CUDA_ERROR_CHECK(cudaFree(data), "");
@@ -32,13 +29,8 @@ namespace mo
             THROW(warning) << "Not built with CUDA";
 #endif
         }
-    };
 
-    template <>
-    class Memory<CPU>
-    {
-      public:
-        static void allocate(unsigned char** data, size_t size)
+        void CPU::allocate(unsigned char** data, size_t size)
         {
 #ifdef HAVE_CUDA
             MO_CUDA_ERROR_CHECK(cudaMallocHost(data, size), "unable to allocate " << size << " bytes");
@@ -47,7 +39,8 @@ namespace mo
             MO_ASSERT(*data) << " unable to allocate " << size << " bytes";
 #endif
         }
-        static void deallocate(unsigned char* data)
+
+        void CPU::deallocate(unsigned char* data)
         {
 #ifdef HAVE_CUDA
             MO_CUDA_ERROR_CHECK(cudaFreeHost(data), "");
@@ -55,7 +48,6 @@ namespace mo
             free(data);
 #endif
         }
-    };
 
     template <class XPU>
     MemoryBlock<XPU>::MemoryBlock(size_t size_)
