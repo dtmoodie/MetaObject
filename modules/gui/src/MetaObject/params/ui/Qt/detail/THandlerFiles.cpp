@@ -1,4 +1,3 @@
-#ifdef HAVE_QT5
 #include "MetaObject/types/file_types.hpp"
 #include "MetaObject/params/ui/Qt/POD.hpp"
 #include "qfiledialog.h"
@@ -127,5 +126,3 @@ std::vector<QWidget*> THandler<WriteFile, void>::getUiWidgets(QWidget* parent_)
     output.push_back(btn);
     return output;
 }
-
-#endif

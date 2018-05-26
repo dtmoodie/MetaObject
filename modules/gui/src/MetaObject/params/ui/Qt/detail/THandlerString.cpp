@@ -1,4 +1,3 @@
-#ifdef HAVE_QT5
 #include "MetaObject/types/file_types.hpp"
 #include "MetaObject/params/ui/Qt/POD.hpp"
 #include "qlineedit.h"
@@ -34,4 +33,3 @@ std::vector<QWidget*> THandler<std::string, void>::getUiWidgets(QWidget* parent)
     output.push_back(lineEdit);
     return output;
 }
-#endif

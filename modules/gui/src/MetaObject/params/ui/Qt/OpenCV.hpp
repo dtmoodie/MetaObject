@@ -1,5 +1,6 @@
 #pragma once
-#if defined(HAVE_QT5) && defined(HAVE_OPENCV)
+#include "MetaObject/core/metaobject_config.hpp"
+#if MO_HAVE_OPENCV
 #include "POD.hpp"
 
 #include <opencv2/core/matx.hpp>

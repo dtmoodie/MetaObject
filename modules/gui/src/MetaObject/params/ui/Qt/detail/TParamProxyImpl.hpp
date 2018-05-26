@@ -1,5 +1,4 @@
 #pragma once
-#ifdef HAVE_QT5
 #include "qgridlayout.h"
 #include "qlabel.h"
 #include "qpushbutton.h"
@@ -120,4 +119,4 @@ namespace mo
         }
     }
 }
-#endif // HAVE_QT5
+

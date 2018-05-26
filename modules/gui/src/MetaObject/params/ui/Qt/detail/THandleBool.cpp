@@ -1,4 +1,3 @@
-#ifdef HAVE_QT5
 #include "MetaObject/params/ui/Qt/POD.hpp"
 #include "MetaObject/params/ui/Qt/SignalProxy.hpp"
 #include "qcheckbox.h"
@@ -34,5 +33,3 @@ std::vector<QWidget*> THandler<bool, void>::getUiWidgets(QWidget* parent_)
     output.push_back(chkBox);
     return output;
 }
-
-#endif

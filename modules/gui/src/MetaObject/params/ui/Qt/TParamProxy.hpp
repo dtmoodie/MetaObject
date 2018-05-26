@@ -1,5 +1,4 @@
 #pragma once
-#ifdef HAVE_QT5
 #include "IParamProxy.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
 #include "MetaObject/params/ITAccessibleParam.hpp"
@@ -166,4 +165,4 @@ namespace mo
     MO_UI_QT_PARAMTERPROXY_METAParam(__COUNTER__)
 }
 //#include "detail/TParamProxyImpl.hpp"
-#endif // HAVE_QT5
+

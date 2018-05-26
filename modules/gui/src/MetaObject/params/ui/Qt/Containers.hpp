@@ -1,5 +1,4 @@
 #pragma once
-#ifdef HAVE_QT5
 #include "IHandler.hpp"
 #include "POD.hpp"
 #include <boost/thread/recursive_mutex.hpp>
@@ -96,4 +95,3 @@ namespace mo
         }
     }
 }
-#endif

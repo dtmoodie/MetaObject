@@ -1,5 +1,4 @@
 #pragma once
-#ifdef HAVE_QT5
 #include "IHandler.hpp"
 #include "IParamProxy.hpp"
 #include "MetaObject/core/Demangle.hpp"
@@ -51,4 +50,4 @@ namespace mo
         }
     }
 }
-#endif // HAVE_QT5
+

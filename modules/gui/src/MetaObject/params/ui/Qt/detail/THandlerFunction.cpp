@@ -1,4 +1,3 @@
-#ifdef HAVE_QT5
 #include "MetaObject/types/file_types.hpp"
 #include "MetaObject/params/ui/Qt/POD.hpp"
 #include "qpushbutton.h"
@@ -32,5 +31,3 @@ std::vector<QWidget*> THandler<std::function<void(void)>, void>::getUiWidgets(QW
     output.push_back(btn);
     return output;
 }
-
-#endif

@@ -1,5 +1,4 @@
 #pragma once
-#ifdef HAVE_QT5
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/params/ui/Qt/SignalProxy.hpp"
 #include "THandler.hpp"
@@ -223,4 +222,3 @@ namespace mo
         }
     }
 }
-#endif
