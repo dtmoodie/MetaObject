@@ -844,7 +844,7 @@ namespace mo
         {
             if (param_.second == param.get())
             {
-                MO_LOG(debug) << "Trying to add a Param a second time";
+                MO_LOG(debug) << "Trying to add a param a second time";
                 return param.get();
             }
         }

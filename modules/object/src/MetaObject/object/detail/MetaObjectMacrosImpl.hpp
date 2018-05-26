@@ -24,7 +24,7 @@ namespace mo
     template <int N>                                                                                                   \
     static void _list_signal_info(std::vector<mo::SignalInfo*>& info, mo::_counter_<N> dummy)                          \
     {                                                                                                                  \
-        return _list_signal_info(info, --dummy);                                                                       \
+        _list_signal_info(info, --dummy);                                                                              \
     }                                                                                                                  \
     static void _list_signal_info(std::vector<mo::SignalInfo*>& info, mo::_counter_<N_> dummy)                         \
     {                                                                                                                  \
@@ -74,7 +74,7 @@ namespace mo
     template <int N>                                                                                                   \
     static void _list_slots(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy)                                  \
     {                                                                                                                  \
-        return _list_slots(info, --dummy);                                                                             \
+        _list_slots(info, --dummy);                                                                                    \
     }                                                                                                                  \
     static void _list_slots(std::vector<mo::SlotInfo*>& info, mo::_counter_<N_> dummy)                                 \
     {                                                                                                                  \
