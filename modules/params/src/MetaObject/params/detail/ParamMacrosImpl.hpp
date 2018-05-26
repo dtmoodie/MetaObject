@@ -37,11 +37,9 @@ namespace mo
     {                                                                                                                  \
         if (firstInit)                                                                                                 \
             name = __VA_ARGS__;                                                                                        \
-        name##_param.setMtx(&(this->getMutex()));                                                                      \
-        name##_param.updatePtr(&name);                                                                                 \
-        name##_param.setContext(this->getContext().get());                                                             \
         name##_param.setName(#name);                                                                                   \
-        this->addParam(&name##_param);                                                                                 \
+        addParam(&name##_param);                                                                                       \
+        name##_param.updatePtr(&name);                                                                                 \
         _init_params(firstInit, --dummy);                                                                              \
     }
 
@@ -56,11 +54,9 @@ namespace mo
 #define INIT_(name, N)                                                                                                 \
     void _init_params(bool firstInit, mo::_counter_<N> dummy)                                                          \
     {                                                                                                                  \
-        name##_param.setMtx(_mtx);                                                                                     \
-        name##_param.updatePtr(&name);                                                                                 \
-        name##_param.setContext(_ctx.get());                                                                           \
         name##_param.setName(#name);                                                                                   \
-        this->addParam(&name##_param);                                                                                 \
+        addParam(&name##_param);                                                                                       \
+        name##_param.updatePtr(&name);                                                                                 \
         _init_params(firstInit, --dummy);                                                                              \
     }
 
@@ -91,11 +87,9 @@ namespace mo
         {                                                                                                              \
             name.setValue(ENUM_EXPAND(__VA_ARGS__));                                                                   \
         }                                                                                                              \
-        name##_param.setMtx(&getMutex());                                                                              \
-        name##_param.updatePtr(&name);                                                                                 \
-        name##_param.setContext(getContext().get());                                                                   \
         name##_param.setName(#name);                                                                                   \
         addParam(&name##_param);                                                                                       \
+        name##_param.updatePtr(&name);                                                                                 \
         _init_params(firstInit, --dummy);                                                                              \
     }                                                                                                                  \
     static void _list_param_info(std::vector<mo::ParamInfo*>& info, mo::_counter_<N> dummy)                            \
@@ -109,11 +103,9 @@ namespace mo
 #define OUTPUT_(type_, name, init, N)                                                                                  \
     void _init_params(bool firstInit, mo::_counter_<N> dummy)                                                          \
     {                                                                                                                  \
-        name##_param.setMtx(&getMutex());                                                                              \
-        name##_param.setContext(getContext().get());                                                                   \
         name##_param.setName(#name);                                                                                   \
-        name##_param.updatePtr(&name);                                                                                 \
         addParam(&name##_param);                                                                                       \
+        name##_param.updatePtr(&name);                                                                                 \
         _init_params(firstInit, --dummy);                                                                              \
     }                                                                                                                  \
     static void _list_param_info(std::vector<mo::ParamInfo*>& info, mo::_counter_<N> dummy)                            \
@@ -153,12 +145,10 @@ namespace mo
     {                                                                                                                  \
         if (firstInit)                                                                                                 \
             name = init;                                                                                               \
-        name##_param.setMtx(&getMutex());                                                                              \
-        name##_param.updatePtr(&name);                                                                                 \
-        name##_param.setContext(getContext().get());                                                                   \
         name##_param.setName(#name);                                                                                   \
-        name##_param.setFlags(mo::ParamFlags::State_e);                                                                \
         addParam(&name##_param);                                                                                       \
+        name##_param.updatePtr(&name);                                                                                 \
+        name##_param.setFlags(mo::ParamFlags::State_e);                                                                \
         _init_params(firstInit, --dummy);                                                                              \
     }                                                                                                                  \
     static void _list_param_info(std::vector<mo::ParamInfo*>& info, mo::_counter_<N> dummy)                            \
@@ -180,10 +170,9 @@ namespace mo
 #define INPUT_PARAM_(type_, name, init, N)                                                                             \
     void _init_params(bool firstInit, mo::_counter_<N> dummy)                                                          \
     {                                                                                                                  \
-        name##_param.setMtx(_mtx);                                                                                     \
-        name##_param.SetUserDataPtr(&name);                                                                            \
         name##_param.setName(#name);                                                                                   \
         addParam(&name##_param);                                                                                       \
+        name##_param.SetUserDataPtr(&name);                                                                            \
         _init_params(firstInit, --dummy);                                                                              \
     }                                                                                                                  \
     static void _list_param_info(std::vector<mo::ParamInfo*>& info, mo::_counter_<N> dummy)                            \

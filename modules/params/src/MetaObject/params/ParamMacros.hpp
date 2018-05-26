@@ -24,10 +24,9 @@
     mo::TInputParamPtr<mo::argument_type<void(type_)>::type> name##_param;                                             \
     void _init_params(bool firstInit, mo::_counter_<__COUNTER__> dummy)                                                \
     {                                                                                                                  \
-        name##_param.setMtx(&getMutex());                                                                              \
-        name##_param.setUserDataPtr(&name);                                                                            \
         name##_param.setName(#name);                                                                                   \
         addParam(&name##_param);                                                                                       \
+        name##_param.setUserDataPtr(&name);                                                                            \
         _init_params(firstInit, --dummy);                                                                              \
     }                                                                                                                  \
     static void _list_param_info(std::vector<mo::ParamInfo*>& info, mo::_counter_<__COUNTER__> dummy)                  \
