@@ -35,6 +35,8 @@ set(MO_HAVE_OPENCV 0 CACHE BOOL INTERNAL FORCE)
 set(MO_HAVE_CUDA 0 CACHE BOOL INTERNAL FORCE)
 set(MO_HAVE_CEREAL 0 CACHE BOOL INTERNAL FORCE)
 set(MO_HAVE_PYTHON 0 CACHE BOOL INTERNAL FORCE)
+set(MO_HAVE_QT 0 CACHE BOOL INTERNAL FORCE)
+set(MO_HAVE_WT 0 CACHE BOOL INTERNAL FORCE)
 
 include(cmake/metaobject_dependencies.cmake)
 
@@ -197,18 +199,6 @@ endif()
 file(COPY "cmake" DESTINATION ${PROJECT_BINARY_DIR})
 
 export(PACKAGE MetaObject)
-
-if(Qt5_FOUND)
-    set(MO_QT5 ON)
-else(Qt5_FOUND)
-    set(MO_QT5 OFF)
-endif(Qt5_FOUND)
-
-if(Wt_FOUND AND WITH_WT)
-    set(MO_WT ON)
-else(Wt_FOUND AND WITH_WT)
-    set(MO_WT OFF)
-endif(Wt_FOUND AND WITH_WT)
 
 install(DIRECTORY dependencies/cereal/include/
     DESTINATION include
