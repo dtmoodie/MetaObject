@@ -7,6 +7,7 @@
 #include "nvToolsExt.h"
 #include "nvToolsExtCuda.h"
 #endif
+
 #ifdef HAVE_CUDA
 #include "cuda.h"
 #ifdef HAVE_OPENCV
@@ -62,82 +63,6 @@ void mo::setThreadName(const char* name)
     }
 }
 
-#ifdef RMT_BUILTIN
-void initRemotery()
-{
-    /*if(rmt)
-        return;
-    rmt_CreateGlobalInstance(&rmt);
-    CUcontext ctx;
-    cuCtxGetCurrent(&ctx);
-    rmtCUDABind bind;
-    bind.context = ctx;
-    bind.CtxSetCurrent = (void*)&cuCtxSetCurrent;
-    bind.CtxGetCurrent = (void*)&cuCtxGetCurrent;
-    bind.EventCreate = (void*)&cuEventCreate;
-    bind.EventDestroy = (void*)&cuEventDestroy;
-    bind.EventRecord = (void*)&cuEventRecord;
-    bind.EventQuery = (void*)&cuEventQuery;
-    bind.EventElapsedTime = (void*)&cuEventElapsedTime;
-    rmt_BindCUDA(&bind);
-    rmt_push_cpu = &_rmt_BeginCPUSample;
-    rmt_pop_cpu = &_rmt_EndCPUSample;
-    rmt_push_gpu = &_rmt_BeginCUDASample;
-    rmt_pop_gpu = &_rmt_EndCUDASample;
-    rmt_set_thread = &_rmt_SetCurrentThreadName;*/
-}
-
-#else
-void initRemotery()
-{
-    if (rmt_push_cpu && rmt_pop_cpu)
-        return;
-#ifdef _DEBUG
-    HMODULE handle = LoadLibrary("remoteryd.dll");
-#else
-    HMODULE handle = LoadLibrary("remotery.dll");
-#endif
-    if (handle)
-    {
-        MO_LOG(info) << "Loaded remotery library for profiling";
-        typedef void (*rmt_init)(Remotery**);
-        rmt_init init = (rmt_init)GetProcAddress(handle, "_rmt_CreateGlobalInstance");
-        if (init)
-        {
-            init(&rmt);
-#ifdef HAVE_CUDA
-            typedef void (*rmt_cuda_init)(const rmtCUDABind*);
-            rmt_cuda_init cuda_init = (rmt_cuda_init)(GetProcAddress(handle, "_rmt_BindCUDA"));
-            if (cuda_init)
-            {
-                CUcontext ctx;
-                cuCtxGetCurrent(&ctx);
-                rmtCUDABind bind;
-                bind.context = ctx;
-                bind.CtxSetCurrent = (void*)&cuCtxSetCurrent;
-                bind.CtxGetCurrent = (void*)&cuCtxGetCurrent;
-                bind.EventCreate = (void*)&cuEventCreate;
-                bind.EventDestroy = (void*)&cuEventDestroy;
-                bind.EventRecord = (void*)&cuEventRecord;
-                bind.EventQuery = (void*)&cuEventQuery;
-                bind.EventElapsedTime = (void*)&cuEventElapsedTime;
-                cuda_init(&bind);
-            }
-            rmt_push_cpu = (rmt_push_cpu_f)GetProcAddress(handle, "_rmt_BeginCPUSample");
-            rmt_pop_cpu = (rmt_pop_cpu_f)GetProcAddress(handle, "_rmt_EndCPUSample");
-            rmt_push_gpu = (rmt_push_cuda_f)GetProcAddress(handle, "_rmt_BeginCUDASample");
-            rmt_pop_gpu = (rmt_pop_cuda_f)GetProcAddress(handle, "_rmt_EndCUDASample");
-            rmt_set_thread = (rmt_set_thread_name_f)GetProcAddress(handle, "_rmt_SetCurrentThreadName");
-#endif
-        }
-    }
-    else
-    {
-        MO_LOG(info) << "No remotery library found";
-    }
-}
-#endif
-
 void initNvtx()
 {
     if (nvtx_push && nvtx_pop)
@@ -173,19 +98,15 @@ void initNvtx()
 
 void mo::initProfiling()
 {
-#ifndef PROFILING_NONE
     initNvtx();
-    initRemotery();
-#endif
 }
-void mo::pushCpu(const char* name, unsigned int* rmt_hash)
+
+void mo::pushCpu(const char* name)
 {
     if (nvtx_push)
-        (*nvtx_push)(name);
-    /*if (rmt && rmt_push_cpu)
     {
-        rmt_push_cpu(name, rmt_hash);
-    }*/
+        (*nvtx_push)(name);
+    }
 }
 
 void mo::popCpu()
@@ -194,11 +115,8 @@ void mo::popCpu()
     {
         (*nvtx_pop)();
     }
-    /*if (rmt && rmt_pop_cpu)
-    {
-        rmt_pop_cpu();
-    }*/
 }
+
 void mo::setStreamName(const char* name, const cudaStream_t stream)
 {
     if (nvtx_name_stream)
@@ -207,27 +125,22 @@ void mo::setStreamName(const char* name, const cudaStream_t stream)
     }
 }
 
-scoped_profile::scoped_profile(std::string name, unsigned int* obj_hash, unsigned int* cuda_hash, cudaStream_t stream)
-    : scoped_profile(name.c_str(), obj_hash, cuda_hash, stream)
+scoped_profile::scoped_profile(const std::string& name)
+    : scoped_profile(name.c_str())
 {
 }
 
-scoped_profile::scoped_profile(const char* name, unsigned int* rmt_hash, unsigned int* rmt_cuda, cudaStream_t stream)
+scoped_profile::scoped_profile(const char* name)
 {
-#ifndef PROFILING_NONE
     if (nvtx_push)
-        (*nvtx_push)(name);
-/*if (rmt && rmt_push_cpu)
     {
-        rmt_push_cpu(name, rmt_hash);
-    }*/
-#endif
+        (*nvtx_push)(name);
+    }
 }
 
 scoped_profile::scoped_profile(
-    const char* name, const char* func, unsigned int* rmt_hash, unsigned int* rmt_cuda, cudaStream_t stream)
+    const char* name, const char* func)
 {
-#ifndef PROFILING_NONE
     std::stringstream ss;
     ss << name;
     ss << "[";
@@ -238,32 +151,12 @@ scoped_profile::scoped_profile(
     {
         (*nvtx_push)(str);
     }
-/*if (rmt && rmt_push_cpu)
-    {
-        rmt_push_cpu(str, rmt_hash);
-        if(stream && rmt_push_gpu)
-        {
-            rmt_push_gpu(str, rmt_cuda, cv::cuda::StreamAccessor::getStream(*stream));
-            this->stream = stream;
-        }
-    }*/
-#endif
 }
 
 scoped_profile::~scoped_profile()
 {
-#ifndef PROFILING_NONE
     if (nvtx_pop)
     {
         (*nvtx_pop)();
     }
-    /*if (rmt && rmt_pop_cpu)
-    {
-        rmt_pop_cpu();
-    }*/
-    if (stream && rmt_pop_gpu)
-    {
-        rmt_pop_gpu(stream);
-    }
-#endif
 }

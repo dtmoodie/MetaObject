@@ -7,6 +7,7 @@
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/object/MetaObjectFactory.hpp"
 #include "MetaObject/params/ParamFactory.hpp"
+#include <MetaObject/logging/profiling.hpp>
 #include "PythonAllocator.hpp"
 #include "PythonPolicy.hpp"
 #include "PythonSetup.hpp"
@@ -361,6 +362,7 @@ namespace mo
 
         std::shared_ptr<SystemTable> pythonSetup(const char* module_name_)
         {
+            mo::initProfiling();
             boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
             std::string module_name(module_name_);
             mo::python::module_name = module_name;
