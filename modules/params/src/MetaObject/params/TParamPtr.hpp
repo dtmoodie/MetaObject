@@ -64,8 +64,11 @@ namespace mo
         virtual IParam* emitUpdate(const IParam& other) { return IParam::emitUpdate(other); }
         virtual AccessToken<T> access();
         virtual ConstAccessToken<T> access() const;
+        bool canAccess() const override{return ptr != nullptr;}
 
         ITParam<T>* updatePtr(Raw_t* ptr, bool ownsData_ = false);
+
+        std::ostream& print(std::ostream& os) const override;
 
       protected:
         virtual bool updateDataImpl(const Storage_t& data,

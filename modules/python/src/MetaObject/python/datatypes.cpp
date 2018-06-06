@@ -15,28 +15,7 @@ namespace mo
     std::string printParam(const mo::ParamBase* param)
     {
         std::stringstream ss;
-        ss << param->getTreeName();
-        ss << " [" << mo::Demangle::typeToName(param->getTypeInfo()) << "]";
-        auto ts = param->getTimestamp();
-        if (ts)
-        {
-            ss << " " << *ts;
-        }
-        auto fn = param->getFrameNumber();
-        if (fn != -1)
-        {
-            ss << " " << fn;
-        }
-        auto cs = param->getCoordinateSystem();
-        if (cs)
-        {
-            ss << " " << cs->getName();
-        }
-        auto ctx = param->getContext();
-        if (ctx)
-        {
-            ss << "<" << ctx->getName() << ">";
-        }
+        param->print(ss);
         return ss.str();
     }
 

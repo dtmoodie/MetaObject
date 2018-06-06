@@ -22,7 +22,8 @@ https://github.com/dtmoodie/MetaObject
 #include "MetaObject/signals/TSlot.hpp"
 #include <algorithm>
 #include <boost/thread/recursive_mutex.hpp>
-
+#include "ICoordinateSystem.hpp"
+#include "MetaObject/core/Demangle.hpp"
 namespace mo
 {
 
@@ -278,5 +279,32 @@ namespace mo
     bool IParam::modified() const { return _modified; }
 
     void IParam::modified(bool value) { _modified = value; }
+
+    std::ostream& IParam::print(std::ostream& os) const
+    {
+        os << getTreeName();
+        os << " [" << mo::Demangle::typeToName(getTypeInfo()) << "]";
+        auto ts = getTimestamp();
+        if (ts)
+        {
+            os << " " << *ts;
+        }
+        auto fn = getFrameNumber();
+        if (fn != -1)
+        {
+            os << " " << fn;
+        }
+        auto cs = getCoordinateSystem();
+        if (cs)
+        {
+            os << " " << cs->getName();
+        }
+        auto ctx = getContext();
+        if (ctx)
+        {
+            os << " <" << ctx->getName() << ">";
+        }
+        return os;
+    }
 
 } // namespace mo

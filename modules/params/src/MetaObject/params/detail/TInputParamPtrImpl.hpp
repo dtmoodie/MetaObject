@@ -285,6 +285,8 @@ namespace mo
 
         ConstAccessToken<T> access() const { return ConstAccessToken<T>(*this, ParamTraits<T>::get(_current_data)); }
 
+        bool canAccess() const override{return _current_data != nullptr; }
+
       protected:
         virtual bool updateDataImpl(
             const Storage_t&, const OptionalTime_t&, Context*, size_t, const std::shared_ptr<ICoordinateSystem>&)

@@ -148,6 +148,7 @@ namespace mo
         virtual const std::shared_ptr<ICoordinateSystem>&
         getCoordinateSystem() const = 0;                 // Get the coordinate system of this Param
         virtual const TypeInfo& getTypeInfo() const = 0; // Implemented in concrete type
+        virtual std::ostream& print(std::ostream& os) const = 0;
     };
 
     class MO_EXPORTS IParam : public ParamBase
@@ -246,6 +247,8 @@ namespace mo
         EnumClassBitset<ParamFlags> getFlags() const;
         bool modified() const;     // Check if has been modified
         void modified(bool value); // Set if it has been modified
+
+        std::ostream& print(std::ostream& os) const override;
       protected:
         template <class T>
         friend class UI::qt::ParamProxy;

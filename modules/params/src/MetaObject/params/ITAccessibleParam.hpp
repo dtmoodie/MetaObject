@@ -8,6 +8,7 @@ namespace mo
     class ITConstAccessibleParam : virtual public ITParam<T>
     {
       public:
+        virtual bool canAccess() const = 0;
         virtual ConstAccessToken<T> access() const = 0;
     };
 

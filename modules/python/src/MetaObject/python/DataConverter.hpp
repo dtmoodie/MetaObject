@@ -61,8 +61,11 @@ namespace mo
                 {
                     if (auto typed = dynamic_cast<const mo::ITConstAccessibleParam<T>*>(param))
                     {
-                        auto token = typed->access();
-                        return convertToPython(token());
+                        if(typed->canAccess())
+                        {
+                            auto token = typed->access();
+                            return convertToPython(token());
+                        }
                     }
                     else
                     {

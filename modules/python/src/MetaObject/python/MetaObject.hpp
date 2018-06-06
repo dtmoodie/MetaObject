@@ -50,12 +50,8 @@ namespace mo
         std::stringstream ss;
         for (auto param : params)
         {
-            auto getter = python::DataConverterRegistry::instance()->getGetter(param->getTypeInfo());
-            boost::python::object obj = getter(param);
-            if (obj)
-            {
-                ss << param->getName() << ':' << PyObject_Repr(obj.ptr()) << '\n';
-            }
+            param->print(ss);
+            ss << '\n';
         }
         return ss.str();
     }

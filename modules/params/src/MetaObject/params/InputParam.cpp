@@ -18,3 +18,15 @@ bool InputParam::getInput(size_t fn, OptionalTime_t* ts)
 {
     return false;
 }
+
+std::ostream& InputParam::print(std::ostream& os) const
+{
+    IParam::print(os);
+    auto input = getInputParam();
+    if (input)
+    {
+        os << "\n";
+        input->print(os);
+    }
+    return os;
+}

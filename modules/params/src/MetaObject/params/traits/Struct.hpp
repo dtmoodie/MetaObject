@@ -111,6 +111,8 @@ namespace mo
 
         static inline StoragePtr_t ptr(const Storage_t& data) { return data.get(); }
         static inline ConstStoragePtr_t ptr(ConstStorageRef_t& data) { return data.get(); }
+
+        static inline bool valid(ConstStorageRef_t stored) {return stored != nullptr; }
     };
 
     template <class Type>
@@ -182,6 +184,8 @@ namespace mo
             MO_ASSERT(input_storage != nullptr);
             return *input_storage;
         }
+
+        static inline bool valid(ConstStorageRef_t stored) {return stored != nullptr; }
 
         static void move(Storage_t& storage, Type&& data) { storage = std::make_shared<Type>(std::move(data)); }
 

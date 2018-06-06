@@ -53,6 +53,8 @@ namespace mo
         virtual bool acceptsType(const TypeInfo& type) const = 0;
 
         void setQualifier(std::function<bool(std::weak_ptr<IParam>)> f) { qualifier = f; }
+
+        std::ostream& print(std::ostream& os) const override;
       protected:
         InputParam(const InputParam&) = delete;
         InputParam& operator=(const InputParam&) = delete;

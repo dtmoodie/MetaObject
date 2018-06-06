@@ -4,6 +4,7 @@
 #include "MetaObject/logging/logging.hpp"
 #include <MetaObject/params/AccessToken.hpp>
 #include <boost/thread/recursive_mutex.hpp>
+#include "print_data.hpp"
 
 namespace mo
 {
@@ -93,6 +94,18 @@ namespace mo
     {
         MO_ASSERT(ptr);
         return ConstAccessToken<T>(*this, ParamTraits<T>::get(*ptr));
+    }
+
+    template<typename T>
+    std::ostream& TParamPtr<T>::print(std::ostream& os) const
+    {
+        mo::IParam::print(os);
+        os << ' ';
+        if(ptr)
+        {
+            mo::print(os, *ptr);
+        }
+        return os;
     }
 
     template <typename T>
@@ -409,6 +422,8 @@ namespace mo
         virtual AccessToken<T> access() { return AccessToken<T>(*this, data); }
 
         virtual ConstAccessToken<T> access() const { return ConstAccessToken<T>(*this, ParamTraits<T>::get(data)); }
+
+        bool canAccess() const override{return data != nullptr;}
 
         virtual IParam* emitUpdate(const OptionalTime_t& ts_ = OptionalTime_t(),
                                    Context* ctx_ = mo::Context::getCurrent(),
