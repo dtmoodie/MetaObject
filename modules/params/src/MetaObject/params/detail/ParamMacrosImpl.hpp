@@ -16,6 +16,16 @@ namespace mo
     };
 }
 
+#define VISIT(NAME, FILTER)                                                                                            \
+    template<class V, class ... Args>                                                                                  \
+    static constexpr inline void                                                                                       \
+    reflectHelper(V& visitor, THIS_CLASS* obj, VisitationFilter<FILTER> filter, mo::_counter_<__COUNTER__> cnt, Args&&... args)    \
+    {                                                                                                                  \
+        visitor(mo::tagData(&obj->NAME), mo::Name(#NAME), mo::tagParam(obj->NAME##_param), cnt, std::forward<Args>(args)...);\
+        reflectHelper(visitor, obj, filter, --cnt, std::forward<Args>(args)...); \
+    }
+
+
 #define PARAM_(type_, name, N, ...)                                                                                    \
     LOAD_SAVE_(name, N)                                                                                                \
     INIT_SET_(name, N, __VA_ARGS__)                                                                                    \

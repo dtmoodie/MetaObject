@@ -8,9 +8,11 @@
 #include "MetaObject/types/file_types.hpp"
 
 #define PARAM(type_, name, ...)                                                                                        \
-    mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param;                                                  \
-    mo::argument_type<void(type_)>::type name = __VA_ARGS__;                                                           \
-    PARAM_(type_, name, __COUNTER__, __VA_ARGS__)
+    mo::TParamPtr<type_> name##_param;                                                                                 \
+    type_ name = __VA_ARGS__;                                                                                          \
+    VISIT(name, mo::CONTROL)
+
+
 
 #define ENUM_PARAM(name, ...)                                                                                          \
     mo::TParamPtr<mo::EnumParam> name##_param;                                                                         \
@@ -20,26 +22,9 @@
 #define RANGED_PARAM(type, name, init, min, max)
 
 #define INPUT(type_, name, init)                                                                                       \
-    mo::TInputParamPtr<mo::argument_type<void(type_)>::type>::Input_t name = init;                                     \
-    mo::TInputParamPtr<mo::argument_type<void(type_)>::type> name##_param;                                             \
-    void _init_params(bool firstInit, mo::_counter_<__COUNTER__> dummy)                                                \
-    {                                                                                                                  \
-        name##_param.setName(#name);                                                                                   \
-        addParam(&name##_param);                                                                                       \
-        name##_param.setUserDataPtr(&name);                                                                            \
-        _init_params(firstInit, --dummy);                                                                              \
-    }                                                                                                                  \
-    static void _list_param_info(std::vector<mo::ParamInfo*>& info, mo::_counter_<__COUNTER__> dummy)                  \
-    {                                                                                                                  \
-        static mo::ParamInfo s_info(mo::TypeInfo(typeid(mo::argument_type<void(type_)>::type)),                        \
-                                    #name,                                                                             \
-                                    "",                                                                                \
-                                    "",                                                                                \
-                                    mo::ParamFlags::Input_e,                                                           \
-                                    #init);                                                                            \
-        info.push_back(&s_info);                                                                                       \
-        _list_param_info(info, --dummy);                                                                               \
-    }
+    mo::TInputParamPtr<type_>::Input_t name = init;                                     \
+    mo::TInputParamPtr<type_> name##_param; \
+    VISIT(name, mo::INPUT)
 
 #define OPTIONAL_INPUT(type, name, init)                                                                               \
     INPUT(type, name, init)                                                                                            \
@@ -83,10 +68,10 @@
 
 #define DESCRIPTION(name, DESCRIPTION)
 
-#define OUTPUT(type_, name, init)                                                                                      \
-    mo::TParamOutput<typename mo::argument_type<void(type_)>::type> name##_param;                                      \
-    OUTPUT_(type_, name, init, __COUNTER__)                                                                            \
-    mo::argument_type<void(type_)>::type name = init;
+#define OUTPUT(type_, name, init)          \
+    mo::TParamOutput<type_> name##_param;  \
+    type_ name = init;                     \
+    VISIT(name, mo::OUTPUT)
 
 #define SOURCE(type, name, init)                                                                                       \
     OUTPUT(type, name, init)                                                                                           \

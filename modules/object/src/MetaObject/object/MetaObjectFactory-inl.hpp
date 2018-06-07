@@ -50,6 +50,7 @@ namespace mo
 
     MO_INLINE void MetaObjectFactory::registerTranslationUnit()
     {
-        setupObjectConstructors(PerModuleInterface::GetInstance());
+        auto module = PerModuleInterface::GetInstance();
+        setupObjectConstructors(module);
     }
 }

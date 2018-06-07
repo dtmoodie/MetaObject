@@ -33,13 +33,20 @@ namespace mo
       - Slots with a return value can only have a 1 to 1 mapping, thus the Connection of a signal
         to a slot with a return will only call the most recent slot that was Connected to it.
     */
+    template<class T>
+    struct TMetaObjectInterfaceHelper;
+
     class MO_EXPORTS IMetaObject : virtual public TInterface<IMetaObject, IObject>
     {
       public:
-        typedef IMetaObject Interface;
-        typedef IMetaObjectInfo InterfaceInfo;
-        typedef rcc::shared_ptr<IMetaObject> Ptr;
-        typedef rcc::shared_ptr<const IMetaObject> ConstPtr;
+        using ParentClass = std::tuple<IMetaObject>;
+        using Interface = IMetaObject;
+        using InterfaceInfo = IMetaObjectInfo;
+        template<class T>
+        using InterfaceHelper = TMetaObjectInterfaceHelper<T>;
+
+        using Ptr = rcc::shared_ptr<IMetaObject>;
+        using ConstPtr = rcc::shared_ptr<const IMetaObject>;
 
         static int connect(IMetaObject* sender,
                            const std::string& signal_name,
@@ -72,7 +79,6 @@ namespace mo
         virtual void bindSlots(bool firstInit) = 0;
         virtual void initParams(bool firstInit) = 0;
         virtual int initSignals(bool firstInit) = 0;
-        virtual void initOutputs() = 0;
 
         virtual void Serialize(ISimpleSerializer* pSerializer) = 0; // Inherit from RCC's IObject
         virtual void serializeConnections(ISimpleSerializer* pSerializer) = 0;

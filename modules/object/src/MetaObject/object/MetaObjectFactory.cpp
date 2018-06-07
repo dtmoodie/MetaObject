@@ -61,8 +61,8 @@ MetaObjectFactory::MetaObjectFactory(SystemTable* table)
 {
     MO_ASSERT(table);
     MO_ASSERT(table->metaobject_factory == nullptr);
-    _pimpl.reset(new impl(table));
     table->metaobject_factory = this;
+    _pimpl.reset(new impl(table));
 }
 
 MetaObjectFactory::~MetaObjectFactory()

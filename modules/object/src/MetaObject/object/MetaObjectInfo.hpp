@@ -3,13 +3,121 @@
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/core/detail/HelperMacros.hpp"
 #include "MetaObject/object/MetaObjectInfoDatabase.hpp"
+#include "MetaObject/object/detail/MetaObjectMacros.hpp"
+#include "MetaObject/params/TParamPtr.hpp"
+#include "MetaObject/params/TInputParam.hpp"
 #include <type_traits>
+
+struct ISimpleSerializer;
 
 namespace mo
 {
+    template<class T>
+    struct TMetaObjectInterfaceHelper: public T
+    {
+        void bindSlots(bool first_init) override
+        {
+
+        }
+
+
+        template<class DType, class ParamType>
+        inline void operator()(const mo::Data<DType>& data, const mo::Name& name, const mo::Param<ParamType>& param, int32_t N)
+        {
+            param.get()->setName(name.get());
+            T::addParam(param.get());
+        }
+
+        template<class DType>
+        inline void operator()(const mo::Data<DType>& data, const mo::Name& name, const mo::Param<mo::TParamPtr<DType>>& param, int32_t N)
+        {
+            param.get()->setName(name.get());
+            param.get()->updatePtr(data.get());
+            T::addParam(param.get());
+        }
+
+        template<class DType>
+        inline void operator()(const mo::Data<DType>& data, const mo::Name& name, const mo::Param<mo::TParamOutput<DType>>& param, int32_t N)
+        {
+            param.get()->setName(name.get());
+            param.get()->updatePtr(data.get());
+            T::addParam(param.get());
+        }
+
+        template<class DType>
+        inline void operator()(const mo::Data<DType const **>& data, const mo::Name& name, const mo::Param<mo::TInputParamPtr<DType>>& param, int32_t N)
+        {
+            param.get()->setName(name.get());
+            param.get()->setUserDataPtr(data.get());
+            T::addParam(param.get());
+        }
+
+        void initParams(bool first_init) override
+        {
+            T::reflect(*this, this, mo::VisitationFilter<mo::CONTROL>());
+            T::reflect(*this, this, mo::VisitationFilter<mo::INPUT>());
+            T::reflect(*this, this, mo::VisitationFilter<mo::OUTPUT>());
+            T::reflect(*this, this, mo::VisitationFilter<mo::STATUS>());
+            T::reflect(*this, this, mo::VisitationFilter<mo::STATE>());
+        }
+
+        void serializeParams(ISimpleSerializer* serializer) override
+        {
+
+        }
+
+        int initSignals(bool first_init) override
+        {
+
+        }
+
+        struct ParamInfoVisitor
+        {
+            template<class DType, class ParamType, int32_t N>
+            inline void operator()(const mo::Data<DType>& data, const mo::Name& name, const mo::Param<ParamType>& param, mo::_counter_<N>)
+            {
+
+            }
+            std::vector<mo::ParamInfo*>& vec;
+        };
+        static void getParamInfoStatic(std::vector<mo::ParamInfo*>& vec)
+        {
+            ParamInfoVisitor visitor{vec};
+            T::reflect(visitor, static_cast<T*>(nullptr),
+                       mo::VisitationFilter<mo::CONTROL>());
+        }
+
+        static void getSignalInfoStatic(std::vector<mo::SignalInfo*>& vec)
+        {
+
+        }
+
+        static void getSlotInfoStatic(std::vector<mo::SlotInfo*>& vec)
+        {
+
+        }
+
+        void getParamInfo(std::vector<mo::ParamInfo*>& vec) const override
+        {
+            getParamInfoStatic(vec);
+        }
+
+        void getSignalInfo(std::vector<mo::SignalInfo*>& vec) const override
+        {
+            getSignalInfoStatic(vec);
+        }
+
+        void getSlotInfo(std::vector<mo::SlotInfo*>& vec) const override
+        {
+            getSlotInfoStatic(vec);
+        }
+
+
+
+    };
+
     // Static object information available for each meta object
     // Used for static introspection
-
     // Specialize this for each class which requires additional fields
     template <class Type, class InterfaceInfo>
     struct MetaObjectInfoImpl : public InterfaceInfo

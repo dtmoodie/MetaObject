@@ -15,6 +15,7 @@
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
+#include "MetaObject/core/SystemTable.hpp"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 
@@ -27,6 +28,21 @@
 using namespace mo;
 
 INSTANTIATE_META_PARAM(int);
+
+struct GlobalFixture
+{
+  GlobalFixture():
+        table{},
+        factory(&table)
+    {
+        factory.registerTranslationUnit();
+    }
+
+    SystemTable table;
+    mo::MetaObjectFactory factory;
+};
+
+BOOST_GLOBAL_FIXTURE(GlobalFixture);
 
 struct output_parametered_object : public MetaObject
 {
