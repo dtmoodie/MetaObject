@@ -152,7 +152,7 @@ namespace mo
     }
 
     template <typename T>
-    ConstAccessToken<T> TInputParamPtr<T>::access() const
+    ConstAccessToken<T> TInputParamPtr<T>::read() const
     {
         return ConstAccessToken<T>(*this, ParamTraits<T>::get(_current_data));
     }
@@ -283,7 +283,7 @@ namespace mo
             return false;
         }
 
-        ConstAccessToken<T> access() const { return ConstAccessToken<T>(*this, ParamTraits<T>::get(_current_data)); }
+        ConstAccessToken<T> read() const override { return ConstAccessToken<T>(*this, ParamTraits<T>::get(_current_data)); }
 
         bool canAccess() const override{return _current_data != nullptr; }
 

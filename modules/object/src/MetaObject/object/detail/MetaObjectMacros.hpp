@@ -8,7 +8,7 @@ namespace mo
     class ISlot;
     class ISignal;
 
-    enum VisitationType
+    enum VisitationMemberType
     {
         INPUT   = 0,
         OUTPUT  = 1,
@@ -19,8 +19,22 @@ namespace mo
         SLOTS   = 6
     };
 
+    enum VisitationType
+    {
+        LIST,
+        TOOLTIP,
+        INIT,
+        SERIALIZE,
+        DESCRIPTION
+    };
+
+    template<VisitationMemberType Type>
+    using MemberFilter = std::integral_constant<VisitationMemberType, Type>;
+
     template<VisitationType Type>
     using VisitationFilter = std::integral_constant<VisitationType, Type>;
+
+
 
     using Name = NamedType<const char>;
 
@@ -59,6 +73,12 @@ namespace mo
     Slot<T> tagSlot(T& sl)
     {
         return Slot<T>(&sl);
+    }
+
+    template<class T, class R, class... Args>
+    NamedType<R(T::*)(Args...), Function> tagFunction(R(T::*ptr)(Args...))
+    {
+        return NamedType<R(T::*)(Args...), Function>(ptr);
     }
 
     using Description = NamedType<const char>;

@@ -54,7 +54,7 @@ namespace mo
         bool getInput(const OptionalTime_t& ts, size_t* fn = nullptr);
         bool getInput(size_t fn, OptionalTime_t* ts = nullptr);
 
-        virtual ConstAccessToken<T> access() const;
+        virtual ConstAccessToken<T> read() const;
         bool canAccess() const override{return ParamTraits<T>::valid(_current_data); }
 
       protected:

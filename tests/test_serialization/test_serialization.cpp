@@ -58,7 +58,7 @@ BOOST_AUTO_TEST_CASE(serialize_manual_xml)
     cb = new BuildCallback();
     mo::MetaParams::initialize();
     MetaObjectFactory::instance().getObjectSystem()->SetupObjectConstructors(PerModuleInterface::GetInstance());
-    rcc::shared_ptr<serializable_object> obj = serializable_object::create();
+    auto obj = serializable_object::create();
     {
         std::ofstream ofs("test.xml");
         cereal::XMLOutputArchive archive(ofs);
@@ -69,7 +69,7 @@ BOOST_AUTO_TEST_CASE(serialize_manual_xml)
     {
         std::ifstream ifs("test.xml");
         cereal::XMLInputArchive inar(ifs);
-        rcc::shared_ptr<serializable_object> obj2 = serializable_object::create();
+        auto obj2 = serializable_object::create();
         inar(*(obj2.get()));
         BOOST_REQUIRE_EQUAL(obj->test, obj2->test);
         BOOST_REQUIRE_EQUAL(obj->test2, obj2->test2);
@@ -78,7 +78,7 @@ BOOST_AUTO_TEST_CASE(serialize_manual_xml)
 
 BOOST_AUTO_TEST_CASE(serialize_manual_binary)
 {
-    rcc::shared_ptr<serializable_object> obj = serializable_object::create();
+    auto obj = serializable_object::create();
     {
         std::ofstream ofs("test.bin");
         cereal::BinaryOutputArchive archive(ofs);
@@ -89,7 +89,7 @@ BOOST_AUTO_TEST_CASE(serialize_manual_binary)
     {
         std::ifstream ifs("test.bin");
         cereal::BinaryInputArchive inar(ifs);
-        rcc::shared_ptr<serializable_object> obj2 = serializable_object::create();
+        auto obj2 = serializable_object::create();
         inar(*(obj2.get()));
         BOOST_REQUIRE_EQUAL(obj->test, obj2->test);
         BOOST_REQUIRE_EQUAL(obj->test2, obj2->test2);
@@ -98,7 +98,7 @@ BOOST_AUTO_TEST_CASE(serialize_manual_binary)
 
 BOOST_AUTO_TEST_CASE(serialize_by_policy_xml)
 {
-    rcc::shared_ptr<serializable_object> obj = serializable_object::create();
+    auto obj = serializable_object::create();
     obj->test = 14;
     obj->test2 = 13;
     {
@@ -113,7 +113,7 @@ BOOST_AUTO_TEST_CASE(serialize_by_policy_xml)
 
 BOOST_AUTO_TEST_CASE(serialize_by_policy_binary)
 {
-    rcc::shared_ptr<serializable_object> obj = serializable_object::create();
+    auto obj = serializable_object::create();
     obj->test = 14;
     obj->test2 = 13;
     {

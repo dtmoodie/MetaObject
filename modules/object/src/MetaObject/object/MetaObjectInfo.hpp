@@ -2,10 +2,14 @@
 #include "IMetaObjectInfo.hpp"
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/core/detail/HelperMacros.hpp"
+#include "MetaObject/core/detail/Placeholders.hpp"
+
 #include "MetaObject/object/MetaObjectInfoDatabase.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
+
 #include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/TInputParam.hpp"
+
 #include <type_traits>
 
 struct ISimpleSerializer;
@@ -15,29 +19,15 @@ namespace mo
     template<class T>
     struct TMetaObjectInterfaceHelper: public T
     {
-        void bindSlots(bool first_init) override
-        {
-
-        }
-
-
         template<class DType, class ParamType>
-        inline void operator()(const mo::Data<DType>& data, const mo::Name& name, const mo::Param<ParamType>& param, int32_t N)
+        inline void operator()(const mo::Data<DType>& data, const mo::Name& name, const mo::Param<ParamType>& param, int32_t N, bool first_init)
         {
             param.get()->setName(name.get());
             T::addParam(param.get());
         }
 
         template<class DType>
-        inline void operator()(const mo::Data<DType>& data, const mo::Name& name, const mo::Param<mo::TParamPtr<DType>>& param, int32_t N)
-        {
-            param.get()->setName(name.get());
-            param.get()->updatePtr(data.get());
-            T::addParam(param.get());
-        }
-
-        template<class DType>
-        inline void operator()(const mo::Data<DType>& data, const mo::Name& name, const mo::Param<mo::TParamOutput<DType>>& param, int32_t N)
+        inline void operator()(const mo::Data<DType>& data, const mo::Name& name, const mo::Param<mo::TParamPtr<DType>>& param, int32_t N, bool first_init)
         {
             param.get()->setName(name.get());
             param.get()->updatePtr(data.get());
@@ -45,7 +35,15 @@ namespace mo
         }
 
         template<class DType>
-        inline void operator()(const mo::Data<DType const **>& data, const mo::Name& name, const mo::Param<mo::TInputParamPtr<DType>>& param, int32_t N)
+        inline void operator()(const mo::Data<DType>& data, const mo::Name& name, const mo::Param<mo::TParamOutput<DType>>& param, int32_t N, bool first_init)
+        {
+            param.get()->setName(name.get());
+            param.get()->updatePtr(data.get());
+            T::addParam(param.get());
+        }
+
+        template<class DType>
+        inline void operator()(const mo::Data<DType const *>& data, const mo::Name& name, const mo::Param<mo::TInputParamPtr<DType>>& param, int32_t N, bool first_init)
         {
             param.get()->setName(name.get());
             param.get()->setUserDataPtr(data.get());
@@ -54,11 +52,38 @@ namespace mo
 
         void initParams(bool first_init) override
         {
-            T::reflect(*this, this, mo::VisitationFilter<mo::CONTROL>());
-            T::reflect(*this, this, mo::VisitationFilter<mo::INPUT>());
-            T::reflect(*this, this, mo::VisitationFilter<mo::OUTPUT>());
-            T::reflect(*this, this, mo::VisitationFilter<mo::STATUS>());
-            T::reflect(*this, this, mo::VisitationFilter<mo::STATE>());
+            T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::CONTROL>(), first_init);
+            T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::INPUT>(), first_init);
+            T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::OUTPUT>(), first_init);
+            T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::STATUS>(), first_init);
+            T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::STATE>(), first_init);
+        }
+
+        template<class AR>
+        struct SerializeVisitor
+        {
+            AR& ar;
+            template< class DType>
+            inline void operator()(const mo::Data<DType>& data, const mo::Name& name)
+            {
+                ar(name.get(), data.get());
+            }
+        };
+
+        template<class AR>
+        void loadParams(AR& ar)
+        {
+            SerializeVisitor<AR> visitor{ar};
+            T::reflect(visitor, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::CONTROL>());
+            T::reflect(visitor, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::STATE>());
+        }
+
+        template<class AR>
+        void saveParams(AR& ar)
+        {
+            SerializeVisitor<AR> visitor{ar};
+            T::reflect(visitor, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::CONTROL>());
+            T::reflect(visitor, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::STATE>());
         }
 
         void serializeParams(ISimpleSerializer* serializer) override
@@ -66,9 +91,43 @@ namespace mo
 
         }
 
-        int initSignals(bool first_init) override
+        template<class AR>
+        void save( AR& ar ) const
         {
 
+        }
+
+        template<class AR>
+        void load( AR& ar )
+        {
+
+        }
+
+
+        template<class Sig, class R, class T1, class... Args>
+        inline void operator()(const mo::Slot<Sig>& data, const mo::NamedType<R(T1::*)(Args...), Function>& fptr, const mo::Name& name, int N, bool first_init)
+        {
+            // TODO finish slot initialization
+            (*data.get()) = variadicBind(fptr.get(), static_cast<T*>(this), make_int_sequence<sizeof...(Args)>{});
+            this->addSlot(data.get(), name.get());
+        }
+
+        void bindSlots(bool first_init) override
+        {
+            T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::SLOTS>(), first_init);
+        }
+
+        template<class Sig>
+        inline void operator()(const mo::Signal<Sig>& data, const mo::Name& name, int N, bool first_init, int32_t* counter)
+        {
+            // TODO finish signal initialization
+        }
+
+        int initSignals(bool first_init) override
+        {
+            int32_t count = 0;
+            T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::SIGNALS>(), first_init,  &count);
+            return count;
         }
 
         struct ParamInfoVisitor
@@ -80,11 +139,20 @@ namespace mo
             }
             std::vector<mo::ParamInfo*>& vec;
         };
+
+
         static void getParamInfoStatic(std::vector<mo::ParamInfo*>& vec)
         {
             ParamInfoVisitor visitor{vec};
-            T::reflect(visitor, static_cast<T*>(nullptr),
-                       mo::VisitationFilter<mo::CONTROL>());
+            static_cast<T*>(nullptr)->reflect(visitor,
+                       mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::CONTROL>());
+        }
+
+        static std::vector<mo::ParamInfo*> getParamInfoStatic()
+        {
+            std::vector<mo::ParamInfo*> vec;
+            getParamInfoStatic(vec);
+            return vec;
         }
 
         static void getSignalInfoStatic(std::vector<mo::SignalInfo*>& vec)
@@ -92,9 +160,23 @@ namespace mo
 
         }
 
+        static std::vector<mo::SignalInfo*> getSignalInfoStatic()
+        {
+            std::vector<mo::SignalInfo*> vec;
+            getSignalInfoStatic(vec);
+            return vec;
+        }
+
         static void getSlotInfoStatic(std::vector<mo::SlotInfo*>& vec)
         {
 
+        }
+
+        static std::vector<mo::SlotInfo*> getSlotInfoStatic()
+        {
+            std::vector<mo::SlotInfo*> vec;
+            getSlotInfoStatic(vec);
+            return vec;
         }
 
         void getParamInfo(std::vector<mo::ParamInfo*>& vec) const override

@@ -9,7 +9,7 @@ namespace mo
     {
       public:
         virtual bool canAccess() const = 0;
-        virtual ConstAccessToken<T> access() const = 0;
+        virtual ConstAccessToken<T> read() const = 0;
     };
 
     template <typename T>

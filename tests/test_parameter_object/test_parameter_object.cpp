@@ -71,7 +71,7 @@ BOOST_AUTO_TEST_CASE(input_parameter_manual)
     auto input = input_parametered_object::create();
     auto output = output_parametered_object::create();
     input->test_input_param.setInput(&output->test_output_param);
-    BOOST_REQUIRE(input->test_input);
+    BOOST_REQUIRE(input->test_input != nullptr);
     BOOST_REQUIRE_EQUAL(input->test_input, &output->test_output);
     BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
 }

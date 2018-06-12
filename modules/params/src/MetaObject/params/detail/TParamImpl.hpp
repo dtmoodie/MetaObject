@@ -58,7 +58,7 @@ namespace mo
     }
 
     template <typename T>
-    ConstAccessToken<T> TParam<T>::access() const
+    ConstAccessToken<T> TParam<T>::read() const
     {
         return ConstAccessToken<T>(*this, ParamTraits<T>::get(_data));
     }

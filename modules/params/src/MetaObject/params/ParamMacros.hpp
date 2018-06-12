@@ -1,5 +1,5 @@
 #pragma once
-#ifndef __CUDACC__
+
 #include "MetaObject/core/detail/HelperMacros.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include "MetaObject/params/TInputParam.hpp"
@@ -31,22 +31,17 @@
     APPEND_FLAGS(name, mo::ParamFlags::Optional_e)
 
 #define APPEND_FLAGS(name, flags)                                                                                      \
-    void _init_params(bool firstInit, mo::_counter_<__COUNTER__> dummy)                                                \
+    template<class V, class ... Args> inline void                                                                      \
+    reflectHelper(V& visitor, mo::VisitationFilter<mo::INIT> filter, mo::_counter_<__COUNTER__> cnt, Args&&... args)     \
     {                                                                                                                  \
-        _init_params(firstInit, --dummy);                                                                              \
         name##_param.appendFlags(flags);                                                                               \
+        reflectHelper(visitor, filter, --cnt, std::forward<Args>(args)...);                                            \
     }
 
-#define PROPERTY(type_, name, init)                                                                                    \
-    mo::argument_type<void(type_)>::type name;                                                                         \
-    void _init_params(bool firstInit, mo::_counter_<__COUNTER__> dummy)                                                \
-    {                                                                                                                  \
-        if (firstInit)                                                                                                 \
-            name = init;                                                                                               \
-        _init_params(firstInit, --dummy);                                                                              \
-    }                                                                                                                  \
-    mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param;                                                  \
-    SERIALIZE_(name, __COUNTER__)
+#define STATE(type_, name, init)                                                                                       \
+    type_ name;                                                                         \
+    mo::TParamPtr<type_> name##_param; \
+    VISIT(name, mo::STATE)
 
 #define PERSISTENT_(type_, name, N)                                                                                    \
     mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param;                                                  \
@@ -76,10 +71,3 @@
 #define SOURCE(type, name, init)                                                                                       \
     OUTPUT(type, name, init)                                                                                           \
     APPEND_FLAGS(name, mo::ParamFlags::Source_e)
-
-#else
-#define PARAM(type, name, init)
-#define PROPERTY(type, name, init)
-#define INPUT(type, name, init)
-#define OUTPUT(type, name, init)
-#endif

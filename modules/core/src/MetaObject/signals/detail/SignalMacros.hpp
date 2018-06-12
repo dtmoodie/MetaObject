@@ -55,22 +55,18 @@
     }
 
 #define INIT_SIGNALS_(N, C, RETURN, NAME, ...)                                                                         \
-    int _init_signals(bool firstInit, mo::_counter_<C> dummy)                                                          \
+    template<class V, class F, class ... Args>                                                                                  \
+    inline void                                                                                              \
+    reflectHelper(V& visitor, F visit_filter, mo::MemberFilter<mo::SIGNALS> filter, mo::_counter_<C> cnt, Args&&... args)              \
     {                                                                                                                  \
-        addSignal(&COMBINE(_sig_##NAME##_, N), #NAME);                                                                 \
-        return _init_signals(firstInit, --dummy) + 1;                                                                  \
+        visitor(mo::tagSignal(COMBINE(_sig_##NAME##_, N)), mo::Name(#NAME), cnt, std::forward<Args>(args)...);         \
+        reflectHelper(visitor, visit_filter, filter, --cnt, std::forward<Args>(args)...);                                            \
     }                                                                                                                  \
     template <class Sig>                                                                                               \
     mo::TSignal<RETURN(__VA_ARGS__)>* getSignal_##NAME(                                                                \
         typename std::enable_if<std::is_same<Sig, RETURN(__VA_ARGS__)>::value>::type* = 0)                             \
     {                                                                                                                  \
         return &COMBINE(_sig_##NAME##_, N);                                                                            \
-    }                                                                                                                  \
-    static void _list_signal_info(std::vector<mo::SignalInfo*>& output, mo::_counter_<C> dummy)                        \
-    {                                                                                                                  \
-        static mo::SignalInfo info{mo::TypeInfo(typeid(RETURN(__VA_ARGS__))), std::string(#NAME), "", ""};             \
-        _list_signal_info(output, --dummy);                                                                            \
-        output.push_back(&info);                                                                                       \
     }
 
 #ifdef BOOST_PP_VARIADICS_MSVC

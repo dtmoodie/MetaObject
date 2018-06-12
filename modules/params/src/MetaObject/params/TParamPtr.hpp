@@ -63,7 +63,7 @@ namespace mo
                                    UpdateFlags flags_ = ValueUpdated_e);
         virtual IParam* emitUpdate(const IParam& other) { return IParam::emitUpdate(other); }
         virtual AccessToken<T> access();
-        virtual ConstAccessToken<T> access() const;
+        virtual ConstAccessToken<T> read() const;
         bool canAccess() const override{return ptr != nullptr;}
 
         ITParam<T>* updatePtr(Raw_t* ptr, bool ownsData_ = false);
@@ -113,7 +113,7 @@ namespace mo
         virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 
         virtual AccessToken<T> access();
-        virtual ConstAccessToken<T> access() const;
+        virtual ConstAccessToken<T> read() const;
 
         virtual IParam* emitUpdate(const OptionalTime_t& ts_ = OptionalTime_t(),
                                    Context* ctx_ = mo::Context::getCurrent(),

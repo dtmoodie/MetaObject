@@ -63,7 +63,7 @@ namespace mo
                     {
                         if(typed->canAccess())
                         {
-                            auto token = typed->access();
+                            auto token = typed->read();
                             return convertToPython(token());
                         }
                     }

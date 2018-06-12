@@ -14,20 +14,14 @@
 #define SLOT_N(NAME, N, RETURN, ...)                                                                                   \
     virtual RETURN NAME(__VA_ARGS__);                                                                                  \
     mo::TSlot<RETURN(__VA_ARGS__)> COMBINE(_slot_##NAME##_, N);                                                        \
-    void _bind_slots(bool firstInit, mo::_counter_<N> dummy)                                                           \
+    template<class V, class F, class ... Args>                                                                                  \
+    inline void                                                                                                        \
+    reflectHelper(V& visitor, F visit_filter, mo::MemberFilter<mo::SLOTS> filter, mo::_counter_<N> cnt, Args&&... args)            \
     {                                                                                                                  \
-        COMBINE(_slot_##NAME##_, N) = my_bind(static_cast<RETURN (THIS_CLASS::*)(__VA_ARGS__)>(&THIS_CLASS::NAME),     \
-                                              this,                                                                    \
-                                              make_int_sequence<BOOST_PP_VARIADIC_SIZE(__VA_ARGS__)>{});               \
-        addSlot(&COMBINE(_slot_##NAME##_, N), #NAME);                                                                  \
-        _bind_slots(firstInit, --dummy);                                                                               \
-    }                                                                                                                  \
-    static void _list_slots(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy)                                  \
-    {                                                                                                                  \
-        (void)dummy;                                                                                                   \
-        _list_slots(info, mo::_counter_<N - 1>());                                                                     \
-        static mo::SlotInfo s_info{mo::TypeInfo(typeid(RETURN(__VA_ARGS__))), #NAME, "", ""};                          \
-        info.push_back(&s_info);                                                                                       \
+        visitor(mo::tagSlot(COMBINE(_slot_##NAME##_, N)),                                                              \
+            mo::tagFunction(static_cast<RETURN (THIS_CLASS::*)(__VA_ARGS__)>(&THIS_CLASS::NAME)),                      \
+            mo::Name(#NAME), cnt, std::forward<Args>(args)...);                                                        \
+        reflectHelper(visitor, visit_filter, filter, --cnt, std::forward<Args>(args)...);                                            \
     }                                                                                                                  \
     template <class Sig>                                                                                               \
     mo::TSlot<RETURN(__VA_ARGS__)>* getSlot_##NAME(                                                                    \
@@ -39,19 +33,14 @@
 #define SLOT_1(RETURN, N, NAME)                                                                                        \
     virtual RETURN NAME();                                                                                             \
     mo::TSlot<RETURN(void)> COMBINE(_slot_##NAME##_, N);                                                               \
-    void _bind_slots(bool firstInit, mo::_counter_<N> dummy)                                                           \
+    template<class V, class F, class ... Args>                                                                                  \
+    inline void                                                                                              \
+    reflectHelper(V& visitor, F visit_filter, mo::MemberFilter<mo::SLOTS> filter, mo::_counter_<N> cnt, Args&&... args)          \
     {                                                                                                                  \
-        COMBINE(_slot_##NAME##_, N) = std::bind(static_cast<RETURN (THIS_CLASS::*)()>(&THIS_CLASS::NAME), this);       \
-        addSlot(&COMBINE(_slot_##NAME##_, N), #NAME);                                                                  \
-        _bind_slots(firstInit, --dummy);                                                                               \
-    }                                                                                                                  \
-    static void _list_slots(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy)                                  \
-    {                                                                                                                  \
-        (void)dummy;                                                                                                   \
-        _list_slots(info, mo::_counter_<N - 1>());                                                                     \
-        static mo::TypeInfo type(typeid(RETURN(void)));                                                                \
-        static mo::SlotInfo s_info{type, #NAME, "", ""};                                                               \
-        info.push_back(&s_info);                                                                                       \
+        visitor(mo::tagSlot(COMBINE(_slot_##NAME##_, N)),                                                              \
+            mo::tagFunction(static_cast<RETURN (THIS_CLASS::*)()>(&THIS_CLASS::NAME)),                                 \
+            mo::Name(#NAME), cnt, std::forward<Args>(args)...);                                                        \
+        reflectHelper(visitor, visit_filter, filter, --cnt, std::forward<Args>(args)...);                                            \
     }                                                                                                                  \
     template <class Sig>                                                                                               \
     mo::TSlot<RETURN()>* getSlot_##NAME(typename std::enable_if<std::is_same<Sig, RETURN()>::value>::type* = 0)        \

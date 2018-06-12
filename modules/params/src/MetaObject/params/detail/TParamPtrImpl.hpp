@@ -90,7 +90,7 @@ namespace mo
     }
 
     template <typename T>
-    ConstAccessToken<T> TParamPtr<T>::access() const
+    ConstAccessToken<T> TParamPtr<T>::read() const
     {
         MO_ASSERT(ptr);
         return ConstAccessToken<T>(*this, ParamTraits<T>::get(*ptr));
@@ -242,7 +242,7 @@ namespace mo
             return AccessToken<T>(*this, ParamTraits<T>::get(*ptr));
         }
 
-        virtual ConstAccessToken<T> access() const
+        virtual ConstAccessToken<T> read() const
         {
             MO_ASSERT(ptr);
             return ConstAccessToken<T>(*this, ParamTraits<T>::get(*ptr));
@@ -319,7 +319,7 @@ namespace mo
     }
 
     template <typename T>
-    ConstAccessToken<T> TParamOutput<T>::access() const
+    ConstAccessToken<T> TParamOutput<T>::read() const
     {
         return ConstAccessToken<T>(*this, ParamTraits<T>::get(data));
     }
@@ -421,9 +421,9 @@ namespace mo
 
         virtual AccessToken<T> access() { return AccessToken<T>(*this, data); }
 
-        virtual ConstAccessToken<T> access() const { return ConstAccessToken<T>(*this, ParamTraits<T>::get(data)); }
+        virtual ConstAccessToken<T> read() const override { return ConstAccessToken<T>(*this, ParamTraits<T>::get(data)); }
 
-        bool canAccess() const override{return data != nullptr;}
+        bool canAccess() const override {return data != nullptr;}
 
         virtual IParam* emitUpdate(const OptionalTime_t& ts_ = OptionalTime_t(),
                                    Context* ctx_ = mo::Context::getCurrent(),

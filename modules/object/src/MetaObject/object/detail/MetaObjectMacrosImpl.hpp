@@ -1,5 +1,4 @@
 #pragma once
-#ifndef __CUDACC__
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/object/MetaObjectFactory.hpp"
 #include "MetaObject/object/MetaObjectInfo.hpp"
@@ -20,31 +19,31 @@ namespace mo
 }
 
 #define REFLECT_START(N_)                                                                                              \
-template<class V, int N, class T, class ... Args>                                                                      \
-static constexpr inline void reflectHelper(V& visitor, THIS_CLASS* obj, T type, mo::_counter_<N> dummy, Args&&... args) {    \
-    reflectHelper(visitor, obj, type, --dummy, args...);                                                                     \
+template<class V, int N, class F, class T, class ... Args>                                                                      \
+inline void reflectHelper(V& visitor, F filter, T type, mo::_counter_<N> dummy, Args&&... args) {                      \
+    reflectHelper(visitor, filter, type, --dummy, args...);                                                                    \
 }                                                                                                                      \
-template<class V, class T, class... Args>                                                                              \
-static constexpr inline void reflectHelper(V& visitor, THIS_CLASS* obj, T , mo::_counter_<N_>, Args&&...) {}
+template<class V, class F, class T, class... Args>                                                                              \
+inline void reflectHelper(V& visitor, F, T , mo::_counter_<N_>, Args&&...) {}
 
 #define MO_BEGIN_1(CLASS_NAME, N_) \
     using THIS_CLASS = CLASS_NAME; \
     using ParentClass = std::tuple<void>; \
     REFLECT_START(N_) \
-    static rcc::shared_ptr<CLASS_NAME> create();
+    static rcc::shared_ptr<THIS_CLASS::InterfaceHelper<CLASS_NAME>> create();
 
 
 #define MO_DERIVE_(N_, CLASS_NAME, ...)                                                                                \
     using THIS_CLASS = CLASS_NAME; \
     using ParentClass = std::tuple<__VA_ARGS__>; \
     REFLECT_START(N_) \
-    static rcc::shared_ptr<CLASS_NAME> create();
+    static rcc::shared_ptr<THIS_CLASS::InterfaceHelper<CLASS_NAME>> create();
 
 #define MO_END_(N) \
-template<class V, class T, class ... Args> \
-static constexpr inline void reflect(V& visitor, THIS_CLASS* obj, T filter, Args&&... args) \
+template<class V, class F, class T, class ... Args> \
+inline void reflect(V& visitor, F filter, T type, Args&&... args) \
 { \
-    reflectHelper(visitor, obj, filter, mo::_counter_<N>(), std::forward<Args>(args)...); \
+    reflectHelper(visitor, filter, type, mo::_counter_<N>(), std::forward<Args>(args)...); \
 }
 
 #define MO_ABSTRACT_(N_, CLASS_NAME, ...)                                                                              \
@@ -55,19 +54,12 @@ static constexpr inline void reflect(V& visitor, THIS_CLASS* obj, T filter, Args
 #define MO_REGISTER_OBJECT(TYPE)                                                                                       \
     static ::mo::MetaObjectInfo<TActual<TYPE>> TYPE##_info;                                                            \
     static ::mo::MetaObjectPolicy<TActual<TYPE>, __COUNTER__, void> TYPE##_policy;                                     \
-    ::rcc::shared_ptr<TYPE> TYPE::create()                                                                             \
+    ::rcc::shared_ptr<TYPE::InterfaceHelper<TYPE>> TYPE::create()                                                                             \
     {                                                                                                                  \
         auto obj = ::mo::MetaObjectFactory::instance().create(#TYPE);                                                 \
-        return ::rcc::shared_ptr<TYPE>(obj);                                                                           \
+        return ::rcc::shared_ptr<InterfaceHelper<TYPE>>(obj);                                                                           \
     }                                                                                                                  \
     REGISTERCLASS(TYPE, &TYPE##_info);
 
 #define MO_REGISTER_CLASS(TYPE) MO_REGISTER_OBJECT(TYPE)
 
-#else // __CUDACC__
-#define MO_REGISTER_OBJECT(TYPE)
-#define MO_REGISTER_CLASS(TYPE)
-#define MO_BEGIN_1(CLASS, N)
-#define MO_BEGIN_2(CLASS, PARENT, N)
-#define MO_END_(N)
-#endif // __CUDACC__

@@ -42,7 +42,7 @@ struct DLL_EXPORTS test_meta_object_slots : public MetaObject
     MO_BEGIN(test_meta_object_slots)
     MO_SLOT(void, test_void)
     MO_SLOT(void, test_int, int)
-    PROPERTY(int, call_count, 0)
+    STATE(int, call_count, 0)
     MO_END
 };
 
