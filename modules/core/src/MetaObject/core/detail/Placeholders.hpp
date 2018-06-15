@@ -33,8 +33,8 @@ std::function<R(Args...)> variadicBind(R (*p)(Args...), int_sequence<Is...>)
     return std::bind(p, placeholder_template<Is>{}...);
 }
 
-template <class R, class C, class... Args, int... Is>
-std::function<R(Args...)> variadicBind(R (C::*p)(Args...), C* ptr, int_sequence<Is...>)
+template <class R, class C, class B, class... Args, int... Is>
+std::function<R(Args...)> variadicBind(R (C::*p)(Args...), B* ptr, int_sequence<Is...>)
 {
     return std::bind(p, ptr, placeholder_template<Is>{}...);
 }

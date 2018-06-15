@@ -56,11 +56,14 @@
 
 #define INIT_SIGNALS_(N, C, RETURN, NAME, ...)                                                                         \
     template<class V, class F, class ... Args>                                                                                  \
-    inline void                                                                                              \
-    reflectHelper(V& visitor, F visit_filter, mo::MemberFilter<mo::SIGNALS> filter, mo::_counter_<C> cnt, Args&&... args)              \
-    {                                                                                                                  \
+    inline void reflectHelper(V& visitor, F visit_filter, mo::MemberFilter<mo::SIGNALS> filter, mo::_counter_<C> cnt, Args&&... args){                                                                                                                  \
         visitor(mo::tagSignal(COMBINE(_sig_##NAME##_, N)), mo::Name(#NAME), cnt, std::forward<Args>(args)...);         \
         reflectHelper(visitor, visit_filter, filter, --cnt, std::forward<Args>(args)...);                                            \
+    }                                                                                                                  \
+    template<class V, class F, class ... Args>                                                                                  \
+    static inline void reflectHelperStatic(V& visitor, F visit_filter, mo::MemberFilter<mo::SIGNALS> filter, mo::_counter_<C> cnt, Args&&... args){                                                                                                                  \
+        visitor(mo::tagType<RETURN(__VA_ARGS__)>(), mo::Name(#NAME), cnt, std::forward<Args>(args)...);         \
+        reflectHelperStatic(visitor, visit_filter, filter, --cnt, std::forward<Args>(args)...);                                            \
     }                                                                                                                  \
     template <class Sig>                                                                                               \
     mo::TSignal<RETURN(__VA_ARGS__)>* getSignal_##NAME(                                                                \

@@ -1,5 +1,6 @@
 #pragma once
 #include "MetaObject/core/detail/NamedType.hpp"
+#include "MetaObject/detail/TypeInfo.hpp"
 
 namespace mo
 {
@@ -38,6 +39,8 @@ namespace mo
 
     using Name = NamedType<const char>;
 
+    using Type = NamedType<const mo::TypeInfo>;
+
     template<class T>
     using Param = NamedType<T, ParamBase>;
 
@@ -73,6 +76,13 @@ namespace mo
     Slot<T> tagSlot(T& sl)
     {
         return Slot<T>(&sl);
+    }
+
+    template<class T>
+    Type tagType()
+    {
+        static const mo::TypeInfo tinfo(typeid(T));
+        return Type(&tinfo);
     }
 
     template<class T, class R, class... Args>

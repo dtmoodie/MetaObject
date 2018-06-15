@@ -95,11 +95,21 @@ MO_REGISTER_OBJECT(derived_Param);
 MO_REGISTER_OBJECT(derived1);
 MO_REGISTER_OBJECT(multi_derive);
 
-BOOST_AUTO_TEST_CASE(initialize)
+
+struct Fixture
 {
-    mo::MetaObjectFactory::instance();
-    mo::MetaObjectFactory::instance().registerTranslationUnit();
-}
+    Fixture():
+        table{},
+        factory(&table)
+    {
+        factory.registerTranslationUnit();
+    }
+
+    SystemTable table;
+    mo::MetaObjectFactory factory;
+};
+
+BOOST_GLOBAL_FIXTURE(Fixture)
 
 BOOST_AUTO_TEST_CASE(object_print)
 {
@@ -178,12 +188,7 @@ BOOST_AUTO_TEST_CASE(call_overloaded_slot)
     BOOST_REQUIRE_EQUAL(derived_obj->derived_count, 300);
 }
 
-BOOST_AUTO_TEST_CASE(interface_id_check)
-{
-    auto constructor = mo::MetaObjectFactory::instance().getConstructor("derived1");
-    BOOST_REQUIRE(constructor);
-    BOOST_REQUIRE_EQUAL(constructor->GetInterfaceId(), 1);
-}
+
 
 BOOST_AUTO_TEST_CASE(diamond)
 {

@@ -39,7 +39,7 @@ namespace mo
     class MO_EXPORTS IMetaObject : virtual public TInterface<IMetaObject, IObject>
     {
       public:
-        using ParentClass = std::tuple<IMetaObject>;
+        using ParentClass = ct::variadic_typedef<IMetaObject>;
         using Interface = IMetaObject;
         using InterfaceInfo = IMetaObjectInfo;
         template<class T>

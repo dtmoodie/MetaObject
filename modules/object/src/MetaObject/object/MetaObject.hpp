@@ -12,7 +12,7 @@ namespace mo
     class MO_EXPORTS MetaObject : virtual public IMetaObject
     {
       public:
-        using ParentClass = std::tuple<MetaObject>;
+        using ParentClass = ct::variadic_typedef<MetaObject>;
         MetaObject();
         virtual ~MetaObject();
 

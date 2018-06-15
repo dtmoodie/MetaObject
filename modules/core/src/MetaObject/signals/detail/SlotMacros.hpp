@@ -15,13 +15,14 @@
     virtual RETURN NAME(__VA_ARGS__);                                                                                  \
     mo::TSlot<RETURN(__VA_ARGS__)> COMBINE(_slot_##NAME##_, N);                                                        \
     template<class V, class F, class ... Args>                                                                                  \
-    inline void                                                                                                        \
-    reflectHelper(V& visitor, F visit_filter, mo::MemberFilter<mo::SLOTS> filter, mo::_counter_<N> cnt, Args&&... args)            \
-    {                                                                                                                  \
-        visitor(mo::tagSlot(COMBINE(_slot_##NAME##_, N)),                                                              \
-            mo::tagFunction(static_cast<RETURN (THIS_CLASS::*)(__VA_ARGS__)>(&THIS_CLASS::NAME)),                      \
-            mo::Name(#NAME), cnt, std::forward<Args>(args)...);                                                        \
+    inline void reflectHelper(V& visitor, F visit_filter, mo::MemberFilter<mo::SLOTS> filter, mo::_counter_<N> cnt, Args&&... args) { \
+        visitor(mo::tagSlot(COMBINE(_slot_##NAME##_, N)), mo::tagFunction(static_cast<RETURN (THIS_CLASS::*)(__VA_ARGS__)>(&THIS_CLASS::NAME)), mo::Name(#NAME), cnt, std::forward<Args>(args)...); \
         reflectHelper(visitor, visit_filter, filter, --cnt, std::forward<Args>(args)...);                                            \
+    }                                                                                                                  \
+    template<class V, class F, class ... Args>                                                                                  \
+    static inline void reflectHelperStatic(V& visitor, F visit_filter, mo::MemberFilter<mo::SLOTS> filter, mo::_counter_<N> cnt, Args&&... args) { \
+        visitor(mo::tagFunction(static_cast<RETURN (THIS_CLASS::*)(__VA_ARGS__)>(&THIS_CLASS::NAME)), mo::Name(#NAME), cnt, std::forward<Args>(args)...); \
+        reflectHelperStatic(visitor, visit_filter, filter, --cnt, std::forward<Args>(args)...);                                            \
     }                                                                                                                  \
     template <class Sig>                                                                                               \
     mo::TSlot<RETURN(__VA_ARGS__)>* getSlot_##NAME(                                                                    \
@@ -34,13 +35,14 @@
     virtual RETURN NAME();                                                                                             \
     mo::TSlot<RETURN(void)> COMBINE(_slot_##NAME##_, N);                                                               \
     template<class V, class F, class ... Args>                                                                                  \
-    inline void                                                                                              \
-    reflectHelper(V& visitor, F visit_filter, mo::MemberFilter<mo::SLOTS> filter, mo::_counter_<N> cnt, Args&&... args)          \
-    {                                                                                                                  \
-        visitor(mo::tagSlot(COMBINE(_slot_##NAME##_, N)),                                                              \
-            mo::tagFunction(static_cast<RETURN (THIS_CLASS::*)()>(&THIS_CLASS::NAME)),                                 \
-            mo::Name(#NAME), cnt, std::forward<Args>(args)...);                                                        \
+    inline void reflectHelper(V& visitor, F visit_filter, mo::MemberFilter<mo::SLOTS> filter, mo::_counter_<N> cnt, Args&&... args) { \
+        visitor(mo::tagSlot(COMBINE(_slot_##NAME##_, N)), mo::tagFunction(static_cast<RETURN (THIS_CLASS::*)()>(&THIS_CLASS::NAME)), mo::Name(#NAME), cnt, std::forward<Args>(args)...); \
         reflectHelper(visitor, visit_filter, filter, --cnt, std::forward<Args>(args)...);                                            \
+    }                                                                                                                  \
+    template<class V, class F, class ... Args>                                                                                  \
+    static inline void reflectHelperStatic(V& visitor, F visit_filter, mo::MemberFilter<mo::SLOTS> filter, mo::_counter_<N> cnt, Args&&... args) { \
+        visitor(mo::tagFunction(static_cast<RETURN (THIS_CLASS::*)()>(&THIS_CLASS::NAME)), mo::Name(#NAME), cnt, std::forward<Args>(args)...); \
+        reflectHelperStatic(visitor, visit_filter, filter, --cnt, std::forward<Args>(args)...);                                            \
     }                                                                                                                  \
     template <class Sig>                                                                                               \
     mo::TSlot<RETURN()>* getSlot_##NAME(typename std::enable_if<std::is_same<Sig, RETURN()>::value>::type* = 0)        \

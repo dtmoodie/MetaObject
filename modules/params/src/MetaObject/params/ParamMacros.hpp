@@ -10,9 +10,7 @@
 #define PARAM(type_, name, ...)                                                                                        \
     mo::TParamPtr<type_> name##_param;                                                                                 \
     type_ name = __VA_ARGS__;                                                                                          \
-    VISIT(name, mo::CONTROL)
-
-
+    VISIT(name, mo::CONTROL, __VA_ARGS__)
 
 #define ENUM_PARAM(name, ...)                                                                                          \
     mo::TParamPtr<mo::EnumParam> name##_param;                                                                         \
@@ -22,26 +20,30 @@
 #define RANGED_PARAM(type, name, init, min, max)
 
 #define INPUT(type_, name, init)                                                                                       \
-    mo::TInputParamPtr<type_>::Input_t name = init;                                     \
-    mo::TInputParamPtr<type_> name##_param; \
-    VISIT(name, mo::INPUT)
+    mo::TInputParamPtr<type_>::Input_t name = init;                                                                    \
+    mo::TInputParamPtr<type_> name##_param;                                                                            \
+    VISIT(name, mo::INPUT, init)
 
 #define OPTIONAL_INPUT(type, name, init)                                                                               \
     INPUT(type, name, init)                                                                                            \
     APPEND_FLAGS(name, mo::ParamFlags::Optional_e)
 
 #define APPEND_FLAGS(name, flags)                                                                                      \
-    template<class V, class ... Args> inline void                                                                      \
-    reflectHelper(V& visitor, mo::VisitationFilter<mo::INIT> filter, mo::_counter_<__COUNTER__> cnt, Args&&... args)     \
+    template <class V, class T, class... Args>                                                                         \
+    inline void reflectHelper(V& visitor,                                                                              \
+                              mo::VisitationFilter<mo::INIT> filter,                                                   \
+                              T param_type,                                                                            \
+                              mo::_counter_<__COUNTER__> cnt,                                                          \
+                              Args&&... args)                                                                          \
     {                                                                                                                  \
         name##_param.appendFlags(flags);                                                                               \
-        reflectHelper(visitor, filter, --cnt, std::forward<Args>(args)...);                                            \
+        reflectHelper(visitor, filter, param_type, --cnt, std::forward<Args>(args)...);                                \
     }
 
 #define STATE(type_, name, init)                                                                                       \
-    type_ name;                                                                         \
-    mo::TParamPtr<type_> name##_param; \
-    VISIT(name, mo::STATE)
+    type_ name;                                                                                                        \
+    mo::TParamPtr<type_> name##_param;                                                                                 \
+    VISIT(name, mo::STATE, init)
 
 #define PERSISTENT_(type_, name, N)                                                                                    \
     mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param;                                                  \
@@ -63,10 +65,10 @@
 
 #define DESCRIPTION(name, DESCRIPTION)
 
-#define OUTPUT(type_, name, init)          \
-    mo::TParamOutput<type_> name##_param;  \
-    type_ name = init;                     \
-    VISIT(name, mo::OUTPUT)
+#define OUTPUT(type_, name, init)                                                                                      \
+    mo::TParamOutput<type_> name##_param;                                                                              \
+    type_ name = init;                                                                                                 \
+    VISIT(name, mo::OUTPUT, init)
 
 #define SOURCE(type, name, init)                                                                                       \
     OUTPUT(type, name, init)                                                                                           \
