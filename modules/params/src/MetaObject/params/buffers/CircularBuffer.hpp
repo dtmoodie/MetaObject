@@ -104,7 +104,7 @@ namespace mo
     {                                                                                                                  \
         static ParamConstructor<Buffer::CircularBuffer<T>> _circular_buffer_param_constructor;                         \
         static BufferConstructor<Buffer::CircularBuffer<T>> _circular_buffer_constructor;                              \
-        MetaParam<T, N>(const char* name) : MetaParam<T, N - 1>(name)                                                  \
+        MetaParam<T, N>(SystemTable * table, const char* name) : MetaParam<T, N - 1>(table, name)                      \
         {                                                                                                              \
             (void)&_circular_buffer_constructor;                                                                       \
             (void)&_circular_buffer_param_constructor;                                                                 \

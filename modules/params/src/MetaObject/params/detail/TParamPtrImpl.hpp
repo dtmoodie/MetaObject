@@ -2,9 +2,9 @@
 #ifndef __CUDACC__
 #include "../TParamPtr.hpp"
 #include "MetaObject/logging/logging.hpp"
+#include "print_data.hpp"
 #include <MetaObject/params/AccessToken.hpp>
 #include <boost/thread/recursive_mutex.hpp>
-#include "print_data.hpp"
 
 namespace mo
 {
@@ -15,54 +15,83 @@ namespace mo
 
     template <typename T>
     TParamPtr<T>::TParamPtr(const std::string& name, T* ptr_, ParamFlags type, bool ownsData_)
-        : ptr(ptr_), ownsData(ownsData_), ITParam<T>(name, type)
+        : m_ptr(ptr_), ownsData(ownsData_), ITParam<T>(name, type)
     {
-        (void)&_meta_param;
     }
 
     template <typename T>
     TParamPtr<T>::~TParamPtr()
     {
-        if (ownsData && ptr)
-            delete ptr;
+        if (ownsData && m_ptr)
+        {
+            delete m_ptr;
+        }
+        else
+        {
+        }
     }
 
     template <typename T>
-    bool TParamPtr<T>::getData(InputStorage_t& value, const OptionalTime_t& ts, Context* ctx, size_t* fn_)
+    bool TParamPtr<T>::getData(InputStorage_t& value, const OptionalTime_t& ts, Context* /*ctx*/, size_t* fn_)
     {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if (!ts)
         {
-            if (ptr)
+            if (m_ptr)
             {
-                ParamTraits<T>::reset(value, *ptr);
-                // value = *ptr;
+                ParamTraits<T>::reset(value, *m_ptr);
+                if (fn_)
+                {
+                    *fn_ = IParam::getFrameNumber();
+                }
+                else
+                {
+                }
                 return true;
+            }
+            else
+            {
             }
         }
         else
         {
-            if (this->_ts && *(this->_ts) == *ts && ptr)
+            if (this->_ts && (*(this->_ts) == *ts) && m_ptr)
             {
-                ParamTraits<T>::reset(value, *ptr);
+                ParamTraits<T>::reset(value, *m_ptr);
+                if (fn_)
+                {
+                    *fn_ = IParam::getFrameNumber();
+                }
+                else
+                {
+                }
                 return true;
+            }
+            else
+            {
             }
         }
         return false;
     }
 
     template <typename T>
-    bool TParamPtr<T>::getData(InputStorage_t& value, size_t fn, Context* ctx, OptionalTime_t* ts)
+    bool TParamPtr<T>::getData(InputStorage_t& value, size_t fn, Context* /*ctx*/, OptionalTime_t* ts)
     {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
-        if (fn == this->_fn && ptr)
+        if ((fn == this->_fn) && m_ptr)
         {
-            ParamTraits<T>::reset(value, *ptr);
+            ParamTraits<T>::reset(value, *m_ptr);
             if (ts)
             {
                 *ts = this->_ts;
             }
+            else
+            {
+            }
             return true;
+        }
+        else
+        {
         }
         return false;
     }
@@ -75,9 +104,9 @@ namespace mo
                                      UpdateFlags flags_)
     {
         IParam::emitUpdate(ts_, ctx_, fn_, cs_, flags_);
-        if (ptr)
+        if (m_ptr)
         {
-            ITParam<T>::_typed_update_signal(ParamTraits<T>::copy(*ptr), this, ctx_, ts_, this->_fn, cs_, flags_);
+            ITParamImpl<T>::emitTypedUpdate(ParamTraits<T>::copy(*m_ptr), this, ctx_, ts_, this->_fn, cs_, flags_);
         }
         return this;
     }
@@ -85,25 +114,25 @@ namespace mo
     template <typename T>
     AccessToken<T> TParamPtr<T>::access()
     {
-        MO_ASSERT(ptr);
-        return AccessToken<T>(*this, *ptr);
+        MO_ASSERT(m_ptr);
+        return AccessToken<T>(*this, *m_ptr);
     }
 
     template <typename T>
     ConstAccessToken<T> TParamPtr<T>::read() const
     {
-        MO_ASSERT(ptr);
-        return ConstAccessToken<T>(*this, ParamTraits<T>::get(*ptr));
+        MO_ASSERT(m_ptr);
+        return ConstAccessToken<T>(*this, ParamTraits<T>::get(*m_ptr));
     }
 
-    template<typename T>
+    template <typename T>
     std::ostream& TParamPtr<T>::print(std::ostream& os) const
     {
         mo::IParam::print(os);
         os << ' ';
-        if(ptr)
+        if (m_ptr)
         {
-            mo::print(os, *ptr);
+            mo::print(os, *m_ptr);
         }
         return os;
     }
@@ -116,13 +145,16 @@ namespace mo
                                       const std::shared_ptr<ICoordinateSystem>& cs)
     {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
-        if (ptr)
+        if (m_ptr)
         {
-            *ptr = ParamTraits<T>::get(data);
+            *m_ptr = ParamTraits<T>::get(data);
             lock.unlock();
             this->emitUpdate(ts, ctx, fn, cs);
-            ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::ValueUpdated_e);
+            ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::ValueUpdated_e);
             return true;
+        }
+        else
+        {
         }
         return false;
     }
@@ -131,13 +163,10 @@ namespace mo
     ITParam<T>* TParamPtr<T>::updatePtr(Raw_t* ptr, bool ownsData_)
     {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
-        this->ptr = ptr;
+        this->m_ptr = ptr;
         this->ownsData = ownsData_;
         return this;
     }
-
-    template <typename T>
-    MetaParam<T, 100, void> TParamPtr<T>::_meta_param;
 
     template <typename T>
     class MO_EXPORTS TParamPtr<std::shared_ptr<T>> : virtual public ITAccessibleParam<T>
@@ -169,35 +198,43 @@ namespace mo
                   std::shared_ptr<T>* ptr_ = nullptr,
                   ParamFlags type = ParamFlags::Control_e,
                   bool ownsData_ = false)
-            : ptr(ptr_), ownsData(ownsData_), ITParam<T>(name, type)
+            : m_ptr(ptr_), ownsData(ownsData_), ITParam<T>(name, type)
         {
-            (void)_meta_param;
         }
         ~TParamPtr()
         {
-            if (ownsData && ptr)
-                delete ptr;
+            if (ownsData && m_ptr)
+            {
+                delete m_ptr;
+            }
         }
 
         virtual bool getData(InputStorage_t& data,
                              const OptionalTime_t& ts = OptionalTime_t(),
-                             Context* ctx = nullptr,
+                             Context* /*ctx*/ = nullptr,
                              size_t* fn_ = nullptr)
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             if (!ts)
             {
-                if (ptr)
+                if (m_ptr)
                 {
-                    data = *ptr;
+                    data = *m_ptr;
+                    if (fn_ != nullptr)
+                    {
+                        *fn_ = this->getFrameNumber();
+                    }
+                    else
+                    {
+                    }
                     return true;
                 }
             }
             else
             {
-                if (this->_ts && *(this->_ts) == *ts && ptr)
+                if (this->_ts && *(this->_ts) == *ts && m_ptr)
                 {
-                    data = *ptr;
+                    data = *m_ptr;
                     return true;
                 }
             }
@@ -207,10 +244,10 @@ namespace mo
         virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr)
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
-            if (fn == this->_fn && ptr)
+            if (fn == this->_fn && m_ptr)
             {
                 // ParamTraits<T>::reset(data, *ptr);
-                data = *ptr;
+                data = *m_ptr;
                 if (ts_)
                 {
                     *ts_ = this->_ts;
@@ -227,9 +264,9 @@ namespace mo
                                    UpdateFlags flags_ = ValueUpdated_e)
         {
             IParam::emitUpdate(ts_, ctx_, fn_, cs_, flags_);
-            if (ptr)
+            if (m_ptr)
             {
-                ITParam<T>::_typed_update_signal(ParamTraits<T>::copy(*ptr), this, ctx_, ts_, this->_fn, cs_, flags_);
+                ITParam<T>::emitTypedUpdate(ParamTraits<T>::copy(*m_ptr), this, ctx_, ts_, this->_fn, cs_, flags_);
             }
             return this;
         }
@@ -238,24 +275,24 @@ namespace mo
 
         virtual AccessToken<T> access()
         {
-            MO_ASSERT(ptr);
-            return AccessToken<T>(*this, ParamTraits<T>::get(*ptr));
+            MO_ASSERT(m_ptr);
+            return AccessToken<T>(*this, ParamTraits<T>::get(*m_ptr));
         }
 
         virtual ConstAccessToken<T> read() const
         {
-            MO_ASSERT(ptr);
-            return ConstAccessToken<T>(*this, ParamTraits<T>::get(*ptr));
+            MO_ASSERT(m_ptr);
+            return ConstAccessToken<T>(*this, ParamTraits<T>::get(*m_ptr));
         }
 
         ITParam<T>* updatePtr(std::shared_ptr<T>* ptr, bool ownsData_ = false)
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
-            this->ptr = ptr;
+            this->m_ptr = ptr;
             this->ownsData = ownsData_;
             return this;
         }
-
+        std::shared_ptr<T>* ptr() { return m_ptr; }
       protected:
         virtual bool updateDataImpl(const Storage_t& data,
                                     const OptionalTime_t& ts,
@@ -264,23 +301,21 @@ namespace mo
                                     const std::shared_ptr<ICoordinateSystem>& cs)
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
-            if (ptr)
+            if (m_ptr)
             {
-                *ptr = data;
+                *m_ptr = data;
                 lock.unlock();
                 this->emitUpdate(ts, ctx, fn, cs);
-                ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::ValueUpdated_e);
+                ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::ValueUpdated_e);
                 return true;
             }
             return false;
         }
-        std::shared_ptr<T>* ptr;
-        bool ownsData;
-        static MetaParam<T, 100> _meta_param;
-    };
 
-    template <typename T>
-    MetaParam<T, 100, void> TParamPtr<std::shared_ptr<T>>::_meta_param;
+      private:
+        std::shared_ptr<T>* m_ptr;
+        bool ownsData;
+    };
 
     template <typename T>
     bool TParamOutput<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_)
@@ -292,7 +327,13 @@ namespace mo
             {
                 *fn_ = this->_fn;
             }
+            else
+            {
+            }
             return true;
+        }
+        else
+        {
         }
         return false;
     }
@@ -307,7 +348,13 @@ namespace mo
             {
                 *ts_ = this->_ts;
             }
+            else
+            {
+            }
             return true;
+        }
+        else
+        {
         }
         return false;
     }
@@ -333,9 +380,13 @@ namespace mo
     {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         // this->data = data;
-        if (this->ptr)
+        auto ptr = this->ptr();
+        if (ptr)
         {
-            *(this->ptr) = ParamTraits<T>::get(data);
+            *(ptr) = ParamTraits<T>::get(data);
+        }
+        else
+        {
         }
         lock.unlock();
         this->emitUpdate(ts, ctx, fn, cs);
@@ -349,20 +400,21 @@ namespace mo
                                         const std::shared_ptr<ICoordinateSystem>& cs_,
                                         UpdateFlags flags_)
     {
-        if (this->ptr)
+        auto ptr = this->ptr();
+        if (ptr)
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             if (this->checkFlags(mo::ParamFlags::Unstamped_e))
             {
-                data = ParamTraits<T>::copy(*(this->ptr));
+                data = ParamTraits<T>::copy(*(ptr));
             }
             else
             {
-                ParamTraits<T>::move(data, std::move(*(this->ptr)));
+                ParamTraits<T>::move(data, std::move(*(ptr)));
             }
             lock.unlock();
             IParam::emitUpdate(ts_, ctx_, fn_, cs_, flags_);
-            ITParam<T>::_typed_update_signal(data, this, ctx_, ts_, this->_fn, cs_, flags_);
+            ITParamImpl<T>::emitTypedUpdate(data, this, ctx_, ts_, this->_fn, cs_, flags_);
         }
 
         return this;
@@ -400,7 +452,13 @@ namespace mo
                 {
                     *fn_ = this->_fn;
                 }
+                else
+                {
+                }
                 return true;
+            }
+            else
+            {
             }
             return false;
         }
@@ -414,16 +472,25 @@ namespace mo
                 {
                     *ts_ = this->_ts;
                 }
+                else
+                {
+                }
                 return true;
+            }
+            else
+            {
             }
             return false;
         }
 
         virtual AccessToken<T> access() { return AccessToken<T>(*this, data); }
 
-        virtual ConstAccessToken<T> read() const override { return ConstAccessToken<T>(*this, ParamTraits<T>::get(data)); }
+        virtual ConstAccessToken<T> read() const override
+        {
+            return ConstAccessToken<T>(*this, ParamTraits<T>::get(data));
+        }
 
-        bool canAccess() const override {return data != nullptr;}
+        bool canAccess() const override { return data != nullptr; }
 
         virtual IParam* emitUpdate(const OptionalTime_t& ts_ = OptionalTime_t(),
                                    Context* ctx_ = mo::Context::getCurrent(),
@@ -431,13 +498,17 @@ namespace mo
                                    const std::shared_ptr<ICoordinateSystem>& cs_ = std::shared_ptr<ICoordinateSystem>(),
                                    UpdateFlags flags_ = ValueUpdated_e)
         {
-            if (this->ptr)
+            auto ptr = this->ptr();
+            if (ptr)
             {
                 mo::Mutex_t::scoped_lock lock(IParam::mtx());
-                data = *this->ptr;
+                data = *ptr;
                 lock.unlock();
                 IParam::emitUpdate(ts_, ctx_, fn_, cs_, flags_);
-                ITParam<T>::_typed_update_signal(data, this, ctx_, ts_, this->_fn, cs_, flags_);
+                ITParam<T>::emitTypedUpdate(data, this, ctx_, ts_, this->_fn, cs_, flags_);
+            }
+            else
+            {
             }
 
             return this;
@@ -452,9 +523,13 @@ namespace mo
                                     const std::shared_ptr<ICoordinateSystem>& cs)
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
-            if (this->ptr)
+            auto ptr = this->ptr();
+            if (ptr)
             {
-                *(this->ptr) = data;
+                *(ptr) = data;
+            }
+            else
+            {
             }
             lock.unlock();
             this->emitUpdate(ts, ctx, fn, cs);

@@ -1,4 +1,5 @@
-#ifdef HAVE_OPENCV
+#include "MetaObject/core/metaobject_config.hpp"
+#if MO_HAVE_OPENCV
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "MetaObject/metaparams/reflect/cv_types.hpp"
 #include "MetaObject/params/MetaParam.hpp"
@@ -22,11 +23,25 @@
 using namespace cv;
 static_assert(ct::reflect::ReflectData<cv::Rect>::IS_SPECIALIZED, "Specialization not working for cv::Rect");
 
-INSTANTIATE_META_PARAM(Size);
-INSTANTIATE_META_PARAM(Rect);
-INSTANTIATE_META_PARAM(Rect2d);
-INSTANTIATE_META_PARAM(Rect2f);
-INSTANTIATE_META_PARAM(std::vector<Rect>);
-INSTANTIATE_META_PARAM(std::vector<Rect2f>);
-
+namespace mo
+{
+    namespace MetaParams
+    {
+        void instCVRect(SystemTable* table)
+        {
+            INSTANTIATE_META_PARAM(Size);
+            INSTANTIATE_META_PARAM(Rect);
+            INSTANTIATE_META_PARAM(Rect2d);
+            INSTANTIATE_META_PARAM(Rect2f);
+            INSTANTIATE_META_PARAM(std::vector<Rect>);
+            INSTANTIATE_META_PARAM(std::vector<Rect2f>);
+        }
+    }
+}
+EXTERN_TYPE(Size);
+EXTERN_TYPE(Rect);
+EXTERN_TYPE(Rect2d);
+EXTERN_TYPE(Rect2f);
+EXTERN_TYPE(std::vector<Rect>);
+EXTERN_TYPE(std::vector<Rect2f>);
 #endif

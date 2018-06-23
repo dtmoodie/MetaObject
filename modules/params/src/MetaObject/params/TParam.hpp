@@ -46,7 +46,7 @@ namespace mo
         virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
         virtual AccessToken<T> access();
         virtual ConstAccessToken<T> read() const;
-        bool canAccess() const override{return true;}
+        bool canAccess() const override { return true; }
 
       protected:
         virtual bool updateDataImpl(const Storage_t& data,
@@ -54,11 +54,9 @@ namespace mo
                                     Context* ctx,
                                     size_t fn,
                                     const std::shared_ptr<ICoordinateSystem>& cs);
-        Storage_t _data;
 
       private:
-        static ParamConstructor<TParam<T>> _typed_param_constructor;
-        static MetaParam<T, 100> _meta_param;
+        Storage_t _data;
     };
 }
 #include "detail/TParamImpl.hpp"

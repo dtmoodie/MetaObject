@@ -13,6 +13,7 @@ namespace mo
     class MO_EXPORTS IVariableManager
     {
       public:
+        virtual ~IVariableManager();
         virtual void addParam(IMetaObject* obj, IParam* param) = 0;
 
         virtual void removeParam(IMetaObject* obj, IParam* param) = 0;

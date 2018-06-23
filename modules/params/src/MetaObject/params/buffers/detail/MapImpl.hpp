@@ -19,13 +19,21 @@ namespace mo
             if (itr != _data_buffer.end())
             {
                 if (fn_)
+                {
                     *fn_ = itr->first.fn;
+                }
+                else
+                {
+                }
                 data = (itr->second);
                 this->_ts = itr->first.ts;
                 this->_fn = itr->first.fn;
                 this->_ctx = itr->first.ctx;
                 this->_cs = itr->first.cs;
                 return true;
+            }
+            else
+            {
             }
             return false;
         }
@@ -38,15 +46,23 @@ namespace mo
             if (itr != _data_buffer.end())
             {
                 if (ts)
+                {
                     *ts = itr->first.ts;
-                value = (itr->second);
+                }
+                else
+                {
+                }
+                value = itr->second;
                 this->_ts = itr->first.ts;
                 this->_fn = itr->first.fn;
                 this->_ctx = itr->first.ctx;
                 this->_cs = itr->first.cs;
                 return true;
             }
-            return false;
+            else
+            {
+                return false;
+            }
         }
 
         template <class T>
@@ -61,7 +77,7 @@ namespace mo
             IParam::_modified = true;
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
             return true;
         }
 
@@ -106,6 +122,12 @@ namespace mo
                     end = *_data_buffer.rbegin()->first.ts;
                     return true;
                 }
+                else
+                {
+                }
+            }
+            else
+            {
             }
             return false;
         }
@@ -120,7 +142,10 @@ namespace mo
                 end = _data_buffer.rbegin()->first.fn;
                 return true;
             }
-            return false;
+            else
+            {
+                return false;
+            }
         }
 
         template <class T>
@@ -128,13 +153,27 @@ namespace mo
         Map<T>::search(const OptionalTime_t& ts)
         {
             if (_data_buffer.size() == 0)
-                return _data_buffer.end();
-            if (!ts)
             {
-                if (_data_buffer.size())
-                    return (--this->_data_buffer.end());
                 return _data_buffer.end();
             }
+            else
+            {
+                if (!ts)
+                {
+                    if (_data_buffer.size())
+                    {
+                        return (--this->_data_buffer.end());
+                    }
+                    else
+                    {
+                        return _data_buffer.end();
+                    }
+                }
+                else
+                {
+                }
+            }
+
             return _data_buffer.find(*ts);
         }
 
@@ -142,8 +181,13 @@ namespace mo
         typename std::map<SequenceKey, typename Map<T>::InputStorage_t>::iterator Map<T>::search(size_t fn)
         {
             if (_data_buffer.size() == 0)
+            {
                 return _data_buffer.end();
-            return _data_buffer.find(fn);
+            }
+            else
+            {
+                return _data_buffer.find(fn);
+            }
         }
 
         template <class T>
@@ -159,8 +203,8 @@ namespace mo
             _data_buffer[{ts, fn, cs, ctx}] = data;
             IParam::_modified = true;
             lock.unlock();
-            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            IParam::emitUpdate(ts, ctx, fn, cs, mo::BufferUpdated_e);
+            ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
         }
     }
 }

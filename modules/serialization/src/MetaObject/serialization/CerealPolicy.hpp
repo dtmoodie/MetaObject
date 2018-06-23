@@ -53,16 +53,18 @@ namespace mo
                 }
 
                 template <class AR>
-                static bool serialize(IParam* param, AR& ar)
+                static bool serialize(const IParam* param, AR& ar)
                 {
-                    auto typed = dynamic_cast<ITAccessibleParam<T>*>(param);
+                    auto typed = dynamic_cast<const ITConstAccessibleParam<T>*>(param);
                     if (typed == nullptr)
+                    {
                         return false;
-                    auto token = typed->access();
+                    }
+                    auto token = typed->read();
                     ar(cereal::make_nvp(param->getName(), (token)()));
-                    token.setValid(false); // only reading data, not writing, thus don't emit update
                     return true;
                 }
+
                 template <class AR>
                 static bool deSerialize(IParam* param, AR& ar)
                 {
@@ -104,15 +106,18 @@ namespace mo
         cereal::traits::detail::count_input_serializers<T, cereal::BinaryInputArchive>::value != 0>::type;
 // template<class T> using DetectSerializer = void;
 
-#define Param_CEREAL_SERIALIZATION_POLICY_INST_(N)                                                                     \
+#define PARAM_CEREAL_SERIALIZATION_POLICY_INST_(N)                                                                     \
     template <class T>                                                                                                 \
     struct MetaParam<T, N, DetectSerializer<T>> : public MetaParam<T, N - 1, void>                                     \
     {                                                                                                                  \
         static IO::Cereal::Policy<T> _cereal_policy;                                                                   \
-        MetaParam(const char* name) : MetaParam<T, N - 1, void>(name) { (void)&_cereal_policy; }                       \
+        MetaParam(SystemTable* table, const char* name) : MetaParam<T, N - 1, void>(table, name)                       \
+        {                                                                                                              \
+            (void)&_cereal_policy;                                                                                     \
+        }                                                                                                              \
     };                                                                                                                 \
     template <class T>                                                                                                 \
     IO::Cereal::Policy<T> MetaParam<T, N, DetectSerializer<T>>::_cereal_policy;
 
-    Param_CEREAL_SERIALIZATION_POLICY_INST_(__COUNTER__)
+    PARAM_CEREAL_SERIALIZATION_POLICY_INST_(__COUNTER__)
 }

@@ -64,7 +64,7 @@ namespace mo
         virtual IParam* emitUpdate(const IParam& other) { return IParam::emitUpdate(other); }
         virtual AccessToken<T> access();
         virtual ConstAccessToken<T> read() const;
-        bool canAccess() const override{return ptr != nullptr;}
+        bool canAccess() const override { return m_ptr != nullptr; }
 
         ITParam<T>* updatePtr(Raw_t* ptr, bool ownsData_ = false);
 
@@ -76,9 +76,10 @@ namespace mo
                                     Context* ctx,
                                     size_t fn,
                                     const std::shared_ptr<ICoordinateSystem>& cs);
-        Raw_t* ptr;
+        Raw_t* ptr() { return m_ptr; }
+      private:
+        Raw_t* m_ptr;
         bool ownsData;
-        static MetaParam<T, 100> _meta_param;
     };
 
     /*!

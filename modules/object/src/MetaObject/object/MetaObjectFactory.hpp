@@ -1,17 +1,13 @@
 #pragma once
 
 #include "MetaObject/detail/Export.hpp"
+#include "MetaObject/detail/defines.hpp"
 #include "MetaObject/logging/logging.hpp"
 
 #include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 
 #include <functional>
 #include <memory>
-#ifdef _MSC_VER
-#define MO_INLINE __forceinline
-#else
-#define MO_INLINE inline __attribute__((always_inline))
-#endif
 
 struct IRuntimeObjectSystem;
 struct IObjectInfo;

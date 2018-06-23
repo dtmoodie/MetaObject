@@ -6,3 +6,9 @@
 #include "MetaObject/core/detail/Forward.hpp"
 #include "MetaObject/core/detail/Time.hpp"
 #include "MetaObject/logging/logging.hpp"
+
+struct SystemTable;
+namespace mo
+{
+    MO_EXPORTS void initCoreModule(SystemTable* table);
+}

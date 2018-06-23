@@ -1,11 +1,11 @@
-#include <boost/python.hpp>
-
 #include "MetaObject/core/Demangle.hpp"
+#include "MetaObject/core/TypeTable.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/params/ICoordinateSystem.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include "MetaObject/params/InputParam.hpp"
 #include "MetaObject/python/DataConverter.hpp"
+#include <boost/python.hpp>
 
 #include <RuntimeObjectSystem/IObjectInfo.h>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
@@ -63,7 +63,8 @@ namespace mo
         MO_LOG(trace) << "Accessor function not found for for " << mo::Demangle::typeToName(param->getTypeInfo())
                       << " Available converters:\n"
                       << printTypes();
-        return boost::python::object();
+        return boost::python::object(std::string("No to python converter registered for " +
+                                                 mo::TypeTable::instance().typeToName(param->getTypeInfo())));
     }
 
     bool setData(mo::IParam* param, const boost::python::object& obj)

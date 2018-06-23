@@ -27,7 +27,9 @@ namespace mo
             if (!ts && _data_buffer.size())
             {
                 if (fn_)
+                {
                     *fn_ = _data_buffer.back().fn;
+                }
                 data = _data_buffer.back().data;
                 return true;
             }
@@ -36,9 +38,17 @@ namespace mo
                 if (itr.ts == ts)
                 {
                     if (fn_)
+                    {
                         *fn_ = itr.fn;
+                    }
+                    else
+                    {
+                    }
                     data = itr.data;
                     return true;
+                }
+                else
+                {
                 }
             }
             return false;
@@ -47,14 +57,23 @@ namespace mo
         template <class T>
         bool CircularBuffer<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_)
         {
+            mo::Mutex_t::scoped_lock lock(this->mtx());
             for (auto& itr : _data_buffer)
             {
-                if (itr.fn == fn && itr.ts)
+                if (itr.fn == fn)
                 {
-                    if (ts_)
+                    if (itr.ts && ts_)
+                    {
                         *ts_ = *itr.ts;
+                    }
+                    else
+                    {
+                    }
                     data = itr.data;
                     return true;
+                }
+                else
+                {
                 }
             }
             return false;
@@ -70,9 +89,13 @@ namespace mo
             {
                 mo::Mutex_t::scoped_lock lock(IParam::mtx());
                 if (ts)
+                {
                     _data_buffer.push_back(State<T>(*ts, fn, ctx.get(), cs, data_));
+                }
                 else
+                {
                     _data_buffer.push_back(State<T>(fn, ctx.get(), cs, data_));
+                }
                 this->_modified = true;
             }
             ITParam<T>::_typed_update_signal(data_, this, ctx, ts, fn, cs, mo::InputUpdated_e);
@@ -124,6 +147,9 @@ namespace mo
                     end = *_data_buffer.front().ts;
                     return true;
                 }
+                else
+                {
+                }
             }
             return false;
         }
@@ -139,7 +165,10 @@ namespace mo
                 end = _data_buffer.front().fn;
                 return true;
             }
-            return false;
+            else
+            {
+                return false;
+            }
         }
 
         template <class T>
@@ -153,13 +182,17 @@ namespace mo
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             if (ts)
+            {
                 _data_buffer.push_back(State<T>(*ts, fn, ctx, cs, data));
+            }
             else
+            {
                 _data_buffer.push_back(State<T>(fn, ctx, cs, data));
+            }
             this->_modified = true;
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
         }
         template <typename T>
         ParamConstructor<CircularBuffer<T>> CircularBuffer<T>::_circular_buffer_param_constructor;

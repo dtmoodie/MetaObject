@@ -211,7 +211,10 @@ namespace mo
         : public MetaParam<T, N - 1, void>                                                                             \
     {                                                                                                                  \
         static UI::wt::WidgetConstructor<T> _Param_proxy_constructor;                                                  \
-        MetaParam(const char* name) : MetaParam<T, N - 1, void>(name) { (void)&_Param_proxy_constructor; }             \
+        MetaParam(SystemTable* table, const char* name) : MetaParam<T, N - 1, void>(table, name)                       \
+        {                                                                                                              \
+            (void)&_Param_proxy_constructor;                                                                           \
+        }                                                                                                              \
     };                                                                                                                 \
     template <class T>                                                                                                 \
     UI::wt::WidgetConstructor<T>                                                                                       \

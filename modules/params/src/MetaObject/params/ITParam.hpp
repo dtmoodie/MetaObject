@@ -172,21 +172,43 @@ namespace mo
                 cs = param->getCoordinateSystem();
                 ts = param->getTimestamp();
             }
+            else
+            {
+            }
             const size_t* fnptr = GetKeywordInputOptional<tag::frame_number>(args...);
             if (fnptr)
+            {
                 fn = *fnptr;
-            else if (param == nullptr)
-                fn = this->_fn + 1;
+            }
+            else
+            {
+                if (param == nullptr)
+                {
+                    fn = this->_fn + 1;
+                }
+                else
+                {
+                }
+            }
 
             if (auto tsptr = GetKeywordInputOptional<tag::timestamp>(args...))
+            {
                 ts = *tsptr;
+            }
             if (auto ctx_ = GetKeywordInputDefault<tag::context>(nullptr, args...))
+            {
                 ctx = ctx_;
-            if(!ctx)
+            }
+            if (ctx != nullptr)
+            {
                 ctx = this->_ctx;
-            if (auto cs_ =
-                    GetKeywordInputDefault<tag::coordinate_system>(std::shared_ptr<ICoordinateSystem>(), args...))
+            }
+            auto cs_ = GetKeywordInputDefault<tag::coordinate_system>(std::shared_ptr<ICoordinateSystem>(), args...);
+            if (cs_ != nullptr)
+            {
                 cs = cs_;
+            }
+
             this->updateDataImpl(data, ts, ctx, fn, cs);
             return this;
         }
@@ -194,14 +216,25 @@ namespace mo
       protected:
         friend class AccessToken<T>;
         friend struct ConstAccessToken<T>;
-        TSignal<TUpdateSig_t> _typed_update_signal;
+
         virtual bool updateDataImpl(const Storage_t& data,
                                     const OptionalTime_t& ts,
                                     Context* ctx,
                                     size_t fn,
                                     const std::shared_ptr<ICoordinateSystem>& cs) = 0;
+        void emitTypedUpdate(ConstStorageRef_t data,
+                             IParam* param,
+                             Context* ctx,
+                             OptionalTime_t ts,
+                             const size_t fn,
+                             const std::shared_ptr<ICoordinateSystem>& cs,
+                             const UpdateFlags fg)
+        {
+            _typed_update_signal(data, param, ctx, ts, fn, cs, fg);
+        }
 
       private:
+        TSignal<TUpdateSig_t> _typed_update_signal;
         static const TypeInfo _type_info;
     };
 
@@ -228,6 +261,7 @@ namespace mo
                                    UpdateFlags);
         typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
         typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
+
         // brief ITParam default constructor, passes args to IParam
         ITParam(const std::string& name = "",
                 ParamFlags flags = ParamFlags::Control_e,

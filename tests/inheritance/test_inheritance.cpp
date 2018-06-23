@@ -95,15 +95,9 @@ MO_REGISTER_OBJECT(derived_Param);
 MO_REGISTER_OBJECT(derived1);
 MO_REGISTER_OBJECT(multi_derive);
 
-
 struct Fixture
 {
-    Fixture():
-        table{},
-        factory(&table)
-    {
-        factory.registerTranslationUnit();
-    }
+    Fixture() : table{}, factory(&table) { factory.registerTranslationUnit(); }
 
     SystemTable table;
     mo::MetaObjectFactory factory;
@@ -122,7 +116,7 @@ BOOST_AUTO_TEST_CASE(Param_static)
     auto param_info = TMetaObjectInterfaceHelper<derived_Param>::getParamInfoStatic();
     if (param_info.size() == 1)
     {
-        if (param_info[0]->name == "derived_param")
+        if (param_info[0]->getName() == "derived_param")
         {
             std::cout << "missing base Param \"base_param\"\n";
         }
@@ -187,8 +181,6 @@ BOOST_AUTO_TEST_CASE(call_overloaded_slot)
     sig(100);
     BOOST_REQUIRE_EQUAL(derived_obj->derived_count, 300);
 }
-
-
 
 BOOST_AUTO_TEST_CASE(diamond)
 {

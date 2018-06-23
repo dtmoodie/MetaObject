@@ -11,8 +11,6 @@ namespace mo
     template <typename T>
     TParam<T>::TParam() : ITParam<T>(), _data(), IParam()
     {
-        (void)&_typed_param_constructor;
-        (void)&_meta_param;
     }
 
     template <typename T>
@@ -73,12 +71,7 @@ namespace mo
         _data = data;
         this->_fn = fn;
         this->_ts = ts;
-        ITParam<T>::_typed_update_signal(data, this, ctx, ts, this->_fn, cs, ValueUpdated_e);
+        ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, this->_fn, cs, ValueUpdated_e);
         return true;
     }
-
-    template <typename T>
-    ParamConstructor<TParam<T>> TParam<T>::_typed_param_constructor;
-    template <typename T>
-    MetaParam<T, 100> TParam<T>::_meta_param;
 }

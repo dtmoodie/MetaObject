@@ -23,7 +23,7 @@
 using namespace mo;
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow)
 {
-    mo::MetaParams::initialize();
+    mo::initMetaParamsModule();
     ui->setupUi(this);
     {
         /*auto param = new mo::RangedParam<std::vector<float>>(0.0,20,"vector float");
@@ -108,7 +108,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWi
         Params.push_back(std::shared_ptr<IParam>(param));
     }
 #endif
-    for (int i = 0; i < Params.size(); ++i) {
+    for (int i = 0; i < Params.size(); ++i)
+    {
         auto proxy = mo::UI::qt::WidgetFactory::Instance()->CreateProxy(Params[i].get());
         ui->widgetLayout->addWidget(proxy->getParamWidget(this));
         proxies.push_back(proxy);

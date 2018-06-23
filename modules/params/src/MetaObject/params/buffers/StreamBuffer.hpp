@@ -126,7 +126,7 @@ namespace mo
         static ParamConstructor<Buffer::StreamBuffer<T>> _stream_buffer_param_constructor;                             \
         static ParamConstructor<Buffer::BlockingStreamBuffer<T>> _blocking_stream_buffer_param_constructor;            \
         static ParamConstructor<Buffer::DroppingStreamBuffer<T>> _dropping_stream_buffer_param_constructor;            \
-        MetaParam<T, N>(const char* name) : MetaParam<T, N - 1>(name)                                                  \
+        MetaParam<T, N>(SystemTable * table, const char* name) : MetaParam<T, N - 1>(table, name)                      \
         {                                                                                                              \
             (void)&_stream_buffer_constructor;                                                                         \
             (void)&_stream_buffer_param_constructor;                                                                   \

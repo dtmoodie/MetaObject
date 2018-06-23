@@ -3,16 +3,17 @@
 
 #include "DataConverter.hpp"
 #include "MetaObject.hpp"
+#include "MetaObject/core.hpp"
 #include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/object/MetaObjectFactory.hpp"
 #include "MetaObject/params/ParamFactory.hpp"
-#include <MetaObject/logging/profiling.hpp>
 #include "PythonAllocator.hpp"
 #include "PythonPolicy.hpp"
 #include "PythonSetup.hpp"
 #include <MetaObject/core/detail/opencv_allocator.hpp>
 #include <MetaObject/logging/logging.hpp>
+#include <MetaObject/logging/profiling.hpp>
 #include <signal.h> // SIGINT, etc
 
 #include <RuntimeObjectSystem/IRuntimeObjectSystem.h>
@@ -317,6 +318,7 @@ namespace mo
                   m_allocator(mo::Allocator::createAllocator()), m_cpu_allocator(m_allocator),
                   m_gpu_allocator(m_allocator), m_numpy_allocator(&m_cpu_allocator)
             {
+                m_factory.registerTranslationUnit();
                 m_default_opencv_allocator = cv::Mat::getStdAllocator();
                 m_default_opencv_gpu_allocator = cv::cuda::GpuMat::defaultAllocator();
                 m_system_table->allocator = m_allocator;
@@ -367,8 +369,9 @@ namespace mo
             std::string module_name(module_name_);
             mo::python::module_name = module_name;
             setupAllocator();
-            boost::shared_ptr<LibGuard> libGuard(new LibGuard());
-            setupEnums(module_name);
+            boost::shared_ptr<LibGuard> lib_guard(new LibGuard());
+            mo::initCoreModule(lib_guard->m_system_table.get());
+            mo::setupEnums(module_name);
             setupDataTypes(module_name);
             boost::python::def("listConstructableObjects", &listConstructableObjects);
             boost::python::def("listObjectInfos", &listObjectInfos);
@@ -389,8 +392,8 @@ namespace mo
             boost::python::class_<LibGuard, boost::shared_ptr<LibGuard>, boost::noncopyable> libguardobj(
                 "LibGuard", boost::python::no_init);
             libguardobj.def("setAllocator", &LibGuard::setAllocator);
-            boost::python::scope().attr("__libguard") = libGuard;
-            return libGuard->m_system_table;
+            boost::python::scope().attr("__libguard") = lib_guard;
+            return lib_guard->m_system_table;
         }
     }
 }

@@ -20,8 +20,8 @@
 
 #ifdef _MSC_VER
 #define META_PARAM_EXTERN(TYPE)                                                                                        \
-    template class mo::TInputParamPtr<TYPE>;                                                                    \
-    template class mo::TParamPtr<TYPE>;                                                                         \
+    template class mo::TInputParamPtr<TYPE>;                                                                           \
+    template class mo::TParamPtr<TYPE>;                                                                                \
     template class mo::TParamOutput<TYPE>;
 #else
 #define META_PARAM_EXTERN(TYPE)                                                                                        \
@@ -29,16 +29,17 @@
     extern template class mo::TParamPtr<TYPE>;                                                                         \
     extern template class mo::TParamOutput<TYPE>;
 #endif
+
+#include "MetaObject/core/metaobject_config.hpp"
 #include <MetaObject/params/TInputParam.hpp>
 #include <MetaObject/params/TParamPtr.hpp>
 #include <MetaObject/types/file_types.hpp>
 
+struct SystemTable;
+
 namespace mo
 {
-    namespace MetaParams
-    {
-        METAPARAMTERS_EXPORTS void initialize();
-    }
+    METAPARAMTERS_EXPORTS void initMetaParamsModule(SystemTable* table = nullptr);
 }
 
 META_PARAM_EXTERN(bool)
@@ -66,7 +67,7 @@ META_PARAM_EXTERN(std::vector<float>);
 META_PARAM_EXTERN(std::vector<double>);
 META_PARAM_EXTERN(std::vector<std::string>);
 
-#ifdef HAVE_OPENCV
+#if MO_HAVE_OPENCV
 #include <opencv2/core/types.hpp>
 META_PARAM_EXTERN(cv::Point2f);
 META_PARAM_EXTERN(cv::Point2d);

@@ -1,5 +1,6 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
+#include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/logging/CompileLogger.hpp"
 #include "MetaObject/object/MetaObject.hpp"
@@ -15,7 +16,6 @@
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
-#include "MetaObject/core/SystemTable.hpp"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 
@@ -27,14 +27,12 @@
 #include <thread>
 using namespace mo;
 
-INSTANTIATE_META_PARAM(int);
-
 struct GlobalFixture
 {
-  GlobalFixture():
-        table{},
-        factory(&table)
+    GlobalFixture() : table{}, factory(&table)
     {
+        auto table = &this->table;
+        INSTANTIATE_META_PARAM(int);
         factory.registerTranslationUnit();
     }
 
@@ -72,7 +70,6 @@ BOOST_AUTO_TEST_CASE(input_parameter_manual)
     auto output = output_parametered_object::create();
     input->test_input_param.setInput(&output->test_output_param);
     BOOST_REQUIRE(input->test_input != nullptr);
-    BOOST_REQUIRE_EQUAL(input->test_input, &output->test_output);
     BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
 }
 
@@ -90,7 +87,6 @@ BOOST_AUTO_TEST_CASE(input_parameter_programatic)
     BOOST_REQUIRE(input_param);
     BOOST_REQUIRE(input_param->setInput(output_));
     BOOST_REQUIRE(input->test_input);
-    BOOST_REQUIRE_EQUAL(input->test_input, &output->test_output);
     BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
 }
 
@@ -137,7 +133,8 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
     output->test_output_param.updateData(0, 0);
 
     bool quit = false;
-    std::thread background_thread([&quit, &input]() {
+    bool stopped = false;
+    std::thread background_thread([&stopped, &quit, &input]() {
         int ts = 0;
         int data;
         while (!quit)
@@ -148,6 +145,7 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
                 ++ts;
             }
         }
+        stopped = true;
     });
 
     for (int i = 1; i < 100000; ++i)
@@ -155,6 +153,10 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
         output->test_output_param.updateData(i * 10, i);
     }
     quit = true;
+    while (!stopped)
+    {
+        boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
+    }
     background_thread.join();
 }
 

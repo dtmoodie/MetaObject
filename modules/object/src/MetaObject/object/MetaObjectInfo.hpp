@@ -8,11 +8,11 @@
 #include "MetaObject/object/MetaObjectInfoDatabase.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
 
-#include "MetaObject/params/TParamPtr.hpp"
-#include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/ParamInfo.hpp"
-#include "MetaObject/signals/SlotInfo.hpp"
+#include "MetaObject/params/TInputParam.hpp"
+#include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/signals/SignalInfo.hpp"
+#include "MetaObject/signals/SlotInfo.hpp"
 
 #include "ct/VariadicTypedef.hpp"
 
@@ -22,34 +22,50 @@ struct ISimpleSerializer;
 
 namespace mo
 {
-    template<class T>
-    struct TMetaObjectInterfaceHelper: public T
+    template <class T>
+    struct TMetaObjectInterfaceHelper : public T
     {
-        template<class DType, class ParamType>
-        inline void operator()(const mo::Data<DType>& data, const mo::Name& name, const mo::Param<ParamType>& param, int32_t N, bool first_init)
+        template <class DType, class ParamType>
+        inline void operator()(const mo::Data<DType>& data,
+                               const mo::Name& name,
+                               const mo::Param<ParamType>& param,
+                               int32_t N,
+                               bool first_init)
         {
             param.get()->setName(name.get());
             T::addParam(param.get());
         }
 
-        template<class DType>
-        inline void operator()(const mo::Data<DType>& data, const mo::Name& name, const mo::Param<mo::TParamPtr<DType>>& param, int32_t N, bool first_init)
+        template <class DType>
+        inline void operator()(const mo::Data<DType>& data,
+                               const mo::Name& name,
+                               const mo::Param<mo::TParamPtr<DType>>& param,
+                               int32_t N,
+                               bool first_init)
         {
             param.get()->setName(name.get());
             param.get()->updatePtr(data.get());
             T::addParam(param.get());
         }
 
-        template<class DType>
-        inline void operator()(const mo::Data<DType>& data, const mo::Name& name, const mo::Param<mo::TParamOutput<DType>>& param, int32_t N, bool first_init)
+        template <class DType>
+        inline void operator()(const mo::Data<DType>& data,
+                               const mo::Name& name,
+                               const mo::Param<mo::TParamOutput<DType>>& param,
+                               int32_t N,
+                               bool first_init)
         {
             param.get()->setName(name.get());
             param.get()->updatePtr(data.get());
             T::addParam(param.get());
         }
 
-        template<class DType>
-        inline void operator()(const mo::Data<DType const *>& data, const mo::Name& name, const mo::Param<mo::TInputParamPtr<DType>>& param, int32_t N, bool first_init)
+        template <class DType>
+        inline void operator()(const mo::Data<DType const*>& data,
+                               const mo::Name& name,
+                               const mo::Param<mo::TInputParamPtr<DType>>& param,
+                               int32_t N,
+                               bool first_init)
         {
             param.get()->setName(name.get());
             param.get()->setUserDataPtr(data.get());
@@ -65,18 +81,18 @@ namespace mo
             T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::STATE>(), first_init);
         }
 
-        template<class AR>
+        template <class AR>
         struct SerializeVisitor
         {
             AR& ar;
-            template< class DType>
+            template <class DType>
             inline void operator()(const mo::Data<DType>& data, const mo::Name& name)
             {
                 ar(name.get(), data.get());
             }
         };
 
-        template<class AR>
+        template <class AR>
         void loadParams(AR& ar)
         {
             SerializeVisitor<AR> visitor{ar};
@@ -84,7 +100,7 @@ namespace mo
             T::reflect(visitor, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::STATE>());
         }
 
-        template<class AR>
+        template <class AR>
         void saveParams(AR& ar)
         {
             SerializeVisitor<AR> visitor{ar};
@@ -92,44 +108,26 @@ namespace mo
             T::reflect(visitor, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::STATE>());
         }
 
-        void serializeParams(ISimpleSerializer* serializer) override
-        {
-
-        }
-
-        template<class AR>
-        void save( AR& ar ) const
-        {
-
-        }
-
-        template<class AR>
-        void load( AR& ar )
-        {
-
-        }
+        void serializeParams(ISimpleSerializer* serializer) override {}
 
         struct ParamInfoVisitor
         {
-            template<int32_t N>
+            template <int32_t N>
             inline void operator()(const mo::Name& name, const Type& type, mo::_counter_<N>)
             {
                 static mo::ParamInfo info(*type.get(), name.get(), "", "", flags);
                 vec.push_back(&info);
             }
 
-            void getParamInfoParents(ct::variadic_typedef<void>* = nullptr)
-            {
+            void getParamInfoParents(ct::variadic_typedef<void>* = nullptr) {}
 
-            }
-
-            template<class Parent>
+            template <class Parent>
             void getParamInfoParents(ct::variadic_typedef<Parent>* = nullptr)
             {
                 Parent::template InterfaceHelper<Parent>::getParamInfoStatic(vec);
             }
 
-            template<class Parent, class ... Parents>
+            template <class Parent, class... Parents>
             void getParamInfoParents(ct::variadic_typedef<Parent, Parents...>* = nullptr)
             {
                 Parent::template InterfaceHelper<Parent>::getParamInfoStatic(vec);
@@ -145,22 +143,17 @@ namespace mo
                 ParamInfoVisitor visitor{vec, mo::ParamFlags::Control_e};
                 // Visit parents
                 visitor.getParamInfoParents(static_cast<typename T::ParentClass*>(nullptr));
-                T::reflectStatic(visitor,
-                           mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::CONTROL>());
+                T::reflectStatic(visitor, mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::CONTROL>());
             }
             {
                 ParamInfoVisitor visitor{vec, mo::ParamFlags::Input_e};
-                T::reflectStatic(visitor,
-                           mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::INPUT>());
+                T::reflectStatic(visitor, mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::INPUT>());
             }
 
             {
                 ParamInfoVisitor visitor{vec, mo::ParamFlags::Output_e};
-                T::reflectStatic(visitor,
-                           mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::INPUT>());
+                T::reflectStatic(visitor, mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::INPUT>());
             }
-
-
         }
 
         static std::vector<mo::ParamInfo*> getParamInfoStatic()
@@ -170,9 +163,12 @@ namespace mo
             return vec;
         }
 
-
-        template<class R, class... Args>
-        inline void operator()(const mo::Signal<mo::TSignal<R(Args...)>>& data, const mo::Name& name, int N, bool first_init, int32_t* counter)
+        template <class R, class... Args>
+        inline void operator()(const mo::Signal<mo::TSignal<R(Args...)>>& data,
+                               const mo::Name& name,
+                               int N,
+                               bool first_init,
+                               int32_t* counter)
         {
             // TODO finish signal initialization
             this->addSignal(data.get(), name.get());
@@ -182,32 +178,28 @@ namespace mo
         int initSignals(bool first_init) override
         {
             int32_t count = 0;
-            T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::SIGNALS>(), first_init,  &count);
+            T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::SIGNALS>(), first_init, &count);
             return count;
         }
 
         struct SignalInfoVisitor
         {
-            template<int N>
+            template <int N>
             inline void operator()(const mo::Type& type, const mo::Name& name, mo::_counter_<N>)
             {
                 static mo::SignalInfo info{*type.get(), std::string(name.get()), "", ""};
                 vec.push_back(&info);
-
             }
 
-            void getSignalInfoParents(ct::variadic_typedef<void>* = nullptr)
-            {
+            void getSignalInfoParents(ct::variadic_typedef<void>* = nullptr) {}
 
-            }
-
-            template<class Parent>
+            template <class Parent>
             void getSignalInfoParents(ct::variadic_typedef<Parent>* = nullptr)
             {
                 Parent::template InterfaceHelper<Parent>::getSignalInfoStatic(vec);
             }
 
-            template<class Parent, class ... Parents>
+            template <class Parent, class... Parents>
             void getSignalInfoParents(ct::variadic_typedef<Parent, Parents...>* = nullptr)
             {
                 Parent::template InterfaceHelper<Parent>::getSignalInfoStatic(vec);
@@ -230,8 +222,12 @@ namespace mo
             return vec;
         }
 
-        template<class Sig, class R, class T1, class... Args>
-        inline void operator()(const mo::Slot<Sig>& data, const mo::NamedType<R(T1::*)(Args...), Function>& fptr, const mo::Name& name, int N, bool first_init)
+        template <class Sig, class R, class T1, class... Args>
+        inline void operator()(const mo::Slot<Sig>& data,
+                               const mo::NamedType<R (T1::*)(Args...), Function>& fptr,
+                               const mo::Name& name,
+                               int N,
+                               bool first_init)
         {
             (*data.get()) = variadicBind(fptr.get(), static_cast<T*>(this), make_int_sequence<sizeof...(Args)>{});
             this->addSlot(data.get(), name.get());
@@ -244,25 +240,24 @@ namespace mo
 
         struct SlotInfoVisitor
         {
-            template<class R, class T1, class... Args, int N>
-            inline void operator()(const mo::NamedType<R(T1::*)(Args...), Function>& /*fptr*/, const mo::Name& name, mo::_counter_<N>)
+            template <class R, class T1, class... Args, int N>
+            inline void operator()(const mo::NamedType<R (T1::*)(Args...), Function>& /*fptr*/,
+                                   const mo::Name& name,
+                                   mo::_counter_<N>)
             {
-                static mo::SlotInfo info{mo::TypeInfo(typeid(R(T1::*)(Args...))), std::string(name.get()),"", ""};
+                static mo::SlotInfo info{mo::TypeInfo(typeid(R (T1::*)(Args...))), std::string(name.get()), "", ""};
                 vec.push_back(&info);
             }
 
-            void getSlotInfoParents(ct::variadic_typedef<void>* = nullptr)
-            {
+            void getSlotInfoParents(ct::variadic_typedef<void>* = nullptr) {}
 
-            }
-
-            template<class Parent>
+            template <class Parent>
             void getSlotInfoParents(ct::variadic_typedef<Parent>* = nullptr)
             {
                 Parent::template InterfaceHelper<Parent>::getSlotInfoStatic(vec);
             }
 
-            template<class Parent, class ... Parents>
+            template <class Parent, class... Parents>
             void getSlotInfoParents(ct::variadic_typedef<Parent, Parents...>* = nullptr)
             {
                 Parent::template InterfaceHelper<Parent>::getSlotInfoStatic(vec);
@@ -286,21 +281,11 @@ namespace mo
             return vec;
         }
 
-        void getParamInfo(std::vector<mo::ParamInfo*>& vec) const override
-        {
-            getParamInfoStatic(vec);
-        }
+        void getParamInfo(std::vector<mo::ParamInfo*>& vec) const override { getParamInfoStatic(vec); }
 
-        void getSignalInfo(std::vector<mo::SignalInfo*>& vec) const override
-        {
-            getSignalInfoStatic(vec);
-        }
+        void getSignalInfo(std::vector<mo::SignalInfo*>& vec) const override { getSignalInfoStatic(vec); }
 
-        void getSlotInfo(std::vector<mo::SlotInfo*>& vec) const override
-        {
-            getSlotInfoStatic(vec);
-        }
-
+        void getSlotInfo(std::vector<mo::SlotInfo*>& vec) const override { getSlotInfoStatic(vec); }
     };
 
     // Static object information available for each meta object

@@ -4,6 +4,8 @@
 #include <ostream>
 #include <string>
 
+struct SystemTable;
+
 namespace mo
 {
     class TypeInfo;

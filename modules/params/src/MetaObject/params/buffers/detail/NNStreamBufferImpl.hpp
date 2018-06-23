@@ -18,7 +18,9 @@ namespace mo
             if (!ts)
             { // default timestamp passed in, get newest value
                 if (!this->_data_buffer.empty())
+                {
                     return (--this->_data_buffer.end());
+                }
                 return this->_data_buffer.end();
             }
             else
@@ -46,9 +48,15 @@ namespace mo
                 }
             }
             if (!this->_data_buffer.empty())
+            {
                 return (--this->_data_buffer.end());
-            return this->_data_buffer.end();
+            }
+            else
+            {
+                return this->_data_buffer.end();
+            }
         }
+
         template <class T>
         typename std::map<SequenceKey, typename NNStreamBuffer<T>::InputStorage_t>::iterator
         NNStreamBuffer<T>::search(size_t fn)
@@ -74,7 +82,10 @@ namespace mo
             {
                 return upper;
             }
-            return this->_data_buffer.end();
+            else
+            {
+                return this->_data_buffer.end();
+            }
         }
 
         template <class T>
@@ -87,7 +98,12 @@ namespace mo
                 this->_current_timestamp = itr->first.ts;
                 this->_current_frame_number = itr->first.fn;
                 if (fn_)
+                {
                     *fn_ = this->_current_frame_number;
+                }
+                else
+                {
+                }
                 this->_ts = itr->first.ts;
                 this->_fn = itr->first.fn;
                 this->_ctx = itr->first.ctx;
@@ -113,7 +129,9 @@ namespace mo
                 this->_ctx = itr->first.ctx;
                 this->_cs = itr->first.cs;
                 if (ts_)
+                {
                     *ts_ = this->_current_timestamp;
+                }
                 this->prune();
                 data = itr->second;
                 return true;

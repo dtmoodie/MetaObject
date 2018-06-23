@@ -1,6 +1,5 @@
 #pragma once
-#include "Serializer.hpp"
-
+#include "SerializationFactory.hpp"
 #include "cereal/archives/binary.hpp"
 #include "cereal/archives/json.hpp"
 #include "cereal/archives/xml.hpp"

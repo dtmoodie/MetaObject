@@ -50,7 +50,7 @@ namespace mo
     {                                                                                                                  \
         static BufferConstructor<Buffer::NNStreamBuffer<T>> _nn_stream_buffer_constructor;                             \
         static ParamConstructor<Buffer::NNStreamBuffer<T>> _nn_stream_buffer_Param_constructor;                        \
-        MetaParam<T, N>(const char* name) : MetaParam<T, N - 1>(name)                                                  \
+        MetaParam<T, N>(SystemTable * table, const char* name) : MetaParam<T, N - 1>(table, name)                      \
         {                                                                                                              \
             (void)&_nn_stream_buffer_constructor;                                                                      \
             (void)&_nn_stream_buffer_Param_constructor;                                                                \

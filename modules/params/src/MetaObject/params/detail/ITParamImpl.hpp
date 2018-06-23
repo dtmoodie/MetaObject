@@ -30,6 +30,9 @@ namespace mo
             {
                 return registerUpdateNotifier(typed);
             }
+            else
+            {
+            }
         }
         else
         {

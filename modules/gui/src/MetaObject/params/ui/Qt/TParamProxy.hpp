@@ -156,7 +156,10 @@ namespace mo
         : public MetaParam<T, N - 1, void>                                                                             \
     {                                                                                                                  \
         static UI::qt::Constructor<T> _Param_proxy_constructor;                                                        \
-        MetaParam(const char* name) : MetaParam<T, N - 1, void>(name) { (void)&_Param_proxy_constructor; }             \
+        MetaParam(SystemTable* table, const char* name) : MetaParam<T, N - 1, void>(table, name)                       \
+        {                                                                                                              \
+            (void)&_Param_proxy_constructor;                                                                           \
+        }                                                                                                              \
     };                                                                                                                 \
     template <class T>                                                                                                 \
     UI::qt::Constructor<T>                                                                                             \
@@ -165,4 +168,3 @@ namespace mo
     MO_UI_QT_PARAMTERPROXY_METAParam(__COUNTER__)
 }
 //#include "detail/TParamProxyImpl.hpp"
-

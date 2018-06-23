@@ -48,7 +48,7 @@ namespace mo
         {
             if (valid)
             {
-                _param.emitUpdate(ts, _ctx, fn);
+                _param.IParam::emitUpdate(ts, _ctx, fn);
             }
         }
 

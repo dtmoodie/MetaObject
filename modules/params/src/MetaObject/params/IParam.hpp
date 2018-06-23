@@ -181,26 +181,34 @@ namespace mo
 
         virtual ~IParam();
 
-        IParam* setName(const std::string& name_); // Get the name of this Param
-        IParam* setTreeRoot(
-            const std::string& tree_root_); // Set the root to the name of this Param. IE objname:paramanme, set objname
-        virtual IParam* setContext(Context* ctx);   // Set the compute context of this Param
-        IParam* setFrameNumber(size_t fn);          // Set the frame number for this Param
-        IParam* setTimestamp(const mo::Time_t& ts); // Set the timestamp for this Param
+        // Get the name of this Param
+        IParam* setName(const std::string& name_);
+        // Set the root to the name of this Param. IE objname:paramanme, set objname
+        IParam* setTreeRoot(const std::string& tree_root_);
+        // Set the compute context of this Param
+        virtual IParam* setContext(Context* ctx);
+        // Set the frame number for this Param
+        IParam* setFrameNumber(size_t fn);
+        // Set the timestamp for this Param
+        IParam* setTimestamp(const mo::Time_t& ts);
         // Set the coordinate system for this Param
         IParam* setCoordinateSystem(const std::shared_ptr<ICoordinateSystem>& cs_);
 
-        const std::string& getName() const; // Get the name of this Param
-        const std::string
-        getTreeName() const; // Get the name of this parmaeter appended with the tree root. IE root_name:param_name
-        const std::string&
-        getTreeRoot() const;                 // Get the tree root of this Param, ie the name of the owning parent object
-        OptionalTime_t getTimestamp() const; // Get the timestamp of this Param, may not exist for all Params
-        size_t getFrameNumber() const; // Get the frame number for this Param. Initialized such that first update will
-                                       // set to 0, and increment at every update unless specified
-        Context* getContext() const;   // Get the compute context of this Param
-        const std::shared_ptr<ICoordinateSystem>&
-        getCoordinateSystem() const; // Get the coordinate system of this Param
+        // Get the name of this Param
+        const std::string& getName() const override;
+        // Get the name of this parmaeter appended with the tree root. IE root_name:param_name
+        const std::string getTreeName() const override;
+        // Get the tree root of this Param, ie the name of the owning parent object
+        const std::string& getTreeRoot() const override;
+        // Get the timestamp of this Param, may not exist for all Params
+        OptionalTime_t getTimestamp() const override;
+        // Get the frame number for this Param. Initialized such that first update will
+        // set to 0, and increment at every update unless specified
+        size_t getFrameNumber() const override;
+        // Get the compute context of this Param
+        Context* getContext() const override;
+        // Get the coordinate system of this Param
+        const std::shared_ptr<ICoordinateSystem>& getCoordinateSystem() const override;
 
         void subscribe();              // Subscribe to this Param as an output
         void unsubscribe();            // unsubscribe to this Param as an output
@@ -230,8 +238,6 @@ namespace mo
 
         virtual IParam*
         emitUpdate(const IParam& other); // commit a Param's value copying metadata info from another parmaeter
-        template <class Archive>
-        void serialize(Archive& ar); // Used for cereal serialization
         Mutex_t& mtx() const; // Get reference to Param mutex.  If setMtx was called, this will reference the mutex that
                               // was set, otherwise one will be created
         virtual void setMtx(Mutex_t* mtx); // Use this to share a mutex with an owning object, ie a parent.
@@ -249,6 +255,7 @@ namespace mo
         void modified(bool value); // Set if it has been modified
 
         std::ostream& print(std::ostream& os) const override;
+
       protected:
         template <class T>
         friend class UI::qt::ParamProxy;
@@ -266,14 +273,4 @@ namespace mo
         int _subscribers = 0;
         bool _modified = false; // Set to true if modified by the user interface etc, set to false by the owning object.
     };
-
-    template <typename Archive>
-    void IParam::serialize(Archive& ar)
-    {
-        ar(_name);
-        ar(_tree_root);
-        ar(_ts);
-        ar(_fn);
-        ar(_flags);
-    }
 }

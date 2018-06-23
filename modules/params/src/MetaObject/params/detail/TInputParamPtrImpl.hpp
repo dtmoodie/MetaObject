@@ -33,9 +33,21 @@ namespace mo
                         *_user_var = ParamTraits<T>::ptr(_current_data);
                         return true;
                     }
+                    else
+                    {
+                    }
+                }
+                else
+                {
                 }
             }
-            return true;
+            else
+            {
+                return true;
+            }
+        }
+        else
+        {
         }
         return false;
     }
@@ -54,8 +66,17 @@ namespace mo
                     _current_data = data;
                     *_user_var = ParamTraits<T>::ptr(_current_data);
                 }
+                else
+                {
+                }
+            }
+            else
+            {
             }
             return true;
+        }
+        else
+        {
         }
         return false;
     }
@@ -78,9 +99,12 @@ namespace mo
     {
         if (fg == mo::BufferUpdated_e && param->checkFlags(mo::ParamFlags::Buffer_e))
         {
-            ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
+            ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
             IParam::emitUpdate(ts, ctx, fn, cs, fg);
             return;
+        }
+        else
+        {
         }
         if (ctx && this->_ctx && ctx->thread_id == this->_ctx->thread_id)
         {
@@ -90,9 +114,15 @@ namespace mo
             if (_user_var)
             {
                 *_user_var = ParamTraits<T>::ptr(_current_data);
-                ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
+                ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
                 IParam::emitUpdate(ts, ctx, fn, cs, fg);
             }
+            else
+            {
+            }
+        }
+        else
+        {
         }
     }
 
@@ -110,11 +140,22 @@ namespace mo
                 {
                     return false;
                 }
+                else
+                {
+                }
                 cs = ITInputParam<T>::_input->getCoordinateSystem();
+            }
+            else
+            {
             }
             *_user_var = ParamTraits<T>::ptr(_current_data);
             if (fn_)
+            {
                 *fn_ = fn;
+            }
+            else
+            {
+            }
             this->_ts = ts;
             this->_fn = fn;
             this->setCoordinateSystem(cs);
@@ -127,7 +168,7 @@ namespace mo
     bool TInputParamPtr<T>::getInput(size_t fn, OptionalTime_t* ts_)
     {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
-        if (_user_var && (ITInputParam<T>::_shared_input || ITInputParam<T>::_input))
+        if (_user_var && ITInputParam<T>::_input)
         {
             OptionalTime_t ts;
             if (ITInputParam<T>::_input)
@@ -136,6 +177,12 @@ namespace mo
                 {
                     return false;
                 }
+                else
+                {
+                }
+            }
+            else
+            {
             }
             auto cs = ITInputParam<T>::_input->getCoordinateSystem();
             *_user_var = ParamTraits<T>::ptr(_current_data);
@@ -143,10 +190,16 @@ namespace mo
             {
                 *ts_ = ts;
             }
+            else
+            {
+            }
             this->_ts = ts;
             this->_fn = fn;
             this->setCoordinateSystem(cs);
             return true;
+        }
+        else
+        {
         }
         return false;
     }
@@ -233,7 +286,7 @@ namespace mo
         bool getInput(const OptionalTime_t& ts, size_t* fn_)
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
-            if (_user_var && (ITInputParam<T>::_shared_input || ITInputParam<T>::_input))
+            if (_user_var && ITInputParam<T>::_input)
             {
                 size_t fn;
                 std::shared_ptr<ICoordinateSystem> cs;
@@ -243,12 +296,21 @@ namespace mo
                     {
                         return false;
                     }
+                    else
+                    {
+                    }
                     cs = ITInputParam<T>::_input->getCoordinateSystem();
+                }
+                else
+                {
                 }
                 *_user_var = _current_data;
                 if (fn_)
                 {
                     *fn_ = fn;
+                }
+                else
+                {
                 }
                 this->_ts = ts;
                 this->_fn = fn;
@@ -270,11 +332,22 @@ namespace mo
                     {
                         return false;
                     }
+                    else
+                    {
+                    }
+                }
+                else
+                {
                 }
                 auto cs = ITInputParam<T>::_input->getCoordinateSystem();
                 *_user_var = _current_data;
                 if (ts_)
+                {
                     *ts_ = ts;
+                }
+                else
+                {
+                }
                 this->_ts = ts;
                 this->_fn = fn;
                 this->setCoordinateSystem(cs);
@@ -283,9 +356,12 @@ namespace mo
             return false;
         }
 
-        ConstAccessToken<T> read() const override { return ConstAccessToken<T>(*this, ParamTraits<T>::get(_current_data)); }
+        ConstAccessToken<T> read() const override
+        {
+            return ConstAccessToken<T>(*this, ParamTraits<T>::get(_current_data));
+        }
 
-        bool canAccess() const override{return _current_data != nullptr; }
+        bool canAccess() const override { return _current_data != nullptr; }
 
       protected:
         virtual bool updateDataImpl(
@@ -304,7 +380,7 @@ namespace mo
         {
             if (fg == mo::BufferUpdated_e && param->checkFlags(mo::ParamFlags::Buffer_e))
             {
-                ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
+                ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
                 IParam::emitUpdate(ts, ctx, fn, cs, fg);
                 return;
             }
@@ -316,8 +392,11 @@ namespace mo
                 if (_user_var)
                 {
                     *_user_var = _current_data;
-                    ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
+                    ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
                     IParam::emitUpdate(ts, ctx, fn, cs, fg);
+                }
+                else
+                {
                 }
             }
         }

@@ -3,7 +3,9 @@
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/params/IVariableManager.hpp"
 #include "MetaObject/signals/Connection.hpp"
+#include "MetaObject/signals/TSlot.hpp"
 
+#include <map>
 namespace mo
 {
     class IParam;
@@ -11,7 +13,7 @@ namespace mo
     {
       public:
         VariableManager();
-        ~VariableManager();
+        virtual ~VariableManager();
         virtual void addParam(IMetaObject* obj, IParam* param);
         virtual void removeParam(IMetaObject* obj, IParam* param);
         virtual void removeParam(const IMetaObject* obj);
@@ -25,8 +27,9 @@ namespace mo
         virtual void linkParams(IParam* output, IParam* input);
 
       private:
-        struct impl;
-        impl* pimpl;
+        std::map<std::string, IParam*> _params;
+        TSlot<void(IMetaObject*, IParam*)> delete_slot;
+        std::map<const IMetaObject*, std::vector<std::string>> _obj_params;
     };
 
     // By default uses a buffered Connection when linking two Params together

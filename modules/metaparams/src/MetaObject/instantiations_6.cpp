@@ -122,9 +122,23 @@ namespace std
         return os;
     }
 }
+namespace mo
+{
+    namespace MetaParams
+    {
+        void instMOTypes(SystemTable* table)
+        {
+            INSTANTIATE_META_PARAM(ReadFile);
+            INSTANTIATE_META_PARAM(WriteFile);
+            INSTANTIATE_META_PARAM(ReadDirectory);
+            INSTANTIATE_META_PARAM(WriteDirectory);
+            INSTANTIATE_META_PARAM(EnumParam);
+        }
+    }
+}
 
-INSTANTIATE_META_PARAM(ReadFile);
-INSTANTIATE_META_PARAM(WriteFile);
-INSTANTIATE_META_PARAM(ReadDirectory);
-INSTANTIATE_META_PARAM(WriteDirectory);
-INSTANTIATE_META_PARAM(EnumParam);
+EXTERN_TYPE(ReadFile);
+EXTERN_TYPE(WriteFile);
+EXTERN_TYPE(ReadDirectory);
+EXTERN_TYPE(WriteDirectory);
+EXTERN_TYPE(EnumParam);

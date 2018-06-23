@@ -50,18 +50,33 @@ namespace mo
         inline std::ostream& operator<<(std::ostream& os, const SequenceKey& key)
         {
             if (key.ts)
+            {
                 os << *key.ts << " ";
+            }
+            else
+            {
+            }
             if (key.fn != std::numeric_limits<size_t>::max())
+            {
                 os << key.fn;
+            }
+            else
+            {
+            }
+
             return os;
         }
 
         inline bool operator<(const SequenceKey& lhs, const SequenceKey& rhs)
         {
             if (lhs.ts && rhs.ts)
+            {
                 return *lhs.ts < *rhs.ts;
+            }
             else
+            {
                 return lhs.fn < rhs.fn;
+            }
         }
 
         template <typename T>
@@ -124,13 +139,13 @@ namespace mo
         };
     }
 
-#define MO_METAParam_INSTANCE_MAP_(N)                                                                                  \
+#define MO_METAPARAM_INSTANCE_MAP_(N)                                                                                  \
     template <class T>                                                                                                 \
     struct MetaParam<T, N, void> : public MetaParam<T, N - 1, void>                                                    \
     {                                                                                                                  \
         static ParamConstructor<Buffer::Map<T>> _map_param_constructor;                                                \
         static BufferConstructor<Buffer::Map<T>> _map_constructor;                                                     \
-        MetaParam<T, N>(const char* name) : MetaParam<T, N - 1>(name)                                                  \
+        MetaParam<T, N>(SystemTable * table, const char* name) : MetaParam<T, N - 1>(table, name)                      \
         {                                                                                                              \
             (void)&_map_param_constructor;                                                                             \
             (void)&_map_constructor;                                                                                   \
@@ -141,6 +156,6 @@ namespace mo
     template <class T>                                                                                                 \
     BufferConstructor<Buffer::Map<T>> MetaParam<T, N, void>::_map_constructor;
 
-    MO_METAParam_INSTANCE_MAP_(__COUNTER__)
+    MO_METAPARAM_INSTANCE_MAP_(__COUNTER__)
 }
 #include "detail/MapImpl.hpp"

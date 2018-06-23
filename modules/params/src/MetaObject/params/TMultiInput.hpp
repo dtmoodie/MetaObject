@@ -50,163 +50,52 @@ namespace mo
     class TMultiInput : public InputParam
     {
       public:
-        void setUserDataPtr(std::tuple<const Types*...>* user_var_) { typeLoop<Types...>(*this, user_var_); }
+        void setUserDataPtr(std::tuple<const Types*...>* user_var_);
 
-        virtual bool setInput(std::shared_ptr<IParam> input) override
-        {
-            bool success = false;
-            if (m_current_input)
-            {
-                selectType<Types...>(*this, m_current_input->getTypeInfo(), static_cast<IParam*>(nullptr), &success);
-                success = false;
-            }
-            selectType<Types...>(*this, input->getTypeInfo(), input.get(), &success);
-            if (success)
-            {
-                m_current_input = input.get();
-            }
-            return success;
-        }
+        bool setInput(std::shared_ptr<IParam> input) override;
 
-        virtual bool setInput(IParam* input) override
-        {
-            bool success = false;
-            if (m_current_input)
-            {
-                selectType<Types...>(*this, m_current_input->getTypeInfo(), static_cast<IParam*>(nullptr), &success);
-                success = false;
-            }
-            selectType<Types...>(*this, input->getTypeInfo(), input, &success);
-            if (success)
-            {
-                m_current_input = input;
-            }
-            return success;
-        }
+        bool setInput(IParam* input) override;
 
-        virtual bool getInput(const OptionalTime_t& ts, size_t* fn = nullptr) override
-        {
-            bool success = false;
-            if (m_current_input)
-            {
-                selectType<Types...>(*this, m_current_input->getTypeInfo(), ts, fn, &success);
-            }
-            return success;
-        }
+        bool getInput(const OptionalTime_t& ts, size_t* fn = nullptr) override;
 
-        virtual bool getInput(size_t fn, OptionalTime_t* ts = nullptr) override
-        {
-            bool success = false;
-            if (m_current_input)
-            {
-                selectType<Types...>(*this, m_current_input->getTypeInfo(), fn, ts, &success);
-            }
-            return success;
-        }
+        bool getInput(size_t fn, OptionalTime_t* ts = nullptr) override;
 
-        virtual void setMtx(Mutex_t* mtx) override { typeLoop<Types...>(*this, mtx); }
+        void setMtx(Mutex_t* mtx) override;
 
-        virtual const mo::TypeInfo& getTypeInfo() const override
-        {
-            if (m_current_input == nullptr)
-            {
-                return _void_type_info;
-            }
-            else
-            {
-                return m_current_input->getTypeInfo();
-            }
-        }
+        const mo::TypeInfo& getTypeInfo() const override;
 
-        virtual mo::IParam* getInputParam() const override { return m_current_input; }
+        mo::IParam* getInputParam() const override;
 
-        virtual OptionalTime_t getInputTimestamp() override
-        {
-            if (m_current_input)
-                return m_current_input->getTimestamp();
-            return {};
-        }
+        OptionalTime_t getInputTimestamp() override;
 
-        virtual size_t getInputFrameNumber() override
-        {
-            if (m_current_input)
-            {
-                return m_current_input->getFrameNumber();
-            }
-            return std::numeric_limits<size_t>::max();
-        }
+        size_t getInputFrameNumber() override;
 
-        virtual bool isInputSet() const override { return m_current_input != nullptr; }
+        bool isInputSet() const override;
 
-        virtual bool acceptsInput(IParam* input) const override
-        {
-            AcceptInputRedirect<TMultiInput<Types...>> redirect(*this);
-            bool success = false;
-            selectType<Types...>(redirect, input->getTypeInfo(), input, &success);
-            return success;
-        }
+        bool acceptsInput(IParam* input) const override;
 
-        virtual bool acceptsType(const TypeInfo& type) const override
-        {
-            AcceptInputRedirect<TMultiInput<Types...>> redirect(*this);
-            bool success = false;
-            selectType<Types...>(redirect, type, type, &success);
-            return success;
-        }
+        bool acceptsType(const TypeInfo& type) const override;
 
         template <class T>
-        inline void apply(std::shared_ptr<IParam> input, bool* success)
-        {
-            *success = get<TInputParamPtr<T>>(m_inputs).setInput(input);
-        }
+        inline void acceptsInput(IParam* input, bool* success) const;
 
         template <class T>
-        inline void apply(IParam* input, bool* success)
-        {
-            *success = get<TInputParamPtr<T>>(m_inputs).setInput(input);
-        }
+        inline void acceptsInput(const TypeInfo& type, bool* success) const;
 
         template <class T>
-        inline void apply(std::tuple<const Types*...>* user_var_)
-        {
-            get<TInputParamPtr<T>>(m_inputs).setUserDataPtr(&get<const T*>(*user_var_));
-        }
-
+        inline void apply(std::tuple<const Types*...>* user_var_);
         template <class T>
-        inline void apply(Mutex_t* mtx)
-        {
-            get<TInputParamPtr<T>>(m_inputs).setMtx(mtx);
-        }
-
+        inline void apply(Mutex_t* mtx);
         template <class T>
-        inline void apply(Context* ctx)
-        {
-            get<TInputParamPtr<T>>(m_inputs).setContext(ctx);
-        }
-
+        inline void apply(Context* ctx);
         template <class T>
-        inline void apply(const OptionalTime_t& ts, size_t* fn, bool* success)
-        {
-            *success = get<TInputParamPtr<T>>(m_inputs).getInput(ts, fn);
-        }
-
+        inline void apply(const OptionalTime_t& ts, size_t* fn, bool* success);
         template <class T>
-        inline void apply(size_t fn, OptionalTime_t* ts, bool* success)
-        {
-            *success = get<TInputParamPtr<T>>(m_inputs).getInput(fn, ts);
-        }
-
+        inline void apply(size_t fn, OptionalTime_t* ts, bool* success);
         template <class T>
-        inline void acceptsInput(IParam* input, bool* success) const
-        {
-            *success = get<TInputParamPtr<T>>(m_inputs).acceptsInput(input);
-        }
-
+        inline void apply(std::shared_ptr<IParam> input, bool* success);
         template <class T>
-        inline void acceptsInput(const TypeInfo& type, bool* success) const
-        {
-            *success = get<TInputParamPtr<T>>(m_inputs).acceptsType(type);
-        }
+        inline void apply(IParam* input, bool* success);
 
       private:
         static mo::TypeInfo _void_type_info;
@@ -217,3 +106,5 @@ namespace mo
     template <class... T>
     mo::TypeInfo TMultiInput<T...>::_void_type_info = mo::TypeInfo(typeid(void));
 }
+
+#include "tmultiinput-inl.hpp"

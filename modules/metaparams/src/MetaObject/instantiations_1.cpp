@@ -23,20 +23,44 @@
 #define MO_EXPORTS
 #endif
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
-
-INSTANTIATE_META_PARAM(bool);
-INSTANTIATE_META_PARAM(int);
-INSTANTIATE_META_PARAM(unsigned short);
-INSTANTIATE_META_PARAM(unsigned int);
-INSTANTIATE_META_PARAM(char);
-INSTANTIATE_META_PARAM(unsigned char);
-INSTANTIATE_META_PARAM(long);
-INSTANTIATE_META_PARAM(long long);
+namespace mo
+{
+    namespace MetaParams
+    {
+        void instantiatePOD(SystemTable* table)
+        {
+            INSTANTIATE_META_PARAM(bool);
+            INSTANTIATE_META_PARAM(int);
+            INSTANTIATE_META_PARAM(unsigned short);
+            INSTANTIATE_META_PARAM(unsigned int);
+            INSTANTIATE_META_PARAM(char);
+            INSTANTIATE_META_PARAM(unsigned char);
+            INSTANTIATE_META_PARAM(long);
+            INSTANTIATE_META_PARAM(long long);
 #ifndef __arm__
-INSTANTIATE_META_PARAM(size_t);
+            INSTANTIATE_META_PARAM(size_t);
 #endif
-INSTANTIATE_META_PARAM(float);
-INSTANTIATE_META_PARAM(double);
-INSTANTIATE_META_PARAM(std::string);
+            INSTANTIATE_META_PARAM(float);
+            INSTANTIATE_META_PARAM(double);
+            INSTANTIATE_META_PARAM(std::string);
+            typedef std::map<std::string, std::string> StringMap;
+            INSTANTIATE_META_PARAM(StringMap);
+        }
+    }
+}
+EXTERN_TYPE(bool);
+EXTERN_TYPE(int);
+EXTERN_TYPE(unsigned short);
+EXTERN_TYPE(unsigned int);
+EXTERN_TYPE(char);
+EXTERN_TYPE(unsigned char);
+EXTERN_TYPE(long);
+EXTERN_TYPE(long long);
+#ifndef __arm__
+EXTERN_TYPE(size_t);
+#endif
+EXTERN_TYPE(float);
+EXTERN_TYPE(double);
+EXTERN_TYPE(std::string);
 typedef std::map<std::string, std::string> StringMap;
-INSTANTIATE_META_PARAM(StringMap);
+EXTERN_TYPE(StringMap);

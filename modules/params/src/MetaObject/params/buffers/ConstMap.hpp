@@ -42,7 +42,7 @@ namespace mo
     {                                                                                                                  \
         static ParamConstructor<Buffer::ConstMap<T>> _map_Param_constructor;                                           \
         static BufferConstructor<Buffer::ConstMap<T>> _map_constructor;                                                \
-        MetaParam<T, N>(const char* name) : MetaParam<T, N - 1>(name)                                                  \
+        MetaParam<T, N>(SystemTable * table, const char* name) : MetaParam<T, N - 1>(table, name)                      \
         {                                                                                                              \
             (void)&_map_Param_constructor;                                                                             \
             (void)&_map_constructor;                                                                                   \

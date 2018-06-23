@@ -1,6 +1,8 @@
 #pragma once
 #include "MetaObject/serialization.hpp"
 #include <functional>
+#include <memory>
+#include <vector>
 
 namespace cereal
 {
@@ -18,23 +20,31 @@ namespace mo
     class TypeInfo;
     class Context;
 
-    class MO_EXPORTS IBinarySerializer
-    {
-      public:
-        virtual ~IBinarySerializer() {}
-        virtual void setInput(IParam* input) = 0;
-    };
+    struct Binary;
+    struct JSON;
+    struct XML;
 
-    class MO_EXPORTS IXmlSerializer
+    template <class T>
+    struct ArchivePairs
     {
     };
-
-    class MO_EXPORTS IJsonSerializer
+    template <>
+    struct ArchivePairs<Binary>
     {
+        using Input = cereal::BinaryInputArchive;
+        using Output = cereal::BinaryOutputArchive;
     };
-
-    class MO_EXPORTS ITextSerializer
+    template <>
+    struct ArchivePairs<JSON>
     {
+        using Input = cereal::JSONInputArchive;
+        using Output = cereal::JSONOutputArchive;
+    };
+    template <>
+    struct ArchivePairs<XML>
+    {
+        using Input = cereal::XMLInputArchive;
+        using Output = cereal::XMLOutputArchive;
     };
 
     class MO_EXPORTS SerializationFactory
@@ -42,14 +52,25 @@ namespace mo
       public:
         static SerializationFactory* instance();
 
-        typedef std::function<bool(IParam*, cereal::BinaryOutputArchive&)> SerializeBinary_f;
-        typedef std::function<bool(IParam*, cereal::BinaryInputArchive&)> DeSerializeBinary_f;
-        typedef std::function<bool(IParam*, cereal::XMLOutputArchive&)> SerializeXml_f;
-        typedef std::function<bool(IParam*, cereal::XMLInputArchive&)> DeSerializeXml_f;
-        typedef std::function<bool(IParam*, cereal::JSONOutputArchive&)> SerializeJson_f;
-        typedef std::function<bool(IParam*, cereal::JSONInputArchive&)> DeSerializeJson_f;
-        typedef std::function<bool(IParam*, std::stringstream&)> SerializeText_f;
-        typedef std::function<bool(IParam*, std::stringstream&)> DeSerializeText_f;
+        template <class AR>
+        using Serializer_f = std::function<bool(const IParam*, AR&)>;
+        template <class AR>
+        using Deserializer_f = std::function<bool(IParam*, AR&)>;
+
+        using SerializeBinary_f = Serializer_f<cereal::BinaryOutputArchive>;
+        using SerializeXml_f = Serializer_f<cereal::XMLOutputArchive>;
+        using SerializeJson_f = Serializer_f<cereal::JSONOutputArchive>;
+        using SerializeText_f = Serializer_f<std::stringstream>;
+
+        using DeSerializeBinary_f = Deserializer_f<cereal::BinaryInputArchive>;
+        using DeSerializeXml_f = Deserializer_f<cereal::XMLInputArchive>;
+        using DeSerializeJson_f = Deserializer_f<cereal::JSONInputArchive>;
+        using DeSerializeText_f = Deserializer_f<std::stringstream>;
+
+        template <class AR>
+        Serializer_f<AR> getSerializer(const TypeInfo& type);
+        template <class AR>
+        Deserializer_f<AR> getDeserializer(const TypeInfo& type);
 
         SerializeBinary_f getBinarySerializationFunction(const TypeInfo& type);
         DeSerializeBinary_f getBinaryDeSerializationFunction(const TypeInfo& type);
@@ -84,10 +105,12 @@ namespace mo
         void
         setTextSerializationFunctions(const TypeInfo& type, SerializeText_f serialize, DeSerializeText_f deserialize);
 
+        std::vector<TypeInfo> listSerializableTypes();
+
       private:
         SerializationFactory();
         ~SerializationFactory();
         struct impl;
-        impl* _pimpl;
+        std::unique_ptr<impl> _pimpl;
     };
 }

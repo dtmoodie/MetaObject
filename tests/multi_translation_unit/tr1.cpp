@@ -8,4 +8,4 @@
 #include "MetaObject/params/ui/Qt/OpenCV.hpp"
 #include "MetaObject/params/ui/Qt/TParamProxy.hpp"*/
 
-INSTANTIATE_META_PARAM(std::vector<std::string>);
+// INSTANTIATE_META_PARAM(std::vector<std::string>);

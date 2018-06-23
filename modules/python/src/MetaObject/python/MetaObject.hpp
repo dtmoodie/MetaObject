@@ -209,17 +209,19 @@ namespace mo
         std::vector<ParamInfo*> param_infos = minfo->getParamInfo();
         for (auto param_info : param_infos)
         {
-            auto setter = python::DataConverterRegistry::instance()->getSetter(param_info->data_type);
-            auto getter = python::DataConverterRegistry::instance()->getGetter(param_info->data_type);
+            auto setter = python::DataConverterRegistry::instance()->getSetter(param_info->getDataType());
+            auto getter = python::DataConverterRegistry::instance()->getGetter(param_info->getDataType());
             if (setter && getter)
             {
-                bpobj.def(("get_" + param_info->name).c_str(),
+                bpobj.def(("get_" + param_info->getName()).c_str(),
                           std::function<boost::python::object(const T&)>(
-                              std::bind(getParamHelper<T>, getter, param_info->name, std::placeholders::_1)));
-                bpobj.def(
-                    ("set_" + param_info->name).c_str(),
-                    std::function<bool(T&, const boost::python::object&)>(std::bind(
-                        setParamHelper<T>, setter, param_info->name, std::placeholders::_1, std::placeholders::_2)));
+                              std::bind(getParamHelper<T>, getter, param_info->getName(), std::placeholders::_1)));
+                bpobj.def(("set_" + param_info->getName()).c_str(),
+                          std::function<bool(T&, const boost::python::object&)>(std::bind(setParamHelper<T>,
+                                                                                          setter,
+                                                                                          param_info->getName(),
+                                                                                          std::placeholders::_1,
+                                                                                          std::placeholders::_2)));
             }
         }
     }
@@ -262,9 +264,9 @@ namespace mo
         std::vector<std::string> operator()(const std::vector<ParamInfo*>& param_info)
         {
             std::vector<std::string> param_names;
-            for (ParamInfo* pinfo : param_info)
+            for (const ParamInfo* pinfo : param_info)
             {
-                param_names.push_back(pinfo->name);
+                param_names.push_back(pinfo->getName());
             }
             return param_names;
         }

@@ -18,13 +18,22 @@ namespace mo
             if (Map<T>::getData(data, ts, ctx, &_current_frame_number))
             {
                 if (!ts)
+                {
                     _current_timestamp = this->_data_buffer.rbegin()->first.ts;
+                }
                 else
+                {
                     _current_timestamp = ts;
+                }
                 prune();
                 if (fn_)
+                {
                     *fn_ = _current_frame_number;
+                }
                 return true;
+            }
+            else
+            {
             }
             return false;
         }
@@ -38,7 +47,9 @@ namespace mo
                 _current_frame_number = fn;
                 prune();
                 if (ts_)
+                {
                     *ts_ = _current_timestamp;
+                }
                 return true;
             }
             return false;
@@ -48,7 +59,9 @@ namespace mo
         void StreamBuffer<T>::setFrameBufferCapacity(size_t size)
         {
             if (_time_padding)
+            {
                 _time_padding = boost::none;
+            }
             _frame_padding = size;
         }
 
@@ -56,7 +69,9 @@ namespace mo
         void StreamBuffer<T>::setTimePaddingCapacity(mo::Time_t time)
         {
             if (_frame_padding)
+            {
                 _frame_padding = boost::none;
+            }
             _time_padding = time;
         }
 
@@ -91,6 +106,9 @@ namespace mo
                     }
                 }
             }
+            else
+            {
+            }
             if (_frame_padding && _current_frame_number > *_frame_padding)
             {
                 auto itr = this->_data_buffer.begin();
@@ -105,6 +123,9 @@ namespace mo
                         ++itr;
                     }
                 }
+            }
+            else
+            {
             }
         }
 
@@ -131,13 +152,19 @@ namespace mo
                 // Periodically emit an update signal in case a dirty flag was not set correctly and the read thread is
                 // just sleeping
                 if (lock)
+                {
                     lock.unlock();
+                }
                 IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
                 if (!lock)
+                {
                     lock.lock();
+                }
             }
             if (!lock)
+            {
                 lock.lock();
+            }
             Map<T>::_data_buffer[{ts, fn, cs, ctx}] = data_;
             IParam::_modified = true;
             lock.unlock();
@@ -162,13 +189,19 @@ namespace mo
             while (this->_data_buffer.size() >= _size)
             {
                 if (this->_current_timestamp && itr->first.ts == this->_current_timestamp)
+                {
                     break;
+                }
+                else
+                {
+                }
                 if (this->_current_frame_number && itr->first.fn == this->_current_frame_number)
+                {
                     break;
-#ifdef _DEBUG
-                MO_LOG(trace) << "Removing item at (fn/ts) " << itr->first.fn << "/" << itr->first.ts << " from "
-                              << this->getTreeName();
-#endif
+                }
+                else
+                {
+                }
                 itr = this->_data_buffer.erase(itr);
             }
             lock.unlock();
@@ -193,19 +226,34 @@ namespace mo
                 // Periodically emit an update signal in case a dirty flag was not set correctly and the read thread is
                 // just sleeping
                 if (lock)
+                {
                     lock.unlock();
+                }
+                else
+                {
+                }
                 IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-                ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+                ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
                 if (!lock)
+                {
                     lock.lock();
+                }
+                else
+                {
+                }
             }
             if (!lock)
+            {
                 lock.lock();
+            }
+            else
+            {
+            }
             this->_data_buffer[{ts, fn, cs, ctx}] = data;
             IParam::_modified = true;
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
         }
 
         template <class T>
@@ -225,8 +273,13 @@ namespace mo
             {
                 return false;
             }
+            else
+            {
+            }
             if (!lock)
+            {
                 lock.lock();
+            }
             Map<T>::_data_buffer[{ts, fn, cs, ctx}] = data_;
             IParam::_modified = true;
             lock.unlock();
@@ -251,12 +304,14 @@ namespace mo
                 return;
             }
             if (!lock)
+            {
                 lock.lock();
+            }
             this->_data_buffer[{ts, fn, cs, ctx}] = data;
             IParam::_modified = true;
             lock.unlock();
-            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            ITParam<T>::_typed_update_signal(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            IParam::emitUpdate(ts, ctx, fn, cs, mo::BufferUpdated_e);
+            ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
         }
     }
 }

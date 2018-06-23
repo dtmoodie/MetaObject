@@ -12,12 +12,16 @@ namespace mo
                   const std::string& tooltip_ = "",
                   const std::string description_ = "",
                   ParamFlags type_flags_ = ParamFlags::Control_e,
-                  const std::string& init = "")
-            : data_type(type_), name(name_), tooltip(tooltip_), description(description_), type_flags(type_flags_),
-              initial_value(init)
-        {
-        }
-        std::string Print();
+                  const std::string& init = "");
+        std::string print() const;
+        const std::string& getName() const;
+        const std::string& getTooltip() const;
+        const std::string& getDescription() const;
+        const std::string& getInitialization() const;
+        const EnumClassBitset<ParamFlags> getParamType() const;
+        mo::TypeInfo getDataType() const;
+
+      private:
         mo::TypeInfo data_type;
         std::string name;
         std::string tooltip;

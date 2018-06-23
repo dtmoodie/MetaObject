@@ -1,8 +1,9 @@
-#ifdef HAVE_OPENCV
+#include "MetaObject/core/metaobject_config.hpp"
+#if MO_HAVE_OPENCV
 #include "MetaObject/metaparams/reflect/cv_types.hpp"
 #include "MetaObject/params/MetaParam.hpp"
 #include "ct/reflect/cereal.hpp"
-#ifdef HAVE_BOOST_PYTHON
+#if MO_HAVE_PYTHON
 #include <boost/python/object.hpp>
 #endif
 
@@ -14,7 +15,7 @@ namespace ct
         struct ArrayAdapter;
     }
 }
-#ifdef HAVE_BOOST_PYTHON
+#if MO_HAVE_PYTHON
 namespace mo
 {
     namespace python
@@ -40,7 +41,8 @@ namespace mo
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 #include <boost/lexical_cast.hpp>
 #include <cereal/types/vector.hpp>
-#ifdef HAVE_BOOST_PYTHON
+
+#if MO_HAVE_PYTHON
 namespace mo
 {
     namespace python
@@ -68,12 +70,29 @@ static_assert(ct::reflect::ReflectData<cv::Vec3f>::IS_SPECIALIZED, "Specializati
 static_assert(ct::reflect::ReflectData<cv::Vec3b>::IS_SPECIALIZED, "Specialization not working for cv::Vec3b");
 
 using namespace cv;
-INSTANTIATE_META_PARAM(Scalar);
-INSTANTIATE_META_PARAM(Vec2f);
-INSTANTIATE_META_PARAM(Vec3f);
-INSTANTIATE_META_PARAM(Vec2b);
-INSTANTIATE_META_PARAM(Vec3b);
-INSTANTIATE_META_PARAM(std::vector<Vec3b>);
+namespace mo
+{
+    namespace MetaParams
+    {
+        void instCVVec(SystemTable* table)
+        {
+            INSTANTIATE_META_PARAM(Scalar);
+            INSTANTIATE_META_PARAM(Vec2f);
+            INSTANTIATE_META_PARAM(Vec3f);
+            INSTANTIATE_META_PARAM(Vec2b);
+            INSTANTIATE_META_PARAM(Vec3b);
+            INSTANTIATE_META_PARAM(std::vector<Vec3b>);
+            typedef std::map<std::string, Vec3b> ClassColormap_t;
+            INSTANTIATE_META_PARAM(ClassColormap_t);
+        }
+    }
+}
+EXTERN_TYPE(Scalar);
+EXTERN_TYPE(Vec2f);
+EXTERN_TYPE(Vec3f);
+EXTERN_TYPE(Vec2b);
+EXTERN_TYPE(Vec3b);
+EXTERN_TYPE(std::vector<Vec3b>);
 typedef std::map<std::string, Vec3b> ClassColormap_t;
-INSTANTIATE_META_PARAM(ClassColormap_t);
+EXTERN_TYPE(ClassColormap_t);
 #endif

@@ -10,7 +10,7 @@ InputParamAny::InputParamAny(const std::string& name)
     this->appendFlags(mo::ParamFlags::Input_e);
 }
 
-bool InputParamAny::getInput(OptionalTime_t ts, size_t* fn)
+bool InputParamAny::getInput(const OptionalTime_t& ts, size_t* fn)
 {
     return true;
 }
