@@ -55,7 +55,7 @@ namespace mo
         bool getInput(size_t fn, OptionalTime_t* ts = nullptr);
 
         virtual ConstAccessToken<T> read() const;
-        bool canAccess() const override{return ParamTraits<T>::valid(_current_data); }
+        bool canAccess() const override { return ParamTraits<T>::valid(_current_data); }
 
       protected:
         virtual bool updateDataImpl(
@@ -74,5 +74,4 @@ namespace mo
                                    UpdateFlags);
     };
 }
-#include "MetaObject/params/detail/TInputParamImpl.hpp"
 #include "detail/TInputParamPtrImpl.hpp"

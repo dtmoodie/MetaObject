@@ -46,13 +46,12 @@ namespace mo
             {
                 return applyImpl(--cnt, type, std::forward<Args>(args)...);
             }
-            return false;
         }
 
         F& m_func;
     };
 
-    template<class F, class ... T>
+    template <class F, class... T>
     struct TypeSelector<F, std::tuple<T...>>
     {
         TypeSelector(F& functor) : m_func(functor) {}
@@ -63,7 +62,7 @@ namespace mo
             return applyImpl(_counter_<static_cast<int>(sizeof...(T)) - 1>(), type, std::forward<Args>(args)...);
         }
 
-    private:
+      private:
         template <class... Args>
         bool applyImpl(_counter_<0>, const mo::TypeInfo& type, Args&&... args)
         {
@@ -78,7 +77,7 @@ namespace mo
 
         template <int I, class... Args>
         bool
-            applyImpl(_counter_<I> cnt, const typename std::enable_if<I != 0, mo::TypeInfo>::type& type, Args&&... args)
+        applyImpl(_counter_<I> cnt, const typename std::enable_if<I != 0, mo::TypeInfo>::type& type, Args&&... args)
         {
             typedef typename std::tuple_element<I, std::tuple<T...>>::type Type;
             if (mo::TypeInfo(typeid(Type)) == type)
@@ -90,7 +89,6 @@ namespace mo
             {
                 return applyImpl(--cnt, type, std::forward<Args>(args)...);
             }
-            return false;
         }
 
         F& m_func;

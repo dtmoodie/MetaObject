@@ -46,10 +46,23 @@ namespace mo
         const T& m_func;
     };
 
+    struct Initializer
+    {
+        template <class Type, class... Args>
+        void apply(std::tuple<const Args*...>& tuple)
+        {
+            get<const Type*>(tuple) = nullptr;
+        }
+    };
+
     template <class... Types>
     class TMultiInput : public InputParam
     {
       public:
+        using InputTypeTuple = std::tuple<const Types*...>;
+        using TypeTuple = std::tuple<Types...>;
+        static InputTypeTuple initNullptr();
+
         void setUserDataPtr(std::tuple<const Types*...>* user_var_);
 
         bool setInput(std::shared_ptr<IParam> input) override;
@@ -107,4 +120,4 @@ namespace mo
     mo::TypeInfo TMultiInput<T...>::_void_type_info = mo::TypeInfo(typeid(void));
 }
 
-#include "tmultiinput-inl.hpp"
+#include "TMultiInput-inl.hpp"

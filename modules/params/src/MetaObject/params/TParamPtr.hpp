@@ -1,6 +1,7 @@
 #pragma once
 #include "ITAccessibleParam.hpp"
 #include "MetaParam.hpp"
+#include "OutputParam.hpp"
 
 namespace mo
 {
@@ -87,7 +88,7 @@ namespace mo
      * owns a reference to the data which is updated by the param's reset function.
      */
     template <typename T>
-    class MO_EXPORTS TParamOutput : virtual public TParamPtr<T>
+    class MO_EXPORTS TParamOutput : virtual public TParamPtr<T>, virtual public OutputParam
     {
       public:
         typedef typename ParamTraits<T>::Storage_t Storage_t;
@@ -122,6 +123,9 @@ namespace mo
                                    const std::shared_ptr<ICoordinateSystem>& cs_ = std::shared_ptr<ICoordinateSystem>(),
                                    UpdateFlags flags_ = ValueUpdated_e);
         virtual IParam* emitUpdate(const IParam& other) { return IParam::emitUpdate(other); }
+
+        virtual std::vector<TypeInfo> listOutputTypes() const override;
+        IParam*  getOutputParam(const TypeInfo type)override;
 
       protected:
         virtual bool updateDataImpl(const Storage_t& data,

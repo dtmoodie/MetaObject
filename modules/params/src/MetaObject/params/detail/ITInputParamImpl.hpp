@@ -2,6 +2,7 @@
 #ifndef __CUDACC__
 #include "MetaObject/logging/logging.hpp"
 #include "MetaObject/params/ITInputParam.hpp"
+#include "MetaObject/params/OutputParam.hpp"
 #include <boost/thread/recursive_mutex.hpp>
 #include <functional>
 #include <memory>
@@ -81,7 +82,18 @@ namespace mo
             {
                 _input->unsubscribe();
             }
-            this->_input = dynamic_cast<ITParam<T>*>(param);
+            auto output_param = dynamic_cast<OutputParam*>(param);
+            if (output_param)
+            {
+                if (auto param_ = output_param->getOutputParam(TypeInfo(typeid(T))))
+                {
+                    this->_input = dynamic_cast<ITParam<T>*>(param_);
+                }
+            }
+            else
+            {
+                this->_input = dynamic_cast<ITParam<T>*>(param);
+            }
             if (this->_input)
             {
                 param->subscribe();

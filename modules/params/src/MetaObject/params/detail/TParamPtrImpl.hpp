@@ -421,7 +421,26 @@ namespace mo
     }
 
     template <typename T>
-    class MO_EXPORTS TParamOutput<std::shared_ptr<T>> : virtual public TParamPtr<std::shared_ptr<T>>
+    std::vector<TypeInfo> TParamOutput<T>::listOutputTypes() const
+    {
+        return {getTypeInfo()};
+    }
+
+    template <typename T>
+    IParam* TParamOutput<T>::getOutputParam(const TypeInfo type)
+    {
+        if (type == getTypeInfo())
+        {
+            return this;
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+
+    template <typename T>
+    class MO_EXPORTS TParamOutput<std::shared_ptr<T>> : virtual public TParamPtr<std::shared_ptr<T>>, virtual public OutputParam
     {
       public:
         typedef typename ParamTraits<T>::Storage_t Storage_t;
@@ -514,6 +533,20 @@ namespace mo
             return this;
         }
         virtual IParam* emitUpdate(const IParam& other) { return IParam::emitUpdate(other); }
+
+        std::vector<TypeInfo> listOutputTypes() const override { return {this->getTypeInfo()}; }
+
+        IParam* getOutputParam(const TypeInfo type) override
+        {
+            if (type == this->getTypeInfo())
+            {
+                return this;
+            }
+            else
+            {
+                return nullptr;
+            }
+        }
 
       protected:
         virtual bool updateDataImpl(const Storage_t& data,
