@@ -2,8 +2,12 @@
 #include <MetaObject/core/detail/Allocator.hpp>
 #include <MetaObject/detail/Export.hpp>
 #include <MetaObject/detail/TypeInfo.hpp>
+#include <MetaObject/logging/logging.hpp>
+#include <MetaObject/core/TypeTable.hpp>
+
 #include <RuntimeObjectSystem/ObjectInterfacePerModule.h>
 #include <RuntimeObjectSystem/shared_ptr.hpp>
+
 #include <map>
 #include <memory>
 
@@ -125,7 +129,8 @@ T* singleton()
             ptr = table->getSingleton<T>();
             if (ptr == nullptr)
             {
-                ptr = table->setSingleton(std::unique_ptr<U>(new U()));
+                ptr = table->setSingleton(std::unique_ptr<T>(new U()));
+                MO_LOG(info) << "Creating new " << mo::TypeTable::instance(table).typeToName(mo::TypeInfo(typeid(U))) << " singleton instance " << static_cast<const void*>(ptr) << " in system table: " << static_cast<const void*>(table);
             }
         }
     }

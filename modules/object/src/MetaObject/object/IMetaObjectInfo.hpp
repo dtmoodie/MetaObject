@@ -9,6 +9,7 @@ namespace mo
     struct ParamInfo;
     struct SignalInfo;
     struct SlotInfo;
+    struct ISlot;
     class MO_EXPORTS IMetaObjectInfo : public IObjectInfo
     {
       public:
@@ -20,5 +21,6 @@ namespace mo
         virtual std::string getObjectTooltip() const;
         virtual std::string getObjectHelp() const;
         virtual std::string getDisplayName() const { return GetObjectName(); }
+        virtual std::vector<std::pair<ISlot*, std::string>> getStaticSlots() const { return {}; }
     };
 }

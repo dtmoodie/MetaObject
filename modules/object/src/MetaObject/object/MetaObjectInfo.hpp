@@ -10,7 +10,9 @@
 
 #include "MetaObject/params/ParamInfo.hpp"
 #include "MetaObject/params/TInputParam.hpp"
+#include "MetaObject/params/TMultiInput.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
+
 #include "MetaObject/signals/SignalInfo.hpp"
 #include "MetaObject/signals/SlotInfo.hpp"
 
@@ -64,6 +66,18 @@ namespace mo
         inline void operator()(const mo::Data<DType const*>& data,
                                const mo::Name& name,
                                const mo::Param<mo::TInputParamPtr<DType>>& param,
+                               int32_t N,
+                               bool first_init)
+        {
+            param.get()->setName(name.get());
+            param.get()->setUserDataPtr(data.get());
+            T::addParam(param.get());
+        }
+
+        template <class... DTypes>
+        inline void operator()(const mo::Data<std::tuple<const DTypes*...>>& data,
+                               const mo::Name& name,
+                               const mo::Param<mo::TMultiInput<DTypes...>>& param,
                                int32_t N,
                                bool first_init)
         {
@@ -141,8 +155,6 @@ namespace mo
         {
             {
                 ParamInfoVisitor visitor{vec, mo::ParamFlags::Control_e};
-                // Visit parents
-                visitor.getParamInfoParents(static_cast<typename T::ParentClass*>(nullptr));
                 T::reflectStatic(visitor, mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::CONTROL>());
             }
             {
@@ -152,7 +164,7 @@ namespace mo
 
             {
                 ParamInfoVisitor visitor{vec, mo::ParamFlags::Output_e};
-                T::reflectStatic(visitor, mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::INPUT>());
+                T::reflectStatic(visitor, mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::OUTPUT>());
             }
         }
 
@@ -226,8 +238,8 @@ namespace mo
         inline void operator()(const mo::Slot<Sig>& data,
                                const mo::NamedType<R (T1::*)(Args...), Function>& fptr,
                                const mo::Name& name,
-                               int N,
-                               bool first_init)
+                               int /*N*/,
+                               bool /*first_init*/)
         {
             (*data.get()) = variadicBind(fptr.get(), static_cast<T*>(this), make_int_sequence<sizeof...(Args)>{});
             this->addSlot(data.get(), name.get());
@@ -245,7 +257,17 @@ namespace mo
                                    const mo::Name& name,
                                    mo::_counter_<N>)
             {
-                static mo::SlotInfo info{mo::TypeInfo(typeid(R (T1::*)(Args...))), std::string(name.get()), "", ""};
+                static mo::SlotInfo info{
+                    mo::TypeInfo(typeid(R (T1::*)(Args...))), std::string(name.get()), "", "", false};
+                vec.push_back(&info);
+            }
+
+            template <class R, class... Args, int N>
+            inline void operator()(const mo::NamedType<R (*)(Args...), StaticFunction>& /*fptr*/,
+                                   const mo::Name& name,
+                                   mo::_counter_<N>)
+            {
+                static mo::SlotInfo info{mo::TypeInfo(typeid(R(*)(Args...))), std::string(name.get()), "", "", true};
                 vec.push_back(&info);
             }
 
@@ -266,6 +288,34 @@ namespace mo
 
             std::vector<mo::SlotInfo*>& vec;
         };
+
+        struct StaticSlotVisitor
+        {
+            std::vector<std::pair<mo::ISlot*, std::string>>& slot_vec;
+
+            template <class R, class... Args, int N>
+            inline void operator()(const mo::NamedType<R (*)(Args...), StaticFunction>& fptr,
+                                   const mo::Name& name,
+                                   mo::_counter_<N>)
+            {
+                static mo::TSlot<R(Args...)> slot = variadicBind(fptr.get(), make_int_sequence<sizeof...(Args)>{});
+                slot_vec.push_back(std::make_pair(&slot, name.get()));
+            }
+
+            template <class R, class T1, class... Args, int N>
+            inline void
+            operator()(const mo::NamedType<R (T1::*)(Args...), Function>&, const mo::Name&, mo::_counter_<N>)
+            {
+            }
+        };
+
+        static std::vector<std::pair<mo::ISlot*, std::string>> getStaticSlots()
+        {
+            std::vector<std::pair<mo::ISlot*, std::string>> static_slots;
+            StaticSlotVisitor visitor{static_slots};
+            T::reflectStatic(visitor, mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::SLOTS>());
+            return static_slots;
+        }
 
         static void getSlotInfoStatic(std::vector<mo::SlotInfo*>& vec)
         {
@@ -312,6 +362,8 @@ namespace mo
         static std::string descriptionStatic() { return _get_description_helper<T>(); }
 
         static TypeInfo getTypeInfoStatic() { return TypeInfo(typeid(typename T::BASE_CLASS)); }
+
+        std::vector<std::pair<ISlot*, std::string>> getStaticSlots() const override { return T::getStaticSlots(); }
 
         std::vector<ParamInfo*> getParamInfo() const
         {

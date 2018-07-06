@@ -4,8 +4,8 @@
 #include "MetaObject/object/MetaObjectInfo.hpp"
 #include "MetaObject/object/MetaObjectPolicy.hpp"
 #include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
-#include <RuntimeObjectSystem/shared_ptr.hpp>
 #include "ct/VariadicTypedef.hpp"
+#include <RuntimeObjectSystem/shared_ptr.hpp>
 #include <boost/preprocessor.hpp>
 #include <string>
 #include <type_traits>
@@ -20,82 +20,81 @@ namespace mo
 }
 
 #define REFLECT_START(N_)                                                                                              \
-template<class V, int N, class F, class T, class ... Args>                                                             \
-inline void reflectHelper(V& visitor, F filter, T type, mo::_counter_<N> dummy, Args&&... args) {                      \
-    reflectHelper(visitor, filter, type, --dummy, args...);                                                            \
-}                                                                                                                      \
-template<class V, class F, class T, class... Args>                                                                     \
-inline void reflectHelper(V& visitor, F, T , mo::_counter_<N_>, Args&&...) {} \
-template<class V, int N, class F, class T, class ... Args>                                                             \
-static inline void reflectHelperStatic(V& visitor, F filter, T type, mo::_counter_<N> dummy, Args&&... args) {                      \
-    reflectHelperStatic(visitor, filter, type, --dummy, args...);                                                            \
-}                                                                                                                      \
-template<class V, class F, class T, class... Args>                                                                     \
-static inline void reflectHelperStatic(V& visitor, F, T , mo::_counter_<N_>, Args&&...) {}
+    template <class V, int N, class F, class T, class... Args>                                                         \
+    inline void reflectHelper(V& visitor, F filter, T type, mo::_counter_<N> dummy, Args&&... args)                    \
+    {                                                                                                                  \
+        reflectHelper(visitor, filter, type, --dummy, args...);                                                        \
+    }                                                                                                                  \
+    template <class V, class F, class T, class... Args>                                                                \
+    inline void reflectHelper(V& visitor, F filter, T type, mo::_counter_<N_> cnt, Args&&... args)                     \
+    {                                                                                                                  \
+    }                                                                                                                  \
+    template <class V, int N, class F, class T, class... Args>                                                         \
+    static inline void reflectHelperStatic(V& visitor, F filter, T type, mo::_counter_<N> dummy, Args&&... args)       \
+    {                                                                                                                  \
+        reflectHelperStatic(visitor, filter, type, --dummy, args...);                                                  \
+    }                                                                                                                  \
+    template <class V, class F, class T, class... Args>                                                                \
+    static inline void reflectHelperStatic(V& visitor, F filter, T type, mo::_counter_<N_> cnt, Args&&... args)        \
+    {                                                                                                                  \
+    }
 
-#define MO_BEGIN_1(CLASS_NAME, N_) \
-    using THIS_CLASS = CLASS_NAME; \
-    using ParentClass = ct::variadic_typedef<void>; \
-    REFLECT_START(N_) \
+#define MO_BEGIN_1(CLASS_NAME, N_)                                                                                     \
+    using THIS_CLASS = CLASS_NAME;                                                                                     \
+    using ParentClass = ct::variadic_typedef<void>;                                                                    \
+    REFLECT_START(N_)                                                                                                  \
     static rcc::shared_ptr<THIS_CLASS::InterfaceHelper<CLASS_NAME>> create();
-
 
 #define MO_DERIVE_(N_, CLASS_NAME, ...)                                                                                \
-    using THIS_CLASS = CLASS_NAME; \
-    using ParentClass = ct::variadic_typedef<__VA_ARGS__>; \
-    REFLECT_START(N_) \
+    using THIS_CLASS = CLASS_NAME;                                                                                     \
+    using ParentClass = ct::variadic_typedef<__VA_ARGS__>;                                                             \
+    REFLECT_START(N_)                                                                                                  \
     static rcc::shared_ptr<THIS_CLASS::InterfaceHelper<CLASS_NAME>> create();
 
+template <class T>
+struct ReflectParent;
 
-template<class T>
-struct ReflectParent
-{
-
-};
-
-template<>
+template <>
 struct ReflectParent<ct::variadic_typedef<void>>
 {
-    template<class T , class Visitor, class Filter, class Type, class ... Args>
-    static void visit(T*,Visitor& , Filter , Type , Args&&... )
+    template <class T, class Visitor, class Filter, class Type, class... Args>
+    static void visit(T*, Visitor&, Filter, Type, Args&&...)
     {
-
     }
 
-    template<class Visitor, class Filter, class Type, class ... Args>
-    static void visit(Visitor& , Filter , Type , Args&&... )
+    template <class Visitor, class Filter, class Type, class... Args>
+    static void visit(Visitor&, Filter, Type, Args&&...)
     {
-
     }
 };
 
-template<class Parent>
+template <class Parent>
 struct ReflectParent<ct::variadic_typedef<Parent>>
 {
-    template<class T, class Visitor, class Filter, class Type, class ... Args>
+    template <class T, class Visitor, class Filter, class Type, class... Args>
     static void visit(T* obj, Visitor& visitor, Filter filter, Type type, Args&&... args)
     {
         obj->Parent::reflect(visitor, filter, type, std::forward<Args>(args)...);
     }
 
-    template<class Visitor, class Filter, class Type, class ... Args>
+    template <class Visitor, class Filter, class Type, class... Args>
     static void visit(Visitor& visitor, Filter filter, Type type, Args&&... args)
     {
         Parent::reflectStatic(visitor, filter, type, std::forward<Args>(args)...);
     }
 };
 
-template<class Parent, class ... Parents>
+template <class Parent, class... Parents>
 struct ReflectParent<ct::variadic_typedef<Parent, Parents...>>
 {
-    template<class T, class Visitor, class Filter, class Type, class ... Args>
+    template <class T, class Visitor, class Filter, class Type, class... Args>
     static void visit(T* obj, Visitor& visitor, Filter filter, Type type, Args&&... args)
     {
         obj->Parent::reflect(visitor, filter, type, std::forward<Args>(args)...);
         ReflectParent<ct::variadic_typedef<Parents...>>::visit(obj, visitor, filter, type, std::forward<Args>(args)...);
     }
 
-    template<class Visitor, class Filter, class Type, class ... Args>
+    template <class Visitor, class Filter, class Type, class... Args>
     static void visit(Visitor& visitor, Filter filter, Type type, Args&&... args)
     {
         Parent::reflectStatic(visitor, filter, type, std::forward<Args>(args)...);
@@ -103,33 +102,33 @@ struct ReflectParent<ct::variadic_typedef<Parent, Parents...>>
     }
 };
 
-#define MO_END_(N) \
-template<class V, class F, class T, class ... Args> \
-inline void reflect(V& visitor, F filter, T type, Args&&... args) \
-{ \
-    ReflectParent<ParentClass>::visit(this, visitor, filter, type, std::forward<Args>(args)...); \
-    reflectHelper(visitor, filter, type, mo::_counter_<N>(), std::forward<Args>(args)...); \
-} \
-template<class V, class F, class T, class ... Args> \
-static inline void reflectStatic(V& visitor, F filter, T type, Args&&... args) \
-{ \
-    reflectHelperStatic(visitor, filter, type, mo::_counter_<N>(), std::forward<Args>(args)...); \
-}
+#define MO_END_(N)                                                                                                     \
+    template <class V, class F, class T, class... Args>                                                                \
+    inline void reflect(V& visitor, F filter, T type, Args&&... args)                                                  \
+    {                                                                                                                  \
+        ReflectParent<ParentClass>::visit(this, visitor, filter, type, std::forward<Args>(args)...);                   \
+        reflectHelper(visitor, filter, type, mo::_counter_<N>(), std::forward<Args>(args)...);                         \
+    }                                                                                                                  \
+    template <class V, class F, class T, class... Args>                                                                \
+    static inline void reflectStatic(V& visitor, F filter, T type, Args&&... args)                                     \
+    {                                                                                                                  \
+        ReflectParent<ParentClass>::visit(visitor, filter, type, std::forward<Args>(args)...);                         \
+        reflectHelperStatic(visitor, filter, type, mo::_counter_<N>(), std::forward<Args>(args)...);                   \
+    }
 
 #define MO_ABSTRACT_(N_, CLASS_NAME, ...)                                                                              \
-    using THIS_CLASS = CLASS_NAME; \
-    using ParentClass = ct::variadic_typedef<__VA_ARGS__>; \
+    using THIS_CLASS = CLASS_NAME;                                                                                     \
+    using ParentClass = ct::variadic_typedef<__VA_ARGS__>;                                                             \
     REFLECT_START(N_)
 
 #define MO_REGISTER_OBJECT(TYPE)                                                                                       \
     static ::mo::MetaObjectInfo<TActual<TYPE>> TYPE##_info;                                                            \
     static ::mo::MetaObjectPolicy<TActual<TYPE>, __COUNTER__, void> TYPE##_policy;                                     \
-    ::rcc::shared_ptr<TYPE::InterfaceHelper<TYPE>> TYPE::create()                                                                             \
+    ::rcc::shared_ptr<TYPE::InterfaceHelper<TYPE>> TYPE::create()                                                      \
     {                                                                                                                  \
-        auto obj = ::mo::MetaObjectFactory::instance().create(#TYPE);                                                 \
-        return ::rcc::shared_ptr<InterfaceHelper<TYPE>>(obj);                                                                           \
+        auto obj = ::mo::MetaObjectFactory::instance().create(#TYPE);                                                  \
+        return ::rcc::shared_ptr<InterfaceHelper<TYPE>>(obj);                                                          \
     }                                                                                                                  \
     REGISTERCLASS(TYPE, &TYPE##_info);
 
 #define MO_REGISTER_CLASS(TYPE) MO_REGISTER_OBJECT(TYPE)
-

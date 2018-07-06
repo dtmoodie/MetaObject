@@ -324,12 +324,12 @@ namespace mo
                 m_system_table->allocator = m_allocator;
                 m_allocator->setDefaultAllocator(m_allocator);
                 m_factory.registerTranslationUnit();
-                auto ret = signal(SIGINT, sig_handler);
+                auto ret = signal(SIGINT, &sig_handler);
                 if (ret == SIG_ERR)
                 {
                     MO_LOG(warning) << "Error setting signal handler for SIGINT";
                 }
-                ret = signal(SIGSEGV, sig_handler);
+                ret = signal(SIGSEGV, &sig_handler);
                 if (ret == SIG_ERR)
                 {
                     MO_LOG(warning) << "Error setting signal handler for SIGSEGV";

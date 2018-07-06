@@ -11,13 +11,13 @@ namespace mo
 
     enum VisitationMemberType
     {
-        INPUT   = 0,
-        OUTPUT  = 1,
+        INPUT = 0,
+        OUTPUT = 1,
         CONTROL = 2,
-        STATUS  = 3,
-        STATE   = 4,
+        STATUS = 3,
+        STATE = 4,
         SIGNALS = 5,
-        SLOTS   = 6
+        SLOTS = 6
     };
 
     enum VisitationType
@@ -29,72 +29,74 @@ namespace mo
         DESCRIPTION
     };
 
-    template<VisitationMemberType Type>
+    template <VisitationMemberType Type>
     using MemberFilter = std::integral_constant<VisitationMemberType, Type>;
 
-    template<VisitationType Type>
+    template <VisitationType Type>
     using VisitationFilter = std::integral_constant<VisitationType, Type>;
-
-
 
     using Name = NamedType<const char>;
 
     using Type = NamedType<const mo::TypeInfo>;
 
-    template<class T>
+    template <class T>
     using Param = NamedType<T, ParamBase>;
 
-    template<class T>
+    template <class T>
     using Data = NamedType<T>;
 
-    template<class T>
+    template <class T>
     Data<T> tagData(T* data)
     {
         return Data<T>(data);
     }
 
-    template<class T>
-    Param<T> tagParam(T& param )
+    template <class T>
+    Param<T> tagParam(T& param)
     {
         return Param<T>(&param);
     }
 
-
-    template<class T>
+    template <class T>
     using Slot = NamedType<T, ISlot>;
 
-    template<class T>
+    template <class T>
     using Signal = NamedType<T, ISignal>;
 
-    template<class T>
+    template <class T>
     Signal<T> tagSignal(T& sig)
     {
         return Signal<T>(&sig);
     }
 
-    template<class T>
+    template <class T>
     Slot<T> tagSlot(T& sl)
     {
         return Slot<T>(&sl);
     }
 
-    template<class T>
+    template <class T>
     Type tagType()
     {
         static const mo::TypeInfo tinfo(typeid(T));
         return Type(&tinfo);
     }
 
-    template<class T, class R, class... Args>
-    NamedType<R(T::*)(Args...), Function> tagFunction(R(T::*ptr)(Args...))
+    template <class T, class R, class... Args>
+    NamedType<R (T::*)(Args...), Function> tagFunction(R (T::*ptr)(Args...))
     {
-        return NamedType<R(T::*)(Args...), Function>(ptr);
+        return NamedType<R (T::*)(Args...), Function>(ptr);
+    }
+
+    template <class R, class... Args>
+    NamedType<R (*)(Args...), StaticFunction> tagStaticFunction(R (*ptr)(Args...))
+    {
+        return NamedType<R (*)(Args...), StaticFunction>(ptr);
     }
 
     using Description = NamedType<const char>;
 
     using Tooltip = NamedType<const char>;
-
 }
 
 /*

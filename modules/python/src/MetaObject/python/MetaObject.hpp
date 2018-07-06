@@ -239,22 +239,48 @@ namespace mo
         return std::bind(p, slot_name, std::placeholders::_1);
     }
 
+    template <class R, class... Args, int... Is>
+    std::function<R(Args...)>
+    staticSlotBind(R (*p)(mo::TSlot<R(Args...)>*, const Args&...), mo::TSlot<R(Args...)>* slot_ptr, int_sequence<Is...>)
+    {
+        return std::bind(p, slot_ptr, placeholder_template<Is>{}...);
+    }
+
     template <class T, class R, class... Args, class BP>
     void addSlotAccessors(BP& bpobj, IMetaObjectInfo* minfo)
     {
         std::vector<SlotInfo*> slot_infos = minfo->getSlotInfo();
         for (SlotInfo* slot_info : slot_infos)
         {
-            if (slot_info->signature == TypeInfo(typeid(R(Args...))))
+            if (slot_info->is_static && slot_info->signature == TypeInfo(typeid(R(Args...))))
             {
-                /*bpobj.def(slot_info->name.c_str(),
-                          std::function<void(const T&, Args...)>(std::bind(
-                              mo::python::SlotInvoker<T, void(Args...)>::invoke, slot_info->name,
-                   std::placeholders::_1)));*/
                 bpobj.def(slot_info->name.c_str(),
                           std::function<R(T&, const Args&...)>(slotBind(&mo::python::SlotInvoker<T, R(Args...)>::invoke,
                                                                         slot_info->name,
                                                                         make_int_sequence<sizeof...(Args) + 1>{})));
+                if (slot_info->is_static)
+                {
+                    bpobj.staticmethod(slot_info->name.c_str());
+                }
+            }
+        }
+    }
+
+    template <class T, class R, class... Args, class BP>
+    void addStaticSlotAccessors(BP& bpobj, IMetaObjectInfo* minfo)
+    {
+        auto static_slots = minfo->getStaticSlots();
+        for (const auto& slot : static_slots)
+        {
+            if (slot.first->getSignature() == TypeInfo(typeid(R(Args...))))
+            {
+                auto tslot = dynamic_cast<TSlot<R(Args...)>*>(slot.first);
+                bpobj.def(
+                    slot.second.c_str(),
+                    std::function<R(const Args&...)>(staticSlotBind(&mo::python::StaticSlotInvoker<R(Args...)>::invoke,
+                                                                    tslot,
+                                                                    make_int_sequence<sizeof...(Args)>{})));
+                bpobj.staticmethod(slot.second.c_str());
             }
         }
     }

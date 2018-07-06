@@ -177,6 +177,18 @@ namespace mo
             }
         }
 
+        void pop_back()
+        {
+           --m_size;
+        }
+
+        void erase(int i){
+            for(i = i + 1; i < m_size; ++i){
+                m_ptr[i-1] = m_ptr[i];
+            }
+            m_size--;
+        }
+
         T* begin() { return m_ptr; }
         T* end() { return m_ptr + m_size; }
         const T* begin() const { return m_ptr; }

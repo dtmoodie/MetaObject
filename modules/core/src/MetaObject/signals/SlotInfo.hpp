@@ -10,5 +10,6 @@ namespace mo
         std::string name;
         std::string description;
         std::string tooltip;
+        bool is_static;
     };
 }

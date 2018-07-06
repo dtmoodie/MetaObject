@@ -113,11 +113,12 @@ namespace mo
                 IObjectInfo* info = (*itr)->GetObjectInfo();
                 if (info->InheritsFrom(IMetaObject::getHash()))
                 {
+                    auto docstring = info->Print();
                     boost::python::class_<MetaObject,
                                           rcc::shared_ptr<MetaObject>,
                                           boost::python::bases<IMetaObject>,
                                           boost::noncopyable>
-                        bpobj(info->GetObjectName().c_str(), info->Print().c_str(), boost::python::no_init);
+                        bpobj(info->GetObjectName().c_str(), docstring.c_str(), boost::python::no_init);
                     bpobj.def("__init__",
                               boost::python::make_constructor(std::function<rcc::shared_ptr<MetaObject>()>(
                                   std::bind(&constructObject<MetaObject>, *itr))));
