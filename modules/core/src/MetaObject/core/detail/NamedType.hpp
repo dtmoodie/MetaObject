@@ -1,4 +1,5 @@
 #pragma once
+#include "MetaObject/detail/TypeInfo.hpp"
 #include <utility>
 
 namespace mo
@@ -41,5 +42,16 @@ namespace mo
         FPtr get() const { return _value; }
       private:
         FPtr _value;
+    };
+
+    template <>
+    class NamedType<const TypeInfo>
+    {
+      public:
+        explicit NamedType(const TypeInfo value) : _value(value) {}
+        NamedType(NamedType&& other) : _value(other._value) {}
+        TypeInfo get() const { return _value; }
+      private:
+        TypeInfo _value;
     };
 }

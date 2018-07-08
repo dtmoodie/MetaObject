@@ -9,7 +9,7 @@ namespace mo
     // ITParamImpl
 
     template <typename T>
-    const TypeInfo& ITParamImpl<T>::getTypeInfo() const
+    TypeInfo ITParamImpl<T>::getTypeInfo() const
     {
         return _type_info;
     }

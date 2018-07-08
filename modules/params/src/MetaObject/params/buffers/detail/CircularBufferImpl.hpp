@@ -1,4 +1,5 @@
 #pragma once
+#include "../CircularBuffer.hpp"
 
 namespace mo
 {
@@ -82,7 +83,7 @@ namespace mo
         template <class T>
         bool CircularBuffer<T>::updateDataImpl(const Storage_t& data_,
                                                const OptionalTime_t& ts,
-                                               const ContextPtr_t& ctx,
+                                               Context* ctx,
                                                size_t fn,
                                                const std::shared_ptr<ICoordinateSystem>& cs)
         {
@@ -90,15 +91,38 @@ namespace mo
                 mo::Mutex_t::scoped_lock lock(IParam::mtx());
                 if (ts)
                 {
-                    _data_buffer.push_back(State<T>(*ts, fn, ctx.get(), cs, data_));
+                    _data_buffer.push_back(State<T>(*ts, fn, ctx, cs, data_));
                 }
                 else
                 {
-                    _data_buffer.push_back(State<T>(fn, ctx.get(), cs, data_));
+                    _data_buffer.push_back(State<T>(fn, ctx, cs, data_));
                 }
                 this->_modified = true;
             }
-            ITParam<T>::_typed_update_signal(data_, this, ctx, ts, fn, cs, mo::InputUpdated_e);
+            this->emitTypedUpdate(data_, this, ctx, ts, fn, cs, mo::InputUpdated_e);
+            return true;
+        }
+
+        template <class T>
+        bool CircularBuffer<T>::updateDataImpl(Storage_t&& data_,
+                                               const OptionalTime_t& ts,
+                                               Context* ctx,
+                                               size_t fn,
+                                               const std::shared_ptr<ICoordinateSystem>& cs)
+        {
+            {
+                mo::Mutex_t::scoped_lock lock(IParam::mtx());
+                if (ts)
+                {
+                    _data_buffer.push_back(State<T>(*ts, fn, ctx, cs, std::move(data_)));
+                }
+                else
+                {
+                    _data_buffer.push_back(State<T>(fn, ctx, cs, std::move(data_)));
+                }
+                this->_modified = true;
+            }
+            this->emitTypedUpdate(_data_buffer.back().data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
             return true;
         }
 

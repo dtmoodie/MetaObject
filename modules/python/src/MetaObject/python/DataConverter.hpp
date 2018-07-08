@@ -3,6 +3,7 @@
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include "MetaObject/params/ITAccessibleParam.hpp"
+#include "MetaObject/params/OutputParam.hpp"
 #include "MetaObject/python/PythonSetup.hpp"
 #include "converters.hpp"
 
@@ -59,9 +60,16 @@ namespace mo
             {
                 if (param->getTypeInfo() == mo::TypeInfo(typeid(T)))
                 {
+                    if (param->checkFlags(mo::ParamFlags::Output_e))
+                    {
+                        if (auto output_param = dynamic_cast<const OutputParam*>(param))
+                        {
+                            param = output_param->getOutputParam();
+                        }
+                    }
                     if (auto typed = dynamic_cast<const mo::ITConstAccessibleParam<T>*>(param))
                     {
-                        if(typed->canAccess())
+                        if (typed->canAccess())
                         {
                             auto token = typed->read();
                             return convertToPython(token());
@@ -69,7 +77,8 @@ namespace mo
                     }
                     else
                     {
-                        MO_LOG(trace) << "Failed to cast parameter (" << mo::Demangle::typeToName(param->getTypeInfo())
+
+                        MO_LOG(debug) << "Failed to cast parameter (" << mo::Demangle::typeToName(param->getTypeInfo())
                                       << ") to the correct type for "
                                       << mo::Demangle::typeToName(mo::TypeInfo(typeid(T)));
                     }

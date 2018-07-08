@@ -81,6 +81,7 @@ namespace mo
         }
 
         static void move(Storage_t& storage, Type&& data) { storage = std::make_shared<Type>(std::move(data)); }
+        static void move(Type& data, Storage_t&& storage) { data = std::move(*storage); }
 
         template <class... Args>
         static void reset(InputStorage_t& input_storage, Args&&... args)
@@ -112,7 +113,7 @@ namespace mo
         static inline StoragePtr_t ptr(const Storage_t& data) { return data.get(); }
         static inline ConstStoragePtr_t ptr(ConstStorageRef_t& data) { return data.get(); }
 
-        static inline bool valid(ConstStorageRef_t stored) {return stored != nullptr; }
+        static inline bool valid(ConstStorageRef_t stored) { return stored != nullptr; }
     };
 
     template <class Type>
@@ -185,7 +186,7 @@ namespace mo
             return *input_storage;
         }
 
-        static inline bool valid(ConstStorageRef_t stored) {return stored != nullptr; }
+        static inline bool valid(ConstStorageRef_t stored) { return stored != nullptr; }
 
         static void move(Storage_t& storage, Type&& data) { storage = std::make_shared<Type>(std::move(data)); }
 

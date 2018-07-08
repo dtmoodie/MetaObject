@@ -69,18 +69,26 @@ namespace mo
             virtual ParamType getBufferType() const { return BlockingStreamBuffer_e; }
 
           protected:
-            bool updateDataImpl(const T& data,
+            bool updateDataImpl(const Storage_t& data,
                                 const OptionalTime_t& ts,
-                                const ContextPtr_t& ctx,
+                                Context* ctx,
                                 size_t fn,
-                                const std::shared_ptr<ICoordinateSystem>& cs);
-            virtual void onInputUpdate(ConstStorageRef_t,
-                                       IParam*,
-                                       Context*,
-                                       OptionalTime_t,
-                                       size_t,
-                                       const std::shared_ptr<ICoordinateSystem>&,
-                                       UpdateFlags);
+                                const std::shared_ptr<ICoordinateSystem>& cs) override;
+
+            bool updateDataImpl(Storage_t&& data,
+                                const OptionalTime_t& ts,
+                                Context* ctx,
+                                size_t fn,
+                                const std::shared_ptr<ICoordinateSystem>& cs) override;
+
+            void onInputUpdate(ConstStorageRef_t,
+                               IParam*,
+                               Context*,
+                               OptionalTime_t,
+                               size_t,
+                               const std::shared_ptr<ICoordinateSystem>&,
+                               UpdateFlags) override;
+
             virtual void prune();
             size_t _size;
             boost::condition_variable_any _cv;
@@ -101,18 +109,25 @@ namespace mo
             virtual ParamType getBufferType() const { return Type; }
 
           protected:
-            bool updateDataImpl(const T& data,
+            bool updateDataImpl(const Storage_t& data,
                                 const OptionalTime_t& ts,
-                                const ContextPtr_t& ctx,
+                                Context* ctx,
                                 size_t fn,
                                 const std::shared_ptr<ICoordinateSystem>& cs);
-            virtual void onInputUpdate(ConstStorageRef_t,
-                                       IParam*,
-                                       Context*,
-                                       OptionalTime_t,
-                                       size_t,
-                                       const std::shared_ptr<ICoordinateSystem>&,
-                                       UpdateFlags);
+
+            bool updateDataImpl(Storage_t&& data,
+                                const OptionalTime_t& ts,
+                                Context* ctx,
+                                size_t fn,
+                                const std::shared_ptr<ICoordinateSystem>& cs);
+
+            void onInputUpdate(ConstStorageRef_t,
+                               IParam*,
+                               Context*,
+                               OptionalTime_t,
+                               size_t,
+                               const std::shared_ptr<ICoordinateSystem>&,
+                               UpdateFlags) override;
         };
     }
 

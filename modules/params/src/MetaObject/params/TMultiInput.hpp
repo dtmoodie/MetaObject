@@ -56,12 +56,14 @@ namespace mo
     };
 
     template <class... Types>
-    class TMultiInput : public InputParam
+    class TMultiInput : virtual public InputParam
     {
       public:
         using InputTypeTuple = std::tuple<const Types*...>;
         using TypeTuple = std::tuple<Types...>;
         static InputTypeTuple initNullptr();
+
+        TMultiInput();
 
         void setUserDataPtr(std::tuple<const Types*...>* user_var_);
 
@@ -75,7 +77,7 @@ namespace mo
 
         void setMtx(Mutex_t* mtx) override;
 
-        const mo::TypeInfo& getTypeInfo() const override;
+        mo::TypeInfo getTypeInfo() const override;
 
         mo::IParam* getInputParam() const override;
 

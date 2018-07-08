@@ -1,6 +1,6 @@
 #pragma once
 #include "MetaObject/core/detail/NamedType.hpp"
-#include "MetaObject/detail/TypeInfo.hpp"
+#include <vector>
 
 namespace mo
 {
@@ -78,8 +78,13 @@ namespace mo
     template <class T>
     Type tagType()
     {
-        static const mo::TypeInfo tinfo(typeid(T));
-        return Type(&tinfo);
+        return Type(typeid(T));
+    }
+
+    template <class... T>
+    std::vector<Type> tagTypePack()
+    {
+        return {Type(typeid(T))...};
     }
 
     template <class T, class R, class... Args>

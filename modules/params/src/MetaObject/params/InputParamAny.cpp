@@ -75,7 +75,7 @@ bool InputParamAny::acceptsType(const mo::TypeInfo& type) const
     return true;
 }
 
-const mo::TypeInfo& InputParamAny::getTypeInfo() const
+mo::TypeInfo InputParamAny::getTypeInfo() const
 {
     if (input)
         return input->getTypeInfo();

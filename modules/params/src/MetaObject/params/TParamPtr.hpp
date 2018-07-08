@@ -72,11 +72,18 @@ namespace mo
         std::ostream& print(std::ostream& os) const override;
 
       protected:
-        virtual bool updateDataImpl(const Storage_t& data,
-                                    const OptionalTime_t& ts,
-                                    Context* ctx,
-                                    size_t fn,
-                                    const std::shared_ptr<ICoordinateSystem>& cs);
+        bool updateDataImpl(const Storage_t& data,
+                            const OptionalTime_t& ts,
+                            Context* ctx,
+                            size_t fn,
+                            const std::shared_ptr<ICoordinateSystem>& cs) override;
+
+        bool updateDataImpl(Storage_t&& data,
+                            const OptionalTime_t& ts,
+                            Context* ctx,
+                            size_t fn,
+                            const std::shared_ptr<ICoordinateSystem>& cs) override;
+
         Raw_t* ptr() { return m_ptr; }
       private:
         Raw_t* m_ptr;
@@ -125,14 +132,23 @@ namespace mo
         virtual IParam* emitUpdate(const IParam& other) { return IParam::emitUpdate(other); }
 
         virtual std::vector<TypeInfo> listOutputTypes() const override;
-        IParam*  getOutputParam(const TypeInfo type)override;
+        ParamBase* getOutputParam(const TypeInfo type) override;
+        const ParamBase* getOutputParam(const TypeInfo type) const override;
+        ParamBase* getOutputParam() override;
+        const ParamBase* getOutputParam() const override;
 
       protected:
-        virtual bool updateDataImpl(const Storage_t& data,
-                                    const OptionalTime_t& ts,
-                                    Context* ctx,
-                                    size_t fn,
-                                    const std::shared_ptr<ICoordinateSystem>& cs);
+        bool updateDataImpl(const Storage_t& data,
+                            const OptionalTime_t& ts,
+                            Context* ctx,
+                            size_t fn,
+                            const std::shared_ptr<ICoordinateSystem>& cs) override;
+
+        bool updateDataImpl(Storage_t&& data,
+                            const OptionalTime_t& ts,
+                            Context* ctx,
+                            size_t fn,
+                            const std::shared_ptr<ICoordinateSystem>& cs) override;
 
       private:
         Storage_t data;

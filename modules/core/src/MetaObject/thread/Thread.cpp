@@ -73,7 +73,7 @@ std::shared_ptr<Connection> Thread::setInnerLoop(TSlot<int(void)>* slot)
     {
         std::promise<std::shared_ptr<Connection>> promise;
         std::future<std::shared_ptr<Connection>> future = promise.get_future();
-        this->_event_queue.enqueue([slot, &promise, this]() { promise.set_value(slot->connect(_inner_loop)); });
+        this->_event_queue.enqueue([slot, &promise, this]() { promise.set_value(setInnerLoop(slot)); });
         return future.get();
     }
     else

@@ -26,7 +26,7 @@ namespace mo
         reflectHelper(visitor, filter, type, --dummy, args...);                                                        \
     }                                                                                                                  \
     template <class V, class F, class T, class... Args>                                                                \
-    inline void reflectHelper(V& visitor, F filter, T type, mo::_counter_<N_> cnt, Args&&... args)                     \
+    inline void reflectHelper(V&, F, T, mo::_counter_<N_>, Args&&...)                                                  \
     {                                                                                                                  \
     }                                                                                                                  \
     template <class V, int N, class F, class T, class... Args>                                                         \
@@ -35,7 +35,7 @@ namespace mo
         reflectHelperStatic(visitor, filter, type, --dummy, args...);                                                  \
     }                                                                                                                  \
     template <class V, class F, class T, class... Args>                                                                \
-    static inline void reflectHelperStatic(V& visitor, F filter, T type, mo::_counter_<N_> cnt, Args&&... args)        \
+    static inline void reflectHelperStatic(V&, F, T, mo::_counter_<N_>, Args&&...)                                     \
     {                                                                                                                  \
     }
 

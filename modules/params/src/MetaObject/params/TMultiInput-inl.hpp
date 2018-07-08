@@ -6,6 +6,12 @@ namespace mo
 {
 
     template <class... Types>
+    TMultiInput<Types...>::TMultiInput() : InputParam(), IParam("", mo::ParamFlags::Input_e)
+    {
+        this->setFlags(mo::ParamFlags::Input_e);
+    }
+
+    template <class... Types>
     typename TMultiInput<Types...>::InputTypeTuple TMultiInput<Types...>::initNullptr()
     {
         InputTypeTuple out;
@@ -86,7 +92,7 @@ namespace mo
     }
 
     template <class... Types>
-    const mo::TypeInfo& TMultiInput<Types...>::getTypeInfo() const
+    mo::TypeInfo TMultiInput<Types...>::getTypeInfo() const
     {
         if (m_current_input == nullptr)
         {

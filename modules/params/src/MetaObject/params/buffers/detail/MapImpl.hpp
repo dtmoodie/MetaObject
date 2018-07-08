@@ -82,6 +82,22 @@ namespace mo
         }
 
         template <class T>
+        bool Map<T>::updateDataImpl(Storage_t&& data,
+                                    const OptionalTime_t& ts,
+                                    Context* ctx,
+                                    size_t fn,
+                                    const std::shared_ptr<ICoordinateSystem>& cs)
+        {
+            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            auto itr = _data_buffer.emplace(SequenceKey(ts, fn, cs, ctx), std::move(data));
+            IParam::_modified = true;
+            lock.unlock();
+            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            ITParamImpl<T>::emitTypedUpdate(itr.first->second, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            return true;
+        }
+
+        template <class T>
         void Map<T>::setFrameBufferCapacity(size_t size)
         {
         }

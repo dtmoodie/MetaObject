@@ -30,9 +30,15 @@ namespace mo
         explicit Stamped(mo::Time_t ts, typename ParamTraits<T>::ConstStorageRef_t data) : ts(ts), data(data) {}
 
         explicit Stamped(size_t fn, typename ParamTraits<T>::ConstStorageRef_t data) : fn(fn), data(data) {}
+        explicit Stamped(size_t fn, typename ParamTraits<T>::Storage_t&& data) : fn(fn), data(std::move(data)) {}
 
         explicit Stamped(mo::Time_t ts, size_t fn, typename ParamTraits<T>::ConstStorageRef_t data)
             : ts(ts), fn(fn), data(data)
+        {
+        }
+
+        explicit Stamped(mo::Time_t ts, size_t fn, typename ParamTraits<T>::Storage_t&& data)
+            : ts(ts), fn(fn), data(std::move(data))
         {
         }
 
@@ -67,12 +73,23 @@ namespace mo
     template <class T>
     struct State : public Stamped<T>
     {
+        explicit State(mo::Time_t ts,
+                       size_t fn,
+                       Context* ctx,
+                       const std::shared_ptr<ICoordinateSystem>& cs,
+                       typename ParamTraits<T>::ConstStorageRef_t init)
+            : Stamped<T>(ts, fn, init), ctx(ctx), cs(cs)
+        {
+        }
+
+        template <class U = T>
         State(mo::Time_t ts,
               size_t fn,
               Context* ctx,
               const std::shared_ptr<ICoordinateSystem>& cs,
-              typename ParamTraits<T>::ConstStorageRef_t init)
-            : Stamped<T>(ts, fn, init), ctx(ctx), cs(cs)
+              typename std::enable_if<std::is_move_constructible<U>::value && !std::is_pod<U>::value,
+                                      typename ParamTraits<U>::Storage_t>::type&& init)
+            : Stamped<T>(ts, fn, std::move(init)), ctx(ctx), cs(cs)
         {
         }
 
@@ -86,6 +103,16 @@ namespace mo
               const std::shared_ptr<ICoordinateSystem>& cs,
               typename ParamTraits<T>::ConstStorageRef_t init)
             : Stamped<T>(fn, init), ctx(ctx), cs(cs)
+        {
+        }
+
+        template <class U = T>
+        State(size_t fn,
+              Context* ctx,
+              const std::shared_ptr<ICoordinateSystem>& cs,
+              typename std::enable_if<std::is_move_constructible<U>::value && !std::is_pod<U>::value,
+                                      typename ParamTraits<T>::Storage_t>::type&& init)
+            : Stamped<T>(fn, std::move(init)), ctx(ctx), cs(cs)
         {
         }
 
@@ -151,7 +178,7 @@ namespace mo
         virtual bool
         getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr) = 0;
 
-        virtual const TypeInfo& getTypeInfo() const;
+        TypeInfo getTypeInfo() const override;
         virtual std::shared_ptr<Connection> registerUpdateNotifier(ISlot* f);
         virtual std::shared_ptr<Connection> registerUpdateNotifier(std::shared_ptr<ISignalRelay> relay);
         std::shared_ptr<Connection> registerUpdateNotifier(TUpdateSlot_t* f);
@@ -195,21 +222,101 @@ namespace mo
             {
                 ts = *tsptr;
             }
+            else
+            {
+            }
             if (auto ctx_ = GetKeywordInputDefault<tag::context>(nullptr, args...))
             {
                 ctx = ctx_;
             }
+            else
+            {
+            }
             if (ctx != nullptr)
             {
                 ctx = this->_ctx;
+            }
+            else
+            {
             }
             auto cs_ = GetKeywordInputDefault<tag::coordinate_system>(std::shared_ptr<ICoordinateSystem>(), args...);
             if (cs_ != nullptr)
             {
                 cs = cs_;
             }
+            else
+            {
+            }
 
             this->updateDataImpl(data, ts, ctx, fn, cs);
+            return this;
+        }
+
+        template <class... Args>
+        ITParamImpl<T>* updateData(Storage_t&& data, const Args&... args)
+        {
+            size_t fn;
+            OptionalTime_t ts;
+            Context* ctx = nullptr;
+            std::shared_ptr<ICoordinateSystem> cs;
+            const IParam* param = GetKeywordInputOptional<tag::param>(args...);
+            if (param)
+            {
+                fn = param->getFrameNumber();
+                ctx = param->getContext();
+                cs = param->getCoordinateSystem();
+                ts = param->getTimestamp();
+            }
+            else
+            {
+            }
+            const size_t* fnptr = GetKeywordInputOptional<tag::frame_number>(args...);
+            if (fnptr)
+            {
+                fn = *fnptr;
+            }
+            else
+            {
+                if (param == nullptr)
+                {
+                    fn = this->_fn + 1;
+                }
+                else
+                {
+                }
+            }
+
+            if (auto tsptr = GetKeywordInputOptional<tag::timestamp>(args...))
+            {
+                ts = *tsptr;
+            }
+            else
+            {
+            }
+            if (auto ctx_ = GetKeywordInputDefault<tag::context>(nullptr, args...))
+            {
+                ctx = ctx_;
+            }
+            else
+            {
+            }
+            if (ctx != nullptr)
+            {
+                ctx = this->_ctx;
+            }
+            else
+            {
+            }
+            auto cs_ = GetKeywordInputDefault<tag::coordinate_system>(std::shared_ptr<ICoordinateSystem>(), args...);
+            if (cs_ != nullptr)
+            {
+                cs = cs_;
+            }
+            else
+            {
+            }
+
+            this->updateDataImpl(std::move(data), ts, ctx, fn, cs);
             return this;
         }
 
@@ -222,6 +329,13 @@ namespace mo
                                     Context* ctx,
                                     size_t fn,
                                     const std::shared_ptr<ICoordinateSystem>& cs) = 0;
+
+        virtual bool updateDataImpl(Storage_t&& data,
+                                    const OptionalTime_t& ts,
+                                    Context* ctx,
+                                    size_t fn,
+                                    const std::shared_ptr<ICoordinateSystem>& cs) = 0;
+
         void emitTypedUpdate(ConstStorageRef_t data,
                              IParam* param,
                              Context* ctx,

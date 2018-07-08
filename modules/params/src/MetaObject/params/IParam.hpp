@@ -146,9 +146,18 @@ namespace mo
                                                    // specified
         virtual Context* getContext() const = 0;   // Get the compute context of this Param
         virtual const std::shared_ptr<ICoordinateSystem>&
-        getCoordinateSystem() const = 0;                 // Get the coordinate system of this Param
-        virtual const TypeInfo& getTypeInfo() const = 0; // Implemented in concrete type
+        getCoordinateSystem() const = 0;          // Get the coordinate system of this Param
+        virtual TypeInfo getTypeInfo() const = 0; // Implemented in concrete type
         virtual std::ostream& print(std::ostream& os) const = 0;
+
+        virtual EnumClassBitset<ParamFlags>
+        appendFlags(ParamFlags flags_) = 0;                 // Append a flag to the Param, return previous values
+        virtual bool checkFlags(ParamFlags flag) const = 0; // Check if a single flag is set
+        virtual EnumClassBitset<ParamFlags>
+        setFlags(ParamFlags flags_) = 0; // Set flags of the Param, return previous values
+        virtual EnumClassBitset<ParamFlags>
+        setFlags(EnumClassBitset<ParamFlags> flags_) = 0; // Set flags of the Param, return previous values
+        virtual EnumClassBitset<ParamFlags> getFlags() const = 0;
     };
 
     class MO_EXPORTS IParam : public ParamBase
@@ -243,14 +252,14 @@ namespace mo
         virtual void setMtx(Mutex_t* mtx); // Use this to share a mutex with an owning object, ie a parent.
 
         EnumClassBitset<ParamFlags>
-        appendFlags(ParamFlags flags_); // Append a flag to the Param, return previous values
+        appendFlags(ParamFlags flags_) override; // Append a flag to the Param, return previous values
+
+        bool checkFlags(ParamFlags flag) const override; // Check if a single flag is set
         EnumClassBitset<ParamFlags>
-        toggleFlags(ParamFlags flags_);                          // Toggle the value of a flag, returns previous flags
-        bool checkFlags(ParamFlags flag) const;                  // Check if a single flag is set
-        EnumClassBitset<ParamFlags> setFlags(ParamFlags flags_); // Set flags of the Param, return previous values
+        setFlags(ParamFlags flags_) override; // Set flags of the Param, return previous values
         EnumClassBitset<ParamFlags>
-        setFlags(EnumClassBitset<ParamFlags> flags_); // Set flags of the Param, return previous values
-        EnumClassBitset<ParamFlags> getFlags() const;
+        setFlags(EnumClassBitset<ParamFlags> flags_) override; // Set flags of the Param, return previous values
+        EnumClassBitset<ParamFlags> getFlags() const override;
         bool modified() const;     // Check if has been modified
         void modified(bool value); // Set if it has been modified
 

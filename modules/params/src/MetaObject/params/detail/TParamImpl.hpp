@@ -1,12 +1,11 @@
 #pragma once
+#include "../TParam.hpp"
 #include "MetaObject/logging/logging.hpp"
 #include "MetaObject/params/AccessToken.hpp"
 namespace mo
 {
     template <class T>
     class TParam;
-    template <class T, int N, typename Enable>
-    struct MetaParam;
 
     template <typename T>
     TParam<T>::TParam() : ITParam<T>(), _data(), IParam()
@@ -14,7 +13,7 @@ namespace mo
     }
 
     template <typename T>
-    bool TParam<T>::getData(InputStorage_t& value, const OptionalTime_t& ts, Context* ctx, size_t* fn)
+    bool TParam<T>::getData(InputStorage_t& value, const OptionalTime_t& ts, Context* /*ctx*/, size_t* fn)
     {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if (!ts)
@@ -36,7 +35,7 @@ namespace mo
     }
 
     template <typename T>
-    bool TParam<T>::getData(InputStorage_t& value, size_t fn, Context* ctx, OptionalTime_t* ts)
+    bool TParam<T>::getData(InputStorage_t& value, size_t fn, Context* /*ctx*/, OptionalTime_t* ts)
     {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if (this->_fn == fn)
@@ -71,7 +70,21 @@ namespace mo
         _data = data;
         this->_fn = fn;
         this->_ts = ts;
-        ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, this->_fn, cs, ValueUpdated_e);
+        ITParamImpl<T>::emitTypedUpdate(_data, this, ctx, ts, this->_fn, cs, ValueUpdated_e);
+        return true;
+    }
+
+    template <typename T>
+    bool TParam<T>::updateDataImpl(Storage_t&& data,
+                                   const OptionalTime_t& ts,
+                                   Context* ctx,
+                                   size_t fn,
+                                   const std::shared_ptr<ICoordinateSystem>& cs)
+    {
+        _data = std::move(data);
+        this->_fn = fn;
+        this->_ts = ts;
+        ITParamImpl<T>::emitTypedUpdate(_data, this, ctx, ts, this->_fn, cs, ValueUpdated_e);
         return true;
     }
 }

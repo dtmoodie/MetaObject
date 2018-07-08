@@ -23,7 +23,7 @@ namespace mo
         bool acceptsInput(mo::IParam* param) const override;
         bool acceptsType(const mo::TypeInfo& type) const override;
 
-        const mo::TypeInfo& getTypeInfo() const override;
+        mo::TypeInfo getTypeInfo() const override;
 
         void on_param_update(mo::Context* ctx, mo::IParam* param);
         void on_param_delete(mo::IParam const*);

@@ -160,6 +160,28 @@ namespace mo
     }
 
     template <typename T>
+    bool TParamPtr<T>::updateDataImpl(Storage_t&& data,
+                                      const OptionalTime_t& ts,
+                                      Context* ctx,
+                                      size_t fn,
+                                      const std::shared_ptr<ICoordinateSystem>& cs)
+    {
+        mo::Mutex_t::scoped_lock lock(IParam::mtx());
+        if (m_ptr)
+        {
+            *m_ptr = ParamTraits<T>::get(data);
+            lock.unlock();
+            this->emitUpdate(ts, ctx, fn, cs);
+            ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::ValueUpdated_e);
+            return true;
+        }
+        else
+        {
+        }
+        return false;
+    }
+
+    template <typename T>
     ITParam<T>* TParamPtr<T>::updatePtr(Raw_t* ptr, bool ownsData_)
     {
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
@@ -294,11 +316,11 @@ namespace mo
         }
         std::shared_ptr<T>* ptr() { return m_ptr; }
       protected:
-        virtual bool updateDataImpl(const Storage_t& data,
-                                    const OptionalTime_t& ts,
-                                    Context* ctx,
-                                    size_t fn,
-                                    const std::shared_ptr<ICoordinateSystem>& cs)
+        bool updateDataImpl(const Storage_t& data,
+                            const OptionalTime_t& ts,
+                            Context* ctx,
+                            size_t fn,
+                            const std::shared_ptr<ICoordinateSystem>& cs) override
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             if (m_ptr)
@@ -307,6 +329,24 @@ namespace mo
                 lock.unlock();
                 this->emitUpdate(ts, ctx, fn, cs);
                 ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::ValueUpdated_e);
+                return true;
+            }
+            return false;
+        }
+
+        bool updateDataImpl(Storage_t&& data,
+                            const OptionalTime_t& ts,
+                            Context* ctx,
+                            size_t fn,
+                            const std::shared_ptr<ICoordinateSystem>& cs) override
+        {
+            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            if (m_ptr)
+            {
+                *m_ptr = std::move(data);
+                lock.unlock();
+                this->emitUpdate(ts, ctx, fn, cs);
+                ITParamImpl<T>::emitTypedUpdate(*m_ptr, this, ctx, ts, fn, cs, mo::ValueUpdated_e);
                 return true;
             }
             return false;
@@ -394,6 +434,28 @@ namespace mo
     }
 
     template <typename T>
+    bool TParamOutput<T>::updateDataImpl(Storage_t&& data,
+                                         const OptionalTime_t& ts,
+                                         Context* ctx,
+                                         size_t fn,
+                                         const std::shared_ptr<ICoordinateSystem>& cs)
+    {
+        mo::Mutex_t::scoped_lock lock(IParam::mtx());
+
+        auto ptr = this->ptr();
+        if (ptr)
+        {
+            ParamTraits<T>::move(*ptr, std::move(data));
+        }
+        else
+        {
+        }
+        lock.unlock();
+        this->emitUpdate(ts, ctx, fn, cs);
+        return true;
+    }
+
+    template <typename T>
     IParam* TParamOutput<T>::emitUpdate(const OptionalTime_t& ts_,
                                         Context* ctx_,
                                         const boost::optional<size_t>& fn_,
@@ -427,7 +489,13 @@ namespace mo
     }
 
     template <typename T>
-    IParam* TParamOutput<T>::getOutputParam(const TypeInfo type)
+    ParamBase* TParamOutput<T>::getOutputParam()
+    {
+        return this;
+    }
+
+    template <typename T>
+    ParamBase* TParamOutput<T>::getOutputParam(const TypeInfo type)
     {
         if (type == getTypeInfo())
         {
@@ -440,7 +508,27 @@ namespace mo
     }
 
     template <typename T>
-    class MO_EXPORTS TParamOutput<std::shared_ptr<T>> : virtual public TParamPtr<std::shared_ptr<T>>, virtual public OutputParam
+    const ParamBase* TParamOutput<T>::getOutputParam() const
+    {
+        return this;
+    }
+
+    template <typename T>
+    const ParamBase* TParamOutput<T>::getOutputParam(const TypeInfo type) const
+    {
+        if (type == getTypeInfo())
+        {
+            return this;
+        }
+        else
+        {
+            return nullptr;
+        }
+    }
+
+    template <typename T>
+    class MO_EXPORTS TParamOutput<std::shared_ptr<T>> : virtual public TParamPtr<std::shared_ptr<T>>,
+                                                        virtual public OutputParam
     {
       public:
         typedef typename ParamTraits<T>::Storage_t Storage_t;
@@ -536,7 +624,7 @@ namespace mo
 
         std::vector<TypeInfo> listOutputTypes() const override { return {this->getTypeInfo()}; }
 
-        IParam* getOutputParam(const TypeInfo type) override
+        ParamBase* getOutputParam(const TypeInfo type) override
         {
             if (type == this->getTypeInfo())
             {
@@ -548,18 +636,54 @@ namespace mo
             }
         }
 
+        ParamBase* getOutputParam() override { return this; }
+
+        const ParamBase* getOutputParam(const TypeInfo type) const override
+        {
+            if (type == this->getTypeInfo())
+            {
+                return this;
+            }
+            else
+            {
+                return nullptr;
+            }
+        }
+
+        const ParamBase* getOutputParam() const override { return this; }
+
       protected:
-        virtual bool updateDataImpl(const Storage_t& data,
-                                    const OptionalTime_t& ts,
-                                    Context* ctx,
-                                    size_t fn,
-                                    const std::shared_ptr<ICoordinateSystem>& cs)
+        bool updateDataImpl(const Storage_t& data,
+                            const OptionalTime_t& ts,
+                            Context* ctx,
+                            size_t fn,
+                            const std::shared_ptr<ICoordinateSystem>& cs) override
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             auto ptr = this->ptr();
             if (ptr)
             {
                 *(ptr) = data;
+            }
+            else
+            {
+            }
+            lock.unlock();
+            this->emitUpdate(ts, ctx, fn, cs);
+            return true;
+        }
+
+        bool updateDataImpl(Storage_t&& data,
+                            const OptionalTime_t& ts,
+                            Context* ctx,
+                            size_t fn,
+                            const std::shared_ptr<ICoordinateSystem>& cs) override
+        {
+            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            auto ptr = this->ptr();
+            if (ptr)
+            {
+                *(ptr) = std::move(data);
             }
             else
             {

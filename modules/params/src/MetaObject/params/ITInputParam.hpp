@@ -48,17 +48,21 @@ namespace mo
         virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
 
       protected:
-        virtual bool updateDataImpl(const Storage_t& data,
-                                    const OptionalTime_t& ts,
-                                    Context* ctx,
-                                    size_t fn,
-                                    const std::shared_ptr<ICoordinateSystem>& cs)
+        bool updateDataImpl(const Storage_t& /*data*/,
+                            const OptionalTime_t& /*ts*/,
+                            Context* /*ctx*/,
+                            size_t /*fn*/,
+                            const std::shared_ptr<ICoordinateSystem>& /*cs*/) override
         {
-            (void)data;
-            (void)ts;
-            (void)ctx;
-            (void)fn;
-            (void)cs;
+            return true;
+        }
+
+        bool updateDataImpl(Storage_t&& /*data*/,
+                            const OptionalTime_t& /*ts*/,
+                            Context* /*ctx*/,
+                            size_t /*fn*/,
+                            const std::shared_ptr<ICoordinateSystem>& /*cs*/) override
+        {
             return true;
         }
 

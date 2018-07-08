@@ -13,7 +13,7 @@ namespace mo
 {
     std::string Demangle::typeToName(const TypeInfo& type) { return TypeTable::instance().typeToName(type); }
 
-    const TypeInfo& Demangle::nameToType(const std::string& name) { return TypeTable::instance().nameToType(name); }
+    const TypeInfo Demangle::nameToType(const std::string& name) { return TypeTable::instance().nameToType(name); }
 
     void Demangle::registerName(const TypeInfo& type, const char* name)
     {

@@ -92,9 +92,15 @@ namespace mo
           protected:
             bool updateDataImpl(const Storage_t& data,
                                 const OptionalTime_t& ts,
-                                const ContextPtr_t& ctx,
+                                Context* ctx,
                                 size_t fn,
-                                const std::shared_ptr<ICoordinateSystem>& cs);
+                                const std::shared_ptr<ICoordinateSystem>& cs) override;
+
+            bool updateDataImpl(Storage_t&& data,
+                                const OptionalTime_t& ts,
+                                Context* ctx,
+                                size_t fn,
+                                const std::shared_ptr<ICoordinateSystem>& cs) override;
         };
     }
 

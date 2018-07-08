@@ -49,11 +49,17 @@ namespace mo
         bool canAccess() const override { return true; }
 
       protected:
-        virtual bool updateDataImpl(const Storage_t& data,
-                                    const OptionalTime_t& ts,
-                                    Context* ctx,
-                                    size_t fn,
-                                    const std::shared_ptr<ICoordinateSystem>& cs);
+        bool updateDataImpl(Storage_t&& data,
+                            const OptionalTime_t& ts,
+                            Context* ctx,
+                            size_t fn,
+                            const std::shared_ptr<ICoordinateSystem>& cs) override;
+
+        bool updateDataImpl(const Storage_t& data,
+                            const OptionalTime_t& ts,
+                            Context* ctx,
+                            size_t fn,
+                            const std::shared_ptr<ICoordinateSystem>& cs) override;
 
       private:
         Storage_t _data;

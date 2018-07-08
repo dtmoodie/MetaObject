@@ -137,9 +137,9 @@ namespace mo
         }
 
         template <class T>
-        bool BlockingStreamBuffer<T>::updateDataImpl(const T& data_,
+        bool BlockingStreamBuffer<T>::updateDataImpl(const Storage_t& data_,
                                                      const OptionalTime_t& ts,
-                                                     const ContextPtr_t& ctx,
+                                                     Context* ctx,
                                                      size_t fn,
                                                      const std::shared_ptr<ICoordinateSystem>& cs)
         {
@@ -169,7 +169,44 @@ namespace mo
             IParam::_modified = true;
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            ITParam<T>::_typed_update_signal(data_, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            this->emitTypedUpdate(data_, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            return true;
+        }
+
+        template <class T>
+        bool BlockingStreamBuffer<T>::updateDataImpl(Storage_t&& data_,
+                                                     const OptionalTime_t& ts,
+                                                     Context* ctx,
+                                                     size_t fn,
+                                                     const std::shared_ptr<ICoordinateSystem>& cs)
+        {
+            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            while (this->_data_buffer.size() > _size)
+            {
+                MO_LOG_EVERY_N(debug, 10) << "Pushing to " << this->getTreeName()
+                                          << " waiting on read, current buffer size " << this->_data_buffer.size();
+                _cv.wait_for(lock, boost::chrono::milliseconds(2));
+                // Periodically emit an update signal in case a dirty flag was not set correctly and the read thread is
+                // just sleeping
+                if (lock)
+                {
+                    lock.unlock();
+                }
+                IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+                if (!lock)
+                {
+                    lock.lock();
+                }
+            }
+            if (!lock)
+            {
+                lock.lock();
+            }
+            auto itr = Map<T>::_data_buffer.emplace(SequenceKey(ts, fn, cs, ctx), std::move(data_));
+            IParam::_modified = true;
+            lock.unlock();
+            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            this->emitTypedUpdate(itr.first->second, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
             return true;
         }
 
@@ -262,9 +299,9 @@ namespace mo
         }
 
         template <class T>
-        bool DroppingStreamBuffer<T>::updateDataImpl(const T& data_,
+        bool DroppingStreamBuffer<T>::updateDataImpl(const Storage_t& data_,
                                                      const OptionalTime_t& ts,
-                                                     const ContextPtr_t& ctx,
+                                                     Context* ctx,
                                                      size_t fn,
                                                      const std::shared_ptr<ICoordinateSystem>& cs)
         {
@@ -284,7 +321,34 @@ namespace mo
             IParam::_modified = true;
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            ITParam<T>::_typed_update_signal(data_, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            this->emitTypedUpdate(data_, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            return true;
+        }
+
+        template <class T>
+        bool DroppingStreamBuffer<T>::updateDataImpl(Storage_t&& data_,
+                                                     const OptionalTime_t& ts,
+                                                     Context* ctx,
+                                                     size_t fn,
+                                                     const std::shared_ptr<ICoordinateSystem>& cs)
+        {
+            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            if (this->_data_buffer.size() > this->_size)
+            {
+                return false;
+            }
+            else
+            {
+            }
+            if (!lock)
+            {
+                lock.lock();
+            }
+            auto itr = Map<T>::_data_buffer.emplace(SequenceKey(ts, fn, cs, ctx), std::move(data_));
+            IParam::_modified = true;
+            lock.unlock();
+            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            this->emitTypedUpdate(itr.first->second, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
             return true;
         }
 

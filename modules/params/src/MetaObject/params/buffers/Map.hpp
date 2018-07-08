@@ -120,18 +120,25 @@ namespace mo
             virtual ParamType getBufferType() const { return Map_e; }
 
           protected:
-            virtual bool updateDataImpl(const Storage_t& data,
-                                        const OptionalTime_t& ts,
-                                        Context* ctx,
-                                        size_t fn,
-                                        const std::shared_ptr<ICoordinateSystem>& cs);
-            virtual void onInputUpdate(ConstStorageRef_t,
-                                       IParam*,
-                                       Context*,
-                                       OptionalTime_t,
-                                       size_t,
-                                       const std::shared_ptr<ICoordinateSystem>&,
-                                       UpdateFlags);
+            bool updateDataImpl(const Storage_t& data,
+                                const OptionalTime_t& ts,
+                                Context* ctx,
+                                size_t fn,
+                                const std::shared_ptr<ICoordinateSystem>& cs) override;
+
+            bool updateDataImpl(Storage_t&& data,
+                                const OptionalTime_t& ts,
+                                Context* ctx,
+                                size_t fn,
+                                const std::shared_ptr<ICoordinateSystem>& cs) override;
+
+            void onInputUpdate(ConstStorageRef_t,
+                               IParam*,
+                               Context*,
+                               OptionalTime_t,
+                               size_t,
+                               const std::shared_ptr<ICoordinateSystem>&,
+                               UpdateFlags) override;
             typename std::map<SequenceKey, InputStorage_t>::iterator search(const OptionalTime_t& ts);
             typename std::map<SequenceKey, InputStorage_t>::iterator search(size_t fn);
 

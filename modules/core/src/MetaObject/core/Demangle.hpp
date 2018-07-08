@@ -13,7 +13,7 @@ namespace mo
     {
       public:
         static std::string typeToName(const TypeInfo& type);
-        static const TypeInfo& nameToType(const std::string& name);
+        static const TypeInfo nameToType(const std::string& name);
         static void registerName(const TypeInfo& type, const char* name);
         static void registerType(const TypeInfo& type);
         // This returns a type map that is stored in cereal binary format that

@@ -1,4 +1,5 @@
 #include <MetaObject/params/TMultiInput.hpp>
+#include <MetaObject/params/TMultiOutput.hpp>
 #include <MetaObject/params/TParamPtr.hpp>
 #include <iostream>
 
@@ -51,5 +52,8 @@ int main(int argc, char** argv)
     int_out.updateData(5);
     multi_input.getInput(mo::OptionalTime_t(), nullptr);
     printInputs(inputs);
+
+    mo::TMultiOutput<int, float, double> multi_output;
+
     return 0;
 }

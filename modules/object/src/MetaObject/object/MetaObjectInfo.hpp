@@ -10,7 +10,6 @@
 
 #include "MetaObject/params/ParamInfo.hpp"
 #include "MetaObject/params/TInputParam.hpp"
-#include "MetaObject/params/TMultiInput.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
 
 #include "MetaObject/signals/SignalInfo.hpp"
@@ -24,6 +23,11 @@ struct ISimpleSerializer;
 
 namespace mo
 {
+    template <class... T>
+    class TMultiInput;
+    template <class... T>
+    class TMultiOutput;
+
     template <class T>
     struct TMetaObjectInterfaceHelper : public T
     {
@@ -86,6 +90,16 @@ namespace mo
             T::addParam(param.get());
         }
 
+        template <class... DTypes>
+        inline void operator()(const mo::Name& name,
+                               const mo::Param<mo::TMultiOutput<DTypes...>>& param,
+                               int32_t N,
+                               bool first_init)
+        {
+            param.get()->setName(name.get());
+            T::addParam(param.get());
+        }
+
         void initParams(bool first_init) override
         {
             T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::CONTROL>(), first_init);
@@ -129,7 +143,7 @@ namespace mo
             template <int32_t N>
             inline void operator()(const mo::Name& name, const Type& type, mo::_counter_<N>)
             {
-                static mo::ParamInfo info(*type.get(), name.get(), "", "", flags);
+                static mo::ParamInfo info(type.get(), name.get(), "", "", flags);
                 vec.push_back(&info);
             }
 
@@ -199,7 +213,7 @@ namespace mo
             template <int N>
             inline void operator()(const mo::Type& type, const mo::Name& name, mo::_counter_<N>)
             {
-                static mo::SignalInfo info{*type.get(), std::string(name.get()), "", ""};
+                static mo::SignalInfo info{type.get(), std::string(name.get()), "", ""};
                 vec.push_back(&info);
             }
 
