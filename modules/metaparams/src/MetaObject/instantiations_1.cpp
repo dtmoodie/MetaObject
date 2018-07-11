@@ -1,3 +1,19 @@
+#include <map>
+#include <ostream>
+#include <string>
+namespace std
+{
+    template <class K, class V>
+    ostream& operator<<(ostream& os, const map<K, V>& map_)
+    {
+        for (const auto& kvp : map_)
+        {
+            os << kvp.first << ':' << kvp.second << ' ';
+        }
+        return os;
+    }
+}
+
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "MetaObject/params/MetaParam.hpp"
 #include <stdint.h>
@@ -23,6 +39,7 @@
 #define MO_EXPORTS
 #endif
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
+
 namespace mo
 {
     namespace MetaParams
