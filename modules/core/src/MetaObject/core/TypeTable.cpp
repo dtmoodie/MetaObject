@@ -28,7 +28,7 @@ namespace mo
         auto inst = table->getSingleton<TypeTable>();
         if (!inst)
         {
-            inst = table->setSingleton(std::make_unique<TypeTable>());
+            inst = table->setSingleton(std::unique_ptr<TypeTable>(new TypeTable));
         }
         else
         {
