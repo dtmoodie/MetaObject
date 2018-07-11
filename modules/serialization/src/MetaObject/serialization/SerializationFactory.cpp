@@ -13,7 +13,7 @@ namespace mo
         std::map<TypeInfo, std::pair<SerializeText_f, DeSerializeText_f>> _text_map;
     };
 
-    SerializationFactory::SerializationFactory() { _pimpl = std::make_unique<impl>(); }
+    SerializationFactory::SerializationFactory() { _pimpl = std::unique_ptr<impl>(new impl); }
 
     SerializationFactory::~SerializationFactory() {}
 
@@ -21,7 +21,9 @@ namespace mo
     {
         static SerializationFactory* g_inst = nullptr;
         if (g_inst == nullptr)
+        {
             g_inst = new SerializationFactory();
+        }
         return g_inst;
     }
 
