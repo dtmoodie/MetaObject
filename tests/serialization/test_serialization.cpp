@@ -53,7 +53,7 @@ struct serializable_object : public MetaObject
 
 struct Fixture
 {
-    Fixture() : table{}, factory(&table), cb(std::make_unique<BuildCallback>())
+    Fixture() : table{}, factory(&table), cb(std::unique_ptr<BuildCallback>(new BuildCallback))
     {
         mo::initCoreModule(&table);
         mo::initMetaParamsModule(&table);
