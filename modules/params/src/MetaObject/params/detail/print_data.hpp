@@ -13,19 +13,15 @@ namespace mo
         template <class T>
         struct stream_serializable
         {
-            template <class U>
-            static constexpr auto check(std::ostream* os, U* val) -> decltype(*os << *val, size_t(0))
-            {
-                return 0;
-            }
 
-            template <class U>
-            static constexpr int check(...)
-            {
-                return 0;
-            }
-            static const bool value =
-                sizeof(check<T>(static_cast<std::ostream*>(nullptr), static_cast<T*>(nullptr))) == sizeof(size_t);
+            template <typename SS, typename TT>
+            static auto test(int) -> decltype(std::declval<SS&>() << std::declval<TT>(), std::true_type());
+
+            template <typename, typename>
+            static auto test(...) -> std::false_type;
+
+          public:
+            static const bool value = decltype(test<std::ostream, T>(0))::value;
         };
     } // detail::
 
