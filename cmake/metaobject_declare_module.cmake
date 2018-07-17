@@ -29,6 +29,7 @@ function(metaobject_declare_module)
     if(UNIX)
         target_compile_options(metaobject_${metaobject_declare_module_NAME} PUBLIC "-fPIC;-Wl,--no-undefined")
     endif()
+    set(metaobject_${metaobject_declare_module_NAME}_INCLUDE_DIRS "${CMAKE_CURRENT_LIST_DIR}/src" CACHE INTERNAL "" FORCE)
     target_include_directories(metaobject_${metaobject_declare_module_NAME}
         PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>

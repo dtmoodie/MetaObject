@@ -15,6 +15,7 @@ namespace mo
     {
         std::shared_ptr<SystemTable> MO_EXPORTS pythonSetup(const char* module_name);
         void MO_EXPORTS registerSetupFunction(std::function<void(void)>&& func);
+        void MO_EXPORTS setLogLevel(const std::string& level);
         void MO_EXPORTS
         registerInterfaceSetupFunction(uint32_t interface_id,
                                        std::function<void(void)>&& interface_function,

@@ -54,22 +54,6 @@ namespace mo
 
     inline mo::ICoordinateSystem* get_pointer(const std::shared_ptr<mo::ICoordinateSystem>& ptr) { return ptr.get(); }
 
-    void setLogLevel(const std::string& level)
-    {
-        if (level == "trace")
-            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
-        if (level == "debug")
-            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
-        if (level == "info")
-            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
-        if (level == "warning")
-            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::warning);
-        if (level == "error")
-            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::error);
-        if (level == "fatal")
-            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::fatal);
-    }
-
     std::vector<std::string> listConstructableObjects()
     {
         auto ctrs = mo::MetaObjectFactory::instance().getConstructors();
@@ -102,6 +86,23 @@ namespace mo
 
     namespace python
     {
+
+        void setLogLevel(const std::string& level)
+        {
+            if (level == "trace")
+                boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
+            if (level == "debug")
+                boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
+            if (level == "info")
+                boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
+            if (level == "warning")
+                boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::warning);
+            if (level == "error")
+                boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::error);
+            if (level == "fatal")
+                boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::fatal);
+        }
+
         static std::vector<std::function<void(void)>> setup_functions;
 
         std::map<uint32_t,
@@ -142,6 +143,10 @@ namespace mo
             {
                 data[interface_id] = {std::move(interface_func), std::move(func)};
             }
+            else
+            {
+                MO_LOG(warning) << "Interface id " << interface_id << " already registered";
+            }
         }
 
         void registerObjectsHelper(
@@ -180,6 +185,7 @@ namespace mo
             rcc::InheritanceGraph graph;
             auto system = mo::MetaObjectFactory::instance().getObjectSystem();
             auto ifaces = system->GetInterfaces();
+            MO_LOG(debug) << "Creating inheritance graph for " << ifaces.size() << " interfaces";
             // graph.interfaces.resize(ifaces.size());
             size_t i = 0;
             for (auto& info : ifaces)
@@ -208,6 +214,7 @@ namespace mo
 
         void registerObjects()
         {
+            MO_LOG(info) << "Constructable objects to python";
             auto graph = createGraph();
             auto ctrs = mo::MetaObjectFactory::instance().getConstructors();
             auto funcs = interfaceSetupFunctions();
@@ -250,6 +257,7 @@ namespace mo
 
         void registerInterfaces()
         {
+            MO_LOG(info) << "Registering interfaces to python";
             auto graph = createGraph();
             auto funcs = interfaceSetupFunctions();
             std::map<uint32_t, std::function<void()>> func_map;
@@ -381,7 +389,10 @@ namespace mo
             {
                 func();
             }
-            RegisterInterface<IMetaObject> metaobject(&mo::python::setupInterface, &mo::python::setupObjects);
+            // RegisterInterface<IMetaObject> metaobject(&mo::python::setupInterface, &mo::python::setupObjects);
+            setupInterface();
+            // registerInterfaceSetupFunction(
+            //    IMetaObject::getHash(), &mo::python::setupInterface, &mo::python::setupObjects);
             setupPlugins(module_name);
             mo::python::setup = true;
 

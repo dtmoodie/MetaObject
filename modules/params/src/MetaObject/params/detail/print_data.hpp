@@ -42,6 +42,6 @@ namespace mo
     template <class T>
     void print(std::ostream& os, const T& data)
     {
-        printImpl(os, data);
+//        printImpl(os, data);
     }
 }

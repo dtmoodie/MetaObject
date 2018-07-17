@@ -51,7 +51,6 @@ void mo::InitLogging()
 {
     BOOST_LOG_TRIVIAL(info) << "File logging to " << boost::filesystem::absolute(boost::filesystem::path("")).string()
                             << "/logs";
-    boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
     boost::log::add_common_attributes();
     if (!boost::filesystem::exists("./logs") || !boost::filesystem::is_directory("./logs"))
     {
@@ -59,7 +58,7 @@ void mo::InitLogging()
     }
     boost::log::core::get()->add_global_attribute("Scope", boost::log::attributes::named_scope());
     // https://gist.github.com/xiongjia/e23b9572d3fc3d677e3d
-    
+
     auto fmtThreadId = boost::log::expressions::attr<boost::log::attributes::current_thread_id::value_type>("ThreadID");
 
     auto fmtSeverity = boost::log::expressions::attr<boost::log::trivial::severity_level>("Severity");
@@ -75,10 +74,10 @@ void mo::InitLogging()
 
     auto consoleSink = boost::log::add_console_log(std::clog);
     consoleSink->set_formatter(consoleFmt);
-    
+
     // File sink
-    boost::log::formatter logFmt = boost::log::expressions::format("[%1%] (%2%) [%3%] [%4%]") %
-                                   fmtThreadId % fmtSeverity % fmtScope % boost::log::expressions::smessage;
+    boost::log::formatter logFmt = boost::log::expressions::format("[%1%] (%2%) [%3%] [%4%]") % fmtThreadId %
+                                   fmtSeverity % fmtScope % boost::log::expressions::smessage;
 
     auto fsSink = boost::log::add_file_log(boost::log::keywords::file_name = "./logs/%Y-%m-%d_%H-%M-%S.%N.log",
                                            boost::log::keywords::rotation_size = 10 * 1024 * 1024,

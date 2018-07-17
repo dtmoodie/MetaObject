@@ -35,8 +35,16 @@ set(MO_HAVE_OPENCV 0 CACHE BOOL INTERNAL FORCE)
 set(MO_HAVE_CUDA 0 CACHE BOOL INTERNAL FORCE)
 set(MO_HAVE_CEREAL 0 CACHE BOOL INTERNAL FORCE)
 set(MO_HAVE_PYTHON 0 CACHE BOOL INTERNAL FORCE)
+set(MO_PYTHON_STATUS "" CACHE BOOL INTERNAL FORCE)
 set(MO_HAVE_QT 0 CACHE BOOL INTERNAL FORCE)
 set(MO_HAVE_WT 0 CACHE BOOL INTERNAL FORCE)
+
+if(CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
+    # gcc 4.8 fails to compile some templates used in data printers
+    set(MO_PRINT_PARAM_DATA 0 CACHE BOOL INTERNAL FORCE)
+else()
+    set(MO_PRINT_PARAM_DATA 1 CACHE BOOL INTERNAL FORCE)
+endif()
 
 include(cmake/metaobject_dependencies.cmake)
 
@@ -184,7 +192,7 @@ message(STATUS
     "  C++ Deb flags\t${CMAKE_CXX_FLAGS_DEBUG}\n"
     "  OpenCV\t\t${OpenCV_VERSION} - ${OpenCV_DIR}\n"
     "  Qt5\t\t${Qt5_VERSION}\n"
-    "  Python\t\t${PYTHONLIBS_VERSION_STRING}\n"
+    "  Python\t\t${MO_PYTHON_STATUS}\n"
     "  Wt\t\t${Wt_FOUND}\n"
     "  ZeroMQ\t\t${ZeroMQ_FOUND}\n"
     "  Tests\t\t${Boost_UNIT_TEST_FRAMEWORK_FOUND}\n"
