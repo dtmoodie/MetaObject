@@ -7,7 +7,7 @@
 #include <vector>
 
 struct IObjectConstructor;
-class SystemTable;
+struct SystemTable;
 
 namespace mo
 {

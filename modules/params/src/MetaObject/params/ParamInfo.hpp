@@ -1,11 +1,12 @@
 #pragma once
 #include "MetaObject/detail/TypeInfo.hpp"
 #include "MetaObject/params/IParam.hpp"
+#include "MetaObject/detail/Export.hpp"
 #include <string>
 
 namespace mo
 {
-    struct ParamInfo
+    struct MO_EXPORTS ParamInfo
     {
         ParamInfo(const mo::TypeInfo& type_,
                   const std::string& name_,

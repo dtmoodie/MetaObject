@@ -156,63 +156,63 @@ namespace mo
     template <class T>
     void TMultiInput<Types...>::apply(std::shared_ptr<IParam> input, bool* success)
     {
-        *success = get<TInputParamPtr<T>>(m_inputs).setInput(input);
+        *success = mo::get<TInputParamPtr<T>>(m_inputs).setInput(input);
     }
 
     template <class... Types>
     template <class T>
     void TMultiInput<Types...>::apply(IParam* input, bool* success)
     {
-        *success = get<TInputParamPtr<T>>(m_inputs).setInput(input);
+        *success = mo::get<TInputParamPtr<T>>(m_inputs).setInput(input);
     }
 
     template <class... Types>
     template <class T>
     void TMultiInput<Types...>::apply(std::tuple<const Types*...>* user_var_)
     {
-        get<TInputParamPtr<T>>(m_inputs).setUserDataPtr(&get<const T*>(*user_var_));
+        mo::get<TInputParamPtr<T>>(m_inputs).setUserDataPtr(&mo::get<const T*>(*user_var_));
     }
 
     template <class... Types>
     template <class T>
     void TMultiInput<Types...>::apply(Mutex_t* mtx)
     {
-        get<TInputParamPtr<T>>(m_inputs).setMtx(mtx);
+        mo::get<TInputParamPtr<T>>(m_inputs).setMtx(mtx);
     }
 
     template <class... Types>
     template <class T>
     void TMultiInput<Types...>::apply(Context* ctx)
     {
-        get<TInputParamPtr<T>>(m_inputs).setContext(ctx);
+        mo::get<TInputParamPtr<T>>(m_inputs).setContext(ctx);
     }
 
     template <class... Types>
     template <class T>
     void TMultiInput<Types...>::apply(const OptionalTime_t& ts, size_t* fn, bool* success)
     {
-        *success = get<TInputParamPtr<T>>(m_inputs).getInput(ts, fn);
+        *success = mo::get<TInputParamPtr<T>>(m_inputs).getInput(ts, fn);
     }
 
     template <class... Types>
     template <class T>
     void TMultiInput<Types...>::apply(size_t fn, OptionalTime_t* ts, bool* success)
     {
-        *success = get<TInputParamPtr<T>>(m_inputs).getInput(fn, ts);
+        *success = mo::get<TInputParamPtr<T>>(m_inputs).getInput(fn, ts);
     }
 
     template <class... Types>
     template <class T>
     void TMultiInput<Types...>::acceptsInput(IParam* input, bool* success) const
     {
-        *success = get<TInputParamPtr<T>>(m_inputs).acceptsInput(input);
+        *success = mo::get<TInputParamPtr<T>>(m_inputs).acceptsInput(input);
     }
 
     template <class... Types>
     template <class T>
     void TMultiInput<Types...>::acceptsInput(const TypeInfo& type, bool* success) const
     {
-        *success = get<TInputParamPtr<T>>(m_inputs).acceptsType(type);
+        *success = mo::get<TInputParamPtr<T>>(m_inputs).acceptsType(type);
     }
 
 } // namespace mo

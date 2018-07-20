@@ -17,25 +17,25 @@ namespace mo
         template <class T>
         void apply(ParamBase** param)
         {
-            *param = &get<TParam<T>>(m_params);
+            *param = &mo::get<TParam<T>>(m_params);
         }
 
         template <class T>
         void apply(const ParamBase** param) const
         {
-            *param = &get<TParam<T>>(m_params);
+            *param = &mo::get<TParam<T>>(m_params);
         }
 
         template <class T>
         void apply(const std::string& name)
         {
-            get<TParam<T>>(m_params).setName(name);
+            mo::get<TParam<T>>(m_params).setName(name);
         }
 
         template <class T>
         void apply(std::ostream& os) const
         {
-            get<TParam<T>>(m_params).print(os);
+            mo::get<TParam<T>>(m_params).print(os);
         }
 
         ParamBase* getOutputParam(const TypeInfo type) override

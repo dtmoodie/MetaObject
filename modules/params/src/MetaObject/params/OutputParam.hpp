@@ -3,7 +3,7 @@
 
 namespace mo
 {
-    class OutputParam : virtual public IParam
+    class MO_EXPORTS OutputParam : virtual public IParam
     {
       public:
         virtual ~OutputParam();

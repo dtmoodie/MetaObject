@@ -9,7 +9,7 @@ namespace mo
     struct ParamInfo;
     struct SignalInfo;
     struct SlotInfo;
-    struct ISlot;
+    class ISlot;
     class MO_EXPORTS IMetaObjectInfo : public IObjectInfo
     {
       public:
