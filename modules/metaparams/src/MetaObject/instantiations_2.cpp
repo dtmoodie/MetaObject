@@ -1,5 +1,5 @@
 #include "MetaObject/params/MetaParam.hpp"
-#include "ct/reflect/cereal.hpp"
+#include "ct/reflect/cerealize.hpp"
 
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 

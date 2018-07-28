@@ -3,7 +3,7 @@
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "MetaObject/metaparams/reflect/cv_types.hpp"
 #include "MetaObject/params/MetaParam.hpp"
-#include "ct/reflect/cereal.hpp"
+#include "ct/reflect/cerealize.hpp"
 #include <opencv2/core/types.hpp>
 
 #ifdef MO_EXPORTS

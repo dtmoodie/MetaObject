@@ -128,6 +128,7 @@ namespace mo
     template <typename T>
     std::ostream& TParamPtr<T>::print(std::ostream& os) const
     {
+        mo::Mutex_t::scoped_lock lock(this->mtx());
         mo::IParam::print(os);
         os << ' ';
         if (m_ptr)

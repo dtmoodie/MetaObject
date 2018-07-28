@@ -19,7 +19,7 @@ https://github.com/dtmoodie/MetaObject
 #pragma once
 #include "MetaObject/types.hpp"
 #include <boost/filesystem/path.hpp>
-#include <ct/reflect/reflect_data.hpp>
+#include <ct/reflect.hpp>
 #include <string>
 #include <vector>
 
@@ -120,12 +120,9 @@ namespace mo
 
 namespace ct
 {
-    namespace reflect
-    {
-        REFLECT_DATA_START(mo::EnumParam)
-            REFLECT_DATA_MEMBER(enumerations)
-            REFLECT_DATA_MEMBER(values)
-            REFLECT_DATA_MEMBER(current_selection)
-        REFLECT_DATA_END;
-    }
+    REFLECT_BEGIN(mo::EnumParam)
+        PUBLIC_ACCESS(enumerations)
+        PUBLIC_ACCESS(values)
+        PUBLIC_ACCESS(current_selection)
+    REFLECT_END;
 }

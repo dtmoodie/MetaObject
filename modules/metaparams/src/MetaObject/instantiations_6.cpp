@@ -106,22 +106,6 @@ namespace mo
 #endif
 }
 
-namespace std
-{
-    template <class T>
-    ostream& operator<<(ostream& os, const std::vector<T>& data)
-    {
-        os << '[';
-        for (size_t i = 0; i < data.size(); ++i)
-        {
-            if (i != 0)
-                os << ',';
-            os << data[i];
-        }
-        os << ']';
-        return os;
-    }
-}
 namespace mo
 {
     namespace MetaParams

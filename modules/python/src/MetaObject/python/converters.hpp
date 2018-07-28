@@ -6,9 +6,9 @@
 #include "MetaObject/python/converters.hpp"
 
 #include "ct/VariadicTypedef.hpp"
-#include "ct/reflect/printer.hpp"
-#include "ct/reflect/reflect_data.hpp"
-#include <ct/detail/TypeTraits.hpp>
+#include "ct/reflect/print.hpp"
+#include "ct/reflect.hpp"
+#include <ct/TypeTraits.hpp>
 
 #include "PythonSetup.hpp"
 
@@ -37,7 +37,7 @@ namespace mo
         };
 
         template <class T>
-        struct ToPythonDataConverter<T, ct::reflect::enable_if_reflected<T>>
+        struct ToPythonDataConverter<T, ct::enable_if_reflected<T>>
         {
             ToPythonDataConverter(SystemTable* /*table*/, const char* name)
             {
@@ -47,8 +47,8 @@ namespace mo
 
         template <class T>
         struct ToPythonDataConverter<T,
-                                     typename std::enable_if<!ct::reflect::ReflectData<T, void>::IS_SPECIALIZED &&
-                                                             !ct::reflect::is_container<T>::value>::type>
+                                     typename std::enable_if<!ct::Reflect<T>::SPECIALIZED &&
+                                                             !ct::is_container<T>::value>::type>
         {
             ToPythonDataConverter(SystemTable* /*table*/, const char* name)
             {
@@ -66,7 +66,7 @@ namespace mo
         };
 
         template <class T>
-        struct ToPythonDataConverter<std::vector<T>, ct::reflect::enable_if_reflected<T>>
+        struct ToPythonDataConverter<std::vector<T>, ct::enable_if_reflected<T>>
         {
             ToPythonDataConverter(SystemTable* /*table*/, const char* name)
             {
@@ -84,7 +84,7 @@ namespace mo
         };
 
         template <class T>
-        struct ToPythonDataConverter<std::vector<T>, ct::reflect::enable_if_not_reflected<T>>
+        struct ToPythonDataConverter<std::vector<T>, ct::enable_if_not_reflected<T>>
         {
             ToPythonDataConverter(SystemTable* /*table*/, const char* name)
             {
@@ -116,11 +116,11 @@ namespace mo
 
         template <class T>
         inline auto convertFromPython(const boost::python::object& obj, T& result)
-            -> ct::reflect::enable_if_not_reflected<T>;
+            -> ct::enable_if_not_reflected<T>;
 
         template <class T>
         inline auto convertFromPython(const boost::python::object& obj, T& result)
-            -> ct::reflect::enable_if_reflected<T>;
+            -> ct::enable_if_reflected<T>;
 
         template <class T>
         inline void convertFromPython(const boost::python::object& obj, std::vector<T>& result);
@@ -138,49 +138,61 @@ namespace mo
             }
 
             template <int I, class T>
-            using SetValue_t = decltype(inferSetterType<T>(ct::reflect::setValue<I, T>));
+            using SetValue_t = typename ct::SetterType<T, I>::type;
 
             template <int I, class T>
-            using GetValue_t = decltype(inferGetterType<T>(ct::reflect::getValue<I, T>));
+            using GetValue_t = typename ct::GetterType<T, I>::type;
+
+            template<class T, int I> GetValue_t<I, T> pythonGet(const T& obj)
+            {
+                auto accessor = ct::Reflect<T>::getAccessor(ct::Indexer<I>{});
+                return accessor.get(obj);
+            }
+
+            template<class T, int I> void pythonSet(T& obj, const SetValue_t<I, T>& val)
+            {
+                auto accessor = ct::Reflect<T>::getAccessor(ct::Indexer<I>{});
+                accessor.set(obj, val);
+            }
 
             template <class T, int I, class BP>
-            auto addPropertyImpl(BP& bpobj) -> typename std::enable_if<
-                !std::is_pointer<decltype(ct::reflect::getValue<I>(std::declval<T>()))>::value>::type
+            auto addPropertyImpl(BP& bpobj) -> typename std::enable_if<!std::is_pointer<GetValue_t<I, T>>::value>::type
             {
-                bpobj.add_property(
-                    ct::reflect::getName<I, T>(), &ct::reflect::getValue<I, T>, &ct::reflect::setValue<I, T>);
+                bpobj.add_property(ct::Reflect<T>::getName(ct::Indexer<I>{}), &pythonGet<T, I>, &pythonSet<T, I>);
             }
 
             template <class T, int I, class BP>
             auto addPropertyImpl(BP& bpobj) -> typename std::enable_if<
-                std::is_pointer<decltype(ct::reflect::getValue<I>(std::declval<T>()))>::value>::type
+                std::is_pointer<GetValue_t<I, T>>::value>::type
             {
                 // bpobj.add_property(
                 //    ct::reflect::getName<I, T>(), &ct::reflect::getValue<I, T>, &ct::reflect::setValue<I, T>);
             }
 
             template <class T, class BP>
-            void addPropertyHelper(BP& bpobj, mo::_counter_<0>)
+            void addPropertyHelper(BP& bpobj, const ct::Indexer<0>)
             {
                 addPropertyImpl<T, 0>(bpobj);
             }
 
-            template <class T, int I, class BP>
-            void addPropertyHelper(BP& bpobj, mo::_counter_<I>)
+            template <class T, ct::index_t I, class BP>
+            void addPropertyHelper(BP& bpobj, const ct::Indexer<I> idx)
             {
                 addPropertyImpl<T, I>(bpobj);
-                addPropertyHelper<T>(bpobj, mo::_counter_<I - 1>());
+                addPropertyHelper<T>(bpobj, --idx);
             }
 
             template <class T>
             void initDataMembers(T& data, boost::python::object& value)
             {
-                typedef typename std::decay<SetValue_t<ct::reflect::ReflectData<T>::N - 1, T>>::type Type;
+
+                typedef typename std::decay<SetValue_t<ct::Reflect<T>::N, T>>::type Type;
                 boost::python::extract<Type> ext(value);
                 if (ext.check())
                 {
                     Type value = ext();
-                    ct::reflect::setValue<ct::reflect::ReflectData<T>::N - 1>(data, std::move(value));
+
+                    //ct::setValue<ct::Reflect<T>::N - 1>(data, std::move(value));
                 }
             }
 
@@ -188,12 +200,13 @@ namespace mo
             void initDataMembers(T& data, boost::python::object& value, Args... args)
             {
                 typedef
-                    typename std::decay<SetValue_t<ct::reflect::ReflectData<T>::N - sizeof...(args)-1, T>>::type Type;
+                    typename std::decay<SetValue_t<ct::Reflect<T>::N - sizeof...(args), T>>::type Type;
                 boost::python::extract<Type> ext(value);
                 if (ext.check())
                 {
                     Type value = ext();
-                    ct::reflect::setValue<ct::reflect::ReflectData<T>::N - sizeof...(args)-1>(data, std::move(value));
+                    auto accessor = ct::Reflect<T>::getAccessor(ct::Indexer<ct::Reflect<T>::N - sizeof...(args)>{});
+                    accessor.set(data, std::move(value));
                 }
                 initDataMembers(data, args...);
             }
@@ -204,33 +217,33 @@ namespace mo
             };
 
             template <class T>
-            void populateKwargs(std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N>& kwargs,
-                                ct::_counter_<0> cnt)
+            void populateKwargs(std::array<boost::python::detail::keyword, ct::Reflect<T>::N+1>& kwargs,
+                                const ct::Indexer<0> cnt)
             {
-                kwargs[0] = (boost::python::arg(ct::reflect::getName<0, T>()) = boost::python::object());
+                kwargs[0] = (boost::python::arg(ct::Reflect<T>::getName(cnt)) = boost::python::object());
             }
 
-            template <class T, int I>
-            void populateKwargs(std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N>& kwargs,
-                                ct::_counter_<I> cnt,
+            template <class T, ct::index_t I>
+            void populateKwargs(std::array<boost::python::detail::keyword, ct::Reflect<T>::N+1>& kwargs,
+                                const ct::Indexer<I> cnt,
                                 typename std::enable_if<I != 0>::type* = 0)
             {
-                kwargs[I] = (boost::python::arg(ct::reflect::getName<I, T>()) = boost::python::object());
-                populateKwargs<T>(kwargs, ct::_counter_<I - 1>());
+                kwargs[I] = (boost::python::arg(ct::Reflect<T>::getName(cnt)) = boost::python::object());
+                populateKwargs<T>(kwargs, --cnt);
             }
 
             template <class T>
-            std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N> makeKeywordArgs()
+            std::array<boost::python::detail::keyword, ct::Reflect<T>::N+1> makeKeywordArgs()
             {
-                std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N> kwargs;
-                populateKwargs<T>(kwargs, ct::_counter_<ct::reflect::ReflectData<T>::N - 1>());
+                std::array<boost::python::detail::keyword, ct::Reflect<T>::N+1> kwargs;
+                populateKwargs<T>(kwargs, ct::Reflect<T>::end());
                 return kwargs;
             }
 
             template <class T, class... Args>
-            struct CreateDataObject<T, ct::variadic_typedef<Args...>>
+            struct CreateDataObject<T, ct::VariadicTypedef<Args...>>
             {
-                static const int size = ct::reflect::ReflectData<T>::N - 1;
+                static const int size = ct::Reflect<T>::N;
                 static T* create(Args... args)
                 {
                     T* obj = new T();
@@ -240,10 +253,10 @@ namespace mo
 
                 static boost::python::detail::keyword_range range()
                 {
-                    static std::array<boost::python::detail::keyword, ct::reflect::ReflectData<T>::N> s_keywords =
+                    static std::array<boost::python::detail::keyword, ct::Reflect<T>::N+1> s_keywords =
                         makeKeywordArgs<T>();
                     return std::make_pair<boost::python::detail::keyword const*, boost::python::detail::keyword const*>(
-                        &s_keywords[0], &s_keywords[0] + ct::reflect::ReflectData<T>::N);
+                        &s_keywords[0], &s_keywords[0] + ct::Reflect<T>::N+1);
                 }
             };
 
@@ -253,7 +266,7 @@ namespace mo
                 typedef CreateDataObject<
                     T,
                     typename FunctionSignatureBuilder<boost::python::object,
-                                                      ct::reflect::ReflectData<T>::N - 1>::VariadicTypedef_t>
+                                                      ct::Reflect<T>::N>::VariadicTypedef_t>
                     Creator_t;
                 bpobj.def("__init__",
                           boost::python::make_constructor(
@@ -266,13 +279,13 @@ namespace mo
             }
 
             template <class T>
-            void extract(T& obj, const boost::python::object& bpobj, mo::_counter_<0>)
+            void extract(T& obj, const boost::python::object& bpobj, ct::Indexer<0>)
             {
                 auto ptr = bpobj.ptr();
                 boost::python::object python_member;
-                if (PyObject_HasAttrString(ptr, ct::reflect::getName<0, T>()))
+                if (PyObject_HasAttrString(ptr, ct::getName<0, T>()))
                 {
-                    python_member = bpobj.attr(ct::reflect::getName<0, T>());
+                    python_member = bpobj.attr(ct::getName<0, T>());
                 }
                 else
                 {
@@ -283,19 +296,19 @@ namespace mo
                 }
                 if (python_member)
                 {
-                    convertFromPython(python_member, ct::reflect::get<0>(obj));
+                    convertFromPython(python_member, ct::set<0>(obj));
                 }
             }
 
-            template <class T, int I>
-            void extract(T& obj, const boost::python::object& bpobj, mo::_counter_<I>)
+            template <class T, ct::index_t I>
+            void extract(T& obj, const boost::python::object& bpobj, ct::Indexer<I> idx)
             {
 
                 auto ptr = bpobj.ptr();
                 boost::python::object python_member;
-                if (PyObject_HasAttrString(ptr, ct::reflect::getName<I, T>()))
+                if (PyObject_HasAttrString(ptr, ct::getName<I, T>()))
                 {
-                    python_member = bpobj.attr(ct::reflect::getName<I, T>());
+                    python_member = bpobj.attr(ct::getName<I, T>());
                 }
                 else
                 {
@@ -306,27 +319,27 @@ namespace mo
                 }
                 if (python_member)
                 {
-                    convertFromPython(python_member, ct::reflect::get<I>(obj));
+                    convertFromPython(python_member, ct::set<I>(obj));
                 }
-                extract(obj, bpobj, mo::_counter_<I - 1>());
+                extract(obj, bpobj, --idx);
             }
 
             template <class T>
-            ct::reflect::enable_if_not_reflected<T> pythonizeDataHelper(const char* /*name*/ = nullptr,
+            ct::enable_if_not_reflected<T> pythonizeDataHelper(const char* /*name*/ = nullptr,
                                                                         const T* = nullptr)
             {
             }
 
             template <class T>
-            ct::reflect::enable_if_reflected<T, std::string> repr(const T& data)
+            ct::enable_if_reflected<T, std::string> repr(const T& data)
             {
                 std::stringstream ss;
-                ct::reflect::printStruct(ss, data);
+                ct::printStruct(ss, data);
                 return ss.str();
             }
 
             template <class T>
-            ct::reflect::enable_if_reflected<T, std::string> reprVec(const std::vector<T>& data)
+            ct::enable_if_reflected<T, std::string> reprVec(const std::vector<T>& data)
             {
                 std::stringstream ss;
                 ss << '[';
@@ -334,28 +347,28 @@ namespace mo
                 {
                     if (i != 0)
                         ss << ", ";
-                    ct::reflect::printStruct(ss, data[i]);
+                    ct::printStruct(ss, data[i]);
                 }
                 ss << ']';
                 return ss.str();
             }
 
             template <class T>
-            ct::reflect::enable_if_reflected<T> pythonizeDataHelper(const char* name = nullptr, const T* = nullptr)
+            ct::enable_if_reflected<T> pythonizeDataHelper(const char* name = nullptr, const T* = nullptr)
             {
                 static bool registered = false;
                 if (registered)
                     return;
                 boost::python::class_<T> bpobj(name ? name : mo::Demangle::typeToName(mo::TypeInfo(typeid(T))).c_str(),
                                                boost::python::no_init);
-                addPropertyHelper<T>(bpobj, mo::_counter_<ct::reflect::ReflectData<T>::N - 1>());
+                addPropertyHelper<T>(bpobj, ct::Reflect<T>::end());
                 addInit<T>(bpobj);
                 bpobj.def("__repr__", &repr<T>);
                 registered = true;
             }
 
             template <class T>
-            ct::reflect::enable_if_reflected<T> pythonizeDataHelper(const char* name_ = nullptr,
+            ct::enable_if_reflected<T> pythonizeDataHelper(const char* name_ = nullptr,
                                                                     const std::vector<T>* = nullptr)
             {
                 static bool registered = false;
@@ -375,7 +388,7 @@ namespace mo
             }
 
             template <class K, class T>
-            ct::reflect::enable_if_reflected<T> pythonizeDataHelper(const char* name = nullptr,
+            ct::enable_if_reflected<T> pythonizeDataHelper(const char* name = nullptr,
                                                                     const std::map<K, T>* = nullptr)
             {
                 pythonizeDataHelper<T>(name, static_cast<const T*>(nullptr));
@@ -406,7 +419,7 @@ namespace mo
 
         template <class T>
         inline auto convertFromPython(const boost::python::object& obj, T& result)
-            -> ct::reflect::enable_if_not_reflected<T>
+            -> ct::enable_if_not_reflected<T>
         {
             boost::python::extract<T> extractor(obj);
             result = extractor();
@@ -414,9 +427,9 @@ namespace mo
 
         template <class T>
         inline auto convertFromPython(const boost::python::object& obj, T& result)
-            -> ct::reflect::enable_if_reflected<T>
+            -> ct::enable_if_reflected<T>
         {
-            detail::extract(result, obj, mo::_counter_<ct::reflect::ReflectData<T>::N - 1>());
+            detail::extract(result, obj, ct::Reflect<T>::end());
         }
 
         inline void convertFromPython(const boost::python::object& obj, std::string& result)
@@ -425,9 +438,9 @@ namespace mo
         }
 
         template <class T>
-        inline void convertFromPython(const boost::python::object& obj, ct::reflect::enable_if_reflected<T>& result)
+        inline void convertFromPython(const boost::python::object& obj, ct::enable_if_reflected<T>& result)
         {
-            detail::extract(result, obj, mo::_counter_<ct::reflect::ReflectData<T>::N - 1>());
+            detail::extract(result, obj, ct::Reflect<T>::end());
         }
 
         template <class T>

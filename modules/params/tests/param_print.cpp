@@ -13,7 +13,7 @@ struct NonPrintableStruct
 
 int main()
 {
-    static_assert(mo::detail::stream_serializable<NonPrintableStruct>::value == false, "asdf");
+    static_assert(ct::StreamWritable<NonPrintableStruct>::value == false, "asdf");
     SystemTable table;
     mo::initCoreModule(&table);
     PerModuleInterface::GetInstance()->SetSystemTable(&table);

@@ -12,7 +12,7 @@ namespace mo
     class MO_EXPORTS MetaObject : virtual public IMetaObject
     {
       public:
-        using ParentClass = ct::variadic_typedef<MetaObject>;
+        using ParentClass = ct::VariadicTypedef<MetaObject>;
         MetaObject();
         virtual ~MetaObject();
 

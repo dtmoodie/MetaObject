@@ -2,18 +2,16 @@
 #if MO_HAVE_OPENCV
 #include "MetaObject/metaparams/reflect/cv_types.hpp"
 #include "MetaObject/params/MetaParam.hpp"
-#include "ct/reflect/cereal.hpp"
+#include "ct/reflect/cerealize.hpp"
 #if MO_HAVE_PYTHON
 #include <boost/python/object.hpp>
 #endif
 
 namespace ct
 {
-    namespace reflect
-    {
-        template <class T, size_t N>
-        struct ArrayAdapter;
-    }
+    template <class T, size_t N>
+    struct ArrayAdapter;
+
 }
 #if MO_HAVE_PYTHON
 namespace mo
@@ -21,7 +19,7 @@ namespace mo
     namespace python
     {
         template <class T, size_t N>
-        inline void convertFromPython(const boost::python::object& obj, ct::reflect::ArrayAdapter<T, N> result);
+        inline void convertFromPython(const boost::python::object& obj, ct::ArrayAdapter<T, N> result);
     }
 }
 #endif
@@ -48,7 +46,7 @@ namespace mo
     namespace python
     {
         template <class T, size_t N>
-        inline void convertFromPython(const boost::python::object& obj, ct::reflect::ArrayAdapter<T, N> result)
+        inline void convertFromPython(const boost::python::object& obj, ct::ArrayAdapter<T, N> result)
         {
             if (result.ptr)
             {
@@ -63,11 +61,11 @@ namespace mo
 }
 #endif
 
-static_assert(ct::reflect::ReflectData<cv::Scalar>::IS_SPECIALIZED, "Specialization not working for cv::Scalar");
-static_assert(ct::reflect::ReflectData<cv::Vec2f>::IS_SPECIALIZED, "Specialization not working for cv::Vec2f");
-static_assert(ct::reflect::ReflectData<cv::Vec2b>::IS_SPECIALIZED, "Specialization not working for cv::Vec2b");
-static_assert(ct::reflect::ReflectData<cv::Vec3f>::IS_SPECIALIZED, "Specialization not working for cv::Vec3f");
-static_assert(ct::reflect::ReflectData<cv::Vec3b>::IS_SPECIALIZED, "Specialization not working for cv::Vec3b");
+static_assert(ct::Reflect<cv::Scalar>::SPECIALIZED, "Specialization not working for cv::Scalar");
+static_assert(ct::Reflect<cv::Vec2f>::SPECIALIZED, "Specialization not working for cv::Vec2f");
+static_assert(ct::Reflect<cv::Vec2b>::SPECIALIZED, "Specialization not working for cv::Vec2b");
+static_assert(ct::Reflect<cv::Vec3f>::SPECIALIZED, "Specialization not working for cv::Vec3f");
+static_assert(ct::Reflect<cv::Vec3b>::SPECIALIZED, "Specialization not working for cv::Vec3b");
 
 using namespace cv;
 namespace mo

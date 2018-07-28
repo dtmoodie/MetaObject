@@ -147,19 +147,19 @@ namespace mo
                 vec.push_back(&info);
             }
 
-            void getParamInfoParents(ct::variadic_typedef<void>* = nullptr) {}
+            void getParamInfoParents(ct::VariadicTypedef<void>* = nullptr) {}
 
             template <class Parent>
-            void getParamInfoParents(ct::variadic_typedef<Parent>* = nullptr)
+            void getParamInfoParents(ct::VariadicTypedef<Parent>* = nullptr)
             {
                 Parent::template InterfaceHelper<Parent>::getParamInfoStatic(vec);
             }
 
             template <class Parent, class... Parents>
-            void getParamInfoParents(ct::variadic_typedef<Parent, Parents...>* = nullptr)
+            void getParamInfoParents(ct::VariadicTypedef<Parent, Parents...>* = nullptr)
             {
                 Parent::template InterfaceHelper<Parent>::getParamInfoStatic(vec);
-                getParamInfoParents(static_cast<ct::variadic_typedef<Parents...>*>(nullptr));
+                getParamInfoParents(static_cast<ct::VariadicTypedef<Parents...>*>(nullptr));
             }
             std::vector<mo::ParamInfo*>& vec;
             mo::ParamFlags flags;
@@ -217,19 +217,19 @@ namespace mo
                 vec.push_back(&info);
             }
 
-            void getSignalInfoParents(ct::variadic_typedef<void>* = nullptr) {}
+            void getSignalInfoParents(ct::VariadicTypedef<void>* = nullptr) {}
 
             template <class Parent>
-            void getSignalInfoParents(ct::variadic_typedef<Parent>* = nullptr)
+            void getSignalInfoParents(ct::VariadicTypedef<Parent>* = nullptr)
             {
                 Parent::template InterfaceHelper<Parent>::getSignalInfoStatic(vec);
             }
 
             template <class Parent, class... Parents>
-            void getSignalInfoParents(ct::variadic_typedef<Parent, Parents...>* = nullptr)
+            void getSignalInfoParents(ct::VariadicTypedef<Parent, Parents...>* = nullptr)
             {
                 Parent::template InterfaceHelper<Parent>::getSignalInfoStatic(vec);
-                getSignalInfoParents(static_cast<ct::variadic_typedef<Parents...>*>(nullptr));
+                getSignalInfoParents(static_cast<ct::VariadicTypedef<Parents...>*>(nullptr));
             }
             std::vector<mo::SignalInfo*>& vec;
         };
@@ -285,19 +285,19 @@ namespace mo
                 vec.push_back(&info);
             }
 
-            void getSlotInfoParents(ct::variadic_typedef<void>* = nullptr) {}
+            void getSlotInfoParents(ct::VariadicTypedef<void>* = nullptr) {}
 
             template <class Parent>
-            void getSlotInfoParents(ct::variadic_typedef<Parent>* = nullptr)
+            void getSlotInfoParents(ct::VariadicTypedef<Parent>* = nullptr)
             {
                 Parent::template InterfaceHelper<Parent>::getSlotInfoStatic(vec);
             }
 
             template <class Parent, class... Parents>
-            void getSlotInfoParents(ct::variadic_typedef<Parent, Parents...>* = nullptr)
+            void getSlotInfoParents(ct::VariadicTypedef<Parent, Parents...>* = nullptr)
             {
                 Parent::template InterfaceHelper<Parent>::getSlotInfoStatic(vec);
-                getSlotInfoParents(static_cast<ct::variadic_typedef<Parents...>*>(nullptr));
+                getSlotInfoParents(static_cast<ct::VariadicTypedef<Parents...>*>(nullptr));
             }
 
             std::vector<mo::SlotInfo*>& vec;

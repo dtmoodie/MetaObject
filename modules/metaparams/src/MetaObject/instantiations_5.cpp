@@ -4,8 +4,8 @@
 #include "MetaObject/metaparams/reflect/cv_types.hpp"
 #include "MetaObject/params/MetaParam.hpp"
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
-#include "ct/reflect/cereal.hpp"
-#include "ct/reflect/reflect_data.hpp"
+#include "ct/reflect/cerealize.hpp"
+#include "ct/reflect.hpp"
 #include <boost/lexical_cast.hpp>
 #include <cereal/types/vector.hpp>
 #include <opencv2/core/types.hpp>
@@ -21,7 +21,7 @@
 #endif
 
 using namespace cv;
-static_assert(ct::reflect::ReflectData<cv::Rect>::IS_SPECIALIZED, "Specialization not working for cv::Rect");
+static_assert(ct::Reflect<cv::Rect>::SPECIALIZED, "Specialization not working for cv::Rect");
 
 namespace mo
 {

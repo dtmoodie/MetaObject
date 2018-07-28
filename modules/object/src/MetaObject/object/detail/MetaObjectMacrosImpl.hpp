@@ -41,13 +41,13 @@ namespace mo
 
 #define MO_BEGIN_1(CLASS_NAME, N_)                                                                                     \
     using THIS_CLASS = CLASS_NAME;                                                                                     \
-    using ParentClass = ct::variadic_typedef<void>;                                                                    \
+    using ParentClass = ct::VariadicTypedef<void>;                                                                    \
     REFLECT_START(N_)                                                                                                  \
     static rcc::shared_ptr<THIS_CLASS::InterfaceHelper<CLASS_NAME>> create();
 
 #define MO_DERIVE_(N_, CLASS_NAME, ...)                                                                                \
     using THIS_CLASS = CLASS_NAME;                                                                                     \
-    using ParentClass = ct::variadic_typedef<__VA_ARGS__>;                                                             \
+    using ParentClass = ct::VariadicTypedef<__VA_ARGS__>;                                                             \
     REFLECT_START(N_)                                                                                                  \
     static rcc::shared_ptr<THIS_CLASS::InterfaceHelper<CLASS_NAME>> create();
 
@@ -55,7 +55,7 @@ template <class T>
 struct ReflectParent;
 
 template <>
-struct ReflectParent<ct::variadic_typedef<void>>
+struct ReflectParent<ct::VariadicTypedef<void>>
 {
     template <class T, class Visitor, class Filter, class Type, class... Args>
     static void visit(T*, Visitor&, Filter, Type, Args&&...)
@@ -69,7 +69,7 @@ struct ReflectParent<ct::variadic_typedef<void>>
 };
 
 template <class Parent>
-struct ReflectParent<ct::variadic_typedef<Parent>>
+struct ReflectParent<ct::VariadicTypedef<Parent>>
 {
     template <class T, class Visitor, class Filter, class Type, class... Args>
     static void visit(T* obj, Visitor& visitor, Filter filter, Type type, Args&&... args)
@@ -85,20 +85,20 @@ struct ReflectParent<ct::variadic_typedef<Parent>>
 };
 
 template <class Parent, class... Parents>
-struct ReflectParent<ct::variadic_typedef<Parent, Parents...>>
+struct ReflectParent<ct::VariadicTypedef<Parent, Parents...>>
 {
     template <class T, class Visitor, class Filter, class Type, class... Args>
     static void visit(T* obj, Visitor& visitor, Filter filter, Type type, Args&&... args)
     {
         obj->Parent::reflect(visitor, filter, type, std::forward<Args>(args)...);
-        ReflectParent<ct::variadic_typedef<Parents...>>::visit(obj, visitor, filter, type, std::forward<Args>(args)...);
+        ReflectParent<ct::VariadicTypedef<Parents...>>::visit(obj, visitor, filter, type, std::forward<Args>(args)...);
     }
 
     template <class Visitor, class Filter, class Type, class... Args>
     static void visit(Visitor& visitor, Filter filter, Type type, Args&&... args)
     {
         Parent::reflectStatic(visitor, filter, type, std::forward<Args>(args)...);
-        ReflectParent<ct::variadic_typedef<Parents...>>::visit(visitor, filter, type, std::forward<Args>(args)...);
+        ReflectParent<ct::VariadicTypedef<Parents...>>::visit(visitor, filter, type, std::forward<Args>(args)...);
     }
 };
 
@@ -118,7 +118,7 @@ struct ReflectParent<ct::variadic_typedef<Parent, Parents...>>
 
 #define MO_ABSTRACT_(N_, CLASS_NAME, ...)                                                                              \
     using THIS_CLASS = CLASS_NAME;                                                                                     \
-    using ParentClass = ct::variadic_typedef<__VA_ARGS__>;                                                             \
+    using ParentClass = ct::VariadicTypedef<__VA_ARGS__>;                                                             \
     REFLECT_START(N_)
 
 #define MO_REGISTER_OBJECT(TYPE)                                                                                       \
