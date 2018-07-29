@@ -23,8 +23,11 @@ bool InputParam::getInput(size_t fn, OptionalTime_t* ts)
 
 std::ostream& InputParam::print(std::ostream& os) const
 {
-    mo::Mutex_t::scoped_lock lock(mtx());
-    IParam::print(os);
+    {
+        mo::Mutex_t::scoped_lock lock(mtx());
+        IParam::print(os);
+    }
+
     auto input = getInputParam();
     if (input)
     {
