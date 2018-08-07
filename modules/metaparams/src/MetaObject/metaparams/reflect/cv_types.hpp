@@ -1,5 +1,6 @@
 #pragma once
-#include "ct/reflect.hpp"
+#include <ct/TypeTraits.hpp>
+#include <ct/reflect.hpp>
 #include <cereal/cereal.hpp>
 #include <opencv2/core/types.hpp>
 
@@ -41,6 +42,13 @@ namespace ct
                 }
             }
         }
+    };
+
+    template<class T, size_t N>
+    struct ReferenceType<ArrayAdapter<T, N>>
+    {
+        using Type = ArrayAdapter<T, N>;
+        using ConstType = ArrayAdapter<const T, N>;
     };
 
     template <class T, size_t N>
