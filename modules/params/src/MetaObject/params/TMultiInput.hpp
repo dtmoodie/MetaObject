@@ -123,3 +123,8 @@ namespace mo
 }
 
 #include "TMultiInput-inl.hpp"
+
+#define MULTI_INPUT(name, ...)                                                                                         \
+    mo::TMultiInput<__VA_ARGS__> name##_param;                                                                         \
+    typename mo::TMultiInput<__VA_ARGS__>::InputTypeTuple name;                                                        \
+    VISIT(name, mo::INPUT, mo::TMultiInput<__VA_ARGS__>::initNullptr())
