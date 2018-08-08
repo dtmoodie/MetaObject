@@ -252,7 +252,7 @@ namespace mo
         std::vector<SlotInfo*> slot_infos = minfo->getSlotInfo();
         for (SlotInfo* slot_info : slot_infos)
         {
-            if (slot_info->is_static && slot_info->signature == TypeInfo(typeid(R(Args...))))
+            if (slot_info->signature == TypeInfo(typeid(R(Args...))))
             {
                 bpobj.def(slot_info->name.c_str(),
                           std::function<R(T&, const Args&...)>(slotBind(&mo::python::SlotInvoker<T, R(Args...)>::invoke,
@@ -266,24 +266,31 @@ namespace mo
         }
     }
 
-    template <class T, class R, class... Args, class BP>
-    void addStaticSlotAccessors(BP& bpobj, IMetaObjectInfo* minfo)
+    template<class Sig>
+    struct StaticSlotAccessor;
+
+    template<class R, class ... Args>
+    struct StaticSlotAccessor<R(Args...)>
     {
-        auto static_slots = minfo->getStaticSlots();
-        for (const auto& slot : static_slots)
+        template<class T, class BP>
+        static void add(BP& bpobj, IMetaObjectInfo* minfo)
         {
-            if (slot.first->getSignature() == TypeInfo(typeid(R(Args...))))
+            auto static_slots = minfo->getStaticSlots();
+            for (const auto& slot : static_slots)
             {
-                auto tslot = dynamic_cast<TSlot<R(Args...)>*>(slot.first);
-                bpobj.def(
-                    slot.second.c_str(),
-                    std::function<R(const Args&...)>(staticSlotBind(&mo::python::StaticSlotInvoker<R(Args...)>::invoke,
-                                                                    tslot,
-                                                                    make_int_sequence<sizeof...(Args)>{})));
-                bpobj.staticmethod(slot.second.c_str());
+                if (slot.first->getSignature() == TypeInfo(typeid(R(Args...))))
+                {
+                    auto tslot = dynamic_cast<TSlot<R(Args...)>*>(slot.first);
+                    bpobj.def(
+                        slot.second.c_str(),
+                        std::function<R(const Args&...)>(staticSlotBind(&mo::python::StaticSlotInvoker<R(Args...)>::invoke,
+                                                                        tslot,
+                                                                        make_int_sequence<sizeof...(Args)>{})));
+                    bpobj.staticmethod(slot.second.c_str());
+                }
             }
         }
-    }
+    };
 
     struct DefaultParamPolicy
     {
