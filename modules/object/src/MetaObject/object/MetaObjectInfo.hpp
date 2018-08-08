@@ -272,7 +272,7 @@ namespace mo
                                    mo::_counter_<N>)
             {
                 static mo::SlotInfo info{
-                    mo::TypeInfo(typeid(R (T1::*)(Args...))), std::string(name.get()), "", "", false};
+                    mo::TypeInfo(typeid(R(Args...))), std::string(name.get()), "", "", false};
                 vec.push_back(&info);
             }
 
@@ -281,7 +281,7 @@ namespace mo
                                    const mo::Name& name,
                                    mo::_counter_<N>)
             {
-                static mo::SlotInfo info{mo::TypeInfo(typeid(R(*)(Args...))), std::string(name.get()), "", "", true};
+                static mo::SlotInfo info{mo::TypeInfo(typeid(R(Args...))), std::string(name.get()), "", "", true};
                 vec.push_back(&info);
             }
 
