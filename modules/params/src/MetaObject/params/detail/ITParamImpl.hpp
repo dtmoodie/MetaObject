@@ -15,6 +15,18 @@ namespace mo
     }
 
     template <class T>
+    std::shared_ptr<Connection> ITParamImpl<T>::registerUpdateNotifier(UpdateSlot_t* f)
+    {
+        return IParam::registerUpdateNotifier(f);
+    }
+
+    template <class T>
+    std::shared_ptr<Connection> ITParamImpl<T>::registerUpdateNotifier(std::shared_ptr<TSignalRelay<UpdateSig_t>>& relay)
+    {
+        return IParam::registerUpdateNotifier(relay);
+    }
+
+    template <class T>
     std::shared_ptr<Connection> ITParamImpl<T>::registerUpdateNotifier(TUpdateSlot_t* f)
     {
         return f->connect(&_typed_update_signal);

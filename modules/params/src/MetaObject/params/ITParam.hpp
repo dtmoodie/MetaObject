@@ -179,8 +179,10 @@ namespace mo
         getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr) = 0;
 
         TypeInfo getTypeInfo() const override;
-        virtual std::shared_ptr<Connection> registerUpdateNotifier(ISlot* f);
-        virtual std::shared_ptr<Connection> registerUpdateNotifier(std::shared_ptr<ISignalRelay> relay);
+        virtual std::shared_ptr<Connection> registerUpdateNotifier(UpdateSlot_t* f) override;
+        virtual std::shared_ptr<Connection> registerUpdateNotifier(std::shared_ptr<TSignalRelay<UpdateSig_t>>& relay) override;
+        virtual std::shared_ptr<Connection> registerUpdateNotifier(ISlot* f) override;
+        virtual std::shared_ptr<Connection> registerUpdateNotifier(std::shared_ptr<ISignalRelay> relay) override;
         std::shared_ptr<Connection> registerUpdateNotifier(TUpdateSlot_t* f);
         std::shared_ptr<Connection> registerUpdateNotifier(std::shared_ptr<TSignalRelay<TUpdateSig_t>>& relay);
 
@@ -232,7 +234,7 @@ namespace mo
             else
             {
             }
-            if (ctx != nullptr)
+            if (ctx == nullptr)
             {
                 ctx = this->_ctx;
             }
