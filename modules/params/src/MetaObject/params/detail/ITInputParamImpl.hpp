@@ -76,13 +76,13 @@ namespace mo
         else
         {
         }
-        if (param->getTypeInfo() == this->getTypeInfo())
+        auto output_param = dynamic_cast<OutputParam*>(param);
+        if ((output_param && output_param->providesOutput(getTypeInfo())) ||  (param->getTypeInfo() == this->getTypeInfo()))
         {
             if (_input)
             {
                 _input->unsubscribe();
             }
-            auto output_param = dynamic_cast<OutputParam*>(param);
             if (output_param)
             {
                 if (auto param_ = output_param->getOutputParam(TypeInfo(typeid(T))))
@@ -120,7 +120,14 @@ namespace mo
     template <class T>
     bool ITInputParam<T>::acceptsInput(IParam* param) const
     {
-        return param->getTypeInfo() == getTypeInfo();
+        if(param->checkFlags(mo::ParamFlags::Output_e))
+        {
+            auto out_param = dynamic_cast<OutputParam*>(param);
+            return out_param->providesOutput(getTypeInfo());
+        }else
+        {
+            return param->getTypeInfo() == getTypeInfo();
+        }
     }
 
     template <class T>

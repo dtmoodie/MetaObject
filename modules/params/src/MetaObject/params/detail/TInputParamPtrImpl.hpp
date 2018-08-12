@@ -31,23 +31,10 @@ namespace mo
                     {
                         _current_data = data;
                         *_user_var = ParamTraits<T>::ptr(_current_data);
-                        return true;
-                    }
-                    else
-                    {
                     }
                 }
-                else
-                {
-                }
             }
-            else
-            {
-                return true;
-            }
-        }
-        else
-        {
+            return true;
         }
         return false;
     }
@@ -66,17 +53,8 @@ namespace mo
                     _current_data = data;
                     *_user_var = ParamTraits<T>::ptr(_current_data);
                 }
-                else
-                {
-                }
-            }
-            else
-            {
             }
             return true;
-        }
-        else
-        {
         }
         return false;
     }
@@ -127,8 +105,9 @@ namespace mo
     }
 
     template <typename T>
-    bool TInputParamPtr<T>::getInput(const OptionalTime_t& ts, size_t* fn_)
+    bool TInputParamPtr<T>::getInput(const OptionalTime_t& ts_, size_t* fn_)
     {
+        OptionalTime_t ts = ts_;
         mo::Mutex_t::scoped_lock lock(IParam::mtx());
         if (_user_var && (ITInputParam<T>::_shared_input || ITInputParam<T>::_input))
         {
@@ -136,25 +115,21 @@ namespace mo
             std::shared_ptr<ICoordinateSystem> cs;
             if (ITInputParam<T>::_input)
             {
+                mo::Mutex_t::scoped_lock input_lock(ITInputParam<T>::_input->mtx());
                 if (!ITInputParam<T>::_input->getData(_current_data, ts, this->_ctx, &fn))
                 {
                     return false;
                 }
-                else
+                if(!ts)
                 {
+                    ts = ITInputParam<T>::_input->getTimestamp();
                 }
                 cs = ITInputParam<T>::_input->getCoordinateSystem();
-            }
-            else
-            {
             }
             *_user_var = ParamTraits<T>::ptr(_current_data);
             if (fn_)
             {
                 *fn_ = fn;
-            }
-            else
-            {
             }
             this->_ts = ts;
             this->_fn = fn;
@@ -177,12 +152,6 @@ namespace mo
                 {
                     return false;
                 }
-                else
-                {
-                }
-            }
-            else
-            {
             }
             auto cs = ITInputParam<T>::_input->getCoordinateSystem();
             *_user_var = ParamTraits<T>::ptr(_current_data);
@@ -190,16 +159,10 @@ namespace mo
             {
                 *ts_ = ts;
             }
-            else
-            {
-            }
             this->_ts = ts;
             this->_fn = fn;
             this->setCoordinateSystem(cs);
             return true;
-        }
-        else
-        {
         }
         return false;
     }
@@ -283,8 +246,9 @@ namespace mo
             _user_var = user_var_;
         }
 
-        bool getInput(const OptionalTime_t& ts, size_t* fn_)
+        bool getInput(const OptionalTime_t& ts_, size_t* fn_)
         {
+            OptionalTime_t ts = ts_;
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             if (_user_var && ITInputParam<T>::_input)
             {
@@ -292,25 +256,23 @@ namespace mo
                 std::shared_ptr<ICoordinateSystem> cs;
                 if (ITInputParam<T>::_input)
                 {
+                    mo::Mutex_t::scoped_lock input_param_loakc(ITInputParam<T>::_input->mtx());
                     if (!ITInputParam<T>::_input->getData(_current_data, ts, this->_ctx, &fn))
                     {
                         return false;
-                    }
-                    else
+                    }else
                     {
+                        if(!ts)
+                        {
+                            this->_ts = ITInputParam<T>::_input->getTimestamp();
+                        }
                     }
                     cs = ITInputParam<T>::_input->getCoordinateSystem();
-                }
-                else
-                {
                 }
                 *_user_var = _current_data;
                 if (fn_)
                 {
                     *fn_ = fn;
-                }
-                else
-                {
                 }
                 this->_ts = ts;
                 this->_fn = fn;
@@ -332,21 +294,12 @@ namespace mo
                     {
                         return false;
                     }
-                    else
-                    {
-                    }
-                }
-                else
-                {
                 }
                 auto cs = ITInputParam<T>::_input->getCoordinateSystem();
                 *_user_var = _current_data;
                 if (ts_)
                 {
                     *ts_ = ts;
-                }
-                else
-                {
                 }
                 this->_ts = ts;
                 this->_fn = fn;
@@ -403,9 +356,6 @@ namespace mo
                     *_user_var = _current_data;
                     ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
                     IParam::emitUpdate(ts, ctx, fn, cs, fg);
-                }
-                else
-                {
                 }
             }
         }
