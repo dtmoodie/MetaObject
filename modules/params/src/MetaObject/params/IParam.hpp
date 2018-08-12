@@ -224,8 +224,8 @@ namespace mo
         bool hasSubscriptions() const; // Determine if there are any input Params using this Param as an output
 
         // Register slots to be called on update of this Param
-        std::shared_ptr<Connection> registerUpdateNotifier(UpdateSlot_t* f);
-        std::shared_ptr<Connection> registerUpdateNotifier(std::shared_ptr<TSignalRelay<UpdateSig_t>>& relay);
+        virtual std::shared_ptr<Connection> registerUpdateNotifier(UpdateSlot_t* f);
+        virtual std::shared_ptr<Connection> registerUpdateNotifier(std::shared_ptr<TSignalRelay<UpdateSig_t>>& relay);
         // Virtual to allow typed overload for interface slot input
         virtual std::shared_ptr<Connection> registerUpdateNotifier(ISlot* f);
         virtual std::shared_ptr<Connection> registerUpdateNotifier(std::shared_ptr<ISignalRelay> relay);
@@ -260,8 +260,8 @@ namespace mo
         EnumClassBitset<ParamFlags>
         setFlags(EnumClassBitset<ParamFlags> flags_) override; // Set flags of the Param, return previous values
         EnumClassBitset<ParamFlags> getFlags() const override;
-        bool modified() const;     // Check if has been modified
-        void modified(bool value); // Set if it has been modified
+        virtual bool modified() const;     // Check if has been modified
+        virtual void modified(bool value); // Set if it has been modified
 
         std::ostream& print(std::ostream& os) const override;
 
