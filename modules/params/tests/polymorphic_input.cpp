@@ -1,4 +1,4 @@
-#include <MetaObject/params/TMultiInput.hpp>
+#include <MetaObject/params/TMultiInput-inl.hpp>
 #include <MetaObject/params/TMultiOutput.hpp>
 #include <MetaObject/params/TParamPtr.hpp>
 #include <iostream>
