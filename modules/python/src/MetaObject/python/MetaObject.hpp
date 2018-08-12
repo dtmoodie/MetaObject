@@ -152,6 +152,45 @@ namespace mo
         std::array<boost::python::detail::keyword, N> m_keywords;
     };
 
+    template <int N, class T, class Storage>
+    struct CreateMetaObject<N, T, Storage, ct::VariadicTypedef<void>>
+    {
+        static const int size = N;
+        typedef Storage ConstructedType;
+
+        CreateMetaObject(const std::vector<std::string>& param_names_)
+        {
+            MO_CHECK_EQ(param_names_.size(), N);
+            for (size_t i = 0; i < param_names_.size(); ++i)
+            {
+                m_keywords[i] = (boost::python::arg(param_names_[i].c_str()) = boost::python::object());
+            }
+        }
+
+        static ConstructedType create(IObjectConstructor* ctr, std::vector<std::string> param_names)
+        {
+            IObject* obj = ctr->Construct();
+            rcc::shared_ptr<T> ptr(obj);
+            ptr->Init(true);
+            initializeParameters<T>(ptr, param_names, {});
+            return ptr;
+        }
+
+        static std::function<ConstructedType()> bind(IObjectConstructor* ctr,
+                                                            std::vector<std::string> param_names)
+        {
+            return [ctr, param_names](){return create(ctr, param_names);};
+        }
+
+        boost::python::detail::keyword_range range() const
+        {
+            return std::make_pair<boost::python::detail::keyword const*, boost::python::detail::keyword const*>(
+                &m_keywords[0], &m_keywords[0] + N);
+        }
+
+        std::array<boost::python::detail::keyword, N> m_keywords;
+    };
+
     template <class T,
               int N,
               class Storage,
@@ -318,7 +357,7 @@ namespace mo
         {
         case 0:
         {
-            break;
+            return makeConstructorHelper<T, 0, Storage, Creator>(ctr, param_names);
         }
         case 1:
         {
