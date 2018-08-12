@@ -45,7 +45,7 @@ namespace mo
         }
         const T& m_func;
     };
-
+    struct ModifiedTag{};
     struct Initializer
     {
         template <class Type, class... Args>
@@ -53,6 +53,17 @@ namespace mo
         {
             mo::get<const Type*>(tuple) = nullptr;
         }
+    };
+
+    class MO_EXPORTS MultiConnection: public Connection
+    {
+    public:
+        MultiConnection(std::vector<std::shared_ptr<Connection>>&& connections);
+        virtual ~MultiConnection();
+        virtual bool disconnect() override;
+
+    private:
+        std::vector<std::shared_ptr<Connection>> m_connections;
     };
 
     template <class... Types>
@@ -112,6 +123,22 @@ namespace mo
         template <class T>
         inline void apply(IParam* input, bool* success);
 
+        template<class T, class Slot>
+        inline void apply(std::vector<std::shared_ptr<Connection>>& connection, Slot slot);
+
+        virtual std::shared_ptr<Connection> registerUpdateNotifier(UpdateSlot_t* f) override;
+        virtual std::shared_ptr<Connection> registerUpdateNotifier(std::shared_ptr<TSignalRelay<UpdateSig_t>>& relay) override;
+        // Virtual to allow typed overload for interface slot input
+        virtual std::shared_ptr<Connection> registerUpdateNotifier(ISlot* f) override;
+        virtual std::shared_ptr<Connection> registerUpdateNotifier(std::shared_ptr<ISignalRelay> relay) override;
+
+        template<class T>
+        inline void apply(bool* modified) const;
+        template<class T>
+        inline void apply(bool modified, const ModifiedTag);
+        virtual bool modified() const override;
+        virtual void modified(bool value) override;
+
       private:
         static mo::TypeInfo _void_type_info;
         std::tuple<TInputParamPtr<Types>...> m_inputs;
@@ -122,7 +149,6 @@ namespace mo
     mo::TypeInfo TMultiInput<T...>::_void_type_info = mo::TypeInfo(typeid(void));
 }
 
-#include "TMultiInput-inl.hpp"
 
 #define MULTI_INPUT(name, ...)                                                                                         \
     mo::TMultiInput<__VA_ARGS__> name##_param;                                                                         \
