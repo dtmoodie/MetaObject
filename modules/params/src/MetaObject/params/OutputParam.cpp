@@ -6,4 +6,9 @@ namespace mo
     {
 
     }
+
+    bool OutputParam::providesOutput(const TypeInfo type) const
+    {
+        return type == getTypeInfo();
+    }
 }
