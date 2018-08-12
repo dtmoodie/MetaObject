@@ -8,7 +8,7 @@
 namespace mo
 {
     template <class... Types>
-    class TMultiOutput : virtual public OutputParam
+    class TMultiOutput : public OutputParam
     {
       public:
         TMultiOutput() { this->setFlags(mo::ParamFlags::Output_e); }
@@ -56,7 +56,27 @@ namespace mo
 
         const ParamBase* getOutputParam() const override { return getOutputParam(current_type); }
 
-        void setName(const std::string& name) { typeLoop<Types...>(*this, name); }
+        template<class T>
+        void apply(const TypeInfo type, bool* success) const
+        {
+            if(type == TypeInfo(typeid(T)))
+            {
+                *success = true;
+            }
+        }
+
+        bool providesOutput(const TypeInfo type) const
+        {
+            bool success = false;
+            typeLoop<Types...>(*this, type, &success);
+            return success;
+        }
+
+        void setName(const std::string& name)
+        {
+            OutputParam::setName(name);
+            typeLoop<Types...>(*this, name);
+        }
 
         template <class T, class... Args>
         void updateData(T&& data, Args&&... args)
