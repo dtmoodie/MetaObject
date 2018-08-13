@@ -166,7 +166,7 @@ namespace mo
                 lock.lock();
             }
             Map<T>::_data_buffer[{ts, fn, cs, ctx}] = data_;
-            IParam::_modified = true;
+            this->modified(true);
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
             this->emitTypedUpdate(data_, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
@@ -203,7 +203,7 @@ namespace mo
                 lock.lock();
             }
             auto itr = Map<T>::_data_buffer.emplace(SequenceKey(ts, fn, cs, ctx), std::move(data_));
-            IParam::_modified = true;
+            this->modified(true);
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
             this->emitTypedUpdate(itr.first->second, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
@@ -287,7 +287,7 @@ namespace mo
             {
             }
             this->_data_buffer[{ts, fn, cs, ctx}] = data;
-            IParam::_modified = true;
+            this->modified(true);
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
             ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
@@ -318,7 +318,7 @@ namespace mo
                 lock.lock();
             }
             Map<T>::_data_buffer[{ts, fn, cs, ctx}] = data_;
-            IParam::_modified = true;
+            this->modified(true);
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
             this->emitTypedUpdate(data_, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
@@ -345,7 +345,7 @@ namespace mo
                 lock.lock();
             }
             auto itr = Map<T>::_data_buffer.emplace(SequenceKey(ts, fn, cs, ctx), std::move(data_));
-            IParam::_modified = true;
+            this->modified(true);
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
             this->emitTypedUpdate(itr.first->second, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
@@ -372,7 +372,7 @@ namespace mo
                 lock.lock();
             }
             this->_data_buffer[{ts, fn, cs, ctx}] = data;
-            IParam::_modified = true;
+            this->modified(true);
             lock.unlock();
             IParam::emitUpdate(ts, ctx, fn, cs, mo::BufferUpdated_e);
             ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);

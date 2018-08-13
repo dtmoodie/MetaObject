@@ -74,7 +74,7 @@ namespace mo
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             _data_buffer[{ts, fn, cs, ctx}] = data;
-            IParam::_modified = true;
+            this->modified(true);
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
             ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
@@ -90,7 +90,7 @@ namespace mo
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             auto itr = _data_buffer.emplace(SequenceKey(ts, fn, cs, ctx), std::move(data));
-            IParam::_modified = true;
+            this->modified(true);
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
             ITParamImpl<T>::emitTypedUpdate(itr.first->second, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
@@ -217,7 +217,7 @@ namespace mo
         {
             mo::Mutex_t::scoped_lock lock(IParam::mtx());
             _data_buffer[{ts, fn, cs, ctx}] = data;
-            IParam::_modified = true;
+            this->modified(true);
             lock.unlock();
             IParam::emitUpdate(ts, ctx, fn, cs, mo::BufferUpdated_e);
             ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);

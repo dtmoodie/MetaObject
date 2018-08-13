@@ -97,7 +97,7 @@ namespace mo
                 {
                     _data_buffer.push_back(State<T>(fn, ctx, cs, data_));
                 }
-                this->_modified = true;
+                this->modified(true);
             }
             this->emitTypedUpdate(data_, this, ctx, ts, fn, cs, mo::InputUpdated_e);
             return true;
@@ -120,7 +120,7 @@ namespace mo
                 {
                     _data_buffer.push_back(State<T>(fn, ctx, cs, std::move(data_)));
                 }
-                this->_modified = true;
+                this->modified(true);
             }
             this->emitTypedUpdate(_data_buffer.back().data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
             return true;
@@ -213,7 +213,7 @@ namespace mo
             {
                 _data_buffer.push_back(State<T>(fn, ctx, cs, data));
             }
-            this->_modified = true;
+            this->modified(true);
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
             ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
