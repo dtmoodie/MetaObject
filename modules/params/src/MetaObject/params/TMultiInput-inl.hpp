@@ -4,6 +4,66 @@
 
 namespace mo
 {
+template <class T, class U>
+constexpr int indexOfHelper(int idx, std::tuple<U>* = nullptr)
+{
+    return idx;
+}
+template <class T, class U, class... Ts>
+constexpr int indexOfHelper(int idx, std::tuple<U, Ts...>* = nullptr)
+{
+    return std::is_same<T, U>::value ? idx
+                                     : indexOfHelper<T, Ts...>(idx - 1, static_cast<std::tuple<Ts...>*>(nullptr));
+}
+
+template <class T, class... Ts>
+constexpr int indexOf()
+{
+    return sizeof...(Ts)-indexOfHelper<T, Ts...>(sizeof...(Ts), static_cast<std::tuple<Ts...>*>(nullptr));
+}
+
+template <class T, class... Ts>
+inline T& get(std::tuple<Ts...>& tuple)
+{
+    return std::get<indexOf<T, Ts...>()>(tuple);
+}
+
+template <class T, class... Ts>
+inline const T& get(const std::tuple<Ts...>& tuple)
+{
+    return std::get<indexOf<T, Ts...>()>(tuple);
+}
+
+template <class T>
+struct AcceptInputRedirect
+{
+    AcceptInputRedirect(const T& func) : m_func(func) {}
+    template <class Type, class... Args>
+    void apply(Args&&... args)
+    {
+        m_func.template acceptsInput<Type>(std::forward<Args>(args)...);
+    }
+    const T& m_func;
+};
+
+struct Initializer
+{
+    template <class Type, class... Args>
+    void apply(std::tuple<const Args*...>& tuple)
+    {
+        mo::get<const Type*>(tuple) = nullptr;
+    }
+};
+class MO_EXPORTS MultiConnection: public Connection
+{
+public:
+    MultiConnection(std::vector<std::shared_ptr<Connection>>&& connections);
+    virtual ~MultiConnection();
+    virtual bool disconnect() override;
+
+private:
+    std::vector<std::shared_ptr<Connection>> m_connections;
+};
 
     template <class... Types>
     TMultiInput<Types...>::TMultiInput() : InputParam(), IParam("", mo::ParamFlags::Input_e)
@@ -63,6 +123,13 @@ namespace mo
     }
 
     template <class... Types>
+    template <class T>
+    void TMultiInput<Types...>::apply(const OptionalTime_t& ts, size_t* fn, bool* success)
+    {
+        *success = mo::get<TInputParamPtr<T>>(m_inputs).getInput(ts, fn);
+    }
+
+    template <class... Types>
     bool TMultiInput<Types...>::getInput(const OptionalTime_t& ts, size_t* fn)
     {
         mo::Mutex_t::scoped_lock lock(mtx());
@@ -70,10 +137,44 @@ namespace mo
         if (m_current_input)
         {
             selectType<Types...>(*this, m_current_input->getTypeInfo(), ts, fn, &success);
-            this->_ts = m_current_input->getTimestamp();
-            this->_fn = m_current_input->getFrameNumber();
         }
         return success;
+    }
+
+    template <class... Types>
+    template<class T>
+    void TMultiInput<Types...>::apply(OptionalTime_t* ts) const
+    {
+        *ts = mo::get<TInputParamPtr<T>>(m_inputs).getTimestamp();
+    }
+
+    template <class... Types>
+    OptionalTime_t TMultiInput<Types...>::getTimestamp() const
+    {
+        OptionalTime_t ret;
+        if(m_current_input)
+        {
+            selectType<Types...>(*this, m_current_input->getTypeInfo(), &ret);
+        }
+        return ret;
+    }
+
+    template <class... Types>
+    template<class T>
+    void TMultiInput<Types...>::apply(size_t* fn) const
+    {
+        *fn = mo::get<TInputParamPtr<T>>(m_inputs).getFrameNumber();
+    }
+
+    template <class... Types>
+    size_t TMultiInput<Types...>::getFrameNumber() const
+    {
+        size_t ret = 0;
+        if(m_current_input)
+        {
+            selectType<Types...>(*this, m_current_input->getTypeInfo(), &ret);
+        }
+        return ret;
     }
 
     template <class... Types>
@@ -205,13 +306,6 @@ namespace mo
 
     template <class... Types>
     template <class T>
-    void TMultiInput<Types...>::apply(const OptionalTime_t& ts, size_t* fn, bool* success)
-    {
-        *success = mo::get<TInputParamPtr<T>>(m_inputs).getInput(ts, fn);
-    }
-
-    template <class... Types>
-    template <class T>
     void TMultiInput<Types...>::apply(size_t fn, OptionalTime_t* ts, bool* success)
     {
         *success = mo::get<TInputParamPtr<T>>(m_inputs).getInput(fn, ts);
@@ -282,13 +376,6 @@ namespace mo
     }
 
     template <class... Types>
-    template<class T>
-    void TMultiInput<Types...>::apply(bool modified, const ModifiedTag)
-    {
-        mo::get<TInputParamPtr<T>>(m_inputs).modified(modified);
-    }
-
-    template <class... Types>
     bool TMultiInput<Types...>::modified() const
     {
         if(m_current_input)
@@ -299,9 +386,21 @@ namespace mo
     }
 
     template <class... Types>
+    template<class T>
+    void TMultiInput<Types...>::apply(const bool modified)
+    {
+        mo::get<TInputParamPtr<T>>(m_inputs).modified(modified);
+    }
+
+    template <class... Types>
     void TMultiInput<Types...>::modified(bool value)
     {
-        typeLoop<Types...>(*this, value, ModifiedTag{});
+        InputParam::modified(value);
+        if(m_current_input)
+        {
+            m_current_input->modified(value);
+        }
+        //typeLoop<Types...>(*this, value);
     }
 
 } // namespace mo

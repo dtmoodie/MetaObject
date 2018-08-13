@@ -1,4 +1,4 @@
-#include "TMultiInput.hpp"
+#include "TMultiInput-inl.hpp"
 
 namespace mo
 {

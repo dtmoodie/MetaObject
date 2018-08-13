@@ -4,68 +4,6 @@
 
 namespace mo
 {
-    template <class T, class U>
-    constexpr int indexOfHelper(int idx, std::tuple<U>* = nullptr)
-    {
-        return idx;
-    }
-    template <class T, class U, class... Ts>
-    constexpr int indexOfHelper(int idx, std::tuple<U, Ts...>* = nullptr)
-    {
-        return std::is_same<T, U>::value ? idx
-                                         : indexOfHelper<T, Ts...>(idx - 1, static_cast<std::tuple<Ts...>*>(nullptr));
-    }
-
-    template <class T, class... Ts>
-    constexpr int indexOf()
-    {
-        return sizeof...(Ts)-indexOfHelper<T, Ts...>(sizeof...(Ts), static_cast<std::tuple<Ts...>*>(nullptr));
-    }
-
-    template <class T, class... Ts>
-    inline T& get(std::tuple<Ts...>& tuple)
-    {
-        return std::get<indexOf<T, Ts...>()>(tuple);
-    }
-
-    template <class T, class... Ts>
-    inline const T& get(const std::tuple<Ts...>& tuple)
-    {
-        return std::get<indexOf<T, Ts...>()>(tuple);
-    }
-
-    template <class T>
-    struct AcceptInputRedirect
-    {
-        AcceptInputRedirect(const T& func) : m_func(func) {}
-        template <class Type, class... Args>
-        void apply(Args&&... args)
-        {
-            m_func.template acceptsInput<Type>(std::forward<Args>(args)...);
-        }
-        const T& m_func;
-    };
-    struct ModifiedTag{};
-    struct Initializer
-    {
-        template <class Type, class... Args>
-        void apply(std::tuple<const Args*...>& tuple)
-        {
-            mo::get<const Type*>(tuple) = nullptr;
-        }
-    };
-
-    class MO_EXPORTS MultiConnection: public Connection
-    {
-    public:
-        MultiConnection(std::vector<std::shared_ptr<Connection>>&& connections);
-        virtual ~MultiConnection();
-        virtual bool disconnect() override;
-
-    private:
-        std::vector<std::shared_ptr<Connection>> m_connections;
-    };
-
     template <class... Types>
     class TMultiInput : virtual public InputParam
     {
@@ -94,6 +32,9 @@ namespace mo
 
         OptionalTime_t getInputTimestamp() override;
 
+        virtual OptionalTime_t getTimestamp() const override;
+        virtual size_t getFrameNumber() const;
+
         size_t getInputFrameNumber() override;
 
         bool isInputSet() const override;
@@ -107,6 +48,12 @@ namespace mo
 
         template <class T>
         inline void acceptsInput(const TypeInfo& type, bool* success) const;
+
+        template<class T>
+        inline void apply(OptionalTime_t* ts) const;
+
+        template<class T>
+        inline void apply(size_t* fn) const;
 
         template <class T>
         inline void apply(std::tuple<const Types*...>* user_var_);
@@ -135,7 +82,7 @@ namespace mo
         template<class T>
         inline void apply(bool* modified) const;
         template<class T>
-        inline void apply(bool modified, const ModifiedTag);
+        inline void apply(const bool modified);
         virtual bool modified() const override;
         virtual void modified(bool value) override;
 
