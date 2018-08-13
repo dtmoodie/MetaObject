@@ -199,7 +199,7 @@ namespace mo
         {
             _cs = cs_;
         }
-        _modified = true;
+        this->modified(true);
         lock.unlock();
         _update_signal(this, ctx_, ts_, this->_fn, cs_, flags_);
         return this;
@@ -276,9 +276,15 @@ namespace mo
 
     EnumClassBitset<ParamFlags> IParam::getFlags() const { return _flags; }
 
-    bool IParam::modified() const { return _modified; }
+    bool IParam::modified() const
+    {
+        return _modified;
+    }
 
-    void IParam::modified(bool value) { _modified = value; }
+    void IParam::modified(bool value)
+    {
+        _modified = value;
+    }
 
     std::ostream& IParam::print(std::ostream& os) const
     {

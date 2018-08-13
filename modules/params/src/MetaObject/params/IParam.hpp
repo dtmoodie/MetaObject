@@ -280,6 +280,7 @@ namespace mo
         DeleteSignal_t _delete_signal;
         mutable mo::Mutex_t* _mtx = nullptr;
         int _subscribers = 0;
+    private:
         bool _modified = false; // Set to true if modified by the user interface etc, set to false by the owning object.
     };
 }
