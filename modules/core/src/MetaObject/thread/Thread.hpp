@@ -59,11 +59,11 @@ namespace mo
         boost::condition_variable_any _cv;
         boost::recursive_timed_mutex _mtx;
         // if _run == true, execute the main inner loop
-        volatile bool _run;
+        volatile bool _run = false;
         // if _quit == true, cleanup and exit the thread
-        volatile bool _quit;
+        volatile bool _quit = false;
         // Set by work thread, if true then it is not executing the inner loop
-        volatile bool _paused;
+        volatile bool _paused = false;
         // Set by the thread handle, set this flag to skip executing the event loop because inner loop needs to run
         // again asap
         volatile bool _run_inner_loop;
