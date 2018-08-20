@@ -26,8 +26,12 @@ if(MO_HAVE_PYTHON)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/tests/test_python.py ${out_dir}/RelWithDebInfo/metaobject_python_test.py @ONLY)
     endif(UNIX)
     set(metaobject_param_include
-        "${metaobject_param_include}\n#ifdef slots\n#undef slots\n#endif\n#include <MetaObject/python/PythonPolicy.hpp>\n" CACHE INTERNAL "" FORCE)
-    add_executable(test_mo_python_init tests/python_init_param_setter.cpp)
-    set_target_properties(test_mo_python_init PROPERTIES FOLDER Tests/MetaObject/python)
-    target_link_libraries(test_mo_python_init ct metaobject_python)
+        "${metaobject_param_include}\n#ifdef slots\n#undef slots\n#endif\n#include <MetaObject/python/PythonPolicy.hpp>\n" CACHE INTERNAL "" FORCE
+    )
+
+    if(BUILD_TESTS)
+        add_executable(test_mo_python_init tests/python_init_param_setter.cpp)
+        set_target_properties(test_mo_python_init PROPERTIES FOLDER Tests/MetaObject/python)
+        target_link_libraries(test_mo_python_init ct metaobject_python)
+    endif()
 endif()

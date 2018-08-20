@@ -28,12 +28,15 @@ IF(Qt5_FOUND)
 " CACHE INTERNAL "" FORCE)
 ENDIF()
 
-file(GLOB_RECURSE tests "tests/*.cpp")
 
-foreach(test ${tests})
-    get_filename_component( basename ${test} NAME)
-    add_executable(mo_test_params_${basename} ${test})
-    target_link_libraries(mo_test_params_${basename} metaobject_params)
-    set_property(TARGET mo_test_params_${basename} PROPERTY CXX_STANDARD 11)
-endforeach()
 
+if(BUILD_TESTS)
+    file(GLOB_RECURSE tests "tests/*.cpp")
+    foreach(test ${tests})
+        get_filename_component( basename ${test} NAME)
+        add_executable(mo_test_params_${basename} ${test})
+        target_link_libraries(mo_test_params_${basename} metaobject_params)
+        set_property(TARGET mo_test_params_${basename} PROPERTY CXX_STANDARD 11)
+    endforeach()
+
+endif()
