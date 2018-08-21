@@ -243,7 +243,7 @@ endif(WIN32)
 
 install(DIRECTORY cmake DESTINATION share/MetaObject FILES_MATCHING PATTERN "*.cmake")
 
-install(FILES
-    "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake"
-    DESTINATION "${CMAKE_INSTALL_PREFIX}/share/MetaObject" COMPONENT dev
-)
+#install(FILES
+#    "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake"
+#    DESTINATION "${CMAKE_INSTALL_PREFIX}/share/MetaObject" COMPONENT dev
+#)
