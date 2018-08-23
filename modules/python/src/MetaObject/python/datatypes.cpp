@@ -128,8 +128,7 @@ namespace mo
             auto obj = m_getter(param);
             if(obj)
             {
-                //m_callback(obj, fn, flags);
-                m_callback();
+                m_callback(obj, fn, flags);
             }
         }
 
