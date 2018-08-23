@@ -16,6 +16,15 @@ namespace mo
 
         template <>
         MO_EXPORTS void convertFromPython(const boost::python::object& obj, cv::Mat& result);
+
+        class PyEnsureGIL
+        {
+          public:
+            PyEnsureGIL();
+            ~PyEnsureGIL();
+          private:
+            PyGILState_STATE _state;
+        };
     }
 
     void setupAllocator();

@@ -28,5 +28,12 @@ namespace mo
             .value("DroppingQueue", mo::ParamType::DroppingQueue_e)
             .value("ForceBufferedConnection", mo::ParamType::ForceBufferedConnection_e)
             .value("ForceDirectConnection", mo::ParamType::ForceDirectConnection_e);
+
+        boost::python::enum_<mo::UpdateFlags>("ParamUpdateFlags")
+                .value("ValueUpdated", mo::ValueUpdated_e)
+                .value("InputSet", mo::InputSet_e)
+                .value("InputCleared", mo::InputCleared_e)
+                .value("InputUpdated", mo::InputUpdated_e)
+                .value("BufferUpdated", mo::BufferUpdated_e);
     }
 }

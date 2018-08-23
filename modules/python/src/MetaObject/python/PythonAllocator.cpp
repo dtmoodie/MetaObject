@@ -40,6 +40,8 @@ namespace mo
                 }
             }
         }
+        PyEnsureGIL::PyEnsureGIL() : _state(PyGILState_Ensure()) {}
+        PyEnsureGIL::~PyEnsureGIL() { PyGILState_Release(_state); }
     }
 
     struct NumpyDeallocator
@@ -77,15 +79,6 @@ namespace mo
             "NumpyDallocator", boost::python::no_init);
         importNumpy();
     }
-
-    class PyEnsureGIL
-    {
-      public:
-        PyEnsureGIL() : _state(PyGILState_Ensure()) {}
-        ~PyEnsureGIL() { PyGILState_Release(_state); }
-      private:
-        PyGILState_STATE _state;
-    };
 
     NumpyAllocator::NumpyAllocator(cv::MatAllocator* default_allocator_) : default_allocator(default_allocator_) {}
 
@@ -323,7 +316,7 @@ namespace mo
             total_size += cn;
         }
         auto u = mat.u;
-        PyEnsureGIL gil;
+        python::PyEnsureGIL gil;
 
         PyObject* o = PyArray_SimpleNewFromData(dims, _sizes, typenum, mat.data);
         boost::python::object base(boost::shared_ptr<NumpyDeallocator>(new NumpyDeallocator(u, this)));
