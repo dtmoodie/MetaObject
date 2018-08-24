@@ -8,6 +8,8 @@
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/object/MetaObjectFactory.hpp"
 #include "MetaObject/params/ParamFactory.hpp"
+
+#include "Parameters.hpp"
 #include "PythonAllocator.hpp"
 #include "PythonPolicy.hpp"
 #include "PythonSetup.hpp"
@@ -43,8 +45,6 @@ namespace boost
 namespace mo
 {
     void setupEnums(const std::string& module_name);
-
-    void setupDataTypes(const std::string& module_name);
 
     void setupPlugins(const std::string& module_name);
 
@@ -347,6 +347,7 @@ namespace mo
                 cv::cuda::GpuMat mat(10, 10, CV_32F);
                 cv::Mat::setDefaultAllocator(&m_numpy_allocator);
                 cv::cuda::GpuMat::setDefaultAllocator(&m_gpu_allocator);
+                m_callback_registry = python::ParamCallbackContainer::registry();
             }
 
             void setAllocator(AllocatorMode mode)
@@ -368,6 +369,7 @@ namespace mo
             mo::NumpyAllocator m_numpy_allocator;
             cv::MatAllocator* m_default_opencv_allocator = nullptr;
             cv::cuda::GpuMat::Allocator* m_default_opencv_gpu_allocator = nullptr;
+            std::shared_ptr<python::ParamCallbackContainer::Registry> m_callback_registry;
         };
 
         std::shared_ptr<SystemTable> pythonSetup(const char* module_name_)
@@ -380,7 +382,7 @@ namespace mo
             boost::shared_ptr<LibGuard> lib_guard(new LibGuard());
             mo::initCoreModule(lib_guard->m_system_table.get());
             mo::setupEnums(module_name);
-            setupDataTypes(module_name);
+            setupParameters(module_name);
             boost::python::def("listConstructableObjects", &listConstructableObjects);
             boost::python::def("listObjectInfos", &listObjectInfos);
             boost::python::def("log", &setLogLevel);

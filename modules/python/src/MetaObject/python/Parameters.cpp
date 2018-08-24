@@ -1,3 +1,4 @@
+#include "Parameters.hpp"
 #include "MetaObject/core/Demangle.hpp"
 #include "MetaObject/core/TypeTable.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
@@ -81,89 +82,93 @@ namespace mo
 
     std::string getDataTypeName(const mo::ParamBase* param) { return mo::Demangle::typeToName(param->getTypeInfo()); }
 
-
-    struct ParamCallbackContainer
+    python::ParamCallbackContainer::ParamCallbackContainer(mo::IParam* ptr, const boost::python::object& obj)
+        : m_ptr(ptr), m_callback(obj)
     {
-        using Ptr = std::unique_ptr<ParamCallbackContainer>;
-        ParamCallbackContainer(mo::IParam* ptr, const boost::python::object& obj):
-            m_ptr(ptr),
-            m_callback(obj)
+        m_slot = std::bind(&ParamCallbackContainer::onParamUpdate,
+                           this,
+                           std::placeholders::_1,
+                           std::placeholders::_2,
+                           std::placeholders::_3,
+                           std::placeholders::_4,
+                           std::placeholders::_5,
+                           std::placeholders::_6);
+        m_delete_slot = std::bind(&ParamCallbackContainer::onParamDelete, this, std::placeholders::_1);
+        if (ptr)
         {
-            m_slot = std::bind(&ParamCallbackContainer::onParamUpdate, this,
-                               std::placeholders::_1,
-                               std::placeholders::_2,
-                               std::placeholders::_3,
-                               std::placeholders::_4,
-                               std::placeholders::_5,
-                               std::placeholders::_6);
-            m_delete_slot = std::bind(&ParamCallbackContainer::onParamDelete, this, std::placeholders::_1);
-            if(ptr)
-            {
-                m_getter = mo::python::DataConverterRegistry::instance()->getGetter(ptr->getTypeInfo());
-                update_connection = ptr->registerUpdateNotifier(&m_slot);
-                del_connection = ptr->registerDeleteNotifier(&m_delete_slot);
-            }
+            m_getter = mo::python::DataConverterRegistry::instance()->getGetter(ptr->getTypeInfo());
+            update_connection = ptr->registerUpdateNotifier(&m_slot);
+            del_connection = ptr->registerDeleteNotifier(&m_delete_slot);
         }
+    }
 
-        void onParamUpdate(IParam* param,
-                           Context* ,
-                           OptionalTime_t ts,
-                           size_t fn,
-                           const std::shared_ptr<ICoordinateSystem>& ,
-                           UpdateFlags flags)
+    void python::ParamCallbackContainer::onParamUpdate(IParam* param,
+                                                       Context*,
+                                                       OptionalTime_t ts,
+                                                       size_t fn,
+                                                       const std::shared_ptr<ICoordinateSystem>&,
+                                                       UpdateFlags flags)
+    {
+        if (m_ptr == nullptr)
         {
-            if(m_ptr == nullptr)
-            {
-                return;
-            }
-            python::PyEnsureGIL lock;
-            if(!m_callback)
-            {
-                return;
-            }
-            if(!m_getter)
-            {
-                m_getter = mo::python::DataConverterRegistry::instance()->getGetter(param->getTypeInfo());
-            }
-            auto obj = m_getter(param);
-            if(obj)
+            return;
+        }
+        python::PyEnsureGIL lock;
+        if (!m_callback)
+        {
+            return;
+        }
+        if (!m_getter)
+        {
+            m_getter = mo::python::DataConverterRegistry::instance()->getGetter(param->getTypeInfo());
+        }
+        auto obj = m_getter(param);
+        if (obj)
+        {
+            try
             {
                 m_callback(obj, fn, flags);
             }
-        }
+            catch (...)
+            {
+                MO_LOG(warning) << "Callback invokation failed";
+            }
 
-        void onParamDelete(const mo::ParamBase*)
+            // m_callback();
+        }
+    }
+
+    void python::ParamCallbackContainer::onParamDelete(const mo::ParamBase*) { m_ptr = nullptr; }
+
+    auto python::ParamCallbackContainer::registry() -> std::shared_ptr<Registry>
+    {
+        static std::weak_ptr<Registry>* g_registry = nullptr;
+        std::shared_ptr<Registry> out;
+        if (g_registry == nullptr)
         {
-            m_ptr = nullptr;
+            g_registry = new std::weak_ptr<Registry>();
+            out = std::make_shared<Registry>();
+            *g_registry = out;
         }
-
-        mo::IParam* m_ptr = nullptr;
-        boost::python::object m_callback;
-        mo::python::DataConverterRegistry::Get_t m_getter;
-        UpdateSlot_t m_slot;
-        DeleteSlot_t m_delete_slot;
-        std::shared_ptr<Connection> del_connection;
-        std::shared_ptr<Connection> update_connection;
-    };
-
-    static std::map<mo::ParamBase*, std::vector<ParamCallbackContainer::Ptr>> param_callbacks;
+        else
+        {
+            out = g_registry->lock();
+        }
+        return out;
+    }
 
     void addCallback(mo::IParam* param, const boost::python::object& obj)
     {
-        param_callbacks[param].emplace_back(ParamCallbackContainer::Ptr(new ParamCallbackContainer(param, obj)));
+        auto registry = python::ParamCallbackContainer::registry();
+        (*registry)[param].emplace_back(
+            python::ParamCallbackContainer::Ptr(new python::ParamCallbackContainer(param, obj)));
     }
 
-    std::string printTime(const mo::Time_t& ts)
-    {
+    std::string printTime(const mo::Time_t& ts) {}
 
-    }
+    const mo::Time_t& getTime(const mo::OptionalTime_t& ts) { return ts.get(); }
 
-    const mo::Time_t& getTime(const mo::OptionalTime_t& ts)
-    {
-        return ts.get();
-    }
-
-    void setupDataTypes(const std::string& module_name)
+    void python::setupParameters(const std::string& module_name)
     {
         boost::python::object datatype_module(
             boost::python::handle<>(boost::python::borrowed(PyImport_AddModule((module_name + ".datatypes").c_str()))));
@@ -177,7 +182,8 @@ namespace mo
             .add_property("data", &getData, &setData);
 
         boost::python::class_<IParam, boost::noncopyable, boost::python::bases<ParamBase>>("IParam",
-                                                                                           boost::python::no_init).def("setCallback", &addCallback);
+                                                                                           boost::python::no_init)
+            .def("setCallback", &addCallback);
 
         boost::python::implicitly_convertible<IParam*, ParamBase*>();
 
@@ -219,10 +225,9 @@ namespace mo
             .def("__repr__", &IObjectInfo::Print, (boost::python::arg("verbosity") = IObjectInfo::INFO));
 
         boost::python::class_<mo::Time_t, boost::noncopyable> time("Time");
-        //time.def("__repr__", &printTime);
+        // time.def("__repr__", &printTime);
 
         boost::python::class_<mo::OptionalTime_t, boost::noncopyable> optional_time("OptionalTime");
-        //optional_time.def("get", &getTime);
-
+        // optional_time.def("get", &getTime);
     }
 }
