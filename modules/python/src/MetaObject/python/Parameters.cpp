@@ -127,7 +127,14 @@ namespace mo
         {
             try
             {
-                m_callback(obj, fn, flags);
+                if (ts)
+                {
+                    m_callback(obj, ts->time_since_epoch().count(), fn, flags);
+                }
+                else
+                {
+                    m_callback(obj, boost::python::object(), fn, flags);
+                }
             }
             catch (...)
             {
