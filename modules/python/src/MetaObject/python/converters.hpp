@@ -214,8 +214,8 @@ namespace mo
                 if (ext.check())
                 {
                     Type value = ext();
-
-                    // ct::setValue<ct::Reflect<T>::N - 1>(data, std::move(value));
+                    auto accessor = ct::Reflect<T>::getAccessor(ct::Indexer<ct::Reflect<T>::N>{});
+                    accessor.set(data, std::move(value));
                 }
             }
 
