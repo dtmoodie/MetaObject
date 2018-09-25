@@ -18,7 +18,12 @@ namespace mo
 
     MO_EXPORTS void setTimeSource(GetTime_f timefunc) { time_source = timefunc; }
 
-    MO_EXPORTS std::string printTime(mo::Time_t ns)
+    MO_EXPORTS std::string printTime(mo::Time_t ns,
+                                     const bool print_days,
+                                     const bool hours,
+                                     const bool minutes,
+                                     const bool seconds,
+                                     const bool nanoseconds)
     {
         typedef std::chrono::duration<int, std::ratio<86400>> days;
         std::stringstream ss;
@@ -31,8 +36,119 @@ namespace mo
         ns -= m;
         auto s = std::chrono::duration_cast<std::chrono::seconds>(ns.time_since_epoch());
         ns -= s;
-        ss << std::setw(2) << h.count() << ':' << std::setw(2) << m.count() << ':' << std::setw(2) << s.count() << '.'
-           << std::setw(4) << ns.time_since_epoch().count();
+        if (print_days)
+        {
+            ss << std::setw(2) << d.count();
+            ss << ':';
+        }
+        if (hours)
+        {
+            if (print_days)
+            {
+                ss << ':';
+            }
+            ss << std::setw(2) << h.count();
+        }
+        if (minutes)
+        {
+            if (hours || print_days)
+            {
+                ss << ':';
+            }
+            ss << std::setw(2) << m.count();
+        }
+        if (seconds)
+        {
+            if (minutes)
+            {
+                ss << ':';
+            }
+
+            ss << std::setw(2) << s.count();
+        }
+        if (nanoseconds)
+        {
+            if (seconds)
+            {
+                ss << '.';
+            }
+            ss << std::setw(4) << ns.time_since_epoch().count();
+        }
+
+        return ss.str();
+    }
+
+    std::string printTime(mo::Time_t ts) { return printTime(ts, false); }
+
+    MO_EXPORTS std::string printTime(std::chrono::nanoseconds ns,
+                                     const bool print_days,
+                                     const bool hours,
+                                     const bool minutes,
+                                     const bool seconds,
+                                     const bool nanoseconds)
+    {
+        typedef std::chrono::duration<int, std::ratio<86400>> days;
+        std::stringstream ss;
+        ss.fill('0');
+        auto d = std::chrono::duration_cast<days>(ns);
+        if (print_days)
+        {
+            ns -= d;
+        }
+
+        auto h = std::chrono::duration_cast<std::chrono::hours>(ns);
+        if (hours)
+        {
+            ns -= h;
+        }
+
+        auto m = std::chrono::duration_cast<std::chrono::minutes>(ns);
+        if (minutes)
+        {
+            ns -= m;
+        }
+
+        auto s = std::chrono::duration_cast<std::chrono::seconds>(ns);
+        ns -= s;
+        if (print_days)
+        {
+            ss << std::setw(2) << d.count();
+            ss << ':';
+        }
+        if (hours)
+        {
+            if (print_days)
+            {
+                ss << ':';
+            }
+            ss << std::setw(2) << h.count();
+        }
+        if (minutes)
+        {
+            if (hours || print_days)
+            {
+                ss << ':';
+            }
+            ss << std::setw(2) << m.count();
+        }
+        if (seconds)
+        {
+            if (minutes)
+            {
+                ss << ':';
+            }
+
+            ss << std::setw(2) << s.count();
+        }
+        if (nanoseconds)
+        {
+            if (seconds)
+            {
+                ss << '.';
+            }
+            ss << std::setw(4) << ns.count();
+        }
+
         return ss.str();
     }
 }

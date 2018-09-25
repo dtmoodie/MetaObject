@@ -35,6 +35,18 @@ namespace mo
     MO_EXPORTS mo::Time_t getCurrentTime();
     MO_EXPORTS void setTimeSource(GetTime_f timefunc);
     MO_EXPORTS std::string printTime(mo::Time_t ts);
+    MO_EXPORTS std::string printTime(mo::Time_t ts,
+                                     const bool days,
+                                     const bool hours = true,
+                                     const bool minutes = true,
+                                     const bool seconds = true,
+                                     const bool nanoseconds = true);
+    MO_EXPORTS std::string printTime(std::chrono::nanoseconds,
+                                     const bool days = true,
+                                     const bool hours = true,
+                                     const bool minutes = true,
+                                     const bool seconds = true,
+                                     const bool nanoseconds = true);
 } // namespace mo
 
 namespace std
