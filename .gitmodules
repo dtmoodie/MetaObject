@@ -4,6 +4,3 @@
 [submodule "dependencies/rcc"]
 	path = dependencies/rcc
 	url = ../rcc
-[submodule "dependencies/cppzmq"]
-	path = dependencies/cppzmq
-	url = https://github.com/zeromq/cppzmq
