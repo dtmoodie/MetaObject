@@ -1,13 +1,16 @@
 cmake_minimum_required(VERSION 2.8)
 CMAKE_POLICY(SET CMP0048 NEW)
 PROJECT(MetaObject
-    VERSION 0.1)
+    VERSION 0.1
+)
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 CMAKE_POLICY(SET CMP0020 NEW)
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/CMakeMacros.cmake")
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 list(REVERSE CMAKE_MODULE_PATH)
 
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(link_libs "")
 
 option(BUILD_TESTS "Build tests" ON)
@@ -19,7 +22,7 @@ option(WITH_PYTHON "Enable Python bindings" ON)
 option(WITH_OPENCV "Enable OpenCV types" ON )
 option(WITH_CUDA "Enable CUDA recompilation" ON)
 option(WITH_WT "Enable WT support" OFF)
-option(WITH_ZEROMQ "Enable ZEROMQ support" OFF)
+
 
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -194,7 +197,6 @@ message(STATUS
     "  Qt5\t\t${Qt5_VERSION}\n"
     "  Python\t\t${MO_PYTHON_STATUS}\n"
     "  Wt\t\t${Wt_FOUND}\n"
-    "  ZeroMQ\t\t${ZeroMQ_FOUND}\n"
     "  Tests\t\t${Boost_UNIT_TEST_FRAMEWORK_FOUND}\n"
     "  CUDA\t\t${CUDA_FOUND}\n"
 )

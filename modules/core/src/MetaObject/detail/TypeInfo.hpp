@@ -8,6 +8,12 @@ namespace mo
     class MO_EXPORTS TypeInfo
     {
       public:
+        template <class T>
+        static TypeInfo create()
+        {
+            return TypeInfo(typeid(T));
+        }
+
         TypeInfo();
         TypeInfo(const std::type_info&);
         template <class T>
@@ -22,6 +28,8 @@ namespace mo
 
         bool operator==(const std::type_info& rhs);
         bool operator!=(const std::type_info& rhs);
+
+        const std::type_info* ptr() const;
 
       private:
         const std::type_info* pInfo_;
@@ -49,4 +57,15 @@ namespace mo
     {
         return *this == TypeInfo(typeid(T));
     }
+}
+
+namespace std
+{
+    template <>
+    struct MO_EXPORTS hash<mo::TypeInfo>
+    {
+        using argument_type = mo::TypeInfo;
+        using result_type = std::size_t;
+        result_type operator()(argument_type const& s) const noexcept;
+    };
 }

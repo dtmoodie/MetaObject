@@ -1,8 +1,9 @@
 #pragma once
-#include "MetaObject/core/detail/Forward.hpp"
 #include "MetaObject/detail/Export.hpp"
+
+#include "MetaObject/core/detail/Forward.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
-#include "MetaObject/thread/ThreadRegistry.hpp"
+
 #include <memory>
 
 namespace mo

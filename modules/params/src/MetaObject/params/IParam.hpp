@@ -17,147 +17,84 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/MetaObject
 */
 #pragma once
+#include "Header.hpp"
 #include "MetaObject/core.hpp"
-#include "MetaObject/core/detail/Enums.hpp"
-#include "MetaObject/params/NamedParam.hpp"
+#include "MetaObject/core/detail/Forward.hpp"
 #include "MetaObject/signals/TSignal.hpp"
+#include "ParamTags.hpp"
+#include <MetaObject/detail/Export.hpp>
 
-#if BOOST_VERSION > 105400
-#include <boost/core/noncopyable.hpp>
-#else
-#include <boost/noncopyable.hpp>
-#endif
-
-#include <memory>
 #include <string>
 
 namespace mo
 {
-    namespace UI
-    {
-        namespace qt
-        {
-            template <class T>
-            class ParamProxy;
-        } // namespace UI::qt
-    }     // namespace UI
 
-    MO_KEYWORD_INPUT(timestamp, mo::Time_t)
-    MO_KEYWORD_INPUT(frame_number, size_t)
-    MO_KEYWORD_INPUT(coordinate_system, const std::shared_ptr<ICoordinateSystem>)
-    MO_KEYWORD_INPUT(context, Context*)
-    MO_KEYWORD_INPUT(param_name, std::string)
-    MO_KEYWORD_INPUT(tree_root, std::string)
-    MO_KEYWORD_INPUT(param_flags, EnumClassBitset<ParamFlags>)
+    struct IReadVisitor;
+    struct IWriteVisitor;
 
-#if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__)
-#if defined(metaobject_params_EXPORTS)
-#define PARAM_EXPORTS __declspec(dllexport)
-#else
-#define PARAM_EXPORTS __declspec(dllimport)
-#endif
-#elif defined __GNUC__ && __GNUC__ >= 4
-#define PARAM_EXPORTS __attribute__((visibility("default")))
-#else
-#define PARAM_EXPORTS
-#endif
+    using UpdateSignal_t = TSignal<Update_s>;
+    using UpdateSlotPtr_t = std::shared_ptr<UpdateSlot_t>;
 
-    namespace tag
-    {
-        struct param;
-    }
-    namespace kwargs
-    {
-        template <>
-        struct TaggedArgument<tag::param> : public TaggedBase
-        {
-            typedef tag::param TagType;
-            explicit TaggedArgument(const IParam& val) : arg(&val) {}
+    using DeleteSlot_t = TSlot<void(const IParam*)>;
+    using DeleteSignal_t = TSignal<void(const IParam*)>;
+    using DeleteSlotPtr_t = std::shared_ptr<DeleteSlot_t>;
 
-            const void* get() const { return arg; }
-
-          protected:
-            const void* arg;
-        };
-
-        template <>
-        struct PARAM_EXPORTS TKeyword<tag::param>
-        {
-            static TKeyword instance;
-            TaggedArgument<tag::param> operator=(const IParam& data);
-        };
-
-    } // namespace kwargs
-
-    namespace tag
-    {
-        struct param
-        {
-            typedef IParam Type;
-            typedef const Type& ConstRef;
-            typedef Type& Ref;
-            typedef ConstRef StorageType;
-            typedef const void* VoidType;
-            template <typename T>
-            static constexpr bool AllowedType()
-            {
-                return std::is_same<Type, T>::value;
-            }
-            static VoidType GetPtr(const Type& arg) { return &arg; }
-            template <class T>
-            static VoidType GetPtr(const T& arg)
-            {
-                (void)arg;
-                return nullptr;
-            }
-        };
-        static mo::kwargs::TKeyword<param>& _param = mo::kwargs::TKeyword<param>::instance;
-    }
-
-    typedef void(UpdateSig_t)(IParam*,
-                              Context*,
-                              OptionalTime_t,
-                              size_t,
-                              const std::shared_ptr<ICoordinateSystem>&,
-                              UpdateFlags); // Sig for signature not signal
-    typedef TSlot<UpdateSig_t> UpdateSlot_t;
-    typedef TSignal<UpdateSig_t> UpdateSignal_t;
-    typedef std::shared_ptr<UpdateSlot_t> UpdateSlotPtr_t;
-
-    typedef TSlot<void(const IParam*)> DeleteSlot_t;
-    typedef TSignal<void(const IParam*)> DeleteSignal_t;
-    typedef std::shared_ptr<DeleteSlot_t> DeleteSlotPtr_t;
-
-    class MO_EXPORTS ParamBase : public boost::noncopyable
+    // need a pure virtual base class for python bindings
+    class MO_EXPORTS ParamBase
     {
       public:
+        using Ptr = std::shared_ptr<ParamBase>;
+        using ConstPtr = std::shared_ptr<const ParamBase>;
+
+        ParamBase() = default;
+        ParamBase(const ParamBase&) = delete;
+        ParamBase& operator=(const ParamBase&) = delete;
+
         virtual ~ParamBase();
-        typedef std::shared_ptr<ParamBase> Ptr;
-        typedef std::shared_ptr<const ParamBase> ConstPtr;
-        virtual const std::string& getName() const = 0; // Get the name of this Param
-        virtual const std::string
-        getTreeName() const = 0; // Get the name of this parmaeter appended with the tree root. IE root_name:param_name
-        virtual const std::string&
-        getTreeRoot() const = 0; // Get the tree root of this Param, ie the name of the owning parent object
-        virtual OptionalTime_t
-        getTimestamp() const = 0;                  // Get the timestamp of this Param, may not exist for all Params
-        virtual size_t getFrameNumber() const = 0; // Get the frame number for this Param. Initialized such that first
-                                                   // update will set to 0, and increment at every update unless
-                                                   // specified
-        virtual Context* getContext() const = 0;   // Get the compute context of this Param
-        virtual const std::shared_ptr<ICoordinateSystem>&
-        getCoordinateSystem() const = 0;          // Get the coordinate system of this Param
-        virtual TypeInfo getTypeInfo() const = 0; // Implemented in concrete type
+
+        // Get the name of this Param
+        virtual const std::string& getName() const = 0;
+
+        // Get the name of this parmaeter appended with the tree root. IE root_name:param_name
+        virtual const std::string getTreeName() const = 0;
+
+        // Get the tree root of this Param, ie the name of the owning parent object
+        virtual const std::string& getTreeRoot() const = 0;
+
+        // Get the timestamp of this Param, may not exist for all Params
+        virtual OptionalTime_t getTimestamp() const = 0;
+
+        // Get the frame number for this Param. Initialized such that first
+        // update will set to 0, and increment at every update unless
+        // specified
+        virtual size_t getFrameNumber() const = 0;
+
+        // Get the compute context of this Param
+        virtual Context* getContext() const = 0;
+
+        // Get the coordinate system of this Param
+        virtual const ICoordinateSystemPtr_t& getCoordinateSystem() const = 0;
+
+        // Implemented in concrete type
+        virtual TypeInfo getTypeInfo() const = 0;
         virtual std::ostream& print(std::ostream& os) const = 0;
 
-        virtual EnumClassBitset<ParamFlags>
-        appendFlags(ParamFlags flags_) = 0;                 // Append a flag to the Param, return previous values
-        virtual bool checkFlags(ParamFlags flag) const = 0; // Check if a single flag is set
-        virtual EnumClassBitset<ParamFlags>
-        setFlags(ParamFlags flags_) = 0; // Set flags of the Param, return previous values
-        virtual EnumClassBitset<ParamFlags>
-        setFlags(EnumClassBitset<ParamFlags> flags_) = 0; // Set flags of the Param, return previous values
+        // Append a flag to the Param, return previous values
+        virtual EnumClassBitset<ParamFlags> appendFlags(ParamFlags flags_) = 0;
+
+        // Check if a single flag is set
+        virtual bool checkFlags(ParamFlags flag) const = 0;
+
+        // Set flags of the Param, return previous values
+        virtual EnumClassBitset<ParamFlags> setFlags(ParamFlags flags_) = 0;
+
+        // Set flags of the Param, return previous values
+        virtual EnumClassBitset<ParamFlags> setFlags(EnumClassBitset<ParamFlags> flags_) = 0;
+
         virtual EnumClassBitset<ParamFlags> getFlags() const = 0;
+
+        virtual void visit(IReadVisitor*) = 0;
+        virtual void visit(IWriteVisitor*) const = 0;
     };
 
     class MO_EXPORTS IParam : public ParamBase
@@ -167,120 +104,139 @@ namespace mo
         typedef std::shared_ptr<const IParam> ConstPtr;
 
         template <class... Args>
-        IParam(const Args&... args)
-        {
-            _name = GetKeywordInputDefault<tag::param_name>("unnamed", args...);
-            if (const mo::Time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...))
-                _ts = *ts;
-            _mtx = nullptr;
-            _fn = GetKeywordInputDefault<tag::frame_number>(-1, args...);
-            _ctx = GetKeywordInputDefault<tag::context>(nullptr, args...);
-            //_cs        = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...); // TODO keyword
-            // specialization for std::shared_ptrs
-            _flags = GetKeywordInputDefault<tag::param_flags>(EnumClassBitset<ParamFlags>(mo::ParamFlags::Control_e),
-                                                              args...);
-            _tree_root = GetKeywordInputDefault<tag::tree_root>("", args...);
-        }
+        IParam(const Args&... args);
 
-        IParam(const std::string& name_ = "",
-               ParamFlags flags_ = ParamFlags::Control_e,
-               OptionalTime_t ts_ = OptionalTime_t(),
-               Context* ctx_ = nullptr,
-               size_t fn_ = std::numeric_limits<size_t>::max());
+        IParam(const std::string& name_ = "", ParamFlags flags_ = ParamFlags::Control_e, Context* ctx_ = nullptr);
 
-        virtual ~IParam();
+        virtual ~IParam() override;
 
         // Get the name of this Param
         IParam* setName(const std::string& name_);
+
         // Set the root to the name of this Param. IE objname:paramanme, set objname
         IParam* setTreeRoot(const std::string& tree_root_);
+
         // Set the compute context of this Param
         virtual IParam* setContext(Context* ctx);
+
         // Set the frame number for this Param
         IParam* setFrameNumber(size_t fn);
+
         // Set the timestamp for this Param
         IParam* setTimestamp(const mo::Time_t& ts);
+
         // Set the coordinate system for this Param
         IParam* setCoordinateSystem(const std::shared_ptr<ICoordinateSystem>& cs_);
 
         // Get the name of this Param
         const std::string& getName() const override;
+
         // Get the name of this parmaeter appended with the tree root. IE root_name:param_name
         const std::string getTreeName() const override;
+
         // Get the tree root of this Param, ie the name of the owning parent object
         const std::string& getTreeRoot() const override;
+
         // Get the timestamp of this Param, may not exist for all Params
         OptionalTime_t getTimestamp() const override;
+
         // Get the frame number for this Param. Initialized such that first update will
         // set to 0, and increment at every update unless specified
         size_t getFrameNumber() const override;
+
         // Get the compute context of this Param
         Context* getContext() const override;
-        // Get the coordinate system of this Param
-        const std::shared_ptr<ICoordinateSystem>& getCoordinateSystem() const override;
 
-        void subscribe();              // Subscribe to this Param as an output
-        void unsubscribe();            // unsubscribe to this Param as an output
-        bool hasSubscriptions() const; // Determine if there are any input Params using this Param as an output
+        // Get the coordinate system of this Param
+        const ICoordinateSystemPtr_t& getCoordinateSystem() const override;
+
+        // Subscribe to this Param as an output
+        void subscribe();
+        // unsubscribe to this Param as an output
+        void unsubscribe();
+        // Determine if there are any input Params using this Param as an output
+        bool hasSubscriptions() const;
 
         // Register slots to be called on update of this Param
-        virtual std::shared_ptr<Connection> registerUpdateNotifier(UpdateSlot_t* f);
-        virtual std::shared_ptr<Connection> registerUpdateNotifier(std::shared_ptr<TSignalRelay<UpdateSig_t>>& relay);
+        virtual ConnectionPtr_t registerUpdateNotifier(UpdateSlot_t* f);
+        virtual ConnectionPtr_t registerUpdateNotifier(TSignalRelay<Update_s>::Ptr& relay);
+
         // Virtual to allow typed overload for interface slot input
-        virtual std::shared_ptr<Connection> registerUpdateNotifier(ISlot* f);
-        virtual std::shared_ptr<Connection> registerUpdateNotifier(std::shared_ptr<ISignalRelay> relay);
+        virtual ConnectionPtr_t registerUpdateNotifier(ISlot* f);
+        virtual ConnectionPtr_t registerUpdateNotifier(std::shared_ptr<ISignalRelay> relay);
 
         // Register slots to be called on delete of this Param
-        std::shared_ptr<Connection> registerDeleteNotifier(DeleteSlot_t* f);
-        std::shared_ptr<Connection> registerDeleteNotifier(std::shared_ptr<TSignalRelay<void(IParam const*)>>& relay);
-        std::shared_ptr<Connection> registerDeleteNotifier(ISlot* f);
-        std::shared_ptr<Connection> registerDeleteNotifier(std::shared_ptr<ISignalRelay> relay);
+        ConnectionPtr_t registerDeleteNotifier(DeleteSlot_t* f);
+        ConnectionPtr_t registerDeleteNotifier(TSignalRelay<void(IParam const*)>::Ptr& relay);
+        ConnectionPtr_t registerDeleteNotifier(ISlot* f);
+        ConnectionPtr_t registerDeleteNotifier(ISignalRelay::Ptr relay);
 
         // commit changes to a Param, updates underlying meta info and emits signals accordingly
-        virtual IParam*
-        emitUpdate(const OptionalTime_t& ts_ = OptionalTime_t(), // The timestamp of the new data
-                   Context* ctx_ = mo::Context::getCurrent(),    // The context from which the data was updated
-                   const boost::optional<size_t>& fn_ = boost::optional<size_t>(), // The frame number of the update
-                   const std::shared_ptr<ICoordinateSystem>& cs_ =
-                       std::shared_ptr<ICoordinateSystem>(), // The coordinate system of the data
-                   UpdateFlags flags_ = ValueUpdated_e);
+        virtual IParam* emitUpdate(const Header& header = Header(), UpdateFlags flags_ = ValueUpdated_e);
 
-        virtual IParam*
-        emitUpdate(const IParam& other); // commit a Param's value copying metadata info from another parmaeter
-        Mutex_t& mtx() const; // Get reference to Param mutex.  If setMtx was called, this will reference the mutex that
-                              // was set, otherwise one will be created
-        virtual void setMtx(Mutex_t* mtx); // Use this to share a mutex with an owning object, ie a parent.
+        // commit a Param's value copying metadata info from another parmaeter
+        virtual IParam* emitUpdate(const IParam& other, UpdateFlags flags_ = ValueUpdated_e);
 
-        EnumClassBitset<ParamFlags>
-        appendFlags(ParamFlags flags_) override; // Append a flag to the Param, return previous values
+        // Get reference to Param mutex.  If setMtx was called, this will reference the mutex that
+        // was set, otherwise one will be created
+        Mutex_t& mtx() const;
 
-        bool checkFlags(ParamFlags flag) const override; // Check if a single flag is set
-        EnumClassBitset<ParamFlags>
-        setFlags(ParamFlags flags_) override; // Set flags of the Param, return previous values
-        EnumClassBitset<ParamFlags>
-        setFlags(EnumClassBitset<ParamFlags> flags_) override; // Set flags of the Param, return previous values
+        // Use this to share a mutex with an owning object, ie a parent.
+        virtual void setMtx(Mutex_t* mtx);
+
+        // Append a flag to the Param, return previous values
+        EnumClassBitset<ParamFlags> appendFlags(ParamFlags flags_) override;
+
+        // Check if a single flag is set
+        bool checkFlags(ParamFlags flag) const override;
+
+        // Set flags of the Param, return previous values
+        EnumClassBitset<ParamFlags> setFlags(ParamFlags flags_) override;
+
+        // Set flags of the Param, return previous values
+        EnumClassBitset<ParamFlags> setFlags(EnumClassBitset<ParamFlags> flags_) override;
+
         EnumClassBitset<ParamFlags> getFlags() const override;
-        virtual bool modified() const;     // Check if has been modified
-        virtual void modified(bool value); // Set if it has been modified
+
+        // Check if has been modified
+        virtual bool modified() const;
+
+        // Set if it has been modified
+        virtual void modified(bool value);
 
         std::ostream& print(std::ostream& os) const override;
 
       protected:
-        template <class T>
-        friend class UI::qt::ParamProxy;
+        Header _header;
 
-        OptionalTime_t _ts;
-        size_t _fn;
-        std::shared_ptr<ICoordinateSystem> _cs;
-        Context* _ctx;
         std::string _name;
         std::string _tree_root;
         mutable EnumClassBitset<ParamFlags> _flags;
         UpdateSignal_t _update_signal;
         DeleteSignal_t _delete_signal;
+
         mutable mo::Mutex_t* _mtx = nullptr;
         int _subscribers = 0;
-    private:
+
+      private:
         bool _modified = false; // Set to true if modified by the user interface etc, set to false by the owning object.
     };
+
+    template <class... Args>
+    IParam::IParam(const Args&... args)
+    {
+        _name = GetKeywordInputDefault<tag::param_name>("unnamed", args...);
+        if (const mo::Time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...))
+        {
+            _header.timestamp = *ts;
+        }
+        _mtx = nullptr;
+        _header.frame_number = GetKeywordInputDefault<tag::frame_number>(-1, args...);
+        _header.ctx = GetKeywordInputDefault<tag::context>(nullptr, args...);
+        //_cs        = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...); // TODO keyword
+        // specialization for std::shared_ptrs
+        _flags =
+            GetKeywordInputDefault<tag::param_flags>(EnumClassBitset<ParamFlags>(mo::ParamFlags::Control_e), args...);
+        _tree_root = GetKeywordInputDefault<tag::tree_root>("", args...);
+    }
 }

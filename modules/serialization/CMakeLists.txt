@@ -1,5 +1,9 @@
-metaobject_declare_module(NAME serialization DEPENDS metaobject_core metaobject_params metaobject_object metaobject_types)
+metaobject_declare_module(NAME serialization
+    DEPENDS metaobject_core metaobject_params metaobject_object metaobject_types
+)
 
 target_include_directories(metaobject_serialization
     PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../dependencies/cereal/include>
 )
+
+add_subdirectory(tests/virtual_visitor)

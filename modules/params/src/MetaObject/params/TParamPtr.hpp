@@ -19,75 +19,204 @@ namespace mo
      *  Updates to user_param are reflected in user_data
      */
     template <typename T>
-    class MO_EXPORTS TParamPtr : virtual public ITAccessibleParam<T>
+    struct MO_EXPORTS TParamPtr : virtual public ITParam<T>
     {
-      public:
-        typedef typename ParamTraits<T>::Storage_t Storage_t;
-        typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
-        typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
-        typedef typename ParamTraits<T>::Input_t Input_t;
-        typedef typename ParamTraits<T>::Raw_t Raw_t;
-        typedef void(TUpdateSig_t)(ConstStorageRef_t,
-                                   IParam*,
-                                   Context*,
-                                   OptionalTime_t,
-                                   size_t,
-                                   const std::shared_ptr<ICoordinateSystem>&,
-                                   UpdateFlags);
-        typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
-        typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
-
-        /*!
-         * \brief TParamPtr default constructor
-         * \param name of the Param
-         * \param ptr_ to user owned data
-         * \param type of Param
-         * \param ownsData_ cleanup on delete?
-         */
         TParamPtr(const std::string& name = "",
-                  T* ptr_ = nullptr,
+                  T* ptr = nullptr,
                   ParamFlags type = ParamFlags::Control_e,
-                  bool ownsData_ = false);
-        ~TParamPtr();
+                  bool owns_data = false)
+            : ITParam<T>(name, type) m_ptr(ptr), m_owns_data(owns_data)
+        {
+        }
 
-        virtual bool getData(InputStorage_t& data,
-                             const OptionalTime_t& ts = OptionalTime_t(),
-                             Context* ctx = nullptr,
-                             size_t* fn_ = nullptr);
+        ~TParamPtr()
+        {
+            if (m_owns_data)
+            {
+                delete m_ptr;
+            }
+        }
 
-        virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
+        void updatePtr(T* ptr, bool owns_data = false)
+        {
+            mo::Mutex_t::scoped_lock lock(this->mtx());
+            if (m_ptr && m_owns_data)
+            {
+                delete m_ptr;
+            }
+            m_ptr = ptr;
+            m_owns_data = owns_data;
+        }
 
-        virtual IParam* emitUpdate(const OptionalTime_t& ts_ = OptionalTime_t(),
-                                   Context* ctx_ = mo::Context::getCurrent(),
-                                   const boost::optional<size_t>& fn_ = boost::optional<size_t>(),
-                                   const std::shared_ptr<ICoordinateSystem>& cs_ = std::shared_ptr<ICoordinateSystem>(),
-                                   UpdateFlags flags_ = ValueUpdated_e);
-        virtual IParam* emitUpdate(const IParam& other) { return IParam::emitUpdate(other); }
-        virtual AccessToken<T> access();
-        virtual ConstAccessToken<T> read() const;
-        bool canAccess() const override { return m_ptr != nullptr; }
+        template <class... Args>
+        void updateData(const T& data, const Args&... args)
+        {
+            mo::Mutex_t::scoped_lock lock(this->mtx());
+            ITParam<T>::updateData(data, std::forward<Args>(args)...);
+            updateUserData();
+        }
 
-        ITParam<T>* updatePtr(Raw_t* ptr, bool ownsData_ = false);
+        template <class... Args>
+        void updateData(T&& data, const Args&... args)
+        {
+            mo::Mutex_t::scoped_lock lock(this->mtx());
+            ITParam<T>::updateData(data, std::forward<Args>(args)...);
+            updateUserData();
+        }
 
-        std::ostream& print(std::ostream& os) const override;
+        virtual void updateData(const T& data, const Header& header) override
+        {
+            mo::Mutex_t::scoped_lock lock(this->mtx());
+            ITParam<T>::updateData(data, header);
+            updateUserData();
+        }
+
+        virtual void updateData(T&& data, Header&& header) override
+        {
+            mo::Mutex_t::scoped_lock lock(this->mtx());
+            ITParam<T>::updateData(std::move(data), std::move(header));
+            updateUserData();
+        }
+
+        virtual IParam* emitUpdate(const Header& header = Header(), UpdateFlags) override
+        {
+            mo::Mutex_t::scoped_lock lock(this->mtx());
+            if (m_ptr)
+            {
+                ITParam<T>::updateData(*m_ptr, header);
+            }
+        }
+
+        // commit a Param's value copying metadata info from another parmaeter
+        virtual IParam* emitUpdate(const IParam& other) override
+        {
+            mo::Mutex_t::scoped_lock lock(this->mtx());
+            if (m_ptr)
+            {
+                ITParam<T>::updateData(*m_ptr, mo::tag::_param = other);
+            }
+        }
+
+        std::ostream& print(std::ostream& os) const override
+        {
+            mo::Mutex_t::scoped_lock lock(this->mtx());
+            ITParam<T>::print(os);
+            os << ' ';
+            if (m_ptr)
+            {
+                mo::print(os, *m_ptr);
+            }
+            return os;
+        }
 
       protected:
-        bool updateDataImpl(const Storage_t& data,
-                            const OptionalTime_t& ts,
-                            Context* ctx,
-                            size_t fn,
-                            const std::shared_ptr<ICoordinateSystem>& cs) override;
+        T* ptr()
+        {
+            return m_ptr;
+        }
+        void updateUserData(const T& data)
+        {
+            if (&data != m_ptr)
+            {
+                if (m_ptr)
+                {
+                    *m_ptr = data;
+                }
+            }
+        }
 
-        bool updateDataImpl(Storage_t&& data,
-                            const OptionalTime_t& ts,
-                            Context* ctx,
-                            size_t fn,
-                            const std::shared_ptr<ICoordinateSystem>& cs) override;
-
-        Raw_t* ptr() { return m_ptr; }
       private:
-        Raw_t* m_ptr;
-        bool ownsData;
+        T* m_ptr;
+        bool m_owns_data;
+    };
+
+    template <typename T>
+    struct MO_EXPORTS TParamPtr<std::shared_ptr<T>> : virtual public ITParam<T>
+    {
+        TParamPtr(const std::string& name = "",
+                  std::shared_ptr<T>* ptr = nullptr,
+                  ParamFlags type = ParamFlags::Control_e,
+                  bool owns_data = false)
+            : ITParam<T>(name, type) m_ptr(ptr), m_owns_data(owns_data)
+        {
+        }
+
+        ~TParamPtr()
+        {
+            if (m_owns_data)
+            {
+                delete m_ptr;
+            }
+        }
+
+        void updatePtr(std::shared_ptr<T>* ptr, bool owns_data = false)
+        {
+            if (m_ptr && m_owns_data)
+            {
+                delete m_ptr;
+            }
+            m_ptr = ptr;
+            m_owns_data = owns_data;
+        }
+
+        template <class... Args>
+        void updateData(const T& data, const Args&... args)
+        {
+            ITParam<T>::updateData(data, std::forward<Args>(args)...);
+            updateUserData();
+        }
+
+        template <class... Args>
+        void updateData(T&& data, const Args&... args)
+        {
+            ITParam<T>::updateData(data, std::forward<Args>(args)...);
+            updateUserData();
+        }
+
+        virtual void updateData(const T& data, const Header& header) override
+        {
+            ITParam<T>::updateData(data, header);
+            updateUserData();
+        }
+
+        virtual void updateData(T&& data, Header&& header) override
+        {
+            ITParam<T>::updateData(std::move(data), std::move(header));
+            updateUserData();
+        }
+
+        std::ostream& print(std::ostream& os) const override
+        {
+            mo::Mutex_t::scoped_lock lock(this->mtx());
+            ITParam<T>::print(os);
+            os << ' ';
+            if (m_ptr)
+            {
+                mo::print(os, *m_ptr);
+            }
+            return os;
+        }
+
+      protected:
+        void updateUserData()
+        {
+            if (m_ptr)
+            {
+                ContainerPtr_t container;
+                if (getData(container))
+                {
+                    *m_ptr = container;
+                }
+            }
+        }
+        std::shared_ptr<T>* ptr()
+        {
+            return m_ptr;
+        }
+
+      private:
+        std::shared_ptr<T>* m_ptr;
+        bool m_owns_data;
     };
 
     /*!
@@ -95,63 +224,17 @@ namespace mo
      * owns a reference to the data which is updated by the param's reset function.
      */
     template <typename T>
-    class MO_EXPORTS TParamOutput : virtual public TParamPtr<T>, virtual public OutputParam
+    struct MO_EXPORTS TParamOutput : virtual public TParamPtr<T>, virtual public OutputParam
     {
-      public:
-        typedef typename ParamTraits<T>::Storage_t Storage_t;
-        typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
-        typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
-        typedef typename ParamTraits<T>::Input_t Input_t;
-        typedef void(TUpdateSig_t)(ConstStorageRef_t,
-                                   IParam*,
-                                   Context*,
-                                   OptionalTime_t,
-                                   size_t,
-                                   const std::shared_ptr<ICoordinateSystem>&,
-                                   UpdateFlags);
-        typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
-        typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
-
-        TParamOutput() : IParam(mo::tag::_param_flags = mo::ParamFlags::Output_e) {}
-
-        virtual bool getData(InputStorage_t& data,
-                             const OptionalTime_t& ts = OptionalTime_t(),
-                             Context* ctx = nullptr,
-                             size_t* fn_ = nullptr);
-
-        virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
-
-        virtual AccessToken<T> access();
-        virtual ConstAccessToken<T> read() const;
-
-        virtual IParam* emitUpdate(const OptionalTime_t& ts_ = OptionalTime_t(),
-                                   Context* ctx_ = mo::Context::getCurrent(),
-                                   const boost::optional<size_t>& fn_ = boost::optional<size_t>(),
-                                   const std::shared_ptr<ICoordinateSystem>& cs_ = std::shared_ptr<ICoordinateSystem>(),
-                                   UpdateFlags flags_ = ValueUpdated_e);
-        virtual IParam* emitUpdate(const IParam& other) { return IParam::emitUpdate(other); }
+        TParamOutput() : IParam(mo::tag::_param_flags = mo::ParamFlags::Output_e)
+        {
+        }
 
         virtual std::vector<TypeInfo> listOutputTypes() const override;
         ParamBase* getOutputParam(const TypeInfo type) override;
         const ParamBase* getOutputParam(const TypeInfo type) const override;
         ParamBase* getOutputParam() override;
         const ParamBase* getOutputParam() const override;
-
-      protected:
-        bool updateDataImpl(const Storage_t& data,
-                            const OptionalTime_t& ts,
-                            Context* ctx,
-                            size_t fn,
-                            const std::shared_ptr<ICoordinateSystem>& cs) override;
-
-        bool updateDataImpl(Storage_t&& data,
-                            const OptionalTime_t& ts,
-                            Context* ctx,
-                            size_t fn,
-                            const std::shared_ptr<ICoordinateSystem>& cs) override;
-
-      private:
-        Storage_t data;
     };
 }
 #include "detail/TParamPtrImpl.hpp"

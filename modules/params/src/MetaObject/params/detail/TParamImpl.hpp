@@ -23,11 +23,13 @@ namespace mo
         }
         else
         {
-            if (ts == IParam::_ts)
+            if (ts == IParam::header.timestamp)
             {
                 value = _data;
                 if (fn)
+                {
                     *fn = this->_fn;
+                }
                 return true;
             }
         }

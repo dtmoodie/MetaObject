@@ -49,6 +49,8 @@ namespace mo
     bool TypeInfo::operator==(const std::type_info& rhs) { return this->pInfo_ == &rhs; }
     bool TypeInfo::operator!=(const std::type_info& rhs) { return !(*this == rhs); }
 
+    const std::type_info* TypeInfo::ptr() const { return pInfo_; }
+
     bool operator==(const TypeInfo& lhs, const TypeInfo& rhs) { return (lhs.get() == rhs.get()) != 0; }
 
     bool operator<(const TypeInfo& lhs, const TypeInfo& rhs) { return lhs.before(rhs); }
@@ -60,4 +62,14 @@ namespace mo
     bool operator<=(const TypeInfo& lhs, const TypeInfo& rhs) { return !(lhs > rhs); }
 
     bool operator>=(const TypeInfo& lhs, const TypeInfo& rhs) { return !(lhs < rhs); }
+
 } // namespace mo
+
+namespace std
+{
+
+    hash<mo::TypeInfo>::result_type hash<mo::TypeInfo>::operator()(argument_type const& s) const noexcept
+    {
+        return std::hash<const std::type_info*>{}(s.ptr());
+    }
+}

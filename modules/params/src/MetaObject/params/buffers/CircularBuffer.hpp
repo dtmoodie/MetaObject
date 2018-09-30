@@ -30,39 +30,9 @@ namespace mo
 {
     namespace Buffer
     {
-        template <class T>
-        class CircularBuffer : public IBuffer, public ITInputParam<T>
+
+        struct CircularBuffer : public IBuffer
         {
-            static ParamConstructor<CircularBuffer<T>> _circular_buffer_param_constructor;
-            static BufferConstructor<CircularBuffer<T>> _circular_buffer_constructor;
-            boost::circular_buffer<State<T>> _data_buffer;
-
-          public:
-            typedef typename ParamTraits<T>::Storage_t Storage_t;
-            typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
-            typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
-            typedef typename ParamTraits<T>::Input_t Input_t;
-            typedef void(TUpdateSig_t)(ConstStorageRef_t,
-                                       IParam*,
-                                       Context*,
-                                       OptionalTime_t,
-                                       size_t,
-                                       const std::shared_ptr<ICoordinateSystem>&,
-                                       UpdateFlags);
-            typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
-            typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
-            typedef T ValueType;
-            static const ParamType Type = CircularBuffer_e;
-
-            CircularBuffer(T&& init,
-                           const std::string& name = "",
-                           OptionalTime_t ts = {},
-                           ParamFlags type = ParamFlags::Buffer_e);
-
-            CircularBuffer(const std::string& name = "",
-                           OptionalTime_t ts = {},
-                           ParamFlags type = ParamFlags::Buffer_e);
-
             virtual bool getData(InputStorage_t& data,
                                  const OptionalTime_t& ts = OptionalTime_t(),
                                  Context* ctx = nullptr,

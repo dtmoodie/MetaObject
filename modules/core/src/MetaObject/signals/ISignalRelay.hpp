@@ -1,6 +1,8 @@
 #pragma once
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
+
+#include <memory>
 namespace mo
 {
     class ISlot;
@@ -10,9 +12,13 @@ namespace mo
     class TSlot;
     template <class Sig>
     class TSignal;
+
     class MO_EXPORTS ISignalRelay
     {
       public:
+        using Ptr = std::shared_ptr<ISignalRelay>;
+        using ConstPtr = std::shared_ptr<const ISignalRelay>;
+
         virtual ~ISignalRelay();
         virtual const TypeInfo& getSignature() const = 0;
         virtual bool hasSlots() const = 0;

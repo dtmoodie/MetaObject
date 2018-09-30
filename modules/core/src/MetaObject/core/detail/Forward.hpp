@@ -1,6 +1,6 @@
 #pragma once
-#include "Time.hpp"
 #include "Enums.hpp"
+#include "Time.hpp"
 #include <vector>
 namespace std
 {
@@ -11,6 +11,8 @@ namespace std
 namespace boost
 {
     class recursive_timed_mutex;
+    template <typename T>
+    class unique_lock;
 }
 
 namespace mo
@@ -39,22 +41,24 @@ namespace mo
     class ITParam;
     template <class T>
     class ITInputParam;
+    struct Header;
 
     struct ParamInfo;
     struct SignalInfo;
     struct SlotInfo;
     struct CallbackInfo;
 
-    typedef std::vector<IParam*> ParamVec_t;
-    typedef std::vector<ParamInfo*> ParamInfoVec_t;
-    typedef std::vector<SignalInfo*> SignalInfoVec_t;
-    typedef std::vector<SlotInfo*> SlotInfoVec_t;
-    typedef std::vector<InputParam*> InputParamVec_t;
-    typedef boost::recursive_timed_mutex Mutex_t;
-    typedef std::shared_ptr<Context> ContextPtr_t;
-    typedef std::shared_ptr<ICoordinateSystem> CoordinateSystemPtr_t;
-    typedef std::shared_ptr<Connection> ConnectionPtr_t;
-    typedef std::shared_ptr<IParam> IParamPtr_t;
+    using ParamVec_t = std::vector<IParam*>;
+    using ParamInfoVec_t = std::vector<ParamInfo*>;
+    using SignalInfoVec_t = std::vector<SignalInfo*>;
+    using SlotInfoVec_t = std::vector<SlotInfo*>;
+    using InputParamVec_t = std::vector<InputParam*>;
+    using Mutex_t = boost::recursive_timed_mutex;
+    using Lock = boost::unique_lock<mo::Mutex_t>;
+    using ContextPtr_t = std::shared_ptr<Context>;
+    using CoordinateSystemPtr_t = std::shared_ptr<ICoordinateSystem>;
+    using ConnectionPtr_t = std::shared_ptr<Connection>;
+    using IParamPtr_t = std::shared_ptr<IParam>;
 
     template <class T>
     class TSignal;
@@ -65,6 +69,6 @@ namespace mo
     template <class T>
     class TSignalRelay;
 
-    typedef TSlot<void(IParam*, Context*, OptionalTime_t, size_t, const CoordinateSystemPtr_t&, UpdateFlags)>
-        UpdateSlot_t;
+    using Update_s = void(IParam*, Header, UpdateFlags);
+    using UpdateSlot_t = TSlot<Update_s>;
 }

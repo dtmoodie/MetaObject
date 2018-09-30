@@ -17,17 +17,19 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/MetaObject
 */
 #include "MetaObject/params/IParam.hpp"
+#include "ICoordinateSystem.hpp"
+#include "MetaObject/core/Demangle.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/TSignalRelay.hpp"
 #include "MetaObject/signals/TSlot.hpp"
 #include <algorithm>
 #include <boost/thread/recursive_mutex.hpp>
-#include "ICoordinateSystem.hpp"
-#include "MetaObject/core/Demangle.hpp"
 namespace mo
 {
 
-    ParamBase::~ParamBase() {}
+    ParamBase::~ParamBase()
+    {
+    }
 
     namespace kwargs
     {
@@ -41,14 +43,15 @@ namespace mo
         template MO_EXPORTS struct TKeyword<tag::param>;
     }
 
-    IParam::IParam(const std::string& name_, ParamFlags flags_, OptionalTime_t ts, Context* ctx, size_t fn)
-        : _modified(false), _subscribers(0), _mtx(nullptr), _name(name_), _flags(flags_), _ctx(ctx), _fn(fn), _ts(ts)
+    IParam::IParam(const std::string& name_, ParamFlags flags_, Context* ctx)
+        : _name(name_), _flags(flags_), _mtx(nullptr), _subscribers(0), _modified(false)
     {
+        _header.frame_number = std::numeric_limits<uint64_t>::max();
+        _header.ctx = ctx;
     }
 
     IParam::~IParam()
     {
-
         _delete_signal(this);
         if (checkFlags(ParamFlags::OwnsMutex_e))
             delete _mtx;
@@ -68,47 +71,69 @@ namespace mo
 
     IParam* IParam::setFrameNumber(size_t fn)
     {
-        this->_fn = fn;
+        _header.frame_number = fn;
         return this;
     }
 
     IParam* IParam::setTimestamp(const mo::Time_t& ts)
     {
-        this->_ts = ts;
+        _header.timestamp = ts;
         return this;
     }
 
     IParam* IParam::setCoordinateSystem(const std::shared_ptr<ICoordinateSystem>& system)
     {
-        this->_cs = system;
+        _header.coordinate_system = system;
         return this;
     }
 
     IParam* IParam::setContext(Context* ctx)
     {
-        _ctx = ctx;
+        _header.ctx = ctx;
         return this;
     }
 
-    const std::string& IParam::getName() const { return _name; }
+    const std::string& IParam::getName() const
+    {
+        return _name;
+    }
 
-    const std::string& IParam::getTreeRoot() const { return _tree_root; }
+    const std::string& IParam::getTreeRoot() const
+    {
+        return _tree_root;
+    }
 
     const std::string IParam::getTreeName() const
     {
         if (_tree_root.size())
+        {
             return _tree_root + ":" + _name;
+        }
         else
+        {
             return _name;
+        }
     }
 
-    OptionalTime_t IParam::getTimestamp() const { return _ts; }
+    OptionalTime_t IParam::getTimestamp() const
+    {
+        return _header.timestamp;
+    }
 
-    size_t IParam::getFrameNumber() const { return _fn; }
+    size_t IParam::getFrameNumber() const
+    {
+        return _header.frame_number;
+    }
 
-    Context* IParam::getContext() const { return _ctx; }
+    Context* IParam::getContext() const
+    {
+        return _header.ctx;
+    }
 
-    const std::shared_ptr<ICoordinateSystem>& IParam::getCoordinateSystem() const { return _cs; }
+    const std::shared_ptr<ICoordinateSystem>& IParam::getCoordinateSystem() const
+    {
+        return _header.coordinate_system;
+    }
 
     std::shared_ptr<Connection> IParam::registerUpdateNotifier(UpdateSlot_t* f)
     {
@@ -130,7 +155,7 @@ namespace mo
     std::shared_ptr<Connection> IParam::registerUpdateNotifier(std::shared_ptr<ISignalRelay> relay)
     {
         mo::Mutex_t::scoped_lock lock(mtx());
-        auto typed = std::dynamic_pointer_cast<TSignalRelay<UpdateSig_t>>(relay);
+        auto typed = std::dynamic_pointer_cast<TSignalRelay<Update_s>>(relay);
         if (typed)
         {
             return registerUpdateNotifier(typed);
@@ -138,7 +163,7 @@ namespace mo
         return std::shared_ptr<Connection>();
     }
 
-    std::shared_ptr<Connection> IParam::registerUpdateNotifier(std::shared_ptr<TSignalRelay<UpdateSig_t>>& relay)
+    std::shared_ptr<Connection> IParam::registerUpdateNotifier(TSignalRelay<Update_s>::Ptr& relay)
     {
         mo::Mutex_t::scoped_lock lock(mtx());
         return _update_signal.connect(relay);
@@ -161,7 +186,7 @@ namespace mo
         return std::shared_ptr<Connection>();
     }
 
-    std::shared_ptr<Connection> IParam::registerDeleteNotifier(std::shared_ptr<ISignalRelay> relay)
+    std::shared_ptr<Connection> IParam::registerDeleteNotifier(ISignalRelay::Ptr relay)
     {
         mo::Mutex_t::scoped_lock lock(mtx());
         auto typed = std::dynamic_pointer_cast<TSignalRelay<void(IParam*)>>(relay);
@@ -172,43 +197,32 @@ namespace mo
         return std::shared_ptr<Connection>();
     }
 
-    std::shared_ptr<Connection>
-    IParam::registerDeleteNotifier(std::shared_ptr<TSignalRelay<void(IParam const*)>>& relay)
+    std::shared_ptr<Connection> IParam::registerDeleteNotifier(TSignalRelay<void(IParam const*)>::Ptr& relay)
     {
         mo::Mutex_t::scoped_lock lock(mtx());
         return _delete_signal.connect(relay);
     }
 
-    IParam* IParam::emitUpdate(const OptionalTime_t& ts_,
-                               Context* ctx_,
-                               const boost::optional<size_t>& fn,
-                               const std::shared_ptr<ICoordinateSystem>& cs_,
-                               UpdateFlags flags_)
+    IParam* IParam::emitUpdate(const Header& header, UpdateFlags flags_)
     {
         mo::Mutex_t::scoped_lock lock(mtx());
-        _ts = ts_;
-        if (fn)
+        uint64_t fn = header.frame_number;
+        if (fn == std::numeric_limits<uint64_t>::max())
         {
-            this->_fn = *fn;
+            fn = _header.frame_number + 1;
         }
-        else
-        {
-            ++this->_fn;
-        }
-        if (cs_ != nullptr)
-        {
-            _cs = cs_;
-        }
+        _header = header;
+        _header.frame_number = fn;
         this->modified(true);
         lock.unlock();
-        _update_signal(this, ctx_, ts_, this->_fn, cs_, flags_);
+        _update_signal(this, _header, flags_);
         return this;
     }
 
-    IParam* IParam::emitUpdate(const IParam& other)
+    IParam* IParam::emitUpdate(const IParam& other, UpdateFlags flags_)
     {
-        return emitUpdate(
-            other.getTimestamp(), other.getContext(), other.getFrameNumber(), other.getCoordinateSystem());
+        return emitUpdate(other._header, flags_);
+        return this;
     }
 
     Mutex_t& IParam::mtx() const
@@ -244,7 +258,10 @@ namespace mo
         _subscribers = std::max(0, _subscribers);
     }
 
-    bool IParam::hasSubscriptions() const { return _subscribers != 0; }
+    bool IParam::hasSubscriptions() const
+    {
+        return _subscribers != 0;
+    }
 
     EnumClassBitset<ParamFlags> IParam::setFlags(ParamFlags flags_)
     {
@@ -263,18 +280,19 @@ namespace mo
     EnumClassBitset<ParamFlags> IParam::appendFlags(ParamFlags flags_)
     {
         auto prev = _flags;
-        //_flags          = ParamFlags(_flags | flags_);
         _flags.set(flags_);
         return prev;
     }
 
     bool IParam::checkFlags(ParamFlags flag) const
     {
-        // return (_flags & flag) != 0;
         return _flags.test(flag);
     }
 
-    EnumClassBitset<ParamFlags> IParam::getFlags() const { return _flags; }
+    EnumClassBitset<ParamFlags> IParam::getFlags() const
+    {
+        return _flags;
+    }
 
     bool IParam::modified() const
     {
@@ -296,7 +314,7 @@ namespace mo
             os << " " << *ts;
         }
         auto fn = getFrameNumber();
-        if (fn != -1)
+        if (fn != std::numeric_limits<uint64_t>::max())
         {
             os << " " << fn;
         }

@@ -146,13 +146,13 @@ namespace mo
     }
 
     template <class T, class U>
-    constexpr int CountTypeImpl(const U& value)
+    constexpr int CountTypeImpl(const U&)
     {
         return std::is_same<T, U>::value ? 1 : 0;
     }
 
     template <class T, class U, class... Args>
-    constexpr int CountTypeImpl(const U& value, const Args&... args)
+    constexpr int CountTypeImpl(const U&, const Args&... args)
     {
         return CountTypeImpl<T, Args...>(args...) + (std::is_same<T, U>::value ? 1 : 0);
     }

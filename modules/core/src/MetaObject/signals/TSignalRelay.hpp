@@ -1,7 +1,9 @@
 #pragma once
 #include "ISignalRelay.hpp"
+
 #include <mutex>
 #include <set>
+
 namespace mo
 {
     template <class Sig>
@@ -17,6 +19,9 @@ namespace mo
     class TSignalRelay<void(T...)> : public ISignalRelay
     {
       public:
+        using Ptr = std::shared_ptr<TSignalRelay<void(T...)>>;
+        using ConstPtr = std::shared_ptr<const TSignalRelay<void(T...)>>;
+
         void operator()(TSignal<void(T...)>* sig, const T&... args);
         void operator()(const T&... args);
         void operator()(Context* ctx, const T&... args);
@@ -45,6 +50,9 @@ namespace mo
     class TSignalRelay<R(T...)> : public ISignalRelay
     {
       public:
+        using Ptr = std::shared_ptr<TSignalRelay<R(T...)>>;
+        using ConstPtr = std::shared_ptr<const TSignalRelay<R(T...)>>;
+
         TSignalRelay();
         R operator()(TSignal<R(T...)>* sig, const T&... args);
         R operator()(const T&... args);

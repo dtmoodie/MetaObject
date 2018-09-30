@@ -5,9 +5,26 @@
 
 namespace mo
 {
-    AccessTokenLock::AccessTokenLock() {}
-    AccessTokenLock::AccessTokenLock(AccessTokenLock&& other) : lock(std::move(other.lock)) {}
-    AccessTokenLock::AccessTokenLock(Mutex_t& mtx) { lock = std::unique_ptr<boost::lock_guard<mo::Mutex_t>>(new boost::lock_guard<mo::Mutex_t>(mtx)); }
+    AccessTokenLock::AccessTokenLock()
+    {
+    }
 
-    AccessTokenLock::~AccessTokenLock() {}
+    AccessTokenLock::AccessTokenLock(AccessTokenLock&& other)
+        : lock(std::move(other.lock))
+    {
+    }
+
+    AccessTokenLock::AccessTokenLock(Lock&& lock)
+        : lock(new Lock(std::move(lock)))
+    {
+    }
+
+    AccessTokenLock::AccessTokenLock(Mutex_t& mtx)
+        : lock(new Lock(mtx))
+    {
+    }
+
+    AccessTokenLock::~AccessTokenLock()
+    {
+    }
 }

@@ -2,21 +2,19 @@
 #include "MetaObject/params/IParam.hpp"
 #include "traits/TypeTraits.hpp"
 
-namespace boost
-{
-    template <typename T>
-    class lock_guard;
-}
-
 namespace mo
 {
+
     struct MO_EXPORTS AccessTokenLock
     {
         AccessTokenLock();
         AccessTokenLock(AccessTokenLock&& other);
-        AccessTokenLock(mo::Mutex_t& mtx);
+        AccessTokenLock(Lock&& lock);
+        AccessTokenLock(Mutex_t& lock);
         ~AccessTokenLock();
-        std::unique_ptr<boost::lock_guard<mo::Mutex_t>> lock;
+
+      private:
+        std::unique_ptr<Lock> lock;
     };
 
     // Guarantees write safe access to underlying data
@@ -24,85 +22,94 @@ namespace mo
     class MO_EXPORTS AccessToken
     {
       public:
-        AccessToken(AccessToken<T>&& other)
-            : lock(std::move(other.lock)), _param(other._param), _data(other._data), fn(other.fn), ts(other.ts),
-              _ctx(other._ctx), valid(other.valid)
-        {
-        }
+        AccessToken(AccessToken<T>&& other) = default;
+        AccessToken(const AccessToken<T>& other) = delete;
 
-        AccessToken(ITParam<T>& param, typename ParamTraits<T>::Storage_t& data)
-            : lock(param.mtx()), _param(param), _data(ParamTraits<T>::get(data))
-        {
-        }
+        AccessToken& operator=(const AccessToken&) = delete;
+        AccessToken& operator=(AccessToken&&) = default;
 
-        template <class U>
-        AccessToken(
-            ITParam<T>& param,
-            U& data,
-            typename std::enable_if<!std::is_same<typename ParamTraits<U>::Storage_t, U>::value>::type* dummy = 0)
-            : lock(param.mtx()), _param(param), _data(data)
+        AccessToken(Lock&& lock, ITParam<T>& param, T& data)
+            : _lock(std::move(lock)), _param(param), _data(data)
         {
         }
 
         ~AccessToken()
         {
-            if (valid)
+            if (_modified)
             {
-                _param.IParam::emitUpdate(ts, _ctx, fn);
+                _param.IParam::emitUpdate(std::move(_header));
             }
         }
 
         T& operator()()
         {
-            valid = true;
+            _modified = true;
             return _data;
         }
 
-        const T& operator()() const { return _data; }
+        const T& operator()() const
+        {
+            return _data;
+        }
 
         AccessToken<T>& operator()(const OptionalTime_t& ts_)
         {
-            ts(ts_);
+            _header.timestamp = ts_;
+            _modified = true;
             return *this;
         }
 
-        AccessToken<T>& operator()(const boost::optional<size_t>& fn_)
+        AccessToken<T>& operator()(const uint64_t fn_)
         {
-            fn(fn_);
+            _header.frame_number = fn_;
+            _modified = true;
             return *this;
         }
 
         AccessToken<T>& operator()(Context* ctx)
         {
-            _ctx = ctx;
+            _header.ctx = ctx;
             return *this;
         }
 
-        void setValid(bool value) { valid = value; }
+        void setModified(bool value)
+        {
+            _modified = value;
+        }
 
-        bool getValid() const { return valid; }
+        bool isModified() const
+        {
+            return _modified;
+        }
+
       private:
-        AccessTokenLock lock;
+        AccessTokenLock _lock;
         ITParam<T>& _param;
-        typename ParamTraits<T>::TypeRef_t _data;
-        OptionalTime_t ts;
-        boost::optional<size_t> fn;
-        Context* _ctx = nullptr;
-        bool valid = false;
+        T& _data;
+        Header _header;
+        bool _modified = false;
     };
 
     template <class T>
     struct ConstAccessToken
     {
-        ConstAccessToken(const ITParam<T>& param, typename ParamTraits<T>::ConstTypeRef_t data)
-            : lock(param.mtx()), _param(param), _data(ParamTraits<T>::get(data))
+        ConstAccessToken(ConstAccessToken&& other) = default;
+        ConstAccessToken(const ConstAccessToken& other) = default;
+
+        ConstAccessToken(Lock&& lock, const ITParam<T>& param, const T& data) : _lock(std::move(lock)), _param(param), _data(data)
         {
         }
 
-        const T& operator()() const { return _data; }
+        ConstAccessToken& operator=(const ConstAccessToken&) = default;
+        ConstAccessToken& operator=(ConstAccessToken&&) = default;
 
-        AccessTokenLock lock;
+        const T& operator()() const
+        {
+            return _data;
+        }
+
+        AccessTokenLock _lock;
         const ITParam<T>& _param;
-        typename ParamTraits<T>::ConstTypeRef_t _data;
+        const T& _data;
     };
 }
