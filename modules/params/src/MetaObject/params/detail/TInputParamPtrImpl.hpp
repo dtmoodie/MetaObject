@@ -12,14 +12,16 @@ namespace mo
 
     template <typename T>
     TInputParamPtr<T>::TInputParamPtr(const std::string& name, Input_t* user_var_, Context* ctx)
-        : _user_var(user_var_), ITInputParam<T>(name, ctx), IParam(name, mo::ParamFlags::Input_e)
+        : _user_var(user_var_)
+        , ITInputParam<T>(name, ctx)
+        , IParam(name, mo::ParamFlags::Input_e)
     {
     }
 
     template <typename T>
     bool TInputParamPtr<T>::setInput(std::shared_ptr<IParam> param)
     {
-        mo::Mutex_t::scoped_lock lock(IParam::mtx());
+        Lock lock(IParam::mtx());
         if (ITInputParam<T>::setInput(param))
         {
             if (_user_var)
@@ -42,7 +44,7 @@ namespace mo
     template <typename T>
     bool TInputParamPtr<T>::setInput(IParam* param)
     {
-        mo::Mutex_t::scoped_lock lock(IParam::mtx());
+        Lock lock(IParam::mtx());
         if (ITInputParam<T>::setInput(param))
         {
             if (_user_var)
@@ -62,7 +64,7 @@ namespace mo
     template <typename T>
     void TInputParamPtr<T>::setUserDataPtr(Input_t* user_var_)
     {
-        mo::Mutex_t::scoped_lock lock(IParam::mtx());
+        Lock lock(IParam::mtx());
         _user_var = user_var_;
     }
 
@@ -108,19 +110,19 @@ namespace mo
     bool TInputParamPtr<T>::getInput(const OptionalTime_t& ts_, size_t* fn_)
     {
         OptionalTime_t ts = ts_;
-        mo::Mutex_t::scoped_lock lock(IParam::mtx());
+        Lock lock(IParam::mtx());
         if (_user_var && (ITInputParam<T>::_shared_input || ITInputParam<T>::_input))
         {
             size_t fn;
             std::shared_ptr<ICoordinateSystem> cs;
             if (ITInputParam<T>::_input)
             {
-                mo::Mutex_t::scoped_lock input_lock(ITInputParam<T>::_input->mtx());
+                Lock input_lock(ITInputParam<T>::_input->mtx());
                 if (!ITInputParam<T>::_input->getData(_current_data, ts, this->_ctx, &fn))
                 {
                     return false;
                 }
-                if(!ts)
+                if (!ts)
                 {
                     ts = ITInputParam<T>::_input->getTimestamp();
                 }
@@ -142,7 +144,7 @@ namespace mo
     template <typename T>
     bool TInputParamPtr<T>::getInput(size_t fn, OptionalTime_t* ts_)
     {
-        mo::Mutex_t::scoped_lock lock(IParam::mtx());
+        Lock lock(IParam::mtx());
         if (_user_var && ITInputParam<T>::_input)
         {
             OptionalTime_t ts;
@@ -195,7 +197,9 @@ namespace mo
         typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
 
         TInputParamPtr(const std::string& name = "", std::shared_ptr<T>* user_var_ = nullptr, Context* ctx = nullptr)
-            : _user_var(user_var_), ITInputParam<T>(name, ctx), IParam(name, mo::ParamFlags::Input_e)
+            : _user_var(user_var_)
+            , ITInputParam<T>(name, ctx)
+            , IParam(name, mo::ParamFlags::Input_e)
         {
             // static_assert(std::is_same<InputStorage_t, std::shared_ptr<Input_t>>::value,
             //              "std::is_same<InputStorage_t, std::shared_ptr<Input_t>>::value");
@@ -203,7 +207,7 @@ namespace mo
 
         bool setInput(std::shared_ptr<IParam> input)
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             if (ITInputParam<T>::setInput(input))
             {
                 if (_user_var)
@@ -223,7 +227,7 @@ namespace mo
 
         bool setInput(IParam* input)
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             if (ITInputParam<T>::setInput(input))
             {
                 if (_user_var)
@@ -242,27 +246,28 @@ namespace mo
 
         void setUserDataPtr(std::shared_ptr<T>* user_var_)
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             _user_var = user_var_;
         }
 
         bool getInput(const OptionalTime_t& ts_, size_t* fn_)
         {
             OptionalTime_t ts = ts_;
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             if (_user_var && ITInputParam<T>::_input)
             {
                 size_t fn;
                 std::shared_ptr<ICoordinateSystem> cs;
                 if (ITInputParam<T>::_input)
                 {
-                    mo::Mutex_t::scoped_lock input_param_loakc(ITInputParam<T>::_input->mtx());
+                    Lock input_param_loakc(ITInputParam<T>::_input->mtx());
                     if (!ITInputParam<T>::_input->getData(_current_data, ts, this->_ctx, &fn))
                     {
                         return false;
-                    }else
+                    }
+                    else
                     {
-                        if(!ts)
+                        if (!ts)
                         {
                             this->_ts = ITInputParam<T>::_input->getTimestamp();
                         }
@@ -284,7 +289,7 @@ namespace mo
 
         bool getInput(size_t fn, OptionalTime_t* ts_)
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             if (_user_var && (ITInputParam<T>::_shared_input || ITInputParam<T>::_input))
             {
                 OptionalTime_t ts;
@@ -314,7 +319,10 @@ namespace mo
             return ConstAccessToken<T>(*this, ParamTraits<T>::get(_current_data));
         }
 
-        bool canAccess() const override { return _current_data != nullptr; }
+        bool canAccess() const override
+        {
+            return _current_data != nullptr;
+        }
 
       protected:
         bool updateDataImpl(const Storage_t&,

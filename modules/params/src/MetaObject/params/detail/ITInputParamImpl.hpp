@@ -10,7 +10,8 @@
 namespace mo
 {
     template <class T>
-    ITInputParam<T>::ITInputParam(const std::string& /*name*/, Context* /*ctx*/) : _input(nullptr)
+    ITInputParam<T>::ITInputParam(const std::string& /*name*/, Context* /*ctx*/)
+        : _input(nullptr)
     {
         _update_slot = std::bind(&ITInputParam<T>::onInputUpdate,
                                  this,
@@ -50,7 +51,7 @@ namespace mo
     template <class T>
     bool ITInputParam<T>::setInput(IParam* param)
     {
-        mo::Mutex_t::scoped_lock lock(this->mtx());
+        Lock lock(this->mtx());
         if (param == nullptr)
         {
             if (_input)
@@ -77,7 +78,8 @@ namespace mo
         {
         }
         auto output_param = dynamic_cast<OutputParam*>(param);
-        if ((output_param && output_param->providesOutput(getTypeInfo())) ||  (param->getTypeInfo() == this->getTypeInfo()))
+        if ((output_param && output_param->providesOutput(getTypeInfo())) ||
+            (param->getTypeInfo() == this->getTypeInfo()))
         {
             if (_input)
             {
@@ -120,11 +122,12 @@ namespace mo
     template <class T>
     bool ITInputParam<T>::acceptsInput(IParam* param) const
     {
-        if(param->checkFlags(mo::ParamFlags::Output_e))
+        if (param->checkFlags(mo::ParamFlags::Output_e))
         {
             auto out_param = dynamic_cast<OutputParam*>(param);
             return out_param->providesOutput(getTypeInfo());
-        }else
+        }
+        else
         {
             return param->getTypeInfo() == getTypeInfo();
         }
@@ -209,7 +212,7 @@ namespace mo
         }
         else
         {
-            mo::Mutex_t::scoped_lock lock(this->mtx());
+            Lock lock(this->mtx());
             this->_shared_input.reset();
             this->_input = nullptr;
             IParam::emitUpdate({}, nullptr, {}, nullptr, InputCleared_e);

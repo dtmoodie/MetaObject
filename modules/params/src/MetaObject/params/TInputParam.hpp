@@ -30,57 +30,50 @@ namespace mo
     // auto TParam = TInputParamPtr(&myVar); // TInputParam now updates myvar to point to whatever the
     // input variable is for TParam.
     template <typename T>
-    class MO_EXPORTS TInputParamPtr : virtual public ITInputParam<T>, virtual public ITConstAccessibleParam<T>
+    struct MO_EXPORTS TInputParamPtr : virtual public ITInputParam<T>
     {
-      public:
-        typedef typename ParamTraits<T>::Storage_t Storage_t;
-        typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
-        typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
-        typedef typename ParamTraits<T>::Input_t Input_t;
-        typedef void(TUpdateSig_t)(ConstStorageRef_t,
-                                   IParam*,
-                                   Context*,
-                                   OptionalTime_t,
-                                   size_t,
-                                   const std::shared_ptr<ICoordinateSystem>&,
-                                   UpdateFlags);
-        typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
-        typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
+        using ContainerPtr_t = typename ITParam<T>::ContainerPtr_t;
+        using TUpdateSlot_t = typename ITParam<T>::TUpdateSlot_t;
 
-        TInputParamPtr(const std::string& name = "", Input_t* userVar_ = nullptr, Context* ctx = nullptr);
+        TInputParamPtr(const std::string& name = "", T** user_var_ = nullptr);
+
         bool setInput(std::shared_ptr<IParam> input);
         bool setInput(IParam* input);
-        void setUserDataPtr(Input_t* user_var_);
+        void setUserDataPtr(T** user_var_);
         bool getInput(const OptionalTime_t& ts, size_t* fn = nullptr);
         bool getInput(size_t fn, OptionalTime_t* ts = nullptr);
 
         virtual ConstAccessToken<T> read() const;
-        bool canAccess() const override { return ParamTraits<T>::valid(_current_data); }
+        bool canAccess() const override
+        {
+            return ParamTraits<T>::valid(_current_data);
+        }
 
       protected:
-        bool updateDataImpl(const Storage_t&,
-                            const OptionalTime_t&,
-                            Context*,
-                            size_t,
-                            const std::shared_ptr<ICoordinateSystem>&) override
+        void onInputUpdate(ContainerPtr_t data, IParam* param, UpdateFlags fg) override
         {
-            return true;
+            Lock lock(this->mtx());
+            const auto header = data->getHeader();
+            if (fg == mo::BufferUpdated_e && param->checkFlags(mo::ParamFlags::Buffer_e))
+            {
+                emitTypedUpdate(data, this, header, InputUpdated_e);
+                emitUpdate(this, header, fg, InputUpdated_e);
+                return;
+            }
+            if (header.ctx == this->_header.ctx)
+            {
+                _current_data = data;
+                if (_user_var)
+                {
+                    *_user_var = &data->data;
+                    emitTypedUpdate(data, this, header, InputUpdated_e);
+                    emitUpdate(this, header, InputUpdated_e);
+                }
+            }
         }
 
-        bool updateDataImpl(
-            Storage_t&&, const OptionalTime_t&, Context*, size_t, const std::shared_ptr<ICoordinateSystem>&) override
-        {
-            return true;
-        }
-        Input_t* _user_var; // Pointer to the user space pointer variable of type T
-        InputStorage_t _current_data;
-        virtual void onInputUpdate(ConstStorageRef_t,
-                                   IParam*,
-                                   Context*,
-                                   OptionalTime_t,
-                                   size_t,
-                                   const std::shared_ptr<ICoordinateSystem>&,
-                                   UpdateFlags);
+      private:
+        T** _user_var; // Pointer to the user space pointer variable of type T
+        ContainerPtr_t _current_data;
     };
 }
-#include "detail/TInputParamPtrImpl.hpp"

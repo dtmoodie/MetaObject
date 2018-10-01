@@ -58,7 +58,7 @@ namespace mo
         template <class T>
         bool CircularBuffer<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_)
         {
-            mo::Mutex_t::scoped_lock lock(this->mtx());
+            Lock lock(this->mtx());
             for (auto& itr : _data_buffer)
             {
                 if (itr.fn == fn)
@@ -88,7 +88,7 @@ namespace mo
                                                const std::shared_ptr<ICoordinateSystem>& cs)
         {
             {
-                mo::Mutex_t::scoped_lock lock(IParam::mtx());
+                Lock lock(IParam::mtx());
                 if (ts)
                 {
                     _data_buffer.push_back(State<T>(*ts, fn, ctx, cs, data_));
@@ -111,7 +111,7 @@ namespace mo
                                                const std::shared_ptr<ICoordinateSystem>& cs)
         {
             {
-                mo::Mutex_t::scoped_lock lock(IParam::mtx());
+                Lock lock(IParam::mtx());
                 if (ts)
                 {
                     _data_buffer.push_back(State<T>(*ts, fn, ctx, cs, std::move(data_)));
@@ -129,7 +129,7 @@ namespace mo
         template <class T>
         void CircularBuffer<T>::setFrameBufferCapacity(size_t size)
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             _data_buffer.set_capacity(size);
         }
 
@@ -142,7 +142,7 @@ namespace mo
         template <class T>
         boost::optional<size_t> CircularBuffer<T>::getFrameBufferCapacity()
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             return _data_buffer.capacity();
         }
 
@@ -155,7 +155,7 @@ namespace mo
         template <class T>
         size_t CircularBuffer<T>::getSize()
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             return _data_buffer.size();
         }
 
@@ -164,7 +164,7 @@ namespace mo
         {
             if (_data_buffer.size())
             {
-                mo::Mutex_t::scoped_lock lock(IParam::mtx());
+                Lock lock(IParam::mtx());
                 if (_data_buffer.back().ts && _data_buffer.front().ts)
                 {
                     start = *_data_buffer.back().ts;
@@ -181,10 +181,10 @@ namespace mo
         template <class T>
         bool CircularBuffer<T>::getFrameNumberRange(size_t& start, size_t& end)
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             if (_data_buffer.size())
             {
-                mo::Mutex_t::scoped_lock lock(IParam::mtx());
+                Lock lock(IParam::mtx());
                 start = _data_buffer.back().fn;
                 end = _data_buffer.front().fn;
                 return true;
@@ -204,7 +204,7 @@ namespace mo
                                               const std::shared_ptr<ICoordinateSystem>& cs,
                                               UpdateFlags fg)
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             if (ts)
             {
                 _data_buffer.push_back(State<T>(*ts, fn, ctx, cs, data));

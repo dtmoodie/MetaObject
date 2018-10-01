@@ -44,7 +44,11 @@ namespace mo
     }
 
     IParam::IParam(const std::string& name_, ParamFlags flags_, Context* ctx)
-        : _name(name_), _flags(flags_), _mtx(nullptr), _subscribers(0), _modified(false)
+        : _name(name_)
+        , _flags(flags_)
+        , _mtx(nullptr)
+        , _subscribers(0)
+        , _modified(false)
     {
         _header.frame_number = std::numeric_limits<uint64_t>::max();
         _header.ctx = ctx;
@@ -69,7 +73,7 @@ namespace mo
         return this;
     }
 
-    IParam* IParam::setFrameNumber(size_t fn)
+    IParam* IParam::setFrameNumber(const uint64_t fn)
     {
         _header.frame_number = fn;
         return this;
@@ -120,7 +124,7 @@ namespace mo
         return _header.timestamp;
     }
 
-    size_t IParam::getFrameNumber() const
+    uint64_t IParam::getFrameNumber() const
     {
         return _header.frame_number;
     }
@@ -135,15 +139,20 @@ namespace mo
         return _header.coordinate_system;
     }
 
+    Header IParam::getHeader() const
+    {
+        return _header;
+    }
+
     std::shared_ptr<Connection> IParam::registerUpdateNotifier(UpdateSlot_t* f)
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         return f->connect(&_update_signal);
     }
 
     std::shared_ptr<Connection> IParam::registerUpdateNotifier(ISlot* f)
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         auto typed = dynamic_cast<UpdateSlot_t*>(f);
         if (typed)
         {
@@ -154,7 +163,7 @@ namespace mo
 
     std::shared_ptr<Connection> IParam::registerUpdateNotifier(std::shared_ptr<ISignalRelay> relay)
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         auto typed = std::dynamic_pointer_cast<TSignalRelay<Update_s>>(relay);
         if (typed)
         {
@@ -165,19 +174,19 @@ namespace mo
 
     std::shared_ptr<Connection> IParam::registerUpdateNotifier(TSignalRelay<Update_s>::Ptr& relay)
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         return _update_signal.connect(relay);
     }
 
     std::shared_ptr<Connection> IParam::registerDeleteNotifier(DeleteSlot_t* f)
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         return f->connect(&_delete_signal);
     }
 
     std::shared_ptr<Connection> IParam::registerDeleteNotifier(ISlot* f)
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         auto typed = dynamic_cast<DeleteSlot_t*>(f);
         if (typed)
         {
@@ -188,7 +197,7 @@ namespace mo
 
     std::shared_ptr<Connection> IParam::registerDeleteNotifier(ISignalRelay::Ptr relay)
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         auto typed = std::dynamic_pointer_cast<TSignalRelay<void(IParam*)>>(relay);
         if (typed)
         {
@@ -199,13 +208,13 @@ namespace mo
 
     std::shared_ptr<Connection> IParam::registerDeleteNotifier(TSignalRelay<void(IParam const*)>::Ptr& relay)
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         return _delete_signal.connect(relay);
     }
 
     IParam* IParam::emitUpdate(const Header& header, UpdateFlags flags_)
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         uint64_t fn = header.frame_number;
         if (fn == std::numeric_limits<uint64_t>::max())
         {
@@ -247,13 +256,13 @@ namespace mo
 
     void IParam::subscribe()
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         ++_subscribers;
     }
 
     void IParam::unsubscribe()
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         --_subscribers;
         _subscribers = std::max(0, _subscribers);
     }

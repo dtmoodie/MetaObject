@@ -40,7 +40,7 @@ namespace mo
     template <class T, class Enable = void>
     class ITParam;
     template <class T>
-    class ITInputParam;
+    struct ITInputParam;
     struct Header;
 
     struct ParamInfo;

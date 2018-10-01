@@ -64,10 +64,12 @@ namespace mo
         // Get the timestamp of this Param, may not exist for all Params
         virtual OptionalTime_t getTimestamp() const = 0;
 
+        virtual Header getHeader() const = 0;
+
         // Get the frame number for this Param. Initialized such that first
         // update will set to 0, and increment at every update unless
         // specified
-        virtual size_t getFrameNumber() const = 0;
+        virtual uint64_t getFrameNumber() const = 0;
 
         // Get the compute context of this Param
         virtual Context* getContext() const = 0;
@@ -120,7 +122,7 @@ namespace mo
         virtual IParam* setContext(Context* ctx);
 
         // Set the frame number for this Param
-        IParam* setFrameNumber(size_t fn);
+        IParam* setFrameNumber(const uint64_t fn);
 
         // Set the timestamp for this Param
         IParam* setTimestamp(const mo::Time_t& ts);
@@ -142,13 +144,15 @@ namespace mo
 
         // Get the frame number for this Param. Initialized such that first update will
         // set to 0, and increment at every update unless specified
-        size_t getFrameNumber() const override;
+        uint64_t getFrameNumber() const override;
 
         // Get the compute context of this Param
         Context* getContext() const override;
 
         // Get the coordinate system of this Param
         const ICoordinateSystemPtr_t& getCoordinateSystem() const override;
+
+        virtual Header getHeader() const override;
 
         // Subscribe to this Param as an output
         void subscribe();

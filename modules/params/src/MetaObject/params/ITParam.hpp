@@ -77,7 +77,8 @@ namespace mo
 
     /// implementations
     template <class T>
-    ITParam<T>::ITParam(const std::string& name, ParamFlags flags) : IParam(name, flags)
+    ITParam<T>::ITParam(const std::string& name, ParamFlags flags)
+        : IParam(name, flags)
     {
     }
 

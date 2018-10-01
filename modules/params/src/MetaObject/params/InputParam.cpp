@@ -3,7 +3,7 @@
 
 using namespace mo;
 
-InputParam::InputParam() : IParam("", mo::ParamFlags::Input_e)
+InputParam::InputParam()
 {
 }
 
@@ -11,24 +11,15 @@ InputParam::~InputParam()
 {
 }
 
-bool InputParam::getInput(const OptionalTime_t& ts, size_t* fn)
-{
-    return false;
-}
-
-bool InputParam::getInput(size_t fn, OptionalTime_t* ts)
-{
-    return false;
-}
-
 std::ostream& InputParam::print(std::ostream& os) const
 {
+    IParam* input = nullptr;
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         IParam::print(os);
+        input = getInputParam();
     }
 
-    auto input = getInputParam();
     if (input)
     {
         os << "\n";

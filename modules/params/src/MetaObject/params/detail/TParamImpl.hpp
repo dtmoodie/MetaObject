@@ -15,7 +15,7 @@ namespace mo
     template <typename T>
     bool TParam<T>::getData(InputStorage_t& value, const OptionalTime_t& ts, Context* /*ctx*/, size_t* fn)
     {
-        mo::Mutex_t::scoped_lock lock(IParam::mtx());
+        Lock lock(IParam::mtx());
         if (!ts)
         {
             value = _data;
@@ -39,7 +39,7 @@ namespace mo
     template <typename T>
     bool TParam<T>::getData(InputStorage_t& value, size_t fn, Context* /*ctx*/, OptionalTime_t* ts)
     {
-        mo::Mutex_t::scoped_lock lock(IParam::mtx());
+        Lock lock(IParam::mtx());
         if (this->_fn == fn)
         {
             if (ts)
