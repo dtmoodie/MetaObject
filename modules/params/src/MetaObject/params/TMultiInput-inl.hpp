@@ -4,69 +4,74 @@
 
 namespace mo
 {
-template <class T, class U>
-constexpr int indexOfHelper(int idx, std::tuple<U>* = nullptr)
-{
-    return idx;
-}
-template <class T, class U, class... Ts>
-constexpr int indexOfHelper(int idx, std::tuple<U, Ts...>* = nullptr)
-{
-    return std::is_same<T, U>::value ? idx
-                                     : indexOfHelper<T, Ts...>(idx - 1, static_cast<std::tuple<Ts...>*>(nullptr));
-}
-
-template <class T, class... Ts>
-constexpr int indexOf()
-{
-    return sizeof...(Ts)-indexOfHelper<T, Ts...>(sizeof...(Ts), static_cast<std::tuple<Ts...>*>(nullptr));
-}
-
-template <class T, class... Ts>
-inline T& get(std::tuple<Ts...>& tuple)
-{
-    return std::get<indexOf<T, Ts...>()>(tuple);
-}
-
-template <class T, class... Ts>
-inline const T& get(const std::tuple<Ts...>& tuple)
-{
-    return std::get<indexOf<T, Ts...>()>(tuple);
-}
-
-template <class T>
-struct AcceptInputRedirect
-{
-    AcceptInputRedirect(const T& func) : m_func(func) {}
-    template <class Type, class... Args>
-    void apply(Args&&... args)
+    template <class T, class U>
+    constexpr int indexOfHelper(int idx, std::tuple<U>* = nullptr)
     {
-        m_func.template acceptsInput<Type>(std::forward<Args>(args)...);
+        return idx;
     }
-    const T& m_func;
-};
-
-struct Initializer
-{
-    template <class Type, class... Args>
-    void apply(std::tuple<const Args*...>& tuple)
+    template <class T, class U, class... Ts>
+    constexpr int indexOfHelper(int idx, std::tuple<U, Ts...>* = nullptr)
     {
-        mo::get<const Type*>(tuple) = nullptr;
+        return std::is_same<T, U>::value ? idx
+                                         : indexOfHelper<T, Ts...>(idx - 1, static_cast<std::tuple<Ts...>*>(nullptr));
     }
-};
-class MO_EXPORTS MultiConnection: public Connection
-{
-public:
-    MultiConnection(std::vector<std::shared_ptr<Connection>>&& connections);
-    virtual ~MultiConnection();
-    virtual bool disconnect() override;
 
-private:
-    std::vector<std::shared_ptr<Connection>> m_connections;
-};
+    template <class T, class... Ts>
+    constexpr int indexOf()
+    {
+        return sizeof...(Ts)-indexOfHelper<T, Ts...>(sizeof...(Ts), static_cast<std::tuple<Ts...>*>(nullptr));
+    }
+
+    template <class T, class... Ts>
+    inline T& get(std::tuple<Ts...>& tuple)
+    {
+        return std::get<indexOf<T, Ts...>()>(tuple);
+    }
+
+    template <class T, class... Ts>
+    inline const T& get(const std::tuple<Ts...>& tuple)
+    {
+        return std::get<indexOf<T, Ts...>()>(tuple);
+    }
+
+    template <class T>
+    struct AcceptInputRedirect
+    {
+        AcceptInputRedirect(const T& func)
+            : m_func(func)
+        {
+        }
+        template <class Type, class... Args>
+        void apply(Args&&... args)
+        {
+            m_func.template acceptsInput<Type>(std::forward<Args>(args)...);
+        }
+        const T& m_func;
+    };
+
+    struct Initializer
+    {
+        template <class Type, class... Args>
+        void apply(std::tuple<const Args*...>& tuple)
+        {
+            mo::get<const Type*>(tuple) = nullptr;
+        }
+    };
+    class MO_EXPORTS MultiConnection : public Connection
+    {
+      public:
+        MultiConnection(std::vector<std::shared_ptr<Connection>>&& connections);
+        virtual ~MultiConnection();
+        virtual bool disconnect() override;
+
+      private:
+        std::vector<std::shared_ptr<Connection>> m_connections;
+    };
 
     template <class... Types>
-    TMultiInput<Types...>::TMultiInput() : InputParam(), IParam("", mo::ParamFlags::Input_e)
+    TMultiInput<Types...>::TMultiInput()
+        : InputParam()
+        , IParam("", mo::ParamFlags::Input_e)
     {
         this->setFlags(mo::ParamFlags::Input_e);
     }
@@ -89,7 +94,7 @@ private:
     template <class... Types>
     bool TMultiInput<Types...>::setInput(std::shared_ptr<IParam> input)
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         bool success = false;
         if (m_current_input)
         {
@@ -107,7 +112,7 @@ private:
     template <class... Types>
     bool TMultiInput<Types...>::setInput(IParam* input)
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         bool success = false;
         if (m_current_input)
         {
@@ -132,7 +137,7 @@ private:
     template <class... Types>
     bool TMultiInput<Types...>::getInput(const OptionalTime_t& ts, size_t* fn)
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         bool success = false;
         if (m_current_input)
         {
@@ -142,7 +147,7 @@ private:
     }
 
     template <class... Types>
-    template<class T>
+    template <class T>
     void TMultiInput<Types...>::apply(OptionalTime_t* ts) const
     {
         *ts = mo::get<TInputParamPtr<T>>(m_inputs).getTimestamp();
@@ -152,7 +157,7 @@ private:
     OptionalTime_t TMultiInput<Types...>::getTimestamp() const
     {
         OptionalTime_t ret;
-        if(m_current_input)
+        if (m_current_input)
         {
             selectType<Types...>(*this, m_current_input->getTypeInfo(), &ret);
         }
@@ -160,7 +165,7 @@ private:
     }
 
     template <class... Types>
-    template<class T>
+    template <class T>
     void TMultiInput<Types...>::apply(size_t* fn) const
     {
         *fn = mo::get<TInputParamPtr<T>>(m_inputs).getFrameNumber();
@@ -170,7 +175,7 @@ private:
     size_t TMultiInput<Types...>::getFrameNumber() const
     {
         size_t ret = 0;
-        if(m_current_input)
+        if (m_current_input)
         {
             selectType<Types...>(*this, m_current_input->getTypeInfo(), &ret);
         }
@@ -180,7 +185,7 @@ private:
     template <class... Types>
     bool TMultiInput<Types...>::getInput(size_t fn, OptionalTime_t* ts)
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         bool success = false;
         if (m_current_input)
         {
@@ -202,7 +207,7 @@ private:
     template <class... Types>
     mo::TypeInfo TMultiInput<Types...>::getTypeInfo() const
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         if (m_current_input == nullptr)
         {
             return _void_type_info;
@@ -216,14 +221,14 @@ private:
     template <class... Types>
     mo::IParam* TMultiInput<Types...>::getInputParam() const
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         return m_current_input;
     }
 
     template <class... Types>
     OptionalTime_t TMultiInput<Types...>::getInputTimestamp()
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         if (m_current_input)
         {
             return m_current_input->getTimestamp();
@@ -234,7 +239,7 @@ private:
     template <class... Types>
     size_t TMultiInput<Types...>::getInputFrameNumber()
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         if (m_current_input)
         {
             return m_current_input->getFrameNumber();
@@ -245,14 +250,14 @@ private:
     template <class... Types>
     bool TMultiInput<Types...>::isInputSet() const
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         return m_current_input != nullptr;
     }
 
     template <class... Types>
     bool TMultiInput<Types...>::acceptsInput(IParam* input) const
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         AcceptInputRedirect<TMultiInput<Types...>> redirect(*this);
         bool success = false;
         selectType<Types...>(redirect, input->getTypeInfo(), input, &success);
@@ -262,7 +267,7 @@ private:
     template <class... Types>
     bool TMultiInput<Types...>::acceptsType(const TypeInfo& type) const
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
+        Lock lock(mtx());
         AcceptInputRedirect<TMultiInput<Types...>> redirect(*this);
         bool success = false;
         selectType<Types...>(redirect, type, type, &success);
@@ -326,7 +331,7 @@ private:
     }
 
     template <class... Types>
-    template<class T, class Slot>
+    template <class T, class Slot>
     void TMultiInput<Types...>::apply(std::vector<std::shared_ptr<Connection>>& connections, Slot slot)
     {
         connections.push_back(mo::get<TInputParamPtr<T>>(m_inputs).registerUpdateNotifier(slot));
@@ -341,7 +346,8 @@ private:
     }
 
     template <class... Types>
-    std::shared_ptr<Connection> TMultiInput<Types...>::registerUpdateNotifier(std::shared_ptr<TSignalRelay<UpdateSig_t>>& relay)
+    std::shared_ptr<Connection>
+    TMultiInput<Types...>::registerUpdateNotifier(std::shared_ptr<TSignalRelay<UpdateSig_t>>& relay)
     {
         std::vector<std::shared_ptr<Connection>> out_connection;
         typeLoop<Types...>(*this, out_connection, relay);
@@ -365,11 +371,11 @@ private:
     }
 
     template <class... Types>
-    template<class T>
+    template <class T>
     void TMultiInput<Types...>::apply(bool* modified) const
     {
         const auto val = mo::get<TInputParamPtr<T>>(m_inputs).modified();
-        if(val)
+        if (val)
         {
             *modified = val;
         }
@@ -378,7 +384,7 @@ private:
     template <class... Types>
     bool TMultiInput<Types...>::modified() const
     {
-        if(m_current_input)
+        if (m_current_input)
         {
             return m_current_input->modified();
         }
@@ -386,7 +392,7 @@ private:
     }
 
     template <class... Types>
-    template<class T>
+    template <class T>
     void TMultiInput<Types...>::apply(const bool modified)
     {
         mo::get<TInputParamPtr<T>>(m_inputs).modified(modified);
@@ -396,11 +402,11 @@ private:
     void TMultiInput<Types...>::modified(bool value)
     {
         InputParam::modified(value);
-        if(m_current_input)
+        if (m_current_input)
         {
             m_current_input->modified(value);
         }
-        //typeLoop<Types...>(*this, value);
+        // typeLoop<Types...>(*this, value);
     }
 
 } // namespace mo

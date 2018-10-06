@@ -60,4 +60,36 @@ namespace mo
       protected:
         T** m_user_var; // Pointer to the user space pointer variable of type T
     };
+
+    template <typename T>
+    class MO_EXPORTS TInputParamPtr<std::shared_ptr<T>> : virtual public ITInputParam<T>
+    {
+      public:
+        using ContainerPtr_t = typename ITParam<T>::ContainerPtr_t;
+
+        TInputParamPtr(const std::string& name = "", std::shared_ptr<T>* user_var_ = nullptr)
+            : ITInputParam<T>(name)
+            , m_user_var(user_var_)
+        {
+        }
+
+        void setUserDataPtr(std::shared_ptr<T>* user_var_)
+        {
+            Lock lock(this->mtx());
+            m_user_var = user_var_;
+        }
+
+        virtual void updateData(const ContainerPtr_t& data)
+        {
+            Lock lock(this->mtx());
+            ITInputParam<T>::updateData(data);
+            if (m_user_var)
+            {
+                *m_user_var = data;
+            }
+        }
+
+      protected:
+        std::shared_ptr<T>* m_user_var; // Pointer to the user space pointer variable of type T
+    };
 }

@@ -1,8 +1,7 @@
 #pragma once
-
 #include "ITParam.hpp"
 #include "InputParam.hpp"
-#include "MetaObject/params/OutputParam.hpp"
+#include "OutputParam.hpp"
 
 #ifdef _MSC_VER
 #pragma warning(disable : 4250)
@@ -11,7 +10,7 @@
 namespace mo
 {
     template <class T>
-    class ITInputParam : virtual public ITParam<T>, virtual public InputParam
+    struct ITInputParam : virtual public ITParam<T>, virtual public InputParam
     {
       public:
         using ContainerPtr_t = typename ITParam<T>::ContainerPtr_t;
@@ -145,6 +144,69 @@ namespace mo
             this->_input = nullptr;
             IParam::emitUpdate(Header(), InputCleared_e);
         }
+    }
+
+    template <class T>
+    bool ITInputParam<T>::acceptsInput(IParam* param) const
+    {
+        if (param->checkFlags(mo::ParamFlags::Output_e))
+        {
+            auto out_param = dynamic_cast<OutputParam*>(param);
+            return out_param->providesOutput(getTypeInfo());
+        }
+        else
+        {
+            return param->getTypeInfo() == getTypeInfo();
+        }
+    }
+
+    template <class T>
+    bool ITInputParam<T>::acceptsType(const TypeInfo& type) const
+    {
+        return type == getTypeInfo();
+    }
+
+    template <class T>
+    IParam* ITInputParam<T>::getInputParam() const
+    {
+        Lock lock(this->mtx());
+        return m_input;
+    }
+
+    template <class T>
+    OptionalTime_t ITInputParam<T>::getInputTimestamp()
+    {
+        Lock lock(this->mtx());
+        if (m_input)
+        {
+            return m_input->getTimestamp();
+        }
+        else
+        {
+            THROW(debug) << "Input not set for " << getTreeName();
+            return OptionalTime_t();
+        }
+    }
+
+    template <class T>
+    uint64_t ITInputParam<T>::getInputFrameNumber()
+    {
+        Lock lock(this->mtx());
+        if (m_input)
+        {
+            return m_input->getFrameNumber();
+        }
+        else
+        {
+            THROW(debug) << "Input not set for " << getTreeName();
+            return size_t(0);
+        }
+    }
+
+    template <class T>
+    bool ITInputParam<T>::isInputSet() const
+    {
+        return m_input != nullptr;
     }
 
     template <class T>

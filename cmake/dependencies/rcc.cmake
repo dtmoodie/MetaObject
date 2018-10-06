@@ -1,6 +1,6 @@
-if(NOT BUILD_DEPENDENCIES)
-    find_package(RCC QUIET)
-endif()
+
+find_package(RCC QUIET)
+
 if(RCC_FOUND)
     message(STATUS "RCC found at: ${RCC_DIR} - ${RCC_INCLUDE_DIRS}")
 else(RCC_FOUND)

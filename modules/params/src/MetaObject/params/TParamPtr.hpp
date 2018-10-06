@@ -28,7 +28,9 @@ namespace mo
                   T* ptr = nullptr,
                   ParamFlags type = ParamFlags::Control_e,
                   bool owns_data = false)
-            : ITParam<T>(name, type), m_ptr(ptr), m_owns_data(owns_data)
+            : ITParam<T>(name, type)
+            , m_ptr(ptr)
+            , m_owns_data(owns_data)
         {
         }
 
@@ -50,38 +52,13 @@ namespace mo
             m_ptr = ptr;
             m_owns_data = owns_data;
         }
-
-        template <class... Args>
-        void updateData(const T& data, const Args&... args)
+        void updateData(const ContainerPtr_t& data)
         {
-            Lock lock(this->mtx());
-            ITParam<T>::updateData(data, std::forward<Args>(args)...);
-            updateUserData();
+            ITParam<T>::updateData(data);
+            updateUserData(*data);
         }
 
-        template <class... Args>
-        void updateData(T&& data, const Args&... args)
-        {
-            Lock lock(this->mtx());
-            ITParam<T>::updateData(data, std::forward<Args>(args)...);
-            updateUserData();
-        }
-
-        virtual void updateData(const T& data, const Header& header) override
-        {
-            Lock lock(this->mtx());
-            ITParam<T>::updateData(data, header);
-            updateUserData();
-        }
-
-        virtual void updateData(T&& data, Header&& header) override
-        {
-            Lock lock(this->mtx());
-            ITParam<T>::updateData(std::move(data), std::move(header));
-            updateUserData();
-        }
-
-        virtual IParam* emitUpdate(const Header& header = Header(), UpdateFlags) override
+        virtual IParam* emitUpdate(const Header& header, UpdateFlags = ValueUpdated_e) override
         {
             Lock lock(this->mtx());
             if (m_ptr)
@@ -142,7 +119,9 @@ namespace mo
                   std::shared_ptr<T>* ptr = nullptr,
                   ParamFlags type = ParamFlags::Control_e,
                   bool owns_data = false)
-            : ITParam<T>(name, type), m_ptr(ptr), m_owns_data(owns_data)
+            : ITParam<T>(name, type)
+            , m_ptr(ptr)
+            , m_owns_data(owns_data)
         {
         }
 
@@ -165,30 +144,10 @@ namespace mo
             m_owns_data = owns_data;
         }
 
-        template <class... Args>
-        void updateData(const T& data, const Args&... args)
+        virtual void updateData(const ContainerPtr_t& data) override
         {
-            ITParam<T>::updateData(data, std::forward<Args>(args)...);
-            updateUserData();
-        }
-
-        template <class... Args>
-        void updateData(T&& data, const Args&... args)
-        {
-            ITParam<T>::updateData(data, std::forward<Args>(args)...);
-            updateUserData();
-        }
-
-        virtual void updateData(const T& data, const Header& header) override
-        {
-            ITParam<T>::updateData(data, header);
-            updateUserData();
-        }
-
-        virtual void updateData(T&& data, Header&& header) override
-        {
-            ITParam<T>::updateData(std::move(data), std::move(header));
-            updateUserData();
+            ITParam<T>::updateData(data);
+            updateUserData(data);
         }
 
         std::ostream& print(std::ostream& os) const override
@@ -204,15 +163,11 @@ namespace mo
         }
 
       protected:
-        void updateUserData()
+        void updateUserData(const ContainerPtr_t& data)
         {
             if (m_ptr)
             {
-                ContainerPtr_t container;
-                if (getData(container))
-                {
-                    *m_ptr = container;
-                }
+                *m_ptr = data;
             }
         }
         std::shared_ptr<T>* ptr()
@@ -232,7 +187,8 @@ namespace mo
     template <typename T>
     struct MO_EXPORTS TParamOutput : virtual public TParamPtr<T>, virtual public OutputParam
     {
-        TParamOutput() : IParam(mo::tag::_param_flags = mo::ParamFlags::Output_e)
+        TParamOutput()
+            : IParam(mo::tag::_param_flags = mo::ParamFlags::Output_e)
         {
         }
 
@@ -243,4 +199,3 @@ namespace mo
         const ParamBase* getOutputParam() const override;
     };
 }
-

@@ -14,7 +14,7 @@ namespace mo
         template <class T>
         bool StreamBuffer<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_)
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             if (Map<T>::getData(data, ts, ctx, &_current_frame_number))
             {
                 if (!ts)
@@ -41,7 +41,7 @@ namespace mo
         template <class T>
         bool StreamBuffer<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_)
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             if (Map<T>::getData(data, fn, ctx, &_current_timestamp))
             {
                 _current_frame_number = fn;
@@ -90,7 +90,7 @@ namespace mo
         template <class T>
         void StreamBuffer<T>::prune()
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             if (_current_timestamp && _time_padding)
             {
                 auto itr = this->_data_buffer.begin();
@@ -143,7 +143,7 @@ namespace mo
                                                      size_t fn,
                                                      const std::shared_ptr<ICoordinateSystem>& cs)
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             while (this->_data_buffer.size() > _size)
             {
                 MO_LOG_EVERY_N(debug, 10) << "Pushing to " << this->getTreeName()
@@ -180,7 +180,7 @@ namespace mo
                                                      size_t fn,
                                                      const std::shared_ptr<ICoordinateSystem>& cs)
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             while (this->_data_buffer.size() > _size)
             {
                 MO_LOG_EVERY_N(debug, 10) << "Pushing to " << this->getTreeName()
@@ -220,7 +220,7 @@ namespace mo
         template <class T>
         void BlockingStreamBuffer<T>::prune()
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             StreamBuffer<T>::prune();
             auto itr = this->_data_buffer.begin();
             while (this->_data_buffer.size() >= _size)
@@ -254,7 +254,7 @@ namespace mo
                                                     const std::shared_ptr<ICoordinateSystem>& cs,
                                                     UpdateFlags)
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             while (this->_data_buffer.size() > _size)
             {
                 MO_LOG_EVERY_N(debug, 10) << "Pushing to " << this->getTreeName()
@@ -305,7 +305,7 @@ namespace mo
                                                      size_t fn,
                                                      const std::shared_ptr<ICoordinateSystem>& cs)
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             if (this->_data_buffer.size() > this->_size)
             {
                 return false;
@@ -332,7 +332,7 @@ namespace mo
                                                      size_t fn,
                                                      const std::shared_ptr<ICoordinateSystem>& cs)
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             if (this->_data_buffer.size() > this->_size)
             {
                 return false;
@@ -362,7 +362,7 @@ namespace mo
                                                     UpdateFlags)
         {
 
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock lock(IParam::mtx());
             if (this->_data_buffer.size() > this->_size)
             {
                 return;
