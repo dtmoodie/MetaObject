@@ -30,57 +30,34 @@ namespace mo
     // auto TParam = TInputParamPtr(&myVar); // TInputParam now updates myvar to point to whatever the
     // input variable is for TParam.
     template <typename T>
-    class MO_EXPORTS TInputParamPtr : virtual public ITInputParam<T>, virtual public ITConstAccessibleParam<T>
+    class MO_EXPORTS TInputParamPtr : virtual public ITInputParam<T>
     {
       public:
-        typedef typename ParamTraits<T>::Storage_t Storage_t;
-        typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
-        typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
-        typedef typename ParamTraits<T>::Input_t Input_t;
-        typedef void(TUpdateSig_t)(ConstStorageRef_t,
-                                   IParam*,
-                                   Context*,
-                                   OptionalTime_t,
-                                   size_t,
-                                   const std::shared_ptr<ICoordinateSystem>&,
-                                   UpdateFlags);
-        typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
-        typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
+        using ContainerPtr_t = typename ITParam<T>::ContainerPtr_t;
 
-        TInputParamPtr(const std::string& name = "", Input_t* userVar_ = nullptr, Context* ctx = nullptr);
-        bool setInput(std::shared_ptr<IParam> input);
-        bool setInput(IParam* input);
-        void setUserDataPtr(Input_t* user_var_);
-        bool getInput(const OptionalTime_t& ts, size_t* fn = nullptr);
-        bool getInput(size_t fn, OptionalTime_t* ts = nullptr);
+        TInputParamPtr(const std::string& name = "", T** user_var_ = nullptr)
+            : ITInputParam<T>(name)
+            , m_user_var(user_var_)
+        {
+        }
 
-        virtual ConstAccessToken<T> read() const;
-        bool canAccess() const override { return ParamTraits<T>::valid(_current_data); }
+        void setUserDataPtr(T** user_var_)
+        {
+            Lock lock(this->mtx());
+            m_user_var = user_var_;
+        }
+
+        virtual void updateData(const ContainerPtr_t& data)
+        {
+            Lock lock(this->mtx());
+            ITInputParam<T>::updateData(data);
+            if (m_user_var)
+            {
+                *m_user_var = data;
+            }
+        }
 
       protected:
-        bool updateDataImpl(const Storage_t&,
-                            const OptionalTime_t&,
-                            Context*,
-                            size_t,
-                            const std::shared_ptr<ICoordinateSystem>&) override
-        {
-            return true;
-        }
-
-        bool updateDataImpl(
-            Storage_t&&, const OptionalTime_t&, Context*, size_t, const std::shared_ptr<ICoordinateSystem>&) override
-        {
-            return true;
-        }
-        Input_t* _user_var; // Pointer to the user space pointer variable of type T
-        InputStorage_t _current_data;
-        virtual void onInputUpdate(ConstStorageRef_t,
-                                   IParam*,
-                                   Context*,
-                                   OptionalTime_t,
-                                   size_t,
-                                   const std::shared_ptr<ICoordinateSystem>&,
-                                   UpdateFlags);
+        T** m_user_var; // Pointer to the user space pointer variable of type T
     };
 }
-#include "detail/TInputParamPtrImpl.hpp"

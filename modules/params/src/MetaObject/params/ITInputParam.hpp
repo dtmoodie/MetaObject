@@ -2,6 +2,8 @@
 
 #include "ITParam.hpp"
 #include "InputParam.hpp"
+#include "MetaObject/params/OutputParam.hpp"
+
 #ifdef _MSC_VER
 #pragma warning(disable : 4250)
 #endif
@@ -12,23 +14,14 @@ namespace mo
     class ITInputParam : virtual public ITParam<T>, virtual public InputParam
     {
       public:
-        typedef typename ParamTraits<T>::Storage_t Storage_t;
-        typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
-        typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
-        typedef typename ParamTraits<T>::Input_t Input_t;
-        typedef void(TUpdateSig_t)(ConstStorageRef_t,
-                                   IParam*,
-                                   Context*,
-                                   OptionalTime_t,
-                                   size_t,
-                                   const std::shared_ptr<ICoordinateSystem>&,
-                                   UpdateFlags);
-        typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
-        typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
+        using ContainerPtr_t = typename ITParam<T>::ContainerPtr_t;
+        using ContainerConstPtr_t = typename ITParam<T>::ContainerConstPtr_t;
+        using TUpdateSlot_t = typename ITParam<T>::TUpdateSlot_t;
 
-        ITInputParam(const std::string& name = "", Context* ctx = nullptr);
-        ~ITInputParam();
-        bool setInput(std::shared_ptr<IParam> input);
+        ITInputParam(const std::string& name = "");
+        ~ITInputParam() override;
+
+        bool setInput(const std::shared_ptr<IParam>& input);
         bool setInput(IParam* input);
 
         virtual bool acceptsInput(IParam* param) const;
@@ -40,47 +33,131 @@ namespace mo
 
         virtual bool isInputSet() const;
 
-        virtual bool getData(InputStorage_t& data,
-                             const OptionalTime_t& ts = OptionalTime_t(),
-                             Context* ctx = nullptr,
-                             size_t* fn_ = nullptr);
-
-        virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
-
       protected:
-        bool updateDataImpl(const Storage_t& /*data*/,
-                            const OptionalTime_t& /*ts*/,
-                            Context* /*ctx*/,
-                            size_t /*fn*/,
-                            const std::shared_ptr<ICoordinateSystem>& /*cs*/) override
-        {
-            return true;
-        }
-
-        bool updateDataImpl(Storage_t&& /*data*/,
-                            const OptionalTime_t& /*ts*/,
-                            Context* /*ctx*/,
-                            size_t /*fn*/,
-                            const std::shared_ptr<ICoordinateSystem>& /*cs*/) override
-        {
-            return true;
-        }
-
         virtual void onInputDelete(IParam const* param);
-        virtual void onInputUpdate(ConstStorageRef_t,
-                                   IParam*,
-                                   Context*,
-                                   OptionalTime_t,
-                                   size_t,
-                                   const std::shared_ptr<ICoordinateSystem>&,
-                                   UpdateFlags);
-
-        std::shared_ptr<IParam> _shared_input;
-        ITParam<T>* _input;
+        virtual void onInputUpdate(ContainerPtr_t, IParam*, UpdateFlags);
 
       private:
-        TUpdateSlot_t _update_slot;
-        TSlot<void(IParam const*)> _delete_slot;
+        TUpdateSlot_t m_update_slot;
+        TSlot<void(IParam const*)> m_delete_slot;
+        std::shared_ptr<IParam> m_shared_input;
+        ITParam<T>* m_input;
     };
+
+    template <class T>
+    ITInputParam<T>::ITInputParam(const std::string& name)
+        : m_input(nullptr)
+        , ITParam<T>(name)
+    {
+        m_update_slot = std::bind(&ITInputParam<T>::onInputUpdate,
+                                  this,
+                                  std::placeholders::_1,
+                                  std::placeholders::_2,
+                                  std::placeholders::_3,
+                                  std::placeholders::_4,
+                                  std::placeholders::_5,
+                                  std::placeholders::_6,
+                                  std::placeholders::_7);
+        m_delete_slot = std::bind(&ITInputParam<T>::onInputDelete, this, std::placeholders::_1);
+    }
+
+    template <class T>
+    ITInputParam<T>::~ITInputParam()
+    {
+        if (m_input != nullptr)
+        {
+            m_input->unsubscribe();
+        }
+    }
+
+    template <class T>
+    bool ITInputParam<T>::setInput(const std::shared_ptr<IParam>& param)
+    {
+        if (setInput(param.get()))
+        {
+            m_shared_input = param;
+            return true;
+        }
+        return false;
+    }
+
+    template <class T>
+    bool ITInputParam<T>::setInput(IParam* param)
+    {
+        Lock lock(this->mtx());
+        if (param == nullptr)
+        {
+            if (m_input)
+            {
+                m_input->unsubscribe();
+            }
+            m_update_slot.clear();
+            m_delete_slot.clear();
+            m_input = nullptr;
+            m_shared_input.reset();
+            lock.unlock();
+            IParam::emitUpdate(Header(), InputCleared_e);
+            return true;
+        }
+        auto output_param = dynamic_cast<OutputParam*>(param);
+        if ((output_param && output_param->providesOutput(getTypeInfo())) ||
+            (param->getTypeInfo() == this->getTypeInfo()))
+        {
+            if (m_input)
+            {
+                m_input->unsubscribe();
+            }
+            if (output_param)
+            {
+                if (auto param_ = output_param->getOutputParam(TypeInfo(typeid(T))))
+                {
+                    this->_input = dynamic_cast<ITParam<T>*>(param_);
+                }
+            }
+            else
+            {
+                this->_input = dynamic_cast<ITParam<T>*>(param);
+            }
+            if (this->_input)
+            {
+                param->subscribe();
+                param->registerUpdateNotifier(&m_update_slot);
+                param->registerDeleteNotifier(&m_delete_slot);
+                lock.unlock();
+                IParam::emitUpdate(Header(), InputSet_e);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    template <class T>
+    void ITInputParam<T>::onInputDelete(IParam const* param)
+    {
+        if (param != this->_input)
+        {
+            return;
+        }
+        else
+        {
+            Lock lock(this->mtx());
+            this->_shared_input.reset();
+            this->_input = nullptr;
+            IParam::emitUpdate(Header(), InputCleared_e);
+        }
+    }
+
+    template <class T>
+    void ITInputParam<T>::onInputUpdate(ContainerPtr_t data, IParam*, UpdateFlags)
+    {
+        if (data->header.ctx && this->m_ctx)
+        {
+            if (this->m_ctx->thread_id == data->header.ctx)
+            {
+                ITParam<T>::updateData(data);
+                return;
+            }
+        }
+        IParam::emitUpdate(data->header, InputUpdated_e);
+    }
 }
-#include "detail/ITInputParamImpl.hpp"

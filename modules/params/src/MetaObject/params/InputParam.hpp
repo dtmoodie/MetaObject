@@ -37,12 +37,12 @@ namespace mo
 
         // This loads the value at the requested timestamp into the input
         // Param such that it can be read
-        virtual bool getInput(const OptionalTime_t& ts, size_t* fn = nullptr);
-        virtual bool getInput(size_t fn, OptionalTime_t* ts = nullptr);
+        virtual bool getInputData(const Header& desired, Header* retrieved) = 0;
+
         // This gets a pointer to the variable that feeds into this input
         virtual IParam* getInputParam() const = 0;
 
-        virtual bool setInput(std::shared_ptr<IParam> param) = 0;
+        virtual bool setInput(const std::shared_ptr<IParam>& param) = 0;
         virtual bool setInput(IParam* param = nullptr) = 0;
 
         virtual OptionalTime_t getInputTimestamp() = 0;
@@ -52,9 +52,13 @@ namespace mo
         virtual bool acceptsInput(IParam* param) const = 0;
         virtual bool acceptsType(const TypeInfo& type) const = 0;
 
-        void setQualifier(std::function<bool(std::weak_ptr<IParam>)> f) { qualifier = f; }
+        void setQualifier(std::function<bool(std::weak_ptr<IParam>)> f)
+        {
+            qualifier = f;
+        }
 
         std::ostream& print(std::ostream& os) const override;
+
       protected:
         InputParam(const InputParam&) = delete;
         InputParam& operator=(const InputParam&) = delete;

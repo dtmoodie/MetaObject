@@ -35,6 +35,7 @@ namespace mo
       public:
         using Container_t = TDataContainer<T>;
         using ContainerPtr_t = std::shared_ptr<Container_t>;
+        using ContainerConstPtr_t = std::shared_ptr<const Container_t>;
         using TUpdate_s = void(ContainerPtr_t, IParam*, UpdateFlags);
         using TUpdateSignal_t = TSignal<TUpdate_s>;
         using TUpdateSlot_t = TSlot<TUpdate_s>;
@@ -49,8 +50,10 @@ namespace mo
 
         virtual void updateData(const T& data, const Header& header);
         virtual void updateData(T&& data, Header&& header);
+        virtual void updateData(const ContainerPtr_t& data);
 
-        virtual bool getData(ContainerPtr_t& data, const Header& desired = Header(), Header* received = nullptr);
+        virtual ContainerPtr_t getTypedData(const Header& desired = Header());
+        virtual ContainerConstPtr_t getTypedData(const Header& desired = Header()) const;
 
         TypeInfo getTypeInfo() const override;
 
@@ -59,9 +62,6 @@ namespace mo
         virtual ConnectionPtr_t registerUpdateNotifier(ISlot* f) override;
         virtual ConnectionPtr_t registerUpdateNotifier(ISignalRelay::Ptr relay) override;
 
-        ConnectionPtr_t registerUpdateNotifier(TUpdateSlot_t* f);
-        ConnectionPtr_t registerUpdateNotifier(typename TSignalRelay<TUpdate_s>::Ptr& relay);
-
         virtual void visit(IReadVisitor*) override;
         virtual void visit(IWriteVisitor*) const override;
 
@@ -69,15 +69,21 @@ namespace mo
         ConstAccessToken<T> read() const;
         AccessToken<T> access();
 
+        IContainerPtr_t getData(const Header& desired);
+        IContainerConstPtr_t getData(const Header& desired) const;
+
       private:
         TSignal<TUpdate_s> _typed_update_signal;
         static const TypeInfo _type_info;
         std::shared_ptr<TDataContainer<T>> _data;
     };
 
-    /// implementations
+    ///////////////////////////////////////////////////////////////////////////////////////
+    /// implementation
+    ///////////////////////////////////////////////////////////////////////////////////////
     template <class T>
-    ITParam<T>::ITParam(const std::string& name, ParamFlags flags) : IParam(name, flags)
+    ITParam<T>::ITParam(const std::string& name, ParamFlags flags)
+        : IParam(name, flags)
     {
     }
 
@@ -141,24 +147,27 @@ namespace mo
     template <class T>
     void ITParam<T>::updateData(const T& data, const Header& header)
     {
-        {
-            mo::Lock lock(this->mtx());
-            _data = std::make_shared<TDataContainer<T>>();
-            _data->data = data;
-            _data->header = header;
-        }
-        emitUpdate(_data->header);
-        _typed_update_signal(_data, this, ValueUpdated_e);
+        auto container = std::make_shared<TDataContainer<T>>();
+        container = data;
+        container = header;
+        updateData(container);
     }
 
     template <class T>
     void ITParam<T>::updateData(T&& data, Header&& header)
     {
+        auto container = std::make_shared<TDataContainer<T>>();
+        container->data = std::move(data);
+        container->header = std::move(header);
+        updateData(container);
+    }
+
+    template <class T>
+    void ITParam<T>::updateData(const ContainerPtr_t& data)
+    {
         {
             mo::Lock lock(this->mtx());
-            _data = std::make_shared<TDataContainer<T>>();
-            _data->data = std::move(data);
-            _data->header = std::move(header);
+            _data = data;
         }
         emitUpdate(_data->header);
         _typed_update_signal(_data, this, ValueUpdated_e);
@@ -198,7 +207,7 @@ namespace mo
             auto typed = dynamic_cast<TUpdateSlot_t*>(f);
             if (typed)
             {
-                return registerUpdateNotifier(typed);
+                return _typed_update_signal.connect(typed);
             }
         }
         return IParam::registerUpdateNotifier(f);
@@ -210,21 +219,9 @@ namespace mo
         if (relay->getSignature() == _typed_update_signal.getSignature())
         {
             auto typed = std::dynamic_pointer_cast<TSignalRelay<TUpdate_s>>(relay);
-            return registerUpdateNotifier(typed);
+            return _typed_update_signal.connect(typed);
         }
         return IParam::registerUpdateNotifier(relay);
-    }
-
-    template <class T>
-    ConnectionPtr_t ITParam<T>::registerUpdateNotifier(TUpdateSlot_t* f)
-    {
-        return _typed_update_signal.connect(f);
-    }
-
-    template <class T>
-    ConnectionPtr_t ITParam<T>::registerUpdateNotifier(typename TSignalRelay<TUpdate_s>::Ptr& relay)
-    {
-        return _typed_update_signal.connect(relay);
     }
 
     template <class T>
@@ -248,7 +245,7 @@ namespace mo
     }
 
     template <class T>
-    bool ITParam<T>::getData(ContainerPtr_t& data, const Header& desired, Header* received)
+    typename ITParam<T>::ContainerPtr_t ITParam<T>::getTypedData(const Header& desired)
     {
 
         mo::Lock lock(this->mtx());
@@ -256,40 +253,112 @@ namespace mo
         {
             if (!desired.timestamp && desired.frame_number == std::numeric_limits<uint64_t>::max())
             {
-                data = _data;
-                if (received)
-                {
-                    *received = _header;
-                }
-                return true;
+                return _data;
             }
             else
             {
                 if (desired.timestamp && _data->header.timestamp == desired.timestamp)
                 {
-                    data = _data;
-                    if (received)
-                    {
-                        *received = _header;
-                    }
-                    return true;
+                    return _data;
                 }
                 else
                 {
                     if (desired.frame_number != std::numeric_limits<uint64_t>::max() &&
                         desired.frame_number == _data->header.frame_number)
                     {
-                        data = _data;
-                        if (received)
-                        {
-                            *received = _header;
-                        }
-                        return true;
+                        return _data;
                     }
                 }
             }
         }
-        return false;
+        return {};
+    }
+
+    template <class T>
+    typename ITParam<T>::ContainerConstPtr_t ITParam<T>::getTypedData(const Header& desired) const
+    {
+        mo::Lock lock(this->mtx());
+        if (_data)
+        {
+            if (!desired.timestamp && desired.frame_number == std::numeric_limits<uint64_t>::max())
+            {
+                return _data;
+            }
+            else
+            {
+                if (desired.timestamp && _data->header.timestamp == desired.timestamp)
+                {
+                    return _data;
+                }
+                else
+                {
+                    if (desired.frame_number != std::numeric_limits<uint64_t>::max() &&
+                        desired.frame_number == _data->header.frame_number)
+                    {
+                        return _data;
+                    }
+                }
+            }
+        }
+        return {};
+    }
+
+    template <class T>
+    typename ITParam<T>::IContainerPtr_t ITParam<T>::getData(const Header& desired)
+    {
+        mo::Lock lock(this->mtx());
+        if (_data)
+        {
+            if (!desired.timestamp && desired.frame_number == std::numeric_limits<uint64_t>::max())
+            {
+                return _data;
+            }
+            else
+            {
+                if (desired.timestamp && _data->header.timestamp == desired.timestamp)
+                {
+                    return _data;
+                }
+                else
+                {
+                    if (desired.frame_number != std::numeric_limits<uint64_t>::max() &&
+                        desired.frame_number == _data->header.frame_number)
+                    {
+                        return _data;
+                    }
+                }
+            }
+        }
+        return {};
+    }
+
+    template <class T>
+    typename ITParam<T>::IContainerConstPtr_t ITParam<T>::getData(const Header& desired) const
+    {
+        mo::Lock lock(this->mtx());
+        if (_data)
+        {
+            if (!desired.timestamp && desired.frame_number == std::numeric_limits<uint64_t>::max())
+            {
+                return _data;
+            }
+            else
+            {
+                if (desired.timestamp && _data->header.timestamp == desired.timestamp)
+                {
+                    return _data;
+                }
+                else
+                {
+                    if (desired.frame_number != std::numeric_limits<uint64_t>::max() &&
+                        desired.frame_number == _data->header.frame_number)
+                    {
+                        return _data;
+                    }
+                }
+            }
+        }
+        return {};
     }
 
     template <class T>

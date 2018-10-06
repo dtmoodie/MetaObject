@@ -24,6 +24,9 @@ namespace mo
         operator std::shared_ptr<T>();
         operator std::shared_ptr<const T>() const;
 
+        operator T*();
+        operator const T*() const;
+
         T data;
         Header header;
     };
@@ -32,12 +35,14 @@ namespace mo
     ///  Implementation
     ////////////////////////////////////////////////////////////////////////
     template <class T>
-    TDataContainer<T>::TDataContainer(const T& data_) : data(data_)
+    TDataContainer<T>::TDataContainer(const T& data_)
+        : data(data_)
     {
     }
 
     template <class T>
-    TDataContainer<T>::TDataContainer(T&& data_) : data(std::move(data_))
+    TDataContainer<T>::TDataContainer(T&& data_)
+        : data(std::move(data_))
     {
     }
 
@@ -82,5 +87,17 @@ namespace mo
     {
         auto owning_ptr = shared_from_this();
         return std::shared_ptr<T>(&data, [owning_ptr](T*) {});
+    }
+
+    template <class T>
+    TDataContainer<T>::operator T*()
+    {
+        return &data;
+    }
+
+    template <class T>
+    TDataContainer<T>::operator const T*() const
+    {
+        return &data;
     }
 }

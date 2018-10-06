@@ -17,9 +17,8 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/MetaObject
 */
 #pragma once
-#include "ITAccessibleParam.hpp"
+#include "ITParam.hpp"
 #include "MetaObject/params/MetaParam.hpp"
-#include "ParamConstructor.hpp"
 
 namespace mo
 {
@@ -27,42 +26,16 @@ namespace mo
     class MO_EXPORTS TParam : virtual public ITAccessibleParam<T>
     {
       public:
-        typedef T ValueType;
-        typedef typename ParamTraits<T>::Storage_t Storage_t;
-        typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
-        typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
-        typedef typename ParamTraits<T>::Input_t Input_t;
-
-        static const ParamType Type = TParam_e;
-        TParam(const std::string& name, const T& value) : IParam(name) { ParamTraits<T>::reset(_data, value); }
-        TParam(const std::string& name) : IParam(name) {}
+        TParam(const std::string& name, const T& value)
+            : IParam(name)
+        {
+            ParamTraits<T>::reset(_data, value);
+        }
+        TParam(const std::string& name)
+            : IParam(name)
+        {
+        }
         TParam();
-
-        virtual bool getData(InputStorage_t& data,
-                             const OptionalTime_t& ts = OptionalTime_t(),
-                             Context* ctx = nullptr,
-                             size_t* fn_ = nullptr);
-
-        virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
-        virtual AccessToken<T> access();
-        virtual ConstAccessToken<T> read() const;
-        bool canAccess() const override { return true; }
-
-      protected:
-        bool updateDataImpl(Storage_t&& data,
-                            const OptionalTime_t& ts,
-                            Context* ctx,
-                            size_t fn,
-                            const std::shared_ptr<ICoordinateSystem>& cs) override;
-
-        bool updateDataImpl(const Storage_t& data,
-                            const OptionalTime_t& ts,
-                            Context* ctx,
-                            size_t fn,
-                            const std::shared_ptr<ICoordinateSystem>& cs) override;
-
-      private:
-        Storage_t _data;
     };
 }
 #include "detail/TParamImpl.hpp"

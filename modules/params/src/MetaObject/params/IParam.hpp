@@ -28,9 +28,9 @@ https://github.com/dtmoodie/MetaObject
 
 namespace mo
 {
-
     struct IReadVisitor;
     struct IWriteVisitor;
+    struct IDataContainer;
 
     using UpdateSignal_t = TSignal<Update_s>;
     using UpdateSlotPtr_t = std::shared_ptr<UpdateSlot_t>;
@@ -45,6 +45,8 @@ namespace mo
       public:
         using Ptr = std::shared_ptr<ParamBase>;
         using ConstPtr = std::shared_ptr<const ParamBase>;
+        using IContainerPtr_t = std::shared_ptr<IDataContainer>;
+        using IContainerConstPtr_t = std::shared_ptr<const IDataContainer>;
 
         ParamBase() = default;
         ParamBase(const ParamBase&) = delete;
@@ -95,6 +97,9 @@ namespace mo
 
         virtual void visit(IReadVisitor*) = 0;
         virtual void visit(IWriteVisitor*) const = 0;
+
+        virtual IContainerPtr_t getData(const Header& desired = Header()) = 0;
+        virtual IContainerConstPtr_t getData(const Header& desired = Header()) const = 0;
     };
 
     class MO_EXPORTS IParam : public ParamBase
@@ -157,19 +162,13 @@ namespace mo
         // Determine if there are any input Params using this Param as an output
         bool hasSubscriptions() const;
 
-        // Register slots to be called on update of this Param
-        virtual ConnectionPtr_t registerUpdateNotifier(UpdateSlot_t* f);
-        virtual ConnectionPtr_t registerUpdateNotifier(TSignalRelay<Update_s>::Ptr& relay);
-
         // Virtual to allow typed overload for interface slot input
         virtual ConnectionPtr_t registerUpdateNotifier(ISlot* f);
-        virtual ConnectionPtr_t registerUpdateNotifier(std::shared_ptr<ISignalRelay> relay);
+        virtual ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr& relay);
 
         // Register slots to be called on delete of this Param
-        ConnectionPtr_t registerDeleteNotifier(DeleteSlot_t* f);
-        ConnectionPtr_t registerDeleteNotifier(TSignalRelay<void(IParam const*)>::Ptr& relay);
-        ConnectionPtr_t registerDeleteNotifier(ISlot* f);
-        ConnectionPtr_t registerDeleteNotifier(ISignalRelay::Ptr relay);
+        virtual ConnectionPtr_t registerDeleteNotifier(ISlot* f);
+        virtual ConnectionPtr_t registerDeleteNotifier(const ISignalRelay::Ptr& relay);
 
         // commit changes to a Param, updates underlying meta info and emits signals accordingly
         virtual IParam* emitUpdate(const Header& header = Header(), UpdateFlags flags_ = ValueUpdated_e);
@@ -215,11 +214,13 @@ namespace mo
         UpdateSignal_t _update_signal;
         DeleteSignal_t _delete_signal;
 
-        mutable mo::Mutex_t* _mtx = nullptr;
-        int _subscribers = 0;
-
       private:
-        bool _modified = false; // Set to true if modified by the user interface etc, set to false by the owning object.
+        // Set to true if modified by the user interface etc, set to false by the owning object.
+        bool m_modified = false;
+        int m_subscribers = 0;
+        mutable mo::Mutex_t* _mtx = nullptr;
+
+        mo::Context* m_ctx;
     };
 
     template <class... Args>

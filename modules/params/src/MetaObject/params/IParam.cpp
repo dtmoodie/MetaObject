@@ -44,7 +44,11 @@ namespace mo
     }
 
     IParam::IParam(const std::string& name_, ParamFlags flags_, Context* ctx)
-        : _name(name_), _flags(flags_), _mtx(nullptr), _subscribers(0), _modified(false)
+        : _name(name_)
+        , _flags(flags_)
+        , m_subscribers(0)
+        , m_modified(false)
+        , _mtx(nullptr)
     {
         _header.frame_number = std::numeric_limits<uint64_t>::max();
         _header.ctx = ctx;
@@ -89,7 +93,7 @@ namespace mo
 
     IParam* IParam::setContext(Context* ctx)
     {
-        _header.ctx = ctx;
+        m_ctx = ctx;
         return this;
     }
 
@@ -127,18 +131,12 @@ namespace mo
 
     Context* IParam::getContext() const
     {
-        return _header.ctx;
+        return m_ctx;
     }
 
     const std::shared_ptr<ICoordinateSystem>& IParam::getCoordinateSystem() const
     {
         return _header.coordinate_system;
-    }
-
-    std::shared_ptr<Connection> IParam::registerUpdateNotifier(UpdateSlot_t* f)
-    {
-        mo::Mutex_t::scoped_lock lock(mtx());
-        return f->connect(&_update_signal);
     }
 
     std::shared_ptr<Connection> IParam::registerUpdateNotifier(ISlot* f)
@@ -147,32 +145,20 @@ namespace mo
         auto typed = dynamic_cast<UpdateSlot_t*>(f);
         if (typed)
         {
-            return registerUpdateNotifier(typed);
+            return _update_signal.connect(typed);
         }
         return std::shared_ptr<Connection>();
     }
 
-    std::shared_ptr<Connection> IParam::registerUpdateNotifier(std::shared_ptr<ISignalRelay> relay)
+    ConnectionPtr_t IParam::registerUpdateNotifier(const ISignalRelay::Ptr& relay)
     {
         mo::Mutex_t::scoped_lock lock(mtx());
-        auto typed = std::dynamic_pointer_cast<TSignalRelay<Update_s>>(relay);
+        auto typed = std::dynamic_pointer_cast<TSignalRelay<void(IParam*, Header, UpdateFlags)>>(relay);
         if (typed)
         {
-            return registerUpdateNotifier(typed);
+            return _update_signal.connect(typed);
         }
-        return std::shared_ptr<Connection>();
-    }
-
-    std::shared_ptr<Connection> IParam::registerUpdateNotifier(TSignalRelay<Update_s>::Ptr& relay)
-    {
-        mo::Mutex_t::scoped_lock lock(mtx());
-        return _update_signal.connect(relay);
-    }
-
-    std::shared_ptr<Connection> IParam::registerDeleteNotifier(DeleteSlot_t* f)
-    {
-        mo::Mutex_t::scoped_lock lock(mtx());
-        return f->connect(&_delete_signal);
+        return {};
     }
 
     std::shared_ptr<Connection> IParam::registerDeleteNotifier(ISlot* f)
@@ -186,21 +172,15 @@ namespace mo
         return std::shared_ptr<Connection>();
     }
 
-    std::shared_ptr<Connection> IParam::registerDeleteNotifier(ISignalRelay::Ptr relay)
+    std::shared_ptr<Connection> IParam::registerDeleteNotifier(const ISignalRelay::Ptr& relay)
     {
         mo::Mutex_t::scoped_lock lock(mtx());
-        auto typed = std::dynamic_pointer_cast<TSignalRelay<void(IParam*)>>(relay);
+        auto typed = std::dynamic_pointer_cast<TSignalRelay<void(const IParam*)>>(relay);
         if (typed)
         {
-            return registerDeleteNotifier(typed);
+            return _delete_signal.connect(typed);
         }
         return std::shared_ptr<Connection>();
-    }
-
-    std::shared_ptr<Connection> IParam::registerDeleteNotifier(TSignalRelay<void(IParam const*)>::Ptr& relay)
-    {
-        mo::Mutex_t::scoped_lock lock(mtx());
-        return _delete_signal.connect(relay);
     }
 
     IParam* IParam::emitUpdate(const Header& header, UpdateFlags flags_)
@@ -213,7 +193,7 @@ namespace mo
         }
         _header = header;
         _header.frame_number = fn;
-        this->modified(true);
+        modified(true);
         lock.unlock();
         _update_signal(this, _header, flags_);
         return this;
@@ -248,19 +228,19 @@ namespace mo
     void IParam::subscribe()
     {
         mo::Mutex_t::scoped_lock lock(mtx());
-        ++_subscribers;
+        ++m_subscribers;
     }
 
     void IParam::unsubscribe()
     {
         mo::Mutex_t::scoped_lock lock(mtx());
-        --_subscribers;
-        _subscribers = std::max(0, _subscribers);
+        --m_subscribers;
+        m_subscribers = std::max(0, m_subscribers);
     }
 
     bool IParam::hasSubscriptions() const
     {
-        return _subscribers != 0;
+        return m_subscribers != 0;
     }
 
     EnumClassBitset<ParamFlags> IParam::setFlags(ParamFlags flags_)
@@ -296,12 +276,12 @@ namespace mo
 
     bool IParam::modified() const
     {
-        return _modified;
+        return m_modified;
     }
 
     void IParam::modified(bool value)
     {
-        _modified = value;
+        m_modified = value;
     }
 
     std::ostream& IParam::print(std::ostream& os) const

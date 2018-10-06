@@ -2,129 +2,23 @@
 #ifndef __CUDACC__
 #include "MetaObject/logging/logging.hpp"
 #include "MetaObject/params/ITInputParam.hpp"
-#include "MetaObject/params/OutputParam.hpp"
+
 #include <boost/thread/recursive_mutex.hpp>
 #include <functional>
 #include <memory>
 
 namespace mo
 {
-    template <class T>
-    ITInputParam<T>::ITInputParam(const std::string& /*name*/, Context* /*ctx*/) : _input(nullptr)
-    {
-        _update_slot = std::bind(&ITInputParam<T>::onInputUpdate,
-                                 this,
-                                 std::placeholders::_1,
-                                 std::placeholders::_2,
-                                 std::placeholders::_3,
-                                 std::placeholders::_4,
-                                 std::placeholders::_5,
-                                 std::placeholders::_6,
-                                 std::placeholders::_7);
-        _delete_slot = std::bind(&ITInputParam<T>::onInputDelete, this, std::placeholders::_1);
-    }
-
-    template <class T>
-    ITInputParam<T>::~ITInputParam()
-    {
-        if (_input != nullptr)
-        {
-            _input->unsubscribe();
-        }
-        else
-        {
-        }
-    }
-
-    template <class T>
-    bool ITInputParam<T>::setInput(std::shared_ptr<IParam> param)
-    {
-        if (setInput(param.get()))
-        {
-            _shared_input = param;
-            return true;
-        }
-        return false;
-    }
-
-    template <class T>
-    bool ITInputParam<T>::setInput(IParam* param)
-    {
-        mo::Mutex_t::scoped_lock lock(this->mtx());
-        if (param == nullptr)
-        {
-            if (_input)
-            {
-                _input->unsubscribe();
-            }
-            else
-            {
-            }
-            _update_slot.clear();
-            _delete_slot.clear();
-            _input = nullptr;
-            _shared_input.reset();
-            _shared_input.reset();
-            lock.unlock();
-            IParam::emitUpdate(this->getTimestamp(),
-                               this->getContext(),
-                               this->getFrameNumber(),
-                               this->getCoordinateSystem(),
-                               InputCleared_e);
-            return true;
-        }
-        else
-        {
-        }
-        auto output_param = dynamic_cast<OutputParam*>(param);
-        if ((output_param && output_param->providesOutput(getTypeInfo())) ||  (param->getTypeInfo() == this->getTypeInfo()))
-        {
-            if (_input)
-            {
-                _input->unsubscribe();
-            }
-            if (output_param)
-            {
-                if (auto param_ = output_param->getOutputParam(TypeInfo(typeid(T))))
-                {
-                    this->_input = dynamic_cast<ITParam<T>*>(param_);
-                }
-            }
-            else
-            {
-                this->_input = dynamic_cast<ITParam<T>*>(param);
-            }
-            if (this->_input)
-            {
-                param->subscribe();
-                param->registerUpdateNotifier(&_update_slot);
-                param->registerDeleteNotifier(&_delete_slot);
-                lock.unlock();
-                IParam::emitUpdate(param->getTimestamp(),
-                                   param->getContext(),
-                                   param->getFrameNumber(),
-                                   param->getCoordinateSystem(),
-                                   InputSet_e);
-                return true;
-            }
-            else
-            {
-            }
-        }
-        else
-        {
-        }
-        return false;
-    }
 
     template <class T>
     bool ITInputParam<T>::acceptsInput(IParam* param) const
     {
-        if(param->checkFlags(mo::ParamFlags::Output_e))
+        if (param->checkFlags(mo::ParamFlags::Output_e))
         {
             auto out_param = dynamic_cast<OutputParam*>(param);
             return out_param->providesOutput(getTypeInfo());
-        }else
+        }
+        else
         {
             return param->getTypeInfo() == getTypeInfo();
         }

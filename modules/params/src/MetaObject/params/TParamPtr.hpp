@@ -2,6 +2,7 @@
 #include "ITAccessibleParam.hpp"
 #include "MetaParam.hpp"
 #include "OutputParam.hpp"
+#include "detail/print_data.hpp"
 
 namespace mo
 {
@@ -21,11 +22,13 @@ namespace mo
     template <typename T>
     struct MO_EXPORTS TParamPtr : virtual public ITParam<T>
     {
+        using ContainerPtr_t = typename ITParam<T>::ContainerPtr_t;
+
         TParamPtr(const std::string& name = "",
                   T* ptr = nullptr,
                   ParamFlags type = ParamFlags::Control_e,
                   bool owns_data = false)
-            : ITParam<T>(name, type) m_ptr(ptr), m_owns_data(owns_data)
+            : ITParam<T>(name, type), m_ptr(ptr), m_owns_data(owns_data)
         {
         }
 
@@ -39,7 +42,7 @@ namespace mo
 
         void updatePtr(T* ptr, bool owns_data = false)
         {
-            mo::Mutex_t::scoped_lock lock(this->mtx());
+            Lock lock(this->mtx());
             if (m_ptr && m_owns_data)
             {
                 delete m_ptr;
@@ -51,7 +54,7 @@ namespace mo
         template <class... Args>
         void updateData(const T& data, const Args&... args)
         {
-            mo::Mutex_t::scoped_lock lock(this->mtx());
+            Lock lock(this->mtx());
             ITParam<T>::updateData(data, std::forward<Args>(args)...);
             updateUserData();
         }
@@ -59,28 +62,28 @@ namespace mo
         template <class... Args>
         void updateData(T&& data, const Args&... args)
         {
-            mo::Mutex_t::scoped_lock lock(this->mtx());
+            Lock lock(this->mtx());
             ITParam<T>::updateData(data, std::forward<Args>(args)...);
             updateUserData();
         }
 
         virtual void updateData(const T& data, const Header& header) override
         {
-            mo::Mutex_t::scoped_lock lock(this->mtx());
+            Lock lock(this->mtx());
             ITParam<T>::updateData(data, header);
             updateUserData();
         }
 
         virtual void updateData(T&& data, Header&& header) override
         {
-            mo::Mutex_t::scoped_lock lock(this->mtx());
+            Lock lock(this->mtx());
             ITParam<T>::updateData(std::move(data), std::move(header));
             updateUserData();
         }
 
         virtual IParam* emitUpdate(const Header& header = Header(), UpdateFlags) override
         {
-            mo::Mutex_t::scoped_lock lock(this->mtx());
+            Lock lock(this->mtx());
             if (m_ptr)
             {
                 ITParam<T>::updateData(*m_ptr, header);
@@ -90,7 +93,7 @@ namespace mo
         // commit a Param's value copying metadata info from another parmaeter
         virtual IParam* emitUpdate(const IParam& other) override
         {
-            mo::Mutex_t::scoped_lock lock(this->mtx());
+            Lock lock(this->mtx());
             if (m_ptr)
             {
                 ITParam<T>::updateData(*m_ptr, mo::tag::_param = other);
@@ -99,7 +102,7 @@ namespace mo
 
         std::ostream& print(std::ostream& os) const override
         {
-            mo::Mutex_t::scoped_lock lock(this->mtx());
+            Lock lock(this->mtx());
             ITParam<T>::print(os);
             os << ' ';
             if (m_ptr)
@@ -133,11 +136,13 @@ namespace mo
     template <typename T>
     struct MO_EXPORTS TParamPtr<std::shared_ptr<T>> : virtual public ITParam<T>
     {
+        using ContainerPtr_t = typename ITParam<T>::ContainerPtr_t;
+
         TParamPtr(const std::string& name = "",
                   std::shared_ptr<T>* ptr = nullptr,
                   ParamFlags type = ParamFlags::Control_e,
                   bool owns_data = false)
-            : ITParam<T>(name, type) m_ptr(ptr), m_owns_data(owns_data)
+            : ITParam<T>(name, type), m_ptr(ptr), m_owns_data(owns_data)
         {
         }
 
@@ -151,6 +156,7 @@ namespace mo
 
         void updatePtr(std::shared_ptr<T>* ptr, bool owns_data = false)
         {
+            Lock lock(this->mtx());
             if (m_ptr && m_owns_data)
             {
                 delete m_ptr;
@@ -187,7 +193,7 @@ namespace mo
 
         std::ostream& print(std::ostream& os) const override
         {
-            mo::Mutex_t::scoped_lock lock(this->mtx());
+            Lock lock(this->mtx());
             ITParam<T>::print(os);
             os << ' ';
             if (m_ptr)
@@ -237,4 +243,4 @@ namespace mo
         const ParamBase* getOutputParam() const override;
     };
 }
-#include "detail/TParamPtrImpl.hpp"
+
