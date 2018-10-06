@@ -338,34 +338,17 @@ namespace mo
     }
 
     template <class... Types>
-    std::shared_ptr<Connection> TMultiInput<Types...>::registerUpdateNotifier(UpdateSlot_t* f)
+    ConnectionPtr_t TMultiInput<Types...>::registerUpdateNotifier(ISlot* f)
     {
-        std::vector<std::shared_ptr<Connection>> out_connection;
+        std::vector<ConnectionPtr_t> out_connection;
         typeLoop<Types...>(*this, out_connection, f);
         return std::make_shared<MultiConnection>(std::move(out_connection));
     }
 
     template <class... Types>
-    std::shared_ptr<Connection>
-    TMultiInput<Types...>::registerUpdateNotifier(std::shared_ptr<TSignalRelay<UpdateSig_t>>& relay)
+    ConnectionPtr_t TMultiInput<Types...>::registerUpdateNotifier(const ISignalRelay::Ptr& relay)
     {
-        std::vector<std::shared_ptr<Connection>> out_connection;
-        typeLoop<Types...>(*this, out_connection, relay);
-        return std::make_shared<MultiConnection>(std::move(out_connection));
-    }
-
-    template <class... Types>
-    std::shared_ptr<Connection> TMultiInput<Types...>::registerUpdateNotifier(ISlot* f)
-    {
-        std::vector<std::shared_ptr<Connection>> out_connection;
-        typeLoop<Types...>(*this, out_connection, f);
-        return std::make_shared<MultiConnection>(std::move(out_connection));
-    }
-
-    template <class... Types>
-    std::shared_ptr<Connection> TMultiInput<Types...>::registerUpdateNotifier(std::shared_ptr<ISignalRelay> relay)
-    {
-        std::vector<std::shared_ptr<Connection>> out_connection;
+        std::vector<ConnectionPtr_t> out_connection;
         typeLoop<Types...>(*this, out_connection, relay);
         return std::make_shared<MultiConnection>(std::move(out_connection));
     }

@@ -71,13 +71,11 @@ namespace mo
         inline void apply(IParam* input, bool* success);
 
         template <class T, class Slot>
-        inline void apply(std::vector<std::shared_ptr<Connection>>& connection, Slot slot);
+        inline void apply(std::vector<ConnectionPtr_t>& connection, Slot slot);
 
-        virtual ConnectionPtr_t registerUpdateNotifier(UpdateSlot_t* f) override;
-        virtual ConnectionPtr_t registerUpdateNotifier(std::shared_ptr<TSignalRelay<UpdateSig_t>>& relay) override;
         // Virtual to allow typed overload for interface slot input
         virtual ConnectionPtr_t registerUpdateNotifier(ISlot* f) override;
-        virtual ConnectionPtr_t registerUpdateNotifier(std::shared_ptr<ISignalRelay> relay) override;
+        virtual ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr& relay) override;
 
         template <class T>
         inline void apply(bool* modified) const;

@@ -4,10 +4,7 @@
 using namespace mo;
 
 InputParam::InputParam()
-<<<<<<< HEAD
     : IParam("", mo::ParamFlags::Input_e)
-=======
->>>>>>> 363c579de74f45297b4af110fb911020e1ab4d93
 {
 }
 

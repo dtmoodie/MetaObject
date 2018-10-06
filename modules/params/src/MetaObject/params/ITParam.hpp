@@ -131,9 +131,9 @@ namespace mo
         }
         {
             mo::Lock lock(this->mtx());
-            if (_header.ctx == nullptr)
+            if (getContext() == nullptr)
             {
-                _header.ctx = header.ctx;
+                setContext(header.ctx);
             }
         }
 

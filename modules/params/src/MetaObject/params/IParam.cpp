@@ -179,10 +179,10 @@ namespace mo
         return std::shared_ptr<Connection>();
     }
 
-    std::shared_ptr<Connection> IParam::registerDeleteNotifier(const ISignalRelay::Ptr& relay)
+    ConnectionPtr_t IParam::registerDeleteNotifier(const ISignalRelay::Ptr& relay)
     {
         Lock lock(mtx());
-        auto typed = std::dynamic_pointer_cast<TSignalRelay<void(IParam*)>>(relay);
+        auto typed = std::dynamic_pointer_cast<TSignalRelay<void(const IParam*)>>(relay);
         if (typed)
         {
             return m_delete_signal.connect(typed);
