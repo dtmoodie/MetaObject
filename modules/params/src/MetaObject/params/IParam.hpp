@@ -210,19 +210,19 @@ namespace mo
         std::ostream& print(std::ostream& os) const override;
 
       protected:
-        Header _header;
+        Header m_header;
 
-        std::string _name;
-        std::string _tree_root;
-        mutable EnumClassBitset<ParamFlags> _flags;
-        UpdateSignal_t _update_signal;
-        DeleteSignal_t _delete_signal;
+        std::string m_name;
+        std::string m_tree_root;
+        mutable EnumClassBitset<ParamFlags> m_flags;
+        UpdateSignal_t m_update_signal;
+        DeleteSignal_t m_delete_signal;
 
       private:
         // Set to true if modified by the user interface etc, set to false by the owning object.
         bool m_modified = false;
         int m_subscribers = 0;
-        mutable mo::Mutex_t* _mtx = nullptr;
+        mutable mo::Mutex_t* m_mtx = nullptr;
 
         mo::Context* m_ctx;
     };
@@ -230,18 +230,17 @@ namespace mo
     template <class... Args>
     IParam::IParam(const Args&... args)
     {
-        _name = GetKeywordInputDefault<tag::param_name>("unnamed", args...);
+        m_name = GetKeywordInputDefault<tag::param_name>("unnamed", args...);
         if (const mo::Time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...))
         {
-            _header.timestamp = *ts;
+            m_header.timestamp = *ts;
         }
-        _mtx = nullptr;
-        _header.frame_number = GetKeywordInputDefault<tag::frame_number>(-1, args...);
-        _header.ctx = GetKeywordInputDefault<tag::context>(nullptr, args...);
-        //_cs        = GetKeywordInputDefault<tag::coordinate_system>(nullptr, args...); // TODO keyword
+        m_mtx = nullptr;
+        m_header.frame_number = GetKeywordInputDefault<tag::frame_number>(-1, args...);
+        m_header.ctx = GetKeywordInputDefault<tag::context>(nullptr, args...);
         // specialization for std::shared_ptrs
-        _flags =
+        m_flags =
             GetKeywordInputDefault<tag::param_flags>(EnumClassBitset<ParamFlags>(mo::ParamFlags::Control_e), args...);
-        _tree_root = GetKeywordInputDefault<tag::tree_root>("", args...);
+        m_tree_root = GetKeywordInputDefault<tag::tree_root>("", args...);
     }
 }

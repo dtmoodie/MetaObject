@@ -210,16 +210,18 @@ namespace mo
     }
 
     template <class T>
-    void ITInputParam<T>::onInputUpdate(ContainerPtr_t data, IParam*, UpdateFlags)
+    void ITInputParam<T>::onInputUpdate(ContainerPtr_t data, IParam* param, UpdateFlags fg)
     {
-        if (data->header.ctx && this->m_ctx)
+        const auto header = data->getHeader();
+        if (fg == mo::BufferUpdated_e && param->checkFlags(mo::ParamFlags::Buffer_e))
         {
-            if (this->m_ctx->thread_id == data->header.ctx)
-            {
-                ITParam<T>::updateData(data);
-                return;
-            }
+            emitTypedUpdate(data, this, header, InputUpdated_e);
+            emitUpdate(this, header, fg, InputUpdated_e);
+            return;
         }
-        IParam::emitUpdate(data->header, InputUpdated_e);
+        if (header.ctx == this->m_ctx)
+        {
+            updateData(data);
+        }
     }
 }
