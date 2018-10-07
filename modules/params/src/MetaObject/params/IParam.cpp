@@ -18,6 +18,7 @@ https://github.com/dtmoodie/MetaObject
 */
 #include "MetaObject/params/IParam.hpp"
 #include "ICoordinateSystem.hpp"
+#include "IDataContainer.hpp"
 #include "MetaObject/core/Demangle.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/TSignalRelay.hpp"
@@ -146,24 +147,31 @@ namespace mo
         return m_header;
     }
 
-    std::shared_ptr<Connection> IParam::registerUpdateNotifier(ISlot* f)
+    ConnectionPtr_t IParam::registerUpdateNotifier(ISlot* f)
     {
         Lock lock(mtx());
-        auto typed = dynamic_cast<UpdateSlot_t*>(f);
-        if (typed)
+        if (f->getSignature() == m_data_update.getSignature())
         {
-            return m_update_signal.connect(typed);
+            return m_data_update.connect(f);
         }
-        return std::shared_ptr<Connection>();
+        if (f->getSignature() == m_update_signal.getSignature())
+        {
+            return m_update_signal.connect(f);
+        }
+        return {};
     }
 
     ConnectionPtr_t IParam::registerUpdateNotifier(const ISignalRelay::Ptr& relay)
     {
         Lock lock(mtx());
-        auto typed = std::dynamic_pointer_cast<TSignalRelay<Update_s>>(relay);
-        if (typed)
+        auto tmp = relay;
+        if (relay->getSignature() == m_data_update.getSignature())
         {
-            return m_update_signal.connect(typed);
+            return m_data_update.connect(tmp);
+        }
+        if (relay->getSignature() == m_update_signal.getSignature())
+        {
+            return m_update_signal.connect(tmp);
         }
         return {};
     }
@@ -171,23 +179,22 @@ namespace mo
     ConnectionPtr_t IParam::registerDeleteNotifier(ISlot* f)
     {
         Lock lock(mtx());
-        auto typed = dynamic_cast<DeleteSlot_t*>(f);
-        if (typed)
+        if (m_delete_signal.getSignature() == f->getSignature())
         {
-            return m_delete_signal.connect(typed);
+            return m_delete_signal.connect(f);
         }
-        return std::shared_ptr<Connection>();
+        return {};
     }
 
     ConnectionPtr_t IParam::registerDeleteNotifier(const ISignalRelay::Ptr& relay)
     {
         Lock lock(mtx());
-        auto typed = std::dynamic_pointer_cast<TSignalRelay<void(const IParam*)>>(relay);
-        if (typed)
+        if (relay->getSignature() == m_delete_signal.getSignature())
         {
-            return m_delete_signal.connect(typed);
+            auto tmp = relay;
+            m_delete_signal.connect(tmp);
         }
-        return std::shared_ptr<Connection>();
+        return {};
     }
 
     IParam* IParam::emitUpdate(const Header& header, UpdateFlags flags_)
@@ -203,6 +210,23 @@ namespace mo
         modified(true);
         lock.unlock();
         m_update_signal(this, m_header, flags_);
+        return this;
+    }
+
+    IParam* IParam::emitUpdate(const IDataContainerPtr_t& data, UpdateFlags flags)
+    {
+        Lock lock(mtx());
+        uint64_t fn = data->getHeader().frame_number;
+        if (fn == std::numeric_limits<uint64_t>::max())
+        {
+            fn = m_header.frame_number + 1;
+        }
+        m_header = data->getHeader();
+        m_header.frame_number = fn;
+        modified(true);
+        lock.unlock();
+        m_data_update(data, this, flags);
+        m_update_signal(this, m_header, flags);
         return this;
     }
 

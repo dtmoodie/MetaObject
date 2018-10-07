@@ -34,6 +34,7 @@ namespace mo
     class TypeInfo;
     class IParam;
     class ICoordinateSystem;
+    struct IDataContainer;
 
     class IParam;
     class InputParam;
@@ -70,5 +71,8 @@ namespace mo
     class TSignalRelay;
 
     using Update_s = void(IParam*, Header, UpdateFlags);
+    using DataUpdate_s = void(const std::shared_ptr<IDataContainer>&, IParam*, UpdateFlags);
     using UpdateSlot_t = TSlot<Update_s>;
+    using IDataContainerPtr_t = std::shared_ptr<IDataContainer>;
+    using IDataContainerConstPtr_t = std::shared_ptr<const IDataContainer>;
 }

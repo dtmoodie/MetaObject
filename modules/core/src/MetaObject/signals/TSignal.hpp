@@ -51,9 +51,9 @@ namespace mo
         R operator()(Context* ctx, T... args);
         virtual const TypeInfo& getSignature() const;
 
-        std::shared_ptr<Connection> connect(ISlot* slot);
-        std::shared_ptr<Connection> connect(std::shared_ptr<ISignalRelay>& relay);
-        std::shared_ptr<Connection> connect(std::shared_ptr<TSignalRelay<R(T...)>>& relay);
+        ConnectionPtr_t connect(ISlot* slot);
+        ConnectionPtr_t connect(ISignalRelay::Ptr& relay);
+        ConnectionPtr_t connect(std::shared_ptr<TSignalRelay<R(T...)>>& relay);
 
         bool disconnect();
         bool disconnect(ISlot* slot);

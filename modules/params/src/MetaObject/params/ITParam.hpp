@@ -169,7 +169,7 @@ namespace mo
             mo::Lock lock(this->mtx());
             _data = data;
         }
-        emitUpdate(_data->header);
+        emitUpdate(_data);
         _typed_update_signal(_data, this, ValueUpdated_e);
     }
 

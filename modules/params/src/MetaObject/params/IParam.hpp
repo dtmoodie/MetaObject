@@ -33,6 +33,7 @@ namespace mo
     struct IDataContainer;
 
     using UpdateSignal_t = TSignal<Update_s>;
+    using DataUpdateSignal_t = TSignal<DataUpdate_s>;
     using UpdateSlotPtr_t = std::shared_ptr<UpdateSlot_t>;
 
     using DeleteSlot_t = TSlot<void(const IParam*)>;
@@ -176,6 +177,7 @@ namespace mo
 
         // commit changes to a Param, updates underlying meta info and emits signals accordingly
         virtual IParam* emitUpdate(const Header& header = Header(), UpdateFlags flags_ = ValueUpdated_e);
+        virtual IParam* emitUpdate(const IDataContainerPtr_t& data, UpdateFlags flags = ValueUpdated_e);
 
         // commit a Param's value copying metadata info from another parmaeter
         virtual IParam* emitUpdate(const IParam& other, UpdateFlags flags_ = ValueUpdated_e);
@@ -216,6 +218,7 @@ namespace mo
         std::string m_tree_root;
         mutable EnumClassBitset<ParamFlags> m_flags;
         UpdateSignal_t m_update_signal;
+        DataUpdateSignal_t m_data_update;
         DeleteSignal_t m_delete_signal;
 
       private:
