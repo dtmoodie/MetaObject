@@ -1,4 +1,5 @@
 #include "TMultiInput-inl.hpp"
+#include <boost/thread/recursive_mutex.hpp>
 
 namespace mo
 {
@@ -102,9 +103,9 @@ namespace mo
     {
         if (m_current_input)
         {
-            return m_current_input->getInputTimestamp();
+            return m_current_input->getInputFrameNumber();
         }
-        return {};
+        return std::numeric_limits<uint64_t>::max();
     }
 
     OptionalTime_t IMultiInput::getTimestamp() const

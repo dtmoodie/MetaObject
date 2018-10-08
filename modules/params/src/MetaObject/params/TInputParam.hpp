@@ -33,7 +33,7 @@ namespace mo
     class MO_EXPORTS TInputParamPtr : virtual public ITInputParam<T>
     {
       public:
-        using ContainerPtr_t = typename ITParam<T>::ContainerPtr_t;
+        using TContainerPtr_t = typename ITParam<T>::TContainerPtr_t;
 
         TInputParamPtr(const std::string& name = "", T** user_var_ = nullptr)
             : ITInputParam<T>(name)
@@ -47,7 +47,7 @@ namespace mo
             m_user_var = user_var_;
         }
 
-        virtual void updateData(const ContainerPtr_t& data)
+        virtual void updateData(const TContainerPtr_t& data)
         {
             Lock lock(this->mtx());
             ITInputParam<T>::updateData(data);
@@ -65,7 +65,7 @@ namespace mo
     class MO_EXPORTS TInputParamPtr<std::shared_ptr<T>> : virtual public ITInputParam<T>
     {
       public:
-        using ContainerPtr_t = typename ITParam<T>::ContainerPtr_t;
+        using TContainerPtr_t = typename ITParam<T>::TContainerPtr_t;
 
         TInputParamPtr(const std::string& name = "", std::shared_ptr<T>* user_var_ = nullptr)
             : ITInputParam<T>(name)
@@ -79,7 +79,7 @@ namespace mo
             m_user_var = user_var_;
         }
 
-        virtual void updateData(const ContainerPtr_t& data)
+        virtual void updateData(const TContainerPtr_t& data)
         {
             Lock lock(this->mtx());
             ITInputParam<T>::updateData(data);

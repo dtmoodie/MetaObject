@@ -54,40 +54,9 @@ namespace mo
         TMultiInput();
 
         void setUserDataPtr(std::tuple<const Types*...>* user_var_);
-        template <class T>
-        inline void acceptsInput(IParam* input, bool* success) const;
-
-        template <class T>
-        inline void acceptsInput(const TypeInfo& type, bool* success) const;
-
-        template <class T>
-        inline void apply(OptionalTime_t* ts) const;
-
-        template <class T>
-        inline void apply(size_t* fn) const;
 
         template <class T>
         inline void apply(std::tuple<const Types*...>* user_var_);
-        template <class T>
-        inline void apply(Mutex_t* mtx);
-        template <class T>
-        inline void apply(Context* ctx);
-        template <class T>
-        inline void apply(const OptionalTime_t& ts, size_t* fn, bool* success);
-        template <class T>
-        inline void apply(size_t fn, OptionalTime_t* ts, bool* success);
-        template <class T>
-        inline void apply(std::shared_ptr<IParam> input, bool* success);
-        template <class T>
-        inline void apply(IParam* input, bool* success);
-
-        template <class T, class Slot>
-        inline void apply(std::vector<ConnectionPtr_t>& connection, Slot slot);
-
-        template <class T>
-        inline void apply(bool* modified) const;
-        template <class T>
-        inline void apply(const bool modified);
 
       private:
         std::tuple<TInputParamPtr<Types>...> m_inputs;

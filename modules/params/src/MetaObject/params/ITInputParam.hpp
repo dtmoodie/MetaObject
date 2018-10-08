@@ -13,7 +13,7 @@ namespace mo
     struct ITInputParam : virtual public ITParam<T>, virtual public InputParam
     {
       public:
-        using ContainerPtr_t = typename ITParam<T>::ContainerPtr_t;
+        using TContainerPtr_t = typename ITParam<T>::TContainerPtr_t;
         using ContainerConstPtr_t = typename ITParam<T>::ContainerConstPtr_t;
         using TUpdateSlot_t = typename ITParam<T>::TUpdateSlot_t;
 
@@ -34,13 +34,13 @@ namespace mo
 
       protected:
         virtual void onInputDelete(IParam const* param);
-        virtual void onInputUpdate(ContainerPtr_t, IParam*, UpdateFlags);
+        virtual void onInputUpdate(TContainerPtr_t, IParam*, UpdateFlags);
 
       private:
         TUpdateSlot_t m_update_slot;
         TSlot<void(IParam const*)> m_delete_slot;
         std::shared_ptr<IParam> m_shared_input;
-        ITParam<T>* m_input;
+        IParam* m_input;
     };
 
     template <class T>
@@ -48,15 +48,8 @@ namespace mo
         : m_input(nullptr)
         , ITParam<T>(name)
     {
-        m_update_slot = std::bind(&ITInputParam<T>::onInputUpdate,
-                                  this,
-                                  std::placeholders::_1,
-                                  std::placeholders::_2,
-                                  std::placeholders::_3,
-                                  std::placeholders::_4,
-                                  std::placeholders::_5,
-                                  std::placeholders::_6,
-                                  std::placeholders::_7);
+        m_update_slot = std::bind(
+            &ITInputParam<T>::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
         m_delete_slot = std::bind(&ITInputParam<T>::onInputDelete, this, std::placeholders::_1);
     }
 
@@ -210,7 +203,7 @@ namespace mo
     }
 
     template <class T>
-    void ITInputParam<T>::onInputUpdate(ContainerPtr_t data, IParam* param, UpdateFlags fg)
+    void ITInputParam<T>::onInputUpdate(TContainerPtr_t data, IParam* param, UpdateFlags fg)
     {
         const auto header = data->getHeader();
         if (fg == mo::BufferUpdated_e && param->checkFlags(mo::ParamFlags::Buffer_e))

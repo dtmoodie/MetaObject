@@ -34,9 +34,9 @@ namespace mo
     {
       public:
         using Container_t = TDataContainer<T>;
-        using ContainerPtr_t = std::shared_ptr<Container_t>;
+        using TContainerPtr_t = std::shared_ptr<Container_t>;
         using ContainerConstPtr_t = std::shared_ptr<const Container_t>;
-        using TUpdate_s = void(ContainerPtr_t, IParam*, UpdateFlags);
+        using TUpdate_s = void(TContainerPtr_t, IParam*, UpdateFlags);
         using TUpdateSignal_t = TSignal<TUpdate_s>;
         using TUpdateSlot_t = TSlot<TUpdate_s>;
 
@@ -50,22 +50,17 @@ namespace mo
 
         virtual void updateData(const T& data, const Header& header);
         virtual void updateData(T&& data, Header&& header);
-        virtual void updateData(const ContainerPtr_t& data);
-
-        virtual ContainerPtr_t getTypedData(const Header& desired = Header());
-        virtual ContainerConstPtr_t getTypedData(const Header& desired = Header()) const;
+        virtual void updateData(const TContainerPtr_t& data);
 
         TypeInfo getTypeInfo() const override;
 
-        virtual ConnectionPtr_t registerUpdateNotifier(UpdateSlot_t* f) override;
-        virtual ConnectionPtr_t registerUpdateNotifier(TSignalRelay<Update_s>::Ptr& relay) override;
         virtual ConnectionPtr_t registerUpdateNotifier(ISlot* f) override;
-        virtual ConnectionPtr_t registerUpdateNotifier(ISignalRelay::Ptr relay) override;
+        virtual ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr& relay) override;
 
         virtual void visit(IReadVisitor*) override;
         virtual void visit(IWriteVisitor*) const override;
 
-        bool canAccess() const;
+        bool isValid() const;
         ConstAccessToken<T> read() const;
         AccessToken<T> access();
 
@@ -81,6 +76,7 @@ namespace mo
     ///////////////////////////////////////////////////////////////////////////////////////
     /// implementation
     ///////////////////////////////////////////////////////////////////////////////////////
+
     template <class T>
     ITParam<T>::ITParam(const std::string& name, ParamFlags flags)
         : IParam(name, flags)
@@ -163,7 +159,7 @@ namespace mo
     }
 
     template <class T>
-    void ITParam<T>::updateData(const ContainerPtr_t& data)
+    void ITParam<T>::updateData(const TContainerPtr_t& data)
     {
         {
             mo::Lock lock(this->mtx());
@@ -177,26 +173,6 @@ namespace mo
     TypeInfo ITParam<T>::getTypeInfo() const
     {
         return _type_info;
-    }
-
-    template <class T>
-    ConnectionPtr_t ITParam<T>::registerUpdateNotifier(UpdateSlot_t* f)
-    {
-        if (f->getSignature() == _typed_update_signal.getSignature())
-        {
-            return _typed_update_signal.connect(f);
-        }
-        return IParam::registerUpdateNotifier(f);
-    }
-
-    template <class T>
-    ConnectionPtr_t ITParam<T>::registerUpdateNotifier(TSignalRelay<Update_s>::Ptr& relay)
-    {
-        if (relay->getSignature() == _typed_update_signal.getSignature())
-        {
-            return _typed_update_signal.connect(relay);
-        }
-        return IParam::registerUpdateNotifier(relay);
     }
 
     template <class T>
@@ -214,12 +190,12 @@ namespace mo
     }
 
     template <class T>
-    ConnectionPtr_t ITParam<T>::registerUpdateNotifier(ISignalRelay::Ptr relay)
+    ConnectionPtr_t ITParam<T>::registerUpdateNotifier(const ISignalRelay::Ptr& relay)
     {
         if (relay->getSignature() == _typed_update_signal.getSignature())
         {
-            auto typed = std::dynamic_pointer_cast<TSignalRelay<TUpdate_s>>(relay);
-            return _typed_update_signal.connect(typed);
+            auto tmp = relay;
+            return _typed_update_signal.connect(tmp);
         }
         return IParam::registerUpdateNotifier(relay);
     }
@@ -242,65 +218,6 @@ namespace mo
         {
             _data->visit(visitor);
         }
-    }
-
-    template <class T>
-    typename ITParam<T>::ContainerPtr_t ITParam<T>::getTypedData(const Header& desired)
-    {
-
-        mo::Lock lock(this->mtx());
-        if (_data)
-        {
-            if (!desired.timestamp && desired.frame_number == std::numeric_limits<uint64_t>::max())
-            {
-                return _data;
-            }
-            else
-            {
-                if (desired.timestamp && _data->header.timestamp == desired.timestamp)
-                {
-                    return _data;
-                }
-                else
-                {
-                    if (desired.frame_number != std::numeric_limits<uint64_t>::max() &&
-                        desired.frame_number == _data->header.frame_number)
-                    {
-                        return _data;
-                    }
-                }
-            }
-        }
-        return {};
-    }
-
-    template <class T>
-    typename ITParam<T>::ContainerConstPtr_t ITParam<T>::getTypedData(const Header& desired) const
-    {
-        mo::Lock lock(this->mtx());
-        if (_data)
-        {
-            if (!desired.timestamp && desired.frame_number == std::numeric_limits<uint64_t>::max())
-            {
-                return _data;
-            }
-            else
-            {
-                if (desired.timestamp && _data->header.timestamp == desired.timestamp)
-                {
-                    return _data;
-                }
-                else
-                {
-                    if (desired.frame_number != std::numeric_limits<uint64_t>::max() &&
-                        desired.frame_number == _data->header.frame_number)
-                    {
-                        return _data;
-                    }
-                }
-            }
-        }
-        return {};
     }
 
     template <class T>
@@ -362,7 +279,7 @@ namespace mo
     }
 
     template <class T>
-    bool ITParam<T>::canAccess() const
+    bool ITParam<T>::isValid() const
     {
         return _data != nullptr;
     }
@@ -382,4 +299,7 @@ namespace mo
         MO_ASSERT(_data != nullptr);
         return {std::move(lock), *this, _data->data};
     }
+
+    template <class T>
+    const TypeInfo ITParam<T>::_type_info = TypeInfo(typeid(T));
 }

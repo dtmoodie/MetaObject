@@ -20,149 +20,40 @@ https://github.com/dtmoodie/MetaObject
 
 #include "BufferConstructor.hpp"
 #include "IBuffer.hpp"
-#include "MetaObject/params/ITInputParam.hpp"
-#include "MetaObject/params/MetaParam.hpp"
-#include "MetaObject/params/ParamConstructor.hpp"
+
+#include "MetaObject/params/InputParam.hpp"
+
 #include <map>
 
 namespace mo
 {
     class Context;
-    namespace Buffer
+    namespace buffer
     {
-        struct SequenceKey
-        {
-            SequenceKey(OptionalTime_t ts,
-                        size_t fn = 0,
-                        const std::shared_ptr<ICoordinateSystem>& cs_ = nullptr,
-                        Context* ctx_ = nullptr)
-                : ts(ts), fn(fn), cs(cs_), ctx(ctx_)
-            {
-            }
-            SequenceKey(mo::Time_t ts_) : ts(ts_), fn(0), cs(nullptr), ctx(nullptr) {}
-            SequenceKey(size_t fn) : fn(fn) {}
-            OptionalTime_t ts;
-            size_t fn;
-            std::shared_ptr<ICoordinateSystem> cs;
-            Context* ctx;
-        };
-
-        inline std::ostream& operator<<(std::ostream& os, const SequenceKey& key)
-        {
-            if (key.ts)
-            {
-                os << *key.ts << " ";
-            }
-            else
-            {
-            }
-            if (key.fn != std::numeric_limits<size_t>::max())
-            {
-                os << key.fn;
-            }
-            else
-            {
-            }
-
-            return os;
-        }
-
-        inline bool operator<(const SequenceKey& lhs, const SequenceKey& rhs)
-        {
-            if (lhs.ts && rhs.ts)
-            {
-                return *lhs.ts < *rhs.ts;
-            }
-            else
-            {
-                return lhs.fn < rhs.fn;
-            }
-        }
-
-        template <typename T>
-        class Map : public ITInputParam<T>, public IBuffer
+        class Map : public IBuffer, public InputParam
         {
           public:
             static const ParamType Type = Map_e;
-            typedef T ValueType;
-            typedef typename ParamTraits<T>::Storage_t Storage_t;
-            typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
-            typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
-            typedef typename ParamTraits<T>::Input_t Input_t;
-            typedef void(TUpdateSig_t)(ConstStorageRef_t,
-                                       IParam*,
-                                       Context*,
-                                       OptionalTime_t,
-                                       size_t,
-                                       const std::shared_ptr<ICoordinateSystem>&,
-                                       UpdateFlags);
-            typedef TSignal<TUpdateSig_t> TUpdateSignal_t;
-            typedef TSlot<TUpdateSig_t> TUpdateSlot_t;
 
             Map(const std::string& name = "");
 
-            virtual bool getData(InputStorage_t& data,
-                                 const OptionalTime_t& ts = OptionalTime_t(),
-                                 Context* ctx = nullptr,
-                                 size_t* fn_ = nullptr);
+            virtual void setFrameBufferCapacity(const uint64_t size) override;
+            virtual void setTimePaddingCapacity(const mo::Time_t& time) override;
+            virtual boost::optional<uint64_t> getFrameBufferCapacity() const override;
+            virtual OptionalTime_t getTimePaddingCapacity() const override;
 
-            virtual bool
-            getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
-
-            virtual void setFrameBufferCapacity(size_t size);
-            virtual void setTimePaddingCapacity(mo::Time_t time);
-            virtual boost::optional<size_t> getFrameBufferCapacity();
-            virtual OptionalTime_t getTimePaddingCapacity();
-
-            virtual size_t getSize();
-            virtual bool getTimestampRange(mo::Time_t& start, mo::Time_t& end);
-            virtual bool getFrameNumberRange(size_t& start, size_t& end);
-            virtual ParamType getBufferType() const { return Map_e; }
+            virtual size_t getSize() const override;
+            virtual bool getTimestampRange(mo::OptionalTime_t& start, mo::OptionalTime_t& end) override;
+            virtual bool getFrameNumberRange(uint64_t& start, uint64_t& end) override;
+            virtual ParamType getBufferType() const override;
 
           protected:
-            bool updateDataImpl(const Storage_t& data,
-                                const OptionalTime_t& ts,
-                                Context* ctx,
-                                size_t fn,
-                                const std::shared_ptr<ICoordinateSystem>& cs) override;
+            void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags);
 
-            bool updateDataImpl(Storage_t&& data,
-                                const OptionalTime_t& ts,
-                                Context* ctx,
-                                size_t fn,
-                                const std::shared_ptr<ICoordinateSystem>& cs) override;
-
-            void onInputUpdate(ConstStorageRef_t,
-                               IParam*,
-                               Context*,
-                               OptionalTime_t,
-                               size_t,
-                               const std::shared_ptr<ICoordinateSystem>&,
-                               UpdateFlags) override;
-            typename std::map<SequenceKey, InputStorage_t>::iterator search(const OptionalTime_t& ts);
-            typename std::map<SequenceKey, InputStorage_t>::iterator search(size_t fn);
-
-            std::map<SequenceKey, InputStorage_t> _data_buffer;
+          private:
+            std::map<Header, IDataContainerPtr_t> _data_buffer;
+            TSlot<DataUpdate_s> m_update_slot;
+            IParam* m_input_param;
         };
     }
-
-#define MO_METAPARAM_INSTANCE_MAP_(N)                                                                                  \
-    template <class T>                                                                                                 \
-    struct MetaParam<T, N, void> : public MetaParam<T, N - 1, void>                                                    \
-    {                                                                                                                  \
-        static ParamConstructor<Buffer::Map<T>> _map_param_constructor;                                                \
-        static BufferConstructor<Buffer::Map<T>> _map_constructor;                                                     \
-        MetaParam<T, N>(SystemTable * table, const char* name) : MetaParam<T, N - 1>(table, name)                      \
-        {                                                                                                              \
-            (void)&_map_param_constructor;                                                                             \
-            (void)&_map_constructor;                                                                                   \
-        }                                                                                                              \
-    };                                                                                                                 \
-    template <class T>                                                                                                 \
-    ParamConstructor<Buffer::Map<T>> MetaParam<T, N, void>::_map_param_constructor;                                    \
-    template <class T>                                                                                                 \
-    BufferConstructor<Buffer::Map<T>> MetaParam<T, N, void>::_map_constructor;
-
-    MO_METAPARAM_INSTANCE_MAP_(__COUNTER__)
 }
-#include "detail/MapImpl.hpp"

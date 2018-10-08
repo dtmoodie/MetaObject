@@ -22,7 +22,7 @@ namespace mo
     template <typename T>
     struct MO_EXPORTS TParamPtr : virtual public ITParam<T>
     {
-        using ContainerPtr_t = typename ITParam<T>::ContainerPtr_t;
+        using TContainerPtr_t = typename ITParam<T>::TContainerPtr_t;
 
         TParamPtr(const std::string& name = "",
                   T* ptr = nullptr,
@@ -52,7 +52,7 @@ namespace mo
             m_ptr = ptr;
             m_owns_data = owns_data;
         }
-        void updateData(const ContainerPtr_t& data)
+        void updateData(const TContainerPtr_t& data)
         {
             ITParam<T>::updateData(data);
             updateUserData(*data);
@@ -113,7 +113,7 @@ namespace mo
     template <typename T>
     struct MO_EXPORTS TParamPtr<std::shared_ptr<T>> : virtual public ITParam<T>
     {
-        using ContainerPtr_t = typename ITParam<T>::ContainerPtr_t;
+        using TContainerPtr_t = typename ITParam<T>::TContainerPtr_t;
 
         TParamPtr(const std::string& name = "",
                   std::shared_ptr<T>* ptr = nullptr,
@@ -144,7 +144,7 @@ namespace mo
             m_owns_data = owns_data;
         }
 
-        virtual void updateData(const ContainerPtr_t& data) override
+        virtual void updateData(const TContainerPtr_t& data) override
         {
             ITParam<T>::updateData(data);
             updateUserData(data);
@@ -163,7 +163,7 @@ namespace mo
         }
 
       protected:
-        void updateUserData(const ContainerPtr_t& data)
+        void updateUserData(const TContainerPtr_t& data)
         {
             if (m_ptr)
             {

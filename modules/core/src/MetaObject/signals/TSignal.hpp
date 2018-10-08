@@ -1,13 +1,17 @@
 #pragma once
+
+#include "ISignal.hpp"
+#include "ISignalRelay.hpp"
+#include "TSlot.hpp"
+
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
 #include "MetaObject/logging/logging.hpp"
-#include "MetaObject/signals/ISignal.hpp"
-#include "MetaObject/signals/TSlot.hpp"
 
 #include <memory>
 #include <mutex>
 #include <vector>
+
 namespace mo
 {
     class IMetaObject;

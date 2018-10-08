@@ -22,8 +22,8 @@ https://github.com/dtmoodie/MetaObject
 #include "MetaObject/core/detail/Forward.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "ParamTags.hpp"
+#include "TDataContainer.hpp"
 #include <MetaObject/detail/Export.hpp>
-
 #include <string>
 
 namespace mo
@@ -103,6 +103,11 @@ namespace mo
 
         virtual IContainerPtr_t getData(const Header& desired = Header()) = 0;
         virtual IContainerConstPtr_t getData(const Header& desired = Header()) const = 0;
+
+        template <class T>
+        typename TDataContainer<T>::Ptr getData(const Header& desired = Header());
+        template <class T>
+        typename TDataContainer<T>::ConstPtr getData(const Header& desired = Header()) const;
     };
 
     class MO_EXPORTS IParam : public ParamBase
@@ -217,11 +222,11 @@ namespace mo
         std::string m_name;
         std::string m_tree_root;
         mutable EnumClassBitset<ParamFlags> m_flags;
+
+      private:
         UpdateSignal_t m_update_signal;
         DataUpdateSignal_t m_data_update;
         DeleteSignal_t m_delete_signal;
-
-      private:
         // Set to true if modified by the user interface etc, set to false by the owning object.
         bool m_modified = false;
         int m_subscribers = 0;
@@ -245,5 +250,27 @@ namespace mo
         m_flags =
             GetKeywordInputDefault<tag::param_flags>(EnumClassBitset<ParamFlags>(mo::ParamFlags::Control_e), args...);
         m_tree_root = GetKeywordInputDefault<tag::tree_root>("", args...);
+    }
+
+    template <class T>
+    typename TDataContainer<T>::Ptr ParamBase::getData(const Header& desired)
+    {
+        auto data = getData(desired);
+        if (data)
+        {
+            return std::static_pointer_cast<TDataContainer<T>>(data);
+        }
+        return {};
+    }
+
+    template <class T>
+    typename TDataContainer<T>::ConstPtr ParamBase::getData(const Header& desired) const
+    {
+        auto data = getData(desired);
+        if (data)
+        {
+            return std::static_pointer_cast<const TDataContainer<T>>(data);
+        }
+        return {};
     }
 }
