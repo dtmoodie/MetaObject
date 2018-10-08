@@ -19,7 +19,7 @@ namespace mo
             virtual uint64_t getSize() const = 0;
             virtual bool getTimestampRange(mo::OptionalTime_t& start, mo::OptionalTime_t& end) = 0;
             virtual bool getFrameNumberRange(uint64_t& start, uint64_t& end) = 0;
-            virtual ParamType getBufferType() const = 0;
+            virtual BufferFlags getBufferType() const = 0;
         };
     }
 }

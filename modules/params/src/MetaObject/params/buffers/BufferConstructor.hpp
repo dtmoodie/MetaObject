@@ -3,26 +3,17 @@
 
 namespace mo
 {
-    template <class T>
-    class BufferConstructor
+    template <class Buffer>
+    struct BufferConstructor
     {
-      public:
         BufferConstructor()
         {
-            static_assert(T::Type != TParam_e, "T Param not a buffer");
-            Buffer::BufferFactory::registerFunction(TypeInfo(typeid(typename T::ValueType)),
-                                                    std::bind(&BufferConstructor<T>::create, std::placeholders::_1),
-                                                    T::Type);
+            buffer::BufferFactory::registerConstructor(std::bind(&BufferConstructor<Buffer>::construct), Buffer::type);
         }
-        static IParam* create(IParam* input)
+
+        static InputParam* construct()
         {
-            T* ptr = new T();
-            if (ptr->setInput(input))
-            {
-                return ptr;
-            }
-            delete ptr;
-            return nullptr;
+            return new Buffer();
         }
     };
 }

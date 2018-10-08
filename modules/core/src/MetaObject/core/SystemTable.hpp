@@ -1,9 +1,9 @@
 #pragma once
+#include <MetaObject/core/TypeTable.hpp>
 #include <MetaObject/core/detail/Allocator.hpp>
 #include <MetaObject/detail/Export.hpp>
 #include <MetaObject/detail/TypeInfo.hpp>
 #include <MetaObject/logging/logging.hpp>
-#include <MetaObject/core/TypeTable.hpp>
 
 #include <RuntimeObjectSystem/ObjectInterfacePerModule.h>
 #include <RuntimeObjectSystem/shared_ptr.hpp>
@@ -25,7 +25,11 @@ struct TSingletonContainer : public ISingletonContainer
 template <typename T>
 struct OwningContainer : public TSingletonContainer<T>
 {
-    OwningContainer(std::unique_ptr<T>&& ptr_) : m_ptr(std::move(ptr_)) { this->ptr = m_ptr.get(); }
+    OwningContainer(std::unique_ptr<T>&& ptr_)
+        : m_ptr(std::move(ptr_))
+    {
+        this->ptr = m_ptr.get();
+    }
 
   private:
     std::unique_ptr<T> m_ptr;
@@ -38,8 +42,17 @@ template <typename T>
 struct SharingContainer<T, typename std::enable_if<std::is_base_of<IObject, T>::value>::type>
     : public TSingletonContainer<T>
 {
-    SharingContainer(T* ptr_) : m_ptr(ptr_) { this->ptr = m_ptr.get(); }
-    SharingContainer(const rcc::shared_ptr<T>& ptr_) : m_ptr(ptr_) { this->ptr = m_ptr.get(); }
+    SharingContainer(T* ptr_)
+        : m_ptr(ptr_)
+    {
+        this->ptr = m_ptr.get();
+    }
+    SharingContainer(const rcc::shared_ptr<T>& ptr_)
+        : m_ptr(ptr_)
+    {
+        this->ptr = m_ptr.get();
+    }
+
   private:
     rcc::shared_ptr<T> m_ptr;
 };
@@ -48,8 +61,16 @@ template <typename T>
 struct SharingContainer<T, typename std::enable_if<!std::is_base_of<IObject, T>::value>::type>
     : public TSingletonContainer<T>
 {
-    SharingContainer(T* ptr_) : m_ptr(ptr_) { this->ptr = m_ptr.get(); }
-    SharingContainer(const std::shared_ptr<T>& ptr_) : m_ptr(ptr_) { this->ptr = m_ptr.get(); }
+    SharingContainer(T* ptr_)
+        : m_ptr(ptr_)
+    {
+        this->ptr = m_ptr.get();
+    }
+    SharingContainer(const std::shared_ptr<T>& ptr_)
+        : m_ptr(ptr_)
+    {
+        this->ptr = m_ptr.get();
+    }
 
   private:
     std::shared_ptr<T> m_ptr;
@@ -58,7 +79,10 @@ struct SharingContainer<T, typename std::enable_if<!std::is_base_of<IObject, T>:
 template <typename T>
 struct NonOwningContainer : public TSingletonContainer<T>
 {
-    NonOwningContainer(T* ptr_) { this->ptr = ptr_; }
+    NonOwningContainer(T* ptr_)
+    {
+        this->ptr = ptr_;
+    }
 };
 
 struct SystemInfo
@@ -74,8 +98,8 @@ namespace mo
 struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
 {
   public:
-      SystemTable(const SystemTable& other) = delete;
-      SystemTable& operator=(const SystemTable& other) = delete;
+    SystemTable(const SystemTable& other) = delete;
+    SystemTable& operator=(const SystemTable& other) = delete;
 
     static std::shared_ptr<SystemTable> instance();
     static void setInstance(const std::shared_ptr<SystemTable>& table);
@@ -117,24 +141,36 @@ struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
 };
 
 template <class T, class U = T>
-T* singleton()
+T* singleton(SystemTable* table)
 {
-    auto module = PerModuleInterface::GetInstance();
     T* ptr = nullptr;
-    if (module)
+    if (table)
     {
-        auto table = module->GetSystemTable();
-        if (table)
+        ptr = table->getSingleton<T>();
+        if (ptr == nullptr)
         {
-            ptr = table->getSingleton<T>();
-            if (ptr == nullptr)
-            {
-                ptr = table->setSingleton(std::unique_ptr<T>(new U()));
-                MO_LOG(info) << "Creating new " << mo::TypeTable::instance(table).typeToName(mo::TypeInfo(typeid(U))) << " singleton instance " << static_cast<const void*>(ptr) << " in system table: " << static_cast<const void*>(table);
-            }
+            ptr = table->setSingleton(std::unique_ptr<T>(new U()));
+            MO_LOG(info) << "Creating new " << mo::TypeTable::instance(table).typeToName(mo::TypeInfo(typeid(U)))
+                         << " singleton instance " << static_cast<const void*>(ptr)
+                         << " in system table: " << static_cast<const void*>(table);
         }
     }
     return ptr;
+}
+
+template <class T, class U = T>
+T* singleton()
+{
+    auto module = PerModuleInterface::GetInstance();
+    auto table = module->GetSystemTable();
+    if (table)
+    {
+        return singleton<T, U>(table);
+    }
+    else
+    {
+        return nullptr;
+    }
 }
 
 template <class T>

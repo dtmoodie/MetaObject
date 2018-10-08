@@ -70,16 +70,12 @@ EnumClassBitset<ParamFlags> mo::stringToParamFlags(const std::string& str)
     return output;
 }
 
-std::string mo::paramTypeToString(ParamType flags)
+std::string mo::paramTypeToString(BufferFlags flags)
 {
     switch (flags)
     {
-    case TParam_e:
-        return "T";
     case CircularBuffer_e:
         return "circularbuffer";
-    case ConstMap_e:
-        return "constmap";
     case Map_e:
         return "map";
     case StreamBuffer_e:
@@ -102,14 +98,10 @@ std::string mo::paramTypeToString(ParamType flags)
     return "";
 }
 
-ParamType mo::stringToParamType(const std::string& str)
+BufferFlags mo::stringToParamType(const std::string& str)
 {
-    if (str == "T")
-        return TParam_e;
-    else if (str == "circularbuffer")
+    if (str == "circularbuffer")
         return CircularBuffer_e;
-    else if (str == "constmap")
-        return ConstMap_e;
     else if (str == "map")
         return Map_e;
     else if (str == "StreamBuffer")

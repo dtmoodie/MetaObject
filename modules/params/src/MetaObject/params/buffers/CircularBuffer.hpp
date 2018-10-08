@@ -31,6 +31,7 @@ namespace mo
     {
         struct CircularBuffer : public IBuffer, public InputParam
         {
+            static constexpr const auto type = CircularBuffer_e;
             CircularBuffer();
 
             virtual void setFrameBufferCapacity(const uint64_t size) override;
@@ -41,7 +42,7 @@ namespace mo
             virtual uint64_t getSize() const override;
             bool getTimestampRange(mo::OptionalTime_t& start, mo::OptionalTime_t& end) override;
             bool getFrameNumberRange(uint64_t& start, uint64_t& end) override;
-            virtual ParamType getBufferType() const override;
+            virtual BufferFlags getBufferType() const override;
 
           protected:
             void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags);

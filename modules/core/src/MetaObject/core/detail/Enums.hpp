@@ -13,11 +13,24 @@ namespace mo
     {
       public:
         typedef typename std::underlying_type<T>::type UnderlyingType;
-        EnumClassBitset() : c() {}
-        EnumClassBitset(UnderlyingType v) : c(v) {}
-        EnumClassBitset(T v) : c() { c.set(get_value(v)); }
+        EnumClassBitset()
+            : c()
+        {
+        }
+        EnumClassBitset(UnderlyingType v)
+            : c(v)
+        {
+        }
+        EnumClassBitset(T v)
+            : c()
+        {
+            c.set(get_value(v));
+        }
 
-        bool test(T pos) const { return c.test(get_value(pos)); }
+        bool test(T pos) const
+        {
+            return c.test(get_value(pos));
+        }
 
         EnumClassBitset& reset(T pos)
         {
@@ -39,7 +52,10 @@ namespace mo
 
       private:
         std::bitset<static_cast<UnderlyingType>(EnumTraits<T>::max)> c;
-        typename std::underlying_type<T>::type get_value(T v) const { return static_cast<UnderlyingType>(v); }
+        typename std::underlying_type<T>::type get_value(T v) const
+        {
+            return static_cast<UnderlyingType>(v);
+        }
     };
 
     enum class ParamFlags
@@ -93,27 +109,26 @@ namespace mo
     MO_EXPORTS std::string paramFlagsToString(EnumClassBitset<ParamFlags> flags);
     MO_EXPORTS EnumClassBitset<ParamFlags> stringToParamFlags(const std::string& str);
 
-    enum ParamType
+    enum BufferFlags
     {
-        Default_e = -1,
-        TParam_e = 0,
-        CircularBuffer_e,
-        ConstMap_e,
-        Map_e,
-        StreamBuffer_e,
-        BlockingStreamBuffer_e,
-        DroppingStreamBuffer_e,
-        NNStreamBuffer_e,
-        Queue_e,
-        BlockingQueue_e,
-        DroppingQueue_e,
-        ForceBufferedConnection_e = 1024,
-        ForceDirectConnection_e = 2048
+        DIRECT,
+        CIRCULAR_BUFFER,
+        MAP,
+        STREAM_BUFFER,
+        BLOCKING_STREAM_BUFFER,
+        DROPPING_STREAM_BUFFER,
+        NEAREST_NEIGHBOR_BUFFER,
+        QUEUE,
+        BLOCKING_QUEUE,
+        DROPPING_QUEUE,
+
+        FORCE_BUFFERED = 1024,
+        FORCE_DIRECT = 2048
     };
 
-    MO_EXPORTS std::string paramTypeToString(ParamType type);
-    MO_EXPORTS ParamType stringToParamType(const std::string& str);
+    MO_EXPORTS std::string paramTypeToString(BufferFlags type);
+    MO_EXPORTS BufferFlags stringToParamType(const std::string& str);
 
-    MO_EXPORTS ParamType getDefaultBufferType(const Context* source, const Context* dest);
-    MO_EXPORTS void setDefaultBufferType(const Context* source, const Context* dest, ParamType type);
+    MO_EXPORTS BufferFlags getDefaultBufferType(const Context* source, const Context* dest);
+    MO_EXPORTS void setDefaultBufferType(const Context* source, const Context* dest, BufferFlags type);
 }

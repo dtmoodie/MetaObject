@@ -1,22 +1,23 @@
 #pragma once
 #include "MetaObject/core/detail/Enums.hpp"
 #include "MetaObject/detail/Export.hpp"
-#include "MetaObject/detail/TypeInfo.hpp"
+
 #include <functional>
-#include <memory>
+#include <map>
+
 namespace mo
 {
     class IParam;
+    class InputParam;
 
-    namespace Buffer
+    namespace buffer
     {
         class MO_EXPORTS BufferFactory
         {
           public:
-            typedef std::function<IParam*(IParam*)> create_buffer_f;
-
-            static void registerFunction(TypeInfo type, const create_buffer_f& func, ParamType buffer_type_);
-            static std::shared_ptr<IParam> createProxy(IParam* param, ParamType buffer_type_);
+            using BufferConstructor = std::function<InputParam*()>;
+            static void registerConstructor(const BufferConstructor& constructor, BufferFlags buffer);
+            static InputParam* createBuffer(IParam* param, BufferFlags flags);
         };
     }
 }

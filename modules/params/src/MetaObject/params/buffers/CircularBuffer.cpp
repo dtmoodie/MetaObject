@@ -1,4 +1,5 @@
 #include "CircularBuffer.hpp"
+#include "BufferConstructor.hpp"
 #include <boost/thread/locks.hpp>
 #include <boost/thread/recursive_mutex.hpp>
 
@@ -61,7 +62,7 @@ namespace mo
             return false;
         }
 
-        ParamType CircularBuffer::getBufferType() const
+        BufferFlags CircularBuffer::getBufferType() const
         {
             return CircularBuffer_e;
         }
@@ -74,5 +75,6 @@ namespace mo
                 m_buffer.push_back(data);
             }
         }
+        static BufferConstructor<CircularBuffer> g_ctr;
     }
 }

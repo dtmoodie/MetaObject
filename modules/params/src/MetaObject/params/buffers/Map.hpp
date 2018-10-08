@@ -27,7 +27,6 @@ https://github.com/dtmoodie/MetaObject
 
 namespace mo
 {
-    class Context;
     namespace buffer
     {
         class Map : public IBuffer, public InputParam
@@ -39,6 +38,7 @@ namespace mo
 
             virtual void setFrameBufferCapacity(const uint64_t size) override;
             virtual void setTimePaddingCapacity(const mo::Time_t& time) override;
+
             virtual boost::optional<uint64_t> getFrameBufferCapacity() const override;
             virtual OptionalTime_t getTimePaddingCapacity() const override;
 
