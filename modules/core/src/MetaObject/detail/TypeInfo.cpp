@@ -8,6 +8,12 @@
 #include <cassert>
 namespace mo
 {
+
+    const TypeInfo& TypeInfo::Void()
+    {
+        static TypeInfo g_info(typeid(void));
+        return g_info;
+    }
     TypeInfo::TypeInfo()
     {
         class Void
@@ -17,7 +23,11 @@ namespace mo
         assert(pInfo_);
     }
 
-    TypeInfo::TypeInfo(const std::type_info& ti) : pInfo_(&ti) { assert(pInfo_); }
+    TypeInfo::TypeInfo(const std::type_info& ti)
+        : pInfo_(&ti)
+    {
+        assert(pInfo_);
+    }
 
     bool TypeInfo::before(const TypeInfo& rhs) const
     {
@@ -46,22 +56,49 @@ namespace mo
 #endif
     }
 
-    bool TypeInfo::operator==(const std::type_info& rhs) { return this->pInfo_ == &rhs; }
-    bool TypeInfo::operator!=(const std::type_info& rhs) { return !(*this == rhs); }
+    bool TypeInfo::operator==(const std::type_info& rhs)
+    {
+        return this->pInfo_ == &rhs;
+    }
+    bool TypeInfo::operator!=(const std::type_info& rhs)
+    {
+        return !(*this == rhs);
+    }
 
-    const std::type_info* TypeInfo::ptr() const { return pInfo_; }
+    const std::type_info* TypeInfo::ptr() const
+    {
+        return pInfo_;
+    }
 
-    bool operator==(const TypeInfo& lhs, const TypeInfo& rhs) { return (lhs.get() == rhs.get()) != 0; }
+    bool operator==(const TypeInfo& lhs, const TypeInfo& rhs)
+    {
+        return (lhs.get() == rhs.get()) != 0;
+    }
 
-    bool operator<(const TypeInfo& lhs, const TypeInfo& rhs) { return lhs.before(rhs); }
+    bool operator<(const TypeInfo& lhs, const TypeInfo& rhs)
+    {
+        return lhs.before(rhs);
+    }
 
-    bool operator!=(const TypeInfo& lhs, const TypeInfo& rhs) { return !(lhs == rhs); }
+    bool operator!=(const TypeInfo& lhs, const TypeInfo& rhs)
+    {
+        return !(lhs == rhs);
+    }
 
-    bool operator>(const TypeInfo& lhs, const TypeInfo& rhs) { return rhs < lhs; }
+    bool operator>(const TypeInfo& lhs, const TypeInfo& rhs)
+    {
+        return rhs < lhs;
+    }
 
-    bool operator<=(const TypeInfo& lhs, const TypeInfo& rhs) { return !(lhs > rhs); }
+    bool operator<=(const TypeInfo& lhs, const TypeInfo& rhs)
+    {
+        return !(lhs > rhs);
+    }
 
-    bool operator>=(const TypeInfo& lhs, const TypeInfo& rhs) { return !(lhs < rhs); }
+    bool operator>=(const TypeInfo& lhs, const TypeInfo& rhs)
+    {
+        return !(lhs < rhs);
+    }
 
 } // namespace mo
 

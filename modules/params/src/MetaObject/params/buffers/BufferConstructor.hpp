@@ -8,7 +8,7 @@ namespace mo
     {
         BufferConstructor()
         {
-            buffer::BufferFactory::registerConstructor(std::bind(&BufferConstructor<Buffer>::construct), Buffer::type);
+            buffer::BufferFactory::registerConstructor(std::bind(&BufferConstructor<Buffer>::construct), Buffer::Type);
         }
 
         static InputParam* construct()

@@ -21,17 +21,14 @@ namespace mo
             virtual boost::optional<size_t> getFrameBufferCapacity() const override;
             virtual OptionalTime_t getTimePaddingCapacity() const override;
 
-            virtual BufferFlags getBufferType() const override
-            {
-                return Type;
-            }
+            virtual BufferFlags getBufferType() const override;
 
           protected:
             virtual void prune();
             OptionalTime_t _current_timestamp;
-            size_t _current_frame_number;
+            uint64_t _current_frame_number;
             OptionalTime_t _time_padding;
-            boost::optional<size_t> _frame_padding;
+            boost::optional<uint64_t> _frame_padding;
         };
 
         class MO_EXPORTS BlockingStreamBuffer : public StreamBuffer

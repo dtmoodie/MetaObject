@@ -64,7 +64,7 @@ namespace mo
 
         BufferFlags CircularBuffer::getBufferType() const
         {
-            return CircularBuffer_e;
+            return Type;
         }
 
         void CircularBuffer::onInputUpdate(const std::shared_ptr<IDataContainer>& data, IParam*, UpdateFlags)

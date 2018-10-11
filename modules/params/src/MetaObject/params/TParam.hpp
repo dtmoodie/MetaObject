@@ -22,20 +22,4 @@ https://github.com/dtmoodie/MetaObject
 
 namespace mo
 {
-    template <typename T>
-    class MO_EXPORTS TParam : virtual public ITAccessibleParam<T>
-    {
-      public:
-        TParam(const std::string& name, const T& value)
-            : IParam(name)
-        {
-            ParamTraits<T>::reset(_data, value);
-        }
-        TParam(const std::string& name)
-            : IParam(name)
-        {
-        }
-        TParam();
-    };
 }
-#include "detail/TParamImpl.hpp"

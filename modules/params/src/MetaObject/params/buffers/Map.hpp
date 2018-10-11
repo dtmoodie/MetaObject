@@ -36,6 +36,7 @@ namespace mo
 
             Map(const std::string& name = "");
 
+            // IBuffer
             virtual void setFrameBufferCapacity(const uint64_t size) override;
             virtual void setTimePaddingCapacity(const mo::Time_t& time) override;
 
@@ -47,13 +48,40 @@ namespace mo
             virtual bool getFrameNumberRange(uint64_t& start, uint64_t& end) override;
             virtual BufferFlags getBufferType() const override;
 
+            // IParam
+            virtual TypeInfo getTypeInfo() const override;
+
+            virtual void visit(IReadVisitor*) override;
+            virtual void visit(IWriteVisitor*) const override;
+
+            virtual IContainerPtr_t getData(const Header& desired = Header()) override;
+            virtual IContainerConstPtr_t getData(const Header& desired = Header()) const override;
+
+            // InputParam
+            virtual bool getInputData(const Header& desired, Header* retrieved) override;
+            virtual IParam* getInputParam() const override;
+            virtual bool setInput(const std::shared_ptr<IParam>& param) override;
+            virtual bool setInput(IParam* param = nullptr) override;
+
+            virtual OptionalTime_t getInputTimestamp() override;
+            virtual uint64_t getInputFrameNumber() override;
+            virtual bool isInputSet() const override;
+
+            virtual bool acceptsInput(IParam* param) const override;
+            virtual bool acceptsType(const TypeInfo& type) const override;
+
           protected:
             void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags);
+            virtual std::map<Header, IDataContainerPtr_t>::iterator search(const Header& hdr);
+            virtual std::map<Header, IDataContainerPtr_t>::const_iterator search(const Header& hdr) const;
 
           private:
             std::map<Header, IDataContainerPtr_t> _data_buffer;
+            mutable IDataContainerPtr_t m_current;
             TSlot<DataUpdate_s> m_update_slot;
+            TSlot<void(const IParam*)> m_delete_slot;
             IParam* m_input_param;
+            std::shared_ptr<IParam> m_shared_input;
         };
     }
 }

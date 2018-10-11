@@ -16,6 +16,8 @@ namespace mo
 
         TypeInfo();
         TypeInfo(const std::type_info&);
+
+        static const TypeInfo& Void();
         template <class T>
         TypeInfo(const T& obj);
 
@@ -48,7 +50,8 @@ namespace mo
     MO_EXPORTS bool operator>=(const TypeInfo& lhs, const TypeInfo& rhs);
 
     template <class T>
-    TypeInfo::TypeInfo(const T& obj) : TypeInfo(typeid(obj))
+    TypeInfo::TypeInfo(const T& obj)
+        : TypeInfo(typeid(obj))
     {
     }
 

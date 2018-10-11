@@ -9,18 +9,16 @@ namespace mo
         {
           public:
             NNStreamBuffer(const std::string& name = "");
-
-
+            virtual ~NNStreamBuffer();
 
             virtual BufferFlags getBufferType() const
             {
-                return NNStreamBuffer_e;
+                return NEAREST_NEIGHBOR_BUFFER;
             }
 
           protected:
-            typename std::map<SequenceKey, InputStorage_t>::iterator search(const OptionalTime_t& ts);
-            typename std::map<SequenceKey, InputStorage_t>::iterator search(size_t fn);
+            typename std::map<Header, IDataContainerPtr_t>::iterator search(const OptionalTime_t& ts);
+            typename std::map<Header, IDataContainerPtr_t>::iterator search(size_t fn);
         };
     }
 }
-#include "detail/NNStreamBufferImpl.hpp"
