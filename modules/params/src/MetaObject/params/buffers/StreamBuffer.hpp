@@ -12,7 +12,7 @@ namespace mo
         class MO_EXPORTS StreamBuffer : public Map
         {
           public:
-            static const BufferFlags Type = StreamBuffer_e;
+            static const BufferFlags Type = STREAM_BUFFER;
 
             StreamBuffer(const std::string& name = "");
 
@@ -21,9 +21,9 @@ namespace mo
             virtual boost::optional<size_t> getFrameBufferCapacity() const override;
             virtual OptionalTime_t getTimePaddingCapacity() const override;
 
-            virtual BufferFlags getBufferType() const
+            virtual BufferFlags getBufferType() const override
             {
-                return StreamBuffer_e;
+                return Type;
             }
 
           protected:
@@ -37,17 +37,17 @@ namespace mo
         class MO_EXPORTS BlockingStreamBuffer : public StreamBuffer
         {
           public:
-            static const BufferFlags Type = BlockingStreamBuffer_e;
+            static const BufferFlags Type = BLOCKING_STREAM_BUFFER;
 
             BlockingStreamBuffer(const std::string& name = "");
-            virtual void setFrameBufferCapacity(size_t size);
-            virtual BufferFlags getBufferType() const
+            virtual void setFrameBufferCapacity(size_t size) override;
+            virtual BufferFlags getBufferType() const override
             {
-                return BlockingStreamBuffer_e;
+                return Type;
             }
 
           protected:
-            virtual void prune();
+            virtual void prune() override;
             size_t _size;
             boost::condition_variable_any _cv;
         };
@@ -55,15 +55,13 @@ namespace mo
         class MO_EXPORTS DroppingStreamBuffer : public BlockingStreamBuffer
         {
           public:
-            static const BufferFlags Type = DroppingStreamBuffer_e;
+            static const BufferFlags Type = DROPPING_STREAM_BUFFER;
 
             DroppingStreamBuffer(const std::string& name = "");
-            virtual BufferFlags getBufferType() const
+            virtual BufferFlags getBufferType() const override
             {
                 return Type;
             }
-
-          protected:
         };
     }
 }

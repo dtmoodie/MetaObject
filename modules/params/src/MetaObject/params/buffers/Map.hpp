@@ -32,7 +32,7 @@ namespace mo
         class Map : public IBuffer, public InputParam
         {
           public:
-            static const BufferFlags Type = Map_e;
+            static const BufferFlags Type = MAP_BUFFER;
 
             Map(const std::string& name = "");
 

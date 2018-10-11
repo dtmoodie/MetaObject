@@ -113,14 +113,14 @@ namespace mo
     {
         DIRECT,
         CIRCULAR_BUFFER,
-        MAP,
+        MAP_BUFFER,
         STREAM_BUFFER,
         BLOCKING_STREAM_BUFFER,
         DROPPING_STREAM_BUFFER,
         NEAREST_NEIGHBOR_BUFFER,
-        QUEUE,
-        BLOCKING_QUEUE,
-        DROPPING_QUEUE,
+        QUEUE_BUFFER,
+        BLOCKING_QUEUE_BUFFER,
+        DROPPING_QUEUE_BUFFER,
 
         FORCE_BUFFERED = 1024,
         FORCE_DIRECT = 2048

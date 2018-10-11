@@ -3,7 +3,12 @@
 #include "MetaObject/detail/Export.hpp"
 
 #include <functional>
-#include <map>
+
+namespace std
+{
+    template <class T>
+    class shared_ptr;
+}
 
 namespace mo
 {
@@ -18,6 +23,7 @@ namespace mo
             using BufferConstructor = std::function<InputParam*()>;
             static void registerConstructor(const BufferConstructor& constructor, BufferFlags buffer);
             static InputParam* createBuffer(IParam* param, BufferFlags flags);
+            static InputParam* createBuffer(const std::shared_ptr<IParam>& param, BufferFlags flags);
         };
     }
 }

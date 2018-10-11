@@ -1,40 +1,65 @@
 #include "MetaObject/params/IParam.hpp"
+#include "MetaObject/params/InputParam.hpp"
 #include "MetaObject/params/buffers/BufferFactory.hpp"
+
 #include <map>
 
 using namespace mo;
 using namespace mo::buffer;
 
-static std::map<TypeInfo, std::map<mo::BufferFlags, BufferFactory::create_buffer_f>>& registry()
+namespace
 {
-    static std::map<TypeInfo, std::map<mo::BufferFlags, BufferFactory::create_buffer_f>>* g_inst = nullptr;
-    if (g_inst == nullptr)
+    static std::map<mo::BufferFlags, BufferFactory::BufferConstructor>& registry()
     {
-        g_inst = new std::map<TypeInfo, std::map<mo::BufferFlags, BufferFactory::create_buffer_f>>();
+        static std::map<mo::BufferFlags, BufferFactory::BufferConstructor>* g_inst = nullptr;
+        if (g_inst == nullptr)
+        {
+            g_inst = new std::map<mo::BufferFlags, BufferFactory::BufferConstructor>();
+        }
+        return *g_inst;
     }
-    return *g_inst;
 }
 
-void BufferFactory::registerFunction(TypeInfo type, const create_buffer_f& func, BufferFlags buffer_type_)
+void BufferFactory::registerConstructor(const BufferConstructor& func, BufferFlags buffer_type_)
 {
-    auto& reg = registry();
-    auto itr1 = reg.find(type);
-    if (itr1 != reg.end())
-    {
-        auto itr2 = itr1->second.find(buffer_type_);
-        if (itr2 != itr1->second.end())
-            return;
-    }
-    registry()[type][buffer_type_] = func;
+    auto& map = registry();
+    map[buffer_type_] = func;
 }
 
-std::shared_ptr<IParam> BufferFactory::createProxy(IParam* param, mo::BufferFlags buffer_type_)
+InputParam* BufferFactory::createBuffer(IParam* param, mo::BufferFlags buffer_type_)
 {
-    auto factory_func = registry().find(param->getTypeInfo());
-    if (factory_func != registry().end())
+    auto& map = registry();
+    auto itr = map.find(buffer_type_);
+    if (itr == map.end())
     {
-        if (factory_func->second[buffer_type_])
-            return std::shared_ptr<IParam>(factory_func->second[buffer_type_](param));
+        return nullptr;
+    }
+    InputParam* buffer = itr->second();
+    if (buffer)
+    {
+        if (buffer->setInput(param))
+        {
+            return buffer;
+        }
+    }
+    return nullptr;
+}
+
+InputParam* BufferFactory::createBuffer(const std::shared_ptr<IParam>& param, mo::BufferFlags buffer_type_)
+{
+    auto& map = registry();
+    auto itr = map.find(buffer_type_);
+    if (itr == map.end())
+    {
+        return nullptr;
+    }
+    InputParam* buffer = itr->second();
+    if (buffer)
+    {
+        if (buffer->setInput(param))
+        {
+            return buffer;
+        }
     }
     return nullptr;
 }

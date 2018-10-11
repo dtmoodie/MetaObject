@@ -76,7 +76,7 @@ std::string mo::BufferFlagsToString(BufferFlags flags)
     {
     case CIRCULAR_BUFFER:
         return "CircularBuffer";
-    case MAP:
+    case MAP_BUFFER:
         return "Map";
     case STREAM_BUFFER:
         return "StreamBuffer";
@@ -86,11 +86,11 @@ std::string mo::BufferFlagsToString(BufferFlags flags)
         return "DroppingStreamBuffer";
     case NEAREST_NEIGHBOR_BUFFER:
         return "NNStreamBuffer";
-    case QUEUE:
+    case QUEUE_BUFFER:
         return "Queue";
-    case BLOCKING_QUEUE:
+    case BLOCKING_QUEUE_BUFFER:
         return "BlockingQueue";
-    case DROPPING_QUEUE:
+    case DROPPING_QUEUE_BUFFER:
         return "DroppingQueue";
     }
     return "";
@@ -101,7 +101,7 @@ BufferFlags mo::stringToBufferFlags(const std::string& str)
     if (str == "CircularBuffer")
         return CIRCULAR_BUFFER;
     else if (str == "Map")
-        return MAP;
+        return MAP_BUFFER;
     else if (str == "StreamBuffer")
         return STREAM_BUFFER;
     else if (str == "BlockingStreamBuffer")

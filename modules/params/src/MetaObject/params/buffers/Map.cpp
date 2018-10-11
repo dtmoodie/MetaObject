@@ -61,7 +61,7 @@ namespace mo
 
         BufferFlags Map::getBufferType() const
         {
-            return Map_e;
+            return MAP_BUFFER;
         }
 
         void Map::onInputUpdate(const IDataContainerPtr_t& data, IParam*, UpdateFlags)
