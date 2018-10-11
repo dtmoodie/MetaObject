@@ -102,7 +102,7 @@ BOOST_AUTO_TEST_CASE(buffered_input)
     BOOST_REQUIRE(output_);
     auto input_param = dynamic_cast<InputParam*>(input_);
 
-    auto cbuffer = Buffer::BufferFactory::createProxy(output_, mo::ParamType::CircularBuffer_e);
+    auto cbuffer = Buffer::BufferFactory::createProxy(output_, mo::BufferFlags::CircularBuffer_e);
     BOOST_REQUIRE(cbuffer);
     BOOST_REQUIRE(input_param->setInput(cbuffer));
     output->test_output_param.updateData(0, 0);
@@ -127,7 +127,7 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
     BOOST_REQUIRE(output_);
     auto input_param = dynamic_cast<InputParam*>(input_);
 
-    auto cbuffer = Buffer::BufferFactory::createProxy(output_, mo::ParamType::CircularBuffer_e);
+    auto cbuffer = Buffer::BufferFactory::createProxy(output_, mo::BufferFlags::CircularBuffer_e);
     BOOST_REQUIRE(cbuffer);
     BOOST_REQUIRE(input_param->setInput(cbuffer));
     output->test_output_param.updateData(0, 0);

@@ -679,13 +679,13 @@ namespace mo
     bool IMetaObject::connectInput(const std::string& /*input_name*/,
                                    IMetaObject* /*output_object*/,
                                    IParam* /*output*/,
-                                   ParamType /*type_*/)
+                                   BufferFlags /*type_*/)
     {
         return false;
     }
 
     bool
-    MetaObject::connectInput(const std::string& input_name, IMetaObject* output_object, IParam* output, ParamType type_)
+    MetaObject::connectInput(const std::string& input_name, IMetaObject* output_object, IParam* output, BufferFlags type_)
     {
         auto input = getInput(input_name);
         if (input && output)
@@ -709,12 +709,12 @@ namespace mo
     bool IMetaObject::connectInput(InputParam* /*input*/,
                                    IMetaObject* /*output_object*/,
                                    IParam* /*output*/,
-                                   ParamType /*type_*/)
+                                   BufferFlags /*type_*/)
     {
         return false;
     }
 
-    bool MetaObject::connectInput(InputParam* input, IMetaObject* output_object, IParam* output, ParamType type_)
+    bool MetaObject::connectInput(InputParam* input, IMetaObject* output_object, IParam* output, BufferFlags type_)
     {
         if (input == nullptr || output == nullptr)
         {
@@ -734,15 +734,15 @@ namespace mo
             if (type_ & ForceBufferedConnection_e || input->checkFlags(mo::ParamFlags::RequestBuffered_e) ||
                 output->checkFlags(mo::ParamFlags::RequestBuffered_e))
             {
-                type_ = ParamType(type_ & ~ForceBufferedConnection_e);
+                type_ = BufferFlags(type_ & ~ForceBufferedConnection_e);
                 auto buffer = Buffer::BufferFactory::createProxy(output, type_);
                 if (!buffer)
                 {
-                    MO_LOG(warning) << "Unable to create " << paramTypeToString(type_) << " for datatype "
+                    MO_LOG(warning) << "Unable to create " << BufferFlagsToString(type_) << " for datatype "
                                     << Demangle::typeToName(output->getTypeInfo());
                     return false;
                 }
-                std::string buffer_type = paramTypeToString(type_);
+                std::string buffer_type = BufferFlagsToString(type_);
                 buffer->setName(output->getTreeName() + " " + buffer_type + " buffer for " + input->getTreeName());
                 if (input->setInput(buffer))
                 {
@@ -828,7 +828,7 @@ namespace mo
     }
 
     bool IMetaObject::connectInput(
-        IMetaObject* out_obj, IParam* out_param, IMetaObject* in_obj, InputParam* in_param, ParamType type)
+        IMetaObject* out_obj, IParam* out_param, IMetaObject* in_obj, InputParam* in_param, BufferFlags type)
     {
         return in_obj->connectInput(in_param, out_obj, out_param, type);
     }

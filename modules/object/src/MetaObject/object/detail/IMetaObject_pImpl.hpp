@@ -42,14 +42,14 @@ namespace mo
         ParamConnectionInfo(const rcc::weak_ptr<IMetaObject>& obj,
                             const std::string& output,
                             const std::string& input,
-                            ParamType type)
+                            BufferFlags type)
             : output_object(obj), output_param(output), input_param(input), connection_type(type)
         {
         }
         rcc::weak_ptr<IMetaObject> output_object;
         std::string output_param;
         std::string input_param;
-        ParamType connection_type;
+        BufferFlags connection_type;
     };
 
     struct MO_EXPORTS MetaObject::impl

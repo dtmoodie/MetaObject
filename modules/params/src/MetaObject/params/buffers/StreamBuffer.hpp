@@ -12,7 +12,7 @@ namespace mo
         class MO_EXPORTS StreamBuffer : public Map
         {
           public:
-            static const ParamType Type = StreamBuffer_e;
+            static const BufferFlags Type = StreamBuffer_e;
 
             StreamBuffer(const std::string& name = "");
 
@@ -21,7 +21,7 @@ namespace mo
             virtual boost::optional<size_t> getFrameBufferCapacity() const override;
             virtual OptionalTime_t getTimePaddingCapacity() const override;
 
-            virtual ParamType getBufferType() const
+            virtual BufferFlags getBufferType() const
             {
                 return StreamBuffer_e;
             }
@@ -37,11 +37,11 @@ namespace mo
         class MO_EXPORTS BlockingStreamBuffer : public StreamBuffer
         {
           public:
-            static const ParamType Type = BlockingStreamBuffer_e;
+            static const BufferFlags Type = BlockingStreamBuffer_e;
 
             BlockingStreamBuffer(const std::string& name = "");
             virtual void setFrameBufferCapacity(size_t size);
-            virtual ParamType getBufferType() const
+            virtual BufferFlags getBufferType() const
             {
                 return BlockingStreamBuffer_e;
             }
@@ -55,10 +55,10 @@ namespace mo
         class MO_EXPORTS DroppingStreamBuffer : public BlockingStreamBuffer
         {
           public:
-            static const ParamType Type = DroppingStreamBuffer_e;
+            static const BufferFlags Type = DroppingStreamBuffer_e;
 
             DroppingStreamBuffer(const std::string& name = "");
-            virtual ParamType getBufferType() const
+            virtual BufferFlags getBufferType() const
             {
                 return Type;
             }

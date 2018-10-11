@@ -17,17 +17,17 @@ namespace mo
         ParamFactory();
         ~ParamFactory();
         // Each specialization of a Param must have a unique type
-        void registerConstructor(const TypeInfo& data_type, create_f function, ParamType Param_type);
+        void registerConstructor(const TypeInfo& data_type, create_f function, BufferFlags Param_type);
         void registerConstructor(const TypeInfo& Param_type, create_f function);
 
         // Give datatype and Param type enum
-        std::shared_ptr<IParam> create(const TypeInfo& data_type, ParamType Param_type);
+        std::shared_ptr<IParam> create(const TypeInfo& data_type, BufferFlags Param_type);
 
         // Must give exact Param type, such as TParam<int>
         std::shared_ptr<IParam> create(const TypeInfo& Param_type);
 
-        std::vector<TypeInfo> listConstructableDataTypes(ParamType type);
-        std::vector<std::pair<TypeInfo, ParamType>> listConstructableDataTypes();
+        std::vector<TypeInfo> listConstructableDataTypes(BufferFlags type);
+        std::vector<std::pair<TypeInfo, BufferFlags>> listConstructableDataTypes();
 
       private:
         struct impl;

@@ -70,54 +70,52 @@ EnumClassBitset<ParamFlags> mo::stringToParamFlags(const std::string& str)
     return output;
 }
 
-std::string mo::paramTypeToString(BufferFlags flags)
+std::string mo::BufferFlagsToString(BufferFlags flags)
 {
     switch (flags)
     {
-    case CircularBuffer_e:
-        return "circularbuffer";
-    case Map_e:
-        return "map";
-    case StreamBuffer_e:
+    case CIRCULAR_BUFFER:
+        return "CircularBuffer";
+    case MAP:
+        return "Map";
+    case STREAM_BUFFER:
         return "StreamBuffer";
-    case BlockingStreamBuffer_e:
+    case BLOCKING_STREAM_BUFFER:
         return "BlockingStreamBuffer";
-    case NNStreamBuffer_e:
+    case DROPPING_STREAM_BUFFER:
+        return "DroppingStreamBuffer";
+    case NEAREST_NEIGHBOR_BUFFER:
         return "NNStreamBuffer";
-    case Queue_e:
+    case QUEUE:
         return "Queue";
-    case BlockingQueue_e:
+    case BLOCKING_QUEUE:
         return "BlockingQueue";
-    case DroppingQueue_e:
+    case DROPPING_QUEUE:
         return "DroppingQueue";
-    case ForceDirectConnection_e:
-        return "ForceDirectConnection";
-    case ForceBufferedConnection_e:
-        return "ForceBufferedConnection";
     }
     return "";
 }
 
-BufferFlags mo::stringToParamType(const std::string& str)
+BufferFlags mo::stringToBufferFlags(const std::string& str)
 {
-    if (str == "circularbuffer")
-        return CircularBuffer_e;
-    else if (str == "map")
-        return Map_e;
+    if (str == "CircularBuffer")
+        return CIRCULAR_BUFFER;
+    else if (str == "Map")
+        return MAP;
     else if (str == "StreamBuffer")
-        return StreamBuffer_e;
+        return STREAM_BUFFER;
     else if (str == "BlockingStreamBuffer")
-        return BlockingStreamBuffer_e;
+        return BLOCKING_STREAM_BUFFER;
     else if (str == "NNStreamBuffer")
-        return NNStreamBuffer_e;
+        return NEAREST_NEIGHBOR_BUFFER;
     THROW(debug) << "Invalid string " << str;
-    return TParam_e;
+    return DIRECT;
 }
 
-static std::map<const Context*, std::map<const Context*, ParamType>> connection_map;
-static ParamType default_connection_type = BlockingStreamBuffer_e;
+static std::map<const Context*, std::map<const Context*, BufferFlags>> connection_map;
+static BufferFlags default_connection_type = BLOCKING_STREAM_BUFFER;
 
-ParamType mo::getDefaultBufferType(const Context* source, const Context* dest)
+BufferFlags mo::getDefaultBufferType(const Context* source, const Context* dest)
 {
     auto itr = connection_map.find(source);
     if (itr != connection_map.end())
@@ -136,7 +134,7 @@ ParamType mo::getDefaultBufferType(const Context* source, const Context* dest)
     return default_connection_type;
 }
 
-void mo::setDefaultBufferType(const Context* source, const Context* dest, ParamType type)
+void mo::setDefaultBufferType(const Context* source, const Context* dest, BufferFlags type)
 {
     if (source == nullptr && dest == nullptr)
     {

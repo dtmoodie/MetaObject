@@ -161,18 +161,18 @@ namespace mo
         virtual bool connectInput(const std::string& input_name,
                                   IMetaObject* output_object,
                                   IParam* output_param,
-                                  ParamType type = Default_e) = 0;
+                                  BufferFlags type = Default_e) = 0;
 
         virtual bool connectInput(InputParam* input,
                                   IMetaObject* output_object,
                                   IParam* output_param,
-                                  ParamType type = Default_e) = 0;
+                                  BufferFlags type = Default_e) = 0;
 
         static bool connectInput(IMetaObject* output_object,
                                  IParam* output_Param,
                                  IMetaObject* input_object,
                                  InputParam* input_param,
-                                 ParamType type = Default_e);
+                                 BufferFlags type = Default_e);
 
         virtual Mutex_t& getMutex() const = 0;
 

@@ -121,7 +121,7 @@ std::string IMetaObjectInfo::Print(Verbosity verbosity) const
             {
                 ss << " ";
             }
-            const auto type = param->getParamType();
+            const auto type = param->getBufferFlags();
             if (type.test(ParamFlags::Control_e))
             {
                 ss << "C";

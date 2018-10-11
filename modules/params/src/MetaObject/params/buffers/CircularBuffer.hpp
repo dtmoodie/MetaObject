@@ -31,7 +31,7 @@ namespace mo
     {
         struct CircularBuffer : public IBuffer, public InputParam
         {
-            static constexpr const auto type = CircularBuffer_e;
+            static constexpr const auto type = CIRCULAR_BUFFER;
             CircularBuffer();
 
             virtual void setFrameBufferCapacity(const uint64_t size) override;

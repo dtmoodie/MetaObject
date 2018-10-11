@@ -16,7 +16,7 @@ namespace mo
         {
           public:
             typedef T ValueType;
-            static const ParamType Type = Queue_e;
+            static const BufferFlags Type = Queue_e;
 
             Queue(const std::string& name);
             T* GetDataPtr(OptionalTime_t ts = OptionalTime_t(), Context* ctx = nullptr, size_t* fn_ = nullptr);
@@ -38,7 +38,7 @@ namespace mo
             void SetSize(long long size);
             long long getSize();
             void getTimestampRange(mo::Time_t& start, mo::Time_t& end);
-            virtual ParamType getBufferType() const { return Queue_e; }
+            virtual BufferFlags getBufferType() const { return Queue_e; }
           protected:
             virtual void onInputUpdate(Context* ctx, IParam* param);
             moodycamel::ConcurrentQueue<T> _queue;

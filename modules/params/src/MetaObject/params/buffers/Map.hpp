@@ -32,7 +32,7 @@ namespace mo
         class Map : public IBuffer, public InputParam
         {
           public:
-            static const ParamType Type = Map_e;
+            static const BufferFlags Type = Map_e;
 
             Map(const std::string& name = "");
 
@@ -45,7 +45,7 @@ namespace mo
             virtual size_t getSize() const override;
             virtual bool getTimestampRange(mo::OptionalTime_t& start, mo::OptionalTime_t& end) override;
             virtual bool getFrameNumberRange(uint64_t& start, uint64_t& end) override;
-            virtual ParamType getBufferType() const override;
+            virtual BufferFlags getBufferType() const override;
 
           protected:
             void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags);

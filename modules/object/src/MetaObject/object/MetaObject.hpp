@@ -111,12 +111,12 @@ namespace mo
         virtual bool connectInput(const std::string& input_name,
                                   IMetaObject* output_object,
                                   IParam* output_param,
-                                  ParamType type = StreamBuffer_e) override;
+                                  BufferFlags type = StreamBuffer_e) override;
 
         virtual bool connectInput(InputParam* input,
                                   IMetaObject* output_object,
                                   IParam* output_param,
-                                  ParamType type = StreamBuffer_e) override;
+                                  BufferFlags type = StreamBuffer_e) override;
 
         virtual Mutex_t& getMutex() const override;
 

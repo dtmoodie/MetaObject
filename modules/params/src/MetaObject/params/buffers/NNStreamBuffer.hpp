@@ -12,7 +12,7 @@ namespace mo
 
 
 
-            virtual ParamType getBufferType() const
+            virtual BufferFlags getBufferType() const
             {
                 return NNStreamBuffer_e;
             }

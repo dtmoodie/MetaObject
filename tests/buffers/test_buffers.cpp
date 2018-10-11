@@ -103,12 +103,12 @@ struct BufferFixture
 
 BOOST_FIXTURE_TEST_SUITE(buffer_suite, BufferFixture)
 
-static const mo::ParamType buffer_test_cases[] = {
+static const mo::BufferFlags buffer_test_cases[] = {
     mo::CircularBuffer_e, mo::Map_e, mo::StreamBuffer_e, mo::BlockingStreamBuffer_e, mo::NNStreamBuffer_e};
 
 BOOST_AUTO_PARAM_TEST_CASE(buffer_test, buffer_test_cases, end(buffer_test_cases))
 {
-    std::cout << "Testing " << mo::paramTypeToString(param) << std::endl;
+    std::cout << "Testing " << mo::BufferFlagsToString(param) << std::endl;
     auto buffer = mo::Buffer::BufferFactory::createProxy(&output_param, param);
     BOOST_REQUIRE(buffer);
     auto buf = std::dynamic_pointer_cast<mo::Buffer::IBuffer>(buffer);

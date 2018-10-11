@@ -11,11 +11,11 @@ namespace mo
         {
           public:
             typedef T ValueType;
-            static const ParamType Type = ConstMap_e;
+            static const BufferFlags Type = ConstMap_e;
             ConstMap(const std::string& name = "",
                      const T& init = T(),
                      OptionalTime_t ts = OptionalTime_t(),
-                     ParamType& type = ParamFlags::Buffer_e,
+                     BufferFlags& type = ParamFlags::Buffer_e,
                      const std::string& tooltip = "")
                 : Map<T>(name, init, ts, type, tooltip)
             {
@@ -31,7 +31,7 @@ namespace mo
                 }
             }
             virtual void SetSize(long long size) { _size = size; }
-            virtual ParamType getBufferType() const { return ConstMap_e; }
+            virtual BufferFlags getBufferType() const { return ConstMap_e; }
           private:
             size_t _size;
         };

@@ -3,19 +3,19 @@
 #include <map>
 
 using namespace mo;
-using namespace mo::Buffer;
+using namespace mo::buffer;
 
-static std::map<TypeInfo, std::map<mo::ParamType, BufferFactory::create_buffer_f>>& registry()
+static std::map<TypeInfo, std::map<mo::BufferFlags, BufferFactory::create_buffer_f>>& registry()
 {
-    static std::map<TypeInfo, std::map<mo::ParamType, BufferFactory::create_buffer_f>>* g_inst = nullptr;
+    static std::map<TypeInfo, std::map<mo::BufferFlags, BufferFactory::create_buffer_f>>* g_inst = nullptr;
     if (g_inst == nullptr)
     {
-        g_inst = new std::map<TypeInfo, std::map<mo::ParamType, BufferFactory::create_buffer_f>>();
+        g_inst = new std::map<TypeInfo, std::map<mo::BufferFlags, BufferFactory::create_buffer_f>>();
     }
     return *g_inst;
 }
 
-void BufferFactory::registerFunction(TypeInfo type, const create_buffer_f& func, ParamType buffer_type_)
+void BufferFactory::registerFunction(TypeInfo type, const create_buffer_f& func, BufferFlags buffer_type_)
 {
     auto& reg = registry();
     auto itr1 = reg.find(type);
@@ -28,7 +28,7 @@ void BufferFactory::registerFunction(TypeInfo type, const create_buffer_f& func,
     registry()[type][buffer_type_] = func;
 }
 
-std::shared_ptr<IParam> BufferFactory::createProxy(IParam* param, mo::ParamType buffer_type_)
+std::shared_ptr<IParam> BufferFactory::createProxy(IParam* param, mo::BufferFlags buffer_type_)
 {
     auto factory_func = registry().find(param->getTypeInfo());
     if (factory_func != registry().end())

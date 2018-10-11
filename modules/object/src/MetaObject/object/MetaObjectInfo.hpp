@@ -31,10 +31,10 @@ namespace mo
     template <class T>
     struct TMetaObjectInterfaceHelper : public T
     {
-        template <class DType, class ParamType>
+        template <class DType, class BufferFlags>
         inline void operator()(const mo::Data<DType>& data,
                                const mo::Name& name,
-                               const mo::Param<ParamType>& param,
+                               const mo::Param<BufferFlags>& param,
                                int32_t N,
                                bool first_init)
         {

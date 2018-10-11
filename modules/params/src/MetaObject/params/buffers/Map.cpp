@@ -59,7 +59,7 @@ namespace mo
             return false;
         }
 
-        ParamType Map::getBufferType() const
+        BufferFlags Map::getBufferType() const
         {
             return Map_e;
         }

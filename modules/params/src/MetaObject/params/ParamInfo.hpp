@@ -19,7 +19,7 @@ namespace mo
         const std::string& getTooltip() const;
         const std::string& getDescription() const;
         const std::string& getInitialization() const;
-        const EnumClassBitset<ParamFlags> getParamType() const;
+        const EnumClassBitset<ParamFlags> getBufferFlags() const;
         mo::TypeInfo getDataType() const;
 
       private:

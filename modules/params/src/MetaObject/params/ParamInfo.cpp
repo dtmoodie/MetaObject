@@ -24,7 +24,7 @@ namespace mo
 
     const std::string& ParamInfo::getInitialization() const { return initial_value; }
 
-    const EnumClassBitset<ParamFlags> ParamInfo::getParamType() const { return type_flags; }
+    const EnumClassBitset<ParamFlags> ParamInfo::getBufferFlags() const { return type_flags; }
 
     mo::TypeInfo ParamInfo::getDataType() const { return data_type; }
 }
