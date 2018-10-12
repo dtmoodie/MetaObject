@@ -175,7 +175,7 @@ namespace mo
                     {
                         if (this->connectInput(input, obj.get(), output, param_connection.connection_type))
                         {
-                            input->getInput(mo::OptionalTime_t());
+                            input->getInput(mo::OptionalTime());
                             MO_LOG(debug) << "Reconnected " << GetTypeName() << ":" << param_connection.input_param
                                           << " to " << obj->GetTypeName() << ":" << param_connection.output_param;
                         }
@@ -1013,7 +1013,7 @@ namespace mo
         return nullptr;
     }
 
-    TSlot<void(IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)>*
+    TSlot<void(IParam*, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)>*
     MetaObject::getSlot_param_updated() const
     {
         return &_pimpl->_slot_param_updated;
@@ -1209,12 +1209,12 @@ namespace mo
     }
 
     void IMetaObject::onParamUpdate(
-        IParam* param, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)
+        IParam* param, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)
     {
     }
 
     void MetaObject::onParamUpdate(
-        IParam* param, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)
+        IParam* param, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)
     {
         this->_pimpl->_sig_param_updated(this, param);
     }

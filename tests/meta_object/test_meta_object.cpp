@@ -86,7 +86,7 @@ struct test_meta_object_param : public MetaObject
     TOOLTIP(test_int, "test tooltip")
     MO_END
 
-     void onParamUpdate(IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>& , UpdateFlags) override
+     void onParamUpdate(IParam*, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>& , UpdateFlags) override
     {
         ++update_count;
     }

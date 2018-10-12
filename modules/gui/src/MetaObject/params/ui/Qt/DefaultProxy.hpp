@@ -28,7 +28,7 @@ namespace mo
                 UpdateSlot_t update_slot;
                 virtual void onUiUpdate(QObject* source);
                 virtual void onParamUpdate(
-                    IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags);
+                    IParam*, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags);
                 virtual void onParamDelete(IParam const*);
             };
         }

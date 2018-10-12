@@ -134,7 +134,9 @@ Thread::~Thread()
 struct mo::Thread::ThreadSanitizer
 {
     ThreadSanitizer(volatile bool& paused_flag, boost::condition_variable_any& cv, mo::Thread& thread)
-        : _paused_flag(paused_flag), _cv(cv), m_thread(thread)
+        : _paused_flag(paused_flag)
+        , _cv(cv)
+        , m_thread(thread)
     {
     }
 
@@ -201,10 +203,10 @@ void Thread::main()
             }
             if (delay)
             {
-                const auto start_time = mo::getCurrentTime();
-                auto delta = mo::Time_t(mo::getCurrentTime() - start_time);
+                const auto start_time = Time::now();
+                auto delta = Time::now() - start_time;
                 bool processed_work = false;
-                while (delta < mo::Time_t(mo::ms * delay))
+                while (delta < mo::Time(mo::ms * delay))
                 {
                     if (_work_queue.try_dequeue(f))
                     {
@@ -221,13 +223,13 @@ void Thread::main()
                         processed_work = true;
                     }
 
-                    delta = mo::Time_t(mo::getCurrentTime() - start_time);
+                    delta = Time::now() - start_time;
                     if (!processed_work)
                     {
                         boost::this_thread::sleep_for(
                             boost::chrono::milliseconds(delay) -
                             boost::chrono::milliseconds(
-                                std::chrono::duration_cast<std::chrono::milliseconds>(mo::getCurrentTime() - start_time)
+                                std::chrono::duration_cast<std::chrono::milliseconds>(Time::now() - start_time)
                                     .count()));
                         break;
                     }

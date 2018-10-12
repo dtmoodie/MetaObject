@@ -50,7 +50,7 @@ int main(int argc, char** argv)
     multi_input.setInput(&int_out);
     printInputs(inputs);
     int_out.updateData(5);
-    multi_input.getInput(mo::OptionalTime_t(), nullptr);
+    multi_input.getInput(mo::OptionalTime(), nullptr);
     printInputs(inputs);
 
     mo::TMultiOutput<int, float, double> multi_output;

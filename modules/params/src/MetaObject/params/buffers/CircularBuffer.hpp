@@ -36,13 +36,13 @@ namespace mo
 
             // IBuffer
             virtual void setFrameBufferCapacity(const uint64_t size) override;
-            virtual void setTimePaddingCapacity(const mo::Time_t& time) override;
+            virtual void setTimePaddingCapacity(const Duration& time) override;
 
             virtual boost::optional<uint64_t> getFrameBufferCapacity() const override;
-            virtual OptionalTime_t getTimePaddingCapacity() const override;
+            virtual boost::optional<Duration> getTimePaddingCapacity() const override;
 
             virtual uint64_t getSize() const override;
-            bool getTimestampRange(mo::OptionalTime_t& start, mo::OptionalTime_t& end) override;
+            bool getTimestampRange(mo::OptionalTime& start, mo::OptionalTime& end) override;
             bool getFrameNumberRange(uint64_t& start, uint64_t& end) override;
             virtual BufferFlags getBufferType() const override;
 

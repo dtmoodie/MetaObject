@@ -13,7 +13,7 @@ namespace mo
     }
 
     template <typename T>
-    bool TParam<T>::getData(InputStorage_t& value, const OptionalTime_t& ts, Context* /*ctx*/, size_t* fn)
+    bool TParam<T>::getData(InputStorage_t& value, const OptionalTime& ts, Context* /*ctx*/, size_t* fn)
     {
         Lock lock(IParam::mtx());
         if (!ts)
@@ -37,7 +37,7 @@ namespace mo
     }
 
     template <typename T>
-    bool TParam<T>::getData(InputStorage_t& value, size_t fn, Context* /*ctx*/, OptionalTime_t* ts)
+    bool TParam<T>::getData(InputStorage_t& value, size_t fn, Context* /*ctx*/, OptionalTime* ts)
     {
         Lock lock(IParam::mtx());
         if (this->_fn == fn)
@@ -64,7 +64,7 @@ namespace mo
 
     template <typename T>
     bool TParam<T>::updateDataImpl(const Storage_t& data,
-                                   const OptionalTime_t& ts,
+                                   const OptionalTime& ts,
                                    Context* ctx,
                                    size_t fn,
                                    const std::shared_ptr<ICoordinateSystem>& cs)
@@ -78,7 +78,7 @@ namespace mo
 
     template <typename T>
     bool TParam<T>::updateDataImpl(Storage_t&& data,
-                                   const OptionalTime_t& ts,
+                                   const OptionalTime& ts,
                                    Context* ctx,
                                    size_t fn,
                                    const std::shared_ptr<ICoordinateSystem>& cs)

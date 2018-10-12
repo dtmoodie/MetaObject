@@ -17,7 +17,7 @@ namespace mo
         {
         }
 
-        void Map::setTimePaddingCapacity(const mo::Time_t&)
+        void Map::setTimePaddingCapacity(const Duration&)
         {
         }
 
@@ -26,23 +26,23 @@ namespace mo
             return {};
         }
 
-        OptionalTime_t Map::getTimePaddingCapacity() const
+        boost::optional<Duration> Map::getTimePaddingCapacity() const
         {
             return {};
         }
 
         size_t Map::getSize() const
         {
-            return _data_buffer.size();
+            return m_data_buffer.size();
         }
 
-        bool Map::getTimestampRange(mo::OptionalTime_t& start, mo::OptionalTime_t& end)
+        bool Map::getTimestampRange(mo::OptionalTime& start, mo::OptionalTime& end)
         {
-            if (_data_buffer.size())
+            if (m_data_buffer.size())
             {
                 Lock lock(IParam::mtx());
-                start = _data_buffer.begin()->first.timestamp;
-                end = _data_buffer.rbegin()->first.timestamp;
+                start = m_data_buffer.begin()->first.timestamp;
+                end = m_data_buffer.rbegin()->first.timestamp;
                 return true;
             }
             return false;
@@ -50,11 +50,11 @@ namespace mo
 
         bool Map::getFrameNumberRange(uint64_t& start, uint64_t& end)
         {
-            if (_data_buffer.size())
+            if (m_data_buffer.size())
             {
                 Lock lock(IParam::mtx());
-                start = _data_buffer.begin()->first.frame_number;
-                end = _data_buffer.rbegin()->first.frame_number;
+                start = m_data_buffer.begin()->first.frame_number;
+                end = m_data_buffer.rbegin()->first.frame_number;
                 return true;
             }
             return false;
@@ -70,27 +70,26 @@ namespace mo
             if (data)
             {
                 Lock lock(mtx());
-                _data_buffer[data->getHeader()] = data;
+                m_data_buffer[data->getHeader()] = data;
             }
         }
 
         Map::IContainerPtr_t Map::getData(const Header& desired)
         {
             Lock lock(IParam::mtx());
-            m_current = search(desired);
-            return m_current;
+            m_current_data = search(desired);
+            return m_current_data;
         }
 
         Map::IContainerConstPtr_t Map::getData(const Header& desired) const
         {
             Lock lock(IParam::mtx());
-            m_current = search(desired);
-            return m_current;
+            return m_current_data;
         }
 
-        IDataContainerPtr_t Map::search(const Header& hdr) const
+        IDataContainerPtr_t Map::search(const Header& hdr)
         {
-            if (_data_buffer.size() == 0)
+            if (m_data_buffer.size() == 0)
             {
                 return {};
             }
@@ -98,9 +97,33 @@ namespace mo
             {
                 if (!hdr.timestamp)
                 {
-                    if (_data_buffer.size())
+                    if (m_data_buffer.size())
                     {
-                        return (--this->_data_buffer.end())->second;
+                        return (--this->m_data_buffer.end())->second;
+                    }
+                    else
+                    {
+                        return {};
+                    }
+                }
+            }
+
+            return {};
+        }
+
+        IDataContainerPtr_t Map::search(const Header& hdr) const
+        {
+            if (m_data_buffer.size() == 0)
+            {
+                return {};
+            }
+            else
+            {
+                if (!hdr.timestamp)
+                {
+                    if (m_data_buffer.size())
+                    {
+                        return (--this->m_data_buffer.end())->second;
                     }
                     else
                     {

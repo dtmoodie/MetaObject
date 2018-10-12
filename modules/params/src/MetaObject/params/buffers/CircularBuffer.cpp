@@ -16,7 +16,7 @@ namespace mo
             m_buffer.set_capacity(size);
         }
 
-        void CircularBuffer::setTimePaddingCapacity(const mo::Time_t&)
+        void CircularBuffer::setTimePaddingCapacity(const Duration&)
         {
         }
 
@@ -25,7 +25,7 @@ namespace mo
             return m_buffer.capacity();
         }
 
-        OptionalTime_t CircularBuffer::getTimePaddingCapacity() const
+        boost::optional<Duration> CircularBuffer::getTimePaddingCapacity() const
         {
             return {};
         }
@@ -35,7 +35,7 @@ namespace mo
             return m_buffer.size();
         }
 
-        bool CircularBuffer::getTimestampRange(mo::OptionalTime_t& start, mo::OptionalTime_t& end)
+        bool CircularBuffer::getTimestampRange(mo::OptionalTime& start, mo::OptionalTime& end)
         {
             if (m_buffer.size())
             {

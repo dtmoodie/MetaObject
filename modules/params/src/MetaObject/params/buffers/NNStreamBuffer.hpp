@@ -17,7 +17,7 @@ namespace mo
             }
 
           protected:
-            typename std::map<Header, IDataContainerPtr_t>::iterator search(const OptionalTime_t& ts);
+            typename std::map<Header, IDataContainerPtr_t>::iterator search(const OptionalTime& ts);
             typename std::map<Header, IDataContainerPtr_t>::iterator search(size_t fn);
         };
     }

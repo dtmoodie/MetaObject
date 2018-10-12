@@ -110,10 +110,14 @@ template <typename C>
 struct basic_cstring : public std::basic_string<C>
 {
     template <typename S>
-    basic_cstring(S p) : std::basic_string<C>(p)
+    basic_cstring(S p)
+        : std::basic_string<C>(p)
     {
     }
-    operator const C*() const { return this->c_str(); }
+    operator const C*() const
+    {
+        return this->c_str();
+    }
 };
 typedef basic_cstring<char> cstring;
 typedef basic_cstring<wchar_t> wcstring;
@@ -438,15 +442,26 @@ namespace mo
 {
 
     ExceptionWithCallStack<std::string>::ExceptionWithCallStack(const std::string& msg, const std::string& callstack)
-        : std::string(msg), m_callStack(callstack)
+        : std::string(msg)
+        , m_callStack(callstack)
     {
     }
 
-    const char* mo::ExceptionWithCallStack<std::string>::callStack() const { return m_callStack.c_str(); }
+    const char* mo::ExceptionWithCallStack<std::string>::callStack() const
+    {
+        return m_callStack.c_str();
+    }
 #ifndef _MSC_VER
-    ThrowStream::ThrowStream() : msg(s_msg_buffer) {}
+    ThrowStream::ThrowStream()
+        : msg(s_msg_buffer)
+    {
+    }
 
-    mo::ThrowStream::ThrowStream(const ThrowStream& other) : msg(other.msg), callstack(other.callstack) {}
+    mo::ThrowStream::ThrowStream(const ThrowStream& other)
+        : msg(other.msg)
+        , callstack(other.callstack)
+    {
+    }
 
     ThrowStream& mo::ThrowStream::
     operator()(int error, const char* file, int line, const char* func, bool collect_callstack)
@@ -457,14 +472,23 @@ namespace mo
             callstack = printCallstack(1, true);
         return *this;
     }
-    const char* ThrowStream::callStack() const { return callstack.c_str(); }
+    const char* ThrowStream::callStack() const
+    {
+        return callstack.c_str();
+    }
 
     thread_local ThrowStream ThrowStream::s_instance;
     thread_local std::stringstream ThrowStream::s_msg_buffer;
 
-    const char* ThrowStream::what() const noexcept { return msg.str().c_str(); }
+    const char* ThrowStream::what() const noexcept
+    {
+        return msg.str().c_str();
+    }
 
-    ThrowStream_trace::~ThrowStream_trace() { MO_LOG(trace) << msg.str(); }
+    ThrowStream_trace::~ThrowStream_trace()
+    {
+        MO_LOG(trace) << msg.str();
+    }
 
     ThrowStream_trace& ThrowStream_trace::
     operator()(int error, const char* file, int line, const char* func, bool collect_callstack)
@@ -476,7 +500,10 @@ namespace mo
         return *this;
     }
 
-    ThrowStream_debug::~ThrowStream_debug() { MO_LOG(debug) << msg.str(); }
+    ThrowStream_debug::~ThrowStream_debug()
+    {
+        MO_LOG(debug) << msg.str();
+    }
 
     ThrowStream_debug& ThrowStream_debug::
     operator()(int error, const char* file, int line, const char* func, bool collect_callstack)
@@ -489,7 +516,10 @@ namespace mo
         return *this;
     }
 
-    ThrowStream_info::~ThrowStream_info() { MO_LOG(info) << msg.str(); }
+    ThrowStream_info::~ThrowStream_info()
+    {
+        MO_LOG(info) << msg.str();
+    }
 
     ThrowStream_info& ThrowStream_info::
     operator()(int error, const char* file, int line, const char* func, bool collect_callstack)
@@ -502,7 +532,10 @@ namespace mo
         return *this;
     }
 
-    ThrowStream_warning::~ThrowStream_warning() { MO_LOG(warning) << msg.str(); }
+    ThrowStream_warning::~ThrowStream_warning()
+    {
+        MO_LOG(warning) << msg.str();
+    }
 
     ThrowStream_warning& ThrowStream_warning::
     operator()(int error, const char* file, int line, const char* func, bool collect_callstack)
@@ -515,7 +548,10 @@ namespace mo
         return *this;
     }
 
-    ThrowStream_error::~ThrowStream_error() { MO_LOG(error) << msg.str(); }
+    ThrowStream_error::~ThrowStream_error()
+    {
+        MO_LOG(error) << msg.str();
+    }
 
     ThrowStream_error& ThrowStream_error::
     operator()(int error, const char* file, int line, const char* func, bool collect_callstack)

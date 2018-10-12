@@ -82,7 +82,7 @@ namespace mo
         return this;
     }
 
-    IParam* IParam::setTimestamp(const mo::Time_t& ts)
+    IParam* IParam::setTimestamp(const mo::Time& ts)
     {
         m_header.timestamp = ts;
         return this;
@@ -122,7 +122,7 @@ namespace mo
         }
     }
 
-    OptionalTime_t IParam::getTimestamp() const
+    OptionalTime IParam::getTimestamp() const
     {
         return m_header.timestamp;
     }

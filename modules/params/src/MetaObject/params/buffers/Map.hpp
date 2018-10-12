@@ -38,13 +38,13 @@ namespace mo
 
             // IBuffer
             virtual void setFrameBufferCapacity(const uint64_t size) override;
-            virtual void setTimePaddingCapacity(const mo::Time_t& time) override;
+            virtual void setTimePaddingCapacity(const Duration& time) override;
 
             virtual boost::optional<uint64_t> getFrameBufferCapacity() const override;
-            virtual OptionalTime_t getTimePaddingCapacity() const override;
+            virtual boost::optional<Duration> getTimePaddingCapacity() const override;
 
             virtual size_t getSize() const override;
-            virtual bool getTimestampRange(mo::OptionalTime_t& start, mo::OptionalTime_t& end) override;
+            virtual bool getTimestampRange(mo::OptionalTime& start, mo::OptionalTime& end) override;
             virtual bool getFrameNumberRange(uint64_t& start, uint64_t& end) override;
             virtual BufferFlags getBufferType() const override;
 
@@ -54,17 +54,17 @@ namespace mo
             virtual IContainerConstPtr_t getData(const Header& desired = Header()) const override;
 
           protected:
-            void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags);
+            void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) override;
 
+            virtual IDataContainerPtr_t search(const Header& hdr);
             virtual IDataContainerPtr_t search(const Header& hdr) const;
 
-          private:
-            std::map<Header, IDataContainerPtr_t> _data_buffer;
-            mutable IDataContainerPtr_t m_current;
-            TSlot<DataUpdate_s> m_update_slot;
-            TSlot<void(const IParam*)> m_delete_slot;
-            IParam* m_input_param;
-            std::shared_ptr<IParam> m_shared_input;
+            template <class F>
+            void accessDataBuffer(F& functor)
+            {
+                functor(m_data_buffer);
+            }
+            std::map<Header, IDataContainerPtr_t> m_data_buffer;
         };
     }
 }

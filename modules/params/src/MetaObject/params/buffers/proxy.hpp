@@ -75,21 +75,21 @@ namespace mo
                     }
                 }
             }
-            virtual T* Data(mo::Time_t timestamp) { return _buffer->Data(timestamp); }
-            virtual bool GetData(T& value, mo::Time_t ts = -1 * mo::second)
+            virtual T* Data(mo::Time timestamp) { return _buffer->Data(timestamp); }
+            virtual bool GetData(T& value, mo::Time ts = -1 * mo::second)
             {
                 return _buffer->GetData(value, time_index);
             }
-            virtual void updateData(T& data_, mo::Time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr) {}
-            virtual void updateData(const T& data_, mo::Time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
+            virtual void updateData(T& data_, mo::Time ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr) {}
+            virtual void updateData(const T& data_, mo::Time ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
             {
             }
-            virtual void updateData(T* data_, mo::Time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr) {}
+            virtual void updateData(T* data_, mo::Time ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr) {}
 
             virtual Param::Ptr DeepCopy() const { return Param::Ptr(new Proxy(_input_Param, _buffer->DeepCopy())); }
-            virtual void SetSize(mo::Time_t size) { dynamic_cast<IBuffer*>(_buffer.get())->SetSize(size); }
-            virtual mo::Time_t getSize() { return dynamic_cast<IBuffer*>(_buffer.get())->getSize(); }
-            virtual void getTimestampRange(mo::Time_t& start, mo::Time_t& end)
+            virtual void SetSize(mo::Time size) { dynamic_cast<IBuffer*>(_buffer.get())->SetSize(size); }
+            virtual mo::Time getSize() { return dynamic_cast<IBuffer*>(_buffer.get())->getSize(); }
+            virtual void getTimestampRange(mo::Time& start, mo::Time& end)
             {
                 dynamic_cast<IBuffer*>(_buffer.get())->getTimestampRange(start, end);
             }

@@ -17,10 +17,10 @@ namespace mo
         mo::TypeInfo getTypeInfo() const override;
         mo::IParam* getInputParam() const override;
 
-        OptionalTime_t getInputTimestamp() override;
+        OptionalTime getInputTimestamp() override;
         virtual uint64_t getInputFrameNumber() override;
 
-        virtual OptionalTime_t getTimestamp() const override;
+        virtual OptionalTime getTimestamp() const override;
         virtual uint64_t getFrameNumber() const override;
 
         bool isInputSet() const override;

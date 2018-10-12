@@ -27,7 +27,7 @@ namespace mo
         virtual bool acceptsType(const TypeInfo& type) const;
 
         IParam* getInputParam() const;
-        OptionalTime_t getInputTimestamp();
+        OptionalTime getInputTimestamp();
         size_t getInputFrameNumber();
 
         virtual bool isInputSet() const;
@@ -167,7 +167,7 @@ namespace mo
     }
 
     template <class T>
-    OptionalTime_t ITInputParam<T>::getInputTimestamp()
+    OptionalTime ITInputParam<T>::getInputTimestamp()
     {
         Lock lock(this->mtx());
         if (m_input)
@@ -177,7 +177,7 @@ namespace mo
         else
         {
             THROW(debug) << "Input not set for " << getTreeName();
-            return OptionalTime_t();
+            return OptionalTime();
         }
     }
 

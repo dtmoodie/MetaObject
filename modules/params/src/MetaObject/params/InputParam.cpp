@@ -47,7 +47,7 @@ std::ostream& InputParam::print(std::ostream& os) const
     return os;
 }
 
-OptionalTime_t InputParam::getInputTimestamp()
+OptionalTime InputParam::getInputTimestamp()
 {
     Lock lock(mtx());
     if (m_input_param)

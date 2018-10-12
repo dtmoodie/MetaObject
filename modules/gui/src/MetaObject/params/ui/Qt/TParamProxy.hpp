@@ -94,7 +94,7 @@ namespace mo
                 void onParamUpdate(typename ParamTraits<T>::ConstStorageRef_t data,
                                    IParam* param,
                                    Context* ctx,
-                                   OptionalTime_t ts,
+                                   OptionalTime ts,
                                    size_t fn,
                                    const std::shared_ptr<ICoordinateSystem>& cs,
                                    UpdateFlags fg)

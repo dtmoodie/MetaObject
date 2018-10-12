@@ -5,13 +5,47 @@
 #include <chrono>
 namespace mo
 {
-    typedef std::chrono::high_resolution_clock::time_point Time_t;
-    typedef boost::optional<Time_t> OptionalTime_t;
+    using Duration = std::chrono::high_resolution_clock::duration;
+
+    struct Time : public std::chrono::high_resolution_clock::time_point
+    {
+        using GetTime_f = mo::Time (*)();
+
+        static Time now();
+        static void setTimeSource(GetTime_f timefunc);
+
+        Time(const std::chrono::high_resolution_clock::time_point& t);
+        Time(const Duration& d);
+
+        double seconds() const;
+
+        std::string print() const;
+        void print(std::ostream& os,
+                   const bool print_days = false,
+                   const bool print_hours = false,
+                   const bool print_minutes = true,
+                   const bool print_seconds = true,
+                   const bool print_nanoseconds = false) const;
+    };
+
+    struct FrameNumber
+    {
+        static uint64_t max();
+        bool valid() const;
+        operator uint64_t() const;
+
+        uint64_t val = max();
+    };
+
+    using OptionalTime = boost::optional<Time>;
 
     template <class T>
     struct TimePrefix
     {
-        static Time_t convert(unsigned long val) { return Time_t(T(val)); }
+        static Duration convert(unsigned long val)
+        {
+            return Duration(T(val));
+        }
     };
 
     static const auto ms = TimePrefix<std::chrono::milliseconds>();
@@ -20,55 +54,34 @@ namespace mo
     static const auto second = TimePrefix<std::chrono::seconds>();
 
     template <class T>
-    Time_t operator*(const TimePrefix<T>& /*lhs*/, double rhs)
+    Duration operator*(const TimePrefix<T>& /*lhs*/, double rhs)
     {
         return TimePrefix<T>::convert(static_cast<unsigned long>(rhs));
     }
 
     template <class T>
-    Time_t operator*(double rhs, const TimePrefix<T>& /*lhs*/)
+    Duration operator*(double rhs, const TimePrefix<T>& /*lhs*/)
     {
         return TimePrefix<T>::convert(rhs);
     }
-
-    typedef mo::Time_t (*GetTime_f)();
-    MO_EXPORTS mo::Time_t getCurrentTime();
-    MO_EXPORTS void setTimeSource(GetTime_f timefunc);
-    MO_EXPORTS std::string printTime(mo::Time_t ts);
-    MO_EXPORTS std::string printTime(mo::Time_t ts,
-                                     const bool days,
-                                     const bool hours = true,
-                                     const bool minutes = true,
-                                     const bool seconds = true,
-                                     const bool nanoseconds = true);
-    MO_EXPORTS std::string printTime(std::chrono::nanoseconds,
-                                     const bool days = true,
-                                     const bool hours = true,
-                                     const bool minutes = true,
-                                     const bool seconds = true,
-                                     const bool nanoseconds = true);
 } // namespace mo
 
 namespace std
 {
-    MO_EXPORTS std::ostream& operator<<(std::ostream& lhs, std::chrono::high_resolution_clock::time_point rhs);
-    MO_EXPORTS std::ostream& operator<<(std::ostream& lhs, std::chrono::milliseconds rhs);
-    MO_EXPORTS std::ostream& operator<<(std::ostream& lhs, std::chrono::microseconds rhs);
-    MO_EXPORTS std::ostream& operator<<(std::ostream& lhs, std::chrono::nanoseconds rhs);
-    MO_EXPORTS std::ostream& operator<<(std::ostream& lhs, std::chrono::seconds rhs);
+    MO_EXPORTS std::ostream& operator<<(std::ostream& lhs, const mo::Time& rhs);
 }
 
 namespace cereal
 {
     template <class AR>
-    double save_minimal(const AR& /*ar*/, const mo::Time_t& time)
+    double save_minimal(const AR& /*ar*/, const mo::Time& time)
     {
         return time.time_since_epoch().count();
     }
 
     template <class AR>
-    void load_minimal(AR& /*ar*/, mo::Time_t& time, const double& value)
+    void load_minimal(AR& /*ar*/, mo::Time& time, const double& value)
     {
-        time = mo::ns * value;
+        time = mo::Time(mo::ns * value);
     }
 }

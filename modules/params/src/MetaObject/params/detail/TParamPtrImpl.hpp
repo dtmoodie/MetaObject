@@ -34,7 +34,7 @@ namespace mo
     }
 
     template <typename T>
-    bool TParamPtr<T>::getData(InputStorage_t& value, const OptionalTime_t& ts, Context* /*ctx*/, size_t* fn_)
+    bool TParamPtr<T>::getData(InputStorage_t& value, const OptionalTime& ts, Context* /*ctx*/, size_t* fn_)
     {
         Lock lock(IParam::mtx());
         if (!ts)
@@ -77,7 +77,7 @@ namespace mo
     }
 
     template <typename T>
-    bool TParamPtr<T>::getData(InputStorage_t& value, size_t fn, Context* /*ctx*/, OptionalTime_t* ts)
+    bool TParamPtr<T>::getData(InputStorage_t& value, size_t fn, Context* /*ctx*/, OptionalTime* ts)
     {
         Lock lock(IParam::mtx());
         if ((fn == this->_fn) && m_ptr)
@@ -99,7 +99,7 @@ namespace mo
     }
 
     template <typename T>
-    IParam* TParamPtr<T>::emitUpdate(const OptionalTime_t& ts_,
+    IParam* TParamPtr<T>::emitUpdate(const OptionalTime& ts_,
                                      Context* ctx_,
                                      const boost::optional<size_t>& fn_,
                                      const std::shared_ptr<ICoordinateSystem>& cs_,
@@ -142,7 +142,7 @@ namespace mo
 
     template <typename T>
     bool TParamPtr<T>::updateDataImpl(const Storage_t& data,
-                                      const OptionalTime_t& ts,
+                                      const OptionalTime& ts,
                                       Context* ctx,
                                       size_t fn,
                                       const std::shared_ptr<ICoordinateSystem>& cs)
@@ -164,7 +164,7 @@ namespace mo
 
     template <typename T>
     bool TParamPtr<T>::updateDataImpl(Storage_t&& data,
-                                      const OptionalTime_t& ts,
+                                      const OptionalTime& ts,
                                       Context* ctx,
                                       size_t fn,
                                       const std::shared_ptr<ICoordinateSystem>& cs)
@@ -205,7 +205,7 @@ namespace mo
         typedef void(TUpdateSig_t)(ConstStorageRef_t,
                                    IParam*,
                                    Context*,
-                                   OptionalTime_t,
+                                   OptionalTime,
                                    size_t,
                                    const std::shared_ptr<ICoordinateSystem>&,
                                    UpdateFlags);
@@ -237,7 +237,7 @@ namespace mo
         }
 
         virtual bool getData(InputStorage_t& data,
-                             const OptionalTime_t& ts = OptionalTime_t(),
+                             const OptionalTime& ts = OptionalTime(),
                              Context* /*ctx*/ = nullptr,
                              size_t* fn_ = nullptr)
         {
@@ -268,7 +268,7 @@ namespace mo
             return false;
         }
 
-        virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr)
+        virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime* ts_ = nullptr)
         {
             Lock lock(IParam::mtx());
             if (fn == this->_fn && m_ptr)
@@ -284,7 +284,7 @@ namespace mo
             return false;
         }
 
-        virtual IParam* emitUpdate(const OptionalTime_t& ts_ = OptionalTime_t(),
+        virtual IParam* emitUpdate(const OptionalTime& ts_ = OptionalTime(),
                                    Context* ctx_ = mo::Context::getCurrent(),
                                    const boost::optional<size_t>& fn_ = boost::optional<size_t>(),
                                    const std::shared_ptr<ICoordinateSystem>& cs_ = std::shared_ptr<ICoordinateSystem>(),
@@ -329,7 +329,7 @@ namespace mo
 
       protected:
         bool updateDataImpl(const Storage_t& data,
-                            const OptionalTime_t& ts,
+                            const OptionalTime& ts,
                             Context* ctx,
                             size_t fn,
                             const std::shared_ptr<ICoordinateSystem>& cs) override
@@ -347,7 +347,7 @@ namespace mo
         }
 
         bool updateDataImpl(Storage_t&& data,
-                            const OptionalTime_t& ts,
+                            const OptionalTime& ts,
                             Context* ctx,
                             size_t fn,
                             const std::shared_ptr<ICoordinateSystem>& cs) override
@@ -370,7 +370,7 @@ namespace mo
     };
 
     template <typename T>
-    bool TParamOutput<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_)
+    bool TParamOutput<T>::getData(InputStorage_t& data, const OptionalTime& ts, Context* ctx, size_t* fn_)
     {
         if (!ts || ts == this->_ts)
         {
@@ -391,7 +391,7 @@ namespace mo
     }
 
     template <typename T>
-    bool TParamOutput<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_)
+    bool TParamOutput<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime* ts_)
     {
         if (fn == this->_fn)
         {
@@ -425,7 +425,7 @@ namespace mo
 
     template <typename T>
     bool TParamOutput<T>::updateDataImpl(const Storage_t& data,
-                                         const OptionalTime_t& ts,
+                                         const OptionalTime& ts,
                                          Context* ctx,
                                          size_t fn,
                                          const std::shared_ptr<ICoordinateSystem>& cs)
@@ -447,7 +447,7 @@ namespace mo
 
     template <typename T>
     bool TParamOutput<T>::updateDataImpl(Storage_t&& data,
-                                         const OptionalTime_t& ts,
+                                         const OptionalTime& ts,
                                          Context* ctx,
                                          size_t fn,
                                          const std::shared_ptr<ICoordinateSystem>& cs)
@@ -468,7 +468,7 @@ namespace mo
     }
 
     template <typename T>
-    IParam* TParamOutput<T>::emitUpdate(const OptionalTime_t& ts_,
+    IParam* TParamOutput<T>::emitUpdate(const OptionalTime& ts_,
                                         Context* ctx_,
                                         const boost::optional<size_t>& fn_,
                                         const std::shared_ptr<ICoordinateSystem>& cs_,
@@ -550,7 +550,7 @@ namespace mo
         typedef void(TUpdateSig_t)(ConstStorageRef_t,
                                    IParam*,
                                    Context*,
-                                   OptionalTime_t,
+                                   OptionalTime,
                                    size_t,
                                    const std::shared_ptr<ICoordinateSystem>&,
                                    UpdateFlags);
@@ -563,7 +563,7 @@ namespace mo
         }
 
         virtual bool getData(InputStorage_t& data,
-                             const OptionalTime_t& ts = OptionalTime_t(),
+                             const OptionalTime& ts = OptionalTime(),
                              Context* ctx = nullptr,
                              size_t* fn_ = nullptr)
         {
@@ -585,7 +585,7 @@ namespace mo
             return false;
         }
 
-        virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr)
+        virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime* ts_ = nullptr)
         {
             if (fn == this->_fn)
             {
@@ -620,7 +620,7 @@ namespace mo
             return data != nullptr;
         }
 
-        virtual IParam* emitUpdate(const OptionalTime_t& ts_ = OptionalTime_t(),
+        virtual IParam* emitUpdate(const OptionalTime& ts_ = OptionalTime(),
                                    Context* ctx_ = mo::Context::getCurrent(),
                                    const boost::optional<size_t>& fn_ = boost::optional<size_t>(),
                                    const std::shared_ptr<ICoordinateSystem>& cs_ = std::shared_ptr<ICoordinateSystem>(),
@@ -687,7 +687,7 @@ namespace mo
 
       protected:
         bool updateDataImpl(const Storage_t& data,
-                            const OptionalTime_t& ts,
+                            const OptionalTime& ts,
                             Context* ctx,
                             size_t fn,
                             const std::shared_ptr<ICoordinateSystem>& cs) override
@@ -707,7 +707,7 @@ namespace mo
         }
 
         bool updateDataImpl(Storage_t&& data,
-                            const OptionalTime_t& ts,
+                            const OptionalTime& ts,
                             Context* ctx,
                             size_t fn,
                             const std::shared_ptr<ICoordinateSystem>& cs) override

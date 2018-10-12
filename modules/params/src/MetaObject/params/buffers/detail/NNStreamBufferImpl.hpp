@@ -7,13 +7,14 @@ namespace mo
 
         template <class T>
         NNStreamBuffer<T>::NNStreamBuffer(const std::string& name)
-            : ITParam<T>(name, ParamFlags::Buffer_e), StreamBuffer<T>(name)
+            : ITParam<T>(name, ParamFlags::Buffer_e)
+            , StreamBuffer<T>(name)
         {
         }
 
         template <class T>
         typename std::map<SequenceKey, typename NNStreamBuffer<T>::InputStorage_t>::iterator
-        NNStreamBuffer<T>::search(const OptionalTime_t& ts)
+        NNStreamBuffer<T>::search(const OptionalTime& ts)
         {
             if (!ts)
             { // default timestamp passed in, get newest value
@@ -89,7 +90,7 @@ namespace mo
         }
 
         template <class T>
-        bool NNStreamBuffer<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_)
+        bool NNStreamBuffer<T>::getData(InputStorage_t& data, const OptionalTime& ts, Context* ctx, size_t* fn_)
         {
             Lock lock(IParam::mtx());
             auto itr = search(ts);
@@ -116,7 +117,7 @@ namespace mo
         }
 
         template <class T>
-        bool NNStreamBuffer<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_)
+        bool NNStreamBuffer<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime* ts_)
         {
             Lock lock(IParam::mtx());
             auto itr = search(fn);

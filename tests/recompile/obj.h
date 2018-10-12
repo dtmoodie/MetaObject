@@ -60,7 +60,7 @@ struct DLL_EXPORTS test_meta_object_output : public MetaObject
     MO_END
     int param_update_call_count = 0;
     virtual void onParamUpdate(
-        IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags) override
+        IParam*, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags) override
     {
         ++param_update_call_count;
     }
@@ -73,7 +73,7 @@ struct DLL_EXPORTS test_meta_object_input : public MetaObject
     MO_END
     int param_update_call_count = 0;
     virtual void onParamUpdate(
-        IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags) override
+        IParam*, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags) override
     {
         ++param_update_call_count;
     }

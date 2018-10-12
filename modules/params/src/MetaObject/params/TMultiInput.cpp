@@ -90,7 +90,7 @@ namespace mo
         return m_current_input;
     }
 
-    OptionalTime_t IMultiInput::getInputTimestamp()
+    OptionalTime IMultiInput::getInputTimestamp()
     {
         if (m_current_input)
         {
@@ -108,7 +108,7 @@ namespace mo
         return std::numeric_limits<uint64_t>::max();
     }
 
-    OptionalTime_t IMultiInput::getTimestamp() const
+    OptionalTime IMultiInput::getTimestamp() const
     {
     }
     uint64_t IMultiInput::getFrameNumber() const

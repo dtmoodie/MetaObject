@@ -316,7 +316,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
     PluginInfo plugin_info;
     std::string plugin_name = boost::filesystem::path(fullPluginPath).stem().string();
     plugin_info.m_path = fullPluginPath;
-    mo::Time_t start = mo::getCurrentTime();
+    mo::Time start = mo::getCurrentTime();
     HMODULE handle = LoadLibrary(fullPluginPath.c_str());
     if (handle == nullptr)
     {
@@ -355,7 +355,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
         }
         plugin_info.m_id = id;
         setupObjectConstructors(moduleInterface);
-        mo::Time_t end = mo::getCurrentTime();
+        mo::Time end = mo::getCurrentTime();
         //_pimpl->plugins.push_back(plugin_name + " - success");
         plugin_info.m_state = "success";
         plugin_info.m_load_time =

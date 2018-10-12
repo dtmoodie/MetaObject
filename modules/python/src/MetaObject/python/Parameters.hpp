@@ -23,7 +23,7 @@ namespace mo
 
             void onParamUpdate(IParam* param,
                                Context*,
-                               OptionalTime_t ts,
+                               OptionalTime ts,
                                size_t fn,
                                const std::shared_ptr<ICoordinateSystem>&,
                                UpdateFlags flags);

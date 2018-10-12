@@ -6,8 +6,10 @@ namespace mo
     namespace Buffer
     {
         template <class T>
-        CircularBuffer<T>::CircularBuffer(T&& init, const std::string& name, OptionalTime_t ts, ParamFlags type)
-            : ITInputParam<T>(name), ITParam<T>(name, mo::ParamFlags::Buffer_e), IParam(name, mo::ParamFlags::Buffer_e)
+        CircularBuffer<T>::CircularBuffer(T&& init, const std::string& name, OptionalTime ts, ParamFlags type)
+            : ITInputParam<T>(name)
+            , ITParam<T>(name, mo::ParamFlags::Buffer_e)
+            , IParam(name, mo::ParamFlags::Buffer_e)
         {
             (void)&_circular_buffer_constructor;
             (void)&_circular_buffer_param_constructor;
@@ -16,14 +18,16 @@ namespace mo
         }
 
         template <class T>
-        CircularBuffer<T>::CircularBuffer(const std::string& name, OptionalTime_t ts, ParamFlags type)
-            : ITInputParam<T>(name), ITParam<T>(name, mo::ParamFlags::Buffer_e), IParam(name, mo::ParamFlags::Buffer_e)
+        CircularBuffer<T>::CircularBuffer(const std::string& name, OptionalTime ts, ParamFlags type)
+            : ITInputParam<T>(name)
+            , ITParam<T>(name, mo::ParamFlags::Buffer_e)
+            , IParam(name, mo::ParamFlags::Buffer_e)
         {
             _data_buffer.set_capacity(10);
         }
 
         template <class T>
-        bool CircularBuffer<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_)
+        bool CircularBuffer<T>::getData(InputStorage_t& data, const OptionalTime& ts, Context* ctx, size_t* fn_)
         {
             if (!ts && _data_buffer.size())
             {
@@ -56,7 +60,7 @@ namespace mo
         }
 
         template <class T>
-        bool CircularBuffer<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_)
+        bool CircularBuffer<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime* ts_)
         {
             Lock lock(this->mtx());
             for (auto& itr : _data_buffer)
@@ -82,7 +86,7 @@ namespace mo
 
         template <class T>
         bool CircularBuffer<T>::updateDataImpl(const Storage_t& data_,
-                                               const OptionalTime_t& ts,
+                                               const OptionalTime& ts,
                                                Context* ctx,
                                                size_t fn,
                                                const std::shared_ptr<ICoordinateSystem>& cs)
@@ -105,7 +109,7 @@ namespace mo
 
         template <class T>
         bool CircularBuffer<T>::updateDataImpl(Storage_t&& data_,
-                                               const OptionalTime_t& ts,
+                                               const OptionalTime& ts,
                                                Context* ctx,
                                                size_t fn,
                                                const std::shared_ptr<ICoordinateSystem>& cs)
@@ -134,7 +138,7 @@ namespace mo
         }
 
         template <class T>
-        void CircularBuffer<T>::setTimePaddingCapacity(mo::Time_t time)
+        void CircularBuffer<T>::setTimePaddingCapacity(mo::Time time)
         {
             (void)time;
         }
@@ -147,7 +151,7 @@ namespace mo
         }
 
         template <class T>
-        OptionalTime_t CircularBuffer<T>::getTimePaddingCapacity()
+        OptionalTime CircularBuffer<T>::getTimePaddingCapacity()
         {
             return {};
         }
@@ -160,7 +164,7 @@ namespace mo
         }
 
         template <class T>
-        bool CircularBuffer<T>::getTimestampRange(mo::Time_t& start, mo::Time_t& end)
+        bool CircularBuffer<T>::getTimestampRange(mo::Time& start, mo::Time& end)
         {
             if (_data_buffer.size())
             {
@@ -199,7 +203,7 @@ namespace mo
         void CircularBuffer<T>::onInputUpdate(ConstStorageRef_t data,
                                               IParam* param,
                                               Context* ctx,
-                                              OptionalTime_t ts,
+                                              OptionalTime ts,
                                               size_t fn,
                                               const std::shared_ptr<ICoordinateSystem>& cs,
                                               UpdateFlags fg)

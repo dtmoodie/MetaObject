@@ -11,7 +11,7 @@ namespace mo
         virtual bool getInputData(const Header& desired, Header* retrieved) override;
 
         size_t getInputFrameNumber() override;
-        OptionalTime_t getInputTimestamp() override;
+        OptionalTime getInputTimestamp() override;
 
         // This gets a pointer to the variable that feeds into this input
         IParam* getInputParam() const override;

@@ -68,7 +68,7 @@ namespace mo
         }
 
         // commit a Param's value copying metadata info from another parmaeter
-        virtual IParam* emitUpdate(const IParam& other) override
+        virtual IParam* emitUpdate(const IParam& other, UpdateFlags flags_ = ValueUpdated_e) override
         {
             Lock lock(this->mtx());
             if (m_ptr)

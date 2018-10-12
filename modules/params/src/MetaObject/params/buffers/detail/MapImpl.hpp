@@ -5,13 +5,14 @@ namespace mo
     namespace Buffer
     {
         template <class T>
-        Map<T>::Map(const std::string& name) : ITInputParam<T>(name)
+        Map<T>::Map(const std::string& name)
+            : ITInputParam<T>(name)
         {
             this->appendFlags(ParamFlags::Buffer_e);
         }
 
         template <class T>
-        bool Map<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_)
+        bool Map<T>::getData(InputStorage_t& data, const OptionalTime& ts, Context* ctx, size_t* fn_)
         {
             Lock lock(IParam::mtx());
 
@@ -39,7 +40,7 @@ namespace mo
         }
 
         template <class T>
-        bool Map<T>::getData(InputStorage_t& value, size_t fn, Context* ctx, OptionalTime_t* ts)
+        bool Map<T>::getData(InputStorage_t& value, size_t fn, Context* ctx, OptionalTime* ts)
         {
             Lock lock(IParam::mtx());
             auto itr = search(fn);
@@ -67,7 +68,7 @@ namespace mo
 
         template <class T>
         bool Map<T>::updateDataImpl(const Storage_t& data,
-                                    const OptionalTime_t& ts,
+                                    const OptionalTime& ts,
                                     Context* ctx,
                                     size_t fn,
                                     const std::shared_ptr<ICoordinateSystem>& cs)
@@ -83,7 +84,7 @@ namespace mo
 
         template <class T>
         bool Map<T>::updateDataImpl(Storage_t&& data,
-                                    const OptionalTime_t& ts,
+                                    const OptionalTime& ts,
                                     Context* ctx,
                                     size_t fn,
                                     const std::shared_ptr<ICoordinateSystem>& cs)
@@ -103,7 +104,7 @@ namespace mo
         }
 
         template <class T>
-        void Map<T>::setTimePaddingCapacity(mo::Time_t time)
+        void Map<T>::setTimePaddingCapacity(mo::Time time)
         {
         }
 
@@ -114,7 +115,7 @@ namespace mo
         }
 
         template <class T>
-        OptionalTime_t Map<T>::getTimePaddingCapacity()
+        OptionalTime Map<T>::getTimePaddingCapacity()
         {
             return {};
         }
@@ -127,7 +128,7 @@ namespace mo
         }
 
         template <class T>
-        bool Map<T>::getTimestampRange(mo::Time_t& start, mo::Time_t& end)
+        bool Map<T>::getTimestampRange(mo::Time& start, mo::Time& end)
         {
             if (_data_buffer.size())
             {
@@ -165,8 +166,7 @@ namespace mo
         }
 
         template <class T>
-        typename std::map<SequenceKey, typename Map<T>::InputStorage_t>::iterator
-        Map<T>::search(const OptionalTime_t& ts)
+        typename std::map<SequenceKey, typename Map<T>::InputStorage_t>::iterator Map<T>::search(const OptionalTime& ts)
         {
             if (_data_buffer.size() == 0)
             {
@@ -210,7 +210,7 @@ namespace mo
         void Map<T>::onInputUpdate(ConstStorageRef_t data,
                                    IParam* input,
                                    Context* ctx,
-                                   OptionalTime_t ts,
+                                   OptionalTime ts,
                                    size_t fn,
                                    const std::shared_ptr<ICoordinateSystem>& cs,
                                    UpdateFlags)

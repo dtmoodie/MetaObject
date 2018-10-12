@@ -52,7 +52,7 @@ namespace mo
             return _data;
         }
 
-        AccessToken<T>& operator()(const OptionalTime_t& ts_)
+        AccessToken<T>& operator()(const OptionalTime& ts_)
         {
             _header.timestamp = ts_;
             _modified = true;

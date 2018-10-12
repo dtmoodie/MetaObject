@@ -22,7 +22,7 @@ namespace mo
     }
 
     template <class T>
-    T MetaObject::getParamValue(const std::string& name, const OptionalTime_t& ts, Context* ctx) const
+    T MetaObject::getParamValue(const std::string& name, const OptionalTime& ts, Context* ctx) const
     {
         T data;
         MO_ASSERT(getParam<T>(name)->getData(data, ts, ctx));
@@ -38,7 +38,7 @@ namespace mo
     }
 
     template <class T>
-    ITParam<T>* MetaObject::updateParam(const std::string& name, T& value, const OptionalTime_t& ts, Context* ctx)
+    ITParam<T>* MetaObject::updateParam(const std::string& name, T& value, const OptionalTime& ts, Context* ctx)
     {
         if (ctx == nullptr)
             ctx = getContext().get();
@@ -57,7 +57,7 @@ namespace mo
     }
 
     template <class T>
-    ITParam<T>* MetaObject::updateParam(const std::string& name, const T& value, const OptionalTime_t& ts, Context* ctx)
+    ITParam<T>* MetaObject::updateParam(const std::string& name, const T& value, const OptionalTime& ts, Context* ctx)
     {
         if (ctx == nullptr)
             ctx = getContext().get();

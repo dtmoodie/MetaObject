@@ -11,7 +11,7 @@ namespace mo
 
     struct MO_EXPORTS Header
     {
-        mo::OptionalTime_t timestamp;
+        mo::OptionalTime timestamp;
         uint64_t frame_number = std::numeric_limits<uint64_t>::max();
 
         Context* ctx;

@@ -6,8 +6,9 @@
 
 namespace mo
 {
-    GetTime_f time_source = nullptr;
-    MO_EXPORTS mo::Time_t getCurrentTime()
+    static Time::GetTime_f time_source = nullptr;
+
+    Time Time::now()
     {
         if (time_source)
         {
@@ -16,19 +17,40 @@ namespace mo
         return std::chrono::high_resolution_clock::now();
     }
 
-    MO_EXPORTS void setTimeSource(GetTime_f timefunc) { time_source = timefunc; }
-
-    MO_EXPORTS std::string printTime(mo::Time_t ns,
-                                     const bool print_days,
-                                     const bool hours,
-                                     const bool minutes,
-                                     const bool seconds,
-                                     const bool nanoseconds)
+    void Time::setTimeSource(Time::GetTime_f timefunc)
     {
-        typedef std::chrono::duration<int, std::ratio<86400>> days;
+        time_source = timefunc;
+    }
+
+    Time::Time(const std::chrono::high_resolution_clock::time_point& t)
+        : std::chrono::high_resolution_clock::time_point(t)
+    {
+    }
+
+    Time::Time(const Duration& d)
+        : std::chrono::high_resolution_clock::time_point(d)
+    {
+    }
+
+    std::string Time::print() const
+    {
         std::stringstream ss;
+        print(ss);
+        return ss.str();
+    }
+
+    using Days = std::chrono::duration<int, std::ratio<86400>>;
+    void Time::print(std::ostream& ss,
+                     const bool print_days,
+                     const bool hours,
+                     const bool minutes,
+                     const bool seconds,
+                     const bool nanoseconds) const
+    {
+
         ss.fill('0');
-        auto d = std::chrono::duration_cast<days>(ns.time_since_epoch());
+        auto ns = *this;
+        auto d = std::chrono::duration_cast<Days>(ns.time_since_epoch());
         ns -= d;
         auto h = std::chrono::duration_cast<std::chrono::hours>(ns.time_since_epoch());
         ns -= h;
@@ -74,93 +96,12 @@ namespace mo
             }
             ss << std::setw(4) << ns.time_since_epoch().count();
         }
-
-        return ss.str();
     }
 
-    std::string printTime(mo::Time_t ts) { return printTime(ts, false); }
-
-    MO_EXPORTS std::string printTime(std::chrono::nanoseconds ns,
-                                     const bool print_days,
-                                     const bool hours,
-                                     const bool minutes,
-                                     const bool seconds,
-                                     const bool nanoseconds)
+    double Time::seconds() const
     {
-        typedef std::chrono::duration<int, std::ratio<86400>> days;
-        std::stringstream ss;
-        ss.fill('0');
-        auto d = std::chrono::duration_cast<days>(ns);
-        if (print_days)
-        {
-            ns -= d;
-        }
-
-        auto h = std::chrono::duration_cast<std::chrono::hours>(ns);
-        if (hours)
-        {
-            ns -= h;
-        }
-
-        auto m = std::chrono::duration_cast<std::chrono::minutes>(ns);
-        if (minutes)
-        {
-            ns -= m;
-        }
-
-        auto s = std::chrono::duration_cast<std::chrono::seconds>(ns);
-        ns -= s;
-        if (print_days)
-        {
-            ss << std::setw(2) << d.count();
-            ss << ':';
-        }
-        if (hours)
-        {
-            if (print_days)
-            {
-                ss << ':';
-            }
-            ss << std::setw(2) << h.count();
-        }
-        if (minutes)
-        {
-            if (hours || print_days)
-            {
-                ss << ':';
-            }
-            ss << std::setw(2) << m.count();
-        }
-        if (seconds)
-        {
-            if (minutes)
-            {
-                ss << ':';
-            }
-
-            ss << std::setw(2) << s.count();
-        }
-        if (nanoseconds)
-        {
-            if (seconds)
-            {
-                ss << '.';
-            }
-            ss << std::setw(4) << ns.count();
-        }
-
-        return ss.str();
-    }
-}
-
-namespace std
-{
-
-    std::ostream& operator<<(std::ostream& ss, std::chrono::high_resolution_clock::time_point ns)
-    {
-        typedef std::chrono::duration<int, std::ratio<86400>> days;
-        ss.fill('0');
-        auto d = std::chrono::duration_cast<days>(ns.time_since_epoch());
+        auto ns = *this;
+        auto d = std::chrono::duration_cast<Days>(ns.time_since_epoch());
         ns -= d;
         auto h = std::chrono::duration_cast<std::chrono::hours>(ns.time_since_epoch());
         ns -= h;
@@ -168,80 +109,31 @@ namespace std
         ns -= m;
         auto s = std::chrono::duration_cast<std::chrono::seconds>(ns.time_since_epoch());
         ns -= s;
-        ss << std::setw(2) << h.count() << ':' << std::setw(2) << m.count() << ':' << std::setw(2) << s.count() << '.'
-           << std::setw(4) << ns.time_since_epoch().count();
-        ss << ns.time_since_epoch().count() << " ns";
-        return ss;
-    }
-    std::ostream& operator<<(std::ostream& ss, std::chrono::milliseconds ns)
-    {
-        typedef std::chrono::duration<int, std::ratio<86400>> days;
-        ss.fill('0');
-        auto d = std::chrono::duration_cast<days>(ns);
-        ns -= d;
-        auto h = std::chrono::duration_cast<std::chrono::hours>(ns);
-        ns -= h;
-        auto m = std::chrono::duration_cast<std::chrono::minutes>(ns);
-        ns -= m;
-        auto s = std::chrono::duration_cast<std::chrono::seconds>(ns);
-        ns -= s;
-        ss << std::setw(2) << h.count() << ':' << std::setw(2) << m.count() << ':' << std::setw(2) << s.count() << '.'
-           << std::setw(4) << ns.count();
-        ss << ns.count() << " ns";
-        return ss;
+        auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(ns.time_since_epoch());
+        return s.count() + (ms.count() / 1000.0);
     }
 
-    std::ostream& operator<<(std::ostream& ss, std::chrono::microseconds ns)
+    uint64_t FrameNumber::max()
     {
-        typedef std::chrono::duration<int, std::ratio<86400>> days;
-        ss.fill('0');
-        auto d = std::chrono::duration_cast<days>(ns);
-        ns -= d;
-        auto h = std::chrono::duration_cast<std::chrono::hours>(ns);
-        ns -= h;
-        auto m = std::chrono::duration_cast<std::chrono::minutes>(ns);
-        ns -= m;
-        auto s = std::chrono::duration_cast<std::chrono::seconds>(ns);
-        ns -= s;
-        ss << std::setw(2) << h.count() << ':' << std::setw(2) << m.count() << ':' << std::setw(2) << s.count() << '.'
-           << std::setw(4) << ns.count();
-        ss << ns.count() << " us";
-        return ss;
+        return std::numeric_limits<uint64_t>::max();
     }
 
-    std::ostream& operator<<(std::ostream& ss, std::chrono::nanoseconds ns)
+    bool FrameNumber::valid() const
     {
-        typedef std::chrono::duration<int, std::ratio<86400>> days;
-        ss.fill('0');
-        auto d = std::chrono::duration_cast<days>(ns);
-        ns -= d;
-        auto h = std::chrono::duration_cast<std::chrono::hours>(ns);
-        ns -= h;
-        auto m = std::chrono::duration_cast<std::chrono::minutes>(ns);
-        ns -= m;
-        auto s = std::chrono::duration_cast<std::chrono::seconds>(ns);
-        ns -= s;
-        ss << std::setw(2) << h.count() << ':' << std::setw(2) << m.count() << ':' << std::setw(2) << s.count() << '.'
-           << std::setw(4) << ns.count();
-        ss << ns.count() << " ns";
-        return ss;
+        return val != max();
     }
 
-    std::ostream& operator<<(std::ostream& ss, std::chrono::seconds ns)
+    FrameNumber::operator uint64_t() const
     {
-        typedef std::chrono::duration<int, std::ratio<86400>> days;
-        ss.fill('0');
-        auto d = std::chrono::duration_cast<days>(ns);
-        ns -= d;
-        auto h = std::chrono::duration_cast<std::chrono::hours>(ns);
-        ns -= h;
-        auto m = std::chrono::duration_cast<std::chrono::minutes>(ns);
-        ns -= m;
-        auto s = std::chrono::duration_cast<std::chrono::seconds>(ns);
-        ns -= s;
-        ss << std::setw(2) << h.count() << ':' << std::setw(2) << m.count() << ':' << std::setw(2) << s.count() << '.'
-           << std::setw(4) << ns.count();
-        ss << ns.count() << " s";
-        return ss;
+        return val;
+    }
+}
+
+namespace std
+{
+    std::ostream& operator<<(std::ostream& lhs, const mo::Time& rhs)
+    {
+        rhs.print(lhs);
+        return lhs;
     }
 }

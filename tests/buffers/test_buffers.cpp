@@ -115,10 +115,10 @@ BOOST_AUTO_PARAM_TEST_CASE(buffer_test, buffer_test_cases, end(buffer_test_cases
     BOOST_REQUIRE(buf);
     buf->setFrameBufferCapacity(100);
     input_param.setInput(buffer);
-    std::vector<mo::Time_t> process_queue;
+    std::vector<mo::Time> process_queue;
     mo::UpdateSlot_t slot([&process_queue](mo::IParam* param,
                                            mo::Context* ctx,
-                                           mo::OptionalTime_t ts,
+                                           mo::OptionalTime ts,
                                            size_t fn,
                                            const std::shared_ptr<mo::ICoordinateSystem>& cs,
                                            mo::UpdateFlags fg) {
@@ -130,13 +130,13 @@ BOOST_AUTO_PARAM_TEST_CASE(buffer_test, buffer_test_cases, end(buffer_test_cases
     {
         for (int i = 50 * j; i < 50 + 50 * j; ++i)
         {
-            output_param.updateData(i, mo::tag::_timestamp = mo::Time_t(i * mo::ms));
+            output_param.updateData(i, mo::tag::_timestamp = mo::Time(i * mo::ms));
         }
         for (auto itr = process_queue.begin(); itr != process_queue.end();)
         {
             int data;
             BOOST_REQUIRE(input_param.getData(data, *itr));
-            BOOST_REQUIRE_EQUAL(mo::Time_t(data * mo::ms), *itr);
+            BOOST_REQUIRE_EQUAL(mo::Time(data * mo::ms), *itr);
             itr = process_queue.erase(itr);
         }
     }
@@ -146,13 +146,13 @@ BOOST_AUTO_PARAM_TEST_CASE(buffer_test, buffer_test_cases, end(buffer_test_cases
         for (int i = 50 * j; i < 50 + 50 * j; ++i)
         {
             output = i * 2;
-            output_param.emitUpdate(mo::OptionalTime_t(i * mo::ms));
+            output_param.emitUpdate(mo::OptionalTime(i * mo::ms));
         }
         for (auto itr = process_queue.begin(); itr != process_queue.end();)
         {
             int data;
             BOOST_REQUIRE(input_param.getData(data, *itr));
-            BOOST_REQUIRE_EQUAL(mo::Time_t((data / 2) * mo::ms), *itr);
+            BOOST_REQUIRE_EQUAL(mo::Time((data / 2) * mo::ms), *itr);
             itr = process_queue.erase(itr);
         }
     }

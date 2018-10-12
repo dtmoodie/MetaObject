@@ -202,7 +202,7 @@
             on_##NAME##_modified,                                                                                      \
             mo::IParam*,                                                                                               \
             mo::Context*,                                                                                              \
-            mo::OptionalTime_t,                                                                                        \
+            mo::OptionalTime,                                                                                        \
             size_t,                                                                                                    \
             const std::shared_ptr<mo::ICoordinateSystem>&,                                                             \
             mo::UpdateFlags)

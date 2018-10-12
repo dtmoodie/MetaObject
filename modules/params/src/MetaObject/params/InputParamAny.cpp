@@ -41,7 +41,7 @@ size_t InputParamAny::getInputFrameNumber()
     return 0;
 }
 
-OptionalTime_t InputParamAny::getInputTimestamp()
+OptionalTime InputParamAny::getInputTimestamp()
 {
     if (input)
     {

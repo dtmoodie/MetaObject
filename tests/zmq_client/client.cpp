@@ -53,7 +53,7 @@ BOOST_AUTO_TEST_CASE(client)
             std::istringstream iss(static_cast<char*>(msg.data()));
             cereal::BinaryInputArchive ar(iss);
             deserialization_func(&Param, ar);
-            mo::Time_t ts = Param.getTimestamp();
+            mo::Time ts = Param.getTimestamp();
             int value = Param.GetData();
             BOOST_REQUIRE_EQUAL(ts, value);
             ++count;

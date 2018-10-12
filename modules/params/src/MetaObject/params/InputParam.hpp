@@ -48,7 +48,7 @@ namespace mo
         // These values can differ from the current timestamp and frame number
         // since these values represent the next value that can be read, whereas getTimestamp and
         // getFramenumber represent that data currently loaded
-        virtual OptionalTime_t getInputTimestamp();
+        virtual OptionalTime getInputTimestamp();
         virtual uint64_t getInputFrameNumber();
         virtual bool isInputSet() const;
 
@@ -77,6 +77,6 @@ namespace mo
         Qualifier_f qualifier;
         IParam* m_input_param;
         std::shared_ptr<IParam> m_shared_input;
-        IDataContainerPtr_t m_current_data;
+        mutable IDataContainerPtr_t m_current_data;
     };
 }

@@ -65,7 +65,7 @@ namespace mo
         virtual const std::string& getTreeRoot() const = 0;
 
         // Get the timestamp of this Param, may not exist for all Params
-        virtual OptionalTime_t getTimestamp() const = 0;
+        virtual OptionalTime getTimestamp() const = 0;
 
         virtual Header getHeader() const = 0;
 
@@ -136,7 +136,7 @@ namespace mo
         IParam* setFrameNumber(const uint64_t fn);
 
         // Set the timestamp for this Param
-        IParam* setTimestamp(const mo::Time_t& ts);
+        IParam* setTimestamp(const mo::Time& ts);
 
         // Set the coordinate system for this Param
         IParam* setCoordinateSystem(const std::shared_ptr<ICoordinateSystem>& cs_);
@@ -151,7 +151,7 @@ namespace mo
         const std::string& getTreeRoot() const override;
 
         // Get the timestamp of this Param, may not exist for all Params
-        OptionalTime_t getTimestamp() const override;
+        OptionalTime getTimestamp() const override;
 
         // Get the frame number for this Param. Initialized such that first update will
         // set to 0, and increment at every update unless specified
@@ -239,7 +239,7 @@ namespace mo
     IParam::IParam(const Args&... args)
     {
         m_name = GetKeywordInputDefault<tag::param_name>("unnamed", args...);
-        if (const mo::Time_t* ts = GetKeywordInputOptional<tag::timestamp>(args...))
+        if (const mo::Time* ts = GetKeywordInputOptional<tag::timestamp>(args...))
         {
             m_header.timestamp = *ts;
         }

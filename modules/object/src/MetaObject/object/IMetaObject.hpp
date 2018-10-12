@@ -33,7 +33,7 @@ namespace mo
       - Slots with a return value can only have a 1 to 1 mapping, thus the Connection of a signal
         to a slot with a return will only call the most recent slot that was Connected to it.
     */
-    template<class T>
+    template <class T>
     struct TMetaObjectInterfaceHelper;
 
     class MO_EXPORTS IMetaObject : virtual public TInterface<IMetaObject, IObject>
@@ -42,7 +42,7 @@ namespace mo
         using ParentClass = ct::VariadicTypedef<IMetaObject>;
         using Interface = IMetaObject;
         using InterfaceInfo = IMetaObjectInfo;
-        template<class T>
+        template <class T>
         using InterfaceHelper = TMetaObjectInterfaceHelper<T>;
 
         using Ptr = rcc::shared_ptr<IMetaObject>;
@@ -161,18 +161,18 @@ namespace mo
         virtual bool connectInput(const std::string& input_name,
                                   IMetaObject* output_object,
                                   IParam* output_param,
-                                  BufferFlags type = Default_e) = 0;
+                                  BufferFlags type = DROPPING_STREAM_BUFFER) = 0;
 
         virtual bool connectInput(InputParam* input,
                                   IMetaObject* output_object,
                                   IParam* output_param,
-                                  BufferFlags type = Default_e) = 0;
+                                  BufferFlags type = DROPPING_STREAM_BUFFER) = 0;
 
         static bool connectInput(IMetaObject* output_object,
                                  IParam* output_Param,
                                  IMetaObject* input_object,
                                  InputParam* input_param,
-                                 BufferFlags type = Default_e);
+                                 BufferFlags type = DROPPING_STREAM_BUFFER);
 
         virtual Mutex_t& getMutex() const = 0;
 
@@ -193,7 +193,7 @@ namespace mo
                                    IMetaObject* obj = nullptr) = 0;
 
         virtual void
-        onParamUpdate(IParam*, Context*, OptionalTime_t, size_t, const CoordinateSystemPtr_t&, UpdateFlags) = 0;
+        onParamUpdate(IParam*, Context*, OptionalTime, size_t, const CoordinateSystemPtr_t&, UpdateFlags) = 0;
     };
 
 } // namespace mo

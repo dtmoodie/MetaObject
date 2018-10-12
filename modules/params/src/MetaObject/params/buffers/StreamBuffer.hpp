@@ -17,17 +17,18 @@ namespace mo
             StreamBuffer(const std::string& name = "");
 
             virtual void setFrameBufferCapacity(const uint64_t size) override;
-            virtual void setTimePaddingCapacity(const mo::Time_t& time) override;
+            virtual void setTimePaddingCapacity(const Duration& time) override;
             virtual boost::optional<size_t> getFrameBufferCapacity() const override;
-            virtual OptionalTime_t getTimePaddingCapacity() const override;
+            virtual boost::optional<Duration> getTimePaddingCapacity() const override;
 
             virtual BufferFlags getBufferType() const override;
 
           protected:
+            virtual IDataContainerPtr_t search(const Header& hdr) override;
             virtual void prune();
-            OptionalTime_t _current_timestamp;
+            OptionalTime _current_timestamp;
             uint64_t _current_frame_number;
-            OptionalTime_t _time_padding;
+            boost::optional<Duration> _time_padding;
             boost::optional<uint64_t> _frame_padding;
         };
 

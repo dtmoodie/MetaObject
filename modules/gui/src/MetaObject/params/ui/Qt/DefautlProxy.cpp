@@ -54,7 +54,7 @@ void DefaultProxy::onUiUpdate(QObject* source)
 }
 
 void DefaultProxy::onParamUpdate(
-    IParam*, Context*, OptionalTime_t, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)
+    IParam*, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)
 {
 }
 

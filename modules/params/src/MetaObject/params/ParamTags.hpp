@@ -10,7 +10,7 @@ namespace mo
     class ICoordinateSystem;
     class IParam;
 
-    MO_KEYWORD_INPUT(timestamp, mo::Time_t)
+    MO_KEYWORD_INPUT(timestamp, mo::Time)
     MO_KEYWORD_INPUT(frame_number, uint64_t)
     MO_KEYWORD_INPUT(coordinate_system, const std::shared_ptr<ICoordinateSystem>)
     MO_KEYWORD_INPUT(context, Context*)

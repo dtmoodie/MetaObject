@@ -104,7 +104,7 @@ namespace mo
 
     void python::ParamCallbackContainer::onParamUpdate(IParam* param,
                                                        Context*,
-                                                       OptionalTime_t ts,
+                                                       OptionalTime ts,
                                                        size_t fn,
                                                        const std::shared_ptr<ICoordinateSystem>&,
                                                        UpdateFlags flags)
@@ -171,9 +171,9 @@ namespace mo
             python::ParamCallbackContainer::Ptr(new python::ParamCallbackContainer(param, obj)));
     }
 
-    std::string printTime(const mo::Time_t& ts) {}
+    std::string printTime(const mo::Time& ts) {}
 
-    const mo::Time_t& getTime(const mo::OptionalTime_t& ts) { return ts.get(); }
+    const mo::Time& getTime(const mo::OptionalTime& ts) { return ts.get(); }
 
     void python::setupParameters(const std::string& module_name)
     {
@@ -231,10 +231,10 @@ namespace mo
             .def("getInterfaceName", &IObjectInfo::GetInterfaceName)
             .def("__repr__", &IObjectInfo::Print, (boost::python::arg("verbosity") = IObjectInfo::INFO));
 
-        boost::python::class_<mo::Time_t, boost::noncopyable> time("Time");
+        boost::python::class_<mo::Time, boost::noncopyable> time("Time");
         // time.def("__repr__", &printTime);
 
-        boost::python::class_<mo::OptionalTime_t, boost::noncopyable> optional_time("OptionalTime");
+        boost::python::class_<mo::OptionalTime, boost::noncopyable> optional_time("OptionalTime");
         // optional_time.def("get", &getTime);
     }
 }

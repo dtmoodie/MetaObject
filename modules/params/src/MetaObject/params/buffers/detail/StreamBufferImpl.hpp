@@ -7,12 +7,14 @@ namespace mo
     {
         template <class T>
         StreamBuffer<T>::StreamBuffer(const std::string& name)
-            : ITParam<T>(name, ParamFlags::Buffer_e), _time_padding(mo::ms * 500), _frame_padding(100)
+            : ITParam<T>(name, ParamFlags::Buffer_e)
+            , _time_padding(mo::ms * 500)
+            , _frame_padding(100)
         {
         }
 
         template <class T>
-        bool StreamBuffer<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_)
+        bool StreamBuffer<T>::getData(InputStorage_t& data, const OptionalTime& ts, Context* ctx, size_t* fn_)
         {
             Lock lock(IParam::mtx());
             if (Map<T>::getData(data, ts, ctx, &_current_frame_number))
@@ -39,7 +41,7 @@ namespace mo
         }
 
         template <class T>
-        bool StreamBuffer<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_)
+        bool StreamBuffer<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime* ts_)
         {
             Lock lock(IParam::mtx());
             if (Map<T>::getData(data, fn, ctx, &_current_timestamp))
@@ -66,7 +68,7 @@ namespace mo
         }
 
         template <class T>
-        void StreamBuffer<T>::setTimePaddingCapacity(mo::Time_t time)
+        void StreamBuffer<T>::setTimePaddingCapacity(mo::Time time)
         {
             if (_frame_padding)
             {
@@ -82,7 +84,7 @@ namespace mo
         }
 
         template <class T>
-        OptionalTime_t StreamBuffer<T>::getTimePaddingCapacity()
+        OptionalTime StreamBuffer<T>::getTimePaddingCapacity()
         {
             return _time_padding;
         }
@@ -96,7 +98,7 @@ namespace mo
                 auto itr = this->_data_buffer.begin();
                 while (itr != this->_data_buffer.end())
                 {
-                    if (itr->first.ts && *itr->first.ts < mo::Time_t(*_current_timestamp - *_time_padding))
+                    if (itr->first.ts && *itr->first.ts < mo::Time(*_current_timestamp - *_time_padding))
                     {
                         itr = this->_data_buffer.erase(itr);
                     }
@@ -132,13 +134,15 @@ namespace mo
         // ------------------------------------------------------------
         template <class T>
         BlockingStreamBuffer<T>::BlockingStreamBuffer(const std::string& name)
-            : StreamBuffer<T>(name), ITParam<T>(name, mo::ParamFlags::Buffer_e), _size(100)
+            : StreamBuffer<T>(name)
+            , ITParam<T>(name, mo::ParamFlags::Buffer_e)
+            , _size(100)
         {
         }
 
         template <class T>
         bool BlockingStreamBuffer<T>::updateDataImpl(const Storage_t& data_,
-                                                     const OptionalTime_t& ts,
+                                                     const OptionalTime& ts,
                                                      Context* ctx,
                                                      size_t fn,
                                                      const std::shared_ptr<ICoordinateSystem>& cs)
@@ -175,7 +179,7 @@ namespace mo
 
         template <class T>
         bool BlockingStreamBuffer<T>::updateDataImpl(Storage_t&& data_,
-                                                     const OptionalTime_t& ts,
+                                                     const OptionalTime& ts,
                                                      Context* ctx,
                                                      size_t fn,
                                                      const std::shared_ptr<ICoordinateSystem>& cs)
@@ -249,7 +253,7 @@ namespace mo
         void BlockingStreamBuffer<T>::onInputUpdate(ConstStorageRef_t data,
                                                     IParam* input,
                                                     Context* ctx,
-                                                    OptionalTime_t ts,
+                                                    OptionalTime ts,
                                                     size_t fn,
                                                     const std::shared_ptr<ICoordinateSystem>& cs,
                                                     UpdateFlags)
@@ -294,13 +298,14 @@ namespace mo
         }
 
         template <class T>
-        DroppingStreamBuffer<T>::DroppingStreamBuffer(const std::string& name) : BlockingStreamBuffer<T>(name)
+        DroppingStreamBuffer<T>::DroppingStreamBuffer(const std::string& name)
+            : BlockingStreamBuffer<T>(name)
         {
         }
 
         template <class T>
         bool DroppingStreamBuffer<T>::updateDataImpl(const Storage_t& data_,
-                                                     const OptionalTime_t& ts,
+                                                     const OptionalTime& ts,
                                                      Context* ctx,
                                                      size_t fn,
                                                      const std::shared_ptr<ICoordinateSystem>& cs)
@@ -327,7 +332,7 @@ namespace mo
 
         template <class T>
         bool DroppingStreamBuffer<T>::updateDataImpl(Storage_t&& data_,
-                                                     const OptionalTime_t& ts,
+                                                     const OptionalTime& ts,
                                                      Context* ctx,
                                                      size_t fn,
                                                      const std::shared_ptr<ICoordinateSystem>& cs)
@@ -356,7 +361,7 @@ namespace mo
         void DroppingStreamBuffer<T>::onInputUpdate(ConstStorageRef_t data,
                                                     IParam* input,
                                                     Context* ctx,
-                                                    OptionalTime_t ts,
+                                                    OptionalTime ts,
                                                     size_t fn,
                                                     const std::shared_ptr<ICoordinateSystem>& cs,
                                                     UpdateFlags)

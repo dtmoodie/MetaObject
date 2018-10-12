@@ -128,7 +128,7 @@ namespace mo
 
         template <class T>
         T getParamValue(const std::string& name,
-                        const OptionalTime_t& ts = OptionalTime_t(),
+                        const OptionalTime& ts = OptionalTime(),
                         Context* ctx = nullptr) const;
 
         template <class T>
@@ -152,17 +152,17 @@ namespace mo
                                    IMetaObject* obj = nullptr) override;
 
         virtual void
-        onParamUpdate(IParam*, Context*, OptionalTime_t, size_t, const CoordinateSystemPtr_t&, UpdateFlags) override;
+        onParamUpdate(IParam*, Context*, OptionalTime, size_t, const CoordinateSystemPtr_t&, UpdateFlags) override;
 
         template <class T>
         ITParam<T>* updateParam(const std::string& name,
                                 T& value,
-                                const OptionalTime_t& ts = OptionalTime_t(),
+                                const OptionalTime& ts = OptionalTime(),
                                 Context* ctx = nullptr);
         template <class T>
         ITParam<T>* updateParam(const std::string& name,
                                 const T& value,
-                                const OptionalTime_t& ts = OptionalTime_t(),
+                                const OptionalTime& ts = OptionalTime(),
                                 Context* ctx = nullptr);
         template <class T>
         ITParam<T>* updateParamPtr(const std::string& name, T& ptr);
