@@ -7,6 +7,7 @@ namespace mo
     namespace buffer
     {
         Map::Map(const std::string& name)
+            : IParam(name)
         {
             m_update_slot = std::bind(
                 &Map::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
@@ -73,130 +74,42 @@ namespace mo
             }
         }
 
-        TypeInfo Map::getTypeInfo() const
-        {
-            if (m_input_param)
-            {
-                return m_input_param->getTypeInfo();
-            }
-            else
-            {
-                return TypeInfo::Void();
-            }
-        }
-
-        void Map::visit(IReadVisitor* visitor)
-        {
-            Lock lock(IParam::mtx());
-            if (m_current)
-            {
-                m_current->visit(visitor);
-            }
-        }
-
-        void Map::visit(IWriteVisitor* visitor) const
-        {
-            Lock lock(IParam::mtx());
-            if (m_current)
-            {
-                m_current->visit(visitor);
-            }
-        }
-
         Map::IContainerPtr_t Map::getData(const Header& desired)
         {
             Lock lock(IParam::mtx());
-            m_current.reset();
-            auto itr = search(desired);
-            if (itr != _data_buffer.end())
-            {
-                m_current = itr->second;
-                return m_current;
-            }
-            return {};
+            m_current = search(desired);
+            return m_current;
         }
 
         Map::IContainerConstPtr_t Map::getData(const Header& desired) const
         {
             Lock lock(IParam::mtx());
-            m_current.reset();
-            auto itr = search(desired);
-            if (itr != _data_buffer.end())
-            {
-                m_current = itr->second;
-                return m_current;
-            }
-            return {};
+            m_current = search(desired);
+            return m_current;
         }
 
-        bool Map::getInputData(const Header& desired, Header* retrieved)
+        IDataContainerPtr_t Map::search(const Header& hdr) const
         {
-            auto data = getData(desired);
-            if (data)
+            if (_data_buffer.size() == 0)
             {
-                if (retrieved)
+                return {};
+            }
+            else
+            {
+                if (!hdr.timestamp)
                 {
-                    *retrieved = data->getHeader();
+                    if (_data_buffer.size())
+                    {
+                        return (--this->_data_buffer.end())->second;
+                    }
+                    else
+                    {
+                        return {};
+                    }
                 }
-                return true;
             }
-            return false;
-        }
 
-        IParam* Map::getInputParam() const
-        {
-            Lock lock(IParam::mtx());
-            return m_input_param;
-        }
-
-        bool Map::setInput(const std::shared_ptr<IParam>& param)
-        {
-            Lock lock(mtx());
-            if (setInput(param.get()))
-            {
-                m_shared_input = param;
-                return true;
-            }
-            return false;
-        }
-
-        bool Map::setInput(IParam* param)
-        {
-            Lock lock(mtx());
-            if (m_input_param)
-            {
-                m_input_param->unsubscribe();
-                m_update_slot.clear();
-                m_delete_slot.clear();
-            }
-            m_input_param = param;
-            param->subscribe();
-            param->registerUpdateNotifier(&m_update_slot);
-            param->registerDeleteNotifier(&m_delete_slot);
-            return true;
-        }
-
-        OptionalTime_t Map::getInputTimestamp()
-        {
-        }
-
-        uint64_t Map::getInputFrameNumber()
-        {
-        }
-
-        bool Map::isInputSet() const
-        {
-            return m_input_param != nullptr;
-        }
-
-        bool Map::acceptsInput(IParam*) const
-        {
-            return true;
-        }
-
-        bool Map::acceptsType(const TypeInfo&) const
-        {
-            return true;
+            return {};
         }
 
         static BufferConstructor<Map> g_ctr;

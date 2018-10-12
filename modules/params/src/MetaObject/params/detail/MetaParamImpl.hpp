@@ -2,9 +2,6 @@
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
-#include "MetaObject/params/detail/TInputParamPtrImpl.hpp"
-#include "MetaObject/params/detail/TParamImpl.hpp"
-#include "MetaObject/params/detail/TParamPtrImpl.hpp"
 #include <MetaObject/params/detail/ParamMacrosImpl.hpp>
 
 #define EXTERN_TYPE(TYPE)                                                                                              \

@@ -37,35 +37,46 @@ namespace mo
 
         // This loads the value at the requested timestamp into the input
         // Param such that it can be read
-        virtual bool getInputData(const Header& desired, Header* retrieved) = 0;
+        virtual bool getInputData(const Header& desired, Header* retrieved);
 
         // This gets a pointer to the variable that feeds into this input
-        virtual IParam* getInputParam() const = 0;
+        virtual IParam* getInputParam() const;
 
-        virtual bool setInput(const std::shared_ptr<IParam>& param) = 0;
-        virtual bool setInput(IParam* param = nullptr) = 0;
+        virtual bool setInput(const std::shared_ptr<IParam>& param);
+        virtual bool setInput(IParam* param = nullptr);
 
         // These values can differ from the current timestamp and frame number
         // since these values represent the next value that can be read, whereas getTimestamp and
         // getFramenumber represent that data currently loaded
-        virtual OptionalTime_t getInputTimestamp() = 0;
-        virtual uint64_t getInputFrameNumber() = 0;
-        virtual bool isInputSet() const = 0;
+        virtual OptionalTime_t getInputTimestamp();
+        virtual uint64_t getInputFrameNumber();
+        virtual bool isInputSet() const;
 
-        virtual bool acceptsInput(IParam* param) const = 0;
-        virtual bool acceptsType(const TypeInfo& type) const = 0;
+        virtual bool acceptsInput(IParam* param) const;
+        virtual bool acceptsType(const TypeInfo& type) const;
 
-        void setQualifier(const Qualifier_f& f)
-        {
-            qualifier = f;
-        }
+        void setQualifier(const Qualifier_f& f);
 
         std::ostream& print(std::ostream& os) const override;
 
+        virtual TypeInfo getTypeInfo() const override;
+
+        virtual void visit(IReadVisitor*) override;
+        virtual void visit(IWriteVisitor*) const override;
+
       protected:
+        virtual void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) = 0;
+        virtual void onInputDelete(const IParam* param);
+
         InputParam(const InputParam&) = delete;
         InputParam& operator=(const InputParam&) = delete;
         InputParam& operator=(InputParam&&) = delete;
+
+        TSlot<DataUpdate_s> m_update_slot;
+        TSlot<void(const IParam*)> m_delete_slot;
         Qualifier_f qualifier;
+        IParam* m_input_param;
+        std::shared_ptr<IParam> m_shared_input;
+        IDataContainerPtr_t m_current_data;
     };
 }

@@ -34,8 +34,10 @@ namespace mo
             static constexpr const auto Type = CIRCULAR_BUFFER;
             CircularBuffer();
 
+            // IBuffer
             virtual void setFrameBufferCapacity(const uint64_t size) override;
             virtual void setTimePaddingCapacity(const mo::Time_t& time) override;
+
             virtual boost::optional<uint64_t> getFrameBufferCapacity() const override;
             virtual OptionalTime_t getTimePaddingCapacity() const override;
 
@@ -44,13 +46,18 @@ namespace mo
             bool getFrameNumberRange(uint64_t& start, uint64_t& end) override;
             virtual BufferFlags getBufferType() const override;
 
+            // IParam
+
+            virtual IContainerPtr_t getData(const Header& desired = Header()) override;
+            virtual IContainerConstPtr_t getData(const Header& desired = Header()) const override;
+
+            // InputParam
+
           protected:
-            void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags);
+            void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) override;
 
           private:
-            TSlot<DataUpdate_s> m_update_slot;
             boost::circular_buffer<IDataContainerPtr_t> m_buffer;
-            IParam* m_input_param;
         };
     }
 }

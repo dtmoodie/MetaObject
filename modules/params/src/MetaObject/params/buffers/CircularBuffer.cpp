@@ -9,11 +9,6 @@ namespace mo
     {
         CircularBuffer::CircularBuffer()
         {
-            m_update_slot = std::bind(&CircularBuffer::onInputUpdate,
-                                      this,
-                                      std::placeholders::_1,
-                                      std::placeholders::_2,
-                                      std::placeholders::_3);
         }
 
         void CircularBuffer::setFrameBufferCapacity(uint64_t size)
@@ -75,6 +70,31 @@ namespace mo
                 m_buffer.push_back(data);
             }
         }
+
+        CircularBuffer::IContainerPtr_t CircularBuffer::getData(const Header& desired)
+        {
+            for (auto itr = m_buffer.begin(); itr != m_buffer.end(); ++itr)
+            {
+                if ((*itr)->getHeader() == desired)
+                {
+                    return (*itr);
+                }
+            }
+            return {};
+        }
+
+        CircularBuffer::IContainerConstPtr_t CircularBuffer::getData(const Header& desired) const
+        {
+            for (auto itr = m_buffer.begin(); itr != m_buffer.end(); ++itr)
+            {
+                if ((*itr)->getHeader() == desired)
+                {
+                    return (*itr);
+                }
+            }
+            return {};
+        }
+
         static BufferConstructor<CircularBuffer> g_ctr;
     }
 }

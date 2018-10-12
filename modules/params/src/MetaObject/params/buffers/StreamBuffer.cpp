@@ -36,5 +36,13 @@ namespace mo
         void StreamBuffer::prune()
         {
         }
+
+        StreamBuffer::IContainerPtr_t StreamBuffer::getData(const Header& desired)
+        {
+        }
+
+        StreamBuffer::IContainerConstPtr_t StreamBuffer::getData(const Header& desired) const
+        {
+        }
     }
 }

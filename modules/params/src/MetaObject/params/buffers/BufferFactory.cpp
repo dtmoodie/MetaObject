@@ -66,5 +66,36 @@ namespace mo
             }
             return nullptr;
         }
+
+        InputParam* BufferFactory::createBuffer(const std::shared_ptr<IParam>& param, mo::BufferFlags buffer_type_)
+        {
+            auto instance = PerModuleInterface::GetInstance();
+            if (!instance)
+            {
+                return nullptr;
+            }
+            auto table = instance->GetSystemTable();
+            if (!table)
+            {
+                return nullptr;
+            }
+
+            auto ctr_table = singleton<CtrTable>();
+
+            auto itr = ctr_table->find(buffer_type_);
+            if (itr == ctr_table->end())
+            {
+                return nullptr;
+            }
+            InputParam* buffer = itr->second();
+            if (buffer)
+            {
+                if (buffer->setInput(param))
+                {
+                    return buffer;
+                }
+            }
+            return nullptr;
+        }
     }
 }

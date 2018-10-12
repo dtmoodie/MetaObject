@@ -137,10 +137,26 @@ namespace mo
 
     bool IMultiInput::modified() const
     {
+        if (m_current_input)
+        {
+            return m_current_input->modified();
+        }
+        for (auto in : m_inputs)
+        {
+            if (in->modified())
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
-    void modified(bool value)
+    void IMultiInput::modified(bool value)
     {
+        for (auto in : m_inputs)
+        {
+            in->modified(value);
+        }
     }
 
     MultiConnection::MultiConnection(std::vector<std::shared_ptr<Connection>>&& connections)

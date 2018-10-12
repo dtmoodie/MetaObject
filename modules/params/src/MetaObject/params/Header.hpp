@@ -9,12 +9,17 @@ namespace mo
     using ICoordinateSystemPtr_t = std::shared_ptr<ICoordinateSystem>;
     using ICoordinateSystemConstPtr_t = std::shared_ptr<const ICoordinateSystem>;
 
-    struct Header
+    struct MO_EXPORTS Header
     {
-        mo::OptionalTime_t         timestamp;
-        uint64_t                   frame_number = std::numeric_limits<uint64_t>::max();
+        mo::OptionalTime_t timestamp;
+        uint64_t frame_number = std::numeric_limits<uint64_t>::max();
 
-        Context*                   ctx;
-        ICoordinateSystemPtr_t  coordinate_system;
+        Context* ctx;
+        ICoordinateSystemPtr_t coordinate_system;
+
+        bool operator==(const Header& other);
+        bool operator!=(const Header& other);
+        bool operator>(const Header& other);
+        bool operator<(const Header& other);
     };
 }
