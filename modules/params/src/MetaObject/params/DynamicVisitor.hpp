@@ -7,7 +7,8 @@ namespace mo
     struct ReadCache : virtual public IReadVisitor
     {
       public:
-        using Cache_t = std::unordered_map<std::string, std::unordered_map<uint64_t, std::unique_ptr<IDataContainer>>>;
+        using Cache_t =
+            std::unordered_map<std::string, std::unordered_map<uint64_t, std::unique_ptr<CacheDataContainer>>>;
         using SerializedPointerMap_t = std::unordered_map<TypeInfo, std::unordered_map<uint64_t, void*>>;
 
         ReadCache(
@@ -23,7 +24,8 @@ namespace mo
         std::shared_ptr<SerializedPointerMap_t> getSerializedPointers();
 
       protected:
-        virtual std::unique_ptr<IDataContainer>& accessCache(const std::string& name, const uint64_t id = 0) override;
+        virtual std::unique_ptr<CacheDataContainer>& accessCache(const std::string& name,
+                                                                 const uint64_t id = 0) override;
         virtual void* getPointer(const TypeInfo type, const uint64_t id) override;
         virtual void setSerializedPointer(const TypeInfo type, const uint64_t id, void* ptr) override;
 
@@ -35,7 +37,8 @@ namespace mo
     class WriteCache : virtual public IWriteVisitor
     {
       public:
-        using Cache_t = std::unordered_map<std::string, std::unordered_map<uint64_t, std::unique_ptr<IDataContainer>>>;
+        using Cache_t =
+            std::unordered_map<std::string, std::unordered_map<uint64_t, std::unique_ptr<CacheDataContainer>>>;
         using SerializedPointerMap_t = std::unordered_map<TypeInfo, std::unordered_map<uint64_t, const void*>>;
 
         WriteCache(
@@ -51,7 +54,8 @@ namespace mo
         virtual IWriteVisitor& operator()(const IStructTraits* val, const std::string& name = "") override;
 
       protected:
-        virtual std::unique_ptr<IDataContainer>& accessCache(const std::string& name, const uint64_t id = 0) override;
+        virtual std::unique_ptr<CacheDataContainer>& accessCache(const std::string& name,
+                                                                 const uint64_t id = 0) override;
         virtual const void* getPointer(const TypeInfo type, const uint64_t id) override;
         virtual void setSerializedPointer(const TypeInfo type, const uint64_t id, const void* ptr) override;
 

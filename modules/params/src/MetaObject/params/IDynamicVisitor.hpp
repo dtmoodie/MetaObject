@@ -8,16 +8,20 @@
 
 namespace mo
 {
-    struct IDataContainer
+    struct CacheDataContainer
     {
-        virtual ~IDataContainer();
+        virtual ~CacheDataContainer();
         TypeInfo type;
     };
 
     template <class T>
-    struct DataContainer : public IDataContainer
+    struct DataContainer : public CacheDataContainer
     {
-        DataContainer(T&& val) : m_val(std::move(val)) { type = type.template create<T>(); }
+        DataContainer(T&& val)
+            : m_val(std::move(val))
+        {
+            type = type.template create<T>();
+        }
         T m_val;
     };
 
@@ -100,7 +104,7 @@ namespace mo
         T popCache(const std::string& name, const uint64_t id = 0);
 
       protected:
-        virtual std::unique_ptr<IDataContainer>& accessCache(const std::string& name, const uint64_t id = 0) = 0;
+        virtual std::unique_ptr<CacheDataContainer>& accessCache(const std::string& name, const uint64_t id = 0) = 0;
     };
 
     struct IReadVisitor : public virtual IDynamicVisitor
@@ -198,7 +202,7 @@ namespace mo
     void IDynamicVisitor::pushCach(T&& val, const std::string& name, const uint64_t id)
     {
         auto& container = accessCache(name, id);
-        container = std::unique_ptr<IDataContainer>(new DataContainer<T>(std::move(val)));
+        container = std::unique_ptr<CacheDataContainer>(new DataContainer<T>(std::move(val)));
     }
 
     template <class T>

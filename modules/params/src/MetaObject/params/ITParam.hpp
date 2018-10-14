@@ -48,8 +48,8 @@ namespace mo
         template <class... Args>
         void updateData(T&& data, const Args&... args);
 
-        virtual void updateData(const T& data, const Header& header);
-        virtual void updateData(T&& data, Header&& header);
+        virtual void updateData(const T& data, const Header& header = Header());
+        virtual void updateData(T&& data, Header&& header = Header());
         virtual void updateData(const TContainerPtr_t& data);
 
         TypeInfo getTypeInfo() const override;
@@ -67,10 +67,12 @@ namespace mo
         IContainerPtr_t getData(const Header& desired);
         IContainerConstPtr_t getData(const Header& desired) const;
 
+      protected:
+        typename TDataContainer<T>::Ptr _data;
+
       private:
         TSignal<TUpdate_s> _typed_update_signal;
         static const TypeInfo _type_info;
-        std::shared_ptr<TDataContainer<T>> _data;
     };
 
     ///////////////////////////////////////////////////////////////////////////////////////
@@ -88,7 +90,7 @@ namespace mo
     void ITParam<T>::updateData(const T& data, const Args&... args)
     {
         T tmp = data;
-        updateData(std::move(tmp), std::forward<Args>(args)...);
+        updateData(tmp, args...);
     }
 
     template <class T>
@@ -144,8 +146,8 @@ namespace mo
     void ITParam<T>::updateData(const T& data, const Header& header)
     {
         auto container = std::make_shared<TDataContainer<T>>();
-        container = data;
-        container = header;
+        container->data = data;
+        container->header = header;
         updateData(container);
     }
 
@@ -165,7 +167,7 @@ namespace mo
             mo::Lock lock(this->mtx());
             _data = data;
         }
-        emitUpdate(_data);
+        emitUpdate(IDataContainer::Ptr(_data));
         _typed_update_signal(_data, this, ValueUpdated_e);
     }
 

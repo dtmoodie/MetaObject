@@ -1,7 +1,7 @@
 #pragma once
 #include "TInputParam.hpp"
 #include "TypeSelector.hpp"
-
+#include <tuple>
 namespace mo
 {
     class IMultiInput : public InputParam
@@ -44,7 +44,7 @@ namespace mo
     };
 
     template <class... Types>
-    class TMultiInput : virtual public InputParam
+    class TMultiInput : virtual public IMultiInput
     {
       public:
         using InputTypeTuple = std::tuple<const Types*...>;
@@ -58,7 +58,11 @@ namespace mo
         template <class T>
         inline void apply(std::tuple<const Types*...>* user_var_);
 
+        IContainerPtr_t getData(const mo::Header&);
+        IContainerConstPtr_t getData(const mo::Header&) const;
+
       private:
+        void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags);
         std::tuple<TInputParamPtr<Types>...> m_inputs;
         mo::IParam* m_current_input = nullptr;
     };

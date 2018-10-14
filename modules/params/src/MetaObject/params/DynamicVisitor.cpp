@@ -2,8 +2,13 @@
 
 namespace mo
 {
-    IDataContainer::~IDataContainer() {}
-    IDynamicVisitor::~IDynamicVisitor() {}
+    CacheDataContainer::~CacheDataContainer()
+    {
+    }
+
+    IDynamicVisitor::~IDynamicVisitor()
+    {
+    }
 
     ReadCache::ReadCache(const std::shared_ptr<Cache_t>& cache,
                          const std::shared_ptr<SerializedPointerMap_t>& pointer_map)
@@ -34,7 +39,7 @@ namespace mo
         return *this;
     }
 
-    std::unique_ptr<IDataContainer>& ReadCache::accessCache(const std::string& name, const uint64_t id)
+    std::unique_ptr<CacheDataContainer>& ReadCache::accessCache(const std::string& name, const uint64_t id)
     {
         return (*m_cache)[name][id];
     }
@@ -44,14 +49,20 @@ namespace mo
         return m_serialized_pointers;
     }
 
-    void ReadCache::setCache(const std::shared_ptr<Cache_t>& cache) { m_cache = cache; }
+    void ReadCache::setCache(const std::shared_ptr<Cache_t>& cache)
+    {
+        m_cache = cache;
+    }
 
     void ReadCache::setSerializedPointers(const std::shared_ptr<SerializedPointerMap_t>& pointer_map)
     {
         m_serialized_pointers = pointer_map;
     }
 
-    std::shared_ptr<ReadCache::Cache_t> ReadCache::getCache() { return m_cache; }
+    std::shared_ptr<ReadCache::Cache_t> ReadCache::getCache()
+    {
+        return m_cache;
+    }
 
     void ReadCache::setSerializedPointer(const TypeInfo type, const uint64_t id, void* ptr)
     {
@@ -103,7 +114,7 @@ namespace mo
         return *this;
     }
 
-    std::unique_ptr<IDataContainer>& WriteCache::accessCache(const std::string& name, const uint64_t id)
+    std::unique_ptr<CacheDataContainer>& WriteCache::accessCache(const std::string& name, const uint64_t id)
     {
         return (*m_cache)[name][id];
     }
@@ -113,14 +124,20 @@ namespace mo
         return m_serialized_pointers;
     }
 
-    void WriteCache::setCache(const std::shared_ptr<Cache_t>& cache) { m_cache = cache; }
+    void WriteCache::setCache(const std::shared_ptr<Cache_t>& cache)
+    {
+        m_cache = cache;
+    }
 
     void WriteCache::setSerializedPointers(const std::shared_ptr<SerializedPointerMap_t>& pointer_map)
     {
         m_serialized_pointers = pointer_map;
     }
 
-    std::shared_ptr<ReadCache::Cache_t> WriteCache::getCache() { return m_cache; }
+    std::shared_ptr<ReadCache::Cache_t> WriteCache::getCache()
+    {
+        return m_cache;
+    }
 
     void WriteCache::setSerializedPointer(const TypeInfo type, const uint64_t id, const void* ptr)
     {

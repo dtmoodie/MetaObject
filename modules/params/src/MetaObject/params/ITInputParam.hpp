@@ -26,40 +26,34 @@ namespace mo
         virtual bool acceptsInput(IParam* param) const;
         virtual bool acceptsType(const TypeInfo& type) const;
 
-        IParam* getInputParam() const;
-        OptionalTime getInputTimestamp();
-        size_t getInputFrameNumber();
-
         virtual bool isInputSet() const;
+        virtual TypeInfo getTypeInfo() const override;
+
+        virtual void visit(IReadVisitor*) override;
+        virtual void visit(IWriteVisitor*) const override;
 
       protected:
-        virtual void onInputDelete(IParam const* param);
         virtual void onInputUpdate(TContainerPtr_t, IParam*, UpdateFlags);
+        virtual void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) override
+        {
+        }
 
       private:
-        TUpdateSlot_t m_update_slot;
-        TSlot<void(IParam const*)> m_delete_slot;
-        std::shared_ptr<IParam> m_shared_input;
-        IParam* m_input;
+        TUpdateSlot_t m_typed_update_slot;
+        ConnectionPtr_t m_typed_connection;
     };
 
     template <class T>
     ITInputParam<T>::ITInputParam(const std::string& name)
-        : m_input(nullptr)
-        , ITParam<T>(name)
+        : ITParam<T>(name)
     {
-        m_update_slot = std::bind(
+        m_typed_update_slot = std::bind(
             &ITInputParam<T>::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-        m_delete_slot = std::bind(&ITInputParam<T>::onInputDelete, this, std::placeholders::_1);
     }
 
     template <class T>
     ITInputParam<T>::~ITInputParam()
     {
-        if (m_input != nullptr)
-        {
-            m_input->unsubscribe();
-        }
     }
 
     template <class T>
@@ -77,66 +71,15 @@ namespace mo
     bool ITInputParam<T>::setInput(IParam* param)
     {
         Lock lock(this->mtx());
-        if (param == nullptr)
+        if (param->getTypeInfo() == getTypeInfo())
         {
-            if (m_input)
+            if (InputParam::setInput(param))
             {
-                m_input->unsubscribe();
-            }
-            m_update_slot.clear();
-            m_delete_slot.clear();
-            m_input = nullptr;
-            m_shared_input.reset();
-            lock.unlock();
-            IParam::emitUpdate(Header(), InputCleared_e);
-            return true;
-        }
-        auto output_param = dynamic_cast<OutputParam*>(param);
-        if ((output_param && output_param->providesOutput(getTypeInfo())) ||
-            (param->getTypeInfo() == this->getTypeInfo()))
-        {
-            if (m_input)
-            {
-                m_input->unsubscribe();
-            }
-            if (output_param)
-            {
-                if (auto param_ = output_param->getOutputParam(TypeInfo(typeid(T))))
-                {
-                    this->_input = dynamic_cast<ITParam<T>*>(param_);
-                }
-            }
-            else
-            {
-                this->_input = dynamic_cast<ITParam<T>*>(param);
-            }
-            if (this->_input)
-            {
-                param->subscribe();
-                param->registerUpdateNotifier(&m_update_slot);
-                param->registerDeleteNotifier(&m_delete_slot);
-                lock.unlock();
-                IParam::emitUpdate(Header(), InputSet_e);
+                m_typed_connection = param->registerUpdateNotifier(&m_typed_update_slot);
                 return true;
             }
         }
         return false;
-    }
-
-    template <class T>
-    void ITInputParam<T>::onInputDelete(IParam const* param)
-    {
-        if (param != this->_input)
-        {
-            return;
-        }
-        else
-        {
-            Lock lock(this->mtx());
-            this->_shared_input.reset();
-            this->_input = nullptr;
-            IParam::emitUpdate(Header(), InputCleared_e);
-        }
     }
 
     template <class T>
@@ -160,46 +103,15 @@ namespace mo
     }
 
     template <class T>
-    IParam* ITInputParam<T>::getInputParam() const
+    void ITInputParam<T>::visit(IReadVisitor* visitor)
     {
-        Lock lock(this->mtx());
-        return m_input;
+        InputParam::visit(visitor);
     }
 
     template <class T>
-    OptionalTime ITInputParam<T>::getInputTimestamp()
+    void ITInputParam<T>::visit(IWriteVisitor* visitor) const
     {
-        Lock lock(this->mtx());
-        if (m_input)
-        {
-            return m_input->getTimestamp();
-        }
-        else
-        {
-            THROW(debug) << "Input not set for " << getTreeName();
-            return OptionalTime();
-        }
-    }
-
-    template <class T>
-    uint64_t ITInputParam<T>::getInputFrameNumber()
-    {
-        Lock lock(this->mtx());
-        if (m_input)
-        {
-            return m_input->getFrameNumber();
-        }
-        else
-        {
-            THROW(debug) << "Input not set for " << getTreeName();
-            return size_t(0);
-        }
-    }
-
-    template <class T>
-    bool ITInputParam<T>::isInputSet() const
-    {
-        return m_input != nullptr;
+        InputParam::visit(visitor);
     }
 
     template <class T>
@@ -216,5 +128,11 @@ namespace mo
         {
             updateData(data);
         }
+    }
+
+    template <class T>
+    TypeInfo ITInputParam<T>::getTypeInfo() const
+    {
+        return TypeInfo(typeid(T));
     }
 }

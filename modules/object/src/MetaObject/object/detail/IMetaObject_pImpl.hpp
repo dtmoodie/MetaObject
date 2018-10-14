@@ -5,6 +5,8 @@
 #include "MetaObject/params/IParam.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "RuntimeObjectSystem/shared_ptr.hpp"
+#include <boost/thread/recursive_mutex.hpp>
+
 #include <list>
 #include <map>
 #include <memory>
@@ -21,7 +23,9 @@ namespace mo
     class IMetaObject;
     struct MO_EXPORTS ConnectionInfo
     {
-        ConnectionInfo() {}
+        ConnectionInfo()
+        {
+        }
         ConnectionInfo(const ConnectionInfo& info)
         {
             signal_name = info.signal_name;
@@ -43,7 +47,10 @@ namespace mo
                             const std::string& output,
                             const std::string& input,
                             BufferFlags type)
-            : output_object(obj), output_param(output), input_param(input), connection_type(type)
+            : output_object(obj)
+            , output_param(output)
+            , input_param(input)
+            , connection_type(type)
         {
         }
         rcc::weak_ptr<IMetaObject> output_object;
@@ -73,7 +80,7 @@ namespace mo
         TSignal<void(IMetaObject*, IParam*)> _sig_param_updated;
         TSignal<void(IMetaObject*, IParam*)> _sig_param_added;
         std::map<std::string, InputParam*> _input_Params;
-        TSlot<mo::UpdateSig_t> _slot_param_updated;
+        TSlot<Update_s> _slot_param_updated;
         IVariableManager* _variable_manager;
         mutable mo::Mutex_t m_mutex;
     };

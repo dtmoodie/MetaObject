@@ -192,8 +192,7 @@ namespace mo
                                    const TypeInfo& signature,
                                    IMetaObject* obj = nullptr) = 0;
 
-        virtual void
-        onParamUpdate(IParam*, Context*, OptionalTime, size_t, const CoordinateSystemPtr_t&, UpdateFlags) = 0;
+        virtual void onParamUpdate(IParam*, Header, UpdateFlags) = 0;
     };
 
 } // namespace mo

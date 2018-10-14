@@ -22,7 +22,9 @@
 
 namespace mo
 {
-    IMetaObject::~IMetaObject() {}
+    IMetaObject::~IMetaObject()
+    {
+    }
 
     int IMetaObject::connect(IMetaObject* sender,
                              const std::string& signal_name,
@@ -86,14 +88,8 @@ namespace mo
     {
         _pimpl = new impl();
         _sig_manager = nullptr;
-        _pimpl->_slot_param_updated = std::bind(&MetaObject::onParamUpdate,
-                                                this,
-                                                std::placeholders::_1,
-                                                std::placeholders::_2,
-                                                std::placeholders::_3,
-                                                std::placeholders::_4,
-                                                std::placeholders::_5,
-                                                std::placeholders::_6);
+        _pimpl->_slot_param_updated = std::bind(
+            &MetaObject::onParamUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
     }
 
     MetaObject::~MetaObject()
@@ -105,9 +101,14 @@ namespace mo
         delete _pimpl;
     }
 
-    Mutex_t& MetaObject::getMutex() const { return _pimpl->m_mutex; }
+    Mutex_t& MetaObject::getMutex() const
+    {
+        return _pimpl->m_mutex;
+    }
 
-    void IMetaObject::Init(bool firstInit) {}
+    void IMetaObject::Init(bool firstInit)
+    {
+    }
 
     void MetaObject::Init(bool firstInit)
     {
@@ -240,7 +241,9 @@ namespace mo
         }
     }
 
-    void MetaObject::initCustom(bool /*firstInit*/) {}
+    void MetaObject::initCustom(bool /*firstInit*/)
+    {
+    }
 
     int MetaObject::setupSignals(RelayManager* manager)
     {
@@ -281,7 +284,10 @@ namespace mo
         return _sig_manager;
     }
 
-    int IMetaObject::setupVariableManager(IVariableManager* /*manager*/) { return 0; }
+    int IMetaObject::setupVariableManager(IVariableManager* /*manager*/)
+    {
+        return 0;
+    }
 
     int MetaObject::setupVariableManager(IVariableManager* manager)
     {
@@ -311,7 +317,9 @@ namespace mo
         return count;
     }
 
-    void IMetaObject::Serialize(ISimpleSerializer* pSerializer) {}
+    void IMetaObject::Serialize(ISimpleSerializer* pSerializer)
+    {
+    }
 
     void MetaObject::Serialize(ISimpleSerializer* pSerializer)
     {
@@ -328,7 +336,9 @@ namespace mo
         SERIALIZE(_sig_manager);
     }
 
-    void IMetaObject::setContext(const std::shared_ptr<Context>& ctx, bool overwrite) {}
+    void IMetaObject::setContext(const std::shared_ptr<Context>& ctx, bool overwrite)
+    {
+    }
 
     void MetaObject::setContext(const std::shared_ptr<Context>& ctx, bool overwrite)
     {
@@ -358,7 +368,10 @@ namespace mo
         return count;
     }
 
-    bool MetaObject::disconnect(ISignal* sig) { return false; }
+    bool MetaObject::disconnect(ISignal* sig)
+    {
+        return false;
+    }
 
     int MetaObject::disconnect(IMetaObject* obj)
     {
@@ -393,7 +406,10 @@ namespace mo
         return nullptr;
     }
 
-    std::vector<IParam*> IMetaObject::getParams(const std::string& /*filter*/) const { return {}; }
+    std::vector<IParam*> IMetaObject::getParams(const std::string& /*filter*/) const
+    {
+        return {};
+    }
 
     std::vector<IParam*> MetaObject::getParams(const std::string& filter) const
     {
@@ -475,7 +491,10 @@ namespace mo
         return nullptr;
     }
 
-    std::shared_ptr<Context> MetaObject::getContext() { return _ctx; }
+    std::shared_ptr<Context> MetaObject::getContext()
+    {
+        return _ctx;
+    }
 
     std::vector<InputParam*> MetaObject::getInputs(const std::string& name_filter) const
     {
@@ -541,7 +560,10 @@ namespace mo
         return output;
     }
 
-    IParam* IMetaObject::getOutput(const std::string& /*name*/) const { return nullptr; }
+    IParam* IMetaObject::getOutput(const std::string& /*name*/) const
+    {
+        return nullptr;
+    }
 
     IParam* MetaObject::getOutput(const std::string& name) const
     {
@@ -585,7 +607,10 @@ namespace mo
         return nullptr;
     }
 
-    std::vector<IParam*> IMetaObject::getOutputs(const std::string& /*name_filter*/) const { return {}; }
+    std::vector<IParam*> IMetaObject::getOutputs(const std::string& /*name_filter*/) const
+    {
+        return {};
+    }
 
     std::vector<IParam*> MetaObject::getOutputs(const std::string& name_filter) const
     {
@@ -684,8 +709,10 @@ namespace mo
         return false;
     }
 
-    bool
-    MetaObject::connectInput(const std::string& input_name, IMetaObject* output_object, IParam* output, BufferFlags type_)
+    bool MetaObject::connectInput(const std::string& input_name,
+                                  IMetaObject* output_object,
+                                  IParam* output,
+                                  BufferFlags type_)
     {
         auto input = getInput(input_name);
         if (input && output)
@@ -833,7 +860,10 @@ namespace mo
         return in_obj->connectInput(in_param, out_obj, out_param, type);
     }
 
-    IParam* IMetaObject::addParam(std::shared_ptr<IParam> param) { return nullptr; }
+    IParam* IMetaObject::addParam(std::shared_ptr<IParam> param)
+    {
+        return nullptr;
+    }
 
     IParam* MetaObject::addParam(std::shared_ptr<IParam> param)
     {
@@ -859,7 +889,10 @@ namespace mo
         return param.get();
     }
 
-    IParam* IMetaObject::addParam(IParam* param) { return nullptr; }
+    IParam* IMetaObject::addParam(IParam* param)
+    {
+        return nullptr;
+    }
 
     IParam* MetaObject::addParam(IParam* param)
     {
@@ -1208,8 +1241,7 @@ namespace mo
         _pimpl->_connections.push_back(info);
     }
 
-    void IMetaObject::onParamUpdate(
-        IParam* param, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)
+    void IMetaObject::onParamUpdate(IParam*, Header, UpdateFlags)
     {
     }
 

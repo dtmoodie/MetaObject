@@ -1,6 +1,7 @@
 #include <MetaObject/params/TMultiInput-inl.hpp>
 #include <MetaObject/params/TMultiOutput.hpp>
 #include <MetaObject/params/TParamPtr.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 #include <iostream>
 
 void printInputs(const std::tuple<const int*, const float*, const double*>& inputs)
@@ -50,7 +51,7 @@ int main(int argc, char** argv)
     multi_input.setInput(&int_out);
     printInputs(inputs);
     int_out.updateData(5);
-    multi_input.getInput(mo::OptionalTime(), nullptr);
+    multi_input.getInputData(mo::Header(), nullptr);
     printInputs(inputs);
 
     mo::TMultiOutput<int, float, double> multi_output;

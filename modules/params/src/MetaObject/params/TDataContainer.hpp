@@ -1,6 +1,8 @@
 #pragma once
 #include "Header.hpp"
 #include "IDataContainer.hpp"
+#include <MetaObject/params/IDynamicVisitor.hpp>
+
 namespace mo
 {
     template <class T>

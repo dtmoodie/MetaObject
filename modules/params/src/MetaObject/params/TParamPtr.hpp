@@ -52,10 +52,22 @@ namespace mo
             m_ptr = ptr;
             m_owns_data = owns_data;
         }
+
+        void updateData(const T& data, const Header& header = Header())
+        {
+            ITParam<T>::updateData(data, header);
+        }
+
+        void updateData(T&& data, Header&& header = Header())
+        {
+            ITParam<T>::updateData(std::move(data), std::move(header));
+            updateUserData(ITParam<T>::_data->data);
+        }
+
         void updateData(const TContainerPtr_t& data)
         {
             ITParam<T>::updateData(data);
-            updateUserData(*data);
+            updateUserData(data->data);
         }
 
         virtual IParam* emitUpdate(const Header& header, UpdateFlags = ValueUpdated_e) override

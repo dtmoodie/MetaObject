@@ -2,6 +2,7 @@
 #include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/detail/print_data.hpp"
+#include <boost/thread/recursive_mutex.hpp>
 #include <ostream>
 
 struct NonPrintableStruct

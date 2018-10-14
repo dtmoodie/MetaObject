@@ -22,4 +22,8 @@ https://github.com/dtmoodie/MetaObject
 
 namespace mo
 {
+    template <class T>
+    struct TParam : public ITParam<T>
+    {
+    };
 }

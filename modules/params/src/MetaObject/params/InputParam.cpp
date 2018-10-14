@@ -13,6 +13,10 @@ InputParam::InputParam()
 
 InputParam::~InputParam()
 {
+    if (m_input_param)
+    {
+        m_input_param->unsubscribe();
+    }
 }
 
 bool InputParam::getInputData(const Header& desired, Header* retrieved)

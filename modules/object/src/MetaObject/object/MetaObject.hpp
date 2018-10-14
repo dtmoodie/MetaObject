@@ -2,10 +2,16 @@
 #include "IMetaObject.hpp"
 
 #define MO_OBJ_TOOLTIP(tooltip)                                                                                        \
-    static std::string getTooltipStatic() { return tooltip; }
+    static std::string getTooltipStatic()                                                                              \
+    {                                                                                                                  \
+        return tooltip;                                                                                                \
+    }
 
 #define MO_OBJ_DESCRIPTION(desc)                                                                                       \
-    static std::string getDescriptionStatic() { return desc; }
+    static std::string getDescriptionStatic()                                                                          \
+    {                                                                                                                  \
+        return desc;                                                                                                   \
+    }
 
 namespace mo
 {
@@ -23,13 +29,13 @@ namespace mo
         RelayManager* getRelayManager();
         virtual int setupVariableManager(IVariableManager* mgr) override;
         virtual int removeVariableManager(IVariableManager* mgr) override;
-        
+
         virtual void Init(bool firstInit) override; // inherited from RCC, thus the PascalCase
         virtual void initCustom(bool firstInit) override;
-        //virtual void initParams(bool firstInit) = 0;
-        //virtual void bindSlots(bool firstInit) = 0;
-        //virtual int initSignals(bool firstInit) = 0;
-        //virtual void initOutputs() override = 0;
+        // virtual void initParams(bool firstInit) = 0;
+        // virtual void bindSlots(bool firstInit) = 0;
+        // virtual int initSignals(bool firstInit) = 0;
+        // virtual void initOutputs() override = 0;
 
         virtual void Serialize(ISimpleSerializer* pSerializer) override; // Inherit from RCC's IObject
         virtual void serializeConnections(ISimpleSerializer* pSerializer) override;
@@ -111,12 +117,12 @@ namespace mo
         virtual bool connectInput(const std::string& input_name,
                                   IMetaObject* output_object,
                                   IParam* output_param,
-                                  BufferFlags type = StreamBuffer_e) override;
+                                  BufferFlags type = BLOCKING_STREAM_BUFFER) override;
 
         virtual bool connectInput(InputParam* input,
                                   IMetaObject* output_object,
                                   IParam* output_param,
-                                  BufferFlags type = StreamBuffer_e) override;
+                                  BufferFlags type = BLOCKING_STREAM_BUFFER) override;
 
         virtual Mutex_t& getMutex() const override;
 
@@ -127,9 +133,7 @@ namespace mo
         ITParam<T>* getOutput(const std::string& name) const;
 
         template <class T>
-        T getParamValue(const std::string& name,
-                        const OptionalTime& ts = OptionalTime(),
-                        Context* ctx = nullptr) const;
+        T getParamValue(const std::string& name, const OptionalTime& ts = OptionalTime(), Context* ctx = nullptr) const;
 
         template <class T>
         ITParam<T>* getParam(const std::string& name) const;
@@ -151,14 +155,11 @@ namespace mo
                                    const TypeInfo& signature,
                                    IMetaObject* obj = nullptr) override;
 
-        virtual void
-        onParamUpdate(IParam*, Context*, OptionalTime, size_t, const CoordinateSystemPtr_t&, UpdateFlags) override;
+        virtual void onParamUpdate(IParam*, Header, UpdateFlags) override;
 
         template <class T>
-        ITParam<T>* updateParam(const std::string& name,
-                                T& value,
-                                const OptionalTime& ts = OptionalTime(),
-                                Context* ctx = nullptr);
+        ITParam<T>*
+        updateParam(const std::string& name, T& value, const OptionalTime& ts = OptionalTime(), Context* ctx = nullptr);
         template <class T>
         ITParam<T>* updateParam(const std::string& name,
                                 const T& value,

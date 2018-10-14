@@ -1,7 +1,7 @@
 #ifndef TMULTIINPUTINL_HPP
 #define TMULTIINPUTINL_HPP
 #include "TMultiInput.hpp"
-
+#include <ct/Indexer.hpp>
 namespace mo
 {
     template <class T, class U>
@@ -68,9 +68,30 @@ namespace mo
         std::vector<std::shared_ptr<Connection>> m_connections;
     };
 
+    template <class T, class... Args>
+    void globHelper(std::vector<T*>& vec, std::tuple<Args...>& tuple, ct::Indexer<0>)
+    {
+        vec.push_back(&std::get<0>(tuple));
+    }
+
+    template <class T, class... Args, ct::index_t I>
+    void globHelper(std::vector<T*>& vec, std::tuple<Args...>& tuple, ct::Indexer<I> idx)
+    {
+        vec.push_back(&std::get<I>(tuple));
+        globHelper(vec, tuple, --idx);
+    }
+
+    template <class T, class... Args>
+    std::vector<T*> globParamPtrs(std::tuple<Args...>& tuple)
+    {
+        std::vector<T*> out;
+        globHelper(out, tuple, ct::Indexer<sizeof...(Args)>{});
+        return out;
+    }
+
     template <class... Types>
     TMultiInput<Types...>::TMultiInput()
-        : InputParam()
+        : IMultiInput(globParamPtrs<InputParam>(m_inputs))
         , IParam("", mo::ParamFlags::Input_e)
     {
         this->setFlags(mo::ParamFlags::Input_e);
@@ -96,6 +117,21 @@ namespace mo
     void TMultiInput<Types...>::apply(std::tuple<const Types*...>* user_var_)
     {
         mo::get<TInputParamPtr<T>>(m_inputs).setUserDataPtr(&mo::get<const T*>(*user_var_));
+    }
+
+    template <class... Types>
+    typename TMultiInput<Types...>::IContainerPtr_t TMultiInput<Types...>::getData(const mo::Header&)
+    {
+    }
+
+    template <class... Types>
+    typename TMultiInput<Types...>::IContainerConstPtr_t TMultiInput<Types...>::getData(const mo::Header&) const
+    {
+    }
+
+    template <class... Types>
+    void TMultiInput<Types...>::onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags)
+    {
     }
 
 } // namespace mo
