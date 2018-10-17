@@ -1,5 +1,6 @@
 #pragma once
 
+#include "Connection.hpp"
 #include "ISignal.hpp"
 #include "ISignalRelay.hpp"
 #include "TSlot.hpp"
@@ -139,7 +140,7 @@ namespace mo
         if (relay != _typed_relay)
         {
             _typed_relay = relay;
-            return std::shared_ptr<Connection>(new SignalConnection(this, relay));
+            return std::make_shared<SignalConnection>(this, relay);
         }
         return std::shared_ptr<Connection>();
     }

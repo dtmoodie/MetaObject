@@ -1,7 +1,7 @@
 #pragma once
+#include <cereal/cereal.hpp>
 #include <ct/TypeTraits.hpp>
 #include <ct/reflect.hpp>
-#include <cereal/cereal.hpp>
 #include <opencv2/core/types.hpp>
 
 namespace ct
@@ -16,17 +16,35 @@ namespace ct
         typedef T* iterator;
         typedef const T* const_iterator;
 
-        ArrayAdapter(T* ptr_ = nullptr) : ptr(ptr_) {}
+        ArrayAdapter(T* ptr_ = nullptr)
+            : ptr(ptr_)
+        {
+        }
 
-        constexpr size_t size() const { return N; }
+        constexpr size_t size() const
+        {
+            return N;
+        }
 
-        T* begin() { return ptr; }
+        T* begin()
+        {
+            return ptr;
+        }
 
-        T* end() { return ptr + N; }
+        T* end()
+        {
+            return ptr + N;
+        }
 
-        const T* cbegin() const { return ptr; }
+        const T* cbegin() const
+        {
+            return ptr;
+        }
 
-        const T* cend() const { return ptr + N; }
+        const T* cend() const
+        {
+            return ptr + N;
+        }
 
         T* ptr;
 
@@ -44,7 +62,7 @@ namespace ct
         }
     };
 
-    template<class T, size_t N>
+    template <class T, size_t N>
     struct ReferenceType<ArrayAdapter<T, N>>
     {
         using Type = ArrayAdapter<T, N>;
@@ -88,7 +106,10 @@ namespace ct
     template <class T, size_t Rows, size_t Cols>
     struct MatrixAdapter
     {
-        MatrixAdapter(T* ptr_ = nullptr) : ptr(ptr_) {}
+        MatrixAdapter(T* ptr_ = nullptr)
+            : ptr(ptr_)
+        {
+        }
 
         T* ptr;
 
@@ -112,13 +133,26 @@ namespace ct
     {
         static constexpr int N = 0;
         static constexpr int SPECIALIZED = true;
-        static constexpr MatrixAdapter<T, R, C> get(cv::Matx<T, R, C>& data, Indexer<0>) { return data.val; }
+        static constexpr MatrixAdapter<T, R, C> get(cv::Matx<T, R, C>& data, Indexer<0>)
+        {
+            return data.val;
+        }
         static constexpr MatrixAdapter<const T, R, C> get(const cv::Matx<T, R, C>& data, Indexer<0>)
         {
             return data.val;
         }
-        static constexpr const char* getName(Indexer<0>) { return "data"; }
-        static constexpr ct::Indexer<N> end() { return ct::Indexer<N>{}; }
+        static constexpr const char* getName(Indexer<0>)
+        {
+            return "data";
+        }
+        static constexpr const char* getName()
+        {
+            return "cv::Matx<T, R, C>";
+        }
+        static constexpr ct::Indexer<N> end()
+        {
+            return ct::Indexer<N>{};
+        }
     };
 
     template <class T, int R>
@@ -126,15 +160,34 @@ namespace ct
     {
         static constexpr int N = 0;
         static constexpr int SPECIALIZED = true;
-        static constexpr ct::Accessor<ArrayAdapter<const T, R>(*)(const cv::Vec<T, R>&), ArrayAdapter<T,R>(*)(cv::Vec<T, R>&)> getAccessor(const ct::Indexer<0>)
+        static constexpr ct::Accessor<ArrayAdapter<const T, R> (*)(const cv::Vec<T, R>&),
+                                      ArrayAdapter<T, R> (*)(cv::Vec<T, R>&)>
+        getAccessor(const ct::Indexer<0>)
         {
-            return {[](const cv::Vec<T, R>& data)->ArrayAdapter<const T, R>{return &data.val[0];}, [](cv::Vec<T, R>& data)->ArrayAdapter<T, R>{return &data.val[0];}};
+            return {[](const cv::Vec<T, R>& data) -> ArrayAdapter<const T, R> { return &data.val[0]; },
+                    [](cv::Vec<T, R>& data) -> ArrayAdapter<T, R> { return &data.val[0]; }};
         }
 
-        static constexpr ArrayAdapter<T, R> get(cv::Vec<T, R>& data, Indexer<0>) { return data.val; }
-        static constexpr ArrayAdapter<const T, R> get(const cv::Vec<T, R>& data, Indexer<0>) { return data.val; }
-        static constexpr const char* getName(Indexer<0>) { return "data"; }
-        static constexpr ct::Indexer<N> end() { return ct::Indexer<N>{}; }
+        static constexpr ArrayAdapter<T, R> get(cv::Vec<T, R>& data, Indexer<0>)
+        {
+            return data.val;
+        }
+        static constexpr ArrayAdapter<const T, R> get(const cv::Vec<T, R>& data, Indexer<0>)
+        {
+            return data.val;
+        }
+        static constexpr const char* getName(Indexer<0>)
+        {
+            return "data";
+        }
+        static constexpr const char* getName()
+        {
+            return "cv::Vec_<T, R>";
+        }
+        static constexpr ct::Indexer<N> end()
+        {
+            return ct::Indexer<N>{};
+        }
     };
 
     template <class T>
@@ -143,36 +196,48 @@ namespace ct
         static constexpr int N = 0;
         static constexpr int SPECIALIZED = true;
 
-        static constexpr ct::Accessor<ArrayAdapter<const T, 4>(*)(const cv::Scalar_<T>&), ArrayAdapter<T, 4>(*)(cv::Scalar_<T>&)> getAccessor(const ct::Indexer<0>)
+        static constexpr ct::Accessor<ArrayAdapter<const T, 4> (*)(const cv::Scalar_<T>&),
+                                      ArrayAdapter<T, 4> (*)(cv::Scalar_<T>&)>
+        getAccessor(const ct::Indexer<0>)
         {
-            return {[](const cv::Scalar_<T>& data)->ArrayAdapter<const T, 4>{return &data.val[0];}, [](cv::Scalar_<T>& data)->ArrayAdapter<T, 4>{return &data.val[0];}};
+            return {[](const cv::Scalar_<T>& data) -> ArrayAdapter<const T, 4> { return &data.val[0]; },
+                    [](cv::Scalar_<T>& data) -> ArrayAdapter<T, 4> { return &data.val[0]; }};
         }
 
-        static constexpr const char* getName(Indexer<0>) { return "data"; }
-        static constexpr ct::Indexer<N> end() { return ct::Indexer<N>{}; }
+        static constexpr const char* getName(Indexer<0>)
+        {
+            return "data";
+        }
+        static constexpr const char* getName()
+        {
+            return "cv::Scalar_<T>";
+        }
+        static constexpr ct::Indexer<N> end()
+        {
+            return ct::Indexer<N>{};
+        }
     };
 
     REFLECT_TEMPLATED_START(cv::Rect_)
-        PUBLIC_ACCESS(x)
-        PUBLIC_ACCESS(y)
-        PUBLIC_ACCESS(width)
-        PUBLIC_ACCESS(height)
+    PUBLIC_ACCESS(x)
+    PUBLIC_ACCESS(y)
+    PUBLIC_ACCESS(width)
+    PUBLIC_ACCESS(height)
     REFLECT_END;
 
     REFLECT_TEMPLATED_START(cv::Point_)
-        PUBLIC_ACCESS(x)
-        PUBLIC_ACCESS(y)
+    PUBLIC_ACCESS(x)
+    PUBLIC_ACCESS(y)
     REFLECT_END;
 
     REFLECT_TEMPLATED_START(cv::Point3_)
-        PUBLIC_ACCESS(x)
-        PUBLIC_ACCESS(y)
-        PUBLIC_ACCESS(z)
+    PUBLIC_ACCESS(x)
+    PUBLIC_ACCESS(y)
+    PUBLIC_ACCESS(z)
     REFLECT_END;
 
     REFLECT_TEMPLATED_START(cv::Size_)
-        PUBLIC_ACCESS(width)
-        PUBLIC_ACCESS(height)
+    PUBLIC_ACCESS(width)
+    PUBLIC_ACCESS(height)
     REFLECT_END;
-
 }

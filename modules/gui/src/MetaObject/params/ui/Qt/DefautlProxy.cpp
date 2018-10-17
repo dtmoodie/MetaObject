@@ -4,21 +4,14 @@
 #include <qlabel.h>
 #include <qstring.h>
 
-
 using namespace mo;
 using namespace mo::UI::qt;
 
 DefaultProxy::DefaultProxy(IParam* param)
 {
     delete_slot = std::bind(&DefaultProxy::onParamDelete, this, std::placeholders::_1);
-    update_slot = std::bind(&DefaultProxy::onParamUpdate,
-                            this,
-                            std::placeholders::_1,
-                            std::placeholders::_2,
-                            std::placeholders::_3,
-                            std::placeholders::_4,
-                            std::placeholders::_5,
-                            std::placeholders::_6);
+    update_slot = std::bind(
+        &DefaultProxy::onParamUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
     this->param = param;
     param->registerUpdateNotifier(&update_slot);
     param->registerDeleteNotifier(&delete_slot);
@@ -34,7 +27,6 @@ bool DefaultProxy::checkParam(IParam* param) const
 {
     return this->param == param;
 }
-
 
 QWidget* DefaultProxy::getParamWidget(QWidget* parent)
 {
@@ -53,8 +45,7 @@ void DefaultProxy::onUiUpdate(QObject* source)
     (void)source;
 }
 
-void DefaultProxy::onParamUpdate(
-    IParam*, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)
+void DefaultProxy::onParamUpdate(IParam*, Header, UpdateFlags)
 {
 }
 

@@ -25,17 +25,17 @@ namespace mo
         }
 
         template <class T>
-        ITParam<T>* Queue<T>::updateData(T& data_, mo::Time ts, Context* ctx)
+        TParam<T>* Queue<T>::updateData(T& data_, mo::Time ts, Context* ctx)
         {
         }
 
         template <class T>
-        ITParam<T>* updateData(const T& data_, mo::Time ts, Context* ctx)
+        TParam<T>* updateData(const T& data_, mo::Time ts, Context* ctx)
         {
         }
 
         template <class T>
-        ITParam<T>* updateData(T* data_, mo::Time ts, Context* ctx)
+        TParam<T>* updateData(T* data_, mo::Time ts, Context* ctx)
         {
         }
 

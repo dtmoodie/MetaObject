@@ -4,7 +4,7 @@
 #include "OutputParam.hpp"
 #include "TMultiInput-inl.hpp"
 #include "TMultiInput.hpp"
-#include "TParam.hpp"
+#include "ITParam.hpp"
 
 namespace mo
 {

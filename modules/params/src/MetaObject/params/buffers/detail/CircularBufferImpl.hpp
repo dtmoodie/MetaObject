@@ -8,7 +8,7 @@ namespace mo
         template <class T>
         CircularBuffer<T>::CircularBuffer(T&& init, const std::string& name, OptionalTime ts, ParamFlags type)
             : ITInputParam<T>(name)
-            , ITParam<T>(name, mo::ParamFlags::Buffer_e)
+            , TParam<T>(name, mo::ParamFlags::Buffer_e)
             , IParam(name, mo::ParamFlags::Buffer_e)
         {
             (void)&_circular_buffer_constructor;
@@ -20,7 +20,7 @@ namespace mo
         template <class T>
         CircularBuffer<T>::CircularBuffer(const std::string& name, OptionalTime ts, ParamFlags type)
             : ITInputParam<T>(name)
-            , ITParam<T>(name, mo::ParamFlags::Buffer_e)
+            , TParam<T>(name, mo::ParamFlags::Buffer_e)
             , IParam(name, mo::ParamFlags::Buffer_e)
         {
             _data_buffer.set_capacity(10);
@@ -220,7 +220,7 @@ namespace mo
             this->modified(true);
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
         }
         template <typename T>
         ParamConstructor<CircularBuffer<T>> CircularBuffer<T>::_circular_buffer_param_constructor;

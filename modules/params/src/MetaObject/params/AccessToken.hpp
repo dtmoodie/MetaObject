@@ -28,8 +28,10 @@ namespace mo
         AccessToken& operator=(const AccessToken&) = delete;
         AccessToken& operator=(AccessToken&&) = default;
 
-        AccessToken(Lock&& lock, ITParam<T>& param, T& data)
-            : _lock(std::move(lock)), _param(param), _data(data)
+        AccessToken(Lock&& lock, TParam<T>& param, T& data)
+            : _lock(std::move(lock))
+            , _param(param)
+            , _data(data)
         {
         }
 
@@ -84,7 +86,7 @@ namespace mo
 
       private:
         AccessTokenLock _lock;
-        ITParam<T>& _param;
+        TParam<T>& _param;
         T& _data;
         Header _header;
         bool _modified = false;
@@ -96,7 +98,10 @@ namespace mo
         ConstAccessToken(ConstAccessToken&& other) = default;
         ConstAccessToken(const ConstAccessToken& other) = default;
 
-        ConstAccessToken(Lock&& lock, const ITParam<T>& param, const T& data) : _lock(std::move(lock)), _param(param), _data(data)
+        ConstAccessToken(Lock&& lock, const TParam<T>& param, const T& data)
+            : _lock(std::move(lock))
+            , _param(param)
+            , _data(data)
         {
         }
 
@@ -109,7 +114,7 @@ namespace mo
         }
 
         AccessTokenLock _lock;
-        const ITParam<T>& _param;
+        const TParam<T>& _param;
         const T& _data;
     };
 }

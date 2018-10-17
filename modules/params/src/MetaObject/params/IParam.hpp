@@ -105,9 +105,12 @@ namespace mo
         virtual IContainerConstPtr_t getData(const Header& desired = Header()) const = 0;
 
         template <class T>
-        typename TDataContainer<T>::Ptr getData(const Header& desired = Header());
+        typename TDataContainer<T>::Ptr getTypedData(const Header& desired = Header());
         template <class T>
-        typename TDataContainer<T>::ConstPtr getData(const Header& desired = Header()) const;
+        typename TDataContainer<T>::ConstPtr getTypedData(const Header& desired = Header()) const;
+
+        template <class T>
+        bool getData(T&, const Header& desired = Header()) const;
     };
 
     class MO_EXPORTS IParam : public ParamBase
@@ -253,7 +256,7 @@ namespace mo
     }
 
     template <class T>
-    typename TDataContainer<T>::Ptr ParamBase::getData(const Header& desired)
+    typename TDataContainer<T>::Ptr ParamBase::getTypedData(const Header& desired)
     {
         auto data = getData(desired);
         if (data)
@@ -264,7 +267,7 @@ namespace mo
     }
 
     template <class T>
-    typename TDataContainer<T>::ConstPtr ParamBase::getData(const Header& desired) const
+    typename TDataContainer<T>::ConstPtr ParamBase::getTypedData(const Header& desired) const
     {
         auto data = getData(desired);
         if (data)
@@ -272,5 +275,16 @@ namespace mo
             return std::static_pointer_cast<const TDataContainer<T>>(data);
         }
         return {};
+    }
+    template <class T>
+    bool ParamBase::getData(T& data, const Header& desired) const
+    {
+        auto container = getTypedData<T>(desired);
+        if (container)
+        {
+            data = container->data;
+            return true;
+        }
+        return false;
     }
 }

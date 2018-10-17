@@ -17,9 +17,10 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 https://github.com/dtmoodie/MetaObject
 */
+#include "AccessToken.hpp"
 #include "IParam.hpp"
 #include "TDataContainer.hpp"
-#include "traits/TypeTraits.hpp"
+
 #include <boost/thread/locks.hpp>
 
 namespace mo
@@ -30,7 +31,7 @@ namespace mo
     struct ConstAccessToken;
 
     template <typename T>
-    class MO_EXPORTS ITParam<T> : virtual public IParam
+    class MO_EXPORTS TParam<T> : virtual public IParam
     {
       public:
         using Container_t = TDataContainer<T>;
@@ -40,8 +41,8 @@ namespace mo
         using TUpdateSignal_t = TSignal<TUpdate_s>;
         using TUpdateSlot_t = TSlot<TUpdate_s>;
 
-        // brief ITParam default constructor, passes args to IParam
-        ITParam(const std::string& name = "", ParamFlags flags = ParamFlags::Control_e);
+        // brief TParam default constructor, passes args to IParam
+        TParam(const std::string& name = "", ParamFlags flags = ParamFlags::Control_e);
 
         template <class... Args>
         void updateData(const T& data, const Args&... args);
@@ -69,6 +70,10 @@ namespace mo
 
       protected:
         typename TDataContainer<T>::Ptr _data;
+        void emitTypedUpdate(TContainerPtr_t data, UpdateFlags flags)
+        {
+            _typed_update_signal(data, this, flags);
+        }
 
       private:
         TSignal<TUpdate_s> _typed_update_signal;
@@ -80,14 +85,14 @@ namespace mo
     ///////////////////////////////////////////////////////////////////////////////////////
 
     template <class T>
-    ITParam<T>::ITParam(const std::string& name, ParamFlags flags)
+    TParam<T>::TParam(const std::string& name, ParamFlags flags)
         : IParam(name, flags)
     {
     }
 
     template <class T>
     template <class... Args>
-    void ITParam<T>::updateData(const T& data, const Args&... args)
+    void TParam<T>::updateData(const T& data, const Args&... args)
     {
         T tmp = data;
         updateData(tmp, args...);
@@ -95,7 +100,7 @@ namespace mo
 
     template <class T>
     template <class... Args>
-    void ITParam<T>::updateData(T&& data, const Args&... args)
+    void TParam<T>::updateData(T&& data, const Args&... args)
     {
         Header header;
         const IParam* param = GetKeywordInputOptional<tag::param>(args...);
@@ -139,11 +144,10 @@ namespace mo
             GetKeywordInputDefault<tag::coordinate_system>(std::shared_ptr<ICoordinateSystem>(), args...);
 
         updateData(std::move(data), std::move(header));
-        return this;
     }
 
     template <class T>
-    void ITParam<T>::updateData(const T& data, const Header& header)
+    void TParam<T>::updateData(const T& data, const Header& header)
     {
         auto container = std::make_shared<TDataContainer<T>>();
         container->data = data;
@@ -152,7 +156,7 @@ namespace mo
     }
 
     template <class T>
-    void ITParam<T>::updateData(T&& data, Header&& header)
+    void TParam<T>::updateData(T&& data, Header&& header)
     {
         auto container = std::make_shared<TDataContainer<T>>();
         container->data = std::move(data);
@@ -161,7 +165,7 @@ namespace mo
     }
 
     template <class T>
-    void ITParam<T>::updateData(const TContainerPtr_t& data)
+    void TParam<T>::updateData(const TContainerPtr_t& data)
     {
         {
             mo::Lock lock(this->mtx());
@@ -172,13 +176,13 @@ namespace mo
     }
 
     template <class T>
-    TypeInfo ITParam<T>::getTypeInfo() const
+    TypeInfo TParam<T>::getTypeInfo() const
     {
         return _type_info;
     }
 
     template <class T>
-    ConnectionPtr_t ITParam<T>::registerUpdateNotifier(ISlot* f)
+    ConnectionPtr_t TParam<T>::registerUpdateNotifier(ISlot* f)
     {
         if (f->getSignature() == _typed_update_signal.getSignature())
         {
@@ -192,7 +196,7 @@ namespace mo
     }
 
     template <class T>
-    ConnectionPtr_t ITParam<T>::registerUpdateNotifier(const ISignalRelay::Ptr& relay)
+    ConnectionPtr_t TParam<T>::registerUpdateNotifier(const ISignalRelay::Ptr& relay)
     {
         if (relay->getSignature() == _typed_update_signal.getSignature())
         {
@@ -203,7 +207,7 @@ namespace mo
     }
 
     template <class T>
-    void ITParam<T>::visit(IReadVisitor* visitor)
+    void TParam<T>::visit(IReadVisitor* visitor)
     {
         mo::Lock lock(this->mtx());
         if (_data)
@@ -213,7 +217,7 @@ namespace mo
     }
 
     template <class T>
-    void ITParam<T>::visit(IWriteVisitor* visitor) const
+    void TParam<T>::visit(IWriteVisitor* visitor) const
     {
         mo::Lock lock(this->mtx());
         if (_data)
@@ -223,7 +227,7 @@ namespace mo
     }
 
     template <class T>
-    typename ITParam<T>::IContainerPtr_t ITParam<T>::getData(const Header& desired)
+    typename TParam<T>::IContainerPtr_t TParam<T>::getData(const Header& desired)
     {
         mo::Lock lock(this->mtx());
         if (_data)
@@ -252,7 +256,7 @@ namespace mo
     }
 
     template <class T>
-    typename ITParam<T>::IContainerConstPtr_t ITParam<T>::getData(const Header& desired) const
+    typename TParam<T>::IContainerConstPtr_t TParam<T>::getData(const Header& desired) const
     {
         mo::Lock lock(this->mtx());
         if (_data)
@@ -281,13 +285,13 @@ namespace mo
     }
 
     template <class T>
-    bool ITParam<T>::isValid() const
+    bool TParam<T>::isValid() const
     {
         return _data != nullptr;
     }
 
     template <class T>
-    ConstAccessToken<T> ITParam<T>::read() const
+    ConstAccessToken<T> TParam<T>::read() const
     {
         mo::Lock lock(this->mtx());
         MO_ASSERT(_data != nullptr);
@@ -295,7 +299,7 @@ namespace mo
     }
 
     template <class T>
-    AccessToken<T> ITParam<T>::access()
+    AccessToken<T> TParam<T>::access()
     {
         mo::Lock lock(this->mtx());
         MO_ASSERT(_data != nullptr);
@@ -303,5 +307,5 @@ namespace mo
     }
 
     template <class T>
-    const TypeInfo ITParam<T>::_type_info = TypeInfo(typeid(T));
+    const TypeInfo TParam<T>::_type_info = TypeInfo(typeid(T));
 }

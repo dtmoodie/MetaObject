@@ -19,11 +19,3 @@ https://github.com/dtmoodie/MetaObject
 #pragma once
 #include "ITParam.hpp"
 #include "MetaObject/params/MetaParam.hpp"
-
-namespace mo
-{
-    template <class T>
-    struct TParam : public ITParam<T>
-    {
-    };
-}

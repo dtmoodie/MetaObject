@@ -80,19 +80,20 @@ namespace mo
         return false;
     }
 
-    std::string getDataTypeName(const mo::ParamBase* param) { return mo::Demangle::typeToName(param->getTypeInfo()); }
+    std::string getDataTypeName(const mo::ParamBase* param)
+    {
+        return mo::Demangle::typeToName(param->getTypeInfo());
+    }
 
     python::ParamCallbackContainer::ParamCallbackContainer(mo::IParam* ptr, const boost::python::object& obj)
-        : m_ptr(ptr), m_callback(obj)
+        : m_ptr(ptr)
+        , m_callback(obj)
     {
         m_slot = std::bind(&ParamCallbackContainer::onParamUpdate,
                            this,
                            std::placeholders::_1,
                            std::placeholders::_2,
-                           std::placeholders::_3,
-                           std::placeholders::_4,
-                           std::placeholders::_5,
-                           std::placeholders::_6);
+                           std::placeholders::_3);
         m_delete_slot = std::bind(&ParamCallbackContainer::onParamDelete, this, std::placeholders::_1);
         if (ptr)
         {
@@ -102,12 +103,7 @@ namespace mo
         }
     }
 
-    void python::ParamCallbackContainer::onParamUpdate(IParam* param,
-                                                       Context*,
-                                                       OptionalTime ts,
-                                                       size_t fn,
-                                                       const std::shared_ptr<ICoordinateSystem>&,
-                                                       UpdateFlags flags)
+    void python::ParamCallbackContainer::onParamUpdate(IParam* param, Header header, UpdateFlags flags)
     {
         if (m_ptr == nullptr)
         {
@@ -127,13 +123,13 @@ namespace mo
         {
             try
             {
-                if (ts)
+                if (header.timestamp)
                 {
-                    m_callback(obj, ts->time_since_epoch().count(), fn, flags);
+                    m_callback(obj, header.timestamp->time_since_epoch().count(), header.frame_number, flags);
                 }
                 else
                 {
-                    m_callback(obj, boost::python::object(), fn, flags);
+                    m_callback(obj, boost::python::object(), header.frame_number, flags);
                 }
             }
             catch (...)
@@ -145,7 +141,10 @@ namespace mo
         }
     }
 
-    void python::ParamCallbackContainer::onParamDelete(const mo::ParamBase*) { m_ptr = nullptr; }
+    void python::ParamCallbackContainer::onParamDelete(const mo::ParamBase*)
+    {
+        m_ptr = nullptr;
+    }
 
     auto python::ParamCallbackContainer::registry() -> std::shared_ptr<Registry>
     {
@@ -171,9 +170,14 @@ namespace mo
             python::ParamCallbackContainer::Ptr(new python::ParamCallbackContainer(param, obj)));
     }
 
-    std::string printTime(const mo::Time& ts) {}
+    std::string printTime(const mo::Time& ts)
+    {
+    }
 
-    const mo::Time& getTime(const mo::OptionalTime& ts) { return ts.get(); }
+    const mo::Time& getTime(const mo::OptionalTime& ts)
+    {
+        return ts.get();
+    }
 
     void python::setupParameters(const std::string& module_name)
     {
@@ -231,7 +235,7 @@ namespace mo
             .def("getInterfaceName", &IObjectInfo::GetInterfaceName)
             .def("__repr__", &IObjectInfo::Print, (boost::python::arg("verbosity") = IObjectInfo::INFO));
 
-        boost::python::class_<mo::Time, boost::noncopyable> time("Time");
+        boost::python::class_<Time, boost::noncopyable> time("Time");
         // time.def("__repr__", &printTime);
 
         boost::python::class_<mo::OptionalTime, boost::noncopyable> optional_time("OptionalTime");

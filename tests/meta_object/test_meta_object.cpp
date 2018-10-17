@@ -1,5 +1,6 @@
 
 #define BOOST_TEST_MAIN
+#include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/object/MetaObject.hpp"
 #include "MetaObject/object/RelayManager.hpp"
@@ -7,7 +8,6 @@
 #include "MetaObject/params//ParamMacros.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
-#include "MetaObject/core/SystemTable.hpp"
 //#include "MetaObject/params/ui/Qt/POD.hpp"
 //#include "MetaObject/params/ui/Qt/TParamProxy.hpp"
 #include "MetaObject/signals/TSignal.hpp"
@@ -86,7 +86,7 @@ struct test_meta_object_param : public MetaObject
     TOOLTIP(test_int, "test tooltip")
     MO_END
 
-     void onParamUpdate(IParam*, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>& , UpdateFlags) override
+    void onParamUpdate(IParam*, Header, UpdateFlags) override
     {
         ++update_count;
     }
@@ -109,22 +109,25 @@ MO_REGISTER_OBJECT(test_meta_object_input)
 // RuntimeObjectSystem obj_sys;
 struct Fixture
 {
-  SystemTable table;
-  mo::MetaObjectFactory factory;
+    SystemTable table;
+    mo::MetaObjectFactory factory;
 
-  Fixture():table(), factory(&table){
-    factory.registerTranslationUnit();
-  }
+    Fixture()
+        : table()
+        , factory(&table)
+    {
+        factory.registerTranslationUnit();
+    }
 };
 
 BOOST_GLOBAL_FIXTURE(Fixture);
-
 
 BOOST_AUTO_TEST_CASE(test_meta_object_static_introspection_global)
 {
     auto info = MetaObjectInfoDatabase::instance()->getMetaObjectInfo();
     BOOST_REQUIRE(info.size());
-    for (auto& item : info) {
+    for (auto& item : info)
+    {
         std::cout << item->Print() << std::endl;
     }
 }

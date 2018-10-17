@@ -77,7 +77,7 @@ namespace mo
         virtual void Init(bool firstInit) = 0; // inherited from RCC, thus the PascalCase
         virtual void initCustom(bool firstInit) = 0;
         virtual void bindSlots(bool firstInit) = 0;
-        virtual void initParams(bool firstInit) = 0;
+        virtual void inTParams(bool firstInit) = 0;
         virtual int initSignals(bool firstInit) = 0;
 
         virtual void Serialize(ISimpleSerializer* pSerializer) = 0; // Inherit from RCC's IObject
@@ -155,7 +155,7 @@ namespace mo
         virtual IParam* getParamOptional(const std::string& name) const = 0;
         virtual ParamVec_t getParams(const std::string& filter = "") const = 0;
         virtual ParamVec_t getParams(const TypeInfo& filter) const = 0;
-        virtual std::vector<IParamPtr_t> getImplicitParams() const = 0;
+        virtual std::vector<IParamPtr_t> getImplicTParams() const = 0;
 
         // Connects an input Param to an output Param
         virtual bool connectInput(const std::string& input_name,

@@ -7,10 +7,10 @@
 #include <MetaObject/serialization/BinaryWriter.hpp>
 #include <MetaObject/serialization/JSONPrinter.hpp>
 
-#include <MetaObject/serialization/visitor_traits/map.hpp>
-#include <MetaObject/serialization/visitor_traits/memory.hpp>
-#include <MetaObject/serialization/visitor_traits/string.hpp>
-#include <MetaObject/serialization/visitor_traits/vector.hpp>
+#include <MetaObject/params/visitor_traits/map.hpp>
+#include <MetaObject/params/visitor_traits/memory.hpp>
+#include <MetaObject/params/visitor_traits/string.hpp>
+#include <MetaObject/params/visitor_traits/vector.hpp>
 
 #include <ct/reflect.hpp>
 #include <ct/reflect/cerealize.hpp>
@@ -86,11 +86,23 @@ namespace mo
     {
         Vec* m_vec;
         using base = IStructTraits;
-        TTraits(Vec* vec) : m_vec(vec) {}
+        TTraits(Vec* vec)
+            : m_vec(vec)
+        {
+        }
 
-        virtual size_t size() const override { return sizeof(Vec); }
-        virtual bool isPrimitiveType() const override { return false; }
-        virtual bool triviallySerializable() const override { return std::is_pod<Vec>::value; }
+        virtual size_t size() const override
+        {
+            return sizeof(Vec);
+        }
+        virtual bool isPrimitiveType() const override
+        {
+            return false;
+        }
+        virtual bool triviallySerializable() const override
+        {
+            return std::is_pod<Vec>::value;
+        }
         virtual void visit(IReadVisitor* visitor) override
         {
             (*visitor) (&m_vec->x, "x") (&m_vec->y, "y")(&m_vec->z, "z");
@@ -100,8 +112,14 @@ namespace mo
         {
             (*visitor) (&m_vec->x, "x") (&m_vec->y, "y")(&m_vec->z, "z");
         }
-        virtual const void* ptr() const override { return m_vec; }
-        virtual void* ptr() override { return m_vec; }
+        virtual const void* ptr() const override
+        {
+            return m_vec;
+        }
+        virtual void* ptr() override
+        {
+            return m_vec;
+        }
     };
 
     template <class T1, class T2>
@@ -109,7 +127,11 @@ namespace mo
     {
         using base = IStructTraits;
 
-        TTraits(std::pair<T1, T2>* ptr, const std::pair<T1, T2>* const_ptr) : m_ptr(ptr), m_const_ptr(const_ptr) {}
+        TTraits(std::pair<T1, T2>* ptr, const std::pair<T1, T2>* const_ptr)
+            : m_ptr(ptr)
+            , m_const_ptr(const_ptr)
+        {
+        }
 
         virtual void visit(IReadVisitor* visitor) override
         {
@@ -130,11 +152,27 @@ namespace mo
                 (*visitor)(&m_ptr->second, "second");
             }
         }
-        virtual size_t size() const { return sizeof(std::pair<T1, T2>); }
-        virtual bool triviallySerializable() const { return std::is_pod<T1>::value && std::is_pod<T2>::value; }
-        virtual bool isPrimitiveType() const { return false; }
-        virtual const void* ptr() const { return m_ptr ? m_ptr : m_const_ptr; }
-        virtual void* ptr() { return m_ptr; }
+        virtual size_t size() const
+        {
+            return sizeof(std::pair<T1, T2>);
+        }
+        virtual bool triviallySerializable() const
+        {
+            return std::is_pod<T1>::value && std::is_pod<T2>::value;
+        }
+        virtual bool isPrimitiveType() const
+        {
+            return false;
+        }
+        virtual const void* ptr() const
+        {
+            return m_ptr ? m_ptr : m_const_ptr;
+        }
+        virtual void* ptr()
+        {
+            return m_ptr;
+        }
+
       private:
         std::pair<T1, T2>* m_ptr;
         const std::pair<T1, T2>* m_const_ptr;

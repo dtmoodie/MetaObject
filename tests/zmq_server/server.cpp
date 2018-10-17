@@ -12,7 +12,7 @@
 #include "MetaObject/params/ParamMacros.hpp"
 #include "MetaObject/params/ParamServer.hpp"
 #include "MetaObject/params/TInputParam.hpp"
-#include "MetaObject/params/TParam.hpp"
+#include "MetaObject/params/ITParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/VariableManager.h"
 #include "MetaObject/signals/TSignal.hpp"

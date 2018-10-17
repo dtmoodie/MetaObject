@@ -16,12 +16,14 @@
 #endif
 //#include "MetaObject/params/ui/Qt/Containers.hpp"
 
-#include "MetaObject/params/TParam.hpp"
+#include "MetaObject/params/ITParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
 //#include "MetaObject/params/RangedParam.hpp"
 #include <MetaObject/MetaParameters.hpp>
 using namespace mo;
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), ui(new Ui::MainWindow)
+MainWindow::MainWindow(QWidget* parent)
+    : QMainWindow(parent)
+    , ui(new Ui::MainWindow)
 {
     mo::initMetaParamsModule();
     ui->setupUi(this);

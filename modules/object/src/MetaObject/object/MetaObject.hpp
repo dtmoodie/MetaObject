@@ -32,7 +32,7 @@ namespace mo
 
         virtual void Init(bool firstInit) override; // inherited from RCC, thus the PascalCase
         virtual void initCustom(bool firstInit) override;
-        // virtual void initParams(bool firstInit) = 0;
+        // virtual void inTParams(bool firstInit) = 0;
         // virtual void bindSlots(bool firstInit) = 0;
         // virtual int initSignals(bool firstInit) = 0;
         // virtual void initOutputs() override = 0;
@@ -111,7 +111,7 @@ namespace mo
         virtual IParam* getParamOptional(const std::string& name) const override;
         virtual ParamVec_t getParams(const std::string& filter = "") const override;
         virtual ParamVec_t getParams(const TypeInfo& filter) const override;
-        virtual std::vector<IParamPtr_t> getImplicitParams() const override;
+        virtual std::vector<IParamPtr_t> getImplicTParams() const override;
 
         // Connects an input Param to an output Param
         virtual bool connectInput(const std::string& input_name,
@@ -130,15 +130,15 @@ namespace mo
         ITInputParam<T>* getInput(const std::string& name);
 
         template <class T>
-        ITParam<T>* getOutput(const std::string& name) const;
+        TParam<T>* getOutput(const std::string& name) const;
 
         template <class T>
         T getParamValue(const std::string& name, const OptionalTime& ts = OptionalTime(), Context* ctx = nullptr) const;
 
         template <class T>
-        ITParam<T>* getParam(const std::string& name) const;
+        TParam<T>* getParam(const std::string& name) const;
         template <class T>
-        ITParam<T>* getParamOptional(const std::string& name) const;
+        TParam<T>* getParamOptional(const std::string& name) const;
         template <class T>
         TSlot<T>* getSlot(const std::string& name) const;
 
@@ -158,15 +158,15 @@ namespace mo
         virtual void onParamUpdate(IParam*, Header, UpdateFlags) override;
 
         template <class T>
-        ITParam<T>*
+        TParam<T>*
         updateParam(const std::string& name, T& value, const OptionalTime& ts = OptionalTime(), Context* ctx = nullptr);
         template <class T>
-        ITParam<T>* updateParam(const std::string& name,
+        TParam<T>* updateParam(const std::string& name,
                                 const T& value,
                                 const OptionalTime& ts = OptionalTime(),
                                 Context* ctx = nullptr);
         template <class T>
-        ITParam<T>* updateParamPtr(const std::string& name, T& ptr);
+        TParam<T>* updateParamPtr(const std::string& name, T& ptr);
 
         friend class RelayManager;
         struct impl;

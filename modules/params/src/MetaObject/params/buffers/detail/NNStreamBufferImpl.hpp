@@ -7,7 +7,7 @@ namespace mo
 
         template <class T>
         NNStreamBuffer<T>::NNStreamBuffer(const std::string& name)
-            : ITParam<T>(name, ParamFlags::Buffer_e)
+            : TParam<T>(name, ParamFlags::Buffer_e)
             , StreamBuffer<T>(name)
         {
         }

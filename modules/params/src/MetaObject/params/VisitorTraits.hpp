@@ -16,7 +16,8 @@ namespace mo
     {
         auto accessor = ct::Reflect<T>::getAccessor(ct::Indexer<I>{});
         using RefType = typename ct::ReferenceType<typename decltype(accessor)::SetType>::Type;
-        visitor(&static_cast<RefType>(accessor.set(obj)), ct::Reflect<T>::getName(ct::Indexer<I>{}));
+        auto ref = static_cast<RefType>(accessor.set(obj));
+        visitor(&ref, ct::Reflect<T>::getName(ct::Indexer<I>{}));
     }
 
     template <class T>
@@ -59,9 +60,16 @@ namespace mo
     {
         using base = IStructTraits;
 
-        TTraits(T* ptr, const T* const_ptr) : m_ptr(ptr), m_const_ptr(const_ptr) {}
+        TTraits(T* ptr, const T* const_ptr)
+            : m_ptr(ptr)
+            , m_const_ptr(const_ptr)
+        {
+        }
 
-        virtual void visit(IReadVisitor* visitor) override { visitHelper(*visitor, *m_ptr, ct::Reflect<T>::end()); }
+        virtual void visit(IReadVisitor* visitor) override
+        {
+            visitHelper(*visitor, *m_ptr, ct::Reflect<T>::end());
+        }
         virtual void visit(IWriteVisitor* visitor) const override
         {
             if (m_const_ptr)
@@ -74,14 +82,35 @@ namespace mo
             }
         }
 
-        virtual bool isPrimitiveType() const override { return false; }
+        virtual bool isPrimitiveType() const override
+        {
+            return false;
+        }
 
-        virtual size_t size() const override { return sizeof(T); }
-        virtual TypeInfo type() const { return TypeInfo(typeid(T)); }
-        virtual bool triviallySerializable() const override { return std::is_pod<T>::value; }
-        virtual const void* ptr() const override { return m_ptr ? m_ptr : m_const_ptr; }
-        virtual void* ptr() override { return m_ptr; }
-        virtual const char* getName() const { return ct::Reflect<T>::getName(); }
+        virtual size_t size() const override
+        {
+            return sizeof(T);
+        }
+        virtual TypeInfo type() const
+        {
+            return TypeInfo(typeid(T));
+        }
+        virtual bool triviallySerializable() const override
+        {
+            return std::is_pod<T>::value;
+        }
+        virtual const void* ptr() const override
+        {
+            return m_ptr ? m_ptr : m_const_ptr;
+        }
+        virtual void* ptr() override
+        {
+            return m_ptr;
+        }
+        virtual const char* getName() const
+        {
+            return ct::Reflect<T>::getName();
+        }
 
       private:
         T* m_ptr;

@@ -1,10 +1,12 @@
 #pragma once
 #include "MetaObject/core/Demangle.hpp"
 #include "MetaObject/detail/Export.hpp"
+#include "MetaObject/params/AccessToken.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include "MetaObject/params/ITAccessibleParam.hpp"
 #include "MetaObject/params/OutputParam.hpp"
 #include "MetaObject/python/PythonSetup.hpp"
+
 #include "converters.hpp"
 
 #include <boost/python.hpp>
@@ -44,9 +46,9 @@ namespace mo
 
             static bool set(mo::ParamBase* param, const boost::python::object& obj)
             {
-                if (param->getTypeInfo() == mo::TypeInfo(typeid(T)))
+                if (param->getTypeInfo() == TypeInfo(typeid(T)))
                 {
-                    if (auto typed = dynamic_cast<mo::ITAccessibleParam<T>*>(param))
+                    if (auto typed = dynamic_cast<TParam<T>*>(param))
                     {
                         auto token = typed->access();
                         mo::python::convertFromPython(obj, token());
@@ -56,20 +58,20 @@ namespace mo
                 return false;
             }
 
-            static boost::python::object get(const mo::ParamBase* param)
+            static boost::python::object get(const ParamBase* param)
             {
                 if (param->getTypeInfo() == mo::TypeInfo(typeid(T)))
                 {
-                    if (param->checkFlags(mo::ParamFlags::Output_e))
+                    if (param->checkFlags(ParamFlags::Output_e))
                     {
                         if (auto output_param = dynamic_cast<const OutputParam*>(param))
                         {
                             param = output_param->getOutputParam();
                         }
                     }
-                    if (auto typed = dynamic_cast<const mo::ITConstAccessibleParam<T>*>(param))
+                    if (auto typed = dynamic_cast<const TParam<T>*>(param))
                     {
-                        if (typed->canAccess())
+                        if (typed->isValid())
                         {
                             auto token = typed->read();
                             return convertToPython(token());
@@ -79,8 +81,7 @@ namespace mo
                     {
 
                         MO_LOG(debug) << "Failed to cast parameter (" << mo::Demangle::typeToName(param->getTypeInfo())
-                                      << ") to the correct type for "
-                                      << mo::Demangle::typeToName(mo::TypeInfo(typeid(T)));
+                                      << ") to the correct type for " << mo::Demangle::typeToName(TypeInfo(typeid(T)));
                     }
                 }
                 else

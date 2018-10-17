@@ -42,13 +42,6 @@ set(MO_PYTHON_STATUS "" CACHE BOOL INTERNAL FORCE)
 set(MO_HAVE_QT 0 CACHE BOOL INTERNAL FORCE)
 set(MO_HAVE_WT 0 CACHE BOOL INTERNAL FORCE)
 
-if(CMAKE_COMPILER_IS_GNUCC AND CMAKE_CXX_COMPILER_VERSION VERSION_LESS 5.0)
-    # gcc 4.8 fails to compile some templates used in data printers
-    set(MO_PRINT_PARAM_DATA 0 CACHE BOOL INTERNAL FORCE)
-else()
-    set(MO_PRINT_PARAM_DATA 1 CACHE BOOL INTERNAL FORCE)
-endif()
-
 include(cmake/metaobject_dependencies.cmake)
 
 configure_file(metaobject_config.hpp.in ${CMAKE_BINARY_DIR}/include/MetaObject/core/metaobject_config.hpp @ONLY)

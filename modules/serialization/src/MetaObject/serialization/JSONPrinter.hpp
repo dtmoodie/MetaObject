@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MetaObject/serialization/DynamicVisitor.hpp"
+#include "MetaObject/params/DynamicVisitor.hpp"
 
 #include <cereal/archives/json.hpp>
 #include <iostream>

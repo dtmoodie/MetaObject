@@ -11,8 +11,12 @@ namespace mo
 
     struct MO_EXPORTS Header
     {
+        Header();
+        Header(const mo::Time& ts);
+        Header(const uint64_t fn);
+
         mo::OptionalTime timestamp;
-        uint64_t frame_number = std::numeric_limits<uint64_t>::max();
+        uint64_t frame_number;
 
         Context* ctx;
         ICoordinateSystemPtr_t coordinate_system;

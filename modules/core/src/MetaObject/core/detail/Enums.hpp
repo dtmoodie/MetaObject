@@ -111,7 +111,7 @@ namespace mo
 
     enum BufferFlags
     {
-        DIRECT,
+        DEFAULT,
         CIRCULAR_BUFFER,
         MAP_BUFFER,
         STREAM_BUFFER,

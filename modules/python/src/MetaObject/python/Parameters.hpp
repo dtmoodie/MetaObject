@@ -21,12 +21,7 @@ namespace mo
             static std::shared_ptr<Registry> registry();
             ParamCallbackContainer(mo::IParam* ptr, const boost::python::object& obj);
 
-            void onParamUpdate(IParam* param,
-                               Context*,
-                               OptionalTime ts,
-                               size_t fn,
-                               const std::shared_ptr<ICoordinateSystem>&,
-                               UpdateFlags flags);
+            void onParamUpdate(IParam*, Header, UpdateFlags);
 
             void onParamDelete(const mo::ParamBase*);
 

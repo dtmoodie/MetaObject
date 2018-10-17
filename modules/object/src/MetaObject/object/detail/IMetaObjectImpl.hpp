@@ -1,18 +1,18 @@
 #pragma once
 #include "MetaObject/detail/TypeInfo.hpp"
 #include "MetaObject/logging/logging.hpp"
-#include "MetaObject/params/ITParam.hpp"
-#include "MetaObject/params/TParam.hpp"
 #include "MetaObject/object/MetaObject.hpp"
+#include "MetaObject/params/ITParam.hpp"
+#include "MetaObject/params/ITParam.hpp"
 namespace mo
 {
     class IMetaObject;
 
     template <class T>
-    ITParam<T>* MetaObject::getParam(const std::string& name) const
+    TParam<T>* MetaObject::getParam(const std::string& name) const
     {
         IParam* param = getParam(name);
-        ITParam<T>* typed = dynamic_cast<ITParam<T>*>(param);
+        TParam<T>* typed = dynamic_cast<TParam<T>*>(param);
         if (typed)
         {
             return typed;
@@ -30,15 +30,35 @@ namespace mo
     }
 
     template <class T>
-    ITParam<T>* MetaObject::getParamOptional(const std::string& name) const
+    TParam<T>* MetaObject::getParamOptional(const std::string& name) const
     {
         auto param = getParamOptional(name);
-        ITParam<T>* typed = dynamic_cast<ITParam<T>*>(param);
+        TParam<T>* typed = dynamic_cast<TParam<T>*>(param);
         return typed;
     }
 
     template <class T>
-    ITParam<T>* MetaObject::updateParam(const std::string& name, T& value, const OptionalTime& ts, Context* ctx)
+    TParam<T>* MetaObject::updateParam(const std::string& name, T& value, const OptionalTime& ts, Context* ctx)
+    {
+        if (ctx == nullptr)
+            ctx = getContext().get();
+        auto param = getParamOptional<T>(name);
+        if (param)
+        {
+            param->updateData(value, ts, ctx);
+            return param;
+        }
+        else
+        {
+            std::shared_ptr<TParam<T>> new_param(new TParam<T>(name));
+            new_param->udpateData(value);
+            addParam(new_param);
+            return new_param.get();
+        }
+    }
+
+    template <class T>
+    TParam<T>* MetaObject::updateParam(const std::string& name, const T& value, const OptionalTime& ts, Context* ctx)
     {
         if (ctx == nullptr)
             ctx = getContext().get();
@@ -57,26 +77,7 @@ namespace mo
     }
 
     template <class T>
-    ITParam<T>* MetaObject::updateParam(const std::string& name, const T& value, const OptionalTime& ts, Context* ctx)
-    {
-        if (ctx == nullptr)
-            ctx = getContext().get();
-        auto param = getParamOptional<T>(name);
-        if (param)
-        {
-            param->updateData(value, ts, ctx);
-            return param;
-        }
-        else
-        {
-            std::shared_ptr<ITParam<T>> new_param(new TParam<T>(name, value));
-            addParam(new_param);
-            return new_param.get();
-        }
-    }
-
-    template <class T>
-    ITParam<T>* MetaObject::updateParamPtr(const std::string& name, T& ptr)
+    TParam<T>* MetaObject::updateParamPtr(const std::string& name, T& ptr)
     {
         return nullptr;
     }
@@ -105,14 +106,14 @@ namespace mo
     }
 
     template <class T>
-    ITParam<T>* MetaObject::getOutput(const std::string& name) const
+    TParam<T>* MetaObject::getOutput(const std::string& name) const
     {
         auto ptr = getOutput(name);
         if (ptr)
         {
             if (ptr->getTypeInfo() == TypeInfo(typeid(T)))
             {
-                return dynamic_cast<ITParam<T>*>(ptr);
+                return dynamic_cast<TParam<T>*>(ptr);
             }
         }
         return nullptr;

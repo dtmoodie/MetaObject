@@ -32,8 +32,14 @@ namespace mo
             {
               public:
                 static const bool IS_DEFAULT = THandler<T>::IS_DEFAULT;
-                ParamProxy(IParam* param) : _param_handler(*this) { setParam(param); }
-                ~ParamProxy() {}
+                ParamProxy(IParam* param)
+                    : _param_handler(*this)
+                {
+                    setParam(param);
+                }
+                ~ParamProxy()
+                {
+                }
 
                 QWidget* getParamWidget(QWidget* parent)
                 {
@@ -78,11 +84,14 @@ namespace mo
                     return output;
                 }
 
-                bool checkParam(IParam* param) const { return param == this->_param; }
+                bool checkParam(IParam* param) const
+                {
+                    return param == this->_param;
+                }
 
                 bool setParam(IParam* param)
                 {
-                    this->_param = dynamic_cast<ITAccessibleParam<T>*>(param);
+                    this->_param = dynamic_cast<TParam<T>*>(param);
                     if (this->_param)
                     {
                         return true;
@@ -126,8 +135,8 @@ namespace mo
                     _param_handler.setUpdating(false);
                 }
                 THandler<T> _param_handler;
-                ITAccessibleParam<T>* _param;
-                typename ITParam<T>::TUpdateSlot_t _slot;
+                TParam<T>* _param;
+                typename TParam<T>::TUpdateSlot_t _slot;
             };
             // **********************************************************************************
             // *************************** Constructor ******************************************
@@ -156,7 +165,8 @@ namespace mo
         : public MetaParam<T, N - 1, void>                                                                             \
     {                                                                                                                  \
         static UI::qt::Constructor<T> _Param_proxy_constructor;                                                        \
-        MetaParam(SystemTable* table, const char* name) : MetaParam<T, N - 1, void>(table, name)                       \
+        MetaParam(SystemTable* table, const char* name)                                                                \
+            : MetaParam<T, N - 1, void>(table, name)                                                                   \
         {                                                                                                              \
             (void)&_Param_proxy_constructor;                                                                           \
         }                                                                                                              \

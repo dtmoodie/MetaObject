@@ -85,7 +85,7 @@ namespace mo
     std::vector<T*> globParamPtrs(std::tuple<Args...>& tuple)
     {
         std::vector<T*> out;
-        globHelper(out, tuple, ct::Indexer<sizeof...(Args)>{});
+        globHelper(out, tuple, ct::Indexer<sizeof...(Args)-1>{});
         return out;
     }
 

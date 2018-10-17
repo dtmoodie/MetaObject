@@ -14,6 +14,7 @@ namespace mo
         static Time now();
         static void setTimeSource(GetTime_f timefunc);
 
+        Time() = default;
         Time(const std::chrono::high_resolution_clock::time_point& t);
         Time(const Duration& d);
 

@@ -63,6 +63,26 @@ namespace mo
     template <class T, class E = void>
     struct TTraits;
 
+    template <class T>
+    char is_complete_impl(char (*)[sizeof(T)]);
+
+    template <class>
+    char (&is_complete_impl(...))[2];
+
+    template <class T>
+    struct is_complete
+    {
+        enum
+        {
+            value = sizeof(is_complete_impl<T>(0)) == sizeof(char)
+        };
+    };
+    template <class T, class U = void>
+    using enable_if_trait_exists = typename std::enable_if<is_complete<TTraits<T>>::value, U>::type;
+
+    template <class T, class U = void>
+    using enable_if_not_trait_exists = typename std::enable_if<!is_complete<TTraits<T>>::value, U>::type;
+
     template <class T, class E = void>
     struct IsPrimitive : public std::false_type
     {
@@ -123,7 +143,12 @@ namespace mo
         virtual IReadVisitor& operator()(void* binary, const std::string& name = "", const size_t num_bytes = 1) = 0;
 
         template <class T>
-        IReadVisitor& operator()(T* val, const std::string& name = "", const size_t cnt = 1);
+        auto operator()(T* val, const std::string& name = "", const size_t cnt = 1)
+            -> enable_if_trait_exists<T, IReadVisitor&>;
+        template <class T>
+        auto operator()(T* val, const std::string& name = "", const size_t cnt = 1)
+            -> enable_if_not_trait_exists<T, IReadVisitor&>;
+
         virtual IReadVisitor& operator()(IStructTraits* val, const std::string& name = "") = 0;
         virtual IReadVisitor& operator()(IContainerTraits* val, const std::string& name = "") = 0;
 
@@ -156,7 +181,12 @@ namespace mo
         virtual IWriteVisitor& operator()(const void* binary, const std::string& name = "", const size_t bytes = 1) = 0;
 
         template <class T>
-        IWriteVisitor& operator()(const T* val, const std::string& name = "", const size_t cnt = 1);
+        auto operator()(const T* val, const std::string& name = "", const size_t cnt = 1)
+            -> enable_if_trait_exists<T, IWriteVisitor&>;
+
+        template <class T>
+        auto operator()(const T* val, const std::string& name = "", const size_t cnt = 1)
+            -> enable_if_not_trait_exists<T, IWriteVisitor&>;
 
         virtual IWriteVisitor& operator()(const IStructTraits* val, const std::string& name = "") = 0;
         virtual IWriteVisitor& operator()(const IContainerTraits* val, const std::string& name = "") = 0;
@@ -245,7 +275,8 @@ namespace mo
     }
 
     template <class T>
-    IReadVisitor& IReadVisitor::operator()(T* val, const std::string& name, const size_t cnt)
+    auto IReadVisitor::operator()(T* val, const std::string& name, const size_t cnt)
+        -> enable_if_trait_exists<T, IReadVisitor&>
     {
         if (cnt == 1)
         {
@@ -263,7 +294,14 @@ namespace mo
     }
 
     template <class T>
-    IWriteVisitor& IWriteVisitor::operator()(const T* val, const std::string& name, const size_t cnt)
+    auto IReadVisitor::operator()(T* val, const std::string& name, const size_t cnt)
+        -> enable_if_not_trait_exists<T, IReadVisitor&>
+    {
+    }
+
+    template <class T>
+    auto IWriteVisitor::operator()(const T* val, const std::string& name, const size_t cnt)
+        -> enable_if_trait_exists<T, IWriteVisitor&>
     {
         if (cnt == 1)
         {
@@ -277,6 +315,13 @@ namespace mo
             using base = typename decltype(traits)::base;
             (*this)(static_cast<base*>(&traits), name);
         }
+        return *this;
+    }
+
+    template <class T>
+    auto IWriteVisitor::operator()(const T* val, const std::string& name, const size_t cnt)
+        -> enable_if_not_trait_exists<T, IWriteVisitor&>
+    {
         return *this;
     }
 }

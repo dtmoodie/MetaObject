@@ -29,7 +29,9 @@ using namespace mo;
 
 struct GlobalFixture
 {
-    GlobalFixture() : table{}, factory(&table)
+    GlobalFixture()
+        : table{}
+        , factory(&table)
     {
         auto table = &this->table;
         INSTANTIATE_META_PARAM(int);
@@ -48,7 +50,10 @@ struct output_parametered_object : public MetaObject
     OUTPUT(int, test_output, 0);
     OUTPUT(double, test_double, 0.0);
     MO_END;
-    void increment() { test_output++; }
+    void increment()
+    {
+        test_output++;
+    }
 };
 
 struct input_parametered_object : public MetaObject
@@ -102,16 +107,16 @@ BOOST_AUTO_TEST_CASE(buffered_input)
     BOOST_REQUIRE(output_);
     auto input_param = dynamic_cast<InputParam*>(input_);
 
-    auto cbuffer = Buffer::BufferFactory::createProxy(output_, mo::BufferFlags::CircularBuffer_e);
+    auto cbuffer = buffer::BufferFactory::createBuffer(output_, mo::BufferFlags::CIRCULAR_BUFFER);
     BOOST_REQUIRE(cbuffer);
     BOOST_REQUIRE(input_param->setInput(cbuffer));
     output->test_output_param.updateData(0, 0);
     for (int i = 1; i < 100000; ++i)
     {
         output->test_output_param.updateData(i * 10, i);
-        int data;
-        BOOST_REQUIRE(input->test_input_param.getData(data, i - 1));
-        BOOST_REQUIRE_EQUAL(data, (i - 1) * 10);
+        auto data = input->test_input_param.template getTypedData<int>(i - 1);
+        BOOST_REQUIRE(data);
+        BOOST_REQUIRE_EQUAL(data->data, (i - 1) * 10);
     }
 }
 
@@ -127,7 +132,7 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
     BOOST_REQUIRE(output_);
     auto input_param = dynamic_cast<InputParam*>(input_);
 
-    auto cbuffer = Buffer::BufferFactory::createProxy(output_, mo::BufferFlags::CircularBuffer_e);
+    auto cbuffer = buffer::BufferFactory::createBuffer(output_, mo::BufferFlags::CIRCULAR_BUFFER);
     BOOST_REQUIRE(cbuffer);
     BOOST_REQUIRE(input_param->setInput(cbuffer));
     output->test_output_param.updateData(0, 0);
@@ -139,9 +144,10 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
         int data;
         while (!quit)
         {
-            if (input->test_input_param.getData(data, ts))
+            auto container = input->test_input_param.getTypedData<int>(ts);
+            if (container)
             {
-                BOOST_REQUIRE_EQUAL(data, ts * 10);
+                BOOST_REQUIRE_EQUAL(container->data, ts * 10);
                 ++ts;
             }
         }
@@ -172,21 +178,21 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
     BOOST_REQUIRE(output_);
     auto input_param = dynamic_cast<InputParam*>(input_);
 
-    auto buffer = Buffer::BufferFactory::createProxy(output_, mo::StreamBuffer_e);
+    auto buffer = buffer::BufferFactory::createBuffer(output_, mo::STREAM_BUFFER);
     BOOST_REQUIRE(buffer);
     BOOST_REQUIRE(input_param->setInput(buffer));
     output->test_output_param.updateData(0, 0);
 
     std::thread background_thread([&input]() {
-        int data;
         for (int i = 0; i < 1000; ++i)
         {
-            bool good = input->test_input_param.getData(data, i);
-            while (!good)
+            auto container = input->test_input_param.getTypedData<int>(i);
+
+            while (!container)
             {
-                good = input->test_input_param.getData(data, i);
+                container = input->test_input_param.getTypedData<int>(i);
             }
-            BOOST_REQUIRE_EQUAL(data, i * 10);
+            BOOST_REQUIRE_EQUAL(container->data, i * 10);
             boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
         }
     });

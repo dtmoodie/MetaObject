@@ -22,7 +22,7 @@ namespace mo
             }
             static IParam* create_buffer(IParam* input)
             {
-                if (auto T_param = dynamic_cast<ITParam<T>*>(input))
+                if (auto T_param = dynamic_cast<TParam<T>*>(input))
                 {
                     return new Proxy<T>(T_param, new T("map for " + input->getTreeName()));
                 }

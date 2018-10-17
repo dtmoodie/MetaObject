@@ -7,7 +7,7 @@ namespace mo
     {
         template <class T>
         StreamBuffer<T>::StreamBuffer(const std::string& name)
-            : ITParam<T>(name, ParamFlags::Buffer_e)
+            : TParam<T>(name, ParamFlags::Buffer_e)
             , _time_padding(mo::ms * 500)
             , _frame_padding(100)
         {
@@ -135,7 +135,7 @@ namespace mo
         template <class T>
         BlockingStreamBuffer<T>::BlockingStreamBuffer(const std::string& name)
             : StreamBuffer<T>(name)
-            , ITParam<T>(name, mo::ParamFlags::Buffer_e)
+            , TParam<T>(name, mo::ParamFlags::Buffer_e)
             , _size(100)
         {
         }
@@ -274,7 +274,7 @@ namespace mo
                 {
                 }
                 IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-                ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+                TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
                 if (!lock)
                 {
                     lock.lock();
@@ -294,7 +294,7 @@ namespace mo
             this->modified(true);
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
         }
 
         template <class T>
@@ -380,7 +380,7 @@ namespace mo
             this->modified(true);
             lock.unlock();
             IParam::emitUpdate(ts, ctx, fn, cs, mo::BufferUpdated_e);
-            ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
         }
     }
 }

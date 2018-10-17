@@ -147,7 +147,7 @@ BOOST_AUTO_TEST_CASE(Param_dynamic)
     BOOST_REQUIRE_EQUAL(derived_obj->derived_param, 10);
     derived_obj->base_param = 10;
     derived_obj->derived_param = 100;
-    derived_obj->initParams(true);
+    derived_obj->inTParams(true);
     BOOST_REQUIRE_EQUAL(derived_obj->base_param, 5);
     BOOST_REQUIRE_EQUAL(derived_obj->derived_param, 10);
 }

@@ -121,6 +121,7 @@ bool InputParam::setInput(IParam* param)
     param->subscribe();
     param->registerUpdateNotifier(&m_update_slot);
     param->registerDeleteNotifier(&m_delete_slot);
+    return true;
 }
 
 bool InputParam::isInputSet() const
@@ -167,5 +168,22 @@ void InputParam::visit(IWriteVisitor* visitor) const
     if (data)
     {
         data->visit(visitor);
+    }
+}
+
+void InputParam::onInputUpdate(const IDataContainerPtr_t& data, IParam* param, UpdateFlags)
+{
+    if (data->getHeader().ctx == getContext())
+    {
+        m_current_data = data;
+        emitUpdate(data->getHeader(), InputUpdated_e);
+    }
+    else
+    {
+        // mer figure out what do
+        if (param->checkFlags(ParamFlags::Buffer_e))
+        {
+            emitUpdate(data->getHeader(), BufferUpdated_e);
+        }
     }
 }

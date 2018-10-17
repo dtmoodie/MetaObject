@@ -78,7 +78,7 @@ namespace mo
             this->modified(true);
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
             return true;
         }
 
@@ -94,7 +94,7 @@ namespace mo
             this->modified(true);
             lock.unlock();
             IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            ITParamImpl<T>::emitTypedUpdate(itr.first->second, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            TParamImpl<T>::emitTypedUpdate(itr.first->second, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
             return true;
         }
 
@@ -220,7 +220,7 @@ namespace mo
             this->modified(true);
             lock.unlock();
             IParam::emitUpdate(ts, ctx, fn, cs, mo::BufferUpdated_e);
-            ITParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
         }
     }
 }

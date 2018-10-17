@@ -100,7 +100,7 @@ namespace mo
             T::addParam(param.get());
         }
 
-        void initParams(bool first_init) override
+        void inTParams(bool first_init) override
         {
             T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::CONTROL>(), first_init);
             T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::INPUT>(), first_init);

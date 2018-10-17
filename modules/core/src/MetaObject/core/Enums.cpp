@@ -109,7 +109,7 @@ BufferFlags mo::stringToBufferFlags(const std::string& str)
     else if (str == "NNStreamBuffer")
         return NEAREST_NEIGHBOR_BUFFER;
     THROW(debug) << "Invalid string " << str;
-    return DIRECT;
+    return DEFAULT;
 }
 
 static std::map<const Context*, std::map<const Context*, BufferFlags>> connection_map;

@@ -10,12 +10,12 @@
 namespace mo
 {
     template <class T>
-    struct ITInputParam : virtual public ITParam<T>, virtual public InputParam
+    struct ITInputParam : virtual public TParam<T>, virtual public InputParam
     {
       public:
-        using TContainerPtr_t = typename ITParam<T>::TContainerPtr_t;
-        using ContainerConstPtr_t = typename ITParam<T>::ContainerConstPtr_t;
-        using TUpdateSlot_t = typename ITParam<T>::TUpdateSlot_t;
+        using TContainerPtr_t = typename TParam<T>::TContainerPtr_t;
+        using ContainerConstPtr_t = typename TParam<T>::ContainerConstPtr_t;
+        using TUpdateSlot_t = typename TParam<T>::TUpdateSlot_t;
 
         ITInputParam(const std::string& name = "");
         ~ITInputParam() override;
@@ -26,7 +26,6 @@ namespace mo
         virtual bool acceptsInput(IParam* param) const;
         virtual bool acceptsType(const TypeInfo& type) const;
 
-        virtual bool isInputSet() const;
         virtual TypeInfo getTypeInfo() const override;
 
         virtual void visit(IReadVisitor*) override;
@@ -34,7 +33,7 @@ namespace mo
 
       protected:
         virtual void onInputUpdate(TContainerPtr_t, IParam*, UpdateFlags);
-        virtual void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) override
+        virtual void onTypedInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags)
         {
         }
 
@@ -45,10 +44,13 @@ namespace mo
 
     template <class T>
     ITInputParam<T>::ITInputParam(const std::string& name)
-        : ITParam<T>(name)
+        : TParam<T>(name)
     {
-        m_typed_update_slot = std::bind(
-            &ITInputParam<T>::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        m_typed_update_slot = std::bind(&ITInputParam<T>::onTypedInputUpdate,
+                                        this,
+                                        std::placeholders::_1,
+                                        std::placeholders::_2,
+                                        std::placeholders::_3);
     }
 
     template <class T>
@@ -120,13 +122,13 @@ namespace mo
         const auto header = data->getHeader();
         if (fg == mo::BufferUpdated_e && param->checkFlags(mo::ParamFlags::Buffer_e))
         {
-            emitTypedUpdate(data, this, header, InputUpdated_e);
-            emitUpdate(this, header, fg, InputUpdated_e);
+            TParam<T>::emitTypedUpdate(data, InputUpdated_e);
+            emitUpdate(header, InputUpdated_e);
             return;
         }
-        if (header.ctx == this->m_ctx)
+        if (header.ctx == getContext())
         {
-            updateData(data);
+            TParam<T>::updateData(data);
         }
     }
 

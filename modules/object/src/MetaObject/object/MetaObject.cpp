@@ -112,14 +112,14 @@ namespace mo
 
     void MetaObject::Init(bool firstInit)
     {
-        initParams(firstInit);
+        inTParams(firstInit);
         initSignals(firstInit);
         bindSlots(firstInit);
         initCustom(firstInit);
         auto params = getParams();
         for (auto param : params)
         {
-            auto update_slot = getSlot<mo::UpdateSig_t>("on_" + param->getName() + "_modified");
+            auto update_slot = getSlot<Update_s>("on_" + param->getName() + "_modified");
             if (update_slot)
             {
                 auto connection = param->registerUpdateNotifier(update_slot);
@@ -132,7 +132,7 @@ namespace mo
                                         this);
                 }
             }
-            auto delete_slot = getSlot<void(mo::IParam const*)>("on_" + param->getName() + "_deleted");
+            auto delete_slot = getSlot<void(IParam const*)>("on_" + param->getName() + "_deleted");
             if (delete_slot)
             {
                 auto connection = param->registerDeleteNotifier(delete_slot);
@@ -161,7 +161,7 @@ namespace mo
                     {
                         MO_LOG(debug) << "Unable to find " << param_connection.output_param << " in "
                                       << obj->GetTypeName() << " reinitializing";
-                        obj->initParams(firstInit);
+                        obj->inTParams(firstInit);
                         output = obj->getOutput(param_connection.output_param);
                         if (output == nullptr)
                         {
@@ -176,7 +176,7 @@ namespace mo
                     {
                         if (this->connectInput(input, obj.get(), output, param_connection.connection_type))
                         {
-                            input->getInput(mo::OptionalTime());
+                            input->getInputData();
                             MO_LOG(debug) << "Reconnected " << GetTypeName() << ":" << param_connection.input_param
                                           << " to " << obj->GetTypeName() << ":" << param_connection.output_param;
                         }
@@ -457,7 +457,7 @@ namespace mo
         return output;
     }
 
-    std::vector<std::shared_ptr<IParam>> MetaObject::getImplicitParams() const
+    std::vector<std::shared_ptr<IParam>> MetaObject::getImplicTParams() const
     {
         std::vector<std::shared_ptr<IParam>> output;
         for (const auto& param : _pimpl->_implicit_params)
@@ -754,15 +754,15 @@ namespace mo
             // Check contexts to see if a buffer needs to be setup
             auto output_ctx = output->getContext();
             auto input_context = input->getContext();
-            if (type_ == Default_e && output_ctx != input_context)
+            if (type_ == DEFAULT && output_ctx != input_context)
             {
                 type_ = getDefaultBufferType(output_ctx, input_context);
             }
-            if (type_ & ForceBufferedConnection_e || input->checkFlags(mo::ParamFlags::RequestBuffered_e) ||
+            if (type_ & FORCE_BUFFERED || input->checkFlags(mo::ParamFlags::RequestBuffered_e) ||
                 output->checkFlags(mo::ParamFlags::RequestBuffered_e))
             {
-                type_ = BufferFlags(type_ & ~ForceBufferedConnection_e);
-                auto buffer = Buffer::BufferFactory::createProxy(output, type_);
+                type_ = BufferFlags(type_ & ~FORCE_BUFFERED);
+                auto buffer = buffer::BufferFactory::createBuffer(output, type_);
                 if (!buffer)
                 {
                     MO_LOG(warning) << "Unable to create " << BufferFlagsToString(type_) << " for datatype "
@@ -789,7 +789,7 @@ namespace mo
             {
                 if (output_ctx->thread_id != _ctx.get()->thread_id)
                 {
-                    auto buffer = Buffer::BufferFactory::createProxy(output, type_);
+                    auto buffer = buffer::BufferFactory::createBuffer(output, type_);
                     if (buffer)
                     {
                         buffer->setName(output->getTreeName() + " buffer for " + input->getTreeName());
@@ -1046,8 +1046,7 @@ namespace mo
         return nullptr;
     }
 
-    TSlot<void(IParam*, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)>*
-    MetaObject::getSlot_param_updated() const
+    TSlot<Update_s>* MetaObject::getSlot_param_updated() const
     {
         return &_pimpl->_slot_param_updated;
     }
@@ -1241,12 +1240,7 @@ namespace mo
         _pimpl->_connections.push_back(info);
     }
 
-    void IMetaObject::onParamUpdate(IParam*, Header, UpdateFlags)
-    {
-    }
-
-    void MetaObject::onParamUpdate(
-        IParam* param, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)
+    void MetaObject::onParamUpdate(IParam* param, Header, UpdateFlags)
     {
         this->_pimpl->_sig_param_updated(this, param);
     }

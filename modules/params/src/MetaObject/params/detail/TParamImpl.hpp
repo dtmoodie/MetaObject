@@ -1,5 +1,5 @@
 #pragma once
-#include "../TParam.hpp"
+#include "../ITParam.hpp"
 #include "MetaObject/logging/logging.hpp"
 #include "MetaObject/params/AccessToken.hpp"
 namespace mo
@@ -8,7 +8,7 @@ namespace mo
     class TParam;
 
     template <typename T>
-    TParam<T>::TParam() : ITParam<T>(), _data(), IParam()
+    TParam<T>::TParam() : TParam<T>(), _data(), IParam()
     {
     }
 
@@ -72,7 +72,7 @@ namespace mo
         _data = data;
         this->_fn = fn;
         this->_ts = ts;
-        ITParamImpl<T>::emitTypedUpdate(_data, this, ctx, ts, this->_fn, cs, ValueUpdated_e);
+        TParamImpl<T>::emitTypedUpdate(_data, this, ctx, ts, this->_fn, cs, ValueUpdated_e);
         return true;
     }
 
@@ -86,7 +86,7 @@ namespace mo
         _data = std::move(data);
         this->_fn = fn;
         this->_ts = ts;
-        ITParamImpl<T>::emitTypedUpdate(_data, this, ctx, ts, this->_fn, cs, ValueUpdated_e);
+        TParamImpl<T>::emitTypedUpdate(_data, this, ctx, ts, this->_fn, cs, ValueUpdated_e);
         return true;
     }
 }

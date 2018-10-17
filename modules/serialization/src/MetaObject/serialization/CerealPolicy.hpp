@@ -55,7 +55,7 @@ namespace mo
                 template <class AR>
                 static bool serialize(const IParam* param, AR& ar)
                 {
-                    auto typed = dynamic_cast<const ITConstAccessibleParam<T>*>(param);
+                    auto typed = dynamic_cast<const TParam<T>*>(param);
                     if (typed == nullptr)
                     {
                         return false;
@@ -68,9 +68,11 @@ namespace mo
                 template <class AR>
                 static bool deSerialize(IParam* param, AR& ar)
                 {
-                    auto typed = dynamic_cast<ITAccessibleParam<T>*>(param);
+                    auto typed = dynamic_cast<TParam<T>*>(param);
                     if (typed == nullptr)
+                    {
                         return false;
+                    }
                     auto token = typed->access();
                     auto nvp = cereal::make_optional_nvp(param->getName(), (token)(), (token)());
                     try
@@ -80,12 +82,12 @@ namespace mo
                     catch (cereal::Exception& e)
                     {
                         MO_LOG(debug) << "Failed to deserialize " << param->getName() << " due to " << e.what();
-                        token.setValid(false);
+                        token.setModified(false);
                         return false;
                     }
                     catch (...)
                     {
-                        token.setValid(false);
+                        token.setModified(false);
                         return false;
                     }
 
@@ -93,7 +95,7 @@ namespace mo
                     {
                         return true;
                     }
-                    token.setValid(false);
+                    token.setModified(false);
                     return false;
                 }
             };
@@ -111,7 +113,8 @@ namespace mo
     struct MetaParam<T, N, DetectSerializer<T>> : public MetaParam<T, N - 1, void>                                     \
     {                                                                                                                  \
         static IO::Cereal::Policy<T> _cereal_policy;                                                                   \
-        MetaParam(SystemTable* table, const char* name) : MetaParam<T, N - 1, void>(table, name)                       \
+        MetaParam(SystemTable* table, const char* name)                                                                \
+            : MetaParam<T, N - 1, void>(table, name)                                                                   \
         {                                                                                                              \
             (void)&_cereal_policy;                                                                                     \
         }                                                                                                              \

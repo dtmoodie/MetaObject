@@ -1,12 +1,12 @@
 #pragma once
-#include "ITAccessibleParam.hpp"
+#include "ITParam.hpp"
 #include "MetaParam.hpp"
 #include "OutputParam.hpp"
 #include "detail/print_data.hpp"
 
 namespace mo
 {
-    /*! The TParamPtr class is a concrete implementation of ITParam
+    /*! The TParamPtr class is a concrete implementation of TParam
      *  which implements wrapping of a raw pointer to user data.  This is used
      *  extensively inside of the PARAM macro as follows:
      *
@@ -20,15 +20,15 @@ namespace mo
      *  Updates to user_param are reflected in user_data
      */
     template <typename T>
-    struct MO_EXPORTS TParamPtr : virtual public ITParam<T>
+    struct MO_EXPORTS TParamPtr : virtual public TParam<T>
     {
-        using TContainerPtr_t = typename ITParam<T>::TContainerPtr_t;
+        using TContainerPtr_t = typename TParam<T>::TContainerPtr_t;
 
         TParamPtr(const std::string& name = "",
                   T* ptr = nullptr,
                   ParamFlags type = ParamFlags::Control_e,
                   bool owns_data = false)
-            : ITParam<T>(name, type)
+            : TParam<T>(name, type)
             , m_ptr(ptr)
             , m_owns_data(owns_data)
         {
@@ -53,20 +53,34 @@ namespace mo
             m_owns_data = owns_data;
         }
 
+        template <class... Args>
+        void updateData(const T& data, const Args&... args)
+        {
+            TParam<T>::updateData(data, args...);
+            updateUserData(TParam<T>::_data->data);
+        }
+
+        template <class... Args>
+        void updateData(T&& data, Args&&... args)
+        {
+            TParam<T>::updateData(std::forward<T>(data), std::forward<Args>(args)...);
+            updateUserData(TParam<T>::_data->data);
+        }
+
         void updateData(const T& data, const Header& header = Header())
         {
-            ITParam<T>::updateData(data, header);
+            TParam<T>::updateData(data, header);
         }
 
         void updateData(T&& data, Header&& header = Header())
         {
-            ITParam<T>::updateData(std::move(data), std::move(header));
-            updateUserData(ITParam<T>::_data->data);
+            TParam<T>::updateData(std::move(data), std::move(header));
+            updateUserData(TParam<T>::_data->data);
         }
 
         void updateData(const TContainerPtr_t& data)
         {
-            ITParam<T>::updateData(data);
+            TParam<T>::updateData(data);
             updateUserData(data->data);
         }
 
@@ -75,7 +89,7 @@ namespace mo
             Lock lock(this->mtx());
             if (m_ptr)
             {
-                ITParam<T>::updateData(*m_ptr, header);
+                TParam<T>::updateData(*m_ptr, header);
             }
         }
 
@@ -85,14 +99,14 @@ namespace mo
             Lock lock(this->mtx());
             if (m_ptr)
             {
-                ITParam<T>::updateData(*m_ptr, mo::tag::_param = other);
+                TParam<T>::updateData(*m_ptr, mo::tag::_param = other);
             }
         }
 
         std::ostream& print(std::ostream& os) const override
         {
             Lock lock(this->mtx());
-            ITParam<T>::print(os);
+            TParam<T>::print(os);
             os << ' ';
             if (m_ptr)
             {
@@ -123,15 +137,15 @@ namespace mo
     };
 
     template <typename T>
-    struct MO_EXPORTS TParamPtr<std::shared_ptr<T>> : virtual public ITParam<T>
+    struct MO_EXPORTS TParamPtr<std::shared_ptr<T>> : virtual public TParam<T>
     {
-        using TContainerPtr_t = typename ITParam<T>::TContainerPtr_t;
+        using TContainerPtr_t = typename TParam<T>::TContainerPtr_t;
 
         TParamPtr(const std::string& name = "",
                   std::shared_ptr<T>* ptr = nullptr,
                   ParamFlags type = ParamFlags::Control_e,
                   bool owns_data = false)
-            : ITParam<T>(name, type)
+            : TParam<T>(name, type)
             , m_ptr(ptr)
             , m_owns_data(owns_data)
         {
@@ -158,14 +172,14 @@ namespace mo
 
         virtual void updateData(const TContainerPtr_t& data) override
         {
-            ITParam<T>::updateData(data);
+            TParam<T>::updateData(data);
             updateUserData(data);
         }
 
         std::ostream& print(std::ostream& os) const override
         {
             Lock lock(this->mtx());
-            ITParam<T>::print(os);
+            TParam<T>::print(os);
             os << ' ';
             if (m_ptr)
             {
@@ -204,10 +218,25 @@ namespace mo
         {
         }
 
-        virtual std::vector<TypeInfo> listOutputTypes() const override;
-        ParamBase* getOutputParam(const TypeInfo type) override;
-        const ParamBase* getOutputParam(const TypeInfo type) const override;
-        ParamBase* getOutputParam() override;
-        const ParamBase* getOutputParam() const override;
+        virtual std::vector<TypeInfo> listOutputTypes() const override
+        {
+            return {TypeInfo(typeid(T))};
+        }
+        ParamBase* getOutputParam(const TypeInfo) override
+        {
+            return this;
+        }
+        const ParamBase* getOutputParam(const TypeInfo) const override
+        {
+            return this;
+        }
+        ParamBase* getOutputParam() override
+        {
+            return this;
+        }
+        const ParamBase* getOutputParam() const override
+        {
+            return this;
+        }
     };
 }

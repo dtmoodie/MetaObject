@@ -33,15 +33,16 @@ namespace mo
     class MO_EXPORTS TInputParamPtr : virtual public ITInputParam<T>
     {
       public:
-        using TContainerPtr_t = typename ITParam<T>::TContainerPtr_t;
+        using Input_t = const T*;
+        using TContainerPtr_t = typename TParam<T>::TContainerPtr_t;
 
-        TInputParamPtr(const std::string& name = "", T** user_var_ = nullptr)
+        TInputParamPtr(const std::string& name = "", const T** user_var_ = nullptr)
             : ITInputParam<T>(name)
             , m_user_var(user_var_)
         {
         }
 
-        void setUserDataPtr(T** user_var_)
+        void setUserDataPtr(const T** user_var_)
         {
             Lock lock(this->mtx());
             m_user_var = user_var_;
@@ -53,27 +54,32 @@ namespace mo
             ITInputParam<T>::updateData(data);
             if (m_user_var)
             {
-                *m_user_var = data;
+                *m_user_var = &data->data;
             }
         }
 
       protected:
-        T** m_user_var; // Pointer to the user space pointer variable of type T
+        virtual void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags)
+        {
+        }
+
+        const T** m_user_var; // Pointer to the user space pointer variable of type T
     };
 
     template <typename T>
     class MO_EXPORTS TInputParamPtr<std::shared_ptr<T>> : virtual public ITInputParam<T>
     {
       public:
-        using TContainerPtr_t = typename ITParam<T>::TContainerPtr_t;
+        using Input_t = std::shared_ptr<const T>;
+        using TContainerPtr_t = typename TParam<T>::TContainerPtr_t;
 
-        TInputParamPtr(const std::string& name = "", std::shared_ptr<T>* user_var_ = nullptr)
+        TInputParamPtr(const std::string& name = "", std::shared_ptr<const T>* user_var_ = nullptr)
             : ITInputParam<T>(name)
             , m_user_var(user_var_)
         {
         }
 
-        void setUserDataPtr(std::shared_ptr<T>* user_var_)
+        void setUserDataPtr(std::shared_ptr<const T>* user_var_)
         {
             Lock lock(this->mtx());
             m_user_var = user_var_;
@@ -90,6 +96,6 @@ namespace mo
         }
 
       protected:
-        std::shared_ptr<T>* m_user_var; // Pointer to the user space pointer variable of type T
+        std::shared_ptr<const T>* m_user_var; // Pointer to the user space pointer variable of type T
     };
 }

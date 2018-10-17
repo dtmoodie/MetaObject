@@ -28,9 +28,9 @@ namespace mo
             bool GetData(T& value, OptionalTime ts = OptionalTime(), Context* ctx = nullptr, size_t* fn = nullptr);
             bool GetData(T& value, size_t fn, Context* ctx = nullptr, OptionalTime* ts = nullptr);
 
-            ITParam<T>* updateData(T& data_, mo::Time ts = -1 * mo::second, Context* ctx = nullptr);
-            ITParam<T>* updateData(const T& data_, mo::Time ts = -1 * mo::second, Context* ctx = nullptr);
-            ITParam<T>* updateData(T* data_, mo::Time ts = -1 * mo::second, Context* ctx = nullptr);
+            TParam<T>* updateData(T& data_, mo::Time ts = -1 * mo::second, Context* ctx = nullptr);
+            TParam<T>* updateData(const T& data_, mo::Time ts = -1 * mo::second, Context* ctx = nullptr);
+            TParam<T>* updateData(T* data_, mo::Time ts = -1 * mo::second, Context* ctx = nullptr);
 
             bool Update(IParam* other, Context* ctx = nullptr);
             std::shared_ptr<IParam> DeepCopy() const;
