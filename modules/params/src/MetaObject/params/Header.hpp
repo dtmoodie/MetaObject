@@ -14,6 +14,10 @@ namespace mo
         Header();
         Header(const mo::Time& ts);
         Header(const uint64_t fn);
+        Header(Header&&) = default;
+        Header(const Header&) = default;
+        Header& operator=(const Header&) = default;
+        Header& operator=(Header&&) = default;
 
         mo::OptionalTime timestamp;
         uint64_t frame_number;

@@ -48,57 +48,17 @@ namespace mo
             m_user_var = user_var_;
         }
 
-        template <class... Args>
-        void updateData(const T& data, const Args&... args)
+      protected:
+        virtual void updateDataImpl(const TContainerPtr_t& data) override
         {
             Lock lock(this->mtx());
-            TParam<T>::updateData(data, args...);
-            if (m_user_var)
-            {
-                *m_user_var = &this->_data->data;
-            }
-        }
-        template <class... Args>
-        void updateData(T&& data, const Args&... args)
-        {
-            Lock lock(this->mtx());
-            TParam<T>::updateData(std::move<T>(data), std::move<Args>(args)...);
-            if (m_user_var)
-            {
-                *m_user_var = &this->_data->data;
-            }
-        }
-
-        virtual void updateData(const T& data, const Header& header = Header())
-        {
-            Lock lock(this->mtx());
-            TParam<T>::updateData(data, header);
-            if (m_user_var)
-            {
-                *m_user_var = &this->_data->data;
-            }
-        }
-        virtual void updateData(T&& data, Header&& header = Header())
-        {
-            Lock lock(this->mtx());
-            TParam<T>::updateData(std::move<T>(data), header);
-            if (m_user_var)
-            {
-                *m_user_var = &this->_data->data;
-            }
-        }
-
-        virtual void updateData(const TContainerPtr_t& data)
-        {
-            Lock lock(this->mtx());
-            ITInputParam<T>::updateData(data);
+            ITInputParam<T>::updateDataImpl(data);
             if (m_user_var)
             {
                 *m_user_var = &data->data;
             }
         }
 
-      protected:
         virtual void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags)
         {
         }

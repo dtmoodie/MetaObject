@@ -4,11 +4,12 @@
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
 
+#include "MetaObject/object/MetaObjectFactory.hpp"
 #include "MetaObject/params/ParamInfo.hpp"
 #include "MetaObject/params/ParamMacros.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 
-#include "MetaObject/object/MetaObjectFactory.hpp"
+#include <boost/thread/recursive_mutex.hpp>
 
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>
@@ -42,8 +43,14 @@ struct derived_Param : virtual public base
 
 struct derived_signals : virtual public base
 {
-    static std::string GetDescriptionStatic() { return "test description"; }
-    static std::string GetTooltipStatic() { return "test tooltip"; }
+    static std::string GetDescriptionStatic()
+    {
+        return "test description";
+    }
+    static std::string GetTooltipStatic()
+    {
+        return "test tooltip";
+    }
 
     MO_DERIVE(derived_signals, base);
     MO_SIGNAL(void, derived_signal, int);
@@ -97,7 +104,12 @@ MO_REGISTER_OBJECT(multi_derive);
 
 struct Fixture
 {
-    Fixture() : table{}, factory(&table) { factory.registerTranslationUnit(); }
+    Fixture()
+        : table{}
+        , factory(&table)
+    {
+        factory.registerTranslationUnit();
+    }
 
     SystemTable table;
     mo::MetaObjectFactory factory;

@@ -15,6 +15,7 @@
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include <boost/any.hpp>
+#include <boost/thread/recursive_mutex.hpp>
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>
 #else
@@ -36,7 +37,10 @@ struct Paramed_object : public MetaObject
     INPUT(int, int_input, 0);
     OUTPUT(int, int_output, 0);
     MO_END;
-    void update(int value) { this->updateParam<int>("int_value", value); }
+    void update(int value)
+    {
+        this->updateParam<int>("int_value", value);
+    }
 };
 
 template <class T>
@@ -102,12 +106,10 @@ BOOST_AUTO_TEST_CASE(wrapped_Param)
     BOOST_CHECK_EQUAL(data, 11);
     bool update_handler_called = false;
     TSlot<void(IParam*, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)> slot(
-        [&param, &update_handler_called](IParam* param_in,
-                                         Context*,
-                                         OptionalTime,
-                                         size_t,
-                                         const std::shared_ptr<ICoordinateSystem>&,
-                                         UpdateFlags) { update_handler_called = param_in == &param; });
+        [&param, &update_handler_called](
+            IParam* param_in, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags) {
+            update_handler_called = param_in == &param;
+        });
     auto connection = param.registerUpdateNotifier(&slot);
     BOOST_REQUIRE(connection);
     param.updateData(5);

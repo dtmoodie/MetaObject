@@ -46,7 +46,10 @@ class build_callback : public ITestBuildNotifier
         }
         return true;
     }
-    virtual bool TestBuildWaitAndUpdate() { return true; }
+    virtual bool TestBuildWaitAndUpdate()
+    {
+        return true;
+    }
 };
 
 build_callback* cb = nullptr;
@@ -208,13 +211,13 @@ BOOST_AUTO_TEST_CASE(test_input_output_param)
     BOOST_REQUIRE_EQUAL(output->param_update_call_count, 1);
     BOOST_REQUIRE_EQUAL(input->param_update_call_count, 2);
     BOOST_REQUIRE(input->test_input);
-    BOOST_REQUIRE(input->test_input_param.getInput(mo::OptionalTime()));
+    BOOST_REQUIRE(input->test_input_param.getInputData());
     BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance().getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
     BOOST_REQUIRE_EQUAL(input->param_update_call_count, 1);
     output->test_output_param.updateData(10);
     BOOST_REQUIRE_EQUAL(input->param_update_call_count, 2);
-    BOOST_REQUIRE(input->test_input_param.getInput(mo::OptionalTime()));
+    BOOST_REQUIRE(input->test_input_param.getInputData());
     BOOST_REQUIRE(input->test_input);
     BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
     BOOST_REQUIRE_EQUAL(*input->test_input, 10);
@@ -254,7 +257,8 @@ BOOST_AUTO_TEST_CASE(test_object_cleanup)
 {
     AUDynArray<IObjectConstructor*> constructors;
     MetaObjectFactory::instance().getObjectSystem()->GetObjectFactorySystem()->GetAll(constructors);
-    for (int i = 0; i < constructors.Size(); ++i) {
+    for (int i = 0; i < constructors.Size(); ++i)
+    {
         BOOST_REQUIRE_EQUAL(constructors[i]->GetNumberConstructedObjects(), 0);
     }
     delete cb;

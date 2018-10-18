@@ -22,15 +22,18 @@ RUNTIME_COMPILER_SOURCEDEPENDENCY_EXT(".cu")
 #if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined(test_recompile_object_EXPORTS)
 #define DLL_EXPORTS __declspec(dllexport)
 #elif defined __GNUC__ && __GNUC__ >= 4
-#define DLL_EXPORTS  __attribute__((visibility("default")))
+#define DLL_EXPORTS __attribute__((visibility("default")))
 #else
-#define DLL_EXPORTS 
+#define DLL_EXPORTS
 #endif
 
 using namespace mo;
 struct DLL_EXPORTS test_meta_object_signals : public MetaObject
 {
-    ~test_meta_object_signals() { std::cout << "Deleting object\n"; }
+    ~test_meta_object_signals()
+    {
+        std::cout << "Deleting object\n";
+    }
     MO_BEGIN(test_meta_object_signals)
     MO_SIGNAL(void, test_void)
     MO_SIGNAL(void, test_int, int)
@@ -59,8 +62,7 @@ struct DLL_EXPORTS test_meta_object_output : public MetaObject
     OUTPUT(int, test_output, 0)
     MO_END
     int param_update_call_count = 0;
-    virtual void onParamUpdate(
-        IParam*, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags) override
+    virtual void onParamUpdate(IParam*, Header, UpdateFlags) override
     {
         ++param_update_call_count;
     }
@@ -69,11 +71,10 @@ struct DLL_EXPORTS test_meta_object_output : public MetaObject
 struct DLL_EXPORTS test_meta_object_input : public MetaObject
 {
     MO_BEGIN(test_meta_object_input)
-        INPUT(int, test_input, nullptr)
+    INPUT(int, test_input, nullptr)
     MO_END
     int param_update_call_count = 0;
-    virtual void onParamUpdate(
-        IParam*, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags) override
+    virtual void onParamUpdate(IParam*, Header, UpdateFlags) override
     {
         ++param_update_call_count;
     }

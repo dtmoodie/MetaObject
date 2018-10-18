@@ -1,4 +1,5 @@
 #include "obj.h"
+#include <boost/thread/recursive_mutex.hpp>
 void test_meta_object_slots::test_void()
 {
     ++call_count;

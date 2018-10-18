@@ -49,9 +49,9 @@ namespace mo
         template <class... Args>
         void updateData(T&& data, const Args&... args);
 
-        virtual void updateData(const T& data, const Header& header = Header());
-        virtual void updateData(T&& data, Header&& header = Header());
-        virtual void updateData(const TContainerPtr_t& data);
+        void updateData(const T& data, const Header& header = Header());
+        void updateData(T&& data, Header&& header = Header());
+        void updateData(const TContainerPtr_t& data);
 
         TypeInfo getTypeInfo() const override;
 
@@ -69,6 +69,7 @@ namespace mo
         IContainerConstPtr_t getData(const Header& desired) const;
 
       protected:
+        virtual void updateDataImpl(const TContainerPtr_t& data);
         typename TDataContainer<T>::Ptr _data;
         void emitTypedUpdate(TContainerPtr_t data, UpdateFlags flags)
         {
@@ -166,6 +167,12 @@ namespace mo
 
     template <class T>
     void TParam<T>::updateData(const TContainerPtr_t& data)
+    {
+        updateData(data);
+    }
+
+    template <class T>
+    void TParam<T>::updateDataImpl(const TContainerPtr_t& data)
     {
         {
             mo::Lock lock(this->mtx());

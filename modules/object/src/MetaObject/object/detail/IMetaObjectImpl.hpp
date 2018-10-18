@@ -51,7 +51,7 @@ namespace mo
         else
         {
             std::shared_ptr<TParam<T>> new_param(new TParam<T>(name));
-            new_param->udpateData(value);
+            new_param->updateData(value);
             addParam(new_param);
             return new_param.get();
         }

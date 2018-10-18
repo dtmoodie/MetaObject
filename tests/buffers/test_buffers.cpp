@@ -104,26 +104,21 @@ struct BufferFixture
 BOOST_FIXTURE_TEST_SUITE(buffer_suite, BufferFixture)
 
 static const mo::BufferFlags buffer_test_cases[] = {
-    mo::CircularBuffer_e, mo::Map_e, mo::StreamBuffer_e, mo::BlockingStreamBuffer_e, mo::NNStreamBuffer_e};
+    mo::CIRCULAR_BUFFER, mo::MAP_BUFFER, mo::STREAM_BUFFER, mo::BLOCKING_STREAM_BUFFER, mo::NEAREST_NEIGHBOR_BUFFER};
 
 BOOST_AUTO_PARAM_TEST_CASE(buffer_test, buffer_test_cases, end(buffer_test_cases))
 {
     std::cout << "Testing " << mo::BufferFlagsToString(param) << std::endl;
-    auto buffer = mo::Buffer::BufferFactory::createProxy(&output_param, param);
+    auto buffer = std::shared_ptr<mo::IParam>(mo::buffer::BufferFactory::createBuffer(&output_param, param));
     BOOST_REQUIRE(buffer);
-    auto buf = std::dynamic_pointer_cast<mo::Buffer::IBuffer>(buffer);
+    auto buf = std::dynamic_pointer_cast<mo::buffer::IBuffer>(buffer);
     BOOST_REQUIRE(buf);
     buf->setFrameBufferCapacity(100);
     input_param.setInput(buffer);
     std::vector<mo::Time> process_queue;
-    mo::UpdateSlot_t slot([&process_queue](mo::IParam* param,
-                                           mo::Context* ctx,
-                                           mo::OptionalTime ts,
-                                           size_t fn,
-                                           const std::shared_ptr<mo::ICoordinateSystem>& cs,
-                                           mo::UpdateFlags fg) {
+    mo::UpdateSlot_t slot([&process_queue](mo::IParam*, mo::Header hdr, mo::UpdateFlags fg) {
         if (fg == mo::UpdateFlags::BufferUpdated_e)
-            process_queue.push_back(*ts);
+            process_queue.push_back(*hdr.timestamp);
     });
     auto connection = input_param.registerUpdateNotifier(&slot);
     for (int j = 0; j < 5; ++j)
@@ -134,9 +129,9 @@ BOOST_AUTO_PARAM_TEST_CASE(buffer_test, buffer_test_cases, end(buffer_test_cases
         }
         for (auto itr = process_queue.begin(); itr != process_queue.end();)
         {
-            int data;
-            BOOST_REQUIRE(input_param.getData(data, *itr));
-            BOOST_REQUIRE_EQUAL(mo::Time(data * mo::ms), *itr);
+            auto container = input_param.getTypedData<int>(*itr);
+            BOOST_REQUIRE(container);
+            BOOST_REQUIRE_EQUAL(mo::Time(container->data * mo::ms), *itr);
             itr = process_queue.erase(itr);
         }
     }
@@ -146,7 +141,7 @@ BOOST_AUTO_PARAM_TEST_CASE(buffer_test, buffer_test_cases, end(buffer_test_cases
         for (int i = 50 * j; i < 50 + 50 * j; ++i)
         {
             output = i * 2;
-            output_param.emitUpdate(mo::OptionalTime(i * mo::ms));
+            output_param.emitUpdate(mo::Time(i * mo::ms));
         }
         for (auto itr = process_queue.begin(); itr != process_queue.end();)
         {
