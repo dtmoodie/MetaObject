@@ -4,10 +4,15 @@
 namespace mo
 {
 
-    IMultiInput::IMultiInput(const std::vector<InputParam*>& inputs)
-        : m_inputs(inputs)
-        , IParam("", mo::ParamFlags::Input_e)
+    IMultiInput::IMultiInput()
+        : IParam()
+        , InputParam()
     {
+    }
+
+    void IMultiInput::setInputs(const std::vector<InputParam*>& inputs)
+    {
+        m_inputs = inputs;
     }
 
     bool IMultiInput::setInput(const std::shared_ptr<IParam>& publisher)
@@ -40,7 +45,7 @@ namespace mo
             {
                 if (input->setInput(publisher))
                 {
-                    if (m_current_input)
+                    if (m_current_input != nullptr)
                     {
                         m_current_input->setInput(nullptr);
                     }

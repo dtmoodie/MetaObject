@@ -91,9 +91,11 @@ namespace mo
 
     template <class... Types>
     TMultiInput<Types...>::TMultiInput()
-        : IMultiInput(globParamPtrs<InputParam>(m_inputs))
+        : m_inputs()
+        , IMultiInput()
         , IParam("", mo::ParamFlags::Input_e)
     {
+        IMultiInput::setInputs(globParamPtrs<InputParam>(m_inputs));
         this->setFlags(mo::ParamFlags::Input_e);
     }
 

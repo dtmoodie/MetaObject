@@ -1,3 +1,5 @@
+#include <boost/test/unit_test_suite.hpp>
+
 #include <MetaObject/params/TMultiInput-inl.hpp>
 #include <MetaObject/params/TMultiOutput.hpp>
 #include <MetaObject/params/TParamPtr.hpp>
@@ -9,25 +11,21 @@ void printInputs(const std::tuple<const int*, const float*, const double*>& inpu
     if (std::get<0>(inputs))
     {
         std::cout << "[int] " << *std::get<0>(inputs) << std::endl;
-        ;
         return;
     }
     if (std::get<1>(inputs))
     {
         std::cout << "[float] " << *std::get<0>(inputs) << std::endl;
-        ;
         return;
     }
     if (std::get<2>(inputs))
     {
         std::cout << "[double] " << *std::get<0>(inputs) << std::endl;
-        ;
         return;
     }
     std::cout << "No input set" << std::endl;
 }
-
-int main(int argc, char** argv)
+BOOST_AUTO_TEST_CASE(polymorphic_input)
 {
     std::tuple<const int*, const float*, const double*> inputs;
     int int_val;
@@ -55,6 +53,4 @@ int main(int argc, char** argv)
     printInputs(inputs);
 
     mo::TMultiOutput<int, float, double> multi_output;
-
-    return 0;
 }

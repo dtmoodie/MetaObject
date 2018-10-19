@@ -3,9 +3,6 @@
 
 #include "MetaObject/core.hpp"
 #include "MetaObject/core/detail/Counter.hpp"
-#include "MetaObject/object/IMetaObject.hpp"
-#include "MetaObject/object/detail/IMetaObjectImpl.hpp"
-#include "MetaObject/object/detail/MetaObjectMacros.hpp"
 #include "MetaObject/params//ParamMacros.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
@@ -28,68 +25,8 @@
 
 using namespace mo;
 
-struct Paramed_object : public MetaObject
-{
-    MO_BEGIN(Paramed_object);
-    PARAM(int, int_value, 0);
-    PARAM(float, float_value, 0);
-    PARAM(double, double_value, 0);
-
-    INPUT(int, int_input, 0);
-    OUTPUT(int, int_output, 0);
-    MO_END;
-    void update(int value)
-    {
-        this->updateParam<int>("int_value", value);
-    }
-};
-
-template <class T>
-struct TagType
-{
-};
-
-namespace tag
-{
-    struct test_timestamp
-    {
-        test_timestamp& operator=(const mo::Time& type)
-        {
-            data = &type;
-            return *this;
-        }
-        const void* data = nullptr;
-        static test_timestamp instance;
-    };
-    test_timestamp test_timestamp::instance;
-    static test_timestamp& _test_timestamp = test_timestamp::instance;
-}
-
-template <class Tag>
-Tag indexArgs()
-{
-    return Tag::instance;
-}
-
-template <class Tag, class T, class... Args>
-Tag indexArgs(T arg, Args... args)
-{
-    if (std::is_same<Tag, T>::value)
-        return arg;
-    return indexArgs<Tag>(args...);
-}
-
-template <class T, class... Args>
-void func(const T& data, Args... args)
-{
-    // auto value = indexArgs<::tag::test_timestamp, Args...>(args...);
-}
-
-MO_REGISTER_OBJECT(Paramed_object)
-
 BOOST_AUTO_TEST_CASE(wrapped_Param)
 {
-    func(10, ::tag::_test_timestamp = mo::Time(-1 * mo::second));
     int value = 10;
     TParamPtr<int> param("Test wrapped param", &value);
     param.updateData(value);
@@ -142,21 +79,4 @@ BOOST_AUTO_TEST_CASE(input_param)
     BOOST_REQUIRE(connection);
     param.updateData(5);
     BOOST_REQUIRE_EQUAL(update_handler_called, true);
-}
-
-BOOST_AUTO_TEST_CASE(access_Param)
-{
-    auto table = SystemTable::instance();
-    MetaObjectFactory factory(table.get());
-    PerModuleInterface::GetInstance()->SetSystemTable(table.get());
-    initCoreModule(table.get());
-    MetaObjectFactory::instance().registerTranslationUnit();
-
-    auto obj = rcc::shared_ptr<Paramed_object>::create();
-    obj->getParam<int>("int_value");
-    obj->getParam<double>("double_value");
-    // TODO fix unit test
-    // BOOST_REQUIRE_EQUAL(obj->getParamValue<int>("int_value"), 0);
-    obj->update(10);
-    // BOOST_REQUIRE_EQUAL(obj->getParamValue<int>("int_value"), 10);
 }

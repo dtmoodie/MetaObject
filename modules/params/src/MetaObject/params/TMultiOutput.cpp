@@ -2,8 +2,7 @@
 
 namespace mo
 {
-    IMultiOutput::IMultiOutput(const std::vector<IParam*>& outputs)
-        : m_outputs(outputs)
+    IMultiOutput::IMultiOutput()
     {
         this->setFlags(mo::ParamFlags::Output_e);
     }
@@ -123,5 +122,10 @@ namespace mo
             return out->getData(header);
         }
         return {};
+    }
+
+    void IMultiOutput::setOutputs(const std::vector<IParam*>& outputs)
+    {
+        this->m_outputs = outputs;
     }
 }

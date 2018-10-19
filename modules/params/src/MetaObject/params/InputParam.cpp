@@ -5,6 +5,7 @@ using namespace mo;
 
 InputParam::InputParam()
     : IParam("", mo::ParamFlags::Input_e)
+    , m_input_param(nullptr)
 {
     m_delete_slot = std::bind(&InputParam::onInputDelete, this, std::placeholders::_1);
     m_update_slot = std::bind(

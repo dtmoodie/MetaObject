@@ -7,7 +7,7 @@ namespace mo
     class IMultiInput : public InputParam
     {
       public:
-        IMultiInput(const std::vector<InputParam*>& inputs);
+        IMultiInput();
 
         virtual bool setInput(const std::shared_ptr<IParam>& input) override;
         virtual bool setInput(IParam* input) override;
@@ -35,6 +35,9 @@ namespace mo
 
         virtual bool modified() const override;
         virtual void modified(bool value) override;
+
+      protected:
+        void setInputs(const std::vector<InputParam*>& inputs);
 
       private:
         std::vector<InputParam*> m_inputs;
@@ -64,7 +67,6 @@ namespace mo
       private:
         void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags);
         std::tuple<TInputParamPtr<Types>...> m_inputs;
-        mo::IParam* m_current_input = nullptr;
     };
 }
 

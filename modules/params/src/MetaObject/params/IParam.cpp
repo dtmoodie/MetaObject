@@ -50,6 +50,7 @@ namespace mo
         , m_subscribers(0)
         , m_modified(false)
         , m_mtx(nullptr)
+        , m_ctx(nullptr)
     {
         m_header.frame_number = std::numeric_limits<uint64_t>::max();
         m_header.ctx = ctx;

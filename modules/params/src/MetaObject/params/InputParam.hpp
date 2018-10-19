@@ -75,7 +75,7 @@ namespace mo
         TSlot<DataUpdate_s> m_update_slot;
         TSlot<void(const IParam*)> m_delete_slot;
         Qualifier_f qualifier;
-        IParam* m_input_param;
+        IParam* m_input_param = nullptr;
         std::shared_ptr<IParam> m_shared_input;
         mutable IDataContainerPtr_t m_current_data;
     };

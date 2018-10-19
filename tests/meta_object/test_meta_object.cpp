@@ -4,12 +4,12 @@
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/object/MetaObject.hpp"
 #include "MetaObject/object/RelayManager.hpp"
+#include "MetaObject/object/detail/IMetaObjectImpl.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
 #include "MetaObject/params//ParamMacros.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
-//#include "MetaObject/params/ui/Qt/POD.hpp"
-//#include "MetaObject/params/ui/Qt/TParamProxy.hpp"
+
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
@@ -94,6 +94,22 @@ struct test_meta_object_param : public MetaObject
     int update_count = 0;
 };
 
+struct Paramed_object : public MetaObject
+{
+    MO_BEGIN(Paramed_object);
+    PARAM(int, int_value, 0);
+    PARAM(float, float_value, 0);
+    PARAM(double, double_value, 0);
+
+    INPUT(int, int_input, 0);
+    OUTPUT(int, int_output, 0);
+    MO_END;
+    void update(int value)
+    {
+        this->updateParam<int>("int_value", value);
+    }
+};
+
 struct test_meta_object_input : public MetaObject
 {
     MO_BEGIN(test_meta_object_input);
@@ -106,7 +122,7 @@ MO_REGISTER_OBJECT(test_meta_object_slots)
 MO_REGISTER_OBJECT(test_meta_object_callback)
 MO_REGISTER_OBJECT(test_meta_object_param)
 MO_REGISTER_OBJECT(test_meta_object_input)
-
+MO_REGISTER_OBJECT(Paramed_object)
 // RuntimeObjectSystem obj_sys;
 struct Fixture
 {
@@ -117,11 +133,24 @@ struct Fixture
         : table()
         , factory(&table)
     {
+        PerModuleInterface::GetInstance()->SetSystemTable(&table);
         factory.registerTranslationUnit();
     }
 };
 
 BOOST_GLOBAL_FIXTURE(Fixture);
+
+BOOST_AUTO_TEST_CASE(access_Param)
+{
+
+    auto obj = rcc::shared_ptr<Paramed_object>::create();
+    obj->getParam<int>("int_value");
+    obj->getParam<double>("double_value");
+    // TODO fix unit test
+    // BOOST_REQUIRE_EQUAL(obj->getParamValue<int>("int_value"), 0);
+    obj->update(10);
+    // BOOST_REQUIRE_EQUAL(obj->getParamValue<int>("int_value"), 10);
+}
 
 BOOST_AUTO_TEST_CASE(test_meta_object_static_introspection_global)
 {

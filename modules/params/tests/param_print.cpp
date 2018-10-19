@@ -1,3 +1,5 @@
+#include <boost/test/unit_test_suite.hpp>
+
 #include "MetaObject/core.hpp"
 #include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
@@ -12,15 +14,13 @@ struct NonPrintableStruct
     int c;
 };
 
-int main()
+BOOST_AUTO_TEST_CASE(non_printable)
 {
-    static_assert(ct::StreamWritable<NonPrintableStruct>::value == false, "asdf");
     SystemTable table;
-    mo::initCoreModule(&table);
     PerModuleInterface::GetInstance()->SetSystemTable(&table);
+    static_assert(ct::StreamWritable<NonPrintableStruct>::value == false, "asdf");
     mo::TParamPtr<NonPrintableStruct> param;
     NonPrintableStruct data;
     param.updatePtr(&data);
     param.print(std::cout);
-    std::cout << std::endl;
 }

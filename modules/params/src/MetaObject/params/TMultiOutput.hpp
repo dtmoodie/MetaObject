@@ -1,16 +1,16 @@
 #ifndef TMULTIOUTPUT_HPP
 #define TMULTIOUTPUT_HPP
+#include "ITParam.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include "OutputParam.hpp"
 #include "TMultiInput-inl.hpp"
 #include "TMultiInput.hpp"
-#include "ITParam.hpp"
 
 namespace mo
 {
     struct IMultiOutput : public OutputParam
     {
-        IMultiOutput(const std::vector<IParam*>& outputs);
+        IMultiOutput();
         virtual std::vector<TypeInfo> listOutputTypes() const override;
 
         ParamBase* getOutputParam(const TypeInfo type) override;
@@ -33,6 +33,9 @@ namespace mo
         IContainerPtr_t getData(const Header& header);
         IContainerConstPtr_t getData(const Header& header) const;
 
+      protected:
+        void setOutputs(const std::vector<IParam*>& outputs);
+
       private:
         std::vector<IParam*> m_outputs;
         TypeInfo m_current_type = TypeInfo::Void();
@@ -43,8 +46,9 @@ namespace mo
     {
       public:
         TMultiOutput()
-            : IMultiOutput(globParamPtrs<IParam>(m_params))
+            : IMultiOutput()
         {
+            IMultiOutput::setOutputs(globParamPtrs<IParam>(m_params));
         }
         template <class T, class... Args>
         void updateData(T&& data, Args&&... args)
