@@ -33,9 +33,6 @@ namespace mo
 
       protected:
         virtual void onInputUpdate(TContainerPtr_t, IParam*, UpdateFlags);
-        virtual void onTypedInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags)
-        {
-        }
 
       private:
         TUpdateSlot_t m_typed_update_slot;
@@ -46,11 +43,8 @@ namespace mo
     ITInputParam<T>::ITInputParam(const std::string& name)
         : TParam<T>(name)
     {
-        m_typed_update_slot = std::bind(&ITInputParam<T>::onTypedInputUpdate,
-                                        this,
-                                        std::placeholders::_1,
-                                        std::placeholders::_2,
-                                        std::placeholders::_3);
+        m_typed_update_slot = std::bind(
+            &ITInputParam<T>::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
     }
 
     template <class T>

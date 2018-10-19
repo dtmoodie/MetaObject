@@ -42,6 +42,25 @@ namespace mo
         {
         }
 
+        bool setInput(const std::shared_ptr<IParam>& input)
+        {
+            return ITInputParam<T>::setInput(input);
+        }
+
+        bool setInput(IParam* input)
+        {
+            Lock lock(this->mtx());
+            if (ITInputParam<T>::setInput(input))
+            {
+                if (m_user_var && TParam<T>::_data)
+                {
+                    *m_user_var = &TParam<T>::_data->data;
+                }
+                return true;
+            }
+            return false;
+        }
+
         void setUserDataPtr(const T** user_var_)
         {
             Lock lock(this->mtx());
@@ -57,10 +76,6 @@ namespace mo
             {
                 *m_user_var = &data->data;
             }
-        }
-
-        virtual void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags)
-        {
         }
 
         const T** m_user_var; // Pointer to the user space pointer variable of type T
@@ -85,10 +100,10 @@ namespace mo
             m_user_var = user_var_;
         }
 
-        virtual void updateData(const TContainerPtr_t& data)
+        virtual void updateDataImpl(const TContainerPtr_t& data)
         {
             Lock lock(this->mtx());
-            ITInputParam<T>::updateData(data);
+            ITInputParam<T>::updateDataImpl(data);
             if (m_user_var)
             {
                 *m_user_var = data;

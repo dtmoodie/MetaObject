@@ -92,7 +92,11 @@ namespace mo
 
     mo::IParam* IMultiInput::getInputParam() const
     {
-        return m_current_input;
+        if (m_current_input)
+        {
+            return m_current_input->getInputParam();
+        }
+        return nullptr;
     }
 
     OptionalTime IMultiInput::getInputTimestamp()

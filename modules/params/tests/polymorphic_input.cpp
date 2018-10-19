@@ -1,3 +1,4 @@
+#include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test_suite.hpp>
 
 #include <MetaObject/params/TMultiInput-inl.hpp>
@@ -45,9 +46,15 @@ BOOST_AUTO_TEST_CASE(polymorphic_input)
     mo::Mutex_t mtx;
     multi_input.setMtx(&mtx);
     multi_input.setUserDataPtr(&inputs);
+    BOOST_REQUIRE(multi_input.setInput(&int_out));
 
-    multi_input.setInput(&int_out);
+    BOOST_REQUIRE(multi_input.getInputParam());
+    BOOST_REQUIRE_EQUAL(multi_input.getInputParam(), &int_out);
+    int_out.updateData(6);
+    BOOST_REQUIRE_NE(mo::get<const int*>(inputs), (void*)nullptr);
+    BOOST_REQUIRE_EQUAL(*mo::get<const int*>(inputs), 6);
     printInputs(inputs);
+
     int_out.updateData(5);
     multi_input.getInputData(mo::Header(), nullptr);
     printInputs(inputs);
