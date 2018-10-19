@@ -78,6 +78,7 @@ namespace mo
             if (InputParam::setInput(param))
             {
                 m_typed_connection = param->registerUpdateNotifier(&m_typed_update_slot);
+                TParam<T>::_data = param->getTypedData<T>();
                 return true;
             }
         }

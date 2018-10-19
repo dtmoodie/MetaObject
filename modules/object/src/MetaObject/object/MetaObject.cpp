@@ -402,8 +402,10 @@ namespace mo
     {
         auto param = this->getParamOptional(name);
         if (!param)
+        {
             THROW(debug) << "Param with name \"" << name << "\" not found";
-        return nullptr;
+        }
+        return param;
     }
 
     std::vector<IParam*> IMetaObject::getParams(const std::string& /*filter*/) const

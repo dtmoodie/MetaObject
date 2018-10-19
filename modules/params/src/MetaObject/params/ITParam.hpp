@@ -22,7 +22,7 @@ https://github.com/dtmoodie/MetaObject
 #include "TDataContainer.hpp"
 
 #include <boost/thread/locks.hpp>
-
+#include <boost/thread/recursive_mutex.hpp>
 namespace mo
 {
     template <typename T>
@@ -96,7 +96,7 @@ namespace mo
     void TParam<T>::updateData(const T& data, const Args&... args)
     {
         T tmp = data;
-        updateData(tmp, args...);
+        updateData(std::move(tmp), args...);
     }
 
     template <class T>
@@ -168,7 +168,7 @@ namespace mo
     template <class T>
     void TParam<T>::updateData(const TContainerPtr_t& data)
     {
-        updateData(data);
+        updateDataImpl(data);
     }
 
     template <class T>

@@ -51,8 +51,9 @@ SystemTable::SystemTable()
     {
         system_info.have_cuda = true;
     }
-
 #endif
+    auto module = PerModuleInterface::GetInstance();
+    module->SetSystemTable(this);
 }
 
 SystemTable::~SystemTable()

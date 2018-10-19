@@ -110,7 +110,7 @@ namespace mo
         typename TDataContainer<T>::ConstPtr getTypedData(const Header& desired = Header()) const;
 
         template <class T>
-        bool getData(T&, const Header& desired = Header()) const;
+        bool getTypedData(T*, const Header& desired = Header(), Header* retrieved = nullptr) const;
     };
 
     class MO_EXPORTS IParam : public ParamBase
@@ -277,12 +277,16 @@ namespace mo
         return {};
     }
     template <class T>
-    bool ParamBase::getData(T& data, const Header& desired) const
+    bool ParamBase::getTypedData(T* data, const Header& desired, Header* retrieved) const
     {
         auto container = getTypedData<T>(desired);
         if (container)
         {
-            data = container->data;
+            if (retrieved)
+            {
+                *retrieved = container->getHeader();
+            }
+            *data = container->data;
             return true;
         }
         return false;

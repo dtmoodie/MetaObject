@@ -141,13 +141,13 @@ BOOST_AUTO_PARAM_TEST_CASE(buffer_test, buffer_test_cases, end(buffer_test_cases
         for (int i = 50 * j; i < 50 + 50 * j; ++i)
         {
             output = i * 2;
-            output_param.emitUpdate(mo::Time(i * mo::ms));
+            output_param.emitUpdate(mo::Header(mo::Time(i * mo::ms)));
         }
         for (auto itr = process_queue.begin(); itr != process_queue.end();)
         {
-            int data;
-            BOOST_REQUIRE(input_param.getData(data, *itr));
-            BOOST_REQUIRE_EQUAL(mo::Time((data / 2) * mo::ms), *itr);
+            auto container = input_param.getTypedData<int>(*itr);
+            BOOST_REQUIRE(container);
+            BOOST_REQUIRE_EQUAL(mo::Time((container->data / 2) * mo::ms), *itr);
             itr = process_queue.erase(itr);
         }
     }

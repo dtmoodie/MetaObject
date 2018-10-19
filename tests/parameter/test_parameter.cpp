@@ -1,6 +1,7 @@
 
 #define BOOST_TEST_MAIN
 
+#include "MetaObject/core.hpp"
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/object/detail/IMetaObjectImpl.hpp"
@@ -91,25 +92,27 @@ BOOST_AUTO_TEST_CASE(wrapped_Param)
     func(10, ::tag::_test_timestamp = mo::Time(-1 * mo::second));
     int value = 10;
     TParamPtr<int> param("Test wrapped param", &value);
-    ParamTraits<int>::InputStorage_t data;
-    BOOST_REQUIRE(param.getData(data));
-    BOOST_REQUIRE_EQUAL(data, 10);
+    param.updateData(value);
+    auto container = param.getTypedData<int>();
+    BOOST_REQUIRE(container);
+    BOOST_REQUIRE_EQUAL(container->data, 10);
     param.updateData(5);
-    BOOST_REQUIRE(param.getData(data));
-    BOOST_CHECK_EQUAL(data, 5);
+    container = param.getTypedData<int>();
+    BOOST_REQUIRE(container);
+    BOOST_CHECK_EQUAL(container->data, 5);
     param.updateData(10, mo::tag::_timestamp = mo::Time(1 * mo::second));
-    BOOST_REQUIRE(param.getData(data));
+    int data;
+    BOOST_REQUIRE(param.getTypedData(&data));
     BOOST_CHECK_EQUAL(data, 10);
     BOOST_CHECK_EQUAL(*param.getTimestamp(), mo::Time(1 * mo::second));
-    value = 11;
-    BOOST_REQUIRE(param.getData(data));
+    param.updateData(11);
+    BOOST_CHECK_EQUAL(value, 11);
+    BOOST_REQUIRE(param.getTypedData(&data));
     BOOST_CHECK_EQUAL(data, 11);
     bool update_handler_called = false;
-    TSlot<void(IParam*, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)> slot(
-        [&param, &update_handler_called](
-            IParam* param_in, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags) {
-            update_handler_called = param_in == &param;
-        });
+
+    TSlot<void(IParam*, Header, UpdateFlags)> slot([&param, &update_handler_called](
+        IParam* param_in, Header, UpdateFlags) { update_handler_called = param_in == &param; });
     auto connection = param.registerUpdateNotifier(&slot);
     BOOST_REQUIRE(connection);
     param.updateData(5);
@@ -125,18 +128,16 @@ BOOST_AUTO_TEST_CASE(input_param)
 {
     int value = 10;
     TParamPtr<int> param("Test wrapped param", &value);
+    param.updateData(value);
     ITInputParam<int> input_param;
-    ParamTraits<int>::InputStorage_t data;
+    int data;
     BOOST_REQUIRE(input_param.setInput(&param));
-    input_param.getData(data);
+    BOOST_REQUIRE(input_param.getTypedData(&data));
     BOOST_REQUIRE_EQUAL(data, value);
 
     bool update_handler_called = false;
-    TSlot<void(IParam*, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags)> slot(
-        [&update_handler_called](
-            IParam*, Context*, OptionalTime, size_t, const std::shared_ptr<ICoordinateSystem>&, UpdateFlags) {
-            update_handler_called = true;
-        });
+    TSlot<void(IParam*, Header, UpdateFlags)> slot(
+        [&update_handler_called](IParam*, Header, UpdateFlags) { update_handler_called = true; });
     auto connection = input_param.registerUpdateNotifier(&slot);
     BOOST_REQUIRE(connection);
     param.updateData(5);
@@ -145,6 +146,10 @@ BOOST_AUTO_TEST_CASE(input_param)
 
 BOOST_AUTO_TEST_CASE(access_Param)
 {
+    auto table = SystemTable::instance();
+    MetaObjectFactory factory(table.get());
+    PerModuleInterface::GetInstance()->SetSystemTable(table.get());
+    initCoreModule(table.get());
     MetaObjectFactory::instance().registerTranslationUnit();
 
     auto obj = rcc::shared_ptr<Paramed_object>::create();
