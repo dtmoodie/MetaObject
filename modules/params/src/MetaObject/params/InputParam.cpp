@@ -122,6 +122,7 @@ bool InputParam::setInput(IParam* param)
     param->subscribe();
     param->registerUpdateNotifier(&m_update_slot);
     param->registerDeleteNotifier(&m_delete_slot);
+    emitUpdate(Header(), UpdateFlags::InputSet_e);
     return true;
 }
 

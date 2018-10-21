@@ -65,8 +65,8 @@ namespace mo
         ConstAccessToken<T> read() const;
         AccessToken<T> access();
 
-        IContainerPtr_t getData(const Header& desired);
-        IContainerConstPtr_t getData(const Header& desired) const;
+        IContainerPtr_t getData(const Header& desired = Header());
+        IContainerConstPtr_t getData(const Header& desired = Header()) const;
 
       protected:
         virtual void updateDataImpl(const TContainerPtr_t& data);
@@ -245,9 +245,12 @@ namespace mo
             }
             else
             {
-                if (desired.timestamp && _data->header.timestamp == desired.timestamp)
+                if (desired.timestamp)
                 {
-                    return _data;
+                    if (_data->header.timestamp == desired.timestamp)
+                    {
+                        return _data;
+                    }
                 }
                 else
                 {

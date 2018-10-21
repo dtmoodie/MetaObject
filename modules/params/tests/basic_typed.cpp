@@ -4,6 +4,7 @@
 #include "MetaObject/core.hpp"
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/params//ParamMacros.hpp"
+#include "MetaObject/params/DynamicVisitor.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/signals/TSignal.hpp"
@@ -25,58 +26,195 @@
 
 using namespace mo;
 
-BOOST_AUTO_TEST_CASE(wrapped_Param)
+template <class T>
+struct WrappedParam
 {
-    int value = 10;
-    TParamPtr<int> param("Test wrapped param", &value);
-    param.updateData(value);
-    auto container = param.getTypedData<int>();
+    T value = 10;
+    TParamPtr<T> param;
+    WrappedParam()
+        : param("test", &value)
+    {
+    }
+};
+
+struct TestReadVisitor : public ReadCache
+{
+    VisitorTraits traits() const
+    {
+        return {true, true};
+    }
+
+    IReadVisitor& operator()(IContainerTraits*, const std::string&)
+    {
+        return *this;
+    }
+    virtual IReadVisitor& operator()(char* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual IReadVisitor& operator()(int8_t* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual IReadVisitor& operator()(uint8_t* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual IReadVisitor& operator()(int16_t* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual IReadVisitor& operator()(uint16_t* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual IReadVisitor& operator()(int32_t* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual IReadVisitor& operator()(uint32_t* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual IReadVisitor& operator()(int64_t* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual IReadVisitor& operator()(uint64_t* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+
+    virtual IReadVisitor& operator()(float* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual IReadVisitor& operator()(double* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual IReadVisitor& operator()(void* binary, const std::string& name = "", const size_t num_bytes = 1)
+    {
+        ++count;
+        return *this;
+    }
+    std::string getCurrentElementName() const
+    {
+        return "";
+    }
+    int count = 0;
+};
+
+BOOST_FIXTURE_TEST_CASE(set_value, WrappedParam<int>)
+{
+    param.updateData(100);
+    BOOST_REQUIRE_EQUAL(value, 100);
+}
+
+BOOST_FIXTURE_TEST_CASE(read_from_param, WrappedParam<int>)
+{
+    param.updateData(100);
+    BOOST_REQUIRE(param.getData());
+
+    int val;
+    BOOST_REQUIRE(param.getTypedData(&val));
+    BOOST_REQUIRE_EQUAL(val, 100);
+
+    auto container = param.getTypedData<int>(Header());
     BOOST_REQUIRE(container);
-    BOOST_REQUIRE_EQUAL(container->data, 10);
-    param.updateData(5);
-    container = param.getTypedData<int>();
-    BOOST_REQUIRE(container);
-    BOOST_CHECK_EQUAL(container->data, 5);
+    BOOST_REQUIRE_EQUAL(container->data, 100);
+}
+
+BOOST_FIXTURE_TEST_CASE(read_async_param, WrappedParam<int>)
+{
+    param.updateData(100, Header(mo::Time(mo::ms * 33)));
+    BOOST_REQUIRE(param.getData());
+}
+
+BOOST_FIXTURE_TEST_CASE(read_sync_param, WrappedParam<int>)
+{
+    param.updateData(100, Header(mo::Time(mo::ms * 33)));
+    BOOST_REQUIRE_NE(param.getData(Header(mo::Time(mo::ms * 33))), (void*)nullptr);
+    auto container = param.getData(Header(mo::Time(mo::ms * 34)));
+    BOOST_REQUIRE(container == nullptr);
+
+    param.updateData(100);
+    int data;
+    BOOST_REQUIRE(param.getTypedData(&data));
+    BOOST_REQUIRE(!param.getTypedData(&data, Header(mo::Time(mo::ms * 33))));
+
     param.updateData(10, mo::tag::_timestamp = mo::Time(1 * mo::second));
-    int data;
     BOOST_REQUIRE(param.getTypedData(&data));
-    BOOST_CHECK_EQUAL(data, 10);
-    BOOST_CHECK_EQUAL(*param.getTimestamp(), mo::Time(1 * mo::second));
-    param.updateData(11);
-    BOOST_CHECK_EQUAL(value, 11);
-    BOOST_REQUIRE(param.getTypedData(&data));
-    BOOST_CHECK_EQUAL(data, 11);
-    bool update_handler_called = false;
-
-    TSlot<void(IParam*, Header, UpdateFlags)> slot([&param, &update_handler_called](
-        IParam* param_in, Header, UpdateFlags) { update_handler_called = param_in == &param; });
-    auto connection = param.registerUpdateNotifier(&slot);
-    BOOST_REQUIRE(connection);
-    param.updateData(5);
-    BOOST_REQUIRE_EQUAL(update_handler_called, true);
+    BOOST_REQUIRE(!param.getTypedData(&data, Header(mo::Time(mo::ms * 33))));
+    BOOST_REQUIRE(param.getTypedData(&data, Header(mo::Time(mo::second * 1))));
 }
 
-BOOST_AUTO_TEST_CASE(enum_params)
+BOOST_FIXTURE_TEST_CASE(read_visit_param, WrappedParam<int>)
 {
-    mo::EnumParam enum_param = {{"test", 5}};
+    param.updateData(100);
+    TestReadVisitor visitor;
+    BOOST_REQUIRE_EQUAL(visitor.count, 0);
+    param.visit(&visitor);
+    BOOST_REQUIRE_EQUAL(visitor.count, 1);
 }
 
-BOOST_AUTO_TEST_CASE(input_param)
+BOOST_FIXTURE_TEST_CASE(param_update, WrappedParam<int>)
 {
-    int value = 10;
-    TParamPtr<int> param("Test wrapped param", &value);
-    param.updateData(value);
-    ITInputParam<int> input_param;
-    int data;
-    BOOST_REQUIRE(input_param.setInput(&param));
-    BOOST_REQUIRE(input_param.getTypedData(&data));
-    BOOST_REQUIRE_EQUAL(data, value);
-
     bool update_handler_called = false;
     TSlot<void(IParam*, Header, UpdateFlags)> slot(
-        [&update_handler_called](IParam*, Header, UpdateFlags) { update_handler_called = true; });
-    auto connection = input_param.registerUpdateNotifier(&slot);
+        [this, &update_handler_called](IParam* param_in, Header, UpdateFlags fg) {
+            update_handler_called = param_in == &param;
+            BOOST_REQUIRE(fg == UpdateFlags::ValueUpdated_e);
+        });
+
+    auto connection = param.registerUpdateNotifier(&slot);
     BOOST_REQUIRE(connection);
-    param.updateData(5);
-    BOOST_REQUIRE_EQUAL(update_handler_called, true);
+
+    param.updateData(100);
+
+    BOOST_REQUIRE(update_handler_called);
+}
+
+BOOST_FIXTURE_TEST_CASE(param_data_update, WrappedParam<int>)
+{
+    bool update_handler_called = false;
+    TSlot<void(const std::shared_ptr<IDataContainer>&, IParam*, UpdateFlags)> slot(
+        [this, &update_handler_called](const std::shared_ptr<IDataContainer>&, IParam* param_in, UpdateFlags fg) {
+            update_handler_called = param_in == &param;
+            BOOST_REQUIRE(fg == UpdateFlags::ValueUpdated_e);
+        });
+
+    auto connection = param.registerUpdateNotifier(&slot);
+    BOOST_REQUIRE(connection);
+
+    param.updateData(100);
+
+    BOOST_REQUIRE(update_handler_called);
+}
+
+BOOST_FIXTURE_TEST_CASE(param_typed_data_update, WrappedParam<int>)
+{
+    bool update_handler_called = false;
+    TSlot<void(mo::TParam<int>::TContainerPtr_t, IParam*, UpdateFlags)> slot(
+        [this, &update_handler_called](TParam<int>::TContainerPtr_t, IParam* param_in, UpdateFlags fg) {
+            update_handler_called = param_in == &param;
+            BOOST_REQUIRE(fg == UpdateFlags::ValueUpdated_e);
+        });
+
+    auto connection = param.registerUpdateNotifier(&slot);
+    BOOST_REQUIRE(connection);
+
+    param.updateData(100);
+    BOOST_REQUIRE(update_handler_called);
 }
