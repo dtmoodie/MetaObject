@@ -178,7 +178,7 @@ namespace mo
             mo::Lock lock(this->mtx());
             _data = data;
         }
-        emitUpdate(IDataContainer::Ptr(_data));
+        emitUpdate(IDataContainer::Ptr(_data), ValueUpdated_e);
         _typed_update_signal(_data, this, ValueUpdated_e);
     }
 

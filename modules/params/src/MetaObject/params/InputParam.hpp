@@ -65,7 +65,7 @@ namespace mo
         virtual void visit(IWriteVisitor*) const override;
 
       protected:
-        virtual void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags);
+        virtual void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) = 0;
         virtual void onInputDelete(const IParam* param);
 
         InputParam(const InputParam&) = delete;

@@ -15,9 +15,12 @@ struct Fixture
     ITInputParam<int> input_param;
 
     bool update_called = false;
-    UpdateFlags update_flag;
+    std::vector<UpdateFlags> update_flag;
+    T update_val;
+
     Fixture()
-        : param("test", &value)
+        : param("pub", &value)
+        , input_param("sub")
     {
         update_slot =
             std::bind(&Fixture<T>::onUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
@@ -27,22 +30,26 @@ struct Fixture
             &Fixture<T>::onTypedDataUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
     }
 
-    void onUpdate(IParam*, Header, UpdateFlags fg)
+    void onUpdate(IParam* param, Header, UpdateFlags fg)
     {
         update_called = true;
-        update_flag = fg;
+        update_flag.push_back(fg);
     }
 
-    void onDataUpdate(const std::shared_ptr<IDataContainer>&, IParam*, UpdateFlags fg)
+    void onDataUpdate(const std::shared_ptr<IDataContainer>& data, IParam*, UpdateFlags fg)
     {
         update_called = true;
-        update_flag = fg;
+        update_flag.push_back(fg);
+        auto typed = std::dynamic_pointer_cast<TDataContainer<T>>(data);
+        BOOST_REQUIRE(typed);
+        update_val = typed->data;
     }
 
-    void onTypedDataUpdate(mo::TParam<int>::TContainerPtr_t, IParam*, UpdateFlags fg)
+    void onTypedDataUpdate(mo::TParam<int>::TContainerPtr_t data, IParam*, UpdateFlags fg)
     {
         update_called = true;
-        update_flag = fg;
+        update_flag.push_back(fg);
+        update_val = data->data;
     }
 
     TSlot<void(IParam*, Header, UpdateFlags)> update_slot;
@@ -67,7 +74,8 @@ BOOST_FIXTURE_TEST_CASE(input_param_subscription_callback, Fixture<int>)
 
     input_param.setInput(&param);
     BOOST_REQUIRE(update_called);
-    BOOST_REQUIRE(update_flag == UpdateFlags::InputSet_e);
+    BOOST_REQUIRE(update_flag.back() == UpdateFlags::InputSet_e);
+    BOOST_REQUIRE(update_flag.size() == 1);
 }
 
 BOOST_FIXTURE_TEST_CASE(input_param_update_callback, Fixture<int>)
@@ -79,5 +87,31 @@ BOOST_FIXTURE_TEST_CASE(input_param_update_callback, Fixture<int>)
     BOOST_REQUIRE(update_called == false);
     param.updateData(5);
     BOOST_REQUIRE(update_called == true);
-    BOOST_REQUIRE(update_flag == UpdateFlags::InputUpdated_e);
+    BOOST_REQUIRE_EQUAL((std::count(update_flag.begin(), update_flag.end(), UpdateFlags::InputUpdated_e)), 1);
+}
+
+BOOST_FIXTURE_TEST_CASE(input_param_data_callback, Fixture<int>)
+{
+    BOOST_REQUIRE(input_param.setInput(&param));
+
+    connection = input_param.registerUpdateNotifier(&data_slot);
+    BOOST_REQUIRE(connection);
+    BOOST_REQUIRE(update_called == false);
+    param.updateData(5);
+    BOOST_REQUIRE(update_called == true);
+    BOOST_REQUIRE_EQUAL((std::count(update_flag.begin(), update_flag.end(), UpdateFlags::InputUpdated_e)), 1);
+    BOOST_REQUIRE(update_val == 5);
+}
+
+BOOST_FIXTURE_TEST_CASE(input_param_typed_callback, Fixture<int>)
+{
+    BOOST_REQUIRE(input_param.setInput(&param));
+
+    connection = input_param.registerUpdateNotifier(&typed_slot);
+    BOOST_REQUIRE(connection);
+    BOOST_REQUIRE(update_called == false);
+    param.updateData(5);
+    BOOST_REQUIRE(update_called == true);
+    BOOST_REQUIRE(std::count(update_flag.begin(), update_flag.end(), UpdateFlags::InputUpdated_e) == 1);
+    BOOST_REQUIRE(update_val == 5);
 }

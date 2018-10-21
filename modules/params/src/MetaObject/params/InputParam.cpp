@@ -178,14 +178,14 @@ void InputParam::onInputUpdate(const IDataContainerPtr_t& data, IParam* param, U
     if (data->getHeader().ctx == getContext())
     {
         m_current_data = data;
-        emitUpdate(data->getHeader(), InputUpdated_e);
+        emitUpdate(data, InputUpdated_e);
     }
     else
     {
         // mer figure out what do
         if (param->checkFlags(ParamFlags::Buffer_e))
         {
-            emitUpdate(data->getHeader(), BufferUpdated_e);
+            emitUpdate(data, BufferUpdated_e);
         }
     }
 }

@@ -32,6 +32,18 @@ namespace mo
         virtual void visit(IWriteVisitor*) const override;
 
       protected:
+        void updateDataImpl(const TContainerPtr_t& data)
+        {
+            {
+                mo::Lock lock(this->mtx());
+                TParam<T>::_data = data;
+            }
+            emitUpdate(IDataContainer::Ptr(TParam<T>::_data), InputUpdated_e);
+            TParam<T>::emitTypedUpdate(TParam<T>::_data, InputUpdated_e);
+        }
+        virtual void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags)
+        {
+        }
         virtual void onInputUpdate(TContainerPtr_t, IParam*, UpdateFlags);
 
       private:
@@ -43,8 +55,12 @@ namespace mo
     ITInputParam<T>::ITInputParam(const std::string& name)
         : TParam<T>(name)
     {
-        m_typed_update_slot = std::bind(
-            &ITInputParam<T>::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        m_typed_update_slot = std::bind(static_cast<void (ITInputParam<T>::*)(TContainerPtr_t, IParam*, UpdateFlags)>(
+                                            &ITInputParam<T>::onInputUpdate),
+                                        this,
+                                        std::placeholders::_1,
+                                        std::placeholders::_2,
+                                        std::placeholders::_3);
     }
 
     template <class T>

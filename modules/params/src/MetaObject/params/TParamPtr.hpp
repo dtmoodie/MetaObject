@@ -53,37 +53,6 @@ namespace mo
             m_owns_data = owns_data;
         }
 
-        template <class... Args>
-        void updateData(const T& data, const Args&... args)
-        {
-            TParam<T>::updateData(data, args...);
-            updateUserData(TParam<T>::_data->data);
-        }
-
-        template <class... Args>
-        void updateData(T&& data, Args&&... args)
-        {
-            TParam<T>::updateData(std::forward<T>(data), std::forward<Args>(args)...);
-            updateUserData(TParam<T>::_data->data);
-        }
-
-        void updateData(const T& data, const Header& header = Header())
-        {
-            TParam<T>::updateData(data, header);
-        }
-
-        void updateData(T&& data, Header&& header = Header())
-        {
-            TParam<T>::updateData(std::move(data), std::move(header));
-            updateUserData(TParam<T>::_data->data);
-        }
-
-        void updateData(const TContainerPtr_t& data)
-        {
-            TParam<T>::updateData(data);
-            updateUserData(data->data);
-        }
-
         virtual IParam* emitUpdate(const Header& header, UpdateFlags = ValueUpdated_e) override
         {
             Lock lock(this->mtx());
@@ -116,6 +85,11 @@ namespace mo
         }
 
       protected:
+        void updateDataImpl(const TContainerPtr_t& data)
+        {
+            TParam<T>::updateDataImpl(data);
+            updateUserData(data->data);
+        }
         T* ptr()
         {
             return m_ptr;
