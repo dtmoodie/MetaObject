@@ -23,6 +23,10 @@ InputParam::~InputParam()
 bool InputParam::getInputData(const Header& desired, Header* retrieved)
 {
     auto data = getData(desired);
+    if (data == nullptr && m_input_param)
+    {
+        data = m_input_param->getData(desired);
+    }
     m_current_data = data;
     if (data)
     {

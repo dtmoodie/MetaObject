@@ -9,6 +9,7 @@ namespace mo
     {
         CircularBuffer::CircularBuffer()
         {
+            m_buffer.set_capacity(10);
         }
 
         void CircularBuffer::setFrameBufferCapacity(uint64_t size)

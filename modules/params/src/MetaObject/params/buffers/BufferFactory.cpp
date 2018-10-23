@@ -1,4 +1,5 @@
 #include "BufferFactory.hpp"
+#include "IBuffer.hpp"
 #include <MetaObject/core/SystemTable.hpp>
 #include <MetaObject/params/InputParam.hpp>
 #include <RuntimeObjectSystem/ObjectInterfacePerModule.h>
@@ -8,8 +9,9 @@ namespace mo
 {
     namespace buffer
     {
-
-        using CtrTable = std::map<BufferFlags, BufferFactory::BufferConstructor>;
+        struct CtrTable : public std::map<BufferFlags, BufferFactory::BufferConstructor>
+        {
+        };
 
         void BufferFactory::registerConstructor(const BufferConstructor& constructor, BufferFlags buffer)
         {
@@ -33,7 +35,7 @@ namespace mo
             }
         }
 
-        InputParam* BufferFactory::createBuffer(IParam* param, BufferFlags flags)
+        IBuffer* BufferFactory::createBuffer(IParam* param, BufferFlags flags)
         {
             auto instance = PerModuleInterface::GetInstance();
             if (!instance)
@@ -67,7 +69,7 @@ namespace mo
             return nullptr;
         }
 
-        InputParam* BufferFactory::createBuffer(const std::shared_ptr<IParam>& param, mo::BufferFlags buffer_type_)
+        IBuffer* BufferFactory::createBuffer(const std::shared_ptr<IParam>& param, mo::BufferFlags buffer_type_)
         {
             auto instance = PerModuleInterface::GetInstance();
             if (!instance)
@@ -87,7 +89,7 @@ namespace mo
             {
                 return nullptr;
             }
-            InputParam* buffer = itr->second();
+            auto buffer = itr->second();
             if (buffer)
             {
                 if (buffer->setInput(param))

@@ -10,6 +10,7 @@
 #include "MetaObject/params/InputParam.hpp"
 #include "MetaObject/params/VariableManager.hpp"
 #include "MetaObject/params/buffers/BufferFactory.hpp"
+#include "MetaObject/params/buffers/IBuffer.hpp"
 #include "MetaObject/signals/ISignal.hpp"
 #include "MetaObject/signals/ISlot.hpp"
 #include "MetaObject/signals/SignalInfo.hpp"

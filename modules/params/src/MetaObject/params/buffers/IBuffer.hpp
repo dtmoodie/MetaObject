@@ -2,11 +2,12 @@
 #include "MetaObject/core/detail/Enums.hpp"
 #include "MetaObject/core/detail/Time.hpp"
 #include "MetaObject/detail/Export.hpp"
+#include "MetaObject/params/InputParam.hpp"
 namespace mo
 {
     namespace buffer
     {
-        class MO_EXPORTS IBuffer
+        class MO_EXPORTS IBuffer : public InputParam
         {
           public:
             virtual ~IBuffer();

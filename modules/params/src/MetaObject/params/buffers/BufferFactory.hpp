@@ -17,13 +17,14 @@ namespace mo
 
     namespace buffer
     {
+        class IBuffer;
         class MO_EXPORTS BufferFactory
         {
           public:
-            using BufferConstructor = std::function<InputParam*()>;
+            using BufferConstructor = std::function<IBuffer*()>;
             static void registerConstructor(const BufferConstructor& constructor, BufferFlags buffer);
-            static InputParam* createBuffer(IParam* param, BufferFlags flags);
-            static InputParam* createBuffer(const std::shared_ptr<IParam>& param, BufferFlags flags);
+            static IBuffer* createBuffer(IParam* param, BufferFlags flags);
+            static IBuffer* createBuffer(const std::shared_ptr<IParam>& param, BufferFlags flags);
         };
     }
 }

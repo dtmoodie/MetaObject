@@ -11,7 +11,7 @@ namespace mo
             buffer::BufferFactory::registerConstructor(std::bind(&BufferConstructor<Buffer>::construct), Buffer::Type);
         }
 
-        static InputParam* construct()
+        static buffer::IBuffer* construct()
         {
             return new Buffer();
         }

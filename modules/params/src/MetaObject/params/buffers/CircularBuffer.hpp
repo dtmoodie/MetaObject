@@ -29,7 +29,7 @@ namespace mo
 {
     namespace buffer
     {
-        struct CircularBuffer : public IBuffer, public InputParam
+        struct CircularBuffer : public IBuffer
         {
             static constexpr const auto Type = CIRCULAR_BUFFER;
             CircularBuffer();

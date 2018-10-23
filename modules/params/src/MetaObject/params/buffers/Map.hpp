@@ -29,7 +29,7 @@ namespace mo
 {
     namespace buffer
     {
-        class Map : public IBuffer, public InputParam
+        class Map : public IBuffer
         {
           public:
             static const BufferFlags Type = MAP_BUFFER;
