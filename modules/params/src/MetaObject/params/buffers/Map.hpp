@@ -23,6 +23,8 @@ https://github.com/dtmoodie/MetaObject
 
 #include "MetaObject/params/InputParam.hpp"
 
+#include <boost/thread/recursive_mutex.hpp>
+
 #include <map>
 
 namespace mo
@@ -55,16 +57,19 @@ namespace mo
 
           protected:
             void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) override;
-
-            virtual IDataContainerPtr_t search(const Header& hdr);
             virtual IDataContainerPtr_t search(const Header& hdr) const;
 
+            using Buffer_t = std::map<Header, IDataContainerPtr_t>;
+
             template <class F>
-            void accessDataBuffer(F& functor)
+            auto modifyDataBuffer(F&& functor)
             {
-                functor(m_data_buffer);
+                Lock lock(IParam::mtx());
+                return functor(m_data_buffer);
             }
-            std::map<Header, IDataContainerPtr_t> m_data_buffer;
+
+          private:
+            Buffer_t m_data_buffer;
         };
     }
 }

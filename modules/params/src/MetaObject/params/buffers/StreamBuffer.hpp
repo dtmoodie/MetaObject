@@ -23,9 +23,11 @@ namespace mo
 
             virtual BufferFlags getBufferType() const override;
 
+            virtual IContainerPtr_t getData(const Header& desired = Header()) override;
+            virtual IContainerConstPtr_t getData(const Header& desired = Header()) const override;
+
           protected:
-            virtual IDataContainerPtr_t search(const Header& hdr) override;
-            virtual void prune();
+            virtual uint32_t prune(Map::Buffer_t& buffer);
             OptionalTime _current_timestamp;
             uint64_t _current_frame_number;
             boost::optional<Duration> _time_padding;
@@ -39,13 +41,11 @@ namespace mo
 
             BlockingStreamBuffer(const std::string& name = "");
             virtual void setFrameBufferCapacity(size_t size) override;
-            virtual BufferFlags getBufferType() const override
-            {
-                return Type;
-            }
+            virtual BufferFlags getBufferType() const override;
 
           protected:
-            virtual void prune() override;
+            virtual uint32_t prune(Map::Buffer_t&) override;
+            void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) override;
             size_t _size;
             boost::condition_variable_any _cv;
         };
@@ -56,10 +56,10 @@ namespace mo
             static const BufferFlags Type = DROPPING_STREAM_BUFFER;
 
             DroppingStreamBuffer(const std::string& name = "");
-            virtual BufferFlags getBufferType() const override
-            {
-                return Type;
-            }
+            virtual BufferFlags getBufferType() const override;
+
+          protected:
+            void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) override;
         };
     }
 }

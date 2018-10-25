@@ -1,5 +1,4 @@
 #include "StreamBuffer.hpp"
-#include <boost/thread/recursive_mutex.hpp>
 
 namespace mo
 {
@@ -34,18 +33,35 @@ namespace mo
             return Type;
         }
 
-        void StreamBuffer::prune()
+        StreamBuffer::IContainerPtr_t StreamBuffer::getData(const Header& desired)
         {
-            Lock lock(IParam::mtx());
+            auto result = Map::getData(desired);
+            if (result)
+            {
+                _current_timestamp = result->getHeader().timestamp;
+                _current_frame_number = result->getHeader().frame_number;
+                Map::modifyDataBuffer([this](Map::Buffer_t& buffer) { prune(buffer); });
+            }
+            return result;
+        }
 
+        StreamBuffer::IContainerConstPtr_t StreamBuffer::getData(const Header& desired) const
+        {
+            return Map::getData(desired);
+        }
+
+        uint32_t StreamBuffer::prune(Map::Buffer_t& data_buffer)
+        {
+            uint32_t remove_count = 0;
             if (_current_timestamp && _time_padding)
             {
-                auto itr = m_data_buffer.begin();
-                while (itr != m_data_buffer.end())
+                auto itr = data_buffer.begin();
+                while (itr != data_buffer.end())
                 {
                     if (itr->first.timestamp && *itr->first.timestamp < mo::Time(*_current_timestamp - *_time_padding))
                     {
-                        itr = m_data_buffer.erase(itr);
+                        ++remove_count;
+                        itr = data_buffer.erase(itr);
                     }
                     else
                     {
@@ -55,12 +71,13 @@ namespace mo
             }
             if (_frame_padding && _current_frame_number > *_frame_padding)
             {
-                auto itr = m_data_buffer.begin();
-                while (itr != m_data_buffer.end())
+                auto itr = data_buffer.begin();
+                while (itr != data_buffer.end())
                 {
                     if (itr->first < (_current_frame_number - *_frame_padding))
                     {
-                        itr = m_data_buffer.erase(itr);
+                        ++remove_count;
+                        itr = data_buffer.erase(itr);
                     }
                     else
                     {
@@ -68,17 +85,78 @@ namespace mo
                     }
                 }
             }
+            return remove_count;
         }
 
-        IDataContainerPtr_t StreamBuffer::search(const Header& hdr)
+        BlockingStreamBuffer::BlockingStreamBuffer(const std::string& name)
+            : StreamBuffer(name)
+            , _size(10)
         {
-            Lock lock(mtx());
-            auto ptr = Map::search(hdr);
-            if (m_current_data)
-            {
-                prune();
-            }
-            return ptr;
         }
+
+        void BlockingStreamBuffer::setFrameBufferCapacity(size_t size)
+        {
+            _size = size;
+        }
+
+        BufferFlags BlockingStreamBuffer::getBufferType() const
+        {
+            return Type;
+        }
+
+        uint32_t BlockingStreamBuffer::prune(Map::Buffer_t& buffer)
+        {
+            const auto remove_count = StreamBuffer::prune(buffer);
+            if (remove_count > 0)
+            {
+                _cv.notify_all();
+            }
+            return remove_count;
+        }
+
+        void BlockingStreamBuffer::onInputUpdate(const IDataContainerPtr_t& data, IParam* param, UpdateFlags flags)
+        {
+            Lock lock(IParam::mtx());
+            while (Map::getSize() > _size)
+            {
+                _cv.wait_for(lock, boost::chrono::milliseconds(2));
+                if (lock)
+                {
+                    lock.unlock();
+                }
+                IParam::emitUpdate(data->getHeader(), mo::BufferUpdated_e);
+                if (!lock)
+                {
+                    lock.lock();
+                }
+            }
+            if (!lock)
+            {
+                lock.lock();
+            }
+            Map::onInputUpdate(data, param, flags);
+        }
+
+        DroppingStreamBuffer::DroppingStreamBuffer(const std::string& name)
+            : BlockingStreamBuffer(name)
+        {
+        }
+
+        BufferFlags DroppingStreamBuffer::getBufferType() const
+        {
+            return Type;
+        }
+
+        void DroppingStreamBuffer::onInputUpdate(const IDataContainerPtr_t& data, IParam* param, UpdateFlags fgs)
+        {
+            if (Map::getSize() <= BlockingStreamBuffer::_size)
+            {
+                BlockingStreamBuffer::onInputUpdate(data, param, fgs);
+            }
+        }
+
+        static BufferConstructor<StreamBuffer> g_ctr_stream_buffer;
+        static BufferConstructor<BlockingStreamBuffer> g_ctr_blocking_stream_buffer;
+        static BufferConstructor<DroppingStreamBuffer> g_ctr_dropping_stream_buffer;
     }
 }

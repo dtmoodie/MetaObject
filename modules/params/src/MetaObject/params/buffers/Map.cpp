@@ -33,11 +33,13 @@ namespace mo
 
         size_t Map::getSize() const
         {
+            Lock lock(IParam::mtx());
             return m_data_buffer.size();
         }
 
         bool Map::getTimestampRange(mo::OptionalTime& start, mo::OptionalTime& end)
         {
+            Lock lock(IParam::mtx());
             if (m_data_buffer.size())
             {
                 Lock lock(IParam::mtx());
@@ -50,6 +52,7 @@ namespace mo
 
         bool Map::getFrameNumberRange(uint64_t& start, uint64_t& end)
         {
+            Lock lock(IParam::mtx());
             if (m_data_buffer.size())
             {
                 Lock lock(IParam::mtx());
@@ -84,31 +87,12 @@ namespace mo
         Map::IContainerConstPtr_t Map::getData(const Header& desired) const
         {
             Lock lock(IParam::mtx());
+            auto result = search(desired);
+            if (result)
+            {
+                return result;
+            }
             return m_current_data;
-        }
-
-        IDataContainerPtr_t Map::search(const Header& hdr)
-        {
-            if (m_data_buffer.size() == 0)
-            {
-                return {};
-            }
-            else
-            {
-                if (!hdr.timestamp)
-                {
-                    if (m_data_buffer.size())
-                    {
-                        return (--this->m_data_buffer.end())->second;
-                    }
-                    else
-                    {
-                        return {};
-                    }
-                }
-            }
-
-            return {};
         }
 
         IDataContainerPtr_t Map::search(const Header& hdr) const
@@ -130,11 +114,19 @@ namespace mo
                         return {};
                     }
                 }
+                else
+                {
+                    auto itr = m_data_buffer.find(hdr);
+                    if (itr != m_data_buffer.end())
+                    {
+                        return itr->second;
+                    }
+                }
             }
 
             return {};
         }
 
-        static BufferConstructor<Map> g_ctr;
+        static BufferConstructor<Map> g_ctr_map;
     }
 }
