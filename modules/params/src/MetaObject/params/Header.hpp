@@ -20,14 +20,14 @@ namespace mo
         Header& operator=(Header&&) = default;
 
         mo::OptionalTime timestamp;
-        uint64_t frame_number;
+        FrameNumber frame_number;
 
         Context* ctx;
         ICoordinateSystemPtr_t coordinate_system;
 
-        bool operator==(const Header& other);
-        bool operator!=(const Header& other);
-        bool operator>(const Header& other);
-        bool operator<(const Header& other);
+        bool operator==(const Header& other) const;
+        bool operator!=(const Header& other) const;
+        bool operator>(const Header& other) const;
+        bool operator<(const Header& other) const;
     };
 }

@@ -20,23 +20,34 @@ InputParam::~InputParam()
     }
 }
 
-bool InputParam::getInputData(const Header& desired, Header* retrieved)
+InputParam::IContainerPtr_t InputParam::getData(const Header& desired)
 {
-    auto data = getData(desired);
+    InputParam::IContainerPtr_t data;
+    if (m_input_param)
+    {
+        data = m_input_param->getData(desired);
+    }
+    m_current_data = data;
+    return data;
+}
+
+InputParam::IContainerConstPtr_t InputParam::getData(const Header& desired) const
+{
+    InputParam::IContainerPtr_t data;
+    if (m_current_data)
+    {
+        if (m_current_data->getHeader() == desired)
+        {
+            data = m_current_data;
+        }
+    }
+
     if (data == nullptr && m_input_param)
     {
         data = m_input_param->getData(desired);
     }
     m_current_data = data;
-    if (data)
-    {
-        if (retrieved)
-        {
-            *retrieved = data->getHeader();
-        }
-        return true;
-    }
-    return false;
+    return data;
 }
 
 std::ostream& InputParam::print(std::ostream& os) const

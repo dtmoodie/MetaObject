@@ -239,7 +239,7 @@ namespace mo
         mo::Lock lock(this->mtx());
         if (_data)
         {
-            if (!desired.timestamp && desired.frame_number == std::numeric_limits<uint64_t>::max())
+            if (!desired.timestamp && !desired.frame_number.valid())
             {
                 return _data;
             }
@@ -271,7 +271,7 @@ namespace mo
         mo::Lock lock(this->mtx());
         if (_data)
         {
-            if (!desired.timestamp && desired.frame_number == std::numeric_limits<uint64_t>::max())
+            if (!desired.timestamp && !desired.frame_number.valid())
             {
                 return _data;
             }

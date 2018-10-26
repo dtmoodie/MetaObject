@@ -206,7 +206,7 @@ void Thread::main()
                 const auto start_time = Time::now();
                 auto delta = Time::now() - start_time;
                 bool processed_work = false;
-                while (delta < mo::Time(mo::ms * delay))
+                while (delta < mo::ms * delay)
                 {
                     if (_work_queue.try_dequeue(f))
                     {

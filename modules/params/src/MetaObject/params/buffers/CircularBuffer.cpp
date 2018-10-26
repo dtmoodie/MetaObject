@@ -74,13 +74,24 @@ namespace mo
 
         CircularBuffer::IContainerPtr_t CircularBuffer::getData(const Header& desired)
         {
-            for (auto itr = m_buffer.begin(); itr != m_buffer.end(); ++itr)
+            if (!desired.timestamp && !desired.frame_number.valid())
             {
-                if ((*itr)->getHeader() == desired)
+                if (m_buffer.size())
                 {
-                    return (*itr);
+                    return m_buffer.back();
                 }
             }
+            else
+            {
+                for (auto itr = m_buffer.begin(); itr != m_buffer.end(); ++itr)
+                {
+                    if ((*itr)->getHeader() == desired)
+                    {
+                        return (*itr);
+                    }
+                }
+            }
+
             return {};
         }
 

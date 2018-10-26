@@ -8,17 +8,14 @@ namespace mo
         class MO_EXPORTS NNStreamBuffer : public StreamBuffer
         {
           public:
+            static const BufferFlags Type = NEAREST_NEIGHBOR_BUFFER;
             NNStreamBuffer(const std::string& name = "");
             virtual ~NNStreamBuffer();
 
-            virtual BufferFlags getBufferType() const
-            {
-                return NEAREST_NEIGHBOR_BUFFER;
-            }
+            virtual BufferFlags getBufferType() const;
 
           protected:
-            typename std::map<Header, IDataContainerPtr_t>::iterator search(const OptionalTime& ts);
-            typename std::map<Header, IDataContainerPtr_t>::iterator search(size_t fn);
+            virtual IDataContainerPtr_t search(const Header& hdr) const;
         };
     }
 }

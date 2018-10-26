@@ -113,6 +113,11 @@ namespace mo
         return s.count() + (ms.count() / 1000.0);
     }
 
+    FrameNumber::FrameNumber(const uint64_t v)
+        : val(v)
+    {
+    }
+
     uint64_t FrameNumber::max()
     {
         return std::numeric_limits<uint64_t>::max();
@@ -126,6 +131,17 @@ namespace mo
     FrameNumber::operator uint64_t() const
     {
         return val;
+    }
+
+    FrameNumber& FrameNumber::operator=(const uint32_t v)
+    {
+        val = v;
+        return *this;
+    }
+
+    bool FrameNumber::operator==(const FrameNumber& v) const
+    {
+        return val == v.val;
     }
 }
 

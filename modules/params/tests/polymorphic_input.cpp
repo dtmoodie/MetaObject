@@ -56,7 +56,7 @@ BOOST_AUTO_TEST_CASE(polymorphic_input)
     printInputs(inputs);
 
     int_out.updateData(5);
-    multi_input.getInputData(mo::Header(), nullptr);
+    auto data = multi_input.getData(mo::Header());
     printInputs(inputs);
 
     mo::TMultiOutput<int, float, double> multi_output;

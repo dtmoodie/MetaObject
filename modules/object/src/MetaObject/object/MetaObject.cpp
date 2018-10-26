@@ -177,7 +177,7 @@ namespace mo
                     {
                         if (this->connectInput(input, obj.get(), output, param_connection.connection_type))
                         {
-                            input->getInputData();
+                            input->getData();
                             MO_LOG(debug) << "Reconnected " << GetTypeName() << ":" << param_connection.input_param
                                           << " to " << obj->GetTypeName() << ":" << param_connection.output_param;
                         }

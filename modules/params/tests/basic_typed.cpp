@@ -145,7 +145,7 @@ BOOST_FIXTURE_TEST_CASE(read_async_param, WrappedParam<int>)
 BOOST_FIXTURE_TEST_CASE(read_sync_param, WrappedParam<int>)
 {
     param.updateData(100, Header(mo::Time(mo::ms * 33)));
-    BOOST_REQUIRE_NE(param.getData(Header(mo::Time(mo::ms * 33))), (void*)nullptr);
+    BOOST_REQUIRE_NE(param.getData(Header(mo::Time(mo::ms * 33))).get(), (void*)nullptr);
     auto container = param.getData(Header(mo::Time(mo::ms * 34)));
     BOOST_REQUIRE(container == nullptr);
 

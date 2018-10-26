@@ -62,10 +62,16 @@ namespace mo
             using Buffer_t = std::map<Header, IDataContainerPtr_t>;
 
             template <class F>
-            auto modifyDataBuffer(F&& functor)
+            void modifyDataBuffer(F&& functor)
             {
                 Lock lock(IParam::mtx());
-                return functor(m_data_buffer);
+                functor(m_data_buffer);
+            }
+            template <class F>
+            void modifyDataBuffer(F&& functor) const
+            {
+                Lock lock(IParam::mtx());
+                functor(m_data_buffer);
             }
 
           private:

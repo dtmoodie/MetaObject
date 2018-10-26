@@ -35,10 +35,6 @@ namespace mo
         InputParam();
         virtual ~InputParam() override;
 
-        // This loads the value at the requested timestamp into the input
-        // Param such that it can be read
-        virtual bool getInputData(const Header& desired = {}, Header* retrieved = nullptr);
-
         // This gets a pointer to the variable that feeds into this input
         virtual IParam* getInputParam() const;
 
@@ -63,6 +59,9 @@ namespace mo
 
         virtual void visit(IReadVisitor*) override;
         virtual void visit(IWriteVisitor*) const override;
+
+        virtual IContainerPtr_t getData(const Header& desired = Header()) override;
+        virtual IContainerConstPtr_t getData(const Header& desired = Header()) const override;
 
       protected:
         virtual void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) = 0;

@@ -31,6 +31,9 @@ namespace mo
         virtual void visit(IReadVisitor*) override;
         virtual void visit(IWriteVisitor*) const override;
 
+        virtual IContainerPtr_t getData(const Header& desired = Header()) override;
+        virtual IContainerConstPtr_t getData(const Header& desired = Header()) const override;
+
       protected:
         void updateDataImpl(const TContainerPtr_t& data)
         {
@@ -125,6 +128,18 @@ namespace mo
     void ITInputParam<T>::visit(IWriteVisitor* visitor) const
     {
         InputParam::visit(visitor);
+    }
+
+    template <class T>
+    ParamBase::IContainerPtr_t ITInputParam<T>::getData(const Header& desired)
+    {
+        return InputParam::getData(desired);
+    }
+
+    template <class T>
+    ParamBase::IContainerConstPtr_t ITInputParam<T>::getData(const Header& desired) const
+    {
+        return InputParam::getData(desired);
     }
 
     template <class T>

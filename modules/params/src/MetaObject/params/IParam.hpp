@@ -111,6 +111,8 @@ namespace mo
 
         template <class T>
         bool getTypedData(T*, const Header& desired = Header(), Header* retrieved = nullptr) const;
+        template <class T>
+        bool getTypedData(T*, const Header& desired = Header(), Header* retrieved = nullptr);
     };
 
     class MO_EXPORTS IParam : public ParamBase
@@ -278,6 +280,22 @@ namespace mo
     }
     template <class T>
     bool ParamBase::getTypedData(T* data, const Header& desired, Header* retrieved) const
+    {
+        auto container = getTypedData<T>(desired);
+        if (container)
+        {
+            if (retrieved)
+            {
+                *retrieved = container->getHeader();
+            }
+            *data = container->data;
+            return true;
+        }
+        return false;
+    }
+
+    template <class T>
+    bool ParamBase::getTypedData(T* data, const Header& desired, Header* retrieved)
     {
         auto container = getTypedData<T>(desired);
         if (container)

@@ -11,7 +11,10 @@ namespace mo
 
         virtual bool setInput(const std::shared_ptr<IParam>& input) override;
         virtual bool setInput(IParam* input) override;
-        virtual bool getInputData(const Header& desired, Header* retrieved) override;
+
+        virtual IContainerPtr_t getData(const Header& desired = Header()) override;
+        virtual IContainerConstPtr_t getData(const Header& desired = Header()) const override;
+
         virtual void setMtx(Mutex_t* mtx) override;
 
         mo::TypeInfo getTypeInfo() const override;

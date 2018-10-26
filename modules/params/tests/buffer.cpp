@@ -32,11 +32,33 @@ struct Fixture
 
     void testRead()
     {
-        BOOST_REQUIRE(!input_param.getInputData(Header()));
+        int data;
+        BOOST_REQUIRE(!input_param.getData(Header()));
         param.updateData(1, Header(Time(mo::ms * 1.0)));
+
         BOOST_REQUIRE_EQUAL(buffer->getSize(), 1);
-        BOOST_REQUIRE(input_param.getInputData(Header()));
-        BOOST_REQUIRE(input_param.getInputData(Header(Time(mo::ms * 1.0))));
+        BOOST_REQUIRE(input_param.getData(Header()));
+        BOOST_REQUIRE(input_param.getData(Header(Time(mo::ms * 1.0))));
+        BOOST_REQUIRE(input_param.getTypedData(&data, Header(Time(mo::ms * 1.0))));
+        BOOST_REQUIRE_EQUAL(data, 1);
+
+        param.updateData(2, Header(Time(mo::ms * 2.0)));
+        BOOST_REQUIRE_EQUAL(buffer->getSize(), 2);
+        BOOST_REQUIRE(input_param.getTypedData(&data, Header(Time(mo::ms * 2.0))));
+        BOOST_REQUIRE_EQUAL(data, 2);
+
+        param.updateData(5, Header(Time(mo::ms * 5.0)));
+        BOOST_REQUIRE_EQUAL(buffer->getSize(), 3);
+        BOOST_REQUIRE(input_param.getTypedData(&data, Header(Time(mo::ms * 5.0))));
+        BOOST_REQUIRE_EQUAL(data, 5);
+
+        BOOST_REQUIRE(input_param.getData(Header()));
+        BOOST_REQUIRE(input_param.getTypedData(&data, Header()));
+        BOOST_REQUIRE_EQUAL(data, 5);
+
+        data = 10;
+        BOOST_REQUIRE(input_param.getTypedData(&data, Header(mo::ms * 5.0)));
+        BOOST_REQUIRE_EQUAL(data, 5);
     }
 };
 
@@ -68,4 +90,16 @@ BOOST_FIXTURE_TEST_CASE(TestReadNearestNeighbor, Fixture)
 {
     init(NEAREST_NEIGHBOR_BUFFER);
     testRead();
+
+    int data = 10;
+    BOOST_REQUIRE(input_param.getTypedData(&data, Header(mo::ms * 4.0)));
+    BOOST_REQUIRE_EQUAL(data, 5);
+
+    data = 10;
+    BOOST_REQUIRE(input_param.getTypedData(&data, Header(mo::ms * 6.0)));
+    BOOST_REQUIRE_EQUAL(data, 5);
+
+    data = 10;
+    BOOST_REQUIRE(input_param.getTypedData(&data, Header(mo::ms * 1.6)));
+    BOOST_REQUIRE_EQUAL(data, 2);
 }

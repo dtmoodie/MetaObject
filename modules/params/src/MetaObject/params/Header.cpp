@@ -3,10 +3,10 @@
 namespace mo
 {
     Header::Header()
-        : frame_number(std::numeric_limits<uint64_t>::max())
-        , ctx(nullptr)
+        : ctx(nullptr)
     {
     }
+
     Header::Header(const mo::Time& ts)
         : timestamp(ts)
         , ctx(nullptr)
@@ -18,7 +18,7 @@ namespace mo
     {
     }
 
-    bool Header::operator==(const Header& other)
+    bool Header::operator==(const Header& other) const
     {
         if (timestamp && other.timestamp)
         {
@@ -29,12 +29,13 @@ namespace mo
             return frame_number == other.frame_number;
         }
     }
-    bool Header::operator!=(const Header& other)
+
+    bool Header::operator!=(const Header& other) const
     {
         return !(*this == other);
     }
 
-    bool Header::operator>(const Header& other)
+    bool Header::operator>(const Header& other) const
     {
         if (timestamp && other.timestamp)
         {
@@ -46,7 +47,7 @@ namespace mo
         }
     }
 
-    bool Header::operator<(const Header& other)
+    bool Header::operator<(const Header& other) const
     {
         if (timestamp && other.timestamp)
         {

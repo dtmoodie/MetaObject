@@ -57,14 +57,24 @@ namespace mo
         return false;
     }
 
-    bool IMultiInput::getInputData(const Header& desired, Header* retrieved)
+    IMultiInput::IContainerPtr_t IMultiInput::getData(const Header& desired)
     {
         Lock lock(mtx());
         if (m_current_input)
         {
-            return m_current_input->getInputData(desired, retrieved);
+            return m_current_input->getData(desired);
         }
-        return false;
+        return {};
+    }
+
+    IMultiInput::IContainerConstPtr_t IMultiInput::getData(const Header& desired) const
+    {
+        Lock lock(mtx());
+        if (m_current_input)
+        {
+            return m_current_input->getData(desired);
+        }
+        return {};
     }
 
     void IMultiInput::setMtx(Mutex_t* mtx)

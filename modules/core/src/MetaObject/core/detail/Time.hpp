@@ -32,8 +32,13 @@ namespace mo
     struct FrameNumber
     {
         static uint64_t max();
+
+        FrameNumber(const uint64_t v = max());
+
         bool valid() const;
         operator uint64_t() const;
+        FrameNumber& operator=(const uint32_t v);
+        bool operator==(const FrameNumber&) const;
 
         uint64_t val = max();
     };
