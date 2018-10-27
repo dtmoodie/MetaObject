@@ -37,7 +37,7 @@ namespace mo
 
         bool valid() const;
         operator uint64_t() const;
-        FrameNumber& operator=(const uint32_t v);
+        FrameNumber& operator=(const uint64_t v);
         bool operator==(const FrameNumber&) const;
 
         uint64_t val = max();

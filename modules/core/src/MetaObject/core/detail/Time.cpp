@@ -133,7 +133,7 @@ namespace mo
         return val;
     }
 
-    FrameNumber& FrameNumber::operator=(const uint32_t v)
+    FrameNumber& FrameNumber::operator=(const uint64_t v)
     {
         val = v;
         return *this;
