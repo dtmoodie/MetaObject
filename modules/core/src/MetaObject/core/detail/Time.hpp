@@ -77,7 +77,7 @@ namespace mo
     template <class T>
     struct TimePrefix
     {
-        static Duration convert(unsigned long val)
+        static Duration convert(const int64_t val)
         {
             return Duration(T(val));
         }
@@ -101,17 +101,43 @@ namespace mo
     static const auto us = TimePrefix<std::chrono::microseconds>();
     static const auto ms = TimePrefix<std::chrono::milliseconds>();
     static const auto second = TimePrefix<std::chrono::seconds>();
+    static const auto minutes = TimePrefix<std::chrono::minutes>();
+    static const auto hours = TimePrefix<std::chrono::hours>();
 
     template <class T>
-    Duration operator*(const TimePrefix<T>& /*lhs*/, double rhs)
+    Duration operator*(const TimePrefix<T>& /*lhs*/, const double rhs)
     {
         return TimePrefix<T>::convert(rhs);
     }
 
     template <class T>
-    Duration operator*(double rhs, const TimePrefix<T>& /*lhs*/)
+    Duration operator*(const double rhs, const TimePrefix<T>& /*lhs*/)
     {
         return TimePrefix<T>::convert(rhs);
+    }
+
+    template <class T>
+    Duration operator*(const TimePrefix<T>& /*lhs*/, const int64_t rhs)
+    {
+        return TimePrefix<T>::convert(rhs);
+    }
+
+    template <class T>
+    Duration operator*(const int64_t rhs, const TimePrefix<T>& /*lhs*/)
+    {
+        return TimePrefix<T>::convert(rhs);
+    }
+
+    template <class T>
+    Duration operator*(const TimePrefix<T>& /*lhs*/, const int32_t rhs)
+    {
+        return TimePrefix<T>::convert(static_cast<int64_t>(rhs));
+    }
+
+    template <class T>
+    Duration operator*(const int32_t rhs, const TimePrefix<T>& /*lhs*/)
+    {
+        return TimePrefix<T>::convert(static_cast<int64_t>(rhs));
     }
 } // namespace mo
 
