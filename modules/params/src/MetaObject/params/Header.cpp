@@ -12,6 +12,12 @@ namespace mo
         , ctx(nullptr)
     {
     }
+
+    Header::Header(const Duration& d)
+        : Header(Time(d))
+    {
+    }
+
     Header::Header(const uint64_t fn)
         : frame_number(fn)
         , ctx(nullptr)

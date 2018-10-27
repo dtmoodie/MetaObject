@@ -37,6 +37,14 @@ namespace mo
             return m_data_buffer.size();
         }
 
+        uint64_t Map::clear()
+        {
+            Lock lock(IParam::mtx());
+            const uint64_t sz = m_data_buffer.size();
+            m_data_buffer.clear();
+            return sz;
+        }
+
         bool Map::getTimestampRange(mo::OptionalTime& start, mo::OptionalTime& end)
         {
             Lock lock(IParam::mtx());

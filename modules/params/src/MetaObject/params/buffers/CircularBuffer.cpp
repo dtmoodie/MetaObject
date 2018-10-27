@@ -33,11 +33,20 @@ namespace mo
 
         uint64_t CircularBuffer::getSize() const
         {
+            Lock lock(IParam::mtx());
             return m_buffer.size();
+        }
+
+        uint64_t CircularBuffer::clear()
+        {
+            const uint64_t sz = m_buffer.size();
+            m_buffer.clear();
+            return sz;
         }
 
         bool CircularBuffer::getTimestampRange(mo::OptionalTime& start, mo::OptionalTime& end)
         {
+            Lock lock(IParam::mtx());
             if (m_buffer.size())
             {
                 start = m_buffer.front()->getHeader().timestamp;
@@ -49,6 +58,7 @@ namespace mo
 
         bool CircularBuffer::getFrameNumberRange(uint64_t& start, uint64_t& end)
         {
+            Lock lock(IParam::mtx());
             if (m_buffer.size())
             {
                 start = m_buffer.front()->getHeader().frame_number;
@@ -74,6 +84,7 @@ namespace mo
 
         CircularBuffer::IContainerPtr_t CircularBuffer::getData(const Header& desired)
         {
+            Lock lock(IParam::mtx());
             if (!desired.timestamp && !desired.frame_number.valid())
             {
                 if (m_buffer.size())
@@ -97,6 +108,7 @@ namespace mo
 
         CircularBuffer::IContainerConstPtr_t CircularBuffer::getData(const Header& desired) const
         {
+            Lock lock(IParam::mtx());
             for (auto itr = m_buffer.begin(); itr != m_buffer.end(); ++itr)
             {
                 if ((*itr)->getHeader() == desired)

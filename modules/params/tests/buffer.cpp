@@ -60,29 +60,54 @@ struct Fixture
         BOOST_REQUIRE(input_param.getTypedData(&data, Header(mo::ms * 5.0)));
         BOOST_REQUIRE_EQUAL(data, 5);
     }
+
+    void fill(const int32_t num)
+    {
+        BOOST_REQUIRE(buffer && "Something wrong in test, buffer not initialized already");
+        buffer->clear();
+        for (int32_t i = 0; i < num; ++i)
+        {
+            param.updateData(i, Header(i * ms));
+        }
+    }
 };
 
 BOOST_FIXTURE_TEST_CASE(TestReadCircular, Fixture)
 {
     init(CIRCULAR_BUFFER);
     testRead();
+    buffer->setFrameBufferCapacity(10);
+    fill(100);
+    BOOST_REQUIRE_EQUAL(buffer->getSize(), 10);
 }
 
 BOOST_FIXTURE_TEST_CASE(TestReadMap, Fixture)
 {
     init(MAP_BUFFER);
     testRead();
+    buffer->setFrameBufferCapacity(10);
+    fill(100);
+    BOOST_REQUIRE_EQUAL(buffer->getSize(), 100);
 }
 
 BOOST_FIXTURE_TEST_CASE(TestReadStream, Fixture)
 {
     init(STREAM_BUFFER);
     testRead();
+    buffer->setFrameBufferCapacity(10);
+    fill(100);
+    BOOST_REQUIRE_EQUAL(buffer->getSize(), 10);
 }
 
 BOOST_FIXTURE_TEST_CASE(TestReadBlockingStream, Fixture)
 {
     init(BLOCKING_STREAM_BUFFER);
+    testRead();
+}
+
+BOOST_FIXTURE_TEST_CASE(TestReadDroppingStream, Fixture)
+{
+    init(DROPPING_STREAM_BUFFER);
     testRead();
 }
 

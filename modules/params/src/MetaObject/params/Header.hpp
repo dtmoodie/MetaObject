@@ -12,7 +12,8 @@ namespace mo
     struct MO_EXPORTS Header
     {
         Header();
-        Header(const mo::Time& ts);
+        Header(const Time& ts);
+        Header(const Duration& d);
         Header(const uint64_t fn);
         Header(Header&&) = default;
         Header(const Header&) = default;

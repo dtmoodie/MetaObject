@@ -18,6 +18,7 @@ namespace mo
 
             // These are not const accessors because I may need to lock a mutex inside of them.
             virtual uint64_t getSize() const = 0;
+            virtual uint64_t clear() = 0;
             virtual bool getTimestampRange(mo::OptionalTime& start, mo::OptionalTime& end) = 0;
             virtual bool getFrameNumberRange(uint64_t& start, uint64_t& end) = 0;
             virtual BufferFlags getBufferType() const = 0;
