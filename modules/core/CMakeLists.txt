@@ -31,3 +31,10 @@ target_include_directories(metaobject_core
 if(${MO_HAVE_CUDA})
     target_link_libraries(metaobject_core ${CUDA_CUDART_LIBRARY})
 endif(${MO_HAVE_CUDA})
+
+if(BUILD_TESTS)
+    file(GLOB_RECURSE tests "tests/*.cpp")
+    add_executable(mo_test_core ${tests})
+    target_link_libraries(mo_test_core metaobject_core)
+    set_property(TARGET mo_test_core PROPERTY CXX_STANDARD 11)
+endif()
