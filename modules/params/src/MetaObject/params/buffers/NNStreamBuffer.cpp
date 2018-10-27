@@ -34,11 +34,16 @@ namespace mo
                 }
                 else
                 {
-                    auto upper = buffer.upper_bound(*hdr.timestamp);
-                    auto lower = buffer.lower_bound(*hdr.timestamp);
+                    const auto ts = *hdr.timestamp;
+                    auto upper = buffer.upper_bound(hdr);
+                    auto lower = buffer.lower_bound(hdr);
                     if (upper != buffer.end() && lower != buffer.end())
                     {
-                        if (*upper->first.timestamp - *hdr.timestamp < *lower->first.timestamp - *hdr.timestamp)
+                        const auto ts_upper = *upper->first.timestamp;
+                        const auto ts_lower = *lower->first.timestamp;
+                        const auto upperdelta = std::chrono::abs(ts_upper - ts);
+                        const auto lowerdelta = std::chrono::abs(ts_lower - ts);
+                        if (upperdelta < lowerdelta)
                         {
                             output = upper->second;
                             return;

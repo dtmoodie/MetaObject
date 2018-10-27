@@ -46,23 +46,66 @@ namespace mo
     using OptionalTime = boost::optional<Time>;
 
     template <class T>
+    struct MorePreciseTime;
+
+    template <>
+    struct MorePreciseTime<std::chrono::hours>
+    {
+        using type = std::chrono::minutes;
+    };
+    template <>
+    struct MorePreciseTime<std::chrono::minutes>
+    {
+        using type = std::chrono::seconds;
+    };
+    template <>
+    struct MorePreciseTime<std::chrono::seconds>
+    {
+        using type = std::chrono::milliseconds;
+    };
+    template <>
+    struct MorePreciseTime<std::chrono::milliseconds>
+    {
+        using type = std::chrono::microseconds;
+    };
+    template <>
+    struct MorePreciseTime<std::chrono::microseconds>
+    {
+        using type = std::chrono::nanoseconds;
+    };
+
+    template <class T>
     struct TimePrefix
     {
         static Duration convert(unsigned long val)
         {
             return Duration(T(val));
         }
+
+        static Duration convert(double val)
+        {
+            using MorePrecise = typename MorePreciseTime<T>::type;
+            const unsigned long integral = static_cast<unsigned long>(val);
+            T whole(integral);
+            val -= integral;
+            using Ratio = std::ratio_divide<typename MorePrecise::period, typename T::period>;
+            const auto num = Ratio::num;
+            const auto den = Ratio::den;
+            auto fr = static_cast<unsigned long>(val * den / num);
+            MorePrecise fraction(fr);
+            return Duration(whole + fraction);
+        }
     };
 
-    static const auto ms = TimePrefix<std::chrono::milliseconds>();
     static const auto ns = TimePrefix<std::chrono::nanoseconds>();
     static const auto us = TimePrefix<std::chrono::microseconds>();
+    static const auto ms = TimePrefix<std::chrono::milliseconds>();
     static const auto second = TimePrefix<std::chrono::seconds>();
 
     template <class T>
     Duration operator*(const TimePrefix<T>& /*lhs*/, double rhs)
     {
-        return TimePrefix<T>::convert(static_cast<unsigned long>(rhs));
+        return TimePrefix<T>::convert(rhs);
     }
 
     template <class T>
@@ -75,6 +118,17 @@ namespace mo
 namespace std
 {
     MO_EXPORTS std::ostream& operator<<(std::ostream& lhs, const mo::Time& rhs);
+    namespace chrono
+    {
+        template <class Rep,
+                  class Period,
+                  class = typename std::enable_if<std::chrono::duration<Rep, Period>::min() <
+                                                  std::chrono::duration<Rep, Period>::zero()>::type>
+        constexpr std::chrono::duration<Rep, Period> abs(const duration<Rep, Period> d)
+        {
+            return d >= d.zero() ? d : -d;
+        }
+    }
 }
 
 namespace cereal

@@ -92,14 +92,18 @@ BOOST_FIXTURE_TEST_CASE(TestReadNearestNeighbor, Fixture)
     testRead();
 
     int data = 10;
-    BOOST_REQUIRE(input_param.getTypedData(&data, Header(mo::ms * 4.0)));
+    BOOST_REQUIRE(input_param.getTypedData(&data, Header(4.0 * mo::ms)));
     BOOST_REQUIRE_EQUAL(data, 5);
 
     data = 10;
-    BOOST_REQUIRE(input_param.getTypedData(&data, Header(mo::ms * 6.0)));
+    BOOST_REQUIRE(input_param.getTypedData(&data, Header(6.0 * mo::ms)));
     BOOST_REQUIRE_EQUAL(data, 5);
 
     data = 10;
-    BOOST_REQUIRE(input_param.getTypedData(&data, Header(mo::ms * 1.6)));
+    BOOST_REQUIRE(input_param.getTypedData(&data, Header(1.6 * mo::ms)));
     BOOST_REQUIRE_EQUAL(data, 2);
+
+    data = 10;
+    BOOST_REQUIRE(input_param.getTypedData(&data, Header(1.2 * mo::ms)));
+    BOOST_REQUIRE_EQUAL(data, 1);
 }
