@@ -65,10 +65,19 @@ struct Fixture
     {
         BOOST_REQUIRE(buffer && "Something wrong in test, buffer not initialized already");
         buffer->clear();
+        int32_t data;
         for (int32_t i = 0; i < num; ++i)
         {
             param.updateData(i, Header(i * ms));
+            input_param.getTypedData(&data, Header(i * ms));
         }
+    }
+
+    void testPruning()
+    {
+        buffer->setFrameBufferCapacity(10);
+        fill(100);
+        BOOST_REQUIRE_EQUAL(buffer->getSize(), 10);
     }
 };
 
@@ -76,9 +85,7 @@ BOOST_FIXTURE_TEST_CASE(TestReadCircular, Fixture)
 {
     init(CIRCULAR_BUFFER);
     testRead();
-    buffer->setFrameBufferCapacity(10);
-    fill(100);
-    BOOST_REQUIRE_EQUAL(buffer->getSize(), 10);
+    testPruning();
 }
 
 BOOST_FIXTURE_TEST_CASE(TestReadMap, Fixture)
@@ -94,21 +101,21 @@ BOOST_FIXTURE_TEST_CASE(TestReadStream, Fixture)
 {
     init(STREAM_BUFFER);
     testRead();
-    buffer->setFrameBufferCapacity(10);
-    fill(100);
-    BOOST_REQUIRE_EQUAL(buffer->getSize(), 10);
+    testPruning();
 }
 
 BOOST_FIXTURE_TEST_CASE(TestReadBlockingStream, Fixture)
 {
     init(BLOCKING_STREAM_BUFFER);
     testRead();
+    testPruning();
 }
 
 BOOST_FIXTURE_TEST_CASE(TestReadDroppingStream, Fixture)
 {
     init(DROPPING_STREAM_BUFFER);
     testRead();
+    testPruning();
 }
 
 BOOST_FIXTURE_TEST_CASE(TestReadNearestNeighbor, Fixture)
@@ -131,4 +138,6 @@ BOOST_FIXTURE_TEST_CASE(TestReadNearestNeighbor, Fixture)
     data = 10;
     BOOST_REQUIRE(input_param.getTypedData(&data, Header(1.2 * mo::ms)));
     BOOST_REQUIRE_EQUAL(data, 1);
+
+    testPruning();
 }

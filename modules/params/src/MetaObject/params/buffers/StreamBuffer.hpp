@@ -40,13 +40,11 @@ namespace mo
             static const BufferFlags Type = BLOCKING_STREAM_BUFFER;
 
             BlockingStreamBuffer(const std::string& name = "");
-            virtual void setFrameBufferCapacity(size_t size) override;
             virtual BufferFlags getBufferType() const override;
 
           protected:
             virtual uint32_t prune(Map::Buffer_t&) override;
             void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) override;
-            size_t _size;
             boost::condition_variable_any _cv;
         };
 

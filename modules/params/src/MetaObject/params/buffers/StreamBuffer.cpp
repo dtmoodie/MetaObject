@@ -71,10 +71,11 @@ namespace mo
             }
             if (_frame_padding && _current_frame_number > *_frame_padding)
             {
+                const auto cutoff = _current_frame_number - *_frame_padding;
                 auto itr = data_buffer.begin();
                 while (itr != data_buffer.end())
                 {
-                    if (itr->first < (_current_frame_number - *_frame_padding))
+                    if (itr->first.frame_number <= cutoff)
                     {
                         ++remove_count;
                         itr = data_buffer.erase(itr);
@@ -90,13 +91,8 @@ namespace mo
 
         BlockingStreamBuffer::BlockingStreamBuffer(const std::string& name)
             : StreamBuffer(name)
-            , _size(10)
         {
-        }
-
-        void BlockingStreamBuffer::setFrameBufferCapacity(size_t size)
-        {
-            _size = size;
+            _frame_padding = 10;
         }
 
         BufferFlags BlockingStreamBuffer::getBufferType() const
@@ -117,23 +113,27 @@ namespace mo
         void BlockingStreamBuffer::onInputUpdate(const IDataContainerPtr_t& data, IParam* param, UpdateFlags flags)
         {
             Lock lock(IParam::mtx());
-            while (Map::getSize() > _size)
+            if (_frame_padding)
             {
-                _cv.wait_for(lock, boost::chrono::milliseconds(2));
-                if (lock)
+                while (Map::getSize() > (*_frame_padding + 1))
                 {
-                    lock.unlock();
+                    _cv.wait_for(lock, boost::chrono::milliseconds(2));
+                    if (lock)
+                    {
+                        lock.unlock();
+                    }
+                    IParam::emitUpdate(data->getHeader(), mo::BufferUpdated_e);
+                    if (!lock)
+                    {
+                        lock.lock();
+                    }
                 }
-                IParam::emitUpdate(data->getHeader(), mo::BufferUpdated_e);
                 if (!lock)
                 {
                     lock.lock();
                 }
             }
-            if (!lock)
-            {
-                lock.lock();
-            }
+
             Map::onInputUpdate(data, param, flags);
         }
 
@@ -149,10 +149,12 @@ namespace mo
 
         void DroppingStreamBuffer::onInputUpdate(const IDataContainerPtr_t& data, IParam* param, UpdateFlags fgs)
         {
-            if (Map::getSize() <= BlockingStreamBuffer::_size)
+            if (_frame_padding && (Map::getSize() > (*_frame_padding + 1)))
             {
-                BlockingStreamBuffer::onInputUpdate(data, param, fgs);
+                return;
             }
+
+            BlockingStreamBuffer::onInputUpdate(data, param, fgs);
         }
 
         static BufferConstructor<StreamBuffer> g_ctr_stream_buffer;

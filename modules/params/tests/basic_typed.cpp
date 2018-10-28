@@ -122,6 +122,19 @@ BOOST_FIXTURE_TEST_CASE(set_value, WrappedParam<int>)
     BOOST_REQUIRE_EQUAL(value, 100);
 }
 
+BOOST_FIXTURE_TEST_CASE(param_timestamping, WrappedParam<int>)
+{
+    param.updateData(100, tag::_timestamp = 1 * ms);
+    BOOST_REQUIRE(param.getTimestamp());
+    BOOST_REQUIRE_EQUAL(param.getTimestamp()->time_since_epoch(), 1 * ms);
+    BOOST_REQUIRE_EQUAL(param.getFrameNumber(), 0);
+
+    param.updateData(101, tag::_timestamp = 2 * ms);
+    BOOST_REQUIRE(param.getTimestamp());
+    BOOST_REQUIRE_EQUAL(param.getTimestamp()->time_since_epoch(), 2 * ms);
+    BOOST_REQUIRE_EQUAL(param.getFrameNumber(), 1);
+}
+
 BOOST_FIXTURE_TEST_CASE(read_from_param, WrappedParam<int>)
 {
     param.updateData(100);

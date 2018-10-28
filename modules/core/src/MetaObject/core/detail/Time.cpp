@@ -128,6 +128,11 @@ namespace mo
         return val != max();
     }
 
+    FrameNumber::operator uint64_t&()
+    {
+        return val;
+    }
+
     FrameNumber::operator uint64_t() const
     {
         return val;

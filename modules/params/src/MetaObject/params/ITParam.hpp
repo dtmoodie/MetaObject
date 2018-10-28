@@ -117,18 +117,12 @@ namespace mo
         {
             header.frame_number = *fnptr;
         }
-        else
-        {
-            if (param == nullptr)
-            {
-                header.frame_number = header.frame_number + 1;
-            }
-        }
 
         if (auto tsptr = GetKeywordInputOptional<tag::timestamp>(args...))
         {
             header.timestamp = *tsptr;
         }
+
         if (auto ctx_ = GetKeywordInputDefault<tag::context>(nullptr, args...))
         {
             header.ctx = ctx_;
@@ -168,6 +162,15 @@ namespace mo
     template <class T>
     void TParam<T>::updateData(const TContainerPtr_t& data)
     {
+        if (!data->header.frame_number.valid())
+        {
+            ++m_header.frame_number.val;
+            data->header.frame_number = m_header.frame_number.val;
+        }
+        else
+        {
+            m_header.frame_number.val = data->header.frame_number;
+        }
         updateDataImpl(data);
     }
 

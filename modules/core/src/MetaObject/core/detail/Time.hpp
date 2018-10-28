@@ -36,6 +36,7 @@ namespace mo
         FrameNumber(const uint64_t v = max());
 
         bool valid() const;
+        operator uint64_t&();
         operator uint64_t() const;
         FrameNumber& operator=(const uint64_t v);
         bool operator==(const FrameNumber&) const;
