@@ -89,15 +89,21 @@ struct Fixture
             int data;
             for (int i = 0; i < 10000; ++i)
             {
-                bool result = input_param.getTypedData(&data, Header(i * ms));
+                bool result = false;
+                for (int j = 0; j < 10 && !result; ++j)
+                {
+                    result = input_param.getTypedData(&data, Header(i * ms));
+                    boost::this_thread::sleep_for(boost::chrono::nanoseconds(5));
+                }
+
                 BOOST_REQUIRE(result || dropping);
                 if (result)
                 {
                     BOOST_REQUIRE_EQUAL(data, i);
                     ++read_values;
                 }
-                auto wait = rand() % 100 + 20;
-                boost::this_thread::sleep_for(boost::chrono::milliseconds(wait));
+                auto wait = rand() % 20 + 20;
+                boost::this_thread::sleep_for(boost::chrono::nanoseconds(wait));
                 if (boost::this_thread::interruption_requested())
                 {
                     return;
@@ -109,7 +115,7 @@ struct Fixture
         for (int i = 0; i < 10000; ++i)
         {
             param.updateData(i, tag::_timestamp = i * ms);
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(33));
+            boost::this_thread::sleep_for(boost::chrono::nanoseconds(33));
         }
         thread.join();
         BOOST_REQUIRE(dropping || read_values == 10000);
@@ -121,7 +127,7 @@ BOOST_FIXTURE_TEST_CASE(TestReadCircular, Fixture)
     init(CIRCULAR_BUFFER);
     testRead();
     testPruning();
-    testMultiThreaded(false);
+    testMultiThreaded(true);
 }
 
 BOOST_FIXTURE_TEST_CASE(TestReadMap, Fixture)
