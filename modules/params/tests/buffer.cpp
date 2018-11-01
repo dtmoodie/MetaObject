@@ -85,6 +85,8 @@ struct Fixture
     void testMultiThreaded(const bool dropping)
     {
         int read_values = 0;
+        buffer->clear();
+
         auto read_func = [this, dropping, &read_values]() {
             int data;
             for (int i = 0; i < 10000; ++i)
@@ -93,7 +95,7 @@ struct Fixture
                 for (int j = 0; j < 10 && !result; ++j)
                 {
                     result = input_param.getTypedData(&data, Header(i * ms));
-                    boost::this_thread::sleep_for(boost::chrono::nanoseconds(5));
+                    boost::this_thread::sleep_for(boost::chrono::nanoseconds(15));
                 }
 
                 BOOST_REQUIRE(result || dropping);
@@ -121,14 +123,6 @@ struct Fixture
         BOOST_REQUIRE(dropping || read_values == 10000);
     }
 };
-
-BOOST_FIXTURE_TEST_CASE(TestReadCircular, Fixture)
-{
-    init(CIRCULAR_BUFFER);
-    testRead();
-    testPruning();
-    testMultiThreaded(true);
-}
 
 BOOST_FIXTURE_TEST_CASE(TestReadMap, Fixture)
 {

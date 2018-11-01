@@ -1,4 +1,5 @@
 #include "CircularBuffer.hpp"
+/*
 #include "BufferConstructor.hpp"
 #include <boost/thread/locks.hpp>
 #include <boost/thread/recursive_mutex.hpp>
@@ -122,3 +123,4 @@ namespace mo
         static BufferConstructor<CircularBuffer> g_ctr;
     }
 }
+*/
