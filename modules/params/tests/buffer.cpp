@@ -95,7 +95,7 @@ struct Fixture
                 for (int j = 0; j < 10 && !result; ++j)
                 {
                     result = input_param.getTypedData(&data, Header(i * ms));
-                    boost::this_thread::sleep_for(boost::chrono::nanoseconds(15));
+                    boost::this_thread::sleep_for(boost::chrono::nanoseconds(10));
                 }
 
                 BOOST_REQUIRE(result || dropping);
