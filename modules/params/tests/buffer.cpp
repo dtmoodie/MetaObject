@@ -27,6 +27,9 @@ struct Fixture
 
     void init(BufferFlags buffer_type)
     {
+        BOOST_REQUIRE_EQUAL(param.getName(), "pub");
+        BOOST_REQUIRE(param.getData() == nullptr);
+
         buffer.reset(buffer::BufferFactory::createBuffer(&param, buffer_type));
         BOOST_REQUIRE(buffer);
         BOOST_REQUIRE(input_param.setInput(buffer.get()));

@@ -148,6 +148,16 @@ namespace mo
 
     ConnectionPtr_t IMultiInput::registerUpdateNotifier(ISlot* f)
     {
+        ConnectionPtr_t out;
+        for (auto input : m_inputs)
+        {
+            out = input->registerUpdateNotifier(f);
+            if (out)
+            {
+                break;
+            }
+        }
+        return out;
     }
 
     ConnectionPtr_t IMultiInput::registerUpdateNotifier(const ISignalRelay::Ptr& relay)

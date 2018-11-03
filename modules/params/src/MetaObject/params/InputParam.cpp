@@ -122,18 +122,20 @@ bool InputParam::setInput(const std::shared_ptr<IParam>& param)
 
 bool InputParam::setInput(IParam* param)
 {
-    Lock lock(mtx());
-    if (qualifier && !qualifier(param))
     {
-        return false;
+        Lock lock(mtx());
+        if (qualifier && !qualifier(param))
+        {
+            return false;
+        }
+        if (m_input_param)
+        {
+            m_input_param->unsubscribe();
+            m_update_slot.clear();
+            m_delete_slot.clear();
+        }
+        m_input_param = param;
     }
-    if (m_input_param)
-    {
-        m_input_param->unsubscribe();
-        m_update_slot.clear();
-        m_delete_slot.clear();
-    }
-    m_input_param = param;
     param->subscribe();
     param->registerUpdateNotifier(&m_update_slot);
     param->registerDeleteNotifier(&m_delete_slot);

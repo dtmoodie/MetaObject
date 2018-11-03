@@ -55,11 +55,37 @@ struct Fixture
     void testInput(int val)
     {
         BOOST_REQUIRE(multi_input.setInput(&int_out));
-
         BOOST_REQUIRE(multi_input.getInputParam());
 
         BOOST_REQUIRE_EQUAL(multi_input.getInputParam(), &int_out);
-        int_out.updateData(6);
+        int_out.updateData(val);
+
+        BOOST_REQUIRE_NE(mo::get<const int*>(inputs), static_cast<void*>(nullptr));
+        BOOST_REQUIRE_EQUAL(*mo::get<const int*>(inputs), 6);
+        BOOST_REQUIRE(printInputs(inputs));
+
+        int_out.updateData(5);
+
+        BOOST_REQUIRE_NE(mo::get<const int*>(inputs), static_cast<void*>(nullptr));
+        BOOST_REQUIRE_EQUAL(*mo::get<const int*>(inputs), 5);
+
+        auto data = multi_input.getData(mo::Header());
+        BOOST_REQUIRE(printInputs(inputs));
+
+        BOOST_REQUIRE(data);
+        BOOST_REQUIRE(data->getType() == mo::TypeInfo(typeid(int)));
+    }
+
+    void testCallbacks()
+    {
+        int callback_called = 0;
+        mo::TParam<int>::TUpdateSlot_t int_callback(
+            [&callback_called](mo::TParam<int>::TContainerPtr_t, mo::IParam*, mo::UpdateFlags) { ++callback_called; });
+        auto connection = multi_input.registerUpdateNotifier(&int_callback);
+
+        BOOST_REQUIRE(connection);
+        int_out.updateData(10);
+        BOOST_REQUIRE_EQUAL(callback_called, 1);
     }
 
     std::tuple<const int*, const float*, const double*> inputs;
@@ -75,6 +101,8 @@ struct Fixture
     mo::TMultiInput<int, float, double> multi_input;
 
     mo::Mutex_t mtx;
+
+    mo::TMultiOutput<int, float, double> multi_output;
 };
 
 BOOST_FIXTURE_TEST_CASE(init, Fixture)
@@ -83,23 +111,8 @@ BOOST_FIXTURE_TEST_CASE(init, Fixture)
     BOOST_REQUIRE(!printInputs(inputs));
 }
 
-BOOST_AUTO_TEST_CASE(polymorphic_input)
+BOOST_FIXTURE_TEST_CASE(int_subscribe, Fixture)
 {
-
-    BOOST_REQUIRE_NE(mo::get<const int*>(inputs), (void*)nullptr);
-    BOOST_REQUIRE_EQUAL(*mo::get<const int*>(inputs), 6);
-
-    BOOST_REQUIRE(printInputs(inputs));
-
-    int_out.updateData(5);
-    BOOST_REQUIRE_NE(mo::get<const int*>(inputs), (void*)nullptr);
-    BOOST_REQUIRE_EQUAL(*mo::get<const int*>(inputs), 5);
-
-    auto data = multi_input.getData(mo::Header());
-    BOOST_REQUIRE(printInputs(inputs));
-
-    BOOST_REQUIRE(data);
-    BOOST_REQUIRE(data->getType() == mo::TypeInfo(typeid(int)));
-
-    mo::TMultiOutput<int, float, double> multi_output;
+    testInput(6);
+    testCallbacks();
 }
