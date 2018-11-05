@@ -34,77 +34,79 @@ void clearInputs(std::tuple<const int*, const float*, const double*>& inputs)
     std::get<1>(inputs) = nullptr;
     std::get<2>(inputs) = nullptr;
 }
-
-struct Fixture
+namespace
 {
-    Fixture()
+
+    struct Fixture
     {
-        int_out.updatePtr(&int_val);
-        float_out.updatePtr(&float_val);
-        double_out.updatePtr(&double_val);
+        Fixture()
+        {
+            int_out.updatePtr(&int_val);
+            float_out.updatePtr(&float_val);
+            double_out.updatePtr(&double_val);
 
-        multi_input.setMtx(&mtx);
-        multi_input.setUserDataPtr(&inputs);
-    }
+            multi_input.setMtx(&mtx);
+            multi_input.setUserDataPtr(&inputs);
+        }
 
-    void checkInit()
-    {
-        BOOST_REQUIRE(multi_input.getInputParam() == nullptr);
-    }
+        void checkInit()
+        {
+            BOOST_REQUIRE(multi_input.getInputParam() == nullptr);
+        }
 
-    void testInput(int val)
-    {
-        BOOST_REQUIRE(multi_input.setInput(&int_out));
-        BOOST_REQUIRE(multi_input.getInputParam());
+        void testInput(int val)
+        {
+            BOOST_REQUIRE(multi_input.setInput(&int_out));
+            BOOST_REQUIRE(multi_input.getInputParam());
 
-        BOOST_REQUIRE_EQUAL(multi_input.getInputParam(), &int_out);
-        int_out.updateData(val);
+            BOOST_REQUIRE_EQUAL(multi_input.getInputParam(), &int_out);
+            int_out.updateData(val);
 
-        BOOST_REQUIRE_NE(mo::get<const int*>(inputs), static_cast<void*>(nullptr));
-        BOOST_REQUIRE_EQUAL(*mo::get<const int*>(inputs), 6);
-        BOOST_REQUIRE(printInputs(inputs));
+            BOOST_REQUIRE_NE(mo::get<const int*>(inputs), static_cast<void*>(nullptr));
+            BOOST_REQUIRE_EQUAL(*mo::get<const int*>(inputs), 6);
+            BOOST_REQUIRE(printInputs(inputs));
 
-        int_out.updateData(5);
+            int_out.updateData(5);
 
-        BOOST_REQUIRE_NE(mo::get<const int*>(inputs), static_cast<void*>(nullptr));
-        BOOST_REQUIRE_EQUAL(*mo::get<const int*>(inputs), 5);
+            BOOST_REQUIRE_NE(mo::get<const int*>(inputs), static_cast<void*>(nullptr));
+            BOOST_REQUIRE_EQUAL(*mo::get<const int*>(inputs), 5);
 
-        auto data = multi_input.getData(mo::Header());
-        BOOST_REQUIRE(printInputs(inputs));
+            auto data = multi_input.getData(mo::Header());
+            BOOST_REQUIRE(printInputs(inputs));
 
-        BOOST_REQUIRE(data);
-        BOOST_REQUIRE(data->getType() == mo::TypeInfo(typeid(int)));
-    }
+            BOOST_REQUIRE(data);
+            BOOST_REQUIRE(data->getType() == mo::TypeInfo(typeid(int)));
+        }
 
-    void testCallbacks()
-    {
-        int callback_called = 0;
-        mo::TParam<int>::TUpdateSlot_t int_callback(
-            [&callback_called](mo::TParam<int>::TContainerPtr_t, mo::IParam*, mo::UpdateFlags) { ++callback_called; });
-        auto connection = multi_input.registerUpdateNotifier(&int_callback);
+        void testCallbacks()
+        {
+            int callback_called = 0;
+            mo::TParam<int>::TUpdateSlot_t int_callback([&callback_called](
+                mo::TParam<int>::TContainerPtr_t, mo::IParam*, mo::UpdateFlags) { ++callback_called; });
+            auto connection = multi_input.registerUpdateNotifier(&int_callback);
 
-        BOOST_REQUIRE(connection);
-        int_out.updateData(10);
-        BOOST_REQUIRE_EQUAL(callback_called, 1);
-    }
+            BOOST_REQUIRE(connection);
+            int_out.updateData(10);
+            BOOST_REQUIRE_EQUAL(callback_called, 1);
+        }
 
-    std::tuple<const int*, const float*, const double*> inputs;
-    int int_val;
-    mo::TParamOutput<int> int_out;
+        std::tuple<const int*, const float*, const double*> inputs;
+        int int_val;
+        mo::TParamOutput<int> int_out;
 
-    float float_val;
-    mo::TParamOutput<float> float_out;
+        float float_val;
+        mo::TParamOutput<float> float_out;
 
-    double double_val;
-    mo::TParamOutput<double> double_out;
+        double double_val;
+        mo::TParamOutput<double> double_out;
 
-    mo::TMultiInput<int, float, double> multi_input;
+        mo::TMultiInput<int, float, double> multi_input;
 
-    mo::Mutex_t mtx;
+        mo::Mutex_t mtx;
 
-    mo::TMultiOutput<int, float, double> multi_output;
-};
-
+        mo::TMultiOutput<int, float, double> multi_output;
+    };
+}
 BOOST_FIXTURE_TEST_CASE(init, Fixture)
 {
     checkInit();

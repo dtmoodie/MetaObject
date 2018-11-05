@@ -6,57 +6,64 @@
 
 using namespace mo;
 
-template <class T>
-struct Fixture
+namespace
 {
-    T value = 10;
-    TParamPtr<T> param;
 
-    ITInputParam<int> input_param;
-
-    bool update_called = false;
-    std::vector<UpdateFlags> update_flag;
-    T update_val;
-
-    TSlot<void(IParam*, Header, UpdateFlags)> update_slot;
-    TSlot<void(const std::shared_ptr<IDataContainer>&, IParam*, UpdateFlags)> data_slot;
-    TSlot<void(mo::TParam<int>::TContainerPtr_t, IParam*, UpdateFlags)> typed_slot;
-    std::shared_ptr<Connection> connection;
-
-    Fixture()
-        : param("pub", &value)
-        , input_param("sub")
+    template <class T>
+    struct Fixture
     {
-        update_slot =
-            std::bind(&Fixture<T>::onUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-        data_slot = std::bind(
-            &Fixture<T>::onDataUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-        typed_slot = std::bind(
-            &Fixture<T>::onTypedDataUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-    }
+        T value = 10;
+        TParamPtr<T> param;
 
-    void onUpdate(IParam*, Header, UpdateFlags fg)
-    {
-        update_called = true;
-        update_flag.push_back(fg);
-    }
+        ITInputParam<int> input_param;
 
-    void onDataUpdate(const std::shared_ptr<IDataContainer>& data, IParam*, UpdateFlags fg)
-    {
-        update_called = true;
-        update_flag.push_back(fg);
-        auto typed = std::dynamic_pointer_cast<TDataContainer<T>>(data);
-        BOOST_REQUIRE(typed);
-        update_val = typed->data;
-    }
+        bool update_called = false;
+        std::vector<UpdateFlags> update_flag;
+        T update_val;
 
-    void onTypedDataUpdate(mo::TParam<int>::TContainerPtr_t data, IParam*, UpdateFlags fg)
-    {
-        update_called = true;
-        update_flag.push_back(fg);
-        update_val = data->data;
-    }
-};
+        TSlot<void(IParam*, Header, UpdateFlags)> update_slot;
+        TSlot<void(const std::shared_ptr<IDataContainer>&, IParam*, UpdateFlags)> data_slot;
+        TSlot<void(mo::TParam<int>::TContainerPtr_t, IParam*, UpdateFlags)> typed_slot;
+        std::shared_ptr<Connection> connection;
+
+        Fixture()
+            : param("pub", &value)
+            , input_param("sub")
+        {
+            update_slot = std::bind(
+                &Fixture<T>::onUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+            data_slot = std::bind(
+                &Fixture<T>::onDataUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+            typed_slot = std::bind(&Fixture<T>::onTypedDataUpdate,
+                                   this,
+                                   std::placeholders::_1,
+                                   std::placeholders::_2,
+                                   std::placeholders::_3);
+        }
+
+        void onUpdate(IParam*, Header, UpdateFlags fg)
+        {
+            update_called = true;
+            update_flag.push_back(fg);
+        }
+
+        void onDataUpdate(const std::shared_ptr<IDataContainer>& data, IParam*, UpdateFlags fg)
+        {
+            update_called = true;
+            update_flag.push_back(fg);
+            auto typed = std::dynamic_pointer_cast<TDataContainer<T>>(data);
+            BOOST_REQUIRE(typed);
+            update_val = typed->data;
+        }
+
+        void onTypedDataUpdate(mo::TParam<int>::TContainerPtr_t data, IParam*, UpdateFlags fg)
+        {
+            update_called = true;
+            update_flag.push_back(fg);
+            update_val = data->data;
+        }
+    };
+}
 
 BOOST_FIXTURE_TEST_CASE(input_param_get_data, Fixture<int>)
 {
