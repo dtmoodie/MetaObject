@@ -122,16 +122,6 @@ namespace mo
     }
 
     template <class... Types>
-    typename TMultiInput<Types...>::IContainerPtr_t TMultiInput<Types...>::getData(const mo::Header&)
-    {
-    }
-
-    template <class... Types>
-    typename TMultiInput<Types...>::IContainerConstPtr_t TMultiInput<Types...>::getData(const mo::Header&) const
-    {
-    }
-
-    template <class... Types>
     void TMultiInput<Types...>::onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags)
     {
     }

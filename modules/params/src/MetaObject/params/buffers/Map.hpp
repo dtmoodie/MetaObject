@@ -23,8 +23,8 @@ https://github.com/dtmoodie/MetaObject
 
 #include "MetaObject/params/InputParam.hpp"
 
+#include <boost/thread/condition_variable.hpp>
 #include <boost/thread/recursive_mutex.hpp>
-
 #include <map>
 
 namespace mo
@@ -34,9 +34,25 @@ namespace mo
         class Map : public IBuffer
         {
           public:
+            enum PushPolicy
+            {
+                GROW,
+                PRUNE,
+                BLOCK,
+                DROP
+            };
+
+            enum SearchPolicy
+            {
+                EXACT,
+                NEAREST
+            };
+
             static const BufferFlags Type = MAP_BUFFER;
 
-            Map(const std::string& name = "");
+            Map(const std::string& name = "",
+                const PushPolicy push_policy = GROW,
+                const SearchPolicy search_policy = EXACT);
 
             // IBuffer
             virtual void setFrameBufferCapacity(const uint64_t size) override;
@@ -55,28 +71,34 @@ namespace mo
 
             virtual IContainerPtr_t getData(const Header& desired = Header()) override;
             virtual IContainerConstPtr_t getData(const Header& desired = Header()) const override;
+            virtual void setMtx(Mutex_t* mtx) override;
 
           protected:
             void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) override;
-            virtual IDataContainerPtr_t search(const Header& hdr) const;
+            IDataContainerPtr_t search(const Header& hdr) const;
+            IDataContainerPtr_t searchExact(const Header& hdr) const;
+            IDataContainerPtr_t searchNearest(const Header& hdr) const;
 
             using Buffer_t = std::map<Header, IDataContainerPtr_t>;
 
-            template <class F>
-            void modifyDataBuffer(F&& functor)
-            {
-                Lock lock(IParam::mtx());
-                functor(m_data_buffer);
-            }
-            template <class F>
-            void modifyDataBuffer(F&& functor) const
-            {
-                Lock lock(IParam::mtx());
-                functor(m_data_buffer);
-            }
-
           private:
+            void pushData(const IDataContainerPtr_t& data);
+            void pushOrDrop(const IDataContainerPtr_t& data);
+            void pushAndWait(const IDataContainerPtr_t& data);
+            uint32_t prune();
+
+            boost::condition_variable_any m_cv;
+
             Buffer_t m_data_buffer;
+
+            OptionalTime m_current_timestamp;
+            uint64_t m_current_frame_number;
+
+            boost::optional<Duration> m_time_padding;
+            boost::optional<uint64_t> m_frame_padding;
+            PushPolicy m_push_policy = GROW;
+            SearchPolicy m_search_policy = EXACT;
+            mutable mo::Mutex_t m_mtx;
         };
     }
 }

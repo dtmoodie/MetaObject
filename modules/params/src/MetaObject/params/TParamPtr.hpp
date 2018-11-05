@@ -20,7 +20,7 @@ namespace mo
      *  Updates to user_param are reflected in user_data
      */
     template <typename T>
-    struct MO_EXPORTS TParamPtr : virtual public TParam<T>
+    struct MO_EXPORTS TParamPtr : public TParam<T>
     {
         using TContainerPtr_t = typename TParam<T>::TContainerPtr_t;
 

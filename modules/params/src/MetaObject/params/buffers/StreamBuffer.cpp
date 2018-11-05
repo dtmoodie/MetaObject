@@ -1,6 +1,6 @@
 #include "StreamBuffer.hpp"
 
-namespace mo
+/*namespace mo
 {
     namespace buffer
     {
@@ -52,41 +52,6 @@ namespace mo
 
         uint32_t StreamBuffer::prune(Map::Buffer_t& data_buffer)
         {
-            uint32_t remove_count = 0;
-            if (_current_timestamp && _time_padding)
-            {
-                auto itr = data_buffer.begin();
-                while (itr != data_buffer.end())
-                {
-                    if (itr->first.timestamp && *itr->first.timestamp < mo::Time(*_current_timestamp - *_time_padding))
-                    {
-                        ++remove_count;
-                        itr = data_buffer.erase(itr);
-                    }
-                    else
-                    {
-                        ++itr;
-                    }
-                }
-            }
-            if (_frame_padding && _current_frame_number > *_frame_padding)
-            {
-                const auto cutoff = _current_frame_number - *_frame_padding;
-                auto itr = data_buffer.begin();
-                while (itr != data_buffer.end())
-                {
-                    if (itr->first.frame_number <= cutoff)
-                    {
-                        ++remove_count;
-                        itr = data_buffer.erase(itr);
-                    }
-                    else
-                    {
-                        ++itr;
-                    }
-                }
-            }
-            return remove_count;
         }
 
         BlockingStreamBuffer::BlockingStreamBuffer(const std::string& name)
@@ -162,3 +127,4 @@ namespace mo
         static BufferConstructor<DroppingStreamBuffer> g_ctr_dropping_stream_buffer;
     }
 }
+*/

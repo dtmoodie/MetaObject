@@ -44,7 +44,7 @@ namespace mo
 
       private:
         std::vector<InputParam*> m_inputs;
-        InputParam* m_current_input;
+        InputParam* m_current_input = nullptr;
 
         static const mo::TypeInfo _void_type_info;
     };
@@ -63,9 +63,6 @@ namespace mo
 
         template <class T>
         inline void apply(std::tuple<const Types*...>* user_var_);
-
-        IContainerPtr_t getData(const mo::Header&);
-        IContainerConstPtr_t getData(const mo::Header&) const;
 
       private:
         void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags);
