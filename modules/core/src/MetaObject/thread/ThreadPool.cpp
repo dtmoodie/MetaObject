@@ -1,10 +1,6 @@
 #include "MetaObject/thread/ThreadPool.hpp"
 #include "MetaObject/thread/Thread.hpp"
 using namespace mo;
-ThreadPool::PooledThread::~PooledThread()
-{
-    delete this->thread;
-}
 
 ThreadPool* ThreadPool::instance()
 {
@@ -16,33 +12,28 @@ ThreadPool* ThreadPool::instance()
     return g_inst;
 }
 
-ThreadHandle ThreadPool::requestThread()
+std::shared_ptr<Thread> ThreadPool::requestThread()
 {
-    for (auto& thread : _threads)
+    std::lock_guard<std::mutex> lock(m_mtx);
+    if (m_threads.empty())
     {
-        if (thread.available)
-        {
-            thread.ref_count = 0;
-            return ThreadHandle(thread.thread, &thread.ref_count);
-        }
+        std::shared_ptr<Thread> owning_ptr(new Thread(this));
+        return std::shared_ptr<Thread>(owning_ptr.get(), [this, owning_ptr](Thread*) { returnThread(owning_ptr); });
     }
-    _threads.emplace_back(false, new Thread(this));
-    return ThreadHandle(_threads.back().thread, &_threads.back().ref_count);
+    else
+    {
+        auto owning_ptr = m_threads.front();
+        return std::shared_ptr<Thread>(owning_ptr.get(), [this, owning_ptr](Thread*) { returnThread(owning_ptr); });
+    }
 }
 
 void ThreadPool::cleanup()
 {
-    _threads.clear();
+    m_threads.clear();
 }
 
-void ThreadPool::returnThread(Thread* thread_)
+void ThreadPool::returnThread(const std::shared_ptr<Thread>& thread)
 {
-    for (auto& thread : _threads)
-    {
-        if (thread.thread == thread_)
-        {
-            thread.available = true;
-            thread_->stop();
-        }
-    }
+    std::lock_guard<std::mutex> lock(m_mtx);
+    m_threads.push_back(thread);
 }

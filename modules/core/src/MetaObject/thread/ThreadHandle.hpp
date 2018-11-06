@@ -1,9 +1,10 @@
 #pragma once
 #include <MetaObject/core/detail/Forward.hpp>
 #include <MetaObject/detail/Export.hpp>
+
+#include <cstring>
 #include <functional>
 #include <memory>
-
 namespace mo
 {
     class Thread;
@@ -11,54 +12,76 @@ namespace mo
     class Context;
     class ISlot;
     class Connection;
-    template <class T>
-    class TSlot;
 
-    /*!
-         * \brief The ThreadHandle class is used to wrap the mo::Thread in such a way that the implementation an be
-     * hidden from nvcc
-         *        since nvcc has compile errors with many boost/thread headers.  Since contexts contain cuda allocators,
-     * and it is expected that
-         *        the allocator out lives any created objects (OpenCV doesn't do reference counting on allocators);
-     * threads are recycled to the thread
-         *        pool so that when a thread is no longer being used its allocator can still live.  Furthermore this
-     * simplifies cuda callbacks by allowing
-         *        a thread to finish any asynchronous work after the work enqueing object is deleted.
-         */
+    // TODO not needed once we integrate cache engine
+    // borrowed from https://gitlab.com/dtmoodie/cache-engine/blob/WIP/include/ce/detail/hash.hpp
+    inline uint64_t combineHash(uint64_t seed, const uint64_t hash)
+    {
+        seed ^= hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+        return seed;
+    }
+
+    template <class T>
+    inline uint64_t generateHash(const T& val)
+    {
+        return std::hash<T>{}(val);
+    }
+
+    template <class T>
+    inline uint64_t generateHash(const T* val)
+    {
+        return std::hash<const void*>{}(val);
+    }
+
+    template <class T, std::size_t N>
+    inline uint64_t generateHash(const std::array<T, N>& array)
+    {
+        uint64_t hash = 0;
+        for (uint64_t i = 0; i < N; ++i)
+        {
+            hash = combineHash(hash, generateHash(array[i]));
+        }
+        return hash;
+    }
+
+    template <class T, class R, class... Args>
+    uint64_t hashFptr(R (T::*fptr)(Args...))
+    {
+        const char* ptrptr = static_cast<const char*>(static_cast<const void*>(&fptr));
+        std::array<char, sizeof(fptr)> val;
+        std::memcpy(&val[0], ptrptr, sizeof(fptr));
+        return generateHash(val);
+    }
+
+    // Add a level of indirection such that boost/thread header files do not need to be viewed by nvcc
+    // this is a work around for older versions of nvcc that would implode on including certain boost headers
     class MO_EXPORTS ThreadHandle
     {
       public:
-        ThreadHandle();
-        ThreadHandle(const ThreadHandle& other);
-        ThreadHandle(ThreadHandle&& other);
+        ThreadHandle(const std::shared_ptr<Thread>& thread);
 
-        ~ThreadHandle();
+        ContextPtr_t context() const;
+        size_t threadId() const;
 
-        ThreadHandle& operator=(ThreadHandle&& other);
-        ThreadHandle& operator=(const ThreadHandle& other);
-
-        ContextPtr_t getContext() const;
-        size_t getId() const;
-        bool getIsRunning() const;
-        const std::string& getThreadName() const;
+        const std::string& threadName() const;
         bool isOnThread() const;
 
-        void pushEventQueue(const std::function<void(void)>& f); // Events must be handled on the enqueued thread
-        void pushWork(const std::function<void(void)>& f);       // Work can be stolen and can exist on any thread
-        void start();
-        void stop();
+        // Events must be handled on the enqueued thread
+        bool pushEventQueue(std::function<void(void)>&& f, const uint64_t id = 0);
 
-        void setExitCallback(const std::function<void(void)>& f);
-        void setStartCallback(const std::function<void(void)>& f);
+        template <class T, class... Args>
+        bool pushEventQueue(T* obj, void (T::*fptr)(Args...), Args&&... args)
+        {
+            return pushEventQueue([obj, fptr, args...]() { (*obj.*fptr)(args...); },
+                                  combineHash(generateHash(obj), hashFptr(fptr)));
+        }
+        // Work can be stolen and can exist on any thread
+        bool pushWork(std::function<void(void)>&& f);
+
+        void setExitCallback(std::function<void(void)>&& f);
         void setThreadName(const std::string& name);
-        std::shared_ptr<Connection> setInnerLoop(TSlot<int(void)>* slot);
 
-      protected:
-        friend class ThreadPool;
-        ThreadHandle(Thread* thread, int* ref_count);
-        Thread* _thread;
-        int* _ref_count;
-        void decrement();
-        void increment();
+      private:
+        std::shared_ptr<Thread> m_thread;
     };
 }

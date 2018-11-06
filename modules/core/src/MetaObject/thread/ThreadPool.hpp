@@ -9,22 +9,13 @@ namespace mo
     {
       public:
         static ThreadPool* instance();
-        ThreadHandle requestThread();
+        std::shared_ptr<Thread> requestThread();
         void cleanup();
 
-      protected:
-        friend class ThreadHandle;
-        void returnThread(Thread* thread);
-
       private:
-        struct PooledThread
-        {
-            PooledThread(bool available_, Thread* thread_) : available(available_), thread(thread_) {}
-            ~PooledThread();
-            bool available = true;
-            int ref_count = 0;
-            Thread* thread;
-        };
-        std::list<PooledThread> _threads;
+        std::mutex m_mtx;
+        void returnThread(const std::shared_ptr<Thread>& thread);
+
+        std::list<std::shared_ptr<Thread>> m_threads;
     };
 }

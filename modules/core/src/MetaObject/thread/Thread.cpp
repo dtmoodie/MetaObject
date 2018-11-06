@@ -15,269 +15,170 @@
 
 using namespace mo;
 
-void Thread::pushEventQueue(const std::function<void(void)>& f)
+EventToken::EventToken(std::function<void(void)>&& event, const uint64_t id)
+    : event(std::move(event))
+    , event_id(id)
 {
-    _event_queue.enqueue(f);
-    _cv.notify_all();
 }
+
+void Thread::pushEventQueue(std::function<void(void)>&& f, const uint64_t id)
+{
+    m_event_queue.enqueue(EventToken(std::move(f), id));
+    m_cv.notify_all();
+}
+
 // Work can be stolen and can exist on any thread
-void Thread::pushWork(const std::function<void(void)>& f)
+void Thread::pushWork(std::function<void(void)>&& f)
 {
-    _work_queue.enqueue(f);
-    _cv.notify_all();
+    m_work_queue.enqueue(f);
+    m_cv.notify_all();
 }
 
-void Thread::start()
+void Thread::setExitCallback(std::function<void(void)>&& f)
 {
-    _run = true;
-    _cv.notify_all();
-}
-
-void Thread::stop()
-{
-    if (_run == false && _paused == true)
-        return;
-    _run = false;
-    _thread.interrupt();
-    int wait_count = 0;
-    while (!_paused)
-    {
-        boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-        ++wait_count;
-        if (wait_count % 1000 == 0)
-            MO_LOG(warning) << "Waited " << wait_count / 1000 << " second for " << this->_name << " to stop";
-    }
-    //_thread.join();
-    MO_LOG(info) << _name << " has stopped";
-}
-
-void Thread::setExitCallback(const std::function<void(void)>& f)
-{
-    _on_exit = f;
-}
-
-void Thread::setStartCallback(const std::function<void(void)>& f)
-{
-    _on_start = f;
+    Lock lock(m_mtx);
+    m_on_exit = std::move(f);
 }
 
 void Thread::setName(const std::string& name)
 {
-    this->_name = name;
-    setThreadName(_thread, name);
+    m_name = name;
+    setThreadName(m_thread, name);
 }
 
-std::shared_ptr<Connection> Thread::setInnerLoop(TSlot<int(void)>* slot)
+ThreadPool* Thread::pool() const
 {
-    if (mo::getThisThread() != getId())
+    return m_pool;
+}
+
+ContextPtr_t Thread::context(const Duration timeout)
+{
+    Lock lock(m_mtx);
+    if (!m_ctx)
     {
-        std::promise<std::shared_ptr<Connection>> promise;
-        std::future<std::shared_ptr<Connection>> future = promise.get_future();
-        this->_event_queue.enqueue([slot, &promise, this]() { promise.set_value(setInnerLoop(slot)); });
-        return future.get();
+        m_cv.wait_for(lock, boost::chrono::nanoseconds(timeout.count()));
     }
-    else
-    {
-        return slot->connect(_inner_loop);
-    }
-}
-
-ThreadPool* Thread::getPool() const
-{
-    return _pool;
-}
-
-ContextPtr_t Thread::getContext()
-{
-    boost::unique_lock<boost::recursive_timed_mutex> lock(_mtx);
-    if (!_ctx)
-    {
-        _cv.wait_for(lock, boost::chrono::seconds(5));
-    }
-    return _ctx;
-}
-
-Thread::Thread()
-{
-    _pool = nullptr;
-    _inner_loop.reset(new mo::TSignalRelay<int(void)>());
-    _thread = boost::thread(&Thread::main, this);
-    _quit = false;
-    _paused = false;
-    _run = false;
+    return m_ctx;
 }
 
 Thread::Thread(ThreadPool* pool)
 {
-    _inner_loop.reset(new mo::TSignalRelay<int(void)>());
-    _thread = boost::thread(&Thread::main, this);
-    _pool = pool;
-    _quit = false;
-    _paused = false;
-    _run = false;
+    m_thread = boost::thread(&Thread::main, this);
+    m_pool = pool;
 }
 
 Thread::~Thread()
 {
     PROFILE_FUNCTION
-    _quit = true;
-    _run = false;
-    MO_LOG(info) << "Waiting for " << this->_name << " to join";
-    _thread.interrupt();
-    if (!_thread.timed_join(boost::posix_time::time_duration(0, 0, 10)))
+
+    MO_LOG(info) << "Waiting for " << m_name << " to join";
+    m_thread.interrupt();
+    if (!m_thread.timed_join(boost::posix_time::time_duration(0, 0, 10)))
     {
-        MO_LOG(warning) << this->_name << " did not join after waiting 10 seconds";
+        MO_LOG(warning) << m_name << " did not join after waiting 10 seconds";
     }
-    MO_LOG(info) << this->_name << " shutdown complete";
+    MO_LOG(info) << m_name << " shutdown complete";
 }
 
-struct mo::Thread::ThreadSanitizer
+struct ThreadExit
 {
-    ThreadSanitizer(volatile bool& paused_flag, boost::condition_variable_any& cv, mo::Thread& thread)
-        : _paused_flag(paused_flag)
-        , _cv(cv)
-        , m_thread(thread)
+    ~ThreadExit()
     {
+        on_exit();
     }
 
-    ~ThreadSanitizer()
-    {
-        MO_LOG(info) << m_thread._name << " exiting";
-#if defined(HAVE_CUDA)
-        cudaStreamSynchronize(m_thread.getContext()->getCudaStream());
-#endif
-        mo::ThreadSpecificQueue::run();
-        _paused_flag = true;
-        _cv.notify_all();
-        mo::ThreadSpecificQueue::cleanup();
-        std::function<void(void)> f;
-        while (m_thread._work_queue.try_dequeue(f))
-        {
-        }
-        while (m_thread._event_queue.try_dequeue(f))
-        {
-        }
-    }
-    volatile bool& _paused_flag;
-    boost::condition_variable_any& _cv;
-    mo::Thread& m_thread;
+    std::function<void(void)> on_exit;
 };
 
 void Thread::main()
 {
-    ThreadSanitizer allocator_deleter(_paused, _cv, *this);
-    (void)allocator_deleter;
     auto ctx = mo::Context::create();
     {
-        boost::unique_lock<boost::recursive_timed_mutex> lock(_mtx);
-        _ctx = ctx;
+        Lock lock(m_mtx);
+        m_ctx = ctx;
         lock.unlock();
-        _cv.notify_all();
-    }
-    if (_on_start)
-    {
-        _on_start();
+        m_cv.notify_all();
     }
 
-    while (!_quit)
+    ThreadExit on_exit{[this]() {
+        if (m_on_exit)
+        {
+            m_on_exit();
+        }
+    }};
+
+    std::vector<EventToken> events_to_process;
+
+    events_to_process.resize(100);
+    std::set<uint64_t> event_ids;
+
+    std::vector<std::function<void(void)>> work_to_process;
+    work_to_process.resize(100);
+
+    while (!boost::this_thread::interruption_requested())
     {
-        // Execute any events
         try
         {
-            std::function<void(void)> f;
-            if (_work_queue.try_dequeue(f))
-            {
-                f();
-            }
-            if (_event_queue.try_dequeue(f))
-            {
-                f();
-            }
-            mo::ThreadSpecificQueue::runOnce();
+            const size_t num_events = m_event_queue.try_dequeue_bulk(events_to_process.begin(), 100);
 
-            int delay = 0;
-            if (_inner_loop->hasSlots() && _run)
+            for (size_t i = 0; i < num_events; ++i)
             {
-                _paused = false;
-                delay = (*_inner_loop)();
-            }
-            if (delay)
-            {
-                const auto start_time = Time::now();
-                auto delta = Time::now() - start_time;
-                bool processed_work = false;
-                while (delta < mo::ms * delay)
+                if (events_to_process[i].event_id != 0)
                 {
-                    if (_work_queue.try_dequeue(f))
-                    {
-                        processed_work = true;
-                        f();
-                    }
-                    if (_event_queue.try_dequeue(f))
-                    {
-                        processed_work = true;
-                        f();
-                    }
-                    if (mo::ThreadSpecificQueue::runOnce())
-                    {
-                        processed_work = true;
-                    }
-
-                    delta = Time::now() - start_time;
-                    if (!processed_work)
-                    {
-                        boost::this_thread::sleep_for(
-                            boost::chrono::milliseconds(delay) -
-                            boost::chrono::milliseconds(
-                                std::chrono::duration_cast<std::chrono::milliseconds>(Time::now() - start_time)
-                                    .count()));
-                        break;
-                    }
-                }
-                auto size = mo::ThreadSpecificQueue::size();
-                if (size)
-                {
-                    MO_LOG(debug) << size << " events unprocessed on thread " << _name << " [" << getThreadId(_thread)
-                                  << "]";
-                }
-
-                if (size > 100)
-                {
-                    mo::ThreadSpecificQueue::run();
+                    event_ids.insert(events_to_process[i].event_id);
                 }
             }
-            if (!_run)
+
+            for (size_t i = 0; i < num_events; ++i)
             {
-                _paused = true;
-                _cv.notify_all();
+                bool process = true;
+                const auto id = events_to_process[i].event_id;
+                if (id != 0)
+                {
+                    auto itr = event_ids.find(id);
+                    if (itr == event_ids.end())
+                    {
+                        process = false;
+                    }
+                    else
+                    {
+                        event_ids.erase(itr);
+                    }
+                }
+                else
+                {
+                    process = true;
+                }
+                if (process)
+                {
+                    events_to_process[i].event();
+                }
             }
-        }
-        catch (cv::Exception& /*e*/)
-        {
-        }
-        catch (boost::thread_interrupted& /*e*/)
-        {
+            const size_t num_work = m_work_queue.try_dequeue_bulk(work_to_process.begin(), 100);
+            for (size_t i = 0; i < num_work; ++i)
+            {
+                work_to_process[i]();
+            }
         }
         catch (...)
         {
         }
     }
-
     ctx.reset();
-    _ctx.reset();
+    m_ctx.reset();
 }
 
-size_t Thread::getId() const
+size_t Thread::threadId() const
 {
-    return getThreadId(_thread);
+    return getThreadId(m_thread);
 }
 
-const std::string& Thread::getThreadName() const
+const std::string& Thread::threadName() const
 {
-    return _name;
+    return m_name;
 }
 
 bool Thread::isOnThread() const
 {
-    return getId() == getThisThread();
+    return threadId() == getThisThread();
 }

@@ -4,7 +4,7 @@
 
 int main()
 {
-    int call_count = 0;
+    /*int call_count = 0;
     mo::TSlot<int(void)> inner_loop(std::bind([&call_count]() -> int {
         ++call_count;
         return 100;
@@ -18,6 +18,6 @@ int main()
         handle.stop();
     }
     boost::this_thread::sleep_for(boost::chrono::seconds(10));
-    mo::ThreadPool::instance()->cleanup();
+    mo::ThreadPool::instance()->cleanup();*/
     return 0;
 }
