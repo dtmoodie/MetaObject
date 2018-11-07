@@ -100,6 +100,44 @@ namespace
 
             BOOST_REQUIRE_EQUAL(count, 1);
         }
+
+        volatile std::atomic<uint32_t> loop_count;
+        volatile bool exit_loop = false;
+        void loop1()
+        {
+            ++loop_count;
+            if (!exit_loop)
+            {
+                boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+                m_handle.pushEventQueue(this, &Fixture::loop1);
+            }
+        }
+
+        void loop2()
+        {
+            ++loop_count;
+            if (loop_count < 100)
+            {
+                m_handle.pushEventQueue(this, &Fixture::loop2);
+            }
+        }
+
+        void testLoop()
+        {
+            loop_count = 0;
+            m_handle.pushEventQueue(this, &Fixture::loop1);
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+            exit_loop = true;
+            const uint32_t count = loop_count;
+            BOOST_REQUIRE_GT(count, 0);
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+            BOOST_REQUIRE_LT(loop_count, count + 100);
+
+            loop_count = 0;
+            m_handle.pushEventQueue(this, &Fixture::loop2);
+            boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+            BOOST_REQUIRE_EQUAL(loop_count, 100);
+        }
     };
 }
 
@@ -116,4 +154,9 @@ BOOST_FIXTURE_TEST_CASE(work, Fixture)
 BOOST_FIXTURE_TEST_CASE(event, Fixture)
 {
     testEvent();
+}
+
+BOOST_FIXTURE_TEST_CASE(loop, Fixture)
+{
+    testLoop();
 }
