@@ -219,8 +219,8 @@ namespace mo
         // boost::python::return_value_policy<boost::python::reference_existing_object>());
 
         boost::python::class_<Context, std::shared_ptr<Context>, boost::noncopyable>("Context", boost::python::no_init)
-            .add_property("name", &Context::getName)
-            .add_property("thread_id", &Context::getThreadId);
+            .add_property("name", &Context::name)
+            .add_property("thread_id", &Context::threadId);
 
         boost::python::def("setDefaultBufferType", &setDefaultBufferType);
 

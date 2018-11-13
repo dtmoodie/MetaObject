@@ -75,7 +75,7 @@ namespace mo
         virtual uint64_t getFrameNumber() const = 0;
 
         // Get the compute context of this Param
-        virtual Context* getContext() const = 0;
+        virtual IContext* getContext() const = 0;
 
         // Get the coordinate system of this Param
         virtual const ICoordinateSystemPtr_t& getCoordinateSystem() const = 0;
@@ -135,13 +135,13 @@ namespace mo
         IParam* setTreeRoot(const std::string& tree_root_);
 
         // Set the compute context of this Param
-        virtual IParam* setContext(Context* ctx);
+        virtual IParam* setContext(IContext* ctx);
 
         // Set the frame number for this Param
         IParam* setFrameNumber(const uint64_t fn);
 
         // Set the timestamp for this Param
-        IParam* setTimestamp(const mo::Time& ts);
+        IParam* setTimestamp(const Time& ts);
 
         // Set the coordinate system for this Param
         IParam* setCoordinateSystem(const std::shared_ptr<ICoordinateSystem>& cs_);
@@ -163,7 +163,7 @@ namespace mo
         uint64_t getFrameNumber() const override;
 
         // Get the compute context of this Param
-        Context* getContext() const override;
+        IContext* getContext() const override;
 
         // Get the coordinate system of this Param
         const ICoordinateSystemPtr_t& getCoordinateSystem() const override;
@@ -235,16 +235,16 @@ namespace mo
         // Set to true if modified by the user interface etc, set to false by the owning object.
         bool m_modified = false;
         int m_subscribers = 0;
-        mutable mo::Mutex_t* m_mtx = nullptr;
+        mutable Mutex_t* m_mtx = nullptr;
 
-        mo::Context* m_ctx;
+        IContext* m_ctx;
     };
 
     template <class... Args>
     IParam::IParam(const Args&... args)
     {
         m_name = GetKeywordInputDefault<tag::param_name>("unnamed", args...);
-        if (const mo::Time* ts = GetKeywordInputOptional<tag::timestamp>(args...))
+        if (const Time* ts = GetKeywordInputOptional<tag::timestamp>(args...))
         {
             m_header.timestamp = *ts;
         }
@@ -252,8 +252,7 @@ namespace mo
         m_header.frame_number = GetKeywordInputDefault<tag::frame_number>(-1, args...);
         m_header.ctx = GetKeywordInputDefault<tag::context>(nullptr, args...);
         // specialization for std::shared_ptrs
-        m_flags =
-            GetKeywordInputDefault<tag::param_flags>(EnumClassBitset<ParamFlags>(mo::ParamFlags::Control_e), args...);
+        m_flags = GetKeywordInputDefault<tag::param_flags>(EnumClassBitset<ParamFlags>(ParamFlags::Control_e), args...);
         m_tree_root = GetKeywordInputDefault<tag::tree_root>("", args...);
     }
 

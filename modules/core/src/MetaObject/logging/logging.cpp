@@ -438,6 +438,21 @@ mo::ThrowOnDestroy_warning::~ThrowOnDestroy_warning() MO_THROW_SPECIFIER
         throw mo::ExceptionWithCallStack<std::string>(log_stream_.str(), ss.str());
     }
 }
+
+mo::ThrowOnDestroy_error::ThrowOnDestroy_error(const char* function, const char* file, int line)
+    : ThrowOnDestroy(function, file, line)
+{
+}
+mo::ThrowOnDestroy_error::~ThrowOnDestroy_error() MO_THROW_SPECIFIER
+{
+    std::stringstream ss;
+    MO_LOG(error) << "Exception at" << mo::printCallstack(0, true, ss) << log_stream_.str();
+    if (!_currently_throwing_exception)
+    {
+        _currently_throwing_exception = true;
+        throw mo::ExceptionWithCallStack<std::string>(log_stream_.str(), ss.str());
+    }
+}
 namespace mo
 {
 

@@ -1,5 +1,5 @@
-include(cmake/dependencies/python.cmake)
 include(cmake/dependencies/boost.cmake)
+include(cmake/dependencies/python.cmake)
 include(cmake/dependencies/cereal.cmake)
 include(cmake/dependencies/opencv.cmake)
 include(cmake/dependencies/cuda.cmake)

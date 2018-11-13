@@ -1,4 +1,4 @@
-set(Boost_required_components system thread log log_setup)
+set(Boost_required_components system thread fiber)
 if(BUILD_TESTS)
     list(APPEND Boost_required_components unit_test_framework)
 endif()

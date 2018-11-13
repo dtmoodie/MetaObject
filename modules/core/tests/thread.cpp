@@ -3,6 +3,7 @@
 
 #include <MetaObject/thread/Thread.hpp>
 #include <MetaObject/thread/ThreadPool.hpp>
+#include <iostream>
 
 using namespace mo;
 
@@ -141,6 +142,8 @@ namespace
     };
 }
 
+BOOST_AUTO_TEST_SUITE(threading_tests)
+
 BOOST_FIXTURE_TEST_CASE(init, Fixture)
 {
     testInit();
@@ -159,4 +162,5 @@ BOOST_FIXTURE_TEST_CASE(event, Fixture)
 BOOST_FIXTURE_TEST_CASE(loop, Fixture)
 {
     testLoop();
+}
 }

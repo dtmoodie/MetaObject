@@ -138,8 +138,11 @@ struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
 
   private:
     std::map<mo::TypeInfo, std::unique_ptr<ISingletonContainer>> m_singletons;
-};
+}; // struct SystemTable
 
+//////////////////////////////////////////////////////////////////////////////
+///                              Implementation
+//////////////////////////////////////////////////////////////////////////////
 template <class T, class U = T>
 T* singleton(SystemTable* table)
 {

@@ -4,14 +4,14 @@
 #include <RuntimeObjectSystem/ObjectInterfacePerModule.h>
 
 #include "allocator_policies/Combined-inl.hpp"
-#include "allocator_policies/Lock-inl.hpp"
-#include "allocator_policies/Pool-inl.hpp"
-#include "allocator_policies/Stack-inl.hpp"
-#include "allocator_policies/Pitched.hpp"
-#include "allocator_policies/Usage-inl.hpp"
 #include "allocator_policies/Continuous.hpp"
-#include "allocator_policies/RefCount-inl.hpp"
+#include "allocator_policies/Lock-inl.hpp"
 #include "allocator_policies/MergedAllocator-inl.hpp"
+#include "allocator_policies/Pitched.hpp"
+#include "allocator_policies/Pool-inl.hpp"
+#include "allocator_policies/RefCount-inl.hpp"
+#include "allocator_policies/Stack-inl.hpp"
+#include "allocator_policies/Usage-inl.hpp"
 #if MO_HAVE_OPENCV
 #include "opencv_allocator-inl.hpp"
 #endif
@@ -20,21 +20,20 @@
 
 namespace mo
 {
-    template<class XPU>
+    template <class XPU>
     using Combined = UsagePolicy<RefCountPolicy<CombinedPolicy<PoolPolicy<XPU>, StackPolicy<XPU>>>>;
 
-    template<class XPU>
+    template <class XPU>
     using LockedCombined = LockPolicy<Combined<XPU>>;
-
 
     unsigned char* alignMemory(unsigned char* ptr, int elem_size)
     {
-        return ptr + alignmentOffset(ptr, elem_size);
+        return ptr + alignmentOffset(ptr, size_t(elem_size));
     }
 
     const unsigned char* alignMemory(const unsigned char* ptr, int elem_size)
     {
-        return ptr + alignmentOffset(ptr, elem_size);
+        return ptr + alignmentOffset(ptr, size_t(elem_size));
     }
 
     size_t alignmentOffset(const unsigned char* ptr, size_t elem_size)
@@ -42,14 +41,26 @@ namespace mo
         return elem_size - (reinterpret_cast<const size_t>(ptr) % elem_size);
     }
 
-    thread_local std::string g_current_scope;
+    static thread_local std::string g_current_scope;
 
-    const std::string& getScopeName() { return g_current_scope; }
+    const std::string& getScopeName()
+    {
+        return g_current_scope;
+    }
 
-    void setScopeName(const std::string& name) { g_current_scope = name; }
+    void setScopeName(const std::string& name)
+    {
+        g_current_scope = name;
+    }
 #if MO_HAVE_OPENCV
-    typedef MergedAllocator<CvAllocator<CPU, LockedCombined<CPU>, PitchedPolicy>, CvAllocator<GPU, LockedCombined<GPU>, PitchedPolicy>> Allocator_t;
+    typedef MergedAllocator<CvAllocator<CPU, LockedCombined<CPU>, PitchedPolicy>,
+                            CvAllocator<GPU, LockedCombined<GPU>, PitchedPolicy>>
+        Allocator_t;
 #endif
+
+    Allocator::~Allocator()
+    {
+    }
 
     std::shared_ptr<Allocator> Allocator::createDefaultOpencvAllocator()
     {
@@ -83,5 +94,17 @@ namespace mo
         return default_allocator.lock();
     }
 
-    
+    void Allocator::release()
+    {
+    }
+
+    void Allocator::setName(const std::string& name)
+    {
+        m_name = name;
+    }
+
+    const std::string& Allocator::name() const
+    {
+        return m_name;
+    }
 } // namespace mo

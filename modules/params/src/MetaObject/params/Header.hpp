@@ -4,7 +4,7 @@
 
 namespace mo
 {
-    struct Context;
+    struct IContext;
     struct ICoordinateSystem;
     using ICoordinateSystemPtr_t = std::shared_ptr<ICoordinateSystem>;
     using ICoordinateSystemConstPtr_t = std::shared_ptr<const ICoordinateSystem>;
@@ -23,7 +23,7 @@ namespace mo
         mo::OptionalTime timestamp;
         FrameNumber frame_number;
 
-        Context* ctx;
+        IContext* ctx;
         ICoordinateSystemPtr_t coordinate_system;
 
         bool operator==(const Header& other) const;

@@ -1,7 +1,7 @@
 #pragma once
 #include "MetaObject/detail/Export.hpp"
-#include <string>
 #include <memory>
+#include <string>
 namespace mo
 {
     MO_EXPORTS const unsigned char* alignMemory(const unsigned char* ptr, int elemSize);
@@ -15,6 +15,7 @@ namespace mo
     class MO_EXPORTS Allocator
     {
       public:
+        virtual ~Allocator();
         typedef std::shared_ptr<Allocator> Ptr;
         typedef std::shared_ptr<const Allocator> ConstPtr;
 
@@ -30,10 +31,11 @@ namespace mo
         virtual unsigned char* allocateCpu(size_t num_bytes, size_t element_size = 1) = 0;
         virtual void deallocateCpu(unsigned char* ptr, size_t num_bytes) = 0;
 
-        virtual void release() {}
+        virtual void release();
 
-        void setName(const std::string& name) { this->m_name = name; }
-        const std::string& getName() { return m_name; }
+        void setName(const std::string& name);
+        const std::string& name() const;
+
       private:
         std::string m_name;
         static std::weak_ptr<Allocator> default_allocator;

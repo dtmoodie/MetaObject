@@ -18,11 +18,21 @@ ContextPtr_t ThreadHandle::context() const
     return {};
 }
 
+bool ThreadHandle::pushEventQueue(EventToken&& event)
+{
+    if (m_thread)
+    {
+        m_thread->pushEventQueue(std::move(event));
+        return true;
+    }
+    return false;
+}
+
 bool ThreadHandle::pushEventQueue(std::function<void(void)>&& f, const uint64_t id)
 {
     if (m_thread)
     {
-        m_thread->pushEventQueue(std::move(f), id);
+        m_thread->pushEventQueue(EventToken(std::move(f), id));
         return true;
     }
     return false;
@@ -71,20 +81,13 @@ void ThreadHandle::setThreadName(const std::string& name)
         m_thread->setName(name);
         if (m_thread->isOnThread())
         {
-            mo::setThreadName(name.c_str());
-            mo::setStreamName(name.c_str(), m_thread->context()->getCudaStream());
-            m_thread->context()->setName(name);
+            m_thread->setName(name);
         }
         else
         {
             auto thread = m_thread;
             std::string name_ = name;
-            m_thread->pushEventQueue([name_, thread, this]() {
-                mo::setThreadName(name_.c_str());
-                mo::setStreamName(name_.c_str(), thread->context()->getCudaStream());
-                m_thread->setName(name_);
-                m_thread->context()->setName(name_);
-            });
+            m_thread->pushEventQueue(EventToken([name_, thread, this]() { m_thread->setName(name_); }));
         }
     }
 }

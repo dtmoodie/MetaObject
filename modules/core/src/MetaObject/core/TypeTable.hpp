@@ -10,7 +10,6 @@ struct SystemTable;
 
 namespace mo
 {
-
     class MO_EXPORTS TypeTable
     {
       public:
@@ -26,5 +25,5 @@ namespace mo
 
       private:
         std::map<TypeInfo, std::string> m_types;
-    };
-}
+    }; // class TypeTable
+} // namespace mo

@@ -20,18 +20,24 @@ namespace mo
             auto sig_ctx = sig->getContext();
             if (slot_ctx && sig_ctx)
             {
-                if (slot_ctx->process_id == sig_ctx->process_id)
+                if (slot_ctx->processId() == sig_ctx->processId())
                 {
-                    if (slot_ctx->thread_id != sig_ctx->thread_id)
+                    if (slot_ctx->threadId() != sig_ctx->threadId())
                     {
                         ThreadSpecificQueue::push(
-                            std::bind([slot](T... args) { (*slot)(args...); }, args...), slot_ctx->thread_id, slot);
+                            std::bind([slot](T... args) { (*slot)(args...); }, args...), slot_ctx->threadId(), slot);
                         continue;
                     }
                 }
+                else
+                {
+                    THROW(error) << "Not implemented yet";
+                }
             }
             if (slot)
+            {
                 (*slot)(args...);
+            }
         }
     }
 
@@ -54,11 +60,19 @@ namespace mo
             auto slot_ctx = slot->getContext();
             if (slot_ctx)
             {
-                if (slot_ctx->process_id == ctx->process_id && slot_ctx->thread_id != ctx->thread_id)
+                if (slot_ctx->processId() == ctx->processId())
                 {
-                    ThreadSpecificQueue::push(
-                        std::bind([slot](T... args) { (*slot)(args...); }, args...), slot_ctx->thread_id, slot);
+                    if (slot_ctx->threadId() != ctx->threadId())
+                    {
+                        ThreadSpecificQueue::push(
+                            std::bind([slot](T... args) { (*slot)(args...); }, args...), slot_ctx->threadId(), slot);
+                    }
+
                     continue;
+                }
+                else
+                {
+                    THROW(error) << "Not implemented yet";
                 }
             }
             (*slot)(args...);
@@ -130,7 +144,8 @@ namespace mo
     // Return value specialization
 
     template <class R, class... T>
-    TSignalRelay<R(T...)>::TSignalRelay() : _slot(nullptr)
+    TSignalRelay<R(T...)>::TSignalRelay()
+        : _slot(nullptr)
     {
     }
 

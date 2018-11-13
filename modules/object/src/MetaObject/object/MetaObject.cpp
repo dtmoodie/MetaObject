@@ -790,7 +790,7 @@ namespace mo
             }
             if (output_ctx && _ctx.get())
             {
-                if (output_ctx->thread_id != _ctx.get()->thread_id)
+                if (output_ctx->threadId() != _ctx.get()->threadId())
                 {
                     auto buffer = buffer::BufferFactory::createBuffer(output, type_);
                     if (buffer)

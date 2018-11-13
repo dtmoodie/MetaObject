@@ -4,7 +4,7 @@
 #include <string>
 namespace mo
 {
-    class Context;
+    class IContext;
     template <typename T>
     struct EnumTraits;
 
@@ -129,6 +129,6 @@ namespace mo
     MO_EXPORTS std::string BufferFlagsToString(BufferFlags type);
     MO_EXPORTS BufferFlags stringToBufferFlags(const std::string& str);
 
-    MO_EXPORTS BufferFlags getDefaultBufferType(const Context* source, const Context* dest);
-    MO_EXPORTS void setDefaultBufferType(const Context* source, const Context* dest, BufferFlags type);
+    MO_EXPORTS BufferFlags getDefaultBufferType(const IContext* source, const IContext* dest);
+    MO_EXPORTS void setDefaultBufferType(const IContext* source, const IContext* dest, BufferFlags type);
 }

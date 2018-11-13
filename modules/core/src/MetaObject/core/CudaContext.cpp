@@ -1,14 +1,28 @@
+/*
 #include "CudaContext.hpp"
 #if MO_HAVE_CUDA
 #include "MetaObject/logging/logging.hpp"
 #include <MetaObject/logging/profiling.hpp>
 #include <cuda_runtime_api.h>
-    #ifdef MO_HAVE_OPENCV
-        #include <opencv2/core/cuda_stream_accessor.hpp>
-    #endif
+#ifdef MO_HAVE_OPENCV
+#include <opencv2/core/cuda_stream_accessor.hpp>
+#endif
 
 namespace mo
 {
+    CudaContext::CudaContext(TypeInfo type, int priority)
+        : Context(type)
+        , m_priority(priority)
+    {
+        init();
+    }
+
+    CudaContext::CudaContext(int priority)
+        : m_priority(priority)
+    {
+        init();
+    }
+
     CudaContext::~CudaContext()
     {
         {
@@ -20,32 +34,41 @@ namespace mo
         this->m_cuda_stream = nullptr;
     }
 
-    CudaContext::CudaContext(int priority) : m_priority(priority)
+    void CudaContext::init()
     {
         {
-            CUDA_ERROR_CHECK(cudaStreamCreateWithPriority(&m_cuda_stream, cudaStreamNonBlocking, priority))
+            CUDA_ERROR_CHECK(cudaStreamCreateWithPriority(&m_cuda_stream, cudaStreamNonBlocking, m_priority))
                 << " error creating stream";
         }
         {
+            int device_id;
             CUDA_ERROR_CHECK(cudaGetDevice(&device_id));
+            setDeviceId(device_id);
         }
-        context_type = mo::TypeInfo(typeid(CudaContext));
-
     }
 
     void CudaContext::setName(const std::string& name)
     {
-        mo::setStreamName(name.c_str(), getCudaStream());
+        setStreamName(name.c_str(), getCudaStream());
         Context::setName(name);
     }
 
     cv::cuda::Stream& CudaContext::getStream()
     {
+#ifdef MO_HAVE_OPENCV
+        static thread_local cv::cuda::Stream stream;
+        stream = cv::cuda::StreamAccessor::wrapStream(m_cuda_stream);
+        return stream;
+#else
         THROW(warning) << "Not a cv::cuda::Stream context";
         return *static_cast<cv::cuda::Stream*>(nullptr);
+#endif
     }
 
-    cudaStream_t CudaContext::getCudaStream() const { return m_cuda_stream; }
+    cudaStream_t CudaContext::getCudaStream() const
+    {
+        return m_cuda_stream;
+    }
 
     void CudaContext::setStream(const cv::cuda::Stream& stream)
     {
@@ -70,3 +93,4 @@ namespace mo
     }
 }
 #endif
+*/

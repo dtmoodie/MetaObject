@@ -94,7 +94,7 @@ namespace mo
         return this;
     }
 
-    IParam* IParam::setContext(Context* ctx)
+    IParam* IParam::setContext(IContext* ctx)
     {
         m_ctx = ctx;
         return this;
@@ -132,7 +132,7 @@ namespace mo
         return m_header.frame_number;
     }
 
-    Context* IParam::getContext() const
+    IContext* IParam::getContext() const
     {
         return m_ctx;
     }
@@ -337,7 +337,7 @@ namespace mo
         auto ctx = getContext();
         if (ctx)
         {
-            os << " <" << ctx->getName() << ">";
+            os << " <" << ctx->name() << ">";
         }
         return os;
     }

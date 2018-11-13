@@ -242,13 +242,21 @@ namespace mo
     {
 
         template <class... Args>
-        CallstackSeverityException(Args... args) : Exc(std::forward(args)...), _msg(s_msg_buffer)
+        CallstackSeverityException(Args... args)
+            : Exc(std::forward(args)...)
+            , _msg(s_msg_buffer)
         {
         }
 
-        const char* what() const noexcept { return _msg.str().c_str(); }
+        const char* what() const noexcept
+        {
+            return _msg.str().c_str();
+        }
 
-        std::string callstack() { return _callstack; }
+        std::string callstack()
+        {
+            return _callstack;
+        }
 
         CallstackSeverityException& operator()(int error, const char* file, int line, const char* function)
         {
@@ -378,11 +386,23 @@ namespace mo
         ~ThrowOnDestroy_warning() MO_THROW_SPECIFIER;
     };
 
+    class MO_EXPORTS ThrowOnDestroy_error : public ThrowOnDestroy
+    {
+      public:
+        ThrowOnDestroy_error(const char* function, const char* file, int line);
+        ~ThrowOnDestroy_error() MO_THROW_SPECIFIER;
+    };
+
     class MO_EXPORTS EatMessage
     {
       public:
-        EatMessage() {}
-        std::stringstream& stream() { return eat; }
+        EatMessage()
+        {
+        }
+        std::stringstream& stream()
+        {
+            return eat;
+        }
 
       private:
         std::stringstream eat;
@@ -393,10 +413,14 @@ namespace mo
     class MO_EXPORTS LogMessageVoidify
     {
       public:
-        LogMessageVoidify() {}
+        LogMessageVoidify()
+        {
+        }
         // This has to be an operator with a precedence lower than << but
         // higher than ?:
-        void operator&(std::ostream&) {}
+        void operator&(std::ostream&)
+        {
+        }
     };
 
     // Exception wrapper to include native call stack string
@@ -404,11 +428,22 @@ namespace mo
     class ExceptionWithCallStack : public E, public IExceptionWithCallStackBase
     {
       public:
-        ExceptionWithCallStack(const std::string& msg, const std::string& callstack) : E(msg), m_callStack(callstack) {}
+        ExceptionWithCallStack(const std::string& msg, const std::string& callstack)
+            : E(msg)
+            , m_callStack(callstack)
+        {
+        }
 
-        ExceptionWithCallStack(const E& exc, const std::string& callstack) : E(exc), m_callStack(callstack) {}
+        ExceptionWithCallStack(const E& exc, const std::string& callstack)
+            : E(exc)
+            , m_callStack(callstack)
+        {
+        }
 
-        virtual const char* callStack() const override { return m_callStack.c_str(); }
+        virtual const char* callStack() const override
+        {
+            return m_callStack.c_str();
+        }
 
       protected:
         std::string m_callStack;

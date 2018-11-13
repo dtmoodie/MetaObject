@@ -1,5 +1,5 @@
 #pragma once
-
+#include <MetaObject/core/Event.hpp>
 #include <MetaObject/core/detail/ConcurrentQueue.hpp>
 #include <MetaObject/core/detail/Forward.hpp>
 #include <MetaObject/detail/Export.hpp>
@@ -19,14 +19,6 @@ namespace mo
     class ThreadHandle;
     class ISlot;
 
-    struct EventToken
-    {
-        EventToken(std::function<void(void)>&& event = {}, const uint64_t id = 0);
-
-        std::function<void(void)> event;
-        uint64_t event_id;
-    };
-
     class MO_EXPORTS Thread
     {
       public:
@@ -36,7 +28,7 @@ namespace mo
         ~Thread();
 
         // Events have to be handled by this thread
-        void pushEventQueue(std::function<void(void)>&& f, const uint64_t event_id = 0);
+        void pushEventQueue(EventToken&& event);
         // work to be executed on any free thread
         void pushWork(std::function<void(void)>&& f);
 

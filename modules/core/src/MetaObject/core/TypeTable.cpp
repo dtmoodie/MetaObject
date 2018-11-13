@@ -21,17 +21,11 @@ namespace mo
         {
             table = PerModuleInterface::GetInstance()->GetSystemTable();
         }
-        else
-        {
-        }
         MO_ASSERT(table);
         auto inst = table->getSingleton<TypeTable>();
         if (!inst)
         {
             inst = table->setSingleton(std::unique_ptr<TypeTable>(new TypeTable));
-        }
-        else
-        {
         }
         return *inst;
     }
@@ -57,15 +51,15 @@ namespace mo
             {
                 return pair.first;
             }
-            else
-            {
-            }
         }
         THROW(warning) << name << " not a registered type";
         return {};
     }
 
-    void TypeTable::registerType(const TypeInfo& info, const char* name) { m_types[info] = name; }
+    void TypeTable::registerType(const TypeInfo& info, const char* name)
+    {
+        m_types[info] = name;
+    }
 
     std::vector<TypeInfo> TypeTable::listKnownTypes()
     {

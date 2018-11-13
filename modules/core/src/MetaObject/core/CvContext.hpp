@@ -19,6 +19,7 @@ namespace mo
         virtual void setStream(cudaStream_t stream);
 
       protected:
+        CvContext(TypeInfo type);
         cv::cuda::Stream m_cv_stream;
     };
 }

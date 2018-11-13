@@ -1,63 +1,121 @@
 #pragma once
-#include <MetaObject/core/metaobject_config.hpp>
 #include "MetaObject/core.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
+#include <MetaObject/core/metaobject_config.hpp>
+
+#include <functional>
 #include <memory>
 #include <string>
-typedef struct CUstream_st* cudaStream_t;
-namespace cv
-{
-    namespace cuda
-    {
-        class Stream;
-    } // namespace cv::cuda
-} // namespace cv
+#include <vector>
+
 namespace mo
 {
     class Context;
-    class CvContext;
+    class Thread;
+    class EventToken;
+    namespace cuda
+    {
+        struct Context;
+        struct CvContext;
+    }
 
-#if MO_OPENCV_HAVE_CUDA
-    using ContexTypes = std::tuple<Context, CvContext>;
-#else
-    using ContexTypes = std::tuple<Context>;
-#endif
+    struct ContextConstructor;
+
+    struct MO_EXPORTS ContextFactory
+    {
+        using Ptr = std::shared_ptr<Context>;
+        static ContextFactory* instance();
+
+        void registerConstructor(ContextConstructor* ctr);
+
+        Ptr create(const std::string& name, int device_id = 0, int device_priority = 5, int thread_priority = 0);
+
+      private:
+        std::vector<ContextConstructor*> m_ctrs;
+    }; // struct mo::ContextFactory
+
     class Allocator;
-    class MO_EXPORTS Context
+    class MO_EXPORTS IContext
     {
       public:
+        using Ptr = std::shared_ptr<IContext>;
+
         /*!
          * \brief creates a Context based on the underlying hardware
          * \param name of the context
          * \param priority of the created cuda stream
          * \return shared ptr to created context
          */
-        static std::shared_ptr<Context> create(const std::string& name = "", int priority = 5);
-        static Context* getCurrent();
-        static void setCurrent(Context* ctx);
+        static Ptr
+        create(const std::string& name = "", int device_id = 0, int cuda_priority = 5, int thread_priority = 0);
+        static IContext* getCurrent();
+        static void setCurrent(IContext* ctx);
+
+        virtual ~IContext();
+
+        virtual void pushWork(std::function<void(void)>&& work) = 0;
+        virtual void pushEvent(EventToken&&) = 0;
+
+        virtual void setName(const std::string& name) = 0;
+
+        virtual std::string name() const = 0;
+        virtual size_t threadId() const = 0;
+        virtual bool isDeviceContext() const = 0;
+        virtual size_t processId() const = 0;
+        virtual std::shared_ptr<Allocator> allocator() const = 0;
+
+        virtual void setEventHandle(std::function<void(EventToken&&)>&& event_handler) = 0;
+        virtual void setWorkHandler(std::function<void(std::function<void(void)>)>&& work_handler) = 0;
+    }; // class mo::IContext
+
+    class MO_EXPORTS Context : virtual public IContext
+    {
+      public:
+        using Ptr = std::shared_ptr<Context>;
+
+        /*!
+         * \brief creates a Context based on the underlying hardware
+         * \param name of the context
+         * \param priority of the created cuda stream
+         * \return shared ptr to created context
+         */
+        static Ptr
+        create(const std::string& name = "", int cuda_priority = 5, int thread_priority = 0, int device_id = 0);
 
         Context();
         virtual ~Context();
-        virtual cv::cuda::Stream& getStream();
-        virtual cudaStream_t getCudaStream() const;
 
-        virtual void setStream(const cv::cuda::Stream& stream);
-        virtual void setStream(cudaStream_t stream);
+        void setName(const std::string& name) override;
 
-        virtual void setName(const std::string& name);
-        std::string getName() const { return name; }
-        size_t getThreadId() const { return thread_id; }
-        inline bool isDeviceContext() { return device_id != -1; }
+        void pushWork(std::function<void(void)>&& work) override;
+        void pushEvent(EventToken&&) override;
+        std::string name() const override;
+        size_t threadId() const override;
+        bool isDeviceContext() const override;
+        size_t processId() const override;
+        std::shared_ptr<Allocator> allocator() const override;
 
-        size_t process_id = 0;
-        size_t thread_id = 0;
-        int device_id = -1;
-        std::string host_name;
-        std::shared_ptr<Allocator> allocator;
-        // Type of derived class, used for type switch
-        mo::TypeInfo context_type;
+        void setEventHandle(std::function<void(EventToken&&)>&& event_handler) override;
+        void setWorkHandler(std::function<void(std::function<void(void)>)>&& work_handler) override;
 
       protected:
-        std::string name;
-    }; // class mo::Context
+        Context(TypeInfo concrete_type);
+
+        virtual void setDeviceId(const int device_id);
+        virtual void setAllocator(const std::shared_ptr<Allocator>& allocator);
+
+      private:
+        std::string m_name;
+        size_t m_process_id = 0;
+        size_t m_thread_id = 0;
+        int m_device_id = -1;
+        std::string m_host_name;
+        std::shared_ptr<Allocator> m_allocator;
+        // Type of derived class, used for type switch
+        mo::TypeInfo m_context_type;
+
+        std::function<void(std::function<void(void)>)> m_work_handler;
+        std::function<void(EventToken&&)> m_event_handler;
+    }; // class mo::IContext
+
 } // namespace mo

@@ -21,9 +21,9 @@ EventToken::EventToken(std::function<void(void)>&& event, const uint64_t id)
 {
 }
 
-void Thread::pushEventQueue(std::function<void(void)>&& f, const uint64_t id)
+void Thread::pushEventQueue(EventToken&& event)
 {
-    m_event_queue.enqueue(EventToken(std::move(f), id));
+    m_event_queue.enqueue(std::move(event));
     m_cv.notify_all();
 }
 
@@ -94,6 +94,8 @@ void Thread::main()
 {
     auto ctx = mo::Context::create();
     {
+        ctx->setEventHandle([this](EventToken&& event) { this->pushEventQueue(std::move(event)); });
+        ctx->setWorkHandler([this](std::function<void(void)>&& work) { this->pushWork(std::move(work)); });
         Lock lock(m_mtx);
         m_ctx = ctx;
         lock.unlock();
