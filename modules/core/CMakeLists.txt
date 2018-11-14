@@ -20,7 +20,9 @@ endif()
 
 metaobject_declare_module(NAME core SRC src DEPENDS 
     ${OpenCV_LIBS} 
-    ${Boost_TARGETS} 
+    Boost::thread
+    Boost::fiber
+    Boost::stacktrace
     cereal 
     RuntimeObjectSystem
 )

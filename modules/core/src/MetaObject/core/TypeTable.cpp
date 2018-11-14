@@ -52,7 +52,7 @@ namespace mo
                 return pair.first;
             }
         }
-        THROW(warning) << name << " not a registered type";
+        THROW(warning, "{} not a registered type", name);
         return {};
     }
 

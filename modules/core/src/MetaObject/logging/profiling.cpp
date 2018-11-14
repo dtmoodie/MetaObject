@@ -14,7 +14,7 @@
 #include <opencv2/core/cuda_stream_accessor.hpp>
 #endif
 #else
-typedef struct CUstream_st *CUstream;
+typedef struct CUstream_st* CUstream;
 #endif
 #if WIN32
 #include "Windows.h"
@@ -23,7 +23,6 @@ typedef struct CUstream_st *CUstream;
 #endif
 
 using namespace mo;
-
 
 typedef int (*push_f)(const char*);
 typedef int (*pop_f)();
@@ -83,7 +82,7 @@ void initNvtx()
     void* nvtx_handle = dlopen("libnvToolsExt.so", RTLD_NOW);
     if (nvtx_handle)
     {
-        MO_LOG(info) << "Loaded nvtx module";
+        mo::getLogerRegistry().default_logger()->info("Loaded nvtx profiling module");
         nvtx_push = (push_f)dlsym(nvtx_handle, "nvtxRangePushA");
         nvtx_pop = (pop_f)dlsym(nvtx_handle, "nvtxRangePop");
         nvtx_name_thread = (nvtx_name_thread_f)dlsym(nvtx_handle, "nvtxNameOsThreadA");
@@ -91,7 +90,7 @@ void initNvtx()
     }
     else
     {
-        MO_LOG(info) << "No nvtx library loaded";
+        mo::getLogerRegistry().default_logger()->info("no nvtx profiling module loaded");
     }
 #endif
 }
@@ -138,8 +137,7 @@ scoped_profile::scoped_profile(const char* name)
     }
 }
 
-scoped_profile::scoped_profile(
-    const char* name, const char* func)
+scoped_profile::scoped_profile(const char* name, const char* func)
 {
     std::stringstream ss;
     ss << name;

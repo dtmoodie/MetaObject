@@ -115,7 +115,7 @@ namespace mo
             return BLOCKING_STREAM_BUFFER;
         else if (str == "NNStreamBuffer")
             return NEAREST_NEIGHBOR_BUFFER;
-        THROW(debug) << "Invalid string " << str;
+        THROW(debug, "Invalid string {}", str);
         return DEFAULT;
     }
 

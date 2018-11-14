@@ -1,7 +1,6 @@
-#include "Stack-inl.hpp"
+#include "Stack.hpp"
 
 namespace mo
 {
     template class StackPolicy<CPU>;
-    template class StackPolicy<GPU>;
 }

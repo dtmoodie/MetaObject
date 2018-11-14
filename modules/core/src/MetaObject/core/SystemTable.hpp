@@ -153,9 +153,10 @@ T* singleton(SystemTable* table)
         if (ptr == nullptr)
         {
             ptr = table->setSingleton(std::unique_ptr<T>(new U()));
-            MO_LOG(info) << "Creating new " << mo::TypeTable::instance(table).typeToName(mo::TypeInfo(typeid(U)))
-                         << " singleton instance " << static_cast<const void*>(ptr)
-                         << " in system table: " << static_cast<const void*>(table);
+            mo::getDefaultLogger().info("Creating new {} singleton instance {} in system table ({})",
+                                        mo::TypeTable::instance(table).typeToName(mo::TypeInfo(typeid(U))),
+                                        static_cast<const void*>(ptr),
+                                        static_cast<const void*>(table));
         }
     }
     return ptr;
