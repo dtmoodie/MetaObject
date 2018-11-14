@@ -1,22 +1,22 @@
 #pragma once
 #include <MetaObject/detail/Export.hpp>
-#include <list>
 #include <ctime>
+#include <list>
 #include <utility>
 
 namespace mo
 {
+
     class MO_EXPORTS CpuMemoryStack
     {
-    public:
-        static CpuMemoryStack* globalInstance();
-        static CpuMemoryStack* threadInstance();
+      public:
         CpuMemoryStack(size_t delay);
         virtual ~CpuMemoryStack();
         virtual bool allocate(void** ptr, size_t total, size_t elemSize);
         unsigned char* allocate(size_t total);
         virtual bool deallocate(void* ptr, size_t total);
-    private:
+
+      private:
         void cleanup(bool force, bool dtor);
         size_t total_usage = 0;
         size_t deallocation_delay;
