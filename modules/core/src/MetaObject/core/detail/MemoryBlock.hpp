@@ -12,22 +12,8 @@ namespace mo
 
     struct MO_EXPORTS CPU
     {
-        static void* allocate(size_t size);
+        static uint8_t* allocate(size_t size);
         static void deallocate(unsigned char* data);
-    };
-
-    template <class XPU>
-    class MO_EXPORTS Memory
-    {
-      public:
-        static uint8_t* allocate(const uint64_t size)
-        {
-            return XPU::allocate(size);
-        }
-        static void deallocate(uint8_t* data)
-        {
-            XPU::deallocate(data);
-        }
     };
 
     template <class XPU>
@@ -51,7 +37,6 @@ namespace mo
         std::unordered_map<uint8_t*, uint8_t*> m_allocated_blocks;
     };
 
-    using CPUMemory = Memory<CPU>;
     using CPUMemoryBlock = MemoryBlock<CPU>;
     extern template class MemoryBlock<CPU>;
 
@@ -62,14 +47,14 @@ namespace mo
     template <class XPU>
     MemoryBlock<XPU>::MemoryBlock(const size_t size_)
     {
-        m_begin = Memory<XPU>::allocate(size_);
+        m_begin = XPU::allocate(size_);
         m_end = m_begin + size_;
     }
 
     template <class XPU>
     MemoryBlock<XPU>::~MemoryBlock()
     {
-        Memory<XPU>::deallocate(m_begin);
+        XPU::deallocate(m_begin);
     }
 
     template <class XPU>
@@ -114,7 +99,7 @@ namespace mo
 
         if (min != candidates.end() && min->first > size_)
         {
-            m_allocated_blocks[min->second] = static_cast<void*>(min->second + size_);
+            m_allocated_blocks[min->second] = static_cast<uint8_t*>(min->second + size_);
             return min->second;
         }
         return nullptr;

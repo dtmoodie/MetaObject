@@ -67,7 +67,7 @@ namespace mo
     template <class T>
     class TSlot;
 
-    template <class T>
+    template <class T, class Mutex>
     class TSignalRelay;
 
     using Update_s = void(IParam*, Header, UpdateFlags);

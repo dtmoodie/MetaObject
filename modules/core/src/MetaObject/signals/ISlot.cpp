@@ -1,15 +1,14 @@
 #include "MetaObject/signals/ISlot.hpp"
 #include "MetaObject/signals/ISignalRelay.hpp"
-#include "MetaObject/thread/InterThread.hpp"
 
 using namespace mo;
 
 ISlot::~ISlot()
 {
-    ThreadSpecificQueue::removeFromQueue(this);
+    // ThreadSpecificQueue::removeFromQueue(this);
     if (_parent)
     {
-        ThreadSpecificQueue::removeFromQueue(_parent);
+        // ThreadSpecificQueue::removeFromQueue(_parent);
     }
 }
 

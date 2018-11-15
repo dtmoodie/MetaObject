@@ -1,5 +1,4 @@
 #pragma once
-#include <MetaObject/core/Event.hpp>
 #include <MetaObject/core/detail/Forward.hpp>
 #include <MetaObject/detail/Export.hpp>
 
@@ -27,13 +26,7 @@ namespace mo
         bool isOnThread() const;
 
         // Events must be handled on the enqueued thread
-        bool pushEventQueue(EventToken&& token);
-        bool pushEventQueue(std::function<void(void)>&& f, const uint64_t id = 0);
-        template <class T, class... Args>
-        bool pushEventQueue(T* obj, void (T::*fptr)(Args...), Args&&... args)
-        {
-            return pushEventQueue(EventToken::createCallback(obj, fptr, std::forward<Args>(args)...));
-        }
+
         // Work can be stolen and can exist on any thread
         bool pushWork(std::function<void(void)>&& f);
 

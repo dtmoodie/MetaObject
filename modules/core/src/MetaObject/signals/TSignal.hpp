@@ -18,7 +18,7 @@ namespace mo
     class IMetaObject;
     class Context;
     class Connection;
-    template <class Sig>
+    template <class Sig, class Mutex>
     class TSignalRelay;
 
     template <class Sig>
@@ -87,7 +87,7 @@ namespace mo
         {
             return (*_typed_relay)(this, args...);
         }
-        THROW(debug) << "Not Connected to a signal relay";
+        THROW(debug, "Not Connected to a signal relay");
         return R();
     }
 
@@ -99,7 +99,7 @@ namespace mo
         {
             return (*_typed_relay)(ctx, args...);
         }
-        THROW(debug) << "Not Connected to a signal relay";
+        THROW(debug, "Not Connected to a signal relay");
         return R();
     }
 

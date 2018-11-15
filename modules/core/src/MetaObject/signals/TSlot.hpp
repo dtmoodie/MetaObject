@@ -11,7 +11,7 @@ namespace mo
     class TSlot
     {
     };
-    template <typename Sig>
+    template <typename Sig, class Mutex>
     class TSignalRelay;
 
     template <typename R, typename... T>

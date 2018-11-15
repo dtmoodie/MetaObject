@@ -46,7 +46,7 @@ namespace mo
                 return ptr;
             }
         }
-        ptr = Memory<XPU>::allocate(num_bytes);
+        ptr = XPU::allocate(num_bytes);
         return ptr;
     }
 
@@ -78,7 +78,7 @@ namespace mo
                     (time - itr->free_time) * 1000 / CLOCKS_PER_SEC,
                     static_cast<void*>(itr->ptr));
 
-                Memory<XPU>::deallocate(itr->ptr);
+                XPU::deallocate(itr->ptr);
                 itr = m_deallocate_list.erase(itr);
             }
             else

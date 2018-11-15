@@ -1,5 +1,5 @@
 #pragma once
-#include <MetaObject/core/Event.hpp>
+
 #include <MetaObject/core/detail/ConcurrentQueue.hpp>
 #include <MetaObject/core/detail/Forward.hpp>
 #include <MetaObject/detail/Export.hpp>
@@ -27,11 +27,6 @@ namespace mo
         Thread& operator=(const Thread&) = delete;
         ~Thread();
 
-        // Events have to be handled by this thread
-        void pushEventQueue(EventToken&& event);
-        // work to be executed on any free thread
-        void pushWork(std::function<void(void)>&& f);
-
         size_t threadId() const;
         bool isOnThread() const;
         const std::string& threadName() const;
@@ -57,7 +52,6 @@ namespace mo
         boost::condition_variable_any m_cv;
 
         moodycamel::ConcurrentQueue<std::function<void(void)>> m_work_queue;
-        moodycamel::ConcurrentQueue<EventToken> m_event_queue;
 
         std::string m_name;
     };

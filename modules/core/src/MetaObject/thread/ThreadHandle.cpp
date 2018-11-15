@@ -18,31 +18,11 @@ ContextPtr_t ThreadHandle::context() const
     return {};
 }
 
-bool ThreadHandle::pushEventQueue(EventToken&& event)
-{
-    if (m_thread)
-    {
-        m_thread->pushEventQueue(std::move(event));
-        return true;
-    }
-    return false;
-}
-
-bool ThreadHandle::pushEventQueue(std::function<void(void)>&& f, const uint64_t id)
-{
-    if (m_thread)
-    {
-        m_thread->pushEventQueue(EventToken(std::move(f), id));
-        return true;
-    }
-    return false;
-}
-
 bool ThreadHandle::pushWork(std::function<void(void)>&& f)
 {
     if (m_thread)
     {
-        m_thread->pushWork(std::move(f));
+
         return true;
     }
     return false;
@@ -87,7 +67,8 @@ void ThreadHandle::setThreadName(const std::string& name)
         {
             auto thread = m_thread;
             std::string name_ = name;
-            m_thread->pushEventQueue(EventToken([name_, thread, this]() { m_thread->setName(name_); }));
+            // TODO fibers
+            // m_thread->pushEventQueue(EventToken([name_, thread, this]() { m_thread->setName(name_); }));
         }
     }
 }

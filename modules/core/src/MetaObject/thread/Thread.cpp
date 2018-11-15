@@ -15,25 +15,6 @@
 
 using namespace mo;
 
-EventToken::EventToken(std::function<void(void)>&& event, const uint64_t id)
-    : event(std::move(event))
-    , event_id(id)
-{
-}
-
-void Thread::pushEventQueue(EventToken&& event)
-{
-    m_event_queue.enqueue(std::move(event));
-    m_cv.notify_all();
-}
-
-// Work can be stolen and can exist on any thread
-void Thread::pushWork(std::function<void(void)>&& f)
-{
-    m_work_queue.enqueue(f);
-    m_cv.notify_all();
-}
-
 void Thread::setExitCallback(std::function<void(void)>&& f)
 {
     Lock lock(m_mtx);
@@ -71,13 +52,13 @@ Thread::~Thread()
 {
     PROFILE_FUNCTION
 
-    MO_LOG(info) << "Waiting for " << m_name << " to join";
+    MO_LOG(info, "Waiting for {} to join", m_name);
     m_thread.interrupt();
     if (!m_thread.timed_join(boost::posix_time::time_duration(0, 0, 10)))
     {
-        MO_LOG(warning) << m_name << " did not join after waiting 10 seconds";
+        MO_LOG(warn, "{} did not join after waiting 10 seconds");
     }
-    MO_LOG(info) << m_name << " shutdown complete";
+    MO_LOG(info, "{} shutdown complete");
 }
 
 struct ThreadExit
@@ -94,8 +75,9 @@ void Thread::main()
 {
     auto ctx = mo::Context::create();
     {
-        ctx->setEventHandle([this](EventToken&& event) { this->pushEventQueue(std::move(event)); });
-        ctx->setWorkHandler([this](std::function<void(void)>&& work) { this->pushWork(std::move(work)); });
+        // TODO fiber
+        // ctx->setEventHandle([this](EventToken&& event) { this->pushEventQueue(std::move(event)); });
+        // ctx->setWorkHandler([this](std::function<void(void)>&& work) { this->pushWork(std::move(work)); });
         Lock lock(m_mtx);
         m_ctx = ctx;
         lock.unlock();

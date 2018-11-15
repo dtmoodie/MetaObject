@@ -4,18 +4,14 @@
 #include <algorithm>
 #include <utility>
 #include <vector>
-#ifdef HAVE_CUDA
-#include "AllocatorImpl.hpp"
-#include <cuda_runtime.h>
-#endif
 
 namespace mo
 {
 
-    void* CPU::allocate(size_t size)
+    uint8_t* CPU::allocate(size_t size)
     {
-        void* ptr = nullptr;
-        ptr = malloc(size);
+        uint8_t* ptr = nullptr;
+        ptr = static_cast<uint8_t*>(malloc(size));
         MO_ASSERT_FMT(ptr, "Unable to allocate {} bytes", size);
         return ptr;
     }
@@ -25,6 +21,5 @@ namespace mo
         free(data);
     }
 
-    template class Memory<CPU>;
     template class MemoryBlock<CPU>;
 }

@@ -70,6 +70,7 @@ Context::Ptr Context::create(const std::string& name, int device_id, int cuda_pr
 Context::Context()
 {
     m_thread_id = getThisThread();
+    // TODO allocator rework
     m_allocator = Allocator::getDefaultAllocator();
     if (!m_allocator)
     {
@@ -126,7 +127,7 @@ std::string Context::name() const
 Context::~Context()
 {
 #ifdef _DEBUG
-    MO_LOG(info) << "Context [" << m_name << "] destroyed";
+    MO_LOG(info, "Context [{}] destroyed", m_name);
 #endif
 }
 

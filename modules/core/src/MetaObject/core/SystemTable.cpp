@@ -38,7 +38,7 @@ SystemTable::SystemTable()
 {
     if (auto inst_ = inst.lock())
     {
-        THROW(warning, "Can only create one system table per process");
+        THROW(warn, "Can only create one system table per process");
     }
 #ifdef HAVE_CUDA
     int count = 0;

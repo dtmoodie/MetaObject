@@ -1,9 +1,9 @@
 #include "AllocatorImpl.hpp"
-#include "MemoryPool.hpp"
+#include "allocator_policies/Pool.hpp"
 
 namespace mo
 {
-    template <class T>
+    template <class T, class XPU>
     class PinnedStlAllocator
     {
       public:
@@ -17,35 +17,39 @@ namespace mo
         template <class U>
         struct rebind
         {
-            typedef PinnedStlAllocator<U> other;
+            typedef PinnedStlAllocator<U, XPU> other;
         };
 
-        pointer allocate(size_type n, std::allocator<void>::const_pointer hint) { return allocate(n); }
+        pointer allocate(size_type n, std::allocator<void>::const_pointer)
+        {
+            return allocate(n);
+        }
 
         pointer allocate(size_type n)
         {
-            pointer output = nullptr;
-            MO_CUDA_ERROR_CHECK(cudaMallocHost(&output, n * sizeof(pointer)), "");
+            pointer output = XPU::allocate(n * sizeof(pointer));
             return output;
         }
 
-        void deallocate(pointer ptr, size_type n) { MO_CUDA_ERROR_CHECK(cudaFreeHost(ptr), ""); }
+        void deallocate(pointer ptr, size_type)
+        {
+            XPU::deallocate(ptr);
+        }
     };
 
-    template <class T>
-    bool operator==(const PinnedStlAllocator<T>& lhs, const PinnedStlAllocator<T>& rhs)
+    template <class T, class XPU>
+    bool operator==(const PinnedStlAllocator<T, XPU>& lhs, const PinnedStlAllocator<T, XPU>& rhs)
     {
         return &lhs == &rhs;
     }
-    template <class T>
-    bool operator!=(const PinnedStlAllocator<T>& lhs, const PinnedStlAllocator<T>& rhs)
+    template <class T, class XPU>
+    bool operator!=(const PinnedStlAllocator<T, XPU>& lhs, const PinnedStlAllocator<T, XPU>& rhs)
     {
         return &lhs != &rhs;
     }
 
-    // Share pinned pool with CpuPoolPolicy
-    template <class T>
-    class PinnedStlAllocatorPoolThread
+    template <class T, class XPU = CPU>
+    class PinnedStlAllocatorPool
     {
       public:
         typedef T value_type;
@@ -56,7 +60,7 @@ namespace mo
         typedef std::size_t size_type;
         typedef std::ptrdiff_t difference_type;
 
-        PinnedStlAllocatorPoolThread(const std::shared_ptr<CPUMemoryPool>& pool = CPUMemoryPool::instance())
+        PinnedStlAllocatorPool(const std::shared_ptr<CPUMemoryPool>& pool)
             : m_pool(pool)
         {
         }
@@ -64,9 +68,13 @@ namespace mo
         template <class U>
         struct rebind
         {
-            typedef PinnedStlAllocatorPoolThread<U> other;
+            typedef PinnedStlAllocatorPool<U> other;
         };
-        pointer allocate(size_type n, std::allocator<void>::const_pointer hint) { return allocate(n); }
+
+        pointer allocate(size_type n, std::allocator<void>::const_pointer)
+        {
+            return allocate(n);
+        }
 
         pointer allocate(size_type n)
         {
