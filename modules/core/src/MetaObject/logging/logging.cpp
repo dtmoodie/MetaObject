@@ -7,7 +7,7 @@ void mo::initLogging()
 {
 }
 
-spdlog::details::registry& getRegistry()
+spdlog::details::registry& mo::getLoggerRegistry()
 {
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table == nullptr)
@@ -20,5 +20,5 @@ spdlog::details::registry& getRegistry()
 
 spdlog::logger& mo::getDefaultLogger()
 {
-    return *(getRegistry().default_logger());
+    return *(getLoggerRegistry().default_logger());
 }

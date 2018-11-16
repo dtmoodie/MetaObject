@@ -1,4 +1,5 @@
 #pragma once
+#include "../Allocator.hpp"
 #include "../MemoryBlock.hpp"
 #include "MetaObject/logging/logging.hpp"
 #include <ctime>
@@ -7,7 +8,7 @@
 namespace mo
 {
     template <class XPU>
-    class StackPolicy
+    class StackPolicy : public Allocator
     {
       public:
         uint8_t* allocate(const uint64_t num_bytes, const uint64_t elem_size);
@@ -72,7 +73,7 @@ namespace mo
         {
             if ((time - itr->free_time) > m_deallocate_delay)
             {
-                mo::getLogerRegistry().default_logger()->trace(
+                getDefaultLogger().trace(
                     "[GPU] Deallocating block of size {} which was stale for {} milliseconds at {}",
                     itr->size / (1024 * 1024),
                     (time - itr->free_time) * 1000 / CLOCKS_PER_SEC,

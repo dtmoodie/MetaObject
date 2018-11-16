@@ -1,18 +1,19 @@
 #pragma once
+
 #include "MetaObject/logging/logging.hpp"
 
 #include <cstdint>
 
 namespace mo
 {
-    template <class Allocator>
-    class RefCountPolicy : virtual public Allocator
+    template <class BaseAllocator>
+    class RefCountPolicy : public BaseAllocator
     {
       public:
         ~RefCountPolicy();
-        uint8_t* allocate(const uint64_t num_bytes, const uint64_t elem_size);
+        uint8_t* allocate(const uint64_t num_bytes, const uint64_t elem_size) override;
 
-        void deallocate(uint8_t* ptr, const uint64_t num_bytes);
+        void deallocate(uint8_t* ptr, const uint64_t num_bytes) override;
 
         uint64_t refCount() const;
 
@@ -22,8 +23,8 @@ namespace mo
 
     // Implemtation
 
-    template <class Allocator>
-    RefCountPolicy<Allocator>::~RefCountPolicy()
+    template <class BaseAllocator>
+    RefCountPolicy<BaseAllocator>::~RefCountPolicy()
     {
         if (m_ref_count != 0)
         {
@@ -32,10 +33,10 @@ namespace mo
         }
     }
 
-    template <class Allocator>
-    uint8_t* RefCountPolicy<Allocator>::allocate(const uint64_t num_bytes, const uint64_t elem_size)
+    template <class BaseAllocator>
+    uint8_t* RefCountPolicy<BaseAllocator>::allocate(const uint64_t num_bytes, const uint64_t elem_size)
     {
-        auto ptr = Allocator::allocate(num_bytes, elem_size);
+        auto ptr = BaseAllocator::allocate(num_bytes, elem_size);
         if (ptr)
         {
             ++m_ref_count;
@@ -43,15 +44,15 @@ namespace mo
         return ptr;
     }
 
-    template <class Allocator>
-    void RefCountPolicy<Allocator>::deallocate(uint8_t* ptr, const uint64_t num_bytes)
+    template <class BaseAllocator>
+    void RefCountPolicy<BaseAllocator>::deallocate(uint8_t* ptr, const uint64_t num_bytes)
     {
-        Allocator::deallocate(ptr, num_bytes);
+        BaseAllocator::deallocate(ptr, num_bytes);
         --m_ref_count;
     }
 
-    template <class Allocator>
-    uint64_t RefCountPolicy<Allocator>::refCount() const
+    template <class BaseAllocator>
+    uint64_t RefCountPolicy<BaseAllocator>::refCount() const
     {
         return m_ref_count;
     }

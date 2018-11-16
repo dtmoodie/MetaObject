@@ -163,7 +163,7 @@ namespace mo
         std::lock_guard<std::recursive_mutex> lock(mtx);
         if (_typed_relay)
         {
-            if (_typed_relay->_slot == slot)
+            if (_typed_relay->m_slot == slot)
             {
                 _typed_relay.reset();
                 return true;
@@ -280,7 +280,7 @@ namespace mo
         std::lock_guard<std::recursive_mutex> lock(mtx);
         for (auto relay = _typed_relays.begin(); relay != _typed_relays.end(); ++relay)
         {
-            for (auto& slot : (*relay)->_slots)
+            for (auto& slot : (*relay)->m_slots)
             {
                 if (slot == slot_)
                 {

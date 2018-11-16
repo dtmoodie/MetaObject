@@ -54,7 +54,6 @@ namespace mo
         virtual ~IContext();
 
         virtual void pushWork(std::function<void(void)>&& work) = 0;
-        virtual void pushEvent(EventToken&&) = 0;
 
         virtual void setName(const std::string& name) = 0;
 
@@ -64,7 +63,6 @@ namespace mo
         virtual size_t processId() const = 0;
         virtual std::shared_ptr<Allocator> allocator() const = 0;
 
-        virtual void setEventHandle(std::function<void(EventToken&&)>&& event_handler) = 0;
         virtual void setWorkHandler(std::function<void(std::function<void(void)>)>&& work_handler) = 0;
     }; // class mo::IContext
 
@@ -88,14 +86,13 @@ namespace mo
         void setName(const std::string& name) override;
 
         void pushWork(std::function<void(void)>&& work) override;
-        void pushEvent(EventToken&&) override;
+
         std::string name() const override;
         size_t threadId() const override;
         bool isDeviceContext() const override;
         size_t processId() const override;
         std::shared_ptr<Allocator> allocator() const override;
 
-        void setEventHandle(std::function<void(EventToken&&)>&& event_handler) override;
         void setWorkHandler(std::function<void(std::function<void(void)>)>&& work_handler) override;
 
       protected:
@@ -115,7 +112,6 @@ namespace mo
         mo::TypeInfo m_context_type;
 
         std::function<void(std::function<void(void)>)> m_work_handler;
-        std::function<void(EventToken&&)> m_event_handler;
     }; // class mo::IContext
 
 } // namespace mo

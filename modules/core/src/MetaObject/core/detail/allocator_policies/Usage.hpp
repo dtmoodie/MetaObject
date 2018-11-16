@@ -1,13 +1,14 @@
 #pragma once
+#include "../Allocator.hpp"
 #include <cstdint>
 namespace mo
 {
     template <class Allocator>
     struct UsagePolicy : public Allocator
     {
-        unsigned char* allocate(const uint64_t num_bytes, const uint64_t elem_size);
+        uint8_t* allocate(const uint64_t num_bytes, const uint64_t elem_size) override;
 
-        void deallocate(unsigned char* ptr, const uint64_t num_bytes);
+        void deallocate(uint8_t* ptr, const uint64_t num_bytes) override;
 
         uint64_t usage() const;
 
@@ -20,7 +21,7 @@ namespace mo
     //////////////////////////////////////////////////////////////////////////////////////////////////////
 
     template <class Allocator>
-    unsigned char* UsagePolicy<Allocator>::allocate(const uint64_t num_bytes, const uint64_t elem_size)
+    uint8_t* UsagePolicy<Allocator>::allocate(const uint64_t num_bytes, const uint64_t elem_size)
     {
         auto ptr = Allocator::allocate(num_bytes, elem_size);
         if (ptr)
@@ -31,7 +32,7 @@ namespace mo
     }
 
     template <class Allocator>
-    void UsagePolicy<Allocator>::deallocate(unsigned char* ptr, const uint64_t num_bytes)
+    void UsagePolicy<Allocator>::deallocate(uint8_t* ptr, const uint64_t num_bytes)
     {
         Allocator::deallocate(ptr, num_bytes);
         m_usage -= num_bytes;

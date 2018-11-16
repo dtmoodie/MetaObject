@@ -91,9 +91,6 @@ void Thread::main()
         }
     }};
 
-    std::vector<EventToken> events_to_process;
-
-    events_to_process.resize(100);
     std::set<uint64_t> event_ids;
 
     std::vector<std::function<void(void)>> work_to_process;
@@ -103,46 +100,7 @@ void Thread::main()
     {
         try
         {
-            const size_t num_events = m_event_queue.try_dequeue_bulk(events_to_process.begin(), 100);
-
-            for (size_t i = 0; i < num_events; ++i)
-            {
-                if (events_to_process[i].event_id != 0)
-                {
-                    event_ids.insert(events_to_process[i].event_id);
-                }
-            }
-
-            for (size_t i = 0; i < num_events; ++i)
-            {
-                bool process = true;
-                const auto id = events_to_process[i].event_id;
-                if (id != 0)
-                {
-                    auto itr = event_ids.find(id);
-                    if (itr == event_ids.end())
-                    {
-                        process = false;
-                    }
-                    else
-                    {
-                        event_ids.erase(itr);
-                    }
-                }
-                else
-                {
-                    process = true;
-                }
-                if (process)
-                {
-                    events_to_process[i].event();
-                }
-            }
-            const size_t num_work = m_work_queue.try_dequeue_bulk(work_to_process.begin(), 100);
-            for (size_t i = 0; i < num_work; ++i)
-            {
-                work_to_process[i]();
-            }
+            // TODO fiber rework
         }
         catch (...)
         {

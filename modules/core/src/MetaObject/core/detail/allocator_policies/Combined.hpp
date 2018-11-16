@@ -1,15 +1,20 @@
 #pragma once
+#include "../Allocator.hpp"
 #include <cstdint>
+#include <memory>
 
 namespace mo
 {
     template <class SmallAllocator, class LargeAllocator>
-    class CombinedPolicy : virtual public SmallAllocator, virtual public LargeAllocator
+    class CombinedPolicy : public Allocator
     {
       public:
+        using Ptr = std::shared_ptr<CombinedPolicy>;
+        static Ptr create();
+
         CombinedPolicy(const uint64_t threshold = 1 * 1024 * 512);
 
-        unsigned char* allocate(const uint64_t num_bytes, const uint64_t elem_size);
+        uint8_t* allocate(const uint64_t num_bytes, const uint64_t elem_size);
 
         void deallocate(uint8_t* ptr, const uint64_t num_bytes);
         void release();
@@ -18,9 +23,18 @@ namespace mo
 
       private:
         const uint64_t m_threshold;
+        SmallAllocator m_small_allocator;
+        LargeAllocator m_large_allocator;
     };
 
     // implementation
+
+    template <class SmallAllocator, class LargeAllocator>
+    typename CombinedPolicy<SmallAllocator, LargeAllocator>::Ptr
+    CombinedPolicy<SmallAllocator, LargeAllocator>::create()
+    {
+        return std::make_shared<CombinedPolicy<SmallAllocator, LargeAllocator>>();
+    }
 
     template <class SmallAllocator, class LargeAllocator>
     CombinedPolicy<SmallAllocator, LargeAllocator>::CombinedPolicy(const uint64_t threshold)
@@ -34,11 +48,11 @@ namespace mo
     {
         if (num_bytes > m_threshold)
         {
-            return SmallAllocator::allocate(num_bytes, elem_size);
+            return m_small_allocator.allocate(num_bytes, elem_size);
         }
         else
         {
-            return LargeAllocator::allocate(num_bytes, elem_size);
+            return m_large_allocator.allocate(num_bytes, elem_size);
         }
     }
 
@@ -47,18 +61,19 @@ namespace mo
     {
         if (num_bytes > m_threshold)
         {
-            return SmallAllocator::deallocate(ptr, num_bytes);
+            return m_small_allocator.deallocate(ptr, num_bytes);
         }
         else
         {
-            LargeAllocator::deallocate(ptr, num_bytes);
+            m_large_allocator.deallocate(ptr, num_bytes);
         }
     }
+
     template <class SmallAllocator, class LargeAllocator>
     void CombinedPolicy<SmallAllocator, LargeAllocator>::release()
     {
-        SmallAllocator::release();
-        LargeAllocator::release();
+        m_small_allocator.release();
+        m_large_allocator.release();
     }
 
     template <class SmallAllocator, class LargeAllocator>

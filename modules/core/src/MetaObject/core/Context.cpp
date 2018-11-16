@@ -3,10 +3,18 @@
 #include "MetaObject/core/detail/Allocator.hpp"
 #include "MetaObject/core/detail/Allocator.hpp"
 #include "MetaObject/core/detail/HelperMacros.hpp"
+
+#include "MetaObject/core/detail/allocator_policies/Combined.hpp"
+#include "MetaObject/core/detail/allocator_policies/Lock.hpp"
+#include "MetaObject/core/detail/allocator_policies/Pool.hpp"
+#include "MetaObject/core/detail/allocator_policies/RefCount.hpp"
+#include "MetaObject/core/detail/allocator_policies/Stack.hpp"
+#include "MetaObject/core/detail/allocator_policies/Usage.hpp"
+
 #include "MetaObject/logging/logging.hpp"
 #include "MetaObject/logging/profiling.hpp"
-#include "MetaObject/thread/ThreadRegistry.hpp"
 #include <MetaObject/thread/Thread.hpp>
+#include <MetaObject/thread/ThreadRegistry.hpp>
 
 #include "ContextConstructor.hpp"
 
@@ -67,28 +75,22 @@ Context::Ptr Context::create(const std::string& name, int device_id, int cuda_pr
     return ctx;
 }
 
+using Allocator_t = mo::CombinedPolicy<LockPolicy<PoolPolicy<CPU>>, LockPolicy<StackPolicy<CPU>>>;
+
 Context::Context()
 {
     m_thread_id = getThisThread();
     // TODO allocator rework
-    m_allocator = Allocator::getDefaultAllocator();
-    if (!m_allocator)
-    {
-        m_allocator = Allocator::createAllocator();
-        Allocator::setDefaultAllocator(m_allocator);
-    }
+
+    m_allocator = Allocator_t::create();
+
     m_device_id = -1;
 }
 
 Context::Context(TypeInfo type)
 {
     m_thread_id = getThisThread();
-    m_allocator = Allocator::getDefaultAllocator();
-    if (!m_allocator)
-    {
-        m_allocator = Allocator::createAllocator();
-        Allocator::setDefaultAllocator(m_allocator);
-    }
+    m_allocator = Allocator_t::create();
     m_device_id = -1;
     m_context_type = type;
 }
@@ -111,12 +113,6 @@ void Context::pushWork(std::function<void(void)>&& work)
 {
     MO_ASSERT(m_work_handler);
     m_work_handler(std::move(work));
-}
-
-void Context::pushEvent(EventToken&& event)
-{
-    MO_ASSERT(m_event_handler);
-    m_event_handler(std::move(event));
 }
 
 std::string Context::name() const
@@ -159,11 +155,6 @@ void Context::setDeviceId(int id)
 void Context::setAllocator(const std::shared_ptr<Allocator>& allocator)
 {
     m_allocator = allocator;
-}
-
-void Context::setEventHandle(std::function<void(EventToken&&)>&& event_handler)
-{
-    m_event_handler = std::move(event_handler);
 }
 
 void Context::setWorkHandler(std::function<void(std::function<void(void)>)>&& work_handler)

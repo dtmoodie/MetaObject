@@ -1,9 +1,9 @@
-
 #include "MetaObject/core/detail/Counter.hpp"
 
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
+#include "MetaObject/thread/ThreadRegistry.hpp"
 
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
@@ -45,7 +45,8 @@ BOOST_AUTO_TEST_CASE(threaded_signal)
         thread_ctx = mo::Context::create("Thread context");
         while (!boost::this_thread::interruption_requested())
         {
-            ThreadSpecificQueue::run(thread_ctx->threadId());
+            // TODO
+            // ThreadSpecificQueue::run(thread_ctx->threadId());
         }
     });
     boost::this_thread::sleep_for(boost::chrono::milliseconds(100));

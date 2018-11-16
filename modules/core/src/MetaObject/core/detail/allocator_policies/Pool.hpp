@@ -1,3 +1,5 @@
+#pragma once
+#include "../Allocator.hpp"
 #include "../MemoryBlock.hpp"
 #include <list>
 #include <memory>
@@ -7,6 +9,10 @@ namespace mo
     class MemoryPool
     {
       public:
+        using Ptr = std::shared_ptr<MemoryPool<XPU>>;
+
+        static Ptr create();
+
         MemoryPool();
         MemoryPool(const MemoryPool&) = delete;
         MemoryPool& operator=(const MemoryPool&) = delete;
@@ -23,13 +29,14 @@ namespace mo
     };
 
     template <class XPU>
-    class PoolPolicy
+    class PoolPolicy : public Allocator
     {
       public:
-        PoolPolicy(const std::shared_ptr<MemoryPool<XPU>>& pool = MemoryPool<XPU>::instance());
-        unsigned char* allocate(size_t num_bytes, size_t elem_size);
+        PoolPolicy(const std::shared_ptr<MemoryPool<XPU>>& pool = MemoryPool<XPU>::create());
 
-        void deallocate(unsigned char* ptr, size_t num_bytes);
+        uint8_t* allocate(const uint64_t num_bytes, const uint64_t elem_size) override;
+
+        void deallocate(unsigned char* ptr, const uint64_t num_bytes) override;
 
         void release();
 
@@ -42,6 +49,12 @@ namespace mo
     ////////////////////////////////////////////////////////////////////////////////////////////////
     /// Implementation
     ////////////////////////////////////////////////////////////////////////////////////////////////
+
+    template <class XPU>
+    typename MemoryPool<XPU>::Ptr MemoryPool<XPU>::create()
+    {
+        return std::make_shared<MemoryPool<XPU>>();
+    }
 
     template <class XPU>
     MemoryPool<XPU>::MemoryPool()
@@ -98,13 +111,13 @@ namespace mo
     }
 
     template <class XPU>
-    unsigned char* PoolPolicy<XPU>::allocate(size_t num_bytes, size_t elem_size)
+    uint8_t* PoolPolicy<XPU>::allocate(const uint64_t num_bytes, const uint64_t elem_size)
     {
         return m_pool->allocate(num_bytes, elem_size);
     }
 
     template <class XPU>
-    void PoolPolicy<XPU>::deallocate(unsigned char* ptr, size_t num_bytes)
+    void PoolPolicy<XPU>::deallocate(uint8_t* ptr, const uint64_t num_bytes)
     {
         m_pool->deallocate(ptr, num_bytes);
     }

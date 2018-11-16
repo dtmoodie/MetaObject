@@ -18,7 +18,7 @@ namespace mo
 {
     MO_EXPORTS void initLogging();
 
-    MO_EXPORTS spdlog::details::registry& getLogerRegistry();
+    MO_EXPORTS spdlog::details::registry& getLoggerRegistry();
     MO_EXPORTS spdlog::logger& getDefaultLogger();
 
 } // namespace mo

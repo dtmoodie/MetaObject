@@ -79,7 +79,7 @@ namespace mo
         bool disconnect(ISignal* signal);
 
         TSlot<R(T...)>* m_slot;
-        std::mutex m_mtx;
+        Mutex m_mtx;
     };
 
     //////////////////////////////////////////////////////////////////
@@ -89,7 +89,7 @@ namespace mo
     template <class... T, class Mutex>
     void TSignalRelay<void(T...), Mutex>::operator()(TSignal<void(T...)>* sig, const T&... args)
     {
-        typename Mutex::scoped_lock lock(m_mtx);
+        std::lock_guard<Mutex> lock(m_mtx);
         auto mym_slots = m_slots;
         lock.unlock();
         for (auto slot : mym_slots)
@@ -123,7 +123,7 @@ namespace mo
     template <class... T, class Mutex>
     void TSignalRelay<void(T...), Mutex>::operator()(const T&... args)
     {
-        typename Mutex::scoped_lock lock(m_mtx);
+        std::lock_guard<Mutex> lock(m_mtx);
         for (auto slot : m_slots)
         {
             (*slot)(args...);
@@ -133,7 +133,7 @@ namespace mo
     template <class... T, class Mutex>
     void TSignalRelay<void(T...), Mutex>::operator()(Context* ctx, const T&... args)
     {
-        typename Mutex::scoped_lock lock(m_mtx);
+        std::lock_guard<Mutex> lock(m_mtx);
         for (auto slot : m_slots)
         {
             auto slot_ctx = slot->getContext();
@@ -190,7 +190,7 @@ namespace mo
     template <class... T, class Mutex>
     bool TSignalRelay<void(T...), Mutex>::connect(TSlot<void(T...)>* slot)
     {
-        typename Mutex::scoped_lock lock(m_mtx);
+        std::lock_guard<Mutex> lock(m_mtx);
         m_slots.insert(slot);
         return true;
     }
@@ -198,7 +198,7 @@ namespace mo
     template <class... T, class Mutex>
     bool TSignalRelay<void(T...), Mutex>::disconnect(ISlot* slot)
     {
-        typename Mutex::scoped_lock lock(m_mtx);
+        std::lock_guard<Mutex> lock(m_mtx);
         return m_slots.erase(static_cast<TSlot<void(T...)>*>(slot)) > 0;
     }
 
@@ -232,7 +232,7 @@ namespace mo
     template <class R, class... T, class Mutex>
     R TSignalRelay<R(T...), Mutex>::operator()(TSignal<R(T...)>* sig, const T&... args)
     {
-        typename Mutex::scoped_lock lock(m_mtx);
+        std::lock_guard<Mutex> lock(m_mtx);
         if (m_slot)
         {
             return (*m_slot)(args...);
@@ -244,7 +244,7 @@ namespace mo
     template <class R, class... T, class Mutex>
     R TSignalRelay<R(T...), Mutex>::operator()(Context* ctx, const T&... args)
     {
-        typename Mutex::scoped_lock lock(m_mtx);
+        std::lock_guard<Mutex> lock(m_mtx);
         if (m_slot)
             return (*m_slot)(args...);
         THROW(debug, "Slot not connected");
@@ -254,7 +254,7 @@ namespace mo
     template <class R, class... T, class Mutex>
     R TSignalRelay<R(T...), Mutex>::operator()(const T&... args)
     {
-        typename Mutex::scoped_lock lock(m_mtx);
+        std::lock_guard<Mutex> lock(m_mtx);
         if (m_slot && *m_slot)
             return (*m_slot)(args...);
         THROW(debug, "Slot not connected");
@@ -275,7 +275,7 @@ namespace mo
     template <class R, class... T, class Mutex>
     bool TSignalRelay<R(T...), Mutex>::connect(TSlot<R(T...)>* slot)
     {
-        typename Mutex::scoped_lock lock(m_mtx);
+        std::lock_guard<Mutex> lock(m_mtx);
         if (m_slot == slot)
             return false;
         m_slot = slot;
@@ -297,7 +297,7 @@ namespace mo
     template <class R, class... T, class Mutex>
     bool TSignalRelay<R(T...), Mutex>::disconnect(ISlot* slot)
     {
-        typename Mutex::scoped_lock lock(m_mtx);
+        std::lock_guard<Mutex> lock(m_mtx);
         if (m_slot == slot)
         {
             m_slot = nullptr;

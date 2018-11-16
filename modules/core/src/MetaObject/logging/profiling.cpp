@@ -3,10 +3,6 @@
 #include "MetaObject/thread/ThreadRegistry.hpp"
 #include <sstream>
 #include <string>
-#ifdef HAVE_NVTX
-#include "nvToolsExt.h"
-#include "nvToolsExtCuda.h"
-#endif
 
 #ifdef HAVE_CUDA
 #include "cuda.h"
@@ -82,7 +78,7 @@ void initNvtx()
     void* nvtx_handle = dlopen("libnvToolsExt.so", RTLD_NOW);
     if (nvtx_handle)
     {
-        mo::getLogerRegistry().default_logger()->info("Loaded nvtx profiling module");
+        getDefaultLogger().info("Loaded nvtx profiling module");
         nvtx_push = (push_f)dlsym(nvtx_handle, "nvtxRangePushA");
         nvtx_pop = (pop_f)dlsym(nvtx_handle, "nvtxRangePop");
         nvtx_name_thread = (nvtx_name_thread_f)dlsym(nvtx_handle, "nvtxNameOsThreadA");
@@ -90,7 +86,7 @@ void initNvtx()
     }
     else
     {
-        mo::getLogerRegistry().default_logger()->info("no nvtx profiling module loaded");
+        getDefaultLogger().info("no nvtx profiling module loaded");
     }
 #endif
 }
