@@ -1,6 +1,6 @@
 #pragma once
 #include "ISlot.hpp"
-#include "MetaObject/core/Context.hpp"
+#include "MetaObject/core/AsyncStream.hpp"
 #include "TSignal.hpp"
 #include "TSignalRelay.hpp"
 #include <functional>

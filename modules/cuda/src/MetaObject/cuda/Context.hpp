@@ -1,5 +1,5 @@
 #pragma once
-#include <MetaObject/core/Context.hpp>
+#include <MetaObject/core/AsyncStream.hpp>
 
 struct CUstream_st;
 using cudaStream_t = CUstream_st*;

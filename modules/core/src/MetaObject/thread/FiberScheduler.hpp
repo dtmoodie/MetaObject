@@ -9,7 +9,7 @@ namespace mo
 {
     struct PriorityScheduler : public boost::fibers::algo::algorithm_with_properties<FiberProperty>
     {
-        PriorityScheduler();
+        PriorityScheduler(PriorityScheduler** inst);
 
         void awakened(boost::fibers::context* ctx, FiberProperty& props) noexcept override;
 

@@ -1,13 +1,14 @@
 #pragma once
+#include <MetaObject/core/detail/Forward.hpp>
+
+#include "MetaObject/detail/Export.hpp"
+#include "MetaObject/detail/TypeInfo.hpp"
+#include "MetaObject/logging/logging.hpp"
 
 #include "Connection.hpp"
 #include "ISignal.hpp"
 #include "ISignalRelay.hpp"
 #include "TSlot.hpp"
-
-#include "MetaObject/detail/Export.hpp"
-#include "MetaObject/detail/TypeInfo.hpp"
-#include "MetaObject/logging/logging.hpp"
 
 #include <memory>
 #include <mutex>
@@ -15,23 +16,19 @@
 
 namespace mo
 {
-    class IMetaObject;
-    class Context;
-    class Connection;
     template <class Sig, class Mutex>
     class TSignalRelay;
 
     template <class Sig>
-    class TSignal
-    {
-    };
+    class TSignal;
+
     template <class... T>
     class MO_EXPORTS TSignal<void(T...)> : public ISignal
     {
       public:
         TSignal();
         void operator()(T... args);
-        void operator()(Context* ctx, T... args);
+        void operator()(IAsyncStream* ctx, T... args);
         virtual const TypeInfo& getSignature() const;
 
         std::shared_ptr<Connection> connect(ISlot* slot);
@@ -53,7 +50,7 @@ namespace mo
       public:
         TSignal();
         R operator()(T... args);
-        R operator()(Context* ctx, T... args);
+        R operator()(IAsyncStream* ctx, T... args);
         virtual const TypeInfo& getSignature() const;
 
         ConnectionPtr_t connect(ISlot* slot);
@@ -92,12 +89,12 @@ namespace mo
     }
 
     template <class R, class... T>
-    R TSignal<R(T...)>::operator()(Context* ctx, T... args)
+    R TSignal<R(T...)>::operator()(IAsyncStream* stream, T... args)
     {
         std::lock_guard<std::recursive_mutex> lock(mtx);
         if (_typed_relay)
         {
-            return (*_typed_relay)(ctx, args...);
+            return (*_typed_relay)(stream, args...);
         }
         THROW(debug, "Not Connected to a signal relay");
         return R();
@@ -207,14 +204,14 @@ namespace mo
         }
     }
     template <class... T>
-    void TSignal<void(T...)>::operator()(Context* ctx, T... args)
+    void TSignal<void(T...)>::operator()(IAsyncStream* stream, T... args)
     {
         std::lock_guard<std::recursive_mutex> lock(mtx);
         for (auto& relay : _typed_relays)
         {
             if (relay)
             {
-                (*relay)(ctx, args...);
+                (*relay)(stream, args...);
             }
         }
     }

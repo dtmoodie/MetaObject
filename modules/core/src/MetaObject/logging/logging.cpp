@@ -15,7 +15,12 @@ spdlog::details::registry& mo::getLoggerRegistry()
         throw std::runtime_error("SystemTable == nullptr");
     }
 
-    return *table->getSingleton<spdlog::details::registry>();
+    auto registry = table->getSingleton<spdlog::details::registry>();
+    if (!registry)
+    {
+        registry = table->setSingleton(&spdlog::details::registry::instance());
+    }
+    return *registry;
 }
 
 spdlog::logger& mo::getDefaultLogger()

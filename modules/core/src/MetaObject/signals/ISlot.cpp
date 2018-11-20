@@ -5,33 +5,14 @@ using namespace mo;
 
 ISlot::~ISlot()
 {
-    // ThreadSpecificQueue::removeFromQueue(this);
-    if (_parent)
-    {
-        // ThreadSpecificQueue::removeFromQueue(_parent);
-    }
+    // TODO stream remove
 }
 
-void ISlot::setParent(IMetaObject* parent)
+IAsyncStream* ISlot::getStream() const
 {
-    _parent = parent;
+    return m_stream;
 }
-
-IMetaObject* ISlot::getParent() const
+void ISlot::setStream(IAsyncStream* ctx)
 {
-    return _parent;
-}
-Context* ISlot::getContext() const
-{
-    if (_ctx)
-        return _ctx;
-    if (_parent)
-    {
-        // return _parent->getContext();
-    }
-    return nullptr;
-}
-void ISlot::setContext(Context* ctx)
-{
-    _ctx = ctx;
+    m_stream = ctx;
 }

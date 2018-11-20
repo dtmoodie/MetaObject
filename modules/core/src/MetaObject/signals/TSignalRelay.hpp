@@ -2,9 +2,9 @@
 #include "ISignalRelay.hpp"
 
 #include "MetaObject/logging/logging.hpp"
-#include <MetaObject/core/Context.hpp>
-
+#include <MetaObject/core/AsyncStream.hpp>
 #include <boost/fiber/mutex.hpp>
+
 #include <set>
 
 namespace mo
@@ -14,12 +14,12 @@ namespace mo
     template <class Sig>
     class TSignal;
 
-    template <class Sig, class Mutex = boost::fibers::mutex>
+    template <class Sig, class Mutex>
     class TSignalRelay
     {
     };
 
-    class Context;
+    class IAsyncStream;
     template <class... T, class Mutex>
     class TSignalRelay<void(T...), Mutex> : public ISignalRelay
     {
@@ -29,7 +29,7 @@ namespace mo
 
         void operator()(TSignal<void(T...)>* sig, const T&... args);
         void operator()(const T&... args);
-        void operator()(Context* ctx, const T&... args);
+        void operator()(IAsyncStream* ctx, const T&... args);
         const TypeInfo& getSignature() const;
         bool hasSlots() const;
 
@@ -61,7 +61,7 @@ namespace mo
         TSignalRelay();
         R operator()(TSignal<R(T...)>* sig, const T&... args);
         R operator()(const T&... args);
-        R operator()(Context* ctx, const T&... args);
+        R operator()(IAsyncStream* ctx, const T&... args);
         const TypeInfo& getSignature() const;
         bool hasSlots() const;
 
@@ -131,17 +131,17 @@ namespace mo
     }
 
     template <class... T, class Mutex>
-    void TSignalRelay<void(T...), Mutex>::operator()(Context* ctx, const T&... args)
+    void TSignalRelay<void(T...), Mutex>::operator()(IAsyncStream* ctx, const T&... args)
     {
         std::lock_guard<Mutex> lock(m_mtx);
         for (auto slot : m_slots)
         {
-            auto slot_ctx = slot->getContext();
-            if (slot_ctx)
+            auto slot_stream = slot->getStream();
+            if (slot_stream)
             {
-                if (slot_ctx->processId() == ctx->processId())
+                if (slot_stream->processId() == ctx->processId())
                 {
-                    if (slot_ctx->threadId() != ctx->threadId())
+                    if (slot_stream->threadId() != ctx->threadId())
                     {
                         // TODO fibers
                         // ThreadSpecificQueue::push(
@@ -171,7 +171,7 @@ namespace mo
     }
 
     template <class... T, class Mutex>
-    bool TSignalRelay<void(T...), Mutex>::connect(TSignal<void(T...)>* signal)
+    bool TSignalRelay<void(T...), Mutex>::connect(TSignal<void(T...)>*)
     {
         return true;
     }
@@ -203,7 +203,7 @@ namespace mo
     }
 
     template <class... T, class Mutex>
-    bool TSignalRelay<void(T...), Mutex>::disconnect(ISignal* signal)
+    bool TSignalRelay<void(T...), Mutex>::disconnect(ISignal*)
     {
         return false; // Currently not storing signal information to cache the Connection types
     }
@@ -242,11 +242,13 @@ namespace mo
     }
 
     template <class R, class... T, class Mutex>
-    R TSignalRelay<R(T...), Mutex>::operator()(Context* ctx, const T&... args)
+    R TSignalRelay<R(T...), Mutex>::operator()(IAsyncStream* ctx, const T&... args)
     {
         std::lock_guard<Mutex> lock(m_mtx);
         if (m_slot)
+        {
             return (*m_slot)(args...);
+        }
         THROW(debug, "Slot not connected");
         return R();
     }
@@ -283,13 +285,13 @@ namespace mo
     }
 
     template <class R, class... T, class Mutex>
-    bool TSignalRelay<R(T...), Mutex>::connect(ISignal* signal)
+    bool TSignalRelay<R(T...), Mutex>::connect(ISignal*)
     {
         return true;
     }
 
     template <class R, class... T, class Mutex>
-    bool TSignalRelay<R(T...), Mutex>::connect(TSignal<R(T...)>* sig)
+    bool TSignalRelay<R(T...), Mutex>::connect(TSignal<R(T...)>*)
     {
         return true;
     }
@@ -307,7 +309,7 @@ namespace mo
     }
 
     template <class R, class... T, class Mutex>
-    bool TSignalRelay<R(T...), Mutex>::disconnect(ISignal* signal)
+    bool TSignalRelay<R(T...), Mutex>::disconnect(ISignal*)
     {
         return false;
     }

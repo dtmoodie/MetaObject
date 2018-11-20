@@ -1,5 +1,6 @@
 #include "MetaObject/thread/Thread.hpp"
-#include "MetaObject/core/Context.hpp"
+#include "FiberScheduler.hpp"
+#include "MetaObject/core/AsyncStream.hpp"
 #include "MetaObject/core/detail/Allocator.hpp"
 #include "MetaObject/core/detail/Time.hpp"
 #include "MetaObject/logging/profiling.hpp"
@@ -7,6 +8,9 @@
 #include "MetaObject/signals/TSlot.hpp"
 #include "MetaObject/thread/ThreadRegistry.hpp"
 #include "MetaObject/thread/boost_thread.hpp"
+
+#include <boost/fiber/all.hpp>
+
 #include <opencv2/core.hpp>
 #ifdef HAVE_CUDA
 #include <cuda_runtime_api.h>
@@ -17,7 +21,7 @@ using namespace mo;
 
 void Thread::setExitCallback(std::function<void(void)>&& f)
 {
-    Lock lock(m_mtx);
+    Lock_t lock(m_mtx);
     m_on_exit = std::move(f);
 }
 
@@ -32,14 +36,14 @@ ThreadPool* Thread::pool() const
     return m_pool;
 }
 
-ContextPtr_t Thread::context(const Duration timeout)
+IAsyncStreamPtr_t Thread::asyncStream(const Duration timeout)
 {
-    Lock lock(m_mtx);
-    if (!m_ctx)
+    Lock_t lock(m_mtx);
+    if (!m_stream)
     {
-        m_cv.wait_for(lock, boost::chrono::nanoseconds(timeout.count()));
+        m_cv.wait_for(lock, timeout);
     }
-    return m_ctx;
+    return m_stream;
 }
 
 Thread::Thread(ThreadPool* pool)
@@ -73,16 +77,20 @@ struct ThreadExit
 
 void Thread::main()
 {
-    auto ctx = mo::Context::create();
+    auto stream = mo::AsyncStreamFactory::instance()->create();
     {
         // TODO fiber
         // ctx->setEventHandle([this](EventToken&& event) { this->pushEventQueue(std::move(event)); });
         // ctx->setWorkHandler([this](std::function<void(void)>&& work) { this->pushWork(std::move(work)); });
-        Lock lock(m_mtx);
-        m_ctx = ctx;
+        Lock_t lock(m_mtx);
+        m_stream = stream;
         lock.unlock();
         m_cv.notify_all();
     }
+
+    PriorityScheduler* instance;
+    boost::fibers::use_scheduling_algorithm<PriorityScheduler>(&instance);
+    // boost::fibers::context::active()->get_scheduler()->get_algo();
 
     ThreadExit on_exit{[this]() {
         if (m_on_exit)
@@ -106,8 +114,8 @@ void Thread::main()
         {
         }
     }
-    ctx.reset();
-    m_ctx.reset();
+    stream.reset();
+    m_stream.reset();
 }
 
 size_t Thread::threadId() const

@@ -8,6 +8,7 @@
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 
+#include <boost/fiber/mutex.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test_suite.hpp>
 
@@ -31,8 +32,8 @@ BOOST_AUTO_TEST_CASE(signals)
 
 BOOST_AUTO_TEST_CASE(threaded_signal)
 {
-    auto ctx = mo::Context::create();
-    Context::Ptr thread_ctx;
+    auto stream = mo::AsyncStreamFactory::instance()->create();
+    IAsyncStreamPtr_t thread_ctx;
 
     TSlot<void(int)> slot = TSlot<void(int)>(std::bind(
         [&thread_ctx](int value) -> void {
@@ -42,7 +43,7 @@ BOOST_AUTO_TEST_CASE(threaded_signal)
         std::placeholders::_1));
 
     boost::thread thread = boost::thread([&thread_ctx]() -> void {
-        thread_ctx = mo::Context::create("Thread context");
+        thread_ctx = mo::AsyncStreamFactory::instance()->create("Thread context");
         while (!boost::this_thread::interruption_requested())
         {
             // TODO
@@ -51,13 +52,13 @@ BOOST_AUTO_TEST_CASE(threaded_signal)
     });
     boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
 
-    slot.setContext(thread_ctx.get());
+    slot.setStream(thread_ctx.get());
 
     TSignal<void(int)> signal;
     auto Connection = slot.connect(&signal);
 
     boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
-    signal(ctx.get(), 5);
+    signal(stream.get(), 5);
     thread.interrupt();
     thread.join();
 }

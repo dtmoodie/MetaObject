@@ -15,24 +15,10 @@ namespace mo
 
         void BufferFactory::registerConstructor(const BufferConstructor& constructor, BufferFlags buffer)
         {
-            auto instance = PerModuleInterface::GetInstance();
-            if (instance)
-            {
-                auto table = instance->GetSystemTable();
-                std::function<void(SystemTable*)> func = [constructor, buffer](SystemTable* table) {
-                    CtrTable* ctr_table = singleton<CtrTable>(table);
-                    (*ctr_table)[buffer] = constructor;
-                };
-
-                if (table)
-                {
-                    func(table);
-                }
-                else
-                {
-                    instance->AddDelayInitFunction(func);
-                }
-            }
+            SystemTable::staticDispatchToSystemTable([constructor, buffer](SystemTable* table) {
+                CtrTable* ctr_table = singleton<CtrTable>(table);
+                (*ctr_table)[buffer] = constructor;
+            });
         }
 
         IBuffer* BufferFactory::createBuffer(IParam* param, BufferFlags flags)

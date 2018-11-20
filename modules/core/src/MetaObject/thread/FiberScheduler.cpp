@@ -1,7 +1,14 @@
 #include "FiberScheduler.hpp"
+#include <MetaObject/logging/logging.hpp>
 
 namespace mo
 {
+
+    PriorityScheduler::PriorityScheduler(PriorityScheduler** inst)
+    {
+        *inst = this;
+        MO_LOG(info, "Instantiating scheduler");
+    }
 
     void PriorityScheduler::awakened(boost::fibers::context* ctx, FiberProperty& props) noexcept
     {

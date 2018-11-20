@@ -1,20 +1,12 @@
 #ifndef MO_THREAD_FIBER_PROPERTIES_HPP
 #define MO_THREAD_FIBER_PROPERTIES_HPP
+#include "PriorityLevels.hpp"
+
 #include <boost/fiber/properties.hpp>
 #include <cstdint>
 
 namespace mo
 {
-
-    enum PriorityLevels
-    {
-        LOWEST,
-        LOW,
-        MEDIUM,
-        HIGH,
-        HIGHEST
-    };
-
     struct FiberProperty : public boost::fibers::fiber_properties
     {
         FiberProperty(boost::fibers::context* ctx);
