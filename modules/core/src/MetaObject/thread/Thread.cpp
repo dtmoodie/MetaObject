@@ -11,10 +11,6 @@
 
 #include <boost/fiber/all.hpp>
 
-#include <opencv2/core.hpp>
-#ifdef HAVE_CUDA
-#include <cuda_runtime_api.h>
-#endif
 #include <future>
 
 using namespace mo;
@@ -36,7 +32,7 @@ ThreadPool* Thread::pool() const
     return m_pool;
 }
 
-IAsyncStreamPtr_t Thread::asyncStream(const Duration timeout)
+IAsyncStreamPtr_t Thread::asyncStream(const Duration timeout) const
 {
     Lock_t lock(m_mtx);
     if (!m_stream)
@@ -80,8 +76,6 @@ void Thread::main()
     auto stream = mo::AsyncStreamFactory::instance()->create();
     {
         // TODO fiber
-        // ctx->setEventHandle([this](EventToken&& event) { this->pushEventQueue(std::move(event)); });
-        // ctx->setWorkHandler([this](std::function<void(void)>&& work) { this->pushWork(std::move(work)); });
         Lock_t lock(m_mtx);
         m_stream = stream;
         lock.unlock();
@@ -90,7 +84,6 @@ void Thread::main()
 
     PriorityScheduler* instance;
     boost::fibers::use_scheduling_algorithm<PriorityScheduler>(&instance);
-    // boost::fibers::context::active()->get_scheduler()->get_algo();
 
     ThreadExit on_exit{[this]() {
         if (m_on_exit)

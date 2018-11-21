@@ -36,22 +36,20 @@ namespace mo
         void setName(const std::string& name);
 
         ThreadPool* pool() const;
-        IAsyncStreamPtr_t asyncStream(const Duration timeout = 5 * second);
+        IAsyncStreamPtr_t asyncStream(const Duration timeout = 5 * second) const;
 
       private:
         void main();
 
         boost::thread m_thread;
 
-        Mutex_t m_mtx;
+        mutable Mutex_t m_mtx;
+        mutable boost::fibers::condition_variable_any m_cv;
+
         std::function<void(void)> m_on_exit;
 
         IAsyncStreamPtr_t m_stream;
         ThreadPool* m_pool = nullptr;
-
-        boost::fibers::condition_variable_any m_cv;
-
-        moodycamel::ConcurrentQueue<std::function<void(void)>> m_work_queue;
 
         std::string m_name;
     };
