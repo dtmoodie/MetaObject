@@ -67,7 +67,7 @@ namespace mo
         using Ptr_t = std::shared_ptr<AsyncStream>;
 
         AsyncStream();
-        virtual ~AsyncStream();
+        ~AsyncStream() override;
 
         void pushWork(std::function<void(void)>&& work) override;
         void pushEvent(std::function<void(void)>&& event, const uint64_t event_id = 0) override;
@@ -96,6 +96,7 @@ namespace mo
         AllocatorPtr_t m_allocator;
         TypeInfo m_type;
         uint64_t m_stream_id = 0;
+        PriorityLevels m_host_priority = MEDIUM;
     }; // class mo::IContext
 
 } // namespace mo

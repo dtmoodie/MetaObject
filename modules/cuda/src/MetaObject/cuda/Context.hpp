@@ -8,17 +8,17 @@ namespace mo
 {
     namespace cuda
     {
-        struct IContext : virtual public mo::IContext
+        struct IContext : virtual public mo::IAsyncStream
         {
             virtual cudaStream_t stream() const = 0;
             virtual void setStream(cudaStream_t stream) = 0;
 
         }; // struct mo::cuda::Context
 
-        struct Context : virtual public cuda::IContext, public mo::Context
+        struct Context : virtual public cuda::IContext, public mo::AsyncStream
         {
             Context();
-            ~Context();
+            ~Context() override;
 
             cudaStream_t stream() const override;
 

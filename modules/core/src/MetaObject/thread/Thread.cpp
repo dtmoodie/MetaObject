@@ -82,8 +82,7 @@ void Thread::main()
         m_cv.notify_all();
     }
 
-    PriorityScheduler* instance;
-    boost::fibers::use_scheduling_algorithm<PriorityScheduler>(&instance);
+    boost::fibers::use_scheduling_algorithm<PriorityScheduler>();
 
     ThreadExit on_exit{[this]() {
         if (m_on_exit)

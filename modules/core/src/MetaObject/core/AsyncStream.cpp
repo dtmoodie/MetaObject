@@ -7,6 +7,7 @@
 
 #include "MetaObject/logging/logging.hpp"
 #include "MetaObject/logging/profiling.hpp"
+#include "MetaObject/thread/FiberProperties.hpp"
 #include <MetaObject/thread/Thread.hpp>
 #include <MetaObject/thread/ThreadRegistry.hpp>
 
@@ -103,12 +104,18 @@ void AsyncStream::setName(const std::string& name)
 
 void AsyncStream::pushWork(std::function<void(void)>&& work)
 {
-    // TODO fibers
+    boost::fibers::fiber fiber(work);
+    FiberProperty& prop = fiber.properties<FiberProperty>();
+    prop.setPriority(m_host_priority);
+    fiber.detach();
 }
 
 void AsyncStream::pushEvent(std::function<void(void)>&& event, const uint64_t event_id)
 {
-    // TODO event work stuffs
+    boost::fibers::fiber fiber(event);
+    FiberProperty& prop = fiber.properties<FiberProperty>();
+    prop.setBoth(m_host_priority, event_id);
+    fiber.detach();
 }
 
 std::string AsyncStream::name() const
@@ -128,6 +135,7 @@ std::shared_ptr<Allocator> AsyncStream::hostAllocator() const
 
 void AsyncStream::setHostPriority(const PriorityLevels p)
 {
+    m_host_priority = p;
 }
 
 void AsyncStream::setDevicePriority(const PriorityLevels p)

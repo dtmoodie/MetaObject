@@ -1,8 +1,10 @@
+#include <boost/fiber/all.hpp>
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test_suite.hpp>
 
 #include <MetaObject/thread/Thread.hpp>
 #include <MetaObject/thread/ThreadPool.hpp>
+
 #include <iostream>
 
 using namespace mo;
@@ -13,31 +15,34 @@ namespace
     {
         ThreadPool m_thread_pool;
         std::shared_ptr<Thread> m_thread;
+        IAsyncStreamPtr_t m_stream;
         volatile int count = 0;
 
         Fixture()
         {
-            m_thread = m_thread_pool.requestThread();
+
         }
 
         void testInit()
         {
-            // BOOST_REQUIRE(m_handle.context());
-            // m_handle.setExitCallback([]() { std::cout << "Thread shutting down" << std::endl; });
+            m_thread = m_thread_pool.requestThread();
+            BOOST_REQUIRE(m_thread);
+            m_stream = m_thread->asyncStream();
+            BOOST_REQUIRE(m_stream);
         }
 
         void testWork()
         {
             volatile bool executed = false;
-
-            /*m_handle.pushWork([&executed]() {
+            boost::fibers::fiber fiber([&executed]() {
                 std::cout << "Executing work" << std::endl;
                 executed = true;
-            });*/
+            });
+            fiber.detach();
             int count = 0;
             while (!executed)
             {
-                boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+                boost::this_fiber::sleep_for(1 * ms);
                 ++count;
                 BOOST_REQUIRE(count < 100);
             }
@@ -59,8 +64,12 @@ namespace
             ++loop_count;
             if (!exit_loop)
             {
-                boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
-                // m_handle.pushEventQueue(this, &Fixture::loop1);
+                boost::this_fiber::sleep_for(1 * ms);
+                boost::fibers::fiber fiber([this]()
+                {
+                    loop1();
+                });
+                fiber.detach();
             }
         }
 
@@ -69,25 +78,42 @@ namespace
             ++loop_count;
             if (loop_count < 100)
             {
-                // m_handle.pushEventQueue(this, &Fixture::loop2);
+                boost::this_fiber::sleep_for(1 * ms);
+                boost::fibers::fiber fiber([this]()
+                {
+                    loop2();
+                });
+                fiber.detach();
             }
         }
 
         void testLoop()
         {
             loop_count = 0;
-            // m_handle.pushEventQueue(this, &Fixture::loop1);
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+            boost::fibers::fiber fiber([this]()
+            {
+                loop1();
+            });
+            fiber.detach();
+            boost::this_fiber::sleep_for(100 * ms);
             exit_loop = true;
             const uint32_t count = loop_count;
             BOOST_REQUIRE_GT(count, 0);
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
+            boost::this_fiber::sleep_for(100 * ms);
             BOOST_REQUIRE_LT(loop_count, count + 100);
 
             loop_count = 0;
-            // m_handle.pushEventQueue(this, &Fixture::loop2);
-            boost::this_thread::sleep_for(boost::chrono::milliseconds(1000));
+
+            boost::this_fiber::sleep_for(1000 * ms);
+            BOOST_REQUIRE_EQUAL(loop_count, 0);
+
+            loop2();
+
+
+            boost::this_fiber::sleep_for(1000 * ms);
             BOOST_REQUIRE_EQUAL(loop_count, 100);
+
+
         }
     };
 }

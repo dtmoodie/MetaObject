@@ -4,9 +4,8 @@
 namespace mo
 {
 
-    PriorityScheduler::PriorityScheduler(PriorityScheduler** inst)
+    PriorityScheduler::PriorityScheduler()
     {
-        *inst = this;
         MO_LOG(info, "Instantiating scheduler");
     }
 

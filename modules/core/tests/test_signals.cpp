@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(signals)
         BOOST_CHECK_EQUAL(signal(4), 8);
         BOOST_CHECK_EQUAL(signal(8), 16);
     }
-    BOOST_CHECK_THROW(signal(4), std::string);
+    BOOST_CHECK_THROW(signal(4), std::runtime_error);
 }
 
 BOOST_AUTO_TEST_CASE(threaded_signal)
