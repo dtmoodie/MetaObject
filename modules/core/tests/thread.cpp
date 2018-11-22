@@ -11,25 +11,10 @@ using namespace mo;
 
 namespace
 {
-    struct Fixture
+    struct RawFiberFixture
     {
-        ThreadPool m_thread_pool;
-        std::shared_ptr<Thread> m_thread;
-        IAsyncStreamPtr_t m_stream;
         volatile int count = 0;
 
-        Fixture()
-        {
-
-        }
-
-        void testInit()
-        {
-            m_thread = m_thread_pool.requestThread();
-            BOOST_REQUIRE(m_thread);
-            m_stream = m_thread->asyncStream();
-            BOOST_REQUIRE(m_stream);
-        }
 
         void testWork()
         {
@@ -112,31 +97,66 @@ namespace
 
             boost::this_fiber::sleep_for(1000 * ms);
             BOOST_REQUIRE_EQUAL(loop_count, 100);
+        }
+    };
+
+    struct StreamFixture
+    {
+        IAsyncStreamPtr_t m_stream;
+
+        StreamFixture()
+        {
+            m_stream = std::make_shared<AsyncStream>();
+        }
 
 
+        int count = 0;
+        bool stop = false;
+        void loopImpl()
+        {
+            ++count;
+            if(!stop)
+            {
+                boost::this_fiber::sleep_for(1 * ms);
+                m_stream->pushWork([this](){loopImpl();});
+            }
+        }
+
+        void testLoop()
+        {
+            stop = false;
+            count = 0;
+            m_stream->pushWork([this](){loopImpl();});
+
+            boost::this_fiber::sleep_for(100 * ms);
+            stop = true;
+            boost::this_fiber::sleep_for(10 * ms);
+            BOOST_REQUIRE_GT(count, 80);
         }
     };
 }
 
 BOOST_AUTO_TEST_SUITE(threading_tests)
 
-BOOST_FIXTURE_TEST_CASE(init, Fixture)
-{
-    testInit();
-}
 
-BOOST_FIXTURE_TEST_CASE(work, Fixture)
+BOOST_FIXTURE_TEST_CASE(work, RawFiberFixture)
 {
     testWork();
 }
 
-BOOST_FIXTURE_TEST_CASE(event, Fixture)
+BOOST_FIXTURE_TEST_CASE(event, RawFiberFixture)
 {
     testEvent();
 }
 
-BOOST_FIXTURE_TEST_CASE(loop, Fixture)
+BOOST_FIXTURE_TEST_CASE(loop, RawFiberFixture)
 {
     testLoop();
 }
+
+BOOST_FIXTURE_TEST_CASE(stream_loop, StreamFixture)
+{
+    testLoop();
+}
+
 }
