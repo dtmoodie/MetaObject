@@ -3,7 +3,6 @@
 #include <MetaObject/thread/ThreadPool.hpp>
 
 #include <boost/context/detail/prefetch.hpp>
-#include <boost/fiber/algo/work_stealing.hpp>
 namespace mo
 {
 

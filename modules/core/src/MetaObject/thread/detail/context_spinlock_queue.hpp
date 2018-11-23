@@ -5,8 +5,8 @@
 //          http://www.boost.org/LICENSE_1_0.txt)
 //
 
-#ifndef BOOST_FIBERS_DETAIL_SPINLOCK_QUEUE_H
-#define BOOST_FIBERS_DETAIL_SPINLOCK_QUEUE_H
+#ifndef MO_FIBERS_DETAIL_SPINLOCK_QUEUE_H
+#define MO_FIBERS_DETAIL_SPINLOCK_QUEUE_H
 
 #include <cstddef>
 #include <cstring>
