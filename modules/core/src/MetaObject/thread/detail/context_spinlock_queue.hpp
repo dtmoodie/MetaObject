@@ -28,120 +28,168 @@ namespace mo
     {
         namespace detail
         {
-
-            class context_spinlock_queue
+            struct DefaultContextStealPolicy
             {
-              private:
-                typedef boost::fibers::context* slot_type;
-
-                mutable boost::fibers::detail::spinlock splk_{};
-                std::size_t pidx_{0};
-                std::size_t cidx_{0};
-                std::size_t capacity_;
-                slot_type* slots_;
-
-                void resize_()
+                static bool canSteal(boost::fibers::context* ctx)
                 {
-                    slot_type* old_slots = slots_;
-                    slots_ = new slot_type[2 * capacity_];
-                    std::size_t offset = capacity_ - cidx_;
-                    std::memcpy(slots_, old_slots + cidx_, offset * sizeof(slot_type));
-                    if (0 < cidx_)
+                    return !ctx->is_context(boost::fibers::type::pinned_context);
+                }
+            };
+
+            template <class T = boost::fibers::context, class STEAL_POLICY = DefaultContextStealPolicy>
+            struct RobbableQueue
+            {
+                RobbableQueue(const std::size_t capacity = 4096)
+                    : m_push_idx(0)
+                    , m_current_idx(0)
+                    , m_capacity(capacity)
+                {
+                    m_slots = new T[m_capacity];
+                }
+
+                ~RobbableQueue()
+                {
+                    delete[] m_slots;
+                }
+
+                RobbableQueue(RobbableQueue const&) = delete;
+                RobbableQueue& operator=(RobbableQueue const&) = delete;
+
+                std::size_t size() const noexcept
+                {
+                    if (m_current_idx > m_push_idx)
                     {
-                        std::memcpy(slots_ + offset, old_slots, pidx_ * sizeof(slot_type));
-                    }
-                    cidx_ = 0;
-                    pidx_ = capacity_ - 1;
-                    capacity_ *= 2;
-                    delete[] old_slots;
-                }
-
-                bool is_full_() const noexcept
-                {
-                    return cidx_ == ((pidx_ + 1) % capacity_);
-                }
-
-                bool is_empty_() const noexcept
-                {
-                    return cidx_ == pidx_;
-                }
-
-                std::size_t get_size() const noexcept
-                {
-                    if (cidx_ > pidx_)
-                    {
-                        return (capacity_ - cidx_) + pidx_;
+                        return (m_capacity - m_current_idx) + m_push_idx;
                     }
                     else
                     {
-                        return (pidx_ - cidx_);
+                        return (m_push_idx - m_current_idx);
                     }
                 }
 
+                bool isFull() const noexcept
+                {
+                    return m_current_idx == ((m_push_idx + 1) % m_capacity);
+                }
+
+                void push(T* c)
+                {
+                    if (isFull())
+                    {
+                        resize();
+                    }
+                    m_slots[m_push_idx] = c;
+                    m_push_idx = (m_push_idx + 1) % m_capacity;
+                }
+
+                bool isEmpty() const noexcept
+                {
+                    return m_current_idx == m_push_idx;
+                }
+
+                T* pop()
+                {
+                    T* c = nullptr;
+                    if (!isEmpty())
+                    {
+                        c = m_slots[m_current_idx];
+                        m_current_idx = (m_current_idx + 1) % m_capacity;
+                    }
+                    return c;
+                }
+
+                T* steal()
+                {
+                    T* c = nullptr;
+                    if (!isEmpty())
+                    {
+                        c = m_slots[m_current_idx];
+                        if (!STEAL_POLICY::canSteal(c))
+                        {
+                            return nullptr;
+                        }
+                        m_current_idx = (m_current_idx + 1) % m_capacity;
+                    }
+                    return c;
+                }
+
+                struct iterator
+                {
+                    T** data;
+                };
+
+              private:
+                void resize()
+                {
+                    T** old_slots = m_slots;
+                    m_slots = new T*[2 * m_capacity];
+                    std::size_t offset = m_capacity - m_current_idx;
+                    std::memcpy(m_slots, old_slots + m_current_idx, offset * sizeof(T));
+                    if (0 < m_current_idx)
+                    {
+                        std::memcpy(m_slots + offset, old_slots, m_push_idx * sizeof(T));
+                    }
+                    m_current_idx = 0;
+                    m_push_idx = m_capacity - 1;
+                    m_capacity *= 2;
+                    delete[] old_slots;
+                }
+
+                std::size_t m_push_idx;
+                std::size_t m_current_idx;
+                std::size_t m_capacity;
+                T** m_slots;
+            };
+
+            template <class T = boost::fibers::context>
+            class SpinlockQueue
+            {
+              private:
+                mutable boost::fibers::detail::spinlock m_splk{};
+                RobbableQueue<T> m_queue;
+
               public:
-                context_spinlock_queue(std::size_t capacity = 4096)
-                    : capacity_{capacity}
+                SpinlockQueue(std::size_t capacity = 4096)
+                    : m_queue{capacity}
                 {
-                    slots_ = new slot_type[capacity_];
+                    m_slots = new slot_t[m_capacity];
                 }
 
-                ~context_spinlock_queue()
+                ~SpinlockQueue()
                 {
-                    delete[] slots_;
                 }
 
-                context_spinlock_queue(context_spinlock_queue const&) = delete;
-                context_spinlock_queue& operator=(context_spinlock_queue const&) = delete;
+                SpinlockQueue(SpinlockQueue const&) = delete;
+                SpinlockQueue& operator=(SpinlockQueue const&) = delete;
 
                 bool empty() const noexcept
                 {
-                    boost::fibers::detail::spinlock_lock lk{splk_};
-                    return is_empty_();
+                    boost::fibers::detail::spinlock_lock lk{m_splk};
+                    return m_queue.isEmpty();
                 }
 
                 std::size_t size() const noexcept
                 {
-                    boost::fibers::detail::spinlock_lock lk{splk_};
-                    return get_size();
+                    boost::fibers::detail::spinlock_lock lk{m_splk};
+                    return m_queue.size();
                 }
 
-                void push(boost::fibers::context* c)
+                void push(T* c)
                 {
-                    boost::fibers::detail::spinlock_lock lk{splk_};
-                    if (is_full_())
-                    {
-                        resize_();
-                    }
-                    slots_[pidx_] = c;
-                    pidx_ = (pidx_ + 1) % capacity_;
+                    boost::fibers::detail::spinlock_lock lk{m_splk};
+                    m_queue.push(c);
                 }
 
-                boost::fibers::context* pop()
+                T* pop()
                 {
-                    boost::fibers::detail::spinlock_lock lk{splk_};
-                    boost::fibers::context* c = nullptr;
-                    if (!is_empty_())
-                    {
-                        c = slots_[cidx_];
-                        cidx_ = (cidx_ + 1) % capacity_;
-                    }
-                    return c;
+                    boost::fibers::detail::spinlock_lock lk{m_splk};
+                    return m_queue.pop();
                 }
 
-                boost::fibers::context* steal()
+                T* steal()
                 {
-                    boost::fibers::detail::spinlock_lock lk{splk_};
-                    boost::fibers::context* c = nullptr;
-                    if (!is_empty_())
-                    {
-                        c = slots_[cidx_];
-                        if (c->is_context(boost::fibers::type::pinned_context))
-                        {
-                            return nullptr;
-                        }
-                        cidx_ = (cidx_ + 1) % capacity_;
-                    }
-                    return c;
+                    boost::fibers::detail::spinlock_lock lk{m_splk};
+                    return m_queue.steal();
                 }
             };
         }
