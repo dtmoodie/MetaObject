@@ -1,5 +1,7 @@
 #include <MetaObject/core/SystemTable.hpp>
 #include <MetaObject/thread/FiberScheduler.hpp>
+#include <MetaObject/thread/ThreadPool.hpp>
+
 #define BOOST_TEST_MAIN
 
 #ifdef _MSC_VER
@@ -14,7 +16,10 @@ struct GlobalFixture
     GlobalFixture()
         : m_system_table(SystemTable::instance())
     {
-        boost::fibers::use_scheduling_algorithm<mo::PriorityScheduler>();
+        auto module = PerModuleInterface::GetInstance();
+        module->SetSystemTable(m_system_table.get());
+        mo::ThreadPool* pool = mo::singleton<mo::ThreadPool>(m_system_table.get());
+        boost::fibers::use_scheduling_algorithm<mo::PriorityScheduler>(pool);
     }
 
     SystemTable::Ptr_t m_system_table;

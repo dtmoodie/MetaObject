@@ -1,4 +1,5 @@
 #include "FiberProperties.hpp"
+#include <boost/fiber/context.hpp>
 
 namespace mo
 {
@@ -42,6 +43,31 @@ namespace mo
         {
             m_priority = priority;
             m_id = id;
+            notify();
+        }
+    }
+
+    void FiberProperty::setAll(const PriorityLevels priority, const uint64_t id, const bool work)
+    {
+        if (m_priority != priority || id != m_id || m_is_work != work)
+        {
+            m_priority = priority;
+            m_id = id;
+            m_is_work = work;
+            notify();
+        }
+    }
+
+    bool FiberProperty::isWork() const
+    {
+        return m_is_work;
+    }
+
+    void FiberProperty::setWork(const bool val)
+    {
+        if (m_is_work != val)
+        {
+            m_is_work = val;
             notify();
         }
     }

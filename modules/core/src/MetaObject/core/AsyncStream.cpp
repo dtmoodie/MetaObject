@@ -107,6 +107,7 @@ void AsyncStream::pushWork(std::function<void(void)>&& work)
     boost::fibers::fiber fiber(work);
     FiberProperty& prop = fiber.properties<FiberProperty>();
     prop.setPriority(m_host_priority);
+    prop.setWork(true);
     fiber.detach();
 }
 
@@ -115,6 +116,7 @@ void AsyncStream::pushEvent(std::function<void(void)>&& event, const uint64_t ev
     boost::fibers::fiber fiber(event);
     FiberProperty& prop = fiber.properties<FiberProperty>();
     prop.setBoth(m_host_priority, event_id);
+    prop.setWork(false);
     fiber.detach();
 }
 

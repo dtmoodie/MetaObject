@@ -4,6 +4,7 @@
 
 #include <MetaObject/thread/Thread.hpp>
 #include <MetaObject/thread/ThreadPool.hpp>
+#include <MetaObject/core/SystemTable.hpp>
 
 #include <iostream>
 
@@ -14,7 +15,6 @@ namespace
     struct RawFiberFixture
     {
         volatile int count = 0;
-
 
         void testWork()
         {
@@ -133,6 +133,39 @@ namespace
             boost::this_fiber::sleep_for(10 * ms);
             BOOST_REQUIRE_GT(count, 80);
         }
+
+        void testEvent()
+        {
+
+        }
+
+        volatile std::atomic<uint32_t> execution_count;
+        void testSpawningOfAssistant()
+        {
+            mo::ThreadPool* pool = mo::singleton<mo::ThreadPool>();
+            auto schedulers = pool->getSchedulers();
+            BOOST_REQUIRE_EQUAL(schedulers.size(), 1);
+
+            execution_count = 0;
+
+            for(uint32_t i = 0; i < 1000; ++i)
+            {
+                m_stream->pushWork([this]()
+                {
+                    ++execution_count;
+                    boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+                });
+                boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+            }
+            uint32_t count = execution_count;
+            schedulers = pool->getSchedulers();
+            BOOST_REQUIRE_EQUAL(schedulers.size(), 2);
+            BOOST_REQUIRE_GT(count, 0);
+            boost::this_fiber::sleep_for(2 * second);
+            count = execution_count;
+            BOOST_REQUIRE_EQUAL(count, 1000);
+
+        }
     };
 }
 
@@ -159,4 +192,8 @@ BOOST_FIXTURE_TEST_CASE(stream_loop, StreamFixture)
     testLoop();
 }
 
+BOOST_FIXTURE_TEST_CASE(spawn_assistant, StreamFixture)
+{
+    testSpawningOfAssistant();
+}
 }

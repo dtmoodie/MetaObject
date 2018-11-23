@@ -1,15 +1,17 @@
 #ifndef MO_THREAD_FIBER_SCHEDULER_HPP
 #define MO_THREAD_FIBER_SCHEDULER_HPP
 #include "FiberProperties.hpp"
+#include "detail/ContextQueue.hpp"
 
-#include <boost/fiber/algo/round_robin.hpp>
 #include <boost/fiber/all.hpp>
 
 namespace mo
 {
+    class ThreadPool;
+
     struct PriorityScheduler : public boost::fibers::algo::algorithm_with_properties<FiberProperty>
     {
-        PriorityScheduler();
+        PriorityScheduler(ThreadPool* pool, const uint64_t work_threshold = 100, const bool suspend = false);
 
         void awakened(boost::fibers::context* ctx, FiberProperty& props) noexcept override;
 
@@ -23,13 +25,20 @@ namespace mo
 
         void notify() noexcept override;
 
-      private:
-        using Queue = boost::fibers::scheduler::ready_queue_type;
+        boost::fibers::context* steal();
 
-        Queue m_queue;
+      private:
+        using Queue = ContextQueue;
+        Queue m_work_queue;
+        Queue m_event_queue;
+
         std::mutex m_mtx;
         std::condition_variable m_cv;
         bool m_flag = false;
+        ThreadPool* m_pool;
+        uint64_t m_work_threshold;
+        std::shared_ptr<Thread> m_assistant;
+        bool m_suspend;
     };
 }
 

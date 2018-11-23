@@ -5,17 +5,22 @@
 namespace mo
 {
     class Thread;
+    class PriorityScheduler;
     class MO_EXPORTS ThreadPool
     {
       public:
-        static ThreadPool* instance();
         std::shared_ptr<Thread> requestThread();
         void cleanup();
 
+        void addScheduler(PriorityScheduler*);
+        void removeScheduler(PriorityScheduler*);
+        std::vector<PriorityScheduler*> getSchedulers() const;
+
       private:
-        std::mutex m_mtx;
+        mutable std::mutex m_mtx;
         void returnThread(const std::shared_ptr<Thread>& thread);
 
         std::list<std::shared_ptr<Thread>> m_threads;
+        std::vector<PriorityScheduler*> m_schedulers;
     };
 }

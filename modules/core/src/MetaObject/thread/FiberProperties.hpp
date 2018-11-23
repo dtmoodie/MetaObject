@@ -18,10 +18,15 @@ namespace mo
         void setId(const uint64_t id);
 
         void setBoth(const PriorityLevels priority, const uint64_t id);
+        void setAll(const PriorityLevels priority, const uint64_t id, const bool work);
+
+        bool isWork() const;
+        void setWork(const bool val);
 
       private:
         PriorityLevels m_priority = MEDIUM;
         uint64_t m_id = 0;
+        bool m_is_work;
     };
 }
 

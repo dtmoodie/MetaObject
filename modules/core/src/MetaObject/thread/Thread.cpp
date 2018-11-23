@@ -44,8 +44,8 @@ IAsyncStreamPtr_t Thread::asyncStream(const Duration timeout) const
 
 Thread::Thread(ThreadPool* pool)
 {
-    m_thread = boost::thread(&Thread::main, this);
     m_pool = pool;
+    m_thread = boost::thread(&Thread::main, this);
 }
 
 Thread::~Thread()
@@ -53,11 +53,13 @@ Thread::~Thread()
     PROFILE_FUNCTION
 
     MO_LOG(info, "Waiting for {} to join", m_name);
-    m_thread.interrupt();
+    m_cv.notify_all();
+
     if (!m_thread.timed_join(boost::posix_time::time_duration(0, 0, 10)))
     {
         MO_LOG(warn, "{} did not join after waiting 10 seconds");
     }
+
     MO_LOG(info, "{} shutdown complete");
 }
 
@@ -82,7 +84,7 @@ void Thread::main()
         m_cv.notify_all();
     }
 
-    boost::fibers::use_scheduling_algorithm<PriorityScheduler>();
+    boost::fibers::use_scheduling_algorithm<PriorityScheduler>(m_pool, 100, true);
 
     ThreadExit on_exit{[this]() {
         if (m_on_exit)
@@ -91,21 +93,10 @@ void Thread::main()
         }
     }};
 
-    std::set<uint64_t> event_ids;
+    m_mtx.lock();
+    m_cv.wait(m_mtx);
+    m_mtx.unlock();
 
-    std::vector<std::function<void(void)>> work_to_process;
-    work_to_process.resize(100);
-
-    while (!boost::this_thread::interruption_requested())
-    {
-        try
-        {
-            // TODO fiber rework
-        }
-        catch (...)
-        {
-        }
-    }
     stream.reset();
     m_stream.reset();
 }
