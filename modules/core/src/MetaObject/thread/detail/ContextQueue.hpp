@@ -6,7 +6,7 @@
 
 namespace mo
 {
-    class ContextQueue
+    class ContextWorkQueue
     {
       public:
         uint64_t push(boost::fibers::context* c, const PriorityLevels priority);

@@ -2,7 +2,7 @@
 
 namespace mo
 {
-    uint64_t ContextQueue::push(boost::fibers::context* c, const PriorityLevels priority)
+    uint64_t ContextWorkQueue::push(boost::fibers::context* c, const PriorityLevels priority)
     {
         m_queues[priority].push(c);
         uint64_t sz = 0;
@@ -13,7 +13,7 @@ namespace mo
         return sz;
     }
 
-    boost::fibers::context* ContextQueue::pop()
+    boost::fibers::context* ContextWorkQueue::pop()
     {
         boost::fibers::context* output = nullptr;
         for (int32_t i = HIGHEST; i >= 0; --i)
@@ -27,7 +27,7 @@ namespace mo
         return output;
     }
 
-    boost::fibers::context* ContextQueue::steal()
+    boost::fibers::context* ContextWorkQueue::steal()
     {
         boost::fibers::context* output = nullptr;
         for (int32_t i = HIGHEST; i >= 0; --i)
@@ -41,7 +41,7 @@ namespace mo
         return output;
     }
 
-    bool ContextQueue::empty() const
+    bool ContextWorkQueue::empty() const
     {
         for (uint32_t i = 0; i <= HIGHEST; ++i)
         {

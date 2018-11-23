@@ -18,7 +18,7 @@ namespace mo
     void PriorityScheduler::awakened(boost::fibers::context* ctx, FiberProperty& props) noexcept
     {
         const auto ctx_priority = props.getPriority();
-        if (ctx->is_context(boost::fibers::type::worker_context))
+        if (ctx->is_context(boost::fibers::type::worker_context) && props.isWork() == true)
         {
             const uint64_t size = m_work_queue.push(ctx, ctx_priority);
 

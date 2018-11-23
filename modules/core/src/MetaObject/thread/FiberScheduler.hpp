@@ -28,7 +28,7 @@ namespace mo
         boost::fibers::context* steal();
 
       private:
-        using Queue = ContextQueue;
+        using Queue = ContextWorkQueue;
         Queue m_work_queue;
         Queue m_event_queue;
 
