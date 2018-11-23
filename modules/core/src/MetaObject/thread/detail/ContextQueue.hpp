@@ -2,7 +2,7 @@
 #define MO_THREAD_CONTEXT_QUEUE_HPP
 
 #include "../PriorityLevels.hpp"
-#include <boost/fiber/detail/context_spinlock_queue.hpp>
+#include "context_spinlock_queue.hpp"
 
 namespace mo
 {
@@ -16,7 +16,7 @@ namespace mo
         bool empty() const;
 
       private:
-        boost::fibers::detail::context_spinlock_queue m_queues[HIGHEST + 1];
+        mo::fibers::detail::context_spinlock_queue m_queues[HIGHEST + 1];
     };
 }
 
