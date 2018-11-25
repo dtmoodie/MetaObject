@@ -33,7 +33,7 @@ namespace mo
     void PriorityScheduler::awakened(boost::fibers::context* ctx, FiberProperty& props) noexcept
     {
         const auto ctx_priority = props.getPriority();
-
+        const auto id = props.getId();
         if (m_is_worker)
         {
             if (!ctx->is_context(boost::fibers::type::pinned_context))
@@ -43,13 +43,38 @@ namespace mo
         }
 
         boost::fibers::detail::spinlock_lock lk{m_work_spinlock};
+        if (id == 0)
+        {
+            auto itr =
+                std::find_if(m_work_queue.begin(), m_work_queue.end(), [ctx_priority, this](boost::fibers::context& c) {
+                    return properties(&c).getPriority() < ctx_priority;
+                });
 
-        auto itr =
-            std::find_if(m_work_queue.begin(), m_work_queue.end(), [ctx_priority, this](boost::fibers::context& c) {
-                return properties(&c).getPriority() < ctx_priority;
-            });
+            m_work_queue.insert(itr, *ctx);
+        }
+        else
+        {
+            auto itr = std::find_if(
+                m_work_queue.begin(), m_work_queue.end(), [ctx_priority, id, this](boost::fibers::context& c) {
+                    return properties(&c).getPriority() < ctx_priority || properties(&c).getId() == id;
+                });
+            if (itr != m_work_queue.end())
+            {
+                if (properties(&*itr).getId() == id)
+                {
+                    itr = m_work_queue.insert(itr, *ctx);
+                    ++itr;
+                    BOOST_ASSERT(properties(&*itr).getId() == id);
+                    BOOST_ASSERT(&*itr != ctx);
+                    m_work_queue.erase(itr);
+                }
+            }
+            else
+            {
+                m_work_queue.insert(itr, *ctx);
+            }
+        }
 
-        m_work_queue.insert(itr, *ctx);
         const uint64_t size = m_work_queue.size();
 
         if (size > m_work_threshold && nullptr == m_assistant)
