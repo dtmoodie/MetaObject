@@ -131,6 +131,13 @@ namespace
 
         void testEvent()
         {
+            execution_count = 0;
+            m_stream->pushEvent([this]() { ++execution_count; }, 15);
+
+            m_stream->pushEvent([this]() { ++execution_count; }, 15);
+
+            boost::this_fiber::sleep_for(1 * ms);
+            BOOST_REQUIRE_EQUAL(execution_count, 1);
         }
 
         void testWorkPriority()
@@ -157,6 +164,7 @@ namespace
         }
 
         volatile std::atomic<uint32_t> execution_count;
+
         void testSpawningOfAssistant()
         {
             mo::ThreadPool* pool = mo::singleton<mo::ThreadPool>();
@@ -188,37 +196,36 @@ BOOST_AUTO_TEST_SUITE(threading_tests)
 
 BOOST_FIXTURE_TEST_CASE(work, RawFiberFixture)
 {
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
     testWork();
 }
 
 BOOST_FIXTURE_TEST_CASE(event, RawFiberFixture)
 {
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
     testEvent();
 }
 
 BOOST_FIXTURE_TEST_CASE(loop, RawFiberFixture)
 {
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
     testLoop();
 }
 
 BOOST_FIXTURE_TEST_CASE(stream_loop, StreamFixture)
 {
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
     testLoop();
 }
 
 BOOST_FIXTURE_TEST_CASE(priority, StreamFixture)
 {
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
     testWorkPriority();
+}
+
+BOOST_FIXTURE_TEST_CASE(stream_event, StreamFixture)
+{
+    testEvent();
 }
 
 BOOST_FIXTURE_TEST_CASE(spawn_assistant, StreamFixture)
 {
-    std::cout << __PRETTY_FUNCTION__ << std::endl;
     testSpawningOfAssistant();
 }
 }
