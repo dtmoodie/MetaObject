@@ -12,6 +12,7 @@ namespace mo
     struct PriorityScheduler : public boost::fibers::algo::algorithm_with_properties<FiberProperty>
     {
         PriorityScheduler(ThreadPool* pool, const uint64_t work_threshold = 100, const bool suspend = false);
+        ~PriorityScheduler() override;
 
         void awakened(boost::fibers::context* ctx, FiberProperty& props) noexcept override;
 
@@ -28,9 +29,10 @@ namespace mo
         boost::fibers::context* steal();
 
       private:
-        using Queue = ContextWorkQueue;
+        using Queue = boost::fibers::scheduler::ready_queue_type;
+
+        mutable boost::fibers::detail::spinlock m_work_spinlock;
         Queue m_work_queue;
-        Queue m_event_queue;
 
         std::mutex m_mtx;
         std::condition_variable m_cv;

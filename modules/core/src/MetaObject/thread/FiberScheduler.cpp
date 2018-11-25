@@ -15,50 +15,72 @@ namespace mo
         MO_LOG(info, "Instantiating scheduler");
     }
 
+    PriorityScheduler::~PriorityScheduler()
+    {
+        m_pool->removeScheduler(this);
+    }
+
     void PriorityScheduler::awakened(boost::fibers::context* ctx, FiberProperty& props) noexcept
     {
         const auto ctx_priority = props.getPriority();
-        if (ctx->is_context(boost::fibers::type::worker_context) && props.isWork() == true)
-        {
-            const uint64_t size = m_work_queue.push(ctx, ctx_priority);
 
-            if (size > m_work_threshold && nullptr == m_assistant)
-            {
-                m_assistant = m_pool->requestThread();
-            }
-        }
-        else
+        /*if (ctx->is_context(boost::fibers::type::pinned_context))
         {
-            m_event_queue.push(ctx, ctx_priority);
+            ctx->detach();
+        }*/
+
+        boost::fibers::detail::spinlock_lock lk{m_work_spinlock};
+
+        auto itr =
+            std::find_if(m_work_queue.begin(), m_work_queue.end(), [ctx_priority, this](boost::fibers::context& c) {
+                return properties(&c).getPriority() < ctx_priority;
+            });
+
+        m_work_queue.insert(itr, *ctx);
+        const uint64_t size = m_work_queue.size();
+
+        if (size > m_work_threshold && nullptr == m_assistant)
+        {
+            // m_assistant = m_pool->requestThread();
         }
     }
 
     boost::fibers::context* PriorityScheduler::steal()
     {
-        return m_work_queue.steal();
+        boost::fibers::detail::spinlock_lock lk{m_work_spinlock};
+        if (m_work_queue.empty())
+        {
+            return nullptr;
+        }
+
+        boost::fibers::context* victim = &m_work_queue.back();
+        if (victim->is_context(boost::fibers::type::pinned_context))
+        {
+            return nullptr;
+        }
+        m_work_queue.pop_back();
+        return victim;
     }
 
     boost::fibers::context* PriorityScheduler::pick_next() noexcept
     {
-        auto victim = m_event_queue.pop();
-        if (nullptr != victim)
+        boost::fibers::context* victim = nullptr;
         {
-            boost::context::detail::prefetch_range(victim, sizeof(boost::fibers::context));
-            if (!victim->is_context(boost::fibers::type::pinned_context))
+            boost::fibers::detail::spinlock_lock lk{m_work_spinlock};
+            if (!m_work_queue.empty())
             {
-                boost::fibers::context::active()->attach(victim);
+                victim = &m_work_queue.front();
+                m_work_queue.pop_front();
             }
-            return victim;
         }
 
-        victim = m_work_queue.pop();
         if (nullptr != victim)
         {
-            boost::context::detail::prefetch_range(victim, sizeof(boost::fibers::context));
+            /*boost::context::detail::prefetch_range(victim, sizeof(boost::fibers::context));
             if (!victim->is_context(boost::fibers::type::pinned_context))
             {
                 boost::fibers::context::active()->attach(victim);
-            }
+            }*/
         }
         else
         {
@@ -98,6 +120,8 @@ namespace mo
 
     bool PriorityScheduler::has_ready_fibers() const noexcept
     {
+        boost::fibers::detail::spinlock_lock lk1{m_work_spinlock};
+
         return !m_work_queue.empty();
     }
 
@@ -107,7 +131,10 @@ namespace mo
         {
             return;
         }
-        ctx->ready_unlink();
+        {
+            boost::fibers::detail::spinlock_lock lk1{m_work_spinlock};
+            ctx->ready_unlink();
+        }
         awakened(ctx, props);
     }
 

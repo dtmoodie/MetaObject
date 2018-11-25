@@ -3,7 +3,7 @@
 #include <MetaObject/thread/ThreadPool.hpp>
 
 #define BOOST_TEST_MAIN
-
+#include <boost/test/detail/throw_exception.hpp>
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>
 #else
