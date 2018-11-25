@@ -2,6 +2,11 @@
 #include "MetaObject/thread/Thread.hpp"
 using namespace mo;
 
+ThreadPool::~ThreadPool()
+{
+    cleanup();
+}
+
 std::shared_ptr<Thread> ThreadPool::requestThread()
 {
     std::lock_guard<std::mutex> lock(m_mtx);
@@ -13,6 +18,7 @@ std::shared_ptr<Thread> ThreadPool::requestThread()
     else
     {
         auto owning_ptr = m_threads.front();
+        m_threads.pop_front();
         return std::shared_ptr<Thread>(owning_ptr.get(), [this, owning_ptr](Thread*) { returnThread(owning_ptr); });
     }
 }

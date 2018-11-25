@@ -6,7 +6,7 @@
 namespace mo
 {
 
-    PriorityScheduler::PriorityScheduler(ThreadPool* pool, const uint64_t wt)
+    PriorityScheduler::PriorityScheduler(std::shared_ptr<ThreadPool> pool, const uint64_t wt)
         : m_pool(pool)
         , m_work_threshold(wt)
     {
@@ -14,17 +14,19 @@ namespace mo
         MO_LOG(info, "Instantiating scheduler");
     }
 
-    PriorityScheduler::PriorityScheduler(ThreadPool* pool, const WorkerToken)
+    PriorityScheduler::PriorityScheduler(std::shared_ptr<ThreadPool> pool, std::condition_variable** wakeup_cv)
         : m_pool(pool)
         , m_work_threshold(std::numeric_limits<uint64_t>::max())
         , m_is_worker(true)
     {
+        *wakeup_cv = &m_cv;
         m_pool->addScheduler(this);
         MO_LOG(info, "Instantiating worker scheduler");
     }
 
     PriorityScheduler::~PriorityScheduler()
     {
+        m_assistant.reset();
         m_pool->removeScheduler(this);
     }
 

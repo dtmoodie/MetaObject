@@ -52,5 +52,6 @@ namespace mo
         ThreadPool* m_pool = nullptr;
 
         std::string m_name;
+        std::condition_variable* m_scheduler_wakeup_cv = nullptr;
     };
 }

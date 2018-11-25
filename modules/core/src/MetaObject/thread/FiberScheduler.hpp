@@ -17,8 +17,8 @@ namespace mo
 
     struct PriorityScheduler : public boost::fibers::algo::algorithm_with_properties<FiberProperty>
     {
-        PriorityScheduler(ThreadPool* pool, const uint64_t work_threshold = 100);
-        PriorityScheduler(ThreadPool* pool, const WorkerToken);
+        PriorityScheduler(std::shared_ptr<ThreadPool> pool, const uint64_t work_threshold = 100);
+        PriorityScheduler(std::shared_ptr<ThreadPool> pool, std::condition_variable** wakeup_cv);
         ~PriorityScheduler() override;
 
         void awakened(boost::fibers::context* ctx, FiberProperty& props) noexcept override;
@@ -44,7 +44,7 @@ namespace mo
         std::mutex m_mtx;
         std::condition_variable m_cv;
         bool m_flag = false;
-        ThreadPool* m_pool;
+        std::shared_ptr<ThreadPool> m_pool;
         uint64_t m_work_threshold;
         std::shared_ptr<Thread> m_assistant;
         bool m_is_worker = false;

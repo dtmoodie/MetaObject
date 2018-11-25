@@ -1,5 +1,7 @@
 #include "MetaObject/thread/Thread.hpp"
 #include "FiberScheduler.hpp"
+#include "ThreadPool.hpp"
+
 #include "MetaObject/core/AsyncStream.hpp"
 #include "MetaObject/core/detail/Allocator.hpp"
 #include "MetaObject/core/detail/Time.hpp"
@@ -54,6 +56,7 @@ Thread::~Thread()
 
     MO_LOG(info, "Waiting for {} to join", m_name);
     m_cv.notify_all();
+    m_scheduler_wakeup_cv->notify_all();
 
     if (!m_thread.timed_join(boost::posix_time::time_duration(0, 0, 10)))
     {
@@ -84,7 +87,7 @@ void Thread::main()
         m_cv.notify_all();
     }
 
-    boost::fibers::use_scheduling_algorithm<PriorityScheduler>(m_pool, WorkerToken());
+    boost::fibers::use_scheduling_algorithm<PriorityScheduler>(m_pool->shared_from_this(), &m_scheduler_wakeup_cv);
 
     ThreadExit on_exit{[this]() {
         if (m_on_exit)

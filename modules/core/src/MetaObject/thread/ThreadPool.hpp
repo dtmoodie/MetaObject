@@ -6,9 +6,10 @@ namespace mo
 {
     class Thread;
     class PriorityScheduler;
-    class MO_EXPORTS ThreadPool
+    class MO_EXPORTS ThreadPool : public std::enable_shared_from_this<ThreadPool>
     {
       public:
+        ~ThreadPool();
         std::shared_ptr<Thread> requestThread();
         void cleanup();
 

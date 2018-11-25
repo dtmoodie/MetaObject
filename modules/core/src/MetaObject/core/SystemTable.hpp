@@ -41,6 +41,9 @@ struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
     template <class T>
     T* getSingleton();
 
+    template <class T>
+    std::shared_ptr<T> getSharedSingleton();
+
     // Owning
     template <typename T>
     T* setSingleton(std::unique_ptr<T>&& singleton);
@@ -50,7 +53,7 @@ struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
     T* setSingleton(const rcc::shared_ptr<T>& singleton);
 
     template <typename T>
-    T* setSingleton(const std::shared_ptr<T>& singleton);
+    std::shared_ptr<T> setSingleton(const std::shared_ptr<T>& singleton);
 
     // Non owning
     template <typename T>
@@ -159,12 +162,17 @@ namespace mo
         SharingContainer(T* ptr_)
             : m_ptr(ptr_)
         {
-            this->ptr = m_ptr.get();
+            TSingletonContainer<T>::ptr = m_ptr.get();
         }
         SharingContainer(const std::shared_ptr<T>& ptr_)
             : m_ptr(ptr_)
         {
-            this->ptr = m_ptr.get();
+            TSingletonContainer<T>::ptr = m_ptr.get();
+        }
+
+        std::shared_ptr<T> ptr()
+        {
+            return m_ptr;
         }
 
       private:
@@ -193,6 +201,25 @@ namespace mo
                 mo::getDefaultLogger().info("Creating new {} singleton instance {} in system table ({})",
                                             mo::TypeTable::instance(table).typeToName(mo::TypeInfo(typeid(U))),
                                             static_cast<const void*>(ptr),
+                                            static_cast<const void*>(table));
+            }
+        }
+        return ptr;
+    }
+
+    template <class T, class U = T>
+    std::shared_ptr<T> sharedSingleton(SystemTable* table)
+    {
+        std::shared_ptr<T> ptr = nullptr;
+        if (table)
+        {
+            ptr = table->getSharedSingleton<T>();
+            if (ptr == nullptr)
+            {
+                ptr = table->setSingleton(std::make_shared<U>());
+                mo::getDefaultLogger().info("Creating new shared {} singleton instance {} in system table ({})",
+                                            mo::TypeTable::instance(table).typeToName(mo::TypeInfo(typeid(U))),
+                                            static_cast<const void*>(ptr.get()),
                                             static_cast<const void*>(table));
             }
         }
@@ -230,6 +257,21 @@ T* SystemTable::getSingleton()
     return nullptr;
 }
 
+template <class T>
+std::shared_ptr<T> SystemTable::getSharedSingleton()
+{
+    auto itr = m_singletons.find(mo::TypeInfo(typeid(T)));
+    if (itr != m_singletons.end())
+    {
+        auto container = static_cast<mo::SharingContainer<T, void>*>(itr->second.get());
+        if (container)
+        {
+            return container->ptr();
+        }
+    }
+    return nullptr;
+}
+
 // Owning
 template <typename T>
 T* SystemTable::setSingleton(std::unique_ptr<T>&& singleton)
@@ -251,11 +293,11 @@ T* SystemTable::setSingleton(const rcc::shared_ptr<T>& singleton)
 }
 
 template <typename T>
-T* SystemTable::setSingleton(const std::shared_ptr<T>& singleton)
+std::shared_ptr<T> SystemTable::setSingleton(const std::shared_ptr<T>& singleton)
 {
     m_singletons[mo::TypeInfo(typeid(T))] =
         std::unique_ptr<mo::SharingContainer<T, void>>(new mo::SharingContainer<T, void>(singleton));
-    return singleton.get();
+    return singleton;
 }
 
 // Non owning

@@ -18,7 +18,7 @@ struct GlobalFixture
     {
         auto module = PerModuleInterface::GetInstance();
         module->SetSystemTable(m_system_table.get());
-        mo::ThreadPool* pool = mo::singleton<mo::ThreadPool>(m_system_table.get());
+        std::shared_ptr<mo::ThreadPool> pool = mo::sharedSingleton<mo::ThreadPool>(m_system_table.get());
         boost::fibers::use_scheduling_algorithm<mo::PriorityScheduler>(pool);
     }
 
