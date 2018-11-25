@@ -4,15 +4,15 @@
 
 namespace mo
 {
-enum PriorityLevels
-{
-    LOWEST,
-    LOW,
-    MEDIUM,
-    HIGH,
-    HIGHEST
-};
-
+    enum PriorityLevels
+    {
+        NONE = -1,
+        LOWEST = 0,
+        LOW,
+        MEDIUM,
+        HIGH,
+        HIGHEST
+    };
 }
 
 namespace std

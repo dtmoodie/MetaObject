@@ -102,21 +102,19 @@ void AsyncStream::setName(const std::string& name)
     m_name = name;
 }
 
-void AsyncStream::pushWork(std::function<void(void)>&& work)
+void AsyncStream::pushWork(std::function<void(void)>&& work, const PriorityLevels priority)
 {
     boost::fibers::fiber fiber(work);
     FiberProperty& prop = fiber.properties<FiberProperty>();
-    prop.setPriority(m_host_priority);
-    prop.setWork(true);
+    prop.setPriority(priority == NONE ? m_host_priority : priority);
     fiber.detach();
 }
 
-void AsyncStream::pushEvent(std::function<void(void)>&& event, const uint64_t event_id)
+void AsyncStream::pushEvent(std::function<void(void)>&& event, const uint64_t event_id, const PriorityLevels priority)
 {
     boost::fibers::fiber fiber(event);
     FiberProperty& prop = fiber.properties<FiberProperty>();
-    prop.setBoth(m_host_priority, event_id);
-    prop.setWork(false);
+    prop.setAll(priority == NONE ? m_host_priority : priority, event_id, false);
     fiber.detach();
 }
 
@@ -140,7 +138,7 @@ void AsyncStream::setHostPriority(const PriorityLevels p)
     m_host_priority = p;
 }
 
-void AsyncStream::setDevicePriority(const PriorityLevels p)
+void AsyncStream::setDevicePriority(const PriorityLevels)
 {
 }
 
@@ -177,10 +175,7 @@ struct CPUAsyncStreamConstructor : public AsyncStreamConstructor
         return 1U;
     }
 
-    Ptr_t create(const std::string& name,
-                 const int32_t device_id,
-                 PriorityLevels device_priority,
-                 PriorityLevels thread_priority) override
+    Ptr_t create(const std::string& name, const int32_t, PriorityLevels, PriorityLevels thread_priority) override
     {
         auto stream = std::make_shared<AsyncStream>();
         stream->setName(name);

@@ -44,7 +44,7 @@ namespace mo
                     , m_current_idx(0)
                     , m_capacity(capacity)
                 {
-                    m_slots = new T[m_capacity];
+                    m_slots = new T*[m_capacity];
                 }
 
                 ~RobbableQueue()
@@ -152,7 +152,6 @@ namespace mo
                 SpinlockQueue(std::size_t capacity = 4096)
                     : m_queue{capacity}
                 {
-                    m_slots = new slot_t[m_capacity];
                 }
 
                 ~SpinlockQueue()

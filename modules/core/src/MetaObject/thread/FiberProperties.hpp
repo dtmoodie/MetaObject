@@ -26,7 +26,7 @@ namespace mo
       private:
         PriorityLevels m_priority = MEDIUM;
         uint64_t m_id = 0;
-        bool m_is_work;
+        bool m_is_work = true;
     };
 }
 

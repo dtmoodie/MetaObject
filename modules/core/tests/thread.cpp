@@ -2,9 +2,9 @@
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test_suite.hpp>
 
+#include <MetaObject/core/SystemTable.hpp>
 #include <MetaObject/thread/Thread.hpp>
 #include <MetaObject/thread/ThreadPool.hpp>
-#include <MetaObject/core/SystemTable.hpp>
 
 #include <iostream>
 
@@ -50,10 +50,7 @@ namespace
             if (!exit_loop)
             {
                 boost::this_fiber::sleep_for(1 * ms);
-                boost::fibers::fiber fiber([this]()
-                {
-                    loop1();
-                });
+                boost::fibers::fiber fiber([this]() { loop1(); });
                 fiber.detach();
             }
         }
@@ -64,10 +61,7 @@ namespace
             if (loop_count < 100)
             {
                 boost::this_fiber::sleep_for(1 * ms);
-                boost::fibers::fiber fiber([this]()
-                {
-                    loop2();
-                });
+                boost::fibers::fiber fiber([this]() { loop2(); });
                 fiber.detach();
             }
         }
@@ -75,10 +69,7 @@ namespace
         void testLoop()
         {
             loop_count = 0;
-            boost::fibers::fiber fiber([this]()
-            {
-                loop1();
-            });
+            boost::fibers::fiber fiber([this]() { loop1(); });
             fiber.detach();
             boost::this_fiber::sleep_for(100 * ms);
             exit_loop = true;
@@ -94,7 +85,6 @@ namespace
 
             loop2();
 
-
             boost::this_fiber::sleep_for(1000 * ms);
             BOOST_REQUIRE_EQUAL(loop_count, 100);
         }
@@ -109,16 +99,15 @@ namespace
             m_stream = std::make_shared<AsyncStream>();
         }
 
-
         int count = 0;
         bool stop = false;
         void loopImpl()
         {
             ++count;
-            if(!stop)
+            if (!stop)
             {
                 boost::this_fiber::sleep_for(1 * ms);
-                m_stream->pushWork([this](){loopImpl();});
+                m_stream->pushWork([this]() { loopImpl(); });
             }
         }
 
@@ -126,7 +115,7 @@ namespace
         {
             stop = false;
             count = 0;
-            m_stream->pushWork([this](){loopImpl();});
+            m_stream->pushWork([this]() { loopImpl(); });
 
             boost::this_fiber::sleep_for(100 * ms);
             stop = true;
@@ -136,7 +125,29 @@ namespace
 
         void testEvent()
         {
+        }
 
+        void testWorkPriority()
+        {
+            bool higher_priority_executed = false;
+            bool lower_priority_executed = false;
+            mo::ThreadPool* pool = mo::singleton<mo::ThreadPool>();
+            auto schedulers = pool->getSchedulers();
+            m_stream->pushWork([&lower_priority_executed, &higher_priority_executed]() {
+                lower_priority_executed = true;
+                BOOST_REQUIRE(higher_priority_executed);
+            });
+
+            m_stream->pushWork(
+                [&lower_priority_executed, &higher_priority_executed]() {
+                    higher_priority_executed = true;
+                    BOOST_REQUIRE(lower_priority_executed == false);
+                },
+                HIGHEST);
+            boost::this_fiber::sleep_for(1 * ms);
+
+            BOOST_REQUIRE(higher_priority_executed);
+            BOOST_REQUIRE(lower_priority_executed);
         }
 
         volatile std::atomic<uint32_t> execution_count;
@@ -148,10 +159,9 @@ namespace
 
             execution_count = 0;
 
-            for(uint32_t i = 0; i < 1000; ++i)
+            for (uint32_t i = 0; i < 1000; ++i)
             {
-                m_stream->pushWork([this]()
-                {
+                m_stream->pushWork([this]() {
                     ++execution_count;
                     boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
                 });
@@ -164,13 +174,11 @@ namespace
             boost::this_fiber::sleep_for(2 * second);
             count = execution_count;
             BOOST_REQUIRE_EQUAL(count, 1000);
-
         }
     };
 }
 
 BOOST_AUTO_TEST_SUITE(threading_tests)
-
 
 BOOST_FIXTURE_TEST_CASE(work, RawFiberFixture)
 {
@@ -190,6 +198,11 @@ BOOST_FIXTURE_TEST_CASE(loop, RawFiberFixture)
 BOOST_FIXTURE_TEST_CASE(stream_loop, StreamFixture)
 {
     testLoop();
+}
+
+BOOST_FIXTURE_TEST_CASE(priority, StreamFixture)
+{
+    testWorkPriority();
 }
 
 BOOST_FIXTURE_TEST_CASE(spawn_assistant, StreamFixture)

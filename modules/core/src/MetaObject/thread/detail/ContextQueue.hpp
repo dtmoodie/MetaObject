@@ -16,7 +16,7 @@ namespace mo
         bool empty() const;
 
       private:
-        mo::fibers::detail::context_spinlock_queue m_queues[HIGHEST + 1];
+        mo::fibers::detail::SpinlockQueue<boost::fibers::context> m_queues[HIGHEST + 1];
     };
 }
 

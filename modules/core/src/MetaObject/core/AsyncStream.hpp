@@ -45,8 +45,10 @@ namespace mo
 
         virtual ~IAsyncStream();
 
-        virtual void pushWork(std::function<void(void)>&& work) = 0;
-        virtual void pushEvent(std::function<void(void)>&& event, const uint64_t event_id = 0) = 0;
+        virtual void pushWork(std::function<void(void)>&& work, const PriorityLevels priority = NONE) = 0;
+        virtual void pushEvent(std::function<void(void)>&& event,
+                               const uint64_t event_id = 0,
+                               const PriorityLevels priority = NONE) = 0;
 
         virtual void setName(const std::string& name) = 0;
         virtual void setHostPriority(const PriorityLevels p) = 0;
@@ -69,8 +71,10 @@ namespace mo
         AsyncStream();
         ~AsyncStream() override;
 
-        void pushWork(std::function<void(void)>&& work) override;
-        void pushEvent(std::function<void(void)>&& event, const uint64_t event_id = 0) override;
+        void pushWork(std::function<void(void)>&& work, const PriorityLevels priority = NONE) override;
+        void pushEvent(std::function<void(void)>&& event,
+                       const uint64_t event_id = 0,
+                       const PriorityLevels priority = NONE) override;
 
         void setName(const std::string& name) override;
         void setHostPriority(const PriorityLevels p) override;
