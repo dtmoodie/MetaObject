@@ -66,6 +66,7 @@ SystemTable::SystemTable()
 
 SystemTable::~SystemTable()
 {
+    std::cout << "System table cleanup" << std::endl;
 }
 
 void SystemTable::deleteSingleton(mo::TypeInfo type)

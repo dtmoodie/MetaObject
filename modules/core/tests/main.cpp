@@ -22,6 +22,10 @@ struct GlobalFixture
         boost::fibers::use_scheduling_algorithm<mo::PriorityScheduler>(pool);
     }
 
+    ~GlobalFixture()
+    {
+    }
+
     SystemTable::Ptr_t m_system_table;
 };
 

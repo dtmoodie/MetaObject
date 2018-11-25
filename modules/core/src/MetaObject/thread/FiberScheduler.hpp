@@ -8,10 +8,17 @@
 namespace mo
 {
     class ThreadPool;
+    struct WorkerToken
+    {
+        explicit WorkerToken()
+        {
+        }
+    };
 
     struct PriorityScheduler : public boost::fibers::algo::algorithm_with_properties<FiberProperty>
     {
-        PriorityScheduler(ThreadPool* pool, const uint64_t work_threshold = 100, const bool suspend = false);
+        PriorityScheduler(ThreadPool* pool, const uint64_t work_threshold = 100);
+        PriorityScheduler(ThreadPool* pool, const WorkerToken);
         ~PriorityScheduler() override;
 
         void awakened(boost::fibers::context* ctx, FiberProperty& props) noexcept override;
@@ -40,7 +47,7 @@ namespace mo
         ThreadPool* m_pool;
         uint64_t m_work_threshold;
         std::shared_ptr<Thread> m_assistant;
-        bool m_suspend;
+        bool m_is_worker = false;
     };
 }
 

@@ -175,8 +175,8 @@ namespace
             }
             uint32_t count = execution_count;
             schedulers = pool->getSchedulers();
-            // BOOST_REQUIRE_EQUAL(schedulers.size(), 2);
-            // BOOST_REQUIRE_GT(count, 0);
+            BOOST_REQUIRE_EQUAL(schedulers.size(), 2);
+            BOOST_REQUIRE_GT(count, 0);
             boost::this_fiber::sleep_for(2 * second);
             count = execution_count;
             BOOST_REQUIRE_EQUAL(count, 1000);

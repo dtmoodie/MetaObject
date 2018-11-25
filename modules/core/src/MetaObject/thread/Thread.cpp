@@ -84,7 +84,7 @@ void Thread::main()
         m_cv.notify_all();
     }
 
-    boost::fibers::use_scheduling_algorithm<PriorityScheduler>(m_pool, 100, true);
+    boost::fibers::use_scheduling_algorithm<PriorityScheduler>(m_pool, WorkerToken());
 
     ThreadExit on_exit{[this]() {
         if (m_on_exit)

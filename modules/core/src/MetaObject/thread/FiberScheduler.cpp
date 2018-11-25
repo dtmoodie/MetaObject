@@ -6,13 +6,21 @@
 namespace mo
 {
 
-    PriorityScheduler::PriorityScheduler(ThreadPool* pool, const uint64_t wt, const bool suspend)
+    PriorityScheduler::PriorityScheduler(ThreadPool* pool, const uint64_t wt)
         : m_pool(pool)
         , m_work_threshold(wt)
-        , m_suspend(suspend)
     {
         m_pool->addScheduler(this);
         MO_LOG(info, "Instantiating scheduler");
+    }
+
+    PriorityScheduler::PriorityScheduler(ThreadPool* pool, const WorkerToken)
+        : m_pool(pool)
+        , m_work_threshold(std::numeric_limits<uint64_t>::max())
+        , m_is_worker(true)
+    {
+        m_pool->addScheduler(this);
+        MO_LOG(info, "Instantiating worker scheduler");
     }
 
     PriorityScheduler::~PriorityScheduler()
@@ -24,10 +32,13 @@ namespace mo
     {
         const auto ctx_priority = props.getPriority();
 
-        /*if (ctx->is_context(boost::fibers::type::pinned_context))
+        if (m_is_worker)
         {
-            ctx->detach();
-        }*/
+            if (!ctx->is_context(boost::fibers::type::pinned_context))
+            {
+                ctx->detach();
+            }
+        }
 
         boost::fibers::detail::spinlock_lock lk{m_work_spinlock};
 
@@ -41,7 +52,7 @@ namespace mo
 
         if (size > m_work_threshold && nullptr == m_assistant)
         {
-            // m_assistant = m_pool->requestThread();
+            m_assistant = m_pool->requestThread();
         }
     }
 
@@ -59,6 +70,7 @@ namespace mo
             return nullptr;
         }
         m_work_queue.pop_back();
+        victim->detach();
         return victim;
     }
 
@@ -76,11 +88,14 @@ namespace mo
 
         if (nullptr != victim)
         {
-            /*boost::context::detail::prefetch_range(victim, sizeof(boost::fibers::context));
-            if (!victim->is_context(boost::fibers::type::pinned_context))
+            if (m_is_worker)
             {
-                boost::fibers::context::active()->attach(victim);
-            }*/
+                boost::context::detail::prefetch_range(victim, sizeof(boost::fibers::context));
+                if (!victim->is_context(boost::fibers::type::pinned_context))
+                {
+                    boost::fibers::context::active()->attach(victim);
+                }
+            }
         }
         else
         {
@@ -140,7 +155,7 @@ namespace mo
 
     void PriorityScheduler::suspend_until(std::chrono::steady_clock::time_point const& time_point) noexcept
     {
-        if (m_suspend)
+        if (m_is_worker)
         {
             if ((std::chrono::steady_clock::time_point::max)() == time_point)
             {
@@ -159,7 +174,7 @@ namespace mo
 
     void PriorityScheduler::notify() noexcept
     {
-        if (m_suspend)
+        if (m_is_worker)
         {
             std::unique_lock<std::mutex> lk(m_mtx);
             m_flag = true;
