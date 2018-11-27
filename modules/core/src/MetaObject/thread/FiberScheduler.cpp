@@ -6,28 +6,41 @@
 namespace mo
 {
 
-    PriorityScheduler::PriorityScheduler(std::shared_ptr<ThreadPool> pool, const uint64_t wt)
+    PriorityScheduler::PriorityScheduler(std::weak_ptr<ThreadPool> pool, const uint64_t wt)
         : m_pool(pool)
         , m_work_threshold(wt)
     {
-        m_pool->addScheduler(this);
+        auto locked = pool.lock();
+        if (locked)
+        {
+            locked->addScheduler(this);
+        }
+
         MO_LOG(info, "Instantiating scheduler");
     }
 
-    PriorityScheduler::PriorityScheduler(std::shared_ptr<ThreadPool> pool, std::condition_variable** wakeup_cv)
+    PriorityScheduler::PriorityScheduler(std::weak_ptr<ThreadPool> pool, std::condition_variable** wakeup_cv)
         : m_pool(pool)
         , m_work_threshold(std::numeric_limits<uint64_t>::max())
         , m_is_worker(true)
     {
         *wakeup_cv = &m_cv;
-        m_pool->addScheduler(this);
+        auto locked = m_pool.lock();
+        if (locked)
+        {
+            locked->addScheduler(this);
+        }
         MO_LOG(info, "Instantiating worker scheduler");
     }
 
     PriorityScheduler::~PriorityScheduler()
     {
         m_assistant.reset();
-        m_pool->removeScheduler(this);
+        auto locked = m_pool.lock();
+        if (locked)
+        {
+            locked->addScheduler(this);
+        }
     }
 
     void PriorityScheduler::awakened(boost::fibers::context* ctx, FiberProperty& props) noexcept
@@ -79,7 +92,11 @@ namespace mo
 
         if (size > m_work_threshold && nullptr == m_assistant)
         {
-            m_assistant = m_pool->requestThread();
+            auto locked = m_pool.lock();
+            if (locked)
+            {
+                m_assistant = locked->requestThread();
+            }
         }
     }
 
@@ -127,28 +144,33 @@ namespace mo
         else
         {
             std::uint32_t id = 0;
-            const auto schedulers = m_pool->getSchedulers();
-            if (schedulers.size() == 1)
+            auto locked = m_pool.lock();
+            if (locked)
             {
-                return victim;
-            }
-            const auto id_ = std::find(schedulers.begin(), schedulers.end(), this) - schedulers.begin();
-            std::size_t count = 0, size = schedulers.size();
-            static thread_local std::minstd_rand generator{std::random_device{}()};
-            std::uniform_int_distribution<std::uint32_t> distribution{0, static_cast<std::uint32_t>(size - 1)};
-            do
-            {
+                const auto schedulers = locked->getSchedulers();
+                if (schedulers.size() == 1)
+                {
+                    return victim;
+                }
+                const auto id_ = std::find(schedulers.begin(), schedulers.end(), this) - schedulers.begin();
+                std::size_t count = 0, size = schedulers.size();
+                static thread_local std::minstd_rand generator{std::random_device{}()};
+                std::uniform_int_distribution<std::uint32_t> distribution{0, static_cast<std::uint32_t>(size - 1)};
                 do
                 {
-                    ++count;
-                    // random selection of one logical cpu
-                    // that belongs to the local NUMA node
-                    id = distribution(generator);
-                    // prevent stealing from own scheduler
-                } while (id == id_);
-                // steal context from other scheduler
-                victim = schedulers[id]->steal();
-            } while (nullptr == victim && count < size);
+                    do
+                    {
+                        ++count;
+                        // random selection of one logical cpu
+                        // that belongs to the local NUMA node
+                        id = distribution(generator);
+                        // prevent stealing from own scheduler
+                    } while (id == id_);
+                    // steal context from other scheduler
+                    victim = schedulers[id]->steal();
+                } while (nullptr == victim && count < size);
+            }
+
             if (nullptr != victim)
             {
                 boost::context::detail::prefetch_range(victim, sizeof(boost::fibers::context));

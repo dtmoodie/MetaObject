@@ -10,28 +10,36 @@ ThreadPool::~ThreadPool()
 std::shared_ptr<Thread> ThreadPool::requestThread()
 {
     std::lock_guard<std::mutex> lock(m_mtx);
-    if (m_threads.empty())
+    if (m_free_threads.empty())
     {
         std::shared_ptr<Thread> owning_ptr(new Thread(this));
+        m_running_threads.push_back(owning_ptr);
         return std::shared_ptr<Thread>(owning_ptr.get(), [this, owning_ptr](Thread*) { returnThread(owning_ptr); });
     }
     else
     {
-        auto owning_ptr = m_threads.front();
-        m_threads.pop_front();
+        auto owning_ptr = m_free_threads.front();
+        m_free_threads.pop_front();
+        m_running_threads.push_back(owning_ptr);
         return std::shared_ptr<Thread>(owning_ptr.get(), [this, owning_ptr](Thread*) { returnThread(owning_ptr); });
     }
 }
 
 void ThreadPool::cleanup()
 {
-    m_threads.clear();
+    m_free_threads.clear();
+    m_running_threads.clear();
 }
 
 void ThreadPool::returnThread(const std::shared_ptr<Thread>& thread)
 {
     std::lock_guard<std::mutex> lock(m_mtx);
-    m_threads.push_back(thread);
+    m_free_threads.push_back(thread);
+    auto itr = std::find(m_running_threads.begin(), m_running_threads.end(), thread);
+    if (itr != m_running_threads.end())
+    {
+        m_running_threads.erase(itr);
+    }
 }
 
 void ThreadPool::addScheduler(PriorityScheduler* sched)

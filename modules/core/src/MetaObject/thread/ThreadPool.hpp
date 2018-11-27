@@ -21,7 +21,8 @@ namespace mo
         mutable std::mutex m_mtx;
         void returnThread(const std::shared_ptr<Thread>& thread);
 
-        std::list<std::shared_ptr<Thread>> m_threads;
+        std::list<std::shared_ptr<Thread>> m_free_threads;
+        std::list<std::shared_ptr<Thread>> m_running_threads;
         std::vector<PriorityScheduler*> m_schedulers;
     };
 }
