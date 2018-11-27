@@ -17,6 +17,16 @@ if(${MO_HAVE_CUDA})
     target_link_libraries(metaobject_core ${CUDA_CUDART_LIBRARY})
 endif(${MO_HAVE_CUDA})
 
+file(GLOB_RECURSE examples "examples/*.cpp")
+
+foreach(example ${examples})
+    get_filename_component(name ${example} NAME_WE)
+
+    add_executable(mo_example_${name} ${example})
+
+    target_link_libraries(mo_example_${name} metaobject_core)
+endforeach()
+
 if(BUILD_TESTS)
     file(GLOB_RECURSE tests "tests/*.cpp")
     add_executable(test_mo_core ${tests})
