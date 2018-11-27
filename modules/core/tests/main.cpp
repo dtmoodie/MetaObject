@@ -24,6 +24,7 @@ struct GlobalFixture
 
     ~GlobalFixture()
     {
+        m_system_table.reset();
     }
 
     SystemTable::Ptr_t m_system_table;

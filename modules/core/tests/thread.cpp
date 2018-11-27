@@ -129,9 +129,25 @@ namespace
             BOOST_REQUIRE_GT(count, 80);
         }
 
-        void testEvent()
+        void testEventSimple()
         {
             execution_count = 0;
+            m_stream->pushEvent([this]() { ++execution_count; }, 15);
+
+            m_stream->pushEvent([this]() { ++execution_count; }, 15);
+
+            boost::this_fiber::sleep_for(1 * ms);
+            BOOST_REQUIRE_EQUAL(execution_count, 1);
+        }
+
+        void testEventComplex()
+        {
+            execution_count = 0;
+            for (uint32_t i = 0; i < 5; ++i)
+            {
+                m_stream->pushEvent([this]() {}, i);
+            }
+
             m_stream->pushEvent([this]() { ++execution_count; }, 15);
 
             m_stream->pushEvent([this]() { ++execution_count; }, 15);
@@ -219,9 +235,9 @@ BOOST_FIXTURE_TEST_CASE(priority, StreamFixture)
     testWorkPriority();
 }
 
-BOOST_FIXTURE_TEST_CASE(stream_event, StreamFixture)
+BOOST_FIXTURE_TEST_CASE(stream_event_simple, StreamFixture)
 {
-    testEvent();
+    testEventSimple();
 }
 
 BOOST_FIXTURE_TEST_CASE(spawn_assistant, StreamFixture)
