@@ -1,7 +1,7 @@
 #include "MetaObject/types/file_types.hpp"
 #include "MetaObject/params/ui/Qt/POD.hpp"
 #include "qlineedit.h"
-#include <boost/thread/recursive_mutex.hpp>
+#include <boost/fiber/recursive_timed_mutex.hpp>
 
 using namespace mo;
 using namespace mo::UI;

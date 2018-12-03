@@ -44,7 +44,7 @@ namespace mo
 
         void updatePtr(T* ptr, bool owns_data = false)
         {
-            Lock lock(this->mtx());
+            Lock_t lock(this->mtx());
             if (m_ptr && m_owns_data)
             {
                 delete m_ptr;
@@ -55,7 +55,7 @@ namespace mo
 
         virtual IParam* emitUpdate(const Header& header, UpdateFlags = ValueUpdated_e) override
         {
-            Lock lock(this->mtx());
+            Lock_t lock(this->mtx());
             if (m_ptr)
             {
                 TParam<T>::updateData(*m_ptr, header);
@@ -65,7 +65,7 @@ namespace mo
         // commit a Param's value copying metadata info from another parmaeter
         virtual IParam* emitUpdate(const IParam& other, UpdateFlags flags_ = ValueUpdated_e) override
         {
-            Lock lock(this->mtx());
+            Lock_t lock(this->mtx());
             if (m_ptr)
             {
                 TParam<T>::updateData(*m_ptr, mo::tag::_param = other);
@@ -74,7 +74,7 @@ namespace mo
 
         std::ostream& print(std::ostream& os) const override
         {
-            Lock lock(this->mtx());
+            Lock_t lock(this->mtx());
             TParam<T>::print(os);
             os << ' ';
             if (m_ptr)
@@ -135,7 +135,7 @@ namespace mo
 
         void updatePtr(std::shared_ptr<T>* ptr, bool owns_data = false)
         {
-            Lock lock(this->mtx());
+            Lock_t lock(this->mtx());
             if (m_ptr && m_owns_data)
             {
                 delete m_ptr;
@@ -152,7 +152,7 @@ namespace mo
 
         std::ostream& print(std::ostream& os) const override
         {
-            Lock lock(this->mtx());
+            Lock_t lock(this->mtx());
             TParam<T>::print(os);
             os << ' ';
             if (m_ptr)

@@ -1,10 +1,11 @@
 #pragma once
 #include <MetaObject/core/detail/Time.hpp>
+#include <ct/reflect.hpp>
 #include <memory>
 
 namespace mo
 {
-    struct IContext;
+    struct IAsyncStream;
     struct ICoordinateSystem;
     using ICoordinateSystemPtr_t = std::shared_ptr<ICoordinateSystem>;
     using ICoordinateSystemConstPtr_t = std::shared_ptr<const ICoordinateSystem>;
@@ -23,7 +24,7 @@ namespace mo
         mo::OptionalTime timestamp;
         FrameNumber frame_number;
 
-        IContext* ctx;
+        IAsyncStream* stream;
         ICoordinateSystemPtr_t coordinate_system;
 
         bool operator==(const Header& other) const;
@@ -31,4 +32,13 @@ namespace mo
         bool operator>(const Header& other) const;
         bool operator<(const Header& other) const;
     };
+}
+
+namespace ct
+{
+    REFLECT_BEGIN(mo::Header)
+        PUBLIC_ACCESS(timestamp)
+        PUBLIC_ACCESS(frame_number)
+    // PUBLIC_ACCESS(coordinate_system)
+    REFLECT_END;
 }

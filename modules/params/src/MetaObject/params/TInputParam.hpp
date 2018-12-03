@@ -49,7 +49,7 @@ namespace mo
 
         bool setInput(IParam* input)
         {
-            Lock lock(this->mtx());
+            Lock_t lock(this->mtx());
             if (ITInputParam<T>::setInput(input))
             {
                 if (m_user_var && TParam<T>::_data)
@@ -63,14 +63,14 @@ namespace mo
 
         void setUserDataPtr(const T** user_var_)
         {
-            Lock lock(this->mtx());
+            Lock_t lock(this->mtx());
             m_user_var = user_var_;
         }
 
       protected:
         virtual void updateDataImpl(const TContainerPtr_t& data) override
         {
-            Lock lock(this->mtx());
+            Lock_t lock(this->mtx());
             ITInputParam<T>::updateDataImpl(data);
             if (m_user_var)
             {
@@ -96,13 +96,13 @@ namespace mo
 
         void setUserDataPtr(std::shared_ptr<const T>* user_var_)
         {
-            Lock lock(this->mtx());
+            Lock_t lock(this->mtx());
             m_user_var = user_var_;
         }
 
         virtual void updateDataImpl(const TContainerPtr_t& data)
         {
-            Lock lock(this->mtx());
+            Lock_t lock(this->mtx());
             ITInputParam<T>::updateDataImpl(data);
             if (m_user_var)
             {

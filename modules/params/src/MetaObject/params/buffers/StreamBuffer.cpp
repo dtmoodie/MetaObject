@@ -77,7 +77,7 @@
 
         void BlockingStreamBuffer::onInputUpdate(const IDataContainerPtr_t& data, IParam* param, UpdateFlags flags)
         {
-            Lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
             if (_frame_padding)
             {
                 while (Map::getSize() > (*_frame_padding + 1))

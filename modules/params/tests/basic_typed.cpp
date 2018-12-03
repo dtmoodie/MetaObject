@@ -11,10 +11,13 @@
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
 #include "MetaObject/types/file_types.hpp"
+
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
+
 #include <boost/any.hpp>
-#include <boost/thread/recursive_mutex.hpp>
+#include <boost/fiber/recursive_timed_mutex.hpp>
+#include <boost/fiber/recursive_timed_mutex.hpp>
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>
 #else
@@ -178,7 +181,7 @@ BOOST_FIXTURE_TEST_CASE(read_visit_param, WrappedParam<int>)
     param.updateData(100);
     TestReadVisitor visitor;
     BOOST_REQUIRE_EQUAL(visitor.count, 0);
-    param.visit(&visitor);
+    param.visit(visitor);
     BOOST_REQUIRE_EQUAL(visitor.count, 1);
 }
 

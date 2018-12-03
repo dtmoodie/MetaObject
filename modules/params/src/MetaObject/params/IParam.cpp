@@ -23,8 +23,12 @@ https://github.com/dtmoodie/MetaObject
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/TSignalRelay.hpp"
 #include "MetaObject/signals/TSlot.hpp"
+
 #include <algorithm>
-#include <boost/thread/recursive_mutex.hpp>
+
+#include <boost/fiber/recursive_timed_mutex.hpp>
+#include <boost/thread/locks.hpp>
+
 namespace mo
 {
 
@@ -44,15 +48,15 @@ namespace mo
         template MO_EXPORTS struct TKeyword<tag::param>;
     }
 
-    IParam::IParam(const std::string& name_, ParamFlags flags_, Context* ctx)
+    IParam::IParam(const std::string& name_, ParamFlags flags_, IAsyncStream* stream)
         : m_name(name_)
         , m_flags(flags_)
         , m_subscribers(0)
         , m_modified(false)
         , m_mtx(nullptr)
-        , m_ctx(nullptr)
+        , m_stream(nullptr)
     {
-        m_header.ctx = ctx;
+        m_header.stream = stream;
     }
 
     IParam::~IParam()
@@ -94,9 +98,9 @@ namespace mo
         return this;
     }
 
-    IParam* IParam::setContext(IContext* ctx)
+    IParam* IParam::setStream(IAsyncStream* stream)
     {
-        m_ctx = ctx;
+        m_stream = stream;
         return this;
     }
 
@@ -132,9 +136,9 @@ namespace mo
         return m_header.frame_number;
     }
 
-    IContext* IParam::getContext() const
+    IAsyncStream* IParam::getStream() const
     {
-        return m_ctx;
+        return m_stream;
     }
 
     const std::shared_ptr<ICoordinateSystem>& IParam::getCoordinateSystem() const
@@ -149,7 +153,7 @@ namespace mo
 
     ConnectionPtr_t IParam::registerUpdateNotifier(ISlot* f)
     {
-        Lock lock(mtx());
+        Lock_t lock(mtx());
         if (f->getSignature() == m_data_update.getSignature())
         {
             return m_data_update.connect(f);
@@ -163,7 +167,7 @@ namespace mo
 
     ConnectionPtr_t IParam::registerUpdateNotifier(const ISignalRelay::Ptr& relay)
     {
-        Lock lock(mtx());
+        Lock_t lock(mtx());
         auto tmp = relay;
         if (relay->getSignature() == m_data_update.getSignature())
         {
@@ -178,7 +182,7 @@ namespace mo
 
     ConnectionPtr_t IParam::registerDeleteNotifier(ISlot* f)
     {
-        Lock lock(mtx());
+        Lock_t lock(mtx());
         if (m_delete_signal.getSignature() == f->getSignature())
         {
             return m_delete_signal.connect(f);
@@ -188,7 +192,7 @@ namespace mo
 
     ConnectionPtr_t IParam::registerDeleteNotifier(const ISignalRelay::Ptr& relay)
     {
-        Lock lock(mtx());
+        Lock_t lock(mtx());
         if (relay->getSignature() == m_delete_signal.getSignature())
         {
             auto tmp = relay;
@@ -199,7 +203,7 @@ namespace mo
 
     IParam* IParam::emitUpdate(const Header& header, UpdateFlags flags_)
     {
-        Lock lock(mtx());
+        Lock_t lock(mtx());
         uint64_t fn = header.frame_number;
         if (fn == std::numeric_limits<uint64_t>::max())
         {
@@ -215,7 +219,7 @@ namespace mo
 
     IParam* IParam::emitUpdate(const IDataContainerPtr_t& data, UpdateFlags flags)
     {
-        Lock lock(mtx());
+        Lock_t lock(mtx());
         uint64_t fn = data->getHeader().frame_number;
         if (fn == std::numeric_limits<uint64_t>::max())
         {
@@ -240,13 +244,13 @@ namespace mo
     {
         if (m_mtx == nullptr)
         {
-            m_mtx = new boost::recursive_timed_mutex();
+            m_mtx = new Mutex_t();
             m_flags.set(ParamFlags::OwnsMutex_e);
         }
         return *m_mtx;
     }
 
-    void IParam::setMtx(boost::recursive_timed_mutex* mtx_)
+    void IParam::setMtx(Mutex_t* mtx_)
     {
         if (m_mtx && checkFlags(ParamFlags::OwnsMutex_e))
         {
@@ -258,13 +262,13 @@ namespace mo
 
     void IParam::subscribe()
     {
-        Lock lock(mtx());
+        Lock_t lock(mtx());
         ++m_subscribers;
     }
 
     void IParam::unsubscribe()
     {
-        Lock lock(mtx());
+        Lock_t lock(mtx());
         --m_subscribers;
         m_subscribers = std::max(0, m_subscribers);
     }
@@ -334,10 +338,10 @@ namespace mo
         {
             os << " " << cs->getName();
         }
-        auto ctx = getContext();
-        if (ctx)
+        auto stream = getStream();
+        if (stream)
         {
-            os << " <" << ctx->name() << ">";
+            os << " <" << stream->name() << ">";
         }
         return os;
     }

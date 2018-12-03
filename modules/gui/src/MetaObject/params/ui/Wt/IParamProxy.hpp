@@ -9,7 +9,7 @@
 #include <Wt/WContainerWidget>
 #include <Wt/WText>
 
-#include <boost/thread/recursive_mutex.hpp>
+#include <boost/fiber/recursive_timed_mutex.hpp>
 namespace Wt
 {
     namespace Chart

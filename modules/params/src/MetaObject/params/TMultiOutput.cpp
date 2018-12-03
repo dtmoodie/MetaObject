@@ -86,7 +86,7 @@ namespace mo
         return os;
     }
 
-    void IMultiOutput::visit(mo::IReadVisitor* visitor)
+    void IMultiOutput::visit(mo::IReadVisitor& visitor)
     {
         auto out = getOutputParam();
         if (out)
@@ -95,12 +95,30 @@ namespace mo
         }
     }
 
-    void IMultiOutput::visit(mo::IWriteVisitor* visitor) const
+    void IMultiOutput::visit(mo::IWriteVisitor& visitor) const
     {
         auto out = getOutputParam();
         if (out)
         {
             out->visit(visitor);
+        }
+    }
+
+    void IMultiOutput::visit(BinaryInputVisitor& ar)
+    {
+        auto out = getOutputParam();
+        if (out)
+        {
+            out->visit(ar);
+        }
+    }
+
+    void IMultiOutput::visit(BinaryOutputVisitor& ar) const
+    {
+        auto out = getOutputParam();
+        if (out)
+        {
+            out->visit(ar);
         }
     }
 

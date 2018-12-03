@@ -6,7 +6,7 @@
 #include "MetaObject/params/ui/WidgetFactory.hpp"
 #include "ui_mainwindow.h"
 
-#include <boost/thread/recursive_mutex.hpp>
+#include <boost/fiber/recursive_timed_mutex.hpp>
 // The following lines are commented out to demonstrate user interface instantiation in a different translation unit
 // Since the instantiation library is included, instantiations of several types are registered with the full user
 // interface code for those types.  Thus the following are not needed for those types.  However, not all types are

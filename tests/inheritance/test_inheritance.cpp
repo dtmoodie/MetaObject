@@ -9,7 +9,7 @@
 #include "MetaObject/params/ParamMacros.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 
-#include <boost/thread/recursive_mutex.hpp>
+#include <boost/fiber/recursive_timed_mutex.hpp>
 
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>

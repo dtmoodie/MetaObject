@@ -3,13 +3,13 @@
 namespace mo
 {
     Header::Header()
-        : ctx(nullptr)
+        : stream(nullptr)
     {
     }
 
     Header::Header(const mo::Time& ts)
         : timestamp(ts)
-        , ctx(nullptr)
+        , stream(nullptr)
     {
     }
 
@@ -20,7 +20,7 @@ namespace mo
 
     Header::Header(const uint64_t fn)
         : frame_number(fn)
-        , ctx(nullptr)
+        , stream(nullptr)
     {
     }
 

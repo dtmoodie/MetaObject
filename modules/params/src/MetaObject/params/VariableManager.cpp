@@ -116,12 +116,11 @@ IParam* VariableManager::getOutputParam(std::string name)
             std::stringstream ss;
             for (auto potential : potentials)
                 ss << potential->getTreeName() << "\n";
-            MO_LOG(debug) << "Warning ambiguous name \"" << name << "\" passed in, multiple potential matches\n "
-                          << ss.str();
+            MO_LOG(debug, "Warning ambiguous name '{}' passed in, multiple potential matches", ss.str());
         }
         return potentials[0];
     }
-    MO_LOG(debug) << "Unable to find Param named " << name;
+    MO_LOG(debug, "Unable to find param with name name {}", name);
     return nullptr;
 }
 void VariableManager::linkParams(IParam* output, IParam* input)

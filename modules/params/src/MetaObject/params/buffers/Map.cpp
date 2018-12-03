@@ -1,6 +1,6 @@
 #include "Map.hpp"
+#include <boost/fiber/recursive_timed_mutex.hpp>
 #include <boost/thread/locks.hpp>
-#include <boost/thread/recursive_mutex.hpp>
 
 namespace mo
 {
@@ -14,6 +14,10 @@ namespace mo
             m_update_slot = std::bind(
                 &Map::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
             IParam::setMtx(&m_mtx);
+        }
+
+        Map::~Map()
+        {
         }
 
         void Map::setFrameBufferCapacity(const uint64_t size)
@@ -38,13 +42,13 @@ namespace mo
 
         size_t Map::getSize() const
         {
-            Lock lock(m_mtx);
+            Lock_t lock(m_mtx);
             return m_data_buffer.size();
         }
 
         uint64_t Map::clear()
         {
-            Lock lock(m_mtx);
+            Lock_t lock(m_mtx);
             const uint64_t sz = m_data_buffer.size();
             m_data_buffer.clear();
             m_current_frame_number = FrameNumber();
@@ -54,10 +58,10 @@ namespace mo
 
         bool Map::getTimestampRange(mo::OptionalTime& start, mo::OptionalTime& end)
         {
-            Lock lock(m_mtx);
+            Lock_t lock(m_mtx);
             if (m_data_buffer.size())
             {
-                Lock lock(IParam::mtx());
+                Lock_t lock(IParam::mtx());
                 start = m_data_buffer.begin()->first.timestamp;
                 end = m_data_buffer.rbegin()->first.timestamp;
                 return true;
@@ -67,10 +71,10 @@ namespace mo
 
         bool Map::getFrameNumberRange(uint64_t& start, uint64_t& end)
         {
-            Lock lock(m_mtx);
+            Lock_t lock(m_mtx);
             if (m_data_buffer.size())
             {
-                Lock lock(IParam::mtx());
+                Lock_t lock(IParam::mtx());
                 start = m_data_buffer.begin()->first.frame_number;
                 end = m_data_buffer.rbegin()->first.frame_number;
                 return true;
@@ -95,7 +99,7 @@ namespace mo
         {
             if ((m_push_policy == GROW) || (m_push_policy == PRUNE))
             {
-                Lock lock(IParam::mtx());
+                Lock_t lock(IParam::mtx());
                 m_data_buffer[data->getHeader()] = data;
             }
             else
@@ -113,7 +117,7 @@ namespace mo
 
         void Map::pushOrDrop(const IDataContainerPtr_t& data)
         {
-            Lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
             if (m_frame_padding)
             {
                 if (m_data_buffer.size() > (*m_frame_padding + 1))
@@ -126,12 +130,12 @@ namespace mo
 
         void Map::pushAndWait(const IDataContainerPtr_t& data)
         {
-            Lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
             if (m_frame_padding)
             {
                 while (m_data_buffer.size() > (*m_frame_padding + 1))
                 {
-                    m_cv.wait_for(lock, boost::chrono::milliseconds(2));
+                    m_cv.wait_for(lock, 2 * ms);
                     if (lock)
                     {
                         lock.unlock();
@@ -153,7 +157,7 @@ namespace mo
 
         Map::IContainerPtr_t Map::getData(const Header& desired)
         {
-            Lock lock(m_mtx);
+            Lock_t lock(m_mtx);
             m_current_data = search(desired);
             if (m_current_data)
             {
@@ -170,7 +174,7 @@ namespace mo
 
         Map::IContainerConstPtr_t Map::getData(const Header& desired) const
         {
-            Lock lock(m_mtx);
+            Lock_t lock(m_mtx);
             auto result = search(desired);
             if (result)
             {

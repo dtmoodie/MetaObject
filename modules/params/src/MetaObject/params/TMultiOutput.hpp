@@ -27,11 +27,13 @@ namespace mo
 
         std::ostream& print(std::ostream& os) const override;
 
-        virtual void visit(IReadVisitor*) override;
-        virtual void visit(IWriteVisitor*) const override;
+        virtual void visit(IReadVisitor&) override;
+        virtual void visit(IWriteVisitor&) const override;
+        virtual void visit(BinaryInputVisitor& ar) override;
+        virtual void visit(BinaryOutputVisitor& ar) const override;
 
-        IContainerPtr_t getData(const Header& header);
-        IContainerConstPtr_t getData(const Header& header) const;
+        IContainerPtr_t getData(const Header& header) override;
+        IContainerConstPtr_t getData(const Header& header) const override;
 
       protected:
         void setOutputs(const std::vector<IParam*>& outputs);

@@ -28,8 +28,10 @@ namespace mo
 
         virtual TypeInfo getTypeInfo() const override;
 
-        virtual void visit(IReadVisitor*) override;
-        virtual void visit(IWriteVisitor*) const override;
+        virtual void visit(IReadVisitor&) override;
+        virtual void visit(IWriteVisitor&) const override;
+        virtual void visit(BinaryInputVisitor& ar) override;
+        virtual void visit(BinaryOutputVisitor& ar) const override;
 
         virtual IContainerPtr_t getData(const Header& desired = Header()) override;
         virtual IContainerConstPtr_t getData(const Header& desired = Header()) const override;
@@ -38,7 +40,7 @@ namespace mo
         void updateDataImpl(const TContainerPtr_t& data)
         {
             {
-                mo::Lock lock(this->mtx());
+                mo::Lock_t lock(this->mtx());
                 TParam<T>::_data = data;
             }
             emitUpdate(IDataContainer::Ptr(TParam<T>::_data), InputUpdated_e);
@@ -85,7 +87,7 @@ namespace mo
     template <class T>
     bool ITInputParam<T>::setInput(IParam* param)
     {
-        Lock lock(this->mtx());
+        Lock_t lock(this->mtx());
         if (param->getTypeInfo() == getTypeInfo())
         {
             if (InputParam::setInput(param))
@@ -119,15 +121,27 @@ namespace mo
     }
 
     template <class T>
-    void ITInputParam<T>::visit(IReadVisitor* visitor)
+    void ITInputParam<T>::visit(IReadVisitor& visitor)
     {
         InputParam::visit(visitor);
     }
 
     template <class T>
-    void ITInputParam<T>::visit(IWriteVisitor* visitor) const
+    void ITInputParam<T>::visit(IWriteVisitor& visitor) const
     {
         InputParam::visit(visitor);
+    }
+
+    template <class T>
+    void ITInputParam<T>::visit(BinaryInputVisitor& ar)
+    {
+        InputParam::visit(ar);
+    }
+
+    template <class T>
+    void ITInputParam<T>::visit(BinaryOutputVisitor& ar) const
+    {
+        InputParam::visit(ar);
     }
 
     template <class T>
@@ -152,7 +166,7 @@ namespace mo
             emitUpdate(header, InputUpdated_e);
             return;
         }
-        if (header.ctx == getContext())
+        if (header.stream == getStream())
         {
             TParam<T>::updateData(data);
         }

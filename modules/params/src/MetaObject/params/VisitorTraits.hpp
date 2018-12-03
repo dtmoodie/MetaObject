@@ -12,12 +12,17 @@ namespace mo
     using Indexer = ct::Indexer<N>;
 
     template <class T, index_t I>
-    void visitValue(IReadVisitor& visitor, T& obj)
+    auto visitValue(IReadVisitor& visitor, T& obj) -> ct::enable_if_member_setter<T, I>
     {
         auto accessor = ct::Reflect<T>::getAccessor(ct::Indexer<I>{});
         using RefType = typename ct::ReferenceType<typename decltype(accessor)::SetType>::Type;
         auto ref = static_cast<RefType>(accessor.set(obj));
         visitor(&ref, ct::Reflect<T>::getName(ct::Indexer<I>{}));
+    }
+
+    template <class T, index_t I>
+    auto visitValue(IReadVisitor&, T&) -> ct::disable_if_member_setter<T, I>
+    {
     }
 
     template <class T>
@@ -34,12 +39,17 @@ namespace mo
     }
 
     template <class T, index_t I>
-    void visitValue(IWriteVisitor& visitor, const T& obj)
+    auto visitValue(IWriteVisitor& visitor, const T& obj) -> ct::enable_if_member_getter<T, I>
     {
         auto accessor = ct::Reflect<T>::getAccessor(ct::Indexer<I>{});
         using RefType = typename ct::ReferenceType<typename decltype(accessor)::GetType>::ConstType;
         RefType ref = static_cast<RefType>(accessor.get(obj));
         visitor(&ref, ct::Reflect<T>::getName(ct::Indexer<I>{}));
+    }
+
+    template <class T, index_t I>
+    auto visitValue(IWriteVisitor&, const T&) -> ct::disable_if_member_getter<T, I>
+    {
     }
 
     template <class T>

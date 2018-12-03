@@ -4,6 +4,8 @@
 #include <MetaObject/params/TInputParam.hpp>
 #include <MetaObject/params/TParamPtr.hpp>
 
+#include <boost/fiber/recursive_timed_mutex.hpp>
+
 using namespace mo;
 
 namespace

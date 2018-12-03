@@ -21,8 +21,8 @@ https://github.com/dtmoodie/MetaObject
 #include "IParam.hpp"
 #include "TDataContainer.hpp"
 
+#include <boost/fiber/recursive_timed_mutex.hpp>
 #include <boost/thread/locks.hpp>
-#include <boost/thread/recursive_mutex.hpp>
 namespace mo
 {
     template <typename T>
@@ -58,8 +58,10 @@ namespace mo
         virtual ConnectionPtr_t registerUpdateNotifier(ISlot* f) override;
         virtual ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr& relay) override;
 
-        virtual void visit(IReadVisitor*) override;
-        virtual void visit(IWriteVisitor*) const override;
+        virtual void visit(IReadVisitor&) override;
+        virtual void visit(IWriteVisitor&) const override;
+        virtual void visit(BinaryInputVisitor& ar);
+        virtual void visit(BinaryOutputVisitor& ar) const;
 
         bool isValid() const;
         ConstAccessToken<T> read() const;
@@ -108,7 +110,7 @@ namespace mo
         if (param)
         {
             header.frame_number = param->getFrameNumber();
-            header.ctx = param->getContext();
+            header.stream = param->getStream();
             header.coordinate_system = param->getCoordinateSystem();
             header.timestamp = param->getTimestamp();
         }
@@ -123,15 +125,15 @@ namespace mo
             header.timestamp = *tsptr;
         }
 
-        if (auto ctx_ = GetKeywordInputDefault<tag::context>(nullptr, args...))
+        if (auto stream_ = GetKeywordInputDefault<tag::stream>(nullptr, args...))
         {
-            header.ctx = ctx_;
+            header.stream = stream_;
         }
         {
-            mo::Lock lock(this->mtx());
-            if (getContext() == nullptr)
+            mo::Lock_t lock(this->mtx());
+            if (getStream() == nullptr)
             {
-                setContext(header.ctx);
+                setStream(header.stream);
             }
         }
 
@@ -178,7 +180,7 @@ namespace mo
     void TParam<T>::updateDataImpl(const TContainerPtr_t& data)
     {
         {
-            mo::Lock lock(this->mtx());
+            mo::Lock_t lock(this->mtx());
             _data = data;
         }
         emitUpdate(IDataContainer::Ptr(_data), ValueUpdated_e);
@@ -217,9 +219,9 @@ namespace mo
     }
 
     template <class T>
-    void TParam<T>::visit(IReadVisitor* visitor)
+    void TParam<T>::visit(IReadVisitor& visitor)
     {
-        mo::Lock lock(this->mtx());
+        mo::Lock_t lock(this->mtx());
         if (_data)
         {
             _data->visit(visitor);
@@ -227,19 +229,39 @@ namespace mo
     }
 
     template <class T>
-    void TParam<T>::visit(IWriteVisitor* visitor) const
+    void TParam<T>::visit(IWriteVisitor& visitor) const
     {
-        mo::Lock lock(this->mtx());
+        mo::Lock_t lock(this->mtx());
         if (_data)
         {
             _data->visit(visitor);
+        }
+    }
+
+    template <class T>
+    void TParam<T>::visit(BinaryInputVisitor& ar)
+    {
+        mo::Lock_t lock(this->mtx());
+        if (_data)
+        {
+            _data->visit(ar);
+        }
+    }
+
+    template <class T>
+    void TParam<T>::visit(BinaryOutputVisitor& ar) const
+    {
+        mo::Lock_t lock(this->mtx());
+        if (_data)
+        {
+            _data->visit(ar);
         }
     }
 
     template <class T>
     typename TParam<T>::IContainerPtr_t TParam<T>::getData(const Header& desired)
     {
-        mo::Lock lock(this->mtx());
+        mo::Lock_t lock(this->mtx());
         if (_data)
         {
             if (!desired.timestamp && !desired.frame_number.valid())
@@ -271,7 +293,7 @@ namespace mo
     template <class T>
     typename TParam<T>::IContainerConstPtr_t TParam<T>::getData(const Header& desired) const
     {
-        mo::Lock lock(this->mtx());
+        mo::Lock_t lock(this->mtx());
         if (_data)
         {
             if (!desired.timestamp && !desired.frame_number.valid())
@@ -306,7 +328,7 @@ namespace mo
     template <class T>
     ConstAccessToken<T> TParam<T>::read() const
     {
-        mo::Lock lock(this->mtx());
+        mo::Lock_t lock(this->mtx());
         MO_ASSERT(_data != nullptr);
         return {std::move(lock), *this, _data->data};
     }
@@ -314,7 +336,7 @@ namespace mo
     template <class T>
     AccessToken<T> TParam<T>::access()
     {
-        mo::Lock lock(this->mtx());
+        mo::Lock_t lock(this->mtx());
         MO_ASSERT(_data != nullptr);
         return {std::move(lock), *this, _data->data};
     }

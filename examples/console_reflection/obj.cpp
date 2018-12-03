@@ -1,7 +1,7 @@
 #include "obj.hpp"
 #include "MetaObject/object/MetaObjectInfo.hpp"
 #include <MetaObject/params/ParamMacros.hpp>
-#include <boost/thread/recursive_mutex.hpp>
+#include <boost/fiber/recursive_timed_mutex.hpp>
 
 class ConcreteImplementation : public ExampleInterface
 {

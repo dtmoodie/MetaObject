@@ -7,6 +7,8 @@
 #include <MetaObject/params/buffers/BufferFactory.hpp>
 #include <MetaObject/params/buffers/IBuffer.hpp>
 
+#include <boost/fiber/recursive_timed_mutex.hpp>
+
 #include <boost/thread.hpp>
 
 using namespace mo;

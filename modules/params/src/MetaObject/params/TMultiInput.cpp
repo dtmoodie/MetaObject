@@ -1,5 +1,5 @@
 #include "TMultiInput-inl.hpp"
-#include <boost/thread/recursive_mutex.hpp>
+#include <boost/fiber/recursive_timed_mutex.hpp>
 
 namespace mo
 {
@@ -17,7 +17,7 @@ namespace mo
 
     bool IMultiInput::setInput(const std::shared_ptr<IParam>& publisher)
     {
-        Lock lock(mtx());
+        Lock_t lock(mtx());
         for (auto input : m_inputs)
         {
             if (input->acceptsInput(publisher.get()))
@@ -38,7 +38,7 @@ namespace mo
 
     bool IMultiInput::setInput(IParam* publisher)
     {
-        Lock lock(mtx());
+        Lock_t lock(mtx());
         for (auto input : m_inputs)
         {
             if (input->acceptsInput(publisher))
@@ -59,7 +59,7 @@ namespace mo
 
     IMultiInput::IContainerPtr_t IMultiInput::getData(const Header& desired)
     {
-        Lock lock(mtx());
+        Lock_t lock(mtx());
         if (m_current_input)
         {
             return m_current_input->getData(desired);
@@ -69,7 +69,7 @@ namespace mo
 
     IMultiInput::IContainerConstPtr_t IMultiInput::getData(const Header& desired) const
     {
-        Lock lock(mtx());
+        Lock_t lock(mtx());
         if (m_current_input)
         {
             return m_current_input->getData(desired);
@@ -87,7 +87,7 @@ namespace mo
 
     mo::TypeInfo IMultiInput::getTypeInfo() const
     {
-        Lock lock(mtx());
+        Lock_t lock(mtx());
         if (m_current_input)
         {
             return m_current_input->getTypeInfo();

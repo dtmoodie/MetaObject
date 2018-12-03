@@ -3,6 +3,12 @@
 #include "IDataContainer.hpp"
 #include <MetaObject/params/IDynamicVisitor.hpp>
 
+#include <ct/reflect/cerealize.hpp>
+
+#include <cereal/archives/binary.hpp>
+#include <cereal/cereal.hpp>
+#include <cereal/types/boost/optional.hpp>
+
 namespace mo
 {
     template <class T>
@@ -18,8 +24,10 @@ namespace mo
 
         virtual TypeInfo getType() const;
 
-        virtual void visit(IReadVisitor*);
-        virtual void visit(IWriteVisitor*) const;
+        virtual void visit(IReadVisitor&) override;
+        virtual void visit(IWriteVisitor&) const override;
+        virtual void visit(BinaryInputVisitor& ar) override;
+        virtual void visit(BinaryOutputVisitor& ar) const override;
 
         virtual const Header& getHeader() const;
 
@@ -60,15 +68,31 @@ namespace mo
     }
 
     template <class T>
-    void TDataContainer<T>::visit(IReadVisitor* visitor)
+    void TDataContainer<T>::visit(IReadVisitor& visitor)
     {
-        (*visitor)(&data);
+        visitor(&header, "header");
+        visitor(&data, "data");
     }
 
     template <class T>
-    void TDataContainer<T>::visit(IWriteVisitor* visitor) const
+    void TDataContainer<T>::visit(IWriteVisitor& visitor) const
     {
-        (*visitor)(&data);
+        visitor(&header, "header");
+        visitor(&data, "data");
+    }
+
+    template <class T>
+    void TDataContainer<T>::visit(BinaryInputVisitor& ar)
+    {
+        ar(CEREAL_NVP(header));
+        ar(CEREAL_NVP(data));
+    }
+
+    template <class T>
+    void TDataContainer<T>::visit(BinaryOutputVisitor& ar) const
+    {
+        ar(CEREAL_NVP(header));
+        ar(CEREAL_NVP(data));
     }
 
     template <class T>

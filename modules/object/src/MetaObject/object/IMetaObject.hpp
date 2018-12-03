@@ -4,6 +4,7 @@
 #include "MetaObject/core/detail/Time.hpp"
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/object.hpp"
+#include <MetaObject/core/AsyncStream.hpp>
 
 #include <RuntimeObjectSystem/IObject.h>
 #include <RuntimeObjectSystem/shared_ptr.hpp>
@@ -68,10 +69,10 @@ namespace mo
         virtual ~IMetaObject();
 
         // Setup
-        virtual void setContext(const ContextPtr_t& ctx, bool overwrite = false) = 0;
-        virtual ContextPtr_t getContext() = 0;
+        virtual void setStream(const IAsyncStream::Ptr_t& ctx, bool overwrite = false) = 0;
+        virtual IAsyncStream::Ptr_t getStream() = 0;
         virtual int setupSignals(RelayManager* mgr) = 0;
-        virtual int setupVariableManager(IVariableManager* mgr) = 0;
+        virtual int setupeVariableManager(IVariableManager* mgr) = 0;
         virtual int removeVariableManager(IVariableManager* mgr) = 0;
 
         virtual void Init(bool firstInit) = 0; // inherited from RCC, thus the PascalCase

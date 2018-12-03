@@ -2,6 +2,9 @@
 #include <MetaObject/detail/Export.hpp>
 #include <boost/optional.hpp>
 #include <boost/optional/optional_io.hpp>
+
+#include <ct/reflect.hpp>
+
 #include <chrono>
 namespace mo
 {
@@ -163,12 +166,20 @@ namespace cereal
     template <class AR>
     double save_minimal(const AR& /*ar*/, const mo::Time& time)
     {
-        return time.time_since_epoch().count();
+        return time.seconds();
     }
 
     template <class AR>
     void load_minimal(AR& /*ar*/, mo::Time& time, const double& value)
     {
-        time = mo::Time(mo::ns * value);
+        time = mo::Time(value * mo::second);
     }
+}
+
+namespace ct
+{
+    REFLECT_BEGIN(mo::FrameNumber)
+        PUBLIC_ACCESS(val)
+        MEMBER_FUNCTION("valid", &mo::FrameNumber::valid)
+    REFLECT_END;
 }

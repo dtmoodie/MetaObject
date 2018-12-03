@@ -92,7 +92,7 @@ namespace mo
         template <class T>
         bool NNStreamBuffer<T>::getData(InputStorage_t& data, const OptionalTime& ts, Context* ctx, size_t* fn_)
         {
-            Lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
             auto itr = search(ts);
             if (itr != this->_data_buffer.end())
             {
@@ -119,7 +119,7 @@ namespace mo
         template <class T>
         bool NNStreamBuffer<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime* ts_)
         {
-            Lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
             auto itr = search(fn);
             if (itr != this->_data_buffer.end())
             {

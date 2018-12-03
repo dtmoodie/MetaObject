@@ -9,12 +9,12 @@ namespace mo
     {
         AccessTokenLock();
         AccessTokenLock(AccessTokenLock&& other);
-        AccessTokenLock(Lock&& lock);
+        AccessTokenLock(Lock_t&& lock);
         AccessTokenLock(Mutex_t& lock);
         ~AccessTokenLock();
 
       private:
-        std::unique_ptr<Lock> lock;
+        std::unique_ptr<Lock_t> lock;
     };
 
     // Guarantees write safe access to underlying data
@@ -28,7 +28,7 @@ namespace mo
         AccessToken& operator=(const AccessToken&) = delete;
         AccessToken& operator=(AccessToken&&) = default;
 
-        AccessToken(Lock&& lock, TParam<T>& param, T& data)
+        AccessToken(Lock_t&& lock, TParam<T>& param, T& data)
             : _lock(std::move(lock))
             , _param(param)
             , _data(data)
@@ -68,9 +68,9 @@ namespace mo
             return *this;
         }
 
-        AccessToken<T>& operator()(Context* ctx)
+        AccessToken<T>& operator()(IAsyncStream* ctx)
         {
-            _header.ctx = ctx;
+            _header.stream = ctx;
             return *this;
         }
 
@@ -98,7 +98,7 @@ namespace mo
         ConstAccessToken(ConstAccessToken&& other) = default;
         ConstAccessToken(const ConstAccessToken& other) = default;
 
-        ConstAccessToken(Lock&& lock, const TParam<T>& param, const T& data)
+        ConstAccessToken(Lock_t&& lock, const TParam<T>& param, const T& data)
             : _lock(std::move(lock))
             , _param(param)
             , _data(data)

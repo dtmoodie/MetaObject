@@ -89,13 +89,13 @@ namespace mo
     template <class... T, class Mutex>
     void TSignalRelay<void(T...), Mutex>::operator()(TSignal<void(T...)>* sig, const T&... args)
     {
-        std::lock_guard<Mutex> lock(m_mtx);
+        std::unique_lock<Mutex> lock(m_mtx);
         auto mym_slots = m_slots;
         lock.unlock();
         for (auto slot : mym_slots)
         {
-            auto slot_ctx = slot->getContext();
-            auto sig_ctx = sig->getContext();
+            auto slot_ctx = slot->getStream();
+            auto sig_ctx = sig->getStream();
             if (slot_ctx && sig_ctx)
             {
                 if (slot_ctx->processId() == sig_ctx->processId())

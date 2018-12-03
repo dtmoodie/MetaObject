@@ -2,7 +2,7 @@
 /*
 #include "BufferConstructor.hpp"
 #include <boost/thread/locks.hpp>
-#include <boost/thread/recursive_mutex.hpp>
+#include <boost/fiber/recursive_timed_mutex.hpp>
 
 namespace mo
 {
@@ -34,7 +34,7 @@ namespace mo
 
         uint64_t CircularBuffer::getSize() const
         {
-            Lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
             return m_buffer.size();
         }
 
@@ -47,7 +47,7 @@ namespace mo
 
         bool CircularBuffer::getTimestampRange(mo::OptionalTime& start, mo::OptionalTime& end)
         {
-            Lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
             if (m_buffer.size())
             {
                 start = m_buffer.front()->getHeader().timestamp;
@@ -59,7 +59,7 @@ namespace mo
 
         bool CircularBuffer::getFrameNumberRange(uint64_t& start, uint64_t& end)
         {
-            Lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
             if (m_buffer.size())
             {
                 start = m_buffer.front()->getHeader().frame_number;
@@ -78,14 +78,14 @@ namespace mo
         {
             if (data)
             {
-                Lock lock(mtx());
+                Lock_t lock(mtx());
                 m_buffer.push_back(data);
             }
         }
 
         CircularBuffer::IContainerPtr_t CircularBuffer::getData(const Header& desired)
         {
-            Lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
             if (!desired.timestamp && !desired.frame_number.valid())
             {
                 if (m_buffer.size())
@@ -109,7 +109,7 @@ namespace mo
 
         CircularBuffer::IContainerConstPtr_t CircularBuffer::getData(const Header& desired) const
         {
-            Lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
             for (auto itr = m_buffer.begin(); itr != m_buffer.end(); ++itr)
             {
                 if ((*itr)->getHeader() == desired)

@@ -19,7 +19,7 @@
 #include "RuntimeObjectSystem/IObjectState.hpp"
 #include "RuntimeObjectSystem/ISimpleSerializer.h"
 
-#include <boost/thread/recursive_mutex.hpp>
+#include <boost/fiber/recursive_timed_mutex.hpp>
 
 namespace mo
 {
@@ -494,7 +494,7 @@ namespace mo
         return nullptr;
     }
 
-    std::shared_ptr<Context> MetaObject::getContext()
+    std::shared_ptr<Context> MetaObject::getStream()
     {
         return _ctx;
     }
@@ -755,8 +755,8 @@ namespace mo
         if (input && input->acceptsInput(output))
         {
             // Check contexts to see if a buffer needs to be setup
-            auto output_ctx = output->getContext();
-            auto input_context = input->getContext();
+            auto output_ctx = output->getStream();
+            auto input_context = input->getStream();
             if (type_ == DEFAULT && output_ctx != input_context)
             {
                 type_ = getDefaultBufferType(output_ctx, input_context);

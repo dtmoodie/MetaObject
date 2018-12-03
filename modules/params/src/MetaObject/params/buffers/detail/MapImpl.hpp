@@ -14,7 +14,7 @@ namespace mo
         template <class T>
         bool Map<T>::getData(InputStorage_t& data, const OptionalTime& ts, Context* ctx, size_t* fn_)
         {
-            Lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
 
             auto itr = search(ts);
             if (itr != _data_buffer.end())
@@ -42,7 +42,7 @@ namespace mo
         template <class T>
         bool Map<T>::getData(InputStorage_t& value, size_t fn, Context* ctx, OptionalTime* ts)
         {
-            Lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
             auto itr = search(fn);
             if (itr != _data_buffer.end())
             {
@@ -73,7 +73,7 @@ namespace mo
                                     size_t fn,
                                     const std::shared_ptr<ICoordinateSystem>& cs)
         {
-            Lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
             _data_buffer[{ts, fn, cs, ctx}] = data;
             this->modified(true);
             lock.unlock();
@@ -89,7 +89,7 @@ namespace mo
                                     size_t fn,
                                     const std::shared_ptr<ICoordinateSystem>& cs)
         {
-            Lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
             auto itr = _data_buffer.emplace(SequenceKey(ts, fn, cs, ctx), std::move(data));
             this->modified(true);
             lock.unlock();
@@ -123,7 +123,7 @@ namespace mo
         template <class T>
         size_t Map<T>::getSize()
         {
-            Lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
             return _data_buffer.size();
         }
 
@@ -132,7 +132,7 @@ namespace mo
         {
             if (_data_buffer.size())
             {
-                Lock lock(IParam::mtx());
+                Lock_t lock(IParam::mtx());
                 if (_data_buffer.begin()->first.ts && _data_buffer.rbegin()->first.ts)
                 {
                     start = *_data_buffer.begin()->first.ts;
@@ -154,7 +154,7 @@ namespace mo
         {
             if (_data_buffer.size())
             {
-                Lock lock(IParam::mtx());
+                Lock_t lock(IParam::mtx());
                 start = _data_buffer.begin()->first.fn;
                 end = _data_buffer.rbegin()->first.fn;
                 return true;
@@ -215,7 +215,7 @@ namespace mo
                                    const std::shared_ptr<ICoordinateSystem>& cs,
                                    UpdateFlags)
         {
-            Lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
             _data_buffer[{ts, fn, cs, ctx}] = data;
             this->modified(true);
             lock.unlock();

@@ -20,11 +20,7 @@ IF(Qt5_FOUND)
   TARGET_INCLUDE_DIRECTORIES(metaobject_params PRIVATE $<BUILD_INTERFACE:${Qt5Core_INCLUDE_DIRS}>)
   set(metaobject_param_include
   "${metaobject_param_include}
-#if MO_HAVE_QT
-    #include <MetaObject/params/ui/Qt/OpenCV.hpp>
-    #include <MetaObject/params/ui/Qt/Containers.hpp>
-    #include <MetaObject/params/ui/Qt/TParamProxy.hpp>
-#endif
+
 " CACHE INTERNAL "" FORCE)
 ENDIF()
 
@@ -32,7 +28,7 @@ ENDIF()
 
 if(BUILD_TESTS)
     file(GLOB_RECURSE tests "tests/*.cpp")
-    add_executable(mo_test_params ${tests})
-    target_link_libraries(mo_test_params metaobject_params)
-    set_property(TARGET mo_test_params PROPERTY CXX_STANDARD 11)
+    add_executable(test_mo_params ${tests})
+    target_link_libraries(test_mo_params metaobject_params)
+    set_property(TARGET test_mo_params PROPERTY CXX_STANDARD 11)
 endif()

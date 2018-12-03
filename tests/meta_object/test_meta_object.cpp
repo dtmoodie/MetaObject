@@ -16,7 +16,7 @@
 
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
-#include <boost/thread/recursive_mutex.hpp>
+#include <boost/fiber/recursive_timed_mutex.hpp>
 
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>

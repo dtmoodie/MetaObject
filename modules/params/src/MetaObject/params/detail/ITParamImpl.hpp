@@ -1,7 +1,7 @@
 #pragma once
 #ifndef __CUDACC__
 #include "../ITParam.hpp"
-#include <boost/thread/recursive_mutex.hpp>
+#include <boost/fiber/recursive_timed_mutex.hpp>
 
 namespace mo
 {

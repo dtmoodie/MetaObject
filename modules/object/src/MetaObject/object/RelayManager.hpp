@@ -18,7 +18,7 @@ namespace mo
     class TSignal;
     template <typename T>
     class TSlot;
-    template <typename T>
+    template <typename T, class MUTEX>
     class TSignalRelay;
 
     // Manages shared ownership of signals so that multiple senders and receivers can exist, also allows for
@@ -70,5 +70,8 @@ namespace mo
         impl* _pimpl;
         mutable std::mutex mtx;
     };
-    RelayManager* RelayManager::instance() { return singleton<RelayManager>(); }
+    RelayManager* RelayManager::instance()
+    {
+        return singleton<RelayManager>();
+    }
 } // namespace Signals

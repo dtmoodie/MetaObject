@@ -12,7 +12,8 @@ struct ParamFactory::impl
     std::map<TypeInfo, create_f> _registered_constructors_exact;
 };
 
-ParamFactory::ParamFactory() : m_pimpl(std::unique_ptr<ParamFactory::impl>(new ParamFactory::impl()))
+ParamFactory::ParamFactory()
+    : m_pimpl(std::unique_ptr<ParamFactory::impl>(new ParamFactory::impl()))
 {
 }
 
@@ -46,10 +47,12 @@ std::shared_ptr<IParam> ParamFactory::create(const TypeInfo& data_type, BufferFl
         {
             return std::shared_ptr<IParam>(itr2->second());
         }
-        MO_LOG(debug) << "Requested datatype (" << data_type.name()
-                      << ") exists but the specified Param type : " << param_type << " does not.";
+        MO_LOG(debug,
+               "Requsted datatype ({}) exists but the specified param type ({}) does not",
+               data_type.name(),
+               param_type);
     }
-    MO_LOG(debug) << "Requested datatype (" << data_type.name() << ") does not exist";
+    MO_LOG(debug, "Requsted datatype ({}) does not exist", data_type.name());
     return nullptr;
 }
 

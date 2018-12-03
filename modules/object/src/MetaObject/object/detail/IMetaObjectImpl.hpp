@@ -41,7 +41,7 @@ namespace mo
     TParam<T>* MetaObject::updateParam(const std::string& name, T& value, const OptionalTime& ts, Context* ctx)
     {
         if (ctx == nullptr)
-            ctx = getContext().get();
+            ctx = getStream().get();
         auto param = getParamOptional<T>(name);
         if (param)
         {
@@ -61,7 +61,7 @@ namespace mo
     TParam<T>* MetaObject::updateParam(const std::string& name, const T& value, const OptionalTime& ts, Context* ctx)
     {
         if (ctx == nullptr)
-            ctx = getContext().get();
+            ctx = getStream().get();
         auto param = getParamOptional<T>(name);
         if (param)
         {

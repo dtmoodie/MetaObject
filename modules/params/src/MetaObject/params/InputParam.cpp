@@ -1,6 +1,6 @@
 #include "MetaObject/params/InputParam.hpp"
-#include <boost/thread/recursive_mutex.hpp>
-
+#include <boost/fiber/recursive_timed_mutex.hpp>
+#include <boost/thread/locks.hpp>
 using namespace mo;
 
 InputParam::InputParam()
@@ -54,7 +54,7 @@ std::ostream& InputParam::print(std::ostream& os) const
 {
     IParam* input = nullptr;
     {
-        Lock lock(mtx());
+        Lock_t lock(mtx());
         IParam::print(os);
         input = getInputParam();
     }
@@ -69,7 +69,7 @@ std::ostream& InputParam::print(std::ostream& os) const
 
 OptionalTime InputParam::getInputTimestamp()
 {
-    Lock lock(mtx());
+    Lock_t lock(mtx());
     if (m_input_param)
     {
         return m_input_param->getTimestamp();
@@ -79,7 +79,7 @@ OptionalTime InputParam::getInputTimestamp()
 
 uint64_t InputParam::getInputFrameNumber()
 {
-    Lock lock(mtx());
+    Lock_t lock(mtx());
     if (m_input_param)
     {
         return m_input_param->getFrameNumber();
@@ -99,19 +99,19 @@ bool InputParam::acceptsType(const TypeInfo&) const
 
 void InputParam::setQualifier(const Qualifier_f& f)
 {
-    Lock lock(mtx());
+    Lock_t lock(mtx());
     qualifier = f;
 }
 
 void InputParam::onInputDelete(const IParam*)
 {
-    Lock lock(mtx());
+    Lock_t lock(mtx());
     m_input_param = nullptr;
 }
 
 bool InputParam::setInput(const std::shared_ptr<IParam>& param)
 {
-    Lock lock(mtx());
+    Lock_t lock(mtx());
     if (setInput(param.get()))
     {
         m_shared_input = param;
@@ -123,7 +123,7 @@ bool InputParam::setInput(const std::shared_ptr<IParam>& param)
 bool InputParam::setInput(IParam* param)
 {
     {
-        Lock lock(mtx());
+        Lock_t lock(mtx());
         if (qualifier && !qualifier(param))
         {
             return false;
@@ -150,13 +150,13 @@ bool InputParam::isInputSet() const
 
 IParam* InputParam::getInputParam() const
 {
-    Lock lock(IParam::mtx());
+    Lock_t lock(IParam::mtx());
     return m_input_param;
 }
 
 TypeInfo InputParam::getTypeInfo() const
 {
-    Lock lock(IParam::mtx());
+    Lock_t lock(IParam::mtx());
     if (m_input_param)
     {
         return m_input_param->getTypeInfo();
@@ -164,11 +164,11 @@ TypeInfo InputParam::getTypeInfo() const
     return TypeInfo::Void();
 }
 
-void InputParam::visit(IReadVisitor* visitor)
+void InputParam::visit(IReadVisitor& visitor)
 {
     IDataContainerPtr_t data;
     {
-        Lock lock(mtx());
+        Lock_t lock(mtx());
         data = m_current_data;
     }
     if (data)
@@ -177,22 +177,48 @@ void InputParam::visit(IReadVisitor* visitor)
     }
 }
 
-void InputParam::visit(IWriteVisitor* visitor) const
+void InputParam::visit(IWriteVisitor& visitor) const
 {
     IDataContainerPtr_t data;
     {
-        Lock lock(mtx());
+        Lock_t lock(mtx());
         data = m_current_data;
     }
     if (data)
     {
         data->visit(visitor);
+    }
+}
+
+void InputParam::visit(BinaryInputVisitor& ar)
+{
+    IDataContainerPtr_t data;
+    {
+        Lock_t lock(mtx());
+        data = m_current_data;
+    }
+    if (data)
+    {
+        data->visit(ar);
+    }
+}
+
+void InputParam::visit(BinaryOutputVisitor& ar) const
+{
+    IDataContainerPtr_t data;
+    {
+        Lock_t lock(mtx());
+        data = m_current_data;
+    }
+    if (data)
+    {
+        data->visit(ar);
     }
 }
 
 void InputParam::onInputUpdate(const IDataContainerPtr_t& data, IParam* param, UpdateFlags)
 {
-    if (data->getHeader().ctx == getContext())
+    if (data->getHeader().stream == getStream())
     {
         m_current_data = data;
         emitUpdate(data, InputUpdated_e);

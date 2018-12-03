@@ -1,9 +1,18 @@
 #pragma once
 #include <MetaObject/detail/TypeInfo.hpp>
-
 #include <memory>
+
+namespace cereal
+{
+    class BinaryInputArchive;
+    class BinaryOutputArchive;
+}
+
 namespace mo
 {
+    using BinaryInputVisitor = cereal::BinaryInputArchive;
+    using BinaryOutputVisitor = cereal::BinaryOutputArchive;
+
     struct IReadVisitor;
     struct IWriteVisitor;
     struct Header;
@@ -16,8 +25,10 @@ namespace mo
         virtual ~IDataContainer();
         virtual TypeInfo getType() const = 0;
 
-        virtual void visit(IReadVisitor*) = 0;
-        virtual void visit(IWriteVisitor*) const = 0;
+        virtual void visit(IReadVisitor&) = 0;
+        virtual void visit(IWriteVisitor&) const = 0;
+        virtual void visit(BinaryInputVisitor& ar) = 0;
+        virtual void visit(BinaryOutputVisitor& ar) const = 0;
 
         virtual const Header& getHeader() const = 0;
     };

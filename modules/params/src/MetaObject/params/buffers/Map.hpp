@@ -23,8 +23,9 @@ https://github.com/dtmoodie/MetaObject
 
 #include "MetaObject/params/InputParam.hpp"
 
-#include <boost/thread/condition_variable.hpp>
-#include <boost/thread/recursive_mutex.hpp>
+#include <boost/fiber/condition_variable.hpp>
+#include <boost/fiber/recursive_timed_mutex.hpp>
+
 #include <map>
 
 namespace mo
@@ -53,6 +54,7 @@ namespace mo
             Map(const std::string& name = "",
                 const PushPolicy push_policy = GROW,
                 const SearchPolicy search_policy = EXACT);
+            ~Map() override;
 
             // IBuffer
             virtual void setFrameBufferCapacity(const uint64_t size) override;
@@ -87,7 +89,7 @@ namespace mo
             void pushAndWait(const IDataContainerPtr_t& data);
             uint32_t prune();
 
-            boost::condition_variable_any m_cv;
+            boost::fibers::condition_variable_any m_cv;
 
             Buffer_t m_data_buffer;
 
