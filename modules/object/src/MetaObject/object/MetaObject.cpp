@@ -8,7 +8,7 @@
 #include "MetaObject/params/IParam.hpp"
 #include "MetaObject/params/InputParam.hpp"
 #include "MetaObject/params/InputParam.hpp"
-#include "MetaObject/params/VariableManager.hpp"
+#include "MetaObject/params/ParamServer.hpp"
 #include "MetaObject/params/buffers/BufferFactory.hpp"
 #include "MetaObject/params/buffers/IBuffer.hpp"
 #include "MetaObject/signals/ISignal.hpp"
@@ -53,8 +53,12 @@ namespace mo
                 }
                 else
                 {
-                    MO_LOG(debug) << "Signature mismatch, Slot (" << slot_name << " -  " << slot->getSignature().name()
-                                  << ") != Signal (" << signal_name << " - " << signal->getSignature().name() << ")";
+                    MO_LOG(debug,
+                           "Signature mismatch, slot '{}' <{}> != signal '{}' <{}>",
+                           slot_name,
+                           slot->getSignature().name(),
+                           signal_name,
+                           signal->getSignature().name());
                 }
             }
         }
@@ -87,7 +91,7 @@ namespace mo
 
     MetaObject::MetaObject()
     {
-        _pimpl = new impl();
+        _pimpl.reset(new impl());
         _sig_manager = nullptr;
         _pimpl->_slot_param_updated = std::bind(
             &MetaObject::onParamUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
@@ -99,7 +103,6 @@ namespace mo
         {
             _pimpl->_variable_manager->removeParam(this);
         }
-        delete _pimpl;
     }
 
     Mutex_t& MetaObject::getMutex() const
@@ -160,15 +163,20 @@ namespace mo
                     auto output = obj->getOutput(param_connection.output_param);
                     if (output == nullptr)
                     {
-                        MO_LOG(debug) << "Unable to find " << param_connection.output_param << " in "
-                                      << obj->GetTypeName() << " reinitializing";
+                        MO_LOG(debug,
+                               "Unable to find {} in  reinitializing",
+                               param_connection.output_param,
+                               obj->GetTypeName());
                         obj->inTParams(firstInit);
                         output = obj->getOutput(param_connection.output_param);
                         if (output == nullptr)
                         {
-                            MO_LOG(info) << "Unable to find " << param_connection.output_param << " in "
-                                         << obj->GetTypeName() << " unable to reConnect "
-                                         << param_connection.input_param << " from object " << this->GetTypeName();
+                            MO_LOG(info,
+                                   "Unable to find {} in {} unable to reconnect {} from object {}",
+                                   param_connection.output_param,
+                                   obj->GetTypeName(),
+                                   param_connection.input_param,
+                                   this->GetTypeName());
                             continue;
                         }
                     }
@@ -178,13 +186,21 @@ namespace mo
                         if (this->connectInput(input, obj.get(), output, param_connection.connection_type))
                         {
                             input->getData();
-                            MO_LOG(debug) << "Reconnected " << GetTypeName() << ":" << param_connection.input_param
-                                          << " to " << obj->GetTypeName() << ":" << param_connection.output_param;
+                            MO_LOG(debug,
+                                   "Reconnected {}:{} to {}:{}",
+                                   GetTypeName(),
+                                   param_connection.input_param,
+                                   obj->GetTypeName(),
+                                   param_connection.output_param);
                         }
                         else
                         {
-                            MO_LOG(info) << "Reconnect FAILED " << GetTypeName() << ":" << param_connection.input_param
-                                         << " to " << obj->GetTypeName() << ":" << param_connection.output_param;
+                            MO_LOG(info,
+                                   "Reconnect failed {}:{} to {}:{}",
+                                   GetTypeName(),
+                                   param_connection.input_param,
+                                   obj->GetTypeName(),
+                                   param_connection.output_param);
                         }
                     }
                     else
@@ -285,12 +301,12 @@ namespace mo
         return _sig_manager;
     }
 
-    int IMetaObject::setupVariableManager(IVariableManager* /*manager*/)
+    int IMetaObject::setupParamServer(IParamServer* /*manager*/)
     {
         return 0;
     }
 
-    int MetaObject::setupVariableManager(IVariableManager* manager)
+    int MetaObject::setupParamServer(IParamServer* manager)
     {
         if (_pimpl->_variable_manager != nullptr)
         {
@@ -311,7 +327,7 @@ namespace mo
         return count;
     }
 
-    int MetaObject::removeVariableManager(IVariableManager* mgr)
+    int MetaObject::removeParamServer(IParamServer* mgr)
     {
         int count = 0;
         mgr->removeParam(this);
@@ -337,25 +353,34 @@ namespace mo
         SERIALIZE(_sig_manager);
     }
 
-    void IMetaObject::setContext(const std::shared_ptr<Context>& ctx, bool overwrite)
+    void IMetaObject::setStream(const IAsyncStreamPtr_t& ctx, bool overwrite)
     {
     }
 
-    void MetaObject::setContext(const std::shared_ptr<Context>& ctx, bool overwrite)
+    void MetaObject::setStream(const IAsyncStreamPtr_t& ctx, bool overwrite)
     {
         if (_ctx.get() && overwrite == false)
+        {
             return;
+        }
         if (ctx == nullptr)
-            MO_LOG(info) << "Setting context to nullptr";
+        {
+            MO_LOG(info, "Setting context to nullptr");
+        }
         _ctx = ctx;
         for (auto& param : _pimpl->_implicit_params)
         {
-            param.second->setContext(ctx.get());
+            param.second->setStream(ctx.get());
         }
         for (auto& param : _pimpl->_params)
         {
-            param.second->setContext(ctx.get());
+            param.second->setStream(ctx.get());
         }
+    }
+
+    IAsyncStreamPtr_t MetaObject::getStream()
+    {
+        return _ctx;
     }
 
     int MetaObject::disconnectByName(const std::string& name)
@@ -369,7 +394,7 @@ namespace mo
         return count;
     }
 
-    bool MetaObject::disconnect(ISignal* sig)
+    bool MetaObject::disconnect(ISignal*)
     {
         return false;
     }
@@ -404,7 +429,7 @@ namespace mo
         auto param = this->getParamOptional(name);
         if (!param)
         {
-            THROW(debug) << "Param with name \"" << name << "\" not found";
+            THROW(debug, "Param with name {} not found", name);
         }
         return param;
     }
@@ -480,7 +505,7 @@ namespace mo
         {
             return itr2->second.get();
         }
-        MO_LOG(trace) << "Param with name \"" << name << "\" not found";
+        MO_LOG(trace, "Param with name {} not found", name);
         return nullptr;
     }
 
@@ -492,11 +517,6 @@ namespace mo
             return itr->second;
         }
         return nullptr;
-    }
-
-    std::shared_ptr<Context> MetaObject::getStream()
-    {
-        return _ctx;
     }
 
     std::vector<InputParam*> MetaObject::getInputs(const std::string& name_filter) const
@@ -655,7 +675,7 @@ namespace mo
         return output;
     }
 
-    std::vector<IParam*> IMetaObject::getOutputs(const TypeInfo& type_filter, const std::string& name_filter) const
+    std::vector<IParam*> IMetaObject::getOutputs(const TypeInfo&, const std::string&) const
     {
         return {};
     }
@@ -730,8 +750,11 @@ namespace mo
             }
             return ss.str();
         };
-        MO_LOG(debug) << "Unable to find input by name " << input_name << " in object " << this->GetTypeName()
-                      << " with inputs [" << print_inputs() << "]";
+        MO_LOG(debug,
+               "Unable to find input with name {} in object {} with inputs {}",
+               input_name,
+               this->GetTypeName(),
+               print_inputs());
         return false;
     }
 
@@ -748,7 +771,7 @@ namespace mo
     {
         if (input == nullptr || output == nullptr)
         {
-            MO_LOG(debug) << "NULL input or output passed in";
+            MO_LOG(debug, "NULL input or output passed in");
             return false;
         }
 
@@ -768,11 +791,13 @@ namespace mo
                 auto buffer = buffer::BufferFactory::createBuffer(output, type_);
                 if (!buffer)
                 {
-                    MO_LOG(warning) << "Unable to create " << BufferFlagsToString(type_) << " for datatype "
-                                    << Demangle::typeToName(output->getTypeInfo());
+                    MO_LOG(warn,
+                           "Unable to create {} for datatype {}",
+                           bufferFlagsToString(type_),
+                           Demangle::typeToName(output->getTypeInfo()));
                     return false;
                 }
-                std::string buffer_type = BufferFlagsToString(type_);
+                std::string buffer_type = bufferFlagsToString(type_);
                 buffer->setName(output->getTreeName() + " " + buffer_type + " buffer for " + input->getTreeName());
                 if (input->setInput(buffer))
                 {
@@ -781,10 +806,12 @@ namespace mo
                 }
                 else
                 {
-                    MO_LOG(debug) << "Failed to connect output " << output->getName() << "["
-                                  << Demangle::typeToName(output->getTypeInfo()) << "] to input "
-                                  << dynamic_cast<IParam*>(input)->getName() << "["
-                                  << Demangle::typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()) << "]";
+                    MO_LOG(debug,
+                           "Failed to connect output {} [{}] to input {} [{}]",
+                           output->getName(),
+                           Demangle::typeToName(output->getTypeInfo()),
+                           dynamic_cast<IParam*>(input)->getName(),
+                           Demangle::typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()));
                     return false;
                 }
             }
@@ -804,17 +831,20 @@ namespace mo
                         }
                         else
                         {
-                            MO_LOG(debug) << "Failed to connect output " << output->getName() << "["
-                                          << Demangle::typeToName(output->getTypeInfo()) << "] to input "
-                                          << dynamic_cast<IParam*>(input)->getName() << "["
-                                          << Demangle::typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()) << "]";
+                            MO_LOG(debug,
+                                   "Failed to connect output {} [{}] to input {} [{}]",
+                                   output->getName(),
+                                   Demangle::typeToName(output->getTypeInfo()),
+                                   dynamic_cast<IParam*>(input)->getName(),
+                                   Demangle::typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()));
                             return false;
                         }
                     }
                     else
                     {
-                        MO_LOG(debug) << "No buffer of desired type found for type "
-                                      << Demangle::typeToName(output->getTypeInfo());
+                        MO_LOG(debug,
+                               "No buffer of desired type found for type {}",
+                               Demangle::typeToName(output->getTypeInfo()));
                     }
                 }
                 else
@@ -827,10 +857,12 @@ namespace mo
                     }
                     else
                     {
-                        MO_LOG(debug) << "Failed to connect output " << output->getName() << "["
-                                      << Demangle::typeToName(output->getTypeInfo()) << "] to input "
-                                      << dynamic_cast<IParam*>(input)->getName() << "["
-                                      << Demangle::typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()) << "]";
+                        MO_LOG(debug,
+                               "Failed to connect output {} [{}] to input {} [{}]",
+                               output->getName(),
+                               Demangle::typeToName(output->getTypeInfo()),
+                               dynamic_cast<IParam*>(input)->getName(),
+                               Demangle::typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()));
                         return false;
                     }
                 }
@@ -844,16 +876,20 @@ namespace mo
                 }
                 else
                 {
-                    MO_LOG(debug) << "Failed to connect output " << output->getName() << "["
-                                  << Demangle::typeToName(output->getTypeInfo()) << "] to input "
-                                  << dynamic_cast<IParam*>(input)->getName() << "["
-                                  << Demangle::typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()) << "]";
+                    MO_LOG(debug,
+                           "Failed to connect output {} [{}] to input {} [{}]",
+                           output->getName(),
+                           Demangle::typeToName(output->getTypeInfo()),
+                           dynamic_cast<IParam*>(input)->getName(),
+                           Demangle::typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()));
                     return false;
                 }
             }
         }
-        MO_LOG(debug) << "Input \"" << input->getTreeName()
-                      << "\"  does not accept input of type: " << Demangle::typeToName(output->getTypeInfo());
+        MO_LOG(debug,
+               "Input {} does not accept input of type {}",
+               input->getTreeName(),
+               Demangle::typeToName(output->getTypeInfo()));
         return false;
     }
 
@@ -871,13 +907,13 @@ namespace mo
     IParam* MetaObject::addParam(std::shared_ptr<IParam> param)
     {
         param->setMtx(&getMutex());
-        param->setContext(_ctx.get());
+        param->setStream(_ctx.get());
 #ifdef _DEBUG
         for (auto& param_ : _pimpl->_params)
         {
             if (param_.second == param.get())
             {
-                MO_LOG(debug) << "Trying to add a param a second time";
+                MO_LOG(debug, "Trying to add a param a second time");
                 return param.get();
             }
         }

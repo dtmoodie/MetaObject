@@ -1,7 +1,7 @@
 #pragma once
 #include <MetaObject/core/TypeTable.hpp>
 #include <MetaObject/core/detail/Allocator.hpp>
-#include <MetaObject/core/detail/Forward.hpp>
+#include <MetaObject/core/detail/forward.hpp>
 #include <MetaObject/detail/Export.hpp>
 #include <MetaObject/detail/TypeInfo.hpp>
 #include <MetaObject/detail/defines.hpp>
@@ -71,6 +71,9 @@ struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
     mo::AllocatorPtr_t getDefaultAllocator();
 
     static MO_INLINE void staticDispatchToSystemTable(std::function<void(SystemTable*)>&& func);
+
+    mo::MetaObjectFactory* getFactory();
+    void setFactory(mo::MetaObjectFactory* factory);
 
   protected:
     static void setInstance(const Ptr_t& table);

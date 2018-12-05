@@ -15,7 +15,7 @@ namespace mo
             auto table = module->GetSystemTable();
             if (table)
             {
-                ptr = table->metaobject_factory;
+                ptr = table->getFactory();
             }
         }
         MO_ASSERT(ptr);

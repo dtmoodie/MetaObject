@@ -23,12 +23,12 @@ namespace mo
         virtual ~MetaObject();
 
         // Setup
-        virtual void setContext(const ContextPtr_t& ctx, bool overwrite = false) override;
-        virtual ContextPtr_t getStream() override;
+        virtual void setStream(const IAsyncStreamPtr_t& ctx, bool overwrite = false) override;
+        virtual IAsyncStreamPtr_t getStream() override;
         virtual int setupSignals(RelayManager* mgr) override;
         RelayManager* getRelayManager();
-        virtual int setupVariableManager(IVariableManager* mgr) override;
-        virtual int removeVariableManager(IVariableManager* mgr) override;
+        virtual int setupParamServer(IParamServer* mgr) override;
+        virtual int removeParamServer(IParamServer* mgr) override;
 
         virtual void Init(bool firstInit) override; // inherited from RCC, thus the PascalCase
         virtual void initCustom(bool firstInit) override;
@@ -133,7 +133,9 @@ namespace mo
         TParam<T>* getOutput(const std::string& name) const;
 
         template <class T>
-        T getParamValue(const std::string& name, const OptionalTime& ts = OptionalTime(), Context* ctx = nullptr) const;
+        T getParamValue(const std::string& name,
+                        const OptionalTime& ts = OptionalTime(),
+                        IAsyncStream* ctx = nullptr) const;
 
         template <class T>
         TParam<T>* getParam(const std::string& name) const;
@@ -158,21 +160,23 @@ namespace mo
         virtual void onParamUpdate(IParam*, Header, UpdateFlags) override;
 
         template <class T>
-        TParam<T>*
-        updateParam(const std::string& name, T& value, const OptionalTime& ts = OptionalTime(), Context* ctx = nullptr);
+        TParam<T>* updateParam(const std::string& name,
+                               T& value,
+                               const OptionalTime& ts = OptionalTime(),
+                               IAsyncStream* ctx = nullptr);
         template <class T>
         TParam<T>* updateParam(const std::string& name,
-                                const T& value,
-                                const OptionalTime& ts = OptionalTime(),
-                                Context* ctx = nullptr);
+                               const T& value,
+                               const OptionalTime& ts = OptionalTime(),
+                               IAsyncStream* ctx = nullptr);
         template <class T>
         TParam<T>* updateParamPtr(const std::string& name, T& ptr);
 
         friend class RelayManager;
         struct impl;
 
-        impl* _pimpl;
-        ContextPtr_t _ctx;
+        std::unique_ptr<impl> _pimpl;
+        IAsyncStreamPtr_t _ctx;
         RelayManager* _sig_manager;
     };
 }

@@ -1,9 +1,11 @@
 #pragma once
-#include "MetaObject/detail/TypeInfo.hpp"
-#include "MetaObject/logging/logging.hpp"
-#include "MetaObject/object/MetaObject.hpp"
-#include "MetaObject/params/ITParam.hpp"
-#include "MetaObject/params/ITParam.hpp"
+#include <MetaObject/core/detail/forward.hpp>
+#include <MetaObject/detail/TypeInfo.hpp>
+#include <MetaObject/logging/logging.hpp>
+#include <MetaObject/object/MetaObject.hpp>
+#include <MetaObject/params/ITParam.hpp>
+#include <MetaObject/params/ITParam.hpp>
+
 namespace mo
 {
     class IMetaObject;
@@ -17,12 +19,12 @@ namespace mo
         {
             return typed;
         }
-        THROW(debug) << "Param \"" << name << "\" not convertable to type " << TypeInfo(typeid(T)).name();
+        THROW(debug, "Param {} not convertable to {}", name, TypeInfo(typeid(T)).name());
         return nullptr;
     }
 
     template <class T>
-    T MetaObject::getParamValue(const std::string& name, const OptionalTime& ts, Context* ctx) const
+    T MetaObject::getParamValue(const std::string& name, const OptionalTime& ts, IAsyncStream* ctx) const
     {
         T data;
         MO_ASSERT(getParam<T>(name)->getData(data, ts, ctx));
@@ -38,7 +40,7 @@ namespace mo
     }
 
     template <class T>
-    TParam<T>* MetaObject::updateParam(const std::string& name, T& value, const OptionalTime& ts, Context* ctx)
+    TParam<T>* MetaObject::updateParam(const std::string& name, T& value, const OptionalTime& ts, IAsyncStream* ctx)
     {
         if (ctx == nullptr)
             ctx = getStream().get();
@@ -58,7 +60,8 @@ namespace mo
     }
 
     template <class T>
-    TParam<T>* MetaObject::updateParam(const std::string& name, const T& value, const OptionalTime& ts, Context* ctx)
+    TParam<T>*
+    MetaObject::updateParam(const std::string& name, const T& value, const OptionalTime& ts, IAsyncStream* ctx)
     {
         if (ctx == nullptr)
             ctx = getStream().get();

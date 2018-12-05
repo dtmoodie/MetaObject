@@ -1,7 +1,7 @@
 #pragma once
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
-#include <MetaObject/core/detail/Forward.hpp>
+#include <MetaObject/core/detail/forward.hpp>
 #include <memory>
 #include <vector>
 
@@ -10,10 +10,11 @@ namespace mo
     template <typename T>
     class TInputParam;
     class IMetaObject;
-    class MO_EXPORTS IVariableManager
+
+    class MO_EXPORTS IParamServer
     {
       public:
-        virtual ~IVariableManager();
+        virtual ~IParamServer();
         virtual void addParam(IMetaObject* obj, IParam* param) = 0;
 
         virtual void removeParam(IMetaObject* obj, IParam* param) = 0;
@@ -35,7 +36,7 @@ namespace mo
     };
 
     template <typename T>
-    std::vector<IParam*> IVariableManager::getOutputParams()
+    std::vector<IParam*> IParamServer::getOutputParams()
     {
         return getOutputParams(TypeInfo(typeid(T)));
     }

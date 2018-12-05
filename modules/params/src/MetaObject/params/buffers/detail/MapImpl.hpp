@@ -1,5 +1,5 @@
 #pragma once
-#include "MetaObject/core/detail/Forward.hpp"
+#include "MetaObject/core/detail/forward.hpp"
 namespace mo
 {
     namespace Buffer

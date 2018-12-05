@@ -77,7 +77,7 @@ namespace mo
         return output;
     }
 
-    std::string BufferFlagsToString(BufferFlags flags)
+    std::string bufferFlagsToString(BufferFlags flags)
     {
         switch (flags)
         {

@@ -1,7 +1,7 @@
 #pragma once
 #include "MetaObject/detail/Export.hpp"
 
-#include "MetaObject/core/detail/Forward.hpp"
+#include "MetaObject/core/detail/forward.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
 
 #include <memory>

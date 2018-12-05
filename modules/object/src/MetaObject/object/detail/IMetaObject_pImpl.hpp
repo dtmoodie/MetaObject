@@ -81,7 +81,7 @@ namespace mo
         TSignal<void(IMetaObject*, IParam*)> _sig_param_added;
         std::map<std::string, InputParam*> _input_Params;
         TSlot<Update_s> _slot_param_updated;
-        IVariableManager* _variable_manager;
+        IParamServer* _variable_manager;
         mutable mo::Mutex_t m_mutex;
     };
 }

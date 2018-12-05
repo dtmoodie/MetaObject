@@ -1,7 +1,7 @@
 #pragma once
 
 #include <MetaObject/core/detail/ConcurrentQueue.hpp>
-#include <MetaObject/core/detail/Forward.hpp>
+#include <MetaObject/core/detail/forward.hpp>
 #include <MetaObject/detail/Export.hpp>
 #include <MetaObject/signals/TSignalRelay.hpp>
 

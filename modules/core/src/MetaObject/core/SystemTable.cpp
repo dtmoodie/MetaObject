@@ -93,3 +93,14 @@ mo::AllocatorPtr_t SystemTable::createAllocator() const
 {
     return m_allocator_constructor();
 }
+
+mo::MetaObjectFactory* SystemTable::getFactory()
+{
+    return m_metaobject_factory;
+}
+
+void SystemTable::setFactory(mo::MetaObjectFactory* factory)
+{
+    MO_ASSERT(m_metaobject_factory == nullptr);
+    m_metaobject_factory = factory;
+}

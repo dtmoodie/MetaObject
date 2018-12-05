@@ -1,4 +1,4 @@
-#include "MetaObject/params/VariableManager.hpp"
+#include "MetaObject/params/ParamServer.hpp"
 #include "MetaObject/logging/logging.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include "MetaObject/params/InputParam.hpp"
@@ -6,36 +6,35 @@
 
 using namespace mo;
 
-IVariableManager::~IVariableManager()
+IParamServer::~IParamServer()
 {
 }
 
-VariableManager::VariableManager()
+ParamServer::ParamServer()
 {
-    delete_slot =
-        std::bind(static_cast<void (VariableManager::*)(IMetaObject*, IParam*)>(&VariableManager::removeParam),
-                  this,
-                  std::placeholders::_1,
-                  std::placeholders::_2);
+    delete_slot = std::bind(static_cast<void (ParamServer::*)(IMetaObject*, IParam*)>(&ParamServer::removeParam),
+                            this,
+                            std::placeholders::_1,
+                            std::placeholders::_2);
 }
 
-VariableManager::~VariableManager()
+ParamServer::~ParamServer()
 {
 }
 
-void VariableManager::addParam(IMetaObject* obj, IParam* param)
+void ParamServer::addParam(IMetaObject* obj, IParam* param)
 {
     _params[param->getTreeName()] = param;
     _obj_params[obj].push_back(param->getTreeName());
     param->registerDeleteNotifier(&delete_slot);
 }
 
-void VariableManager::removeParam(IMetaObject* /*obj*/, IParam* param)
+void ParamServer::removeParam(IMetaObject* /*obj*/, IParam* param)
 {
     _params.erase(param->getTreeName());
 }
 
-void VariableManager::removeParam(const IMetaObject* obj)
+void ParamServer::removeParam(const IMetaObject* obj)
 {
     auto itr = _obj_params.find(obj);
     if (itr != _obj_params.end())
@@ -47,7 +46,7 @@ void VariableManager::removeParam(const IMetaObject* obj)
     }
 }
 
-std::vector<IParam*> VariableManager::getOutputParams(TypeInfo type)
+std::vector<IParam*> ParamServer::getOutputParams(TypeInfo type)
 {
     std::vector<IParam*> valid_outputs;
     for (auto itr = _params.begin(); itr != _params.end(); ++itr)
@@ -60,7 +59,7 @@ std::vector<IParam*> VariableManager::getOutputParams(TypeInfo type)
     return valid_outputs;
 }
 
-std::vector<IParam*> VariableManager::getAllParms()
+std::vector<IParam*> ParamServer::getAllParms()
 {
     std::vector<IParam*> output;
     for (auto& itr : _params)
@@ -70,7 +69,7 @@ std::vector<IParam*> VariableManager::getAllParms()
     return output;
 }
 
-std::vector<IParam*> VariableManager::getAllOutputParams()
+std::vector<IParam*> ParamServer::getAllOutputParams()
 {
     std::vector<IParam*> output;
     for (auto& itr : _params)
@@ -83,7 +82,7 @@ std::vector<IParam*> VariableManager::getAllOutputParams()
     return output;
 }
 
-IParam* VariableManager::getParam(std::string name)
+IParam* ParamServer::getParam(std::string name)
 {
     auto itr = _params.find(name);
     if (itr != _params.end())
@@ -93,7 +92,7 @@ IParam* VariableManager::getParam(std::string name)
     return nullptr;
 }
 
-IParam* VariableManager::getOutputParam(std::string name)
+IParam* ParamServer::getOutputParam(std::string name)
 {
     auto itr = _params.find(name);
     if (itr != _params.end())
@@ -123,7 +122,7 @@ IParam* VariableManager::getOutputParam(std::string name)
     MO_LOG(debug, "Unable to find param with name name {}", name);
     return nullptr;
 }
-void VariableManager::linkParams(IParam* output, IParam* input)
+void ParamServer::linkParams(IParam* output, IParam* input)
 {
     if (auto input_param = dynamic_cast<InputParam*>(input))
         input_param->setInput(output);

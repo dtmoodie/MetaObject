@@ -19,7 +19,7 @@ https://github.com/dtmoodie/MetaObject
 #pragma once
 #include "Header.hpp"
 #include "MetaObject/core.hpp"
-#include "MetaObject/core/detail/Forward.hpp"
+#include "MetaObject/core/detail/forward.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "ParamTags.hpp"
 #include "TDataContainer.hpp"

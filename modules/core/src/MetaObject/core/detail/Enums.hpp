@@ -126,7 +126,7 @@ namespace mo
         FORCE_DIRECT = 2048
     };
 
-    MO_EXPORTS std::string BufferFlagsToString(BufferFlags type);
+    MO_EXPORTS std::string bufferFlagsToString(BufferFlags type);
     MO_EXPORTS BufferFlags stringToBufferFlags(const std::string& str);
 
     MO_EXPORTS BufferFlags getDefaultBufferType(const IContext* source, const IContext* dest);

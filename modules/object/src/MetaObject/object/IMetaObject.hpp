@@ -1,10 +1,10 @@
 #pragma once
 #include "MetaObject/core/detail/Enums.hpp"
-#include "MetaObject/core/detail/Forward.hpp"
 #include "MetaObject/core/detail/Time.hpp"
+#include "MetaObject/core/detail/forward.hpp"
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/object.hpp"
-#include <MetaObject/core/AsyncStream.hpp>
+#include "MetaObject/params/detail/forward.hpp"
 
 #include <RuntimeObjectSystem/IObject.h>
 #include <RuntimeObjectSystem/shared_ptr.hpp>
@@ -69,11 +69,11 @@ namespace mo
         virtual ~IMetaObject();
 
         // Setup
-        virtual void setStream(const IAsyncStream::Ptr_t& ctx, bool overwrite = false) = 0;
-        virtual IAsyncStream::Ptr_t getStream() = 0;
+        virtual void setStream(const IAsyncStreamPtr_t& ctx, bool overwrite = false) = 0;
+        virtual IAsyncStreamPtr_t getStream() = 0;
         virtual int setupSignals(RelayManager* mgr) = 0;
-        virtual int setupeVariableManager(IVariableManager* mgr) = 0;
-        virtual int removeVariableManager(IVariableManager* mgr) = 0;
+        virtual int setupParamServer(IParamServer* mgr) = 0;
+        virtual int removeParamServer(IParamServer* mgr) = 0;
 
         virtual void Init(bool firstInit) = 0; // inherited from RCC, thus the PascalCase
         virtual void initCustom(bool firstInit) = 0;
