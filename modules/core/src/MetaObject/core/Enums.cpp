@@ -27,7 +27,7 @@ namespace mo
                                                                                       TYPE_NAME_HELPER(Dynamic),
                                                                                       TYPE_NAME_HELPER(Source)};
 
-        static std::map<const IContext*, std::map<const IContext*, BufferFlags>> connection_map;
+        static std::map<const IAsyncStream*, std::map<const IAsyncStream*, BufferFlags>> connection_map;
         static BufferFlags default_connection_type = BLOCKING_STREAM_BUFFER;
     }
 
@@ -119,7 +119,7 @@ namespace mo
         return DEFAULT;
     }
 
-    BufferFlags getDefaultBufferType(const IContext* source, const IContext* dest)
+    BufferFlags getDefaultBufferType(const IAsyncStream* source, const IAsyncStream* dest)
     {
         auto itr = connection_map.find(source);
         if (itr != connection_map.end())
@@ -138,7 +138,7 @@ namespace mo
         return default_connection_type;
     }
 
-    void setDefaultBufferType(const IContext* source, const IContext* dest, BufferFlags type)
+    void setDefaultBufferType(const IAsyncStream* source, const IAsyncStream* dest, BufferFlags type)
     {
         if (source == nullptr && dest == nullptr)
         {

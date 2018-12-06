@@ -205,14 +205,18 @@ namespace mo
                     }
                     else
                     {
-                        MO_LOG(debug) << "Unable to find input Param " << param_connection.input_param << " in object "
-                                      << this->GetTypeName();
+                        MO_LOG(debug,
+                               "Unable to find input param {} in object {}",
+                               param_connection.input_param,
+                               this->GetTypeName());
                     }
                 }
                 else
                 {
-                    MO_LOG(debug) << "Output object no longer exists for input [" << param_connection.input_param
-                                  << "] expected output name [" << param_connection.output_param << "]";
+                    MO_LOG(debug,
+                           "Output object no longer exists for input [{}] expexted output named '{}'",
+                           param_connection.input_param,
+                           param_connection.output_param);
                 }
             }
             // Rebuild Connections
@@ -224,9 +228,11 @@ namespace mo
                     auto slot = connection.obj->getSlot(connection.slot_name, connection.signature);
                     if (signal == nullptr)
                     {
-                        MO_LOG(debug) << "Unable to find signal with name \"" << connection.signal_name
-                                      << "\" and signature: " << connection.signature.name()
-                                      << " in new object of type " << this->GetTypeName();
+                        MO_LOG(debug,
+                               "Unable to find signal with name '{}' and signature <{}> in new object of type {}",
+                               connection.signal_name,
+                               connection.signature.name(),
+                               this->GetTypeName());
                     }
                     if (slot == nullptr)
                     {
@@ -234,9 +240,11 @@ namespace mo
                         slot = connection.obj->getSlot(connection.slot_name, connection.signature);
                         if (slot == nullptr)
                         {
-                            MO_LOG(debug) << "Unable to find slot with name \"" << connection.slot_name
-                                          << "\" and signature: " << connection.signature.name()
-                                          << " in new object of type " << connection.obj->GetTypeName();
+                            MO_LOG(debug,
+                                   "Unable to find slot with name '{}' and signature <{}> in new object of type {}",
+                                   connection.slot_name,
+                                   connection.signature.name(),
+                                   connection.obj->GetTypeName());
                         }
                     }
                     if (signal && slot)
@@ -248,9 +256,12 @@ namespace mo
                         }
                         else
                         {
-                            MO_LOG(info) << "Unable to reconnect signal \"" << connection.signal_name << "\" <"
-                                         << signal->getSignature().name() << "> to slot \"" << connection.slot_name
-                                         << "\" <" << slot->getSignature().name() << ">";
+                            MO_LOG(info,
+                                   "Unable to reconnect signal '{}' <{}> to slot '{}' <{}>",
+                                   connection.signal_name,
+                                   signal->getSignature().name(),
+                                   connection.slot_name,
+                                   slot->getSignature().name());
                         }
                     }
                 }
@@ -310,7 +321,7 @@ namespace mo
     {
         if (_pimpl->_variable_manager != nullptr)
         {
-            removeVariableManager(_pimpl->_variable_manager);
+            removeParamServer(_pimpl->_variable_manager);
         }
         _pimpl->_variable_manager = manager;
         int count = 0;
@@ -936,13 +947,13 @@ namespace mo
     IParam* MetaObject::addParam(IParam* param)
     {
         param->setMtx(&getMutex());
-        param->setContext(_ctx.get());
+        param->setStream(_ctx.get());
 #ifdef _DEBUG
         for (auto& param_ : _pimpl->_params)
         {
             if (param_.second == param)
             {
-                MO_LOG(debug) << "Trying to add a Param a second time";
+                MO_LOG(debug, "Trying to add a Param a second time");
                 return param;
             }
         }

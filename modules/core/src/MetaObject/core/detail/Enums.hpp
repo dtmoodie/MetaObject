@@ -4,7 +4,7 @@
 #include <string>
 namespace mo
 {
-    class IContext;
+    class IAsyncStream;
     template <typename T>
     struct EnumTraits;
 
@@ -129,6 +129,6 @@ namespace mo
     MO_EXPORTS std::string bufferFlagsToString(BufferFlags type);
     MO_EXPORTS BufferFlags stringToBufferFlags(const std::string& str);
 
-    MO_EXPORTS BufferFlags getDefaultBufferType(const IContext* source, const IContext* dest);
-    MO_EXPORTS void setDefaultBufferType(const IContext* source, const IContext* dest, BufferFlags type);
+    MO_EXPORTS BufferFlags getDefaultBufferType(const IAsyncStream* source, const IAsyncStream* dest);
+    MO_EXPORTS void setDefaultBufferType(const IAsyncStream* source, const IAsyncStream* dest, BufferFlags type);
 }
