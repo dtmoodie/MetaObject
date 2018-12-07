@@ -1194,13 +1194,11 @@ namespace mo
     void MetaObject::addSlot(ISlot* slot, const std::string& name)
     {
         _pimpl->_slots[name][slot->getSignature()] = slot;
-        slot->setParent(this);
     }
 
     void MetaObject::addSignal(ISignal* sig, const std::string& name)
     {
         _pimpl->_signals[name][sig->getSignature()] = sig;
-        sig->setParent(this);
         if (_sig_manager)
         {
             auto Connection = _sig_manager->connect(sig, name, this);

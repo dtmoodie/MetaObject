@@ -50,7 +50,10 @@ std::string PluginInfo::getPluginName() const
 struct MetaObjectFactory::impl
 {
 
-    impl(SystemTable* table) { obj_system.Initialise(&logger, table); }
+    impl(SystemTable* table)
+    {
+        obj_system.Initialise(&logger, table);
+    }
     RuntimeObjectSystem obj_system;
     CompileLogger logger;
     std::vector<PluginInfo> plugins;
@@ -60,8 +63,7 @@ struct MetaObjectFactory::impl
 MetaObjectFactory::MetaObjectFactory(SystemTable* table)
 {
     MO_ASSERT(table);
-    MO_ASSERT(table->metaobject_factory == nullptr);
-    table->metaobject_factory = this;
+    table->setFactory(this);
     _pimpl.reset(new impl(table));
 }
 
@@ -112,13 +114,15 @@ IMetaObject* MetaObjectFactory::get(ObjectId id, const char* type_name)
             }
             else
             {
-                MO_LOG(debug) << "No object exits for " << type_name << " with instance id of " << id.m_PerTypeId;
+                MO_LOG(debug, "No object exits for {} with instance id of {}", type_name, id.m_PerTypeId);
             }
         }
         else
         {
-            MO_LOG(debug) << "Requested type \"" << type_name << "\" does not match constructor type \""
-                          << constructors[id.m_ConstructorId]->GetName() << "\" for given ID";
+            MO_LOG(debug,
+                   "Requested type '{}' does not match constructor type '{}' for given ID",
+                   type_name,
+                   constructors[id.m_ConstructorId]->GetName());
             std::string str_type_name(type_name);
             for (size_t i = 0; i < constructors.Size(); ++i)
             {
@@ -135,7 +139,7 @@ IMetaObject* MetaObjectFactory::get(ObjectId id, const char* type_name)
                     }
                 }
             }
-            MO_LOG(warning) << "Requested type \"" << type_name << "\" not found";
+            MO_LOG(warn, "Requested type {} not found", type_name);
         }
     }
     return nullptr;
@@ -371,7 +375,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
 bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
 {
     std::string old_name = mo::getThisThreadName();
-    MO_LOG(info) << "Loading " << fullPluginPath;
+    MO_LOG(info, "Loading {}", fullPluginPath);
     boost::filesystem::path path(fullPluginPath);
     std::string base = path.stem().replace_extension("").string();
     mo::setThisThreadName(base.substr(3));
@@ -383,7 +387,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
         const char* dlsym_error = dlerror();
         if (dlsym_error)
         {
-            MO_LOG(warning) << dlsym_error << '\n';
+            MO_LOG(warn, dlsym_error);
             boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
             _pimpl->plugins.emplace_back(fullPluginPath,
                                          "failed (dlsym_error - " + std::string(dlsym_error),
@@ -405,7 +409,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
     InfoFunctor info = InfoFunctor(dlsym(handle, "getPluginBuildInfo"));
     if (info)
     {
-        MO_LOG(debug) << info();
+        MO_LOG(debug, info());
     }
 
     typedef IPerModuleInterface* (*moduleFunctor)();
@@ -414,7 +418,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
     const char* dlsym_error = dlerror();
     if (dlsym_error)
     {
-        MO_LOG(warning) << dlsym_error << '\n';
+        MO_LOG(warn, dlsym_error);
         boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
         _pimpl->plugins.emplace_back(fullPluginPath,
                                      "failed (dlsym_error - " + std::string(dlsym_error),
@@ -425,7 +429,7 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
     }
     if (module == nullptr)
     {
-        MO_LOG(warning) << "module == nullptr" << std::endl;
+        MO_LOG(warn, "module == nullptr");
         boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
         _pimpl->plugins.emplace_back(
             fullPluginPath, "failed (module == nullptr)", (end - start).total_milliseconds(), info ? info() : nullptr);
