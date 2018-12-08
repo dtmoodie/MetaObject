@@ -58,7 +58,8 @@ namespace mo
 
     template <class T>
     ITInputParam<T>::ITInputParam(const std::string& name)
-        : TParam<T>(name)
+        : TParam<T>(name, mo::ParamFlags::Input_e)
+        , IParam(name, mo::ParamFlags::Input_e)
     {
         m_typed_update_slot = std::bind(static_cast<void (ITInputParam<T>::*)(TContainerPtr_t, IParam*, UpdateFlags)>(
                                             &ITInputParam<T>::onInputUpdate),

@@ -14,8 +14,8 @@ namespace
     template <class T>
     struct Fixture
     {
-        T value = 10;
-        TParamPtr<T> param;
+        T value;
+        TParamPtr<T> output_param;
 
         ITInputParam<int> input_param;
 
@@ -29,7 +29,7 @@ namespace
         std::shared_ptr<Connection> connection;
 
         Fixture()
-            : param("pub", &value)
+            : output_param("pub", &value)
             , input_param("sub")
         {
             update_slot = std::bind(
@@ -41,6 +41,11 @@ namespace
                                    std::placeholders::_1,
                                    std::placeholders::_2,
                                    std::placeholders::_3);
+        }
+
+        void init(T&& data)
+        {
+            value = std::move(data);
         }
 
         void onUpdate(IParam*, Header, UpdateFlags fg)
@@ -67,21 +72,31 @@ namespace
     };
 }
 
+BOOST_FIXTURE_TEST_CASE(input_param_initialization, Fixture<int>)
+{
+    init(10);
+    BOOST_REQUIRE(input_param.checkFlags(mo::ParamFlags::Input_e));
+    BOOST_REQUIRE_EQUAL(input_param.getName(), "sub");
+    BOOST_REQUIRE_EQUAL(input_param.getInputFrameNumber(), mo::FrameNumber::max());
+}
+
 BOOST_FIXTURE_TEST_CASE(input_param_get_data, Fixture<int>)
 {
-    param.updateData(value);
+    init(10);
+    output_param.updateData(value);
     int data;
-    BOOST_REQUIRE(input_param.setInput(&param));
+    BOOST_REQUIRE(input_param.setInput(&output_param));
     BOOST_REQUIRE(input_param.getTypedData(&data));
     BOOST_REQUIRE_EQUAL(data, value);
 }
 
 BOOST_FIXTURE_TEST_CASE(input_param_subscription_callback, Fixture<int>)
 {
+    init(10);
     connection = input_param.registerUpdateNotifier(&update_slot);
     BOOST_REQUIRE(connection);
 
-    input_param.setInput(&param);
+    input_param.setInput(&output_param);
     BOOST_REQUIRE(update_called);
     BOOST_REQUIRE(update_flag.back() == UpdateFlags::InputSet_e);
     BOOST_REQUIRE(update_flag.size() == 1);
@@ -89,24 +104,26 @@ BOOST_FIXTURE_TEST_CASE(input_param_subscription_callback, Fixture<int>)
 
 BOOST_FIXTURE_TEST_CASE(input_param_update_callback, Fixture<int>)
 {
-    BOOST_REQUIRE(input_param.setInput(&param));
+    init(10);
+    BOOST_REQUIRE(input_param.setInput(&output_param));
 
     connection = input_param.registerUpdateNotifier(&update_slot);
     BOOST_REQUIRE(connection);
     BOOST_REQUIRE(update_called == false);
-    param.updateData(5);
+    output_param.updateData(5);
     BOOST_REQUIRE(update_called == true);
     BOOST_REQUIRE_EQUAL((std::count(update_flag.begin(), update_flag.end(), UpdateFlags::InputUpdated_e)), 1);
 }
 
 BOOST_FIXTURE_TEST_CASE(input_param_data_callback, Fixture<int>)
 {
-    BOOST_REQUIRE(input_param.setInput(&param));
+    init(10);
+    BOOST_REQUIRE(input_param.setInput(&output_param));
 
     connection = input_param.registerUpdateNotifier(&data_slot);
     BOOST_REQUIRE(connection);
     BOOST_REQUIRE(update_called == false);
-    param.updateData(5);
+    output_param.updateData(5);
     BOOST_REQUIRE(update_called == true);
     BOOST_REQUIRE_EQUAL((std::count(update_flag.begin(), update_flag.end(), UpdateFlags::InputUpdated_e)), 1);
     BOOST_REQUIRE(update_val == 5);
@@ -114,12 +131,13 @@ BOOST_FIXTURE_TEST_CASE(input_param_data_callback, Fixture<int>)
 
 BOOST_FIXTURE_TEST_CASE(input_param_typed_callback, Fixture<int>)
 {
-    BOOST_REQUIRE(input_param.setInput(&param));
+    init(10);
+    BOOST_REQUIRE(input_param.setInput(&output_param));
 
     connection = input_param.registerUpdateNotifier(&typed_slot);
     BOOST_REQUIRE(connection);
     BOOST_REQUIRE(update_called == false);
-    param.updateData(5);
+    output_param.updateData(5);
     BOOST_REQUIRE(update_called == true);
     BOOST_REQUIRE(std::count(update_flag.begin(), update_flag.end(), UpdateFlags::InputUpdated_e) == 1);
     BOOST_REQUIRE(update_val == 5);

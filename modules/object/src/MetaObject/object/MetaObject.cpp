@@ -522,8 +522,8 @@ namespace mo
 
     InputParam* MetaObject::getInput(const std::string& name) const
     {
-        auto itr = _pimpl->_input_Params.find(name);
-        if (itr != _pimpl->_input_Params.end())
+        auto itr = _pimpl->_input_params.find(name);
+        if (itr != _pimpl->_input_params.end())
         {
             return itr->second;
         }
@@ -533,7 +533,7 @@ namespace mo
     std::vector<InputParam*> MetaObject::getInputs(const std::string& name_filter) const
     {
         std::vector<InputParam*> output;
-        for (auto param : _pimpl->_input_Params)
+        for (auto param : _pimpl->_input_params)
         {
             if (name_filter.size())
             {
@@ -932,16 +932,11 @@ namespace mo
         _pimpl->_implicit_params[param->getName()] = param;
         if (param->checkFlags(ParamFlags::Input_e))
         {
-            _pimpl->_input_Params[param->getName()] = dynamic_cast<InputParam*>(param.get());
+            _pimpl->_input_params[param->getName()] = dynamic_cast<InputParam*>(param.get());
         }
         auto connection = param->registerUpdateNotifier(&(this->_pimpl->_slot_param_updated));
         _pimpl->_sig_param_added(this, param.get());
         return param.get();
-    }
-
-    IParam* IMetaObject::addParam(IParam* param)
-    {
-        return nullptr;
     }
 
     IParam* MetaObject::addParam(IParam* param)
@@ -961,7 +956,7 @@ namespace mo
         _pimpl->_params[param->getName()] = param;
         if (param->checkFlags(ParamFlags::Input_e))
         {
-            _pimpl->_input_Params[param->getName()] = dynamic_cast<InputParam*>(param);
+            _pimpl->_input_params[param->getName()] = dynamic_cast<InputParam*>(param);
         }
         auto connection = param->registerUpdateNotifier(&(this->_pimpl->_slot_param_updated));
         _pimpl->_sig_param_added(this, param);
@@ -971,6 +966,11 @@ namespace mo
                             this->_pimpl->_slot_param_updated.getSignature(),
                             this);
         return param;
+    }
+
+    IParam* IMetaObject::addParam(IParam* param)
+    {
+        return nullptr;
     }
 
     void MetaObject::setParamRoot(const std::string& root)

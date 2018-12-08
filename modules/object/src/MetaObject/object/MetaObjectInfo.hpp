@@ -136,7 +136,9 @@ namespace mo
             T::reflect(visitor, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::STATE>());
         }
 
-        void serializeParams(ISimpleSerializer* serializer) override {}
+        void serializeParams(ISimpleSerializer* serializer) override
+        {
+        }
 
         struct ParamInfoVisitor
         {
@@ -147,7 +149,9 @@ namespace mo
                 vec.push_back(&info);
             }
 
-            void getParamInfoParents(ct::VariadicTypedef<void>* = nullptr) {}
+            void getParamInfoParents(ct::VariadicTypedef<void>* = nullptr)
+            {
+            }
 
             template <class Parent>
             void getParamInfoParents(ct::VariadicTypedef<Parent>* = nullptr)
@@ -217,7 +221,9 @@ namespace mo
                 vec.push_back(&info);
             }
 
-            void getSignalInfoParents(ct::VariadicTypedef<void>* = nullptr) {}
+            void getSignalInfoParents(ct::VariadicTypedef<void>* = nullptr)
+            {
+            }
 
             template <class Parent>
             void getSignalInfoParents(ct::VariadicTypedef<Parent>* = nullptr)
@@ -237,7 +243,7 @@ namespace mo
         static void getSignalInfoStatic(std::vector<mo::SignalInfo*>& vec)
         {
             SignalInfoVisitor visitor{vec};
-            visitor.getSignalInfoParents(static_cast<typename T::ParentClass*>(nullptr));
+            // visitor.getSignalInfoParents(static_cast<typename T::ParentClass*>(nullptr));
             T::reflectStatic(visitor, mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::SIGNALS>());
         }
 
@@ -271,8 +277,7 @@ namespace mo
                                    const mo::Name& name,
                                    mo::_counter_<N>)
             {
-                static mo::SlotInfo info{
-                    mo::TypeInfo(typeid(R(Args...))), std::string(name.get()), "", "", false};
+                static mo::SlotInfo info{mo::TypeInfo(typeid(R(Args...))), std::string(name.get()), "", "", false};
                 vec.push_back(&info);
             }
 
@@ -285,7 +290,9 @@ namespace mo
                 vec.push_back(&info);
             }
 
-            void getSlotInfoParents(ct::VariadicTypedef<void>* = nullptr) {}
+            void getSlotInfoParents(ct::VariadicTypedef<void>* = nullptr)
+            {
+            }
 
             template <class Parent>
             void getSlotInfoParents(ct::VariadicTypedef<Parent>* = nullptr)
@@ -334,7 +341,7 @@ namespace mo
         static void getSlotInfoStatic(std::vector<mo::SlotInfo*>& vec)
         {
             SlotInfoVisitor visitor{vec};
-            visitor.getSlotInfoParents(static_cast<typename T::ParentClass*>(nullptr));
+            // visitor.getSlotInfoParents(static_cast<typename T::ParentClass*>(nullptr));
             T::reflectStatic(visitor, mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::SLOTS>());
         }
 
@@ -345,11 +352,20 @@ namespace mo
             return vec;
         }
 
-        void getParamInfo(std::vector<mo::ParamInfo*>& vec) const override { getParamInfoStatic(vec); }
+        void getParamInfo(std::vector<mo::ParamInfo*>& vec) const override
+        {
+            getParamInfoStatic(vec);
+        }
 
-        void getSignalInfo(std::vector<mo::SignalInfo*>& vec) const override { getSignalInfoStatic(vec); }
+        void getSignalInfo(std::vector<mo::SignalInfo*>& vec) const override
+        {
+            getSignalInfoStatic(vec);
+        }
 
-        void getSlotInfo(std::vector<mo::SlotInfo*>& vec) const override { getSlotInfoStatic(vec); }
+        void getSlotInfo(std::vector<mo::SlotInfo*>& vec) const override
+        {
+            getSlotInfoStatic(vec);
+        }
     };
 
     // Static object information available for each meta object
@@ -363,21 +379,45 @@ namespace mo
     template <class T>
     struct MetaObjectInfo : public MetaObjectInfoImpl<T, typename T::InterfaceInfo>
     {
-        MetaObjectInfo() { MetaObjectInfoDatabase::instance()->registerInfo(this); }
+        MetaObjectInfo()
+        {
+            MetaObjectInfoDatabase::instance()->registerInfo(this);
+        }
 
-        static void getParamInfoStatic(std::vector<ParamInfo*>& info) { T::getParamInfoStatic(info); }
+        static void getParamInfoStatic(std::vector<ParamInfo*>& info)
+        {
+            T::getParamInfoStatic(info);
+        }
 
-        static void getSignalInfoStatic(std::vector<SignalInfo*>& info) { T::getSignalInfoStatic(info); }
+        static void getSignalInfoStatic(std::vector<SignalInfo*>& info)
+        {
+            T::getSignalInfoStatic(info);
+        }
 
-        static void getSlotInfoStatic(std::vector<SlotInfo*>& info) { T::getSlotInfoStatic(info); }
+        static void getSlotInfoStatic(std::vector<SlotInfo*>& info)
+        {
+            T::getSlotInfoStatic(info);
+        }
 
-        static std::string tooltipStatic() { return _get_tooltip_helper<T>(); }
+        static std::string tooltipStatic()
+        {
+            return _get_tooltip_helper<T>();
+        }
 
-        static std::string descriptionStatic() { return _get_description_helper<T>(); }
+        static std::string descriptionStatic()
+        {
+            return _get_description_helper<T>();
+        }
 
-        static TypeInfo getTypeInfoStatic() { return TypeInfo(typeid(typename T::BASE_CLASS)); }
+        static TypeInfo getTypeInfoStatic()
+        {
+            return TypeInfo(typeid(typename T::BASE_CLASS));
+        }
 
-        std::vector<std::pair<ISlot*, std::string>> getStaticSlots() const override { return T::getStaticSlots(); }
+        std::vector<std::pair<ISlot*, std::string>> getStaticSlots() const override
+        {
+            return T::getStaticSlots();
+        }
 
         std::vector<ParamInfo*> getParamInfo() const
         {
@@ -400,21 +440,46 @@ namespace mo
             return info;
         }
 
-        std::string getObjectTooltip() const { return tooltipStatic(); }
+        std::string getObjectTooltip() const
+        {
+            return tooltipStatic();
+        }
 
-        std::string getObjectHelp() const { return descriptionStatic(); }
+        std::string getObjectHelp() const
+        {
+            return descriptionStatic();
+        }
 
-        TypeInfo getTypeInfo() const { return getTypeInfoStatic(); }
+        TypeInfo getTypeInfo() const
+        {
+            return getTypeInfoStatic();
+        }
 
-        std::string GetObjectName() const { return T::GetTypeNameStatic(); }
+        std::string GetObjectName() const
+        {
+            return T::GetTypeNameStatic();
+        }
 
-        unsigned int GetInterfaceId() const { return T::getHash(); }
+        unsigned int GetInterfaceId() const
+        {
+            return T::getHash();
+        }
 
-        virtual std::string GetInterfaceName() const { return T::GetInterfaceName(); }
+        virtual std::string GetInterfaceName() const
+        {
+            return T::GetInterfaceName();
+        }
 
-        virtual IObjectConstructor* GetConstructor() const { return T::GetConstructorStatic(); }
+        virtual IObjectConstructor* GetConstructor() const
+        {
+            return T::GetConstructorStatic();
+        }
 
-        virtual bool InheritsFrom(InterfaceID iid) const override { return T::InheritsFrom(iid); }
+        virtual bool InheritsFrom(InterfaceID iid) const override
+        {
+            return T::InheritsFrom(iid);
+        }
+
       private:
         DEFINE_HAS_STATIC_FUNCTION(HasTooltip, getTooltipStatic, std::string (*)(void));
         DEFINE_HAS_STATIC_FUNCTION(HasDescription, getDescriptionStatic, std::string (*)(void));

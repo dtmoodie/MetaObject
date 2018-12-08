@@ -1,4 +1,4 @@
-set(Boost_required_components system thread fiber)
+set(Boost_required_components system thread fiber filesystem)
 if(BUILD_TESTS)
     list(APPEND Boost_required_components unit_test_framework)
 endif()

@@ -1,5 +1,3 @@
-
-#define BOOST_TEST_MAIN
 #include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/object/MetaObject.hpp"
@@ -18,12 +16,9 @@
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include <boost/fiber/recursive_timed_mutex.hpp>
 
-#ifdef _MSC_VER
-#include <boost/test/unit_test.hpp>
-#else
-#define BOOST_TEST_MODULE "MetaObject"
-#include <boost/test/included/unit_test.hpp>
-#endif
+#include <boost/test/auto_unit_test.hpp>
+#include <boost/test/test_tools.hpp>
+#include <boost/test/unit_test_suite.hpp>
 
 #include <iostream>
 
@@ -80,9 +75,9 @@ void test_meta_object_callback::test_void()
 {
 }
 
-struct test_meta_object_param : public MetaObject
+struct MetaObjectPublisher : public MetaObject
 {
-    MO_BEGIN(test_meta_object_param)
+    MO_BEGIN(MetaObjectPublisher)
     PARAM(int, test_int, 5)
     TOOLTIP(test_int, "test tooltip")
     MO_END
@@ -110,35 +105,24 @@ struct Paramed_object : public MetaObject
     }
 };
 
-struct test_meta_object_input : public MetaObject
+struct MetaObjectSubscriber : public MetaObject
 {
-    MO_BEGIN(test_meta_object_input);
+    MO_BEGIN(MetaObjectSubscriber);
     INPUT(int, test_int, nullptr);
     MO_END;
+    int update_count = 0;
+    void onParamUpdate(IParam*, Header, UpdateFlags) override
+    {
+        ++update_count;
+    }
 };
 
 MO_REGISTER_OBJECT(test_meta_object_signals)
 MO_REGISTER_OBJECT(test_meta_object_slots)
 MO_REGISTER_OBJECT(test_meta_object_callback)
-MO_REGISTER_OBJECT(test_meta_object_param)
-MO_REGISTER_OBJECT(test_meta_object_input)
+MO_REGISTER_OBJECT(MetaObjectPublisher)
+MO_REGISTER_OBJECT(MetaObjectSubscriber)
 MO_REGISTER_OBJECT(Paramed_object)
-// RuntimeObjectSystem obj_sys;
-struct Fixture
-{
-    SystemTable table;
-    mo::MetaObjectFactory factory;
-
-    Fixture()
-        : table()
-        , factory(&table)
-    {
-        PerModuleInterface::GetInstance()->SetSystemTable(&table);
-        factory.registerTranslationUnit();
-    }
-};
-
-BOOST_GLOBAL_FIXTURE(Fixture);
 
 BOOST_AUTO_TEST_CASE(access_Param)
 {
@@ -237,7 +221,9 @@ BOOST_AUTO_TEST_CASE(test_meta_object_internal_slot)
 {
     RelayManager mgr;
     auto constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_slots");
+    BOOST_REQUIRE(constructor);
     auto obj = constructor->Construct();
+    BOOST_REQUIRE(obj);
     auto meta_obj = dynamic_cast<test_meta_object_slots*>(obj);
     // auto slot = meta_obj->getSlot_test_void<void()>();
     // auto overload = meta_obj->getSlot_test_void<void(int)>();
@@ -255,7 +241,9 @@ BOOST_AUTO_TEST_CASE(inter_object_T)
 {
     RelayManager mgr;
     auto constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_signals");
+    BOOST_REQUIRE(constructor);
     auto obj = constructor->Construct();
+    BOOST_REQUIRE(obj);
     auto signal_object = dynamic_cast<test_meta_object_signals*>(obj);
     signal_object->setupSignals(&mgr);
     signal_object->Init(true);
@@ -277,7 +265,9 @@ BOOST_AUTO_TEST_CASE(inter_object_named)
 {
     RelayManager mgr;
     auto constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_signals");
+    BOOST_REQUIRE(constructor);
     auto obj = constructor->Construct();
+    BOOST_REQUIRE(obj);
     auto signal_object = dynamic_cast<test_meta_object_signals*>(obj);
     signal_object->setupSignals(&mgr);
     signal_object->Init(true);
@@ -299,7 +289,9 @@ BOOST_AUTO_TEST_CASE(rest)
     RelayManager mgr;
     {
         auto constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_callback");
+        BOOST_REQUIRE(constructor);
         auto obj = constructor->Construct();
+        BOOST_REQUIRE(obj);
         test_meta_object_callback* meta_obj = dynamic_cast<test_meta_object_callback*>(obj);
         meta_obj->Init(true);
         meta_obj->setupSignals(&mgr);
@@ -313,7 +305,9 @@ BOOST_AUTO_TEST_CASE(rest)
     }
     {
         auto constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_callback");
+        BOOST_REQUIRE(constructor);
         auto obj = constructor->Construct();
+        BOOST_REQUIRE(obj);
         obj->Init(true);
         test_meta_object_callback* cb = dynamic_cast<test_meta_object_callback*>(obj);
         constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_slots");
@@ -325,28 +319,56 @@ BOOST_AUTO_TEST_CASE(rest)
         delete slot;
     }
     {
-        auto constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_param");
+        auto constructor = MetaObjectFactory::instance().getConstructor("MetaObjectPublisher");
+        BOOST_REQUIRE(constructor);
         auto obj = constructor->Construct();
+        BOOST_REQUIRE(obj);
         obj->Init(true);
-        // test_meta_object_Param* ptr = static_cast<test_meta_object_Param*>(obj);
+        MetaObjectPublisher* ptr = dynamic_cast<MetaObjectPublisher*>(obj);
+        BOOST_REQUIRE(ptr);
     }
 }
 
 BOOST_AUTO_TEST_CASE(test_params)
 {
     RelayManager mgr;
-    auto constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_param");
+    auto constructor = MetaObjectFactory::instance().getConstructor("MetaObjectPublisher");
     auto obj = constructor->Construct();
     obj->Init(true);
-    test_meta_object_param* ptr = dynamic_cast<test_meta_object_param*>(obj);
-    ptr->setupSignals(&mgr);
-    constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_input");
+
+    MetaObjectPublisher* publisher = dynamic_cast<MetaObjectPublisher*>(obj);
+
+    BOOST_REQUIRE(publisher->getStream() == nullptr);
+    auto num_signals = publisher->setupSignals(&mgr);
+
+    BOOST_REQUIRE(publisher->getParam("test_int") != nullptr);
+    auto params = publisher->getParams();
+    BOOST_REQUIRE_EQUAL(params.size(), 1);
+
+    constructor = MetaObjectFactory::instance().getConstructor("MetaObjectSubscriber");
     obj = constructor->Construct();
     obj->Init(true);
-    test_meta_object_input* input = dynamic_cast<test_meta_object_input*>(obj);
-    input->setupSignals(&mgr);
-    BOOST_REQUIRE_EQUAL(ptr->update_count, 0);
-    input->test_int_param.updateData(10);
-    BOOST_REQUIRE_EQUAL(ptr->update_count, 1);
+    MetaObjectSubscriber* subscriber = dynamic_cast<MetaObjectSubscriber*>(obj);
+    BOOST_REQUIRE(subscriber->getStream() == nullptr);
+    subscriber->setupSignals(&mgr);
+
+    BOOST_REQUIRE_EQUAL(publisher->update_count, 0);
+    BOOST_REQUIRE_EQUAL(subscriber->update_count, 0);
+
+    auto input_param = subscriber->getInput("test_int");
+    BOOST_REQUIRE(input_param);
+
+    auto output_param = publisher->getParam("test_int");
+    BOOST_REQUIRE(output_param);
+
+    BOOST_REQUIRE_EQUAL(subscriber->update_count, 0);
+    BOOST_REQUIRE(subscriber->connectInput("test_int", publisher, output_param));
+    BOOST_REQUIRE_EQUAL(subscriber->update_count, 1);
+    publisher->test_int_param.updateData(10);
+
+    BOOST_REQUIRE_EQUAL((*subscriber->test_int), 10);
+    BOOST_REQUIRE_EQUAL(publisher->update_count, 1);
+    BOOST_REQUIRE_EQUAL(subscriber->update_count, 2);
+
     delete obj;
 }

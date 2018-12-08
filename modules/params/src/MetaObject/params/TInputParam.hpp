@@ -38,6 +38,8 @@ namespace mo
 
         TInputParamPtr(const std::string& name = "", const T** user_var_ = nullptr)
             : ITInputParam<T>(name)
+            , TParam<T>(name, ParamFlags::Input_e)
+            , IParam(name, ParamFlags::Input_e)
             , m_user_var(user_var_)
         {
         }

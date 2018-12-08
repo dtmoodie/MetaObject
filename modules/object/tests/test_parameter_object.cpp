@@ -1,5 +1,3 @@
-#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MAIN
 #include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/logging/CompileLogger.hpp"
@@ -19,30 +17,14 @@
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 
-#define BOOST_TEST_DYN_LINK
-#define BOOST_TEST_MODULE "parameter"
-#include <boost/test/unit_test.hpp>
+#include <boost/test/auto_unit_test.hpp>
+#include <boost/test/test_tools.hpp>
+#include <boost/test/unit_test_suite.hpp>
 #include <boost/thread.hpp>
+
 #include <iostream>
 #include <thread>
 using namespace mo;
-
-struct GlobalFixture
-{
-    GlobalFixture()
-        : table{}
-        , factory(&table)
-    {
-        auto table = &this->table;
-        INSTANTIATE_META_PARAM(int);
-        factory.registerTranslationUnit();
-    }
-
-    SystemTable table;
-    mo::MetaObjectFactory factory;
-};
-
-BOOST_GLOBAL_FIXTURE(GlobalFixture);
 
 struct output_parametered_object : public MetaObject
 {
@@ -74,7 +56,11 @@ BOOST_AUTO_TEST_CASE(input_parameter_manual)
     auto input = input_parametered_object::create();
     auto output = output_parametered_object::create();
     input->test_input_param.setInput(&output->test_output_param);
+    BOOST_REQUIRE(input->test_input == nullptr);
+    output->test_output_param.updateData(10);
     BOOST_REQUIRE(input->test_input != nullptr);
+    BOOST_REQUIRE(*input->test_input == 10);
+
     BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
 }
 
@@ -91,11 +77,13 @@ BOOST_AUTO_TEST_CASE(input_parameter_programatic)
     auto input_param = dynamic_cast<InputParam*>(input_);
     BOOST_REQUIRE(input_param);
     BOOST_REQUIRE(input_param->setInput(output_));
-    BOOST_REQUIRE(input->test_input);
+    BOOST_REQUIRE(input->test_input == nullptr);
+    output->test_output_param.updateData(10);
+    BOOST_REQUIRE(input->test_input != nullptr);
     BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
 }
 
-BOOST_AUTO_TEST_CASE(buffered_input)
+/*BOOST_AUTO_TEST_CASE(buffered_input)
 {
     rcc::shared_ptr<input_parametered_object> input = input_parametered_object::create();
     auto input_ = input->getParamOptional("test_input");
@@ -164,7 +152,7 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
         boost::this_thread::sleep_for(boost::chrono::milliseconds(5));
     }
     background_thread.join();
-}
+}*/
 
 BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
 {

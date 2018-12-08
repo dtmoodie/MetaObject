@@ -1,4 +1,3 @@
-#define BOOST_TEST_MAIN
 #include "MetaObject/object/MetaObject.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
@@ -11,12 +10,9 @@
 
 #include <boost/fiber/recursive_timed_mutex.hpp>
 
-#ifdef _MSC_VER
-#include <boost/test/unit_test.hpp>
-#else
-#define BOOST_TEST_MODULE "MetaObjectInheritance"
-#include <boost/test/included/unit_test.hpp>
-#endif
+#include <boost/test/auto_unit_test.hpp>
+#include <boost/test/test_tools.hpp>
+#include <boost/test/unit_test_suite.hpp>
 
 #include <iostream>
 
@@ -102,21 +98,6 @@ MO_REGISTER_OBJECT(derived_Param);
 MO_REGISTER_OBJECT(derived1);
 MO_REGISTER_OBJECT(multi_derive);
 
-struct Fixture
-{
-    Fixture()
-        : table{}
-        , factory(&table)
-    {
-        factory.registerTranslationUnit();
-    }
-
-    SystemTable table;
-    mo::MetaObjectFactory factory;
-};
-
-BOOST_GLOBAL_FIXTURE(Fixture)
-
 BOOST_AUTO_TEST_CASE(object_print)
 {
     auto info = mo::MetaObjectFactory::instance().getObjectInfo("derived_signals");
@@ -144,12 +125,35 @@ BOOST_AUTO_TEST_CASE(signals_static)
 {
     auto signal_info = TMetaObjectInterfaceHelper<derived_signals>::getSignalInfoStatic();
     BOOST_REQUIRE_EQUAL(signal_info.size(), 2);
+    auto itr = std::find_if(
+        signal_info.begin(), signal_info.end(), [](SignalInfo* info) { return info->name == "base_signal"; });
+    BOOST_REQUIRE(itr != signal_info.end());
+    BOOST_REQUIRE((*itr)->signature == TypeInfo(typeid(void(int))));
+
+    itr = std::find_if(
+        signal_info.begin(), signal_info.end(), [](SignalInfo* info) { return info->name == "base_signal"; });
+
+    BOOST_REQUIRE(itr != signal_info.end());
+    BOOST_REQUIRE((*itr)->signature == TypeInfo(typeid(void(int))));
 }
 
 BOOST_AUTO_TEST_CASE(slots_static)
 {
     auto slot_info = TMetaObjectInterfaceHelper<derived_signals>::getSlotInfoStatic();
     BOOST_REQUIRE_EQUAL(slot_info.size(), 3);
+
+    auto itr =
+        std::find_if(slot_info.begin(), slot_info.end(), [](SlotInfo* info) { return info->name == "override_slot"; });
+    BOOST_REQUIRE(itr != slot_info.end());
+    BOOST_REQUIRE((*itr)->signature == TypeInfo(typeid(void(int))));
+
+    itr = std::find_if(slot_info.begin(), slot_info.end(), [](SlotInfo* info) { return info->name == "base_slot"; });
+    BOOST_REQUIRE(itr != slot_info.end());
+    BOOST_REQUIRE((*itr)->signature == TypeInfo(typeid(void(int))));
+
+    itr = std::find_if(slot_info.begin(), slot_info.end(), [](SlotInfo* info) { return info->name == "derived_slot"; });
+    BOOST_REQUIRE(itr != slot_info.end());
+    BOOST_REQUIRE((*itr)->signature == TypeInfo(typeid(void(int))));
 }
 
 BOOST_AUTO_TEST_CASE(Param_dynamic)
