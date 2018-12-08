@@ -277,7 +277,7 @@ namespace mo
 
         IDataContainerPtr_t Map::searchNearest(const Header& hdr) const
         {
-            if (!hdr.timestamp)
+            if (!hdr.timestamp && !hdr.frame_number.valid())
             {
                 if (!m_data_buffer.empty())
                 {
