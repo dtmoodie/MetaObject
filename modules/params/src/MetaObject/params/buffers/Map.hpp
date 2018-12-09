@@ -63,7 +63,7 @@ namespace mo
             virtual boost::optional<uint64_t> getFrameBufferCapacity() const override;
             virtual boost::optional<Duration> getTimePaddingCapacity() const override;
 
-            virtual size_t getSize() const override;
+            virtual uint64_t getSize() const override;
             virtual uint64_t clear() override;
             virtual bool getTimestampRange(mo::OptionalTime& start, mo::OptionalTime& end) override;
             virtual bool getFrameNumberRange(uint64_t& start, uint64_t& end) override;

@@ -97,7 +97,7 @@ namespace mo
             return false;
         }
 
-        virtual size_t size() const override
+        virtual uint64_t size() const override
         {
             return sizeof(T);
         }

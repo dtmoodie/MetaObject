@@ -8,7 +8,7 @@
 namespace mo
 {
 
-    uint8_t* CPU::allocate(size_t size)
+    uint8_t* CPU::allocate(const uint64_t size)
     {
         uint8_t* ptr = nullptr;
         ptr = static_cast<uint8_t*>(malloc(size));

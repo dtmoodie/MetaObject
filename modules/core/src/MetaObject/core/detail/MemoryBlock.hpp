@@ -12,7 +12,7 @@ namespace mo
 
     struct MO_EXPORTS CPU
     {
-        static uint8_t* allocate(size_t size);
+        static uint8_t* allocate(const uint64_t size);
         static void deallocate(unsigned char* data);
     };
 
@@ -29,7 +29,7 @@ namespace mo
         const uint8_t* end() const;
         uint8_t* begin();
         uint8_t* end();
-        size_t size() const;
+        uint64_t size() const;
 
       protected:
         uint8_t* m_begin;
@@ -45,7 +45,7 @@ namespace mo
     ////////////////////////////////////////////////////////////////////////////////
 
     template <class XPU>
-    MemoryBlock<XPU>::MemoryBlock(const size_t size_)
+    MemoryBlock<XPU>::MemoryBlock(const uint64_t size_)
     {
         m_begin = XPU::allocate(size_);
         m_end = m_begin + size_;
@@ -64,7 +64,7 @@ namespace mo
         {
             return nullptr;
         }
-        std::vector<std::pair<size_t, uint8_t*>> candidates;
+        std::vector<std::pair<uint64_t, uint8_t*>> candidates;
         uint8_t* prev_end = m_begin;
         if (m_allocated_blocks.size())
         {
@@ -81,19 +81,19 @@ namespace mo
                 prev_end = itr.second;
             }
         }
-        if (static_cast<size_t>(m_end - prev_end) >= size_)
+        if (static_cast<uint64_t>(m_end - prev_end) >= size_)
         {
             auto alignment = alignmentOffset(prev_end, elem_size_);
-            if (static_cast<size_t>(m_end - prev_end + alignment) >= size_)
+            if (static_cast<uint64_t>(m_end - prev_end + alignment) >= size_)
             {
-                candidates.emplace_back(size_t(m_end - prev_end + alignment), prev_end + alignment);
+                candidates.emplace_back(uint64_t(m_end - prev_end + alignment), prev_end + alignment);
             }
         }
         // Find the smallest chunk of memory that fits our requirement, helps reduce fragmentation.
         auto min = std::min_element(
             candidates.begin(),
             candidates.end(),
-            [](const std::pair<size_t, unsigned char*>& first, const std::pair<size_t, unsigned char*>& second) {
+            [](const std::pair<uint64_t, unsigned char*>& first, const std::pair<uint64_t, unsigned char*>& second) {
                 return first.first < second.first;
             });
 
@@ -144,7 +144,7 @@ namespace mo
     }
 
     template <class XPU>
-    size_t MemoryBlock<XPU>::size() const
+    uint64_t MemoryBlock<XPU>::size() const
     {
         return m_end - m_begin;
     }

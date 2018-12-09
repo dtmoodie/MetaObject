@@ -18,7 +18,7 @@
             _time_padding = time;
         }
 
-        boost::optional<size_t> StreamBuffer::getFrameBufferCapacity() const
+        boost::optional<uint64_t> StreamBuffer::getFrameBufferCapacity() const
         {
             return _frame_padding;
         }

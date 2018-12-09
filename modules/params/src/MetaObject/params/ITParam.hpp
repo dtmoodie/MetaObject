@@ -114,7 +114,7 @@ namespace mo
             header.coordinate_system = param->getCoordinateSystem();
             header.timestamp = param->getTimestamp();
         }
-        const size_t* fnptr = GetKeywordInputOptional<tag::frame_number>(args...);
+        const uint64_t* fnptr = GetKeywordInputOptional<tag::frame_number>(args...);
         if (fnptr)
         {
             header.frame_number = *fnptr;

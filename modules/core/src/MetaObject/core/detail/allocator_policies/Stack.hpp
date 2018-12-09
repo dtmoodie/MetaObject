@@ -35,7 +35,7 @@ namespace mo
     ///////////////////////////////////////////////////////////////////////////
 
     template <class XPU>
-    unsigned char* StackPolicy<XPU>::allocate(size_t num_bytes, size_t)
+    unsigned char* StackPolicy<XPU>::allocate(const uint64_t num_bytes, const uint64_t)
     {
         unsigned char* ptr = nullptr;
         for (auto itr = m_deallocate_list.begin(); itr != m_deallocate_list.end(); ++itr)
@@ -52,7 +52,7 @@ namespace mo
     }
 
     template <class XPU>
-    void StackPolicy<XPU>::deallocate(unsigned char* ptr, size_t num_bytes)
+    void StackPolicy<XPU>::deallocate(unsigned char* ptr, const uint64_t num_bytes)
     {
         m_deallocate_list.push_back({ptr, clock(), num_bytes});
         clear();

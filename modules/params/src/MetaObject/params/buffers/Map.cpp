@@ -40,7 +40,7 @@ namespace mo
             return m_time_padding;
         }
 
-        size_t Map::getSize() const
+        uint64_t Map::getSize() const
         {
             Lock_t lock(m_mtx);
             return m_data_buffer.size();

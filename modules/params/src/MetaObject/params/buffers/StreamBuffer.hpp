@@ -18,7 +18,7 @@ namespace mo
 
             virtual void setFrameBufferCapacity(const uint64_t size) override;
             virtual void setTimePaddingCapacity(const Duration& time) override;
-            virtual boost::optional<size_t> getFrameBufferCapacity() const override;
+            virtual boost::optional<uint64_t> getFrameBufferCapacity() const override;
             virtual boost::optional<Duration> getTimePaddingCapacity() const override;
 
             virtual BufferFlags getBufferType() const override;

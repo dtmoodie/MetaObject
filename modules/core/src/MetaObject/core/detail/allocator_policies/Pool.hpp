@@ -24,7 +24,7 @@ namespace mo
         void release();
 
       private:
-        size_t m_initial_block_size;
+        uint64_t m_initial_block_size;
         std::list<std::unique_ptr<MemoryBlock<XPU>>> m_blocks;
     };
 
@@ -87,7 +87,7 @@ namespace mo
     }
 
     template <class XPU>
-    void MemoryPool<XPU>::deallocate(uint8_t* ptr, size_t num_bytes)
+    void MemoryPool<XPU>::deallocate(uint8_t* ptr, const uint64_t num_bytes)
     {
         for (auto& itr : m_blocks)
         {
