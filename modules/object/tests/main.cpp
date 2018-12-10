@@ -17,14 +17,9 @@ struct GlobalFixture
 {
     GlobalFixture()
         : m_system_table(SystemTable::instance())
-        , m_factory(m_system_table.get())
     {
         mo::params::init(m_system_table.get());
-        m_factory.registerTranslationUnit();
-        auto module = PerModuleInterface::GetInstance();
-        module->SetSystemTable(m_system_table.get());
-        std::shared_ptr<mo::ThreadPool> pool = mo::sharedSingleton<mo::ThreadPool>(m_system_table.get());
-        boost::fibers::use_scheduling_algorithm<mo::PriorityScheduler>(pool);
+        mo::MetaObjectFactory::instance()->registerTranslationUnit();
     }
 
     ~GlobalFixture()
@@ -33,7 +28,6 @@ struct GlobalFixture
     }
 
     SystemTable::Ptr_t m_system_table;
-    mo::MetaObjectFactory m_factory;
 };
 
 BOOST_GLOBAL_FIXTURE(GlobalFixture);

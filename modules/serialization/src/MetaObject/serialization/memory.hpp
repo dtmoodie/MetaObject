@@ -63,7 +63,7 @@ namespace cereal
             PerTypeObjectId id;
             ar(cereal::make_nvp("type", type));
             ar(cereal::make_nvp("id", id));
-            auto ctr = mo::MetaObjectFactory::instance().getConstructor(type.c_str());
+            auto ctr = mo::MetaObjectFactory::instance()->getConstructor(type.c_str());
             MO_ASSERT(ctr != nullptr);
             auto obj = ctr->GetConstructedObject(id);
             if (obj == nullptr)

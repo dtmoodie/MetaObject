@@ -24,7 +24,7 @@ namespace mo
         ~MemoryBlock();
 
         uint8_t* allocate(const uint64_t size_, const uint64_t elemSize_);
-        bool deAllocate(uint8_t* ptr, const uint64_t size);
+        bool deAllocate(uint8_t* ptr, const uint64_t num_elements);
         const uint8_t* begin() const;
         const uint8_t* end() const;
         uint8_t* begin();
@@ -35,6 +35,21 @@ namespace mo
         uint8_t* m_begin;
         uint8_t* m_end;
         std::unordered_map<uint8_t*, uint8_t*> m_allocated_blocks;
+    };
+
+    template <class T, class XPU>
+    class TMemoryBlock : public MemoryBlock<XPU>
+    {
+      public:
+        TMemoryBlock(const uint64_t num_elements);
+
+        T* allocate(const uint64_t num_elements);
+        bool deAllocate(T* ptr, const uint64_t size);
+        const T* begin() const;
+        const T* end() const;
+        T* begin();
+        T* end();
+        uint64_t size() const;
     };
 
     using CPUMemoryBlock = MemoryBlock<CPU>;
@@ -147,5 +162,57 @@ namespace mo
     uint64_t MemoryBlock<XPU>::size() const
     {
         return m_end - m_begin;
+    }
+
+    //////////////////////////////////////////////////////////////////////////
+    ///   TMemoryBlock
+    //////////////////////////////////////////////////////////////////////////
+
+    template <class T, class XPU>
+    TMemoryBlock<T, XPU>::TMemoryBlock(const uint64_t num_elements)
+        : MemoryBlock<XPU>(num_elements * sizeof(T))
+    {
+    }
+
+    template <class T, class XPU>
+    T* TMemoryBlock<T, XPU>::allocate(const uint64_t num_elements)
+    {
+        return static_cast<T*>(static_cast<void*>(MemoryBlock<XPU>::allocate(num_elements * sizeof(T), sizeof(T))));
+    }
+
+    template <class T, class XPU>
+    bool TMemoryBlock<T, XPU>::deAllocate(T* ptr, const uint64_t num_elements)
+    {
+        return MemoryBlock<XPU>::deAllocate(static_cast<uint8_t*>(static_cast<void*>(ptr)), num_elements * sizeof(T));
+    }
+
+    template <class T, class XPU>
+    const T* TMemoryBlock<T, XPU>::begin() const
+    {
+        return static_cast<const T*>(static_cast<const void*>(MemoryBlock<XPU>::begin()));
+    }
+
+    template <class T, class XPU>
+    const T* TMemoryBlock<T, XPU>::end() const
+    {
+        return static_cast<const T*>(static_cast<const void*>(MemoryBlock<XPU>::end()));
+    }
+
+    template <class T, class XPU>
+    T* TMemoryBlock<T, XPU>::begin()
+    {
+        return static_cast<T*>(static_cast<void*>(MemoryBlock<XPU>::begin()));
+    }
+
+    template <class T, class XPU>
+    T* TMemoryBlock<T, XPU>::end()
+    {
+        return static_cast<T*>(static_cast<void*>(MemoryBlock<XPU>::end()));
+    }
+
+    template <class T, class XPU>
+    uint64_t TMemoryBlock<T, XPU>::size() const
+    {
+        return MemoryBlock<XPU>::size() / sizeof(T);
     }
 }

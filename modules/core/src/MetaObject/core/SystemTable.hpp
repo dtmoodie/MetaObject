@@ -1,6 +1,7 @@
 #pragma once
 #include <MetaObject/core/TypeTable.hpp>
 #include <MetaObject/core/detail/Allocator.hpp>
+#include <MetaObject/core/detail/ObjectConstructor.hpp>
 #include <MetaObject/core/detail/forward.hpp>
 #include <MetaObject/detail/Export.hpp>
 #include <MetaObject/detail/TypeInfo.hpp>
@@ -34,7 +35,7 @@ struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
     SystemTable& operator=(const SystemTable& other) = delete;
     SystemTable& operator=(SystemTable&& other) = delete;
 
-    static std::shared_ptr<SystemTable> instance();
+    MO_INLINE static std::shared_ptr<SystemTable> instance();
 
     virtual ~SystemTable();
 
@@ -72,15 +73,10 @@ struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
 
     static MO_INLINE void staticDispatchToSystemTable(std::function<void(SystemTable*)>&& func);
 
-    mo::MetaObjectFactory* getFactory();
-    void setFactory(mo::MetaObjectFactory* factory);
-
   protected:
-    static void setInstance(const Ptr_t& table);
-
   private:
+    static std::shared_ptr<SystemTable> instanceImpl();
     SystemTable();
-    mo::MetaObjectFactory* m_metaobject_factory = nullptr;
     mo::AllocatorPtr_t m_default_allocator;
     SystemInfo m_system_info;
     std::unordered_map<mo::TypeInfo, std::unique_ptr<mo::ISingletonContainer>> m_singletons;
@@ -90,6 +86,14 @@ struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
 //////////////////////////////////////////////////////////////////////////////
 ///                              Implementation
 //////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<SystemTable> SystemTable::instance()
+{
+    auto inst = instanceImpl();
+    auto module = PerModuleInterface::GetInstance();
+    module->SetSystemTable(inst.get());
+    return inst;
+}
 
 void SystemTable::staticDispatchToSystemTable(std::function<void(SystemTable*)>&& func)
 {
@@ -192,7 +196,7 @@ namespace mo
     };
 
     template <class T, class U = T>
-    T* singleton(SystemTable* table)
+    T* singleton(SystemTable* table, const mo::ObjectConstructor<U>& ctr = ObjectConstructor<U>())
     {
         T* ptr = nullptr;
         if (table)
@@ -200,7 +204,7 @@ namespace mo
             ptr = table->getSingleton<T>();
             if (ptr == nullptr)
             {
-                ptr = table->setSingleton(std::unique_ptr<T>(new U()));
+                ptr = table->setSingleton(ctr.createUnique());
                 mo::getDefaultLogger().info("Creating new {} singleton instance {} in system table ({})",
                                             mo::TypeTable::instance(table).typeToName(mo::TypeInfo(typeid(U))),
                                             static_cast<const void*>(ptr),
@@ -211,7 +215,7 @@ namespace mo
     }
 
     template <class T, class U = T>
-    std::shared_ptr<T> sharedSingleton(SystemTable* table)
+    std::shared_ptr<T> sharedSingleton(SystemTable* table, const mo::ObjectConstructor<U>& ctr = ObjectConstructor<U>())
     {
         std::shared_ptr<T> ptr = nullptr;
         if (table)
@@ -219,7 +223,7 @@ namespace mo
             ptr = table->getSharedSingleton<T>();
             if (ptr == nullptr)
             {
-                ptr = table->setSingleton(std::make_shared<U>());
+                ptr = table->setSingleton(ctr.createShared());
                 mo::getDefaultLogger().info("Creating new shared {} singleton instance {} in system table ({})",
                                             mo::TypeTable::instance(table).typeToName(mo::TypeInfo(typeid(U))),
                                             static_cast<const void*>(ptr.get()),

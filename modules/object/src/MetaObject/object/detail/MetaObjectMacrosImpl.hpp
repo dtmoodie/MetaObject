@@ -41,13 +41,13 @@ namespace mo
 
 #define MO_BEGIN_1(CLASS_NAME, N_)                                                                                     \
     using THIS_CLASS = CLASS_NAME;                                                                                     \
-    using ParentClass = ct::VariadicTypedef<void>;                                                                    \
+    using ParentClass = ct::VariadicTypedef<void>;                                                                     \
     REFLECT_START(N_)                                                                                                  \
     static rcc::shared_ptr<THIS_CLASS::InterfaceHelper<CLASS_NAME>> create();
 
 #define MO_DERIVE_(N_, CLASS_NAME, ...)                                                                                \
     using THIS_CLASS = CLASS_NAME;                                                                                     \
-    using ParentClass = ct::VariadicTypedef<__VA_ARGS__>;                                                             \
+    using ParentClass = ct::VariadicTypedef<__VA_ARGS__>;                                                              \
     REFLECT_START(N_)                                                                                                  \
     static rcc::shared_ptr<THIS_CLASS::InterfaceHelper<CLASS_NAME>> create();
 
@@ -118,7 +118,7 @@ struct ReflectParent<ct::VariadicTypedef<Parent, Parents...>>
 
 #define MO_ABSTRACT_(N_, CLASS_NAME, ...)                                                                              \
     using THIS_CLASS = CLASS_NAME;                                                                                     \
-    using ParentClass = ct::VariadicTypedef<__VA_ARGS__>;                                                             \
+    using ParentClass = ct::VariadicTypedef<__VA_ARGS__>;                                                              \
     REFLECT_START(N_)
 
 #define MO_REGISTER_OBJECT(TYPE)                                                                                       \
@@ -126,7 +126,7 @@ struct ReflectParent<ct::VariadicTypedef<Parent, Parents...>>
     static ::mo::MetaObjectPolicy<TActual<TYPE>, __COUNTER__, void> TYPE##_policy;                                     \
     ::rcc::shared_ptr<TYPE::InterfaceHelper<TYPE>> TYPE::create()                                                      \
     {                                                                                                                  \
-        auto obj = ::mo::MetaObjectFactory::instance().create(#TYPE);                                                  \
+        auto obj = ::mo::MetaObjectFactory::instance()->create(#TYPE);                                                 \
         return ::rcc::shared_ptr<InterfaceHelper<TYPE>>(obj);                                                          \
     }                                                                                                                  \
     REGISTERCLASS(TYPE, &TYPE##_info);

@@ -100,7 +100,7 @@ MO_REGISTER_OBJECT(multi_derive);
 
 BOOST_AUTO_TEST_CASE(object_print)
 {
-    auto info = mo::MetaObjectFactory::instance().getObjectInfo("derived_signals");
+    auto info = mo::MetaObjectFactory::instance()->getObjectInfo("derived_signals");
     info->Print();
 }
 
@@ -201,7 +201,7 @@ BOOST_AUTO_TEST_CASE(call_overloaded_slot)
 BOOST_AUTO_TEST_CASE(diamond)
 {
     // auto obj = rcc::shared_ptr<multi_derive>::create();
-    auto constructor = mo::MetaObjectFactory::instance().getConstructor("multi_derive");
+    auto constructor = mo::MetaObjectFactory::instance()->getConstructor("multi_derive");
     BOOST_REQUIRE(constructor);
     auto info = constructor->GetObjectInfo();
     std::cout << info->Print();

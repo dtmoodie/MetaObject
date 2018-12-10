@@ -2,6 +2,9 @@
 #include "MetaObject/logging/logging.hpp"
 #include "singletons.hpp"
 
+#include <MetaObject/thread/FiberScheduler.hpp>
+#include <MetaObject/thread/ThreadPool.hpp>
+
 #include "MetaObject/core/detail/allocator_policies/Combined.hpp"
 #include "MetaObject/core/detail/allocator_policies/Lock.hpp"
 #include "MetaObject/core/detail/allocator_policies/Pool.hpp"
@@ -22,22 +25,17 @@ mo::ISingletonContainer::~ISingletonContainer()
 
 static std::weak_ptr<SystemTable> inst;
 
-std::shared_ptr<SystemTable> SystemTable::instance()
+std::shared_ptr<SystemTable> SystemTable::instanceImpl()
 {
     std::shared_ptr<SystemTable> output = inst.lock();
     if (!output)
     {
         output.reset(new SystemTable());
         inst = output;
+        std::shared_ptr<mo::ThreadPool> pool = mo::sharedSingleton<mo::ThreadPool>(output.get());
+        boost::fibers::use_scheduling_algorithm<mo::PriorityScheduler>(pool);
     }
     return output;
-}
-
-void SystemTable::setInstance(const std::shared_ptr<SystemTable>& table)
-{
-    auto current = inst.lock();
-    MO_ASSERT(!current);
-    inst = table;
 }
 
 SystemTable::SystemTable()
@@ -92,15 +90,4 @@ void SystemTable::setAllocatorConstructor(std::function<mo::AllocatorPtr_t()>&& 
 mo::AllocatorPtr_t SystemTable::createAllocator() const
 {
     return m_allocator_constructor();
-}
-
-mo::MetaObjectFactory* SystemTable::getFactory()
-{
-    return m_metaobject_factory;
-}
-
-void SystemTable::setFactory(mo::MetaObjectFactory* factory)
-{
-    MO_ASSERT(m_metaobject_factory == nullptr);
-    m_metaobject_factory = factory;
 }

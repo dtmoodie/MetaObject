@@ -57,7 +57,7 @@ std::string IMetaObjectInfo::Print(Verbosity verbosity) const
                 ss << file << '\n';
         }
         std::vector<FileSystemUtils::Path>& inlcude_paths =
-            MetaObjectFactory::instance().getObjectSystem()->GetIncludeDirList(pid);
+            MetaObjectFactory::instance()->getObjectSystem()->GetIncludeDirList(pid);
         if (inlcude_paths.size())
         {
             for (FileSystemUtils::Path& path : inlcude_paths)
@@ -82,7 +82,7 @@ std::string IMetaObjectInfo::Print(Verbosity verbosity) const
         }
 
         std::vector<FileSystemUtils::Path>& link_paths =
-            MetaObjectFactory::instance().getObjectSystem()->GetLinkDirList(pid);
+            MetaObjectFactory::instance()->getObjectSystem()->GetLinkDirList(pid);
         if (link_paths.size())
         {
             ss << "\nLink dirs:\n";

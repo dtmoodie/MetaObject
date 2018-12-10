@@ -4,6 +4,8 @@
 #include "MetaObject/detail/defines.hpp"
 #include "MetaObject/logging/logging.hpp"
 
+#include "MetaObject/core/SystemTable.hpp"
+
 #include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 
 #include <functional>
@@ -28,7 +30,11 @@ namespace mo
                    unsigned int time = 0,
                    const char* info = nullptr,
                    unsigned int id = 0)
-            : m_path(path), m_state(state), m_load_time(time), m_build_info(info), m_id(id)
+            : m_path(path)
+            , m_state(state)
+            , m_load_time(time)
+            , m_build_info(info)
+            , m_id(id)
         {
         }
 
@@ -46,12 +52,28 @@ namespace mo
         unsigned int m_id = 0;
     };
 
+    template <>
+    struct ObjectConstructor<MetaObjectFactory>
+    {
+        using SharedPtr_t = std::shared_ptr<MetaObjectFactory>;
+        using UniquePtr_t = std::unique_ptr<MetaObjectFactory>;
+
+        ObjectConstructor(SystemTable* table);
+
+        SharedPtr_t createShared() const;
+
+        UniquePtr_t createUnique() const;
+
+        MetaObjectFactory* create() const;
+
+      private:
+        SystemTable* table;
+    };
+
     class MO_EXPORTS MetaObjectFactory
     {
       public:
-        MO_INLINE static MetaObjectFactory& instance();
-        MetaObjectFactory(SystemTable* system_table);
-        ~MetaObjectFactory();
+        MO_INLINE static std::shared_ptr<MetaObjectFactory> instance();
 
         IMetaObject* create(const char* type_name, int64_t interface_id = -1);
         template <class T>
@@ -100,10 +122,64 @@ namespace mo
         template <class T>
         std::vector<typename T::InterfaceInfo*> getObjectInfos();
 
+        ~MetaObjectFactory();
+
+      protected:
+        friend struct ObjectConstructor<MetaObjectFactory>;
+
+        MetaObjectFactory(SystemTable* table);
+
       private:
         struct impl;
         std::unique_ptr<impl> _pimpl;
     };
 
+    MO_INLINE std::shared_ptr<MetaObjectFactory> MetaObjectFactory::instance()
+    {
+        std::shared_ptr<MetaObjectFactory> ptr;
+        auto module = PerModuleInterface::GetInstance();
+        if (module)
+        {
+            auto table = module->GetSystemTable();
+            if (table)
+            {
+                ptr = sharedSingleton<MetaObjectFactory>(table, mo::ObjectConstructor<MetaObjectFactory>(table));
+            }
+        }
+        MO_ASSERT(ptr);
+        return ptr;
+    }
+
+    template <class T>
+    T* MetaObjectFactory::create(const char* type_name)
+    {
+        return static_cast<T*>(create(type_name, T::s_interfaceID));
+    }
+
+    template <class T>
+    std::vector<IObjectConstructor*> MetaObjectFactory::getConstructors()
+    {
+        return getConstructors(T::s_interfaceID);
+    }
+
+    template <class T>
+    std::vector<typename T::InterfaceInfo*> MetaObjectFactory::getObjectInfos()
+    {
+        auto constructors = getConstructors<T>();
+        std::vector<typename T::InterfaceInfo*> output;
+        for (auto constructor : constructors)
+        {
+            typename T::InterfaceInfo* info = dynamic_cast<typename T::InterfaceInfo*>(constructor->GetObjectInfo());
+            if (info)
+                output.push_back(info);
+        }
+        return output;
+    }
+
+    MO_INLINE void MetaObjectFactory::registerTranslationUnit()
+    {
+        auto module = PerModuleInterface::GetInstance();
+        setupObjectConstructors(module);
+    }
+
 } // namespace mo
-#include "MetaObjectFactory-inl.hpp"

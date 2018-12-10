@@ -62,8 +62,7 @@ struct MetaObjectFactory::impl
 
 MetaObjectFactory::MetaObjectFactory(SystemTable* table)
 {
-    MO_ASSERT(table);
-    table->setFactory(this);
+
     _pimpl.reset(new impl(table));
 }
 
@@ -503,4 +502,24 @@ void MetaObjectFactory::setCompileCallback(std::function<void(const std::string,
 std::shared_ptr<Connection> MetaObjectFactory::connectConstructorAdded(TSlot<void(void)>* slot)
 {
     return _pimpl->on_constructor_added.connect(slot);
+}
+
+ObjectConstructor<MetaObjectFactory>::ObjectConstructor(SystemTable* table_)
+    : table(table_)
+{
+}
+
+std::shared_ptr<MetaObjectFactory> ObjectConstructor<MetaObjectFactory>::createShared() const
+{
+    return SharedPtr_t(new MetaObjectFactory(table));
+}
+
+std::unique_ptr<MetaObjectFactory> ObjectConstructor<MetaObjectFactory>::createUnique() const
+{
+    return UniquePtr_t(new MetaObjectFactory(table));
+}
+
+MetaObjectFactory* ObjectConstructor<MetaObjectFactory>::create() const
+{
+    return new MetaObjectFactory(table);
 }

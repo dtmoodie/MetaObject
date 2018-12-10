@@ -156,7 +156,7 @@ BOOST_AUTO_TEST_CASE(test_meta_object_static_introspection_specific)
 BOOST_AUTO_TEST_CASE(test_meta_object_dynamic_introspection)
 {
     RelayManager mgr;
-    auto constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_signals");
+    auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_signals");
     auto obj = constructor->Construct();
     auto state = constructor->GetState(obj->GetPerTypeId());
     auto weak_ptr = state->GetWeakPtr();
@@ -179,7 +179,7 @@ BOOST_AUTO_TEST_CASE(test_meta_object_dynamic_introspection)
 BOOST_AUTO_TEST_CASE(test_meta_object_dynamic_access)
 {
     RelayManager mgr;
-    auto constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_signals");
+    auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_signals");
     auto obj = constructor->Construct();
     auto meta_obj = dynamic_cast<IMetaObject*>(obj);
     meta_obj->Init(true);
@@ -203,7 +203,7 @@ BOOST_AUTO_TEST_CASE(test_meta_object_dynamic_access)
 BOOST_AUTO_TEST_CASE(test_meta_object_external_slot)
 {
     RelayManager mgr;
-    auto constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_signals");
+    auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_signals");
     auto obj = constructor->Construct();
     auto meta_obj = dynamic_cast<test_meta_object_signals*>(obj);
     meta_obj->setupSignals(&mgr);
@@ -220,7 +220,7 @@ BOOST_AUTO_TEST_CASE(test_meta_object_external_slot)
 BOOST_AUTO_TEST_CASE(test_meta_object_internal_slot)
 {
     RelayManager mgr;
-    auto constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_slots");
+    auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_slots");
     BOOST_REQUIRE(constructor);
     auto obj = constructor->Construct();
     BOOST_REQUIRE(obj);
@@ -240,14 +240,14 @@ BOOST_AUTO_TEST_CASE(test_meta_object_internal_slot)
 BOOST_AUTO_TEST_CASE(inter_object_T)
 {
     RelayManager mgr;
-    auto constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_signals");
+    auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_signals");
     BOOST_REQUIRE(constructor);
     auto obj = constructor->Construct();
     BOOST_REQUIRE(obj);
     auto signal_object = dynamic_cast<test_meta_object_signals*>(obj);
     signal_object->setupSignals(&mgr);
     signal_object->Init(true);
-    constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_slots");
+    constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_slots");
     obj = constructor->Construct();
     auto slot_object = dynamic_cast<test_meta_object_slots*>(obj);
     slot_object->setupSignals(&mgr);
@@ -264,14 +264,14 @@ BOOST_AUTO_TEST_CASE(inter_object_T)
 BOOST_AUTO_TEST_CASE(inter_object_named)
 {
     RelayManager mgr;
-    auto constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_signals");
+    auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_signals");
     BOOST_REQUIRE(constructor);
     auto obj = constructor->Construct();
     BOOST_REQUIRE(obj);
     auto signal_object = dynamic_cast<test_meta_object_signals*>(obj);
     signal_object->setupSignals(&mgr);
     signal_object->Init(true);
-    constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_slots");
+    constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_slots");
     obj = constructor->Construct();
     auto slot_object = dynamic_cast<test_meta_object_slots*>(obj);
     slot_object->setupSignals(&mgr);
@@ -288,7 +288,7 @@ BOOST_AUTO_TEST_CASE(rest)
 {
     RelayManager mgr;
     {
-        auto constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_callback");
+        auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_callback");
         BOOST_REQUIRE(constructor);
         auto obj = constructor->Construct();
         BOOST_REQUIRE(obj);
@@ -304,13 +304,13 @@ BOOST_AUTO_TEST_CASE(rest)
         delete obj;
     }
     {
-        auto constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_callback");
+        auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_callback");
         BOOST_REQUIRE(constructor);
         auto obj = constructor->Construct();
         BOOST_REQUIRE(obj);
         obj->Init(true);
         test_meta_object_callback* cb = dynamic_cast<test_meta_object_callback*>(obj);
-        constructor = MetaObjectFactory::instance().getConstructor("test_meta_object_slots");
+        constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_slots");
         obj = constructor->Construct();
         obj->Init(true);
         test_meta_object_slots* slot = dynamic_cast<test_meta_object_slots*>(obj);
@@ -319,7 +319,7 @@ BOOST_AUTO_TEST_CASE(rest)
         delete slot;
     }
     {
-        auto constructor = MetaObjectFactory::instance().getConstructor("MetaObjectPublisher");
+        auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectPublisher");
         BOOST_REQUIRE(constructor);
         auto obj = constructor->Construct();
         BOOST_REQUIRE(obj);
@@ -332,7 +332,7 @@ BOOST_AUTO_TEST_CASE(rest)
 BOOST_AUTO_TEST_CASE(test_params)
 {
     RelayManager mgr;
-    auto constructor = MetaObjectFactory::instance().getConstructor("MetaObjectPublisher");
+    auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectPublisher");
     auto obj = constructor->Construct();
     obj->Init(true);
 
@@ -345,7 +345,7 @@ BOOST_AUTO_TEST_CASE(test_params)
     auto params = publisher->getParams();
     BOOST_REQUIRE_EQUAL(params.size(), 1);
 
-    constructor = MetaObjectFactory::instance().getConstructor("MetaObjectSubscriber");
+    constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSubscriber");
     obj = constructor->Construct();
     obj->Init(true);
     MetaObjectSubscriber* subscriber = dynamic_cast<MetaObjectSubscriber*>(obj);

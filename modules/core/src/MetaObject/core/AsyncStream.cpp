@@ -138,10 +138,6 @@ void AsyncStream::setHostPriority(const PriorityLevels p)
     m_host_priority = p;
 }
 
-void AsyncStream::setDevicePriority(const PriorityLevels)
-{
-}
-
 uint64_t AsyncStream::threadId() const
 {
     return m_thread_id;

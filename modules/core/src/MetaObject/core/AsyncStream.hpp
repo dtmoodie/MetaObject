@@ -52,7 +52,6 @@ namespace mo
 
         virtual void setName(const std::string& name) = 0;
         virtual void setHostPriority(const PriorityLevels p) = 0;
-        virtual void setDevicePriority(const PriorityLevels p) = 0;
 
         virtual std::string name() const = 0;
         virtual uint64_t threadId() const = 0;
@@ -78,7 +77,6 @@ namespace mo
 
         void setName(const std::string& name) override;
         void setHostPriority(const PriorityLevels p) override;
-        void setDevicePriority(const PriorityLevels p) override;
 
         std::string name() const override;
         uint64_t threadId() const override;

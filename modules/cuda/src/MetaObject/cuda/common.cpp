@@ -2,14 +2,15 @@
 
 namespace mo
 {
-
 }
 
-#define PRINT_CUDA_ERR(ERR) case ERR: return (os << #ERR)
+#define PRINT_CUDA_ERR(ERR)                                                                                            \
+    case ERR:                                                                                                          \
+        return #ERR
 
-namespace std
+namespace fmt
 {
-    ostream& operator <<(ostream& os, cudaError err)
+    std::string to_string(const cudaError err)
     {
         switch (err)
         {
@@ -81,7 +82,6 @@ namespace std
             PRINT_CUDA_ERR(cudaErrorLaunchFileScopedTex);
             PRINT_CUDA_ERR(cudaErrorLaunchFileScopedSurf);
 
-
             PRINT_CUDA_ERR(cudaErrorSyncDepthExceeded);
             PRINT_CUDA_ERR(cudaErrorLaunchPendingCountExceeded);
             PRINT_CUDA_ERR(cudaErrorNotPermitted);
@@ -104,60 +104,11 @@ namespace std
     }
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+namespace std
+{
+    ostream& operator<<(ostream& os, cudaError err)
+    {
+        os << fmt::to_string(err);
+        return os;
+    }
+}

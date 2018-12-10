@@ -15,7 +15,7 @@ namespace cereal
     {
         std::string type;
         ar(CEREAL_NVP(type));
-        obj = mo::MetaObjectFactory::instance().create(type.c_str());
+        obj = mo::MetaObjectFactory::instance()->create(type.c_str());
         if (!obj)
         {
             MO_LOG(warning) << "Unable to create object with type: " << type;
