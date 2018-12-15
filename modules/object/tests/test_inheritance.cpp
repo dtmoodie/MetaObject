@@ -8,7 +8,7 @@
 #include "MetaObject/params/ParamMacros.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 
-#include <boost/fiber/recursive_timed_mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
 
 #include <boost/test/auto_unit_test.hpp>
 #include <boost/test/test_tools.hpp>

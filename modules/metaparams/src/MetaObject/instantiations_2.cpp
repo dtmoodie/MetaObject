@@ -23,14 +23,14 @@ namespace mo
     {
         void instantiateVectors(SystemTable* table)
         {
-            INSTANTIATE_META_PARAM(std::vector<int>);
-            INSTANTIATE_META_PARAM(std::vector<unsigned short>);
-            INSTANTIATE_META_PARAM(std::vector<unsigned int>);
-            INSTANTIATE_META_PARAM(std::vector<char>);
-            INSTANTIATE_META_PARAM(std::vector<unsigned char>);
-            INSTANTIATE_META_PARAM(std::vector<float>);
-            INSTANTIATE_META_PARAM(std::vector<double>);
-            INSTANTIATE_META_PARAM(std::vector<std::string>);
+            INSTANTIATE_META_PARAM(std::vector<int>, table);
+            INSTANTIATE_META_PARAM(std::vector<unsigned short>, table);
+            INSTANTIATE_META_PARAM(std::vector<unsigned int>, table);
+            INSTANTIATE_META_PARAM(std::vector<char>, table);
+            INSTANTIATE_META_PARAM(std::vector<unsigned char>, table);
+            INSTANTIATE_META_PARAM(std::vector<float>, table);
+            INSTANTIATE_META_PARAM(std::vector<double>, table);
+            INSTANTIATE_META_PARAM(std::vector<std::string>, table);
         }
     }
 }

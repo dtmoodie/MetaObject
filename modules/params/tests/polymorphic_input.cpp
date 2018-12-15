@@ -4,7 +4,8 @@
 #include <MetaObject/params/TMultiInput-inl.hpp>
 #include <MetaObject/params/TMultiOutput.hpp>
 #include <MetaObject/params/TParamPtr.hpp>
-#include <boost/fiber/recursive_timed_mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
+
 #include <iostream>
 
 bool printInputs(const std::tuple<const int*, const float*, const double*>& inputs)

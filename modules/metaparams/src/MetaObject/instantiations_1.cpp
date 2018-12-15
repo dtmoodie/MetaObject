@@ -18,6 +18,11 @@ namespace std
 #include "MetaObject/params/MetaParam.hpp"
 #include <stdint.h>
 
+#include <cereal/cereal.hpp>
+#include <cereal/types/string.hpp>
+#include <cereal/types/map.hpp>
+#include <MetaObject/serialization/cereal_map.hpp>
+
 #ifdef emit
 #undef emit
 #endif
@@ -46,22 +51,22 @@ namespace mo
     {
         void instantiatePOD(SystemTable* table)
         {
-            INSTANTIATE_META_PARAM(bool);
-            INSTANTIATE_META_PARAM(int);
-            INSTANTIATE_META_PARAM(unsigned short);
-            INSTANTIATE_META_PARAM(unsigned int);
-            INSTANTIATE_META_PARAM(char);
-            INSTANTIATE_META_PARAM(unsigned char);
-            INSTANTIATE_META_PARAM(long);
-            INSTANTIATE_META_PARAM(long long);
+            INSTANTIATE_META_PARAM(bool, table);
+            INSTANTIATE_META_PARAM(int, table);
+            INSTANTIATE_META_PARAM(unsigned short, table);
+            INSTANTIATE_META_PARAM(unsigned int, table);
+            INSTANTIATE_META_PARAM(char, table);
+            INSTANTIATE_META_PARAM(unsigned char, table);
+            INSTANTIATE_META_PARAM(long, table);
+            INSTANTIATE_META_PARAM(long long, table);
 #ifndef __arm__
-            INSTANTIATE_META_PARAM(size_t);
+            INSTANTIATE_META_PARAM(size_t, table);
 #endif
-            INSTANTIATE_META_PARAM(float);
-            INSTANTIATE_META_PARAM(double);
-            INSTANTIATE_META_PARAM(std::string);
+            INSTANTIATE_META_PARAM(float, table);
+            INSTANTIATE_META_PARAM(double, table);
+            INSTANTIATE_META_PARAM(std::string, table);
             typedef std::map<std::string, std::string> StringMap;
-            INSTANTIATE_META_PARAM(StringMap);
+            INSTANTIATE_META_PARAM(StringMap, table);
         }
     }
 }

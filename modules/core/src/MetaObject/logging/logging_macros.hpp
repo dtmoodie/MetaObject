@@ -1,5 +1,25 @@
 #pragma once
 
+#if defined(__GNUC__) && __GNUC__ == 4 && defined(__NVCC__)
+
+#define LOG_EVERY_N_VARNAME(base, line)
+#define LOG_EVERY_N_VARNAME_CONCAT(base, line)
+
+#define LOG_OCCURRENCES
+#define LOG_OCCURRENCES_MOD_N
+
+#define LOG_THEN_THROW(level, ...)
+
+#define THROW(level, ...)
+
+#define MO_ASSERT(CHECK)
+
+#define MO_ASSERT_FMT(CHECK, ...)
+
+#define MO_LOG(LEVEL, ...)
+
+#else
+
 #define LOG_EVERY_N_VARNAME(base, line) LOG_EVERY_N_VARNAME_CONCAT(base, line)
 #define LOG_EVERY_N_VARNAME_CONCAT(base, line) base##line
 
@@ -20,8 +40,11 @@
     if (!(CHECK))                                                                                                      \
     THROW(error, #CHECK)
 
+#define MO_ASSERT_EQ(LHS, RHS) if(!(LHS) == !(RHS)) THROW(error, #LHS " != " #RHS " [{} != {}]", LHS, RHS)
+
 #define MO_ASSERT_FMT(CHECK, ...)                                                                                      \
     if (!(CHECK))                                                                                                      \
     THROW(error, __VA_ARGS__)
 
-#define MO_LOG(LEVEL, ...) getDefaultLogger().LEVEL(__VA_ARGS__)
+#define MO_LOG(LEVEL, ...) mo::getDefaultLogger().LEVEL(__VA_ARGS__)
+#endif

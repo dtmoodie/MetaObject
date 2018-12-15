@@ -1,14 +1,17 @@
 #pragma once
 
 #include <MetaObject/detail/Export.hpp>
-#include <boost/stacktrace.hpp>
+
+#if !(defined(__GNUC__) && __GNUC__ == 4 && defined(__NVCC__))
 #include <spdlog/spdlog.h>
+#endif
 
 #include "logging_macros.hpp"
 
 #include <sstream>
 namespace spdlog
 {
+    class logger;
     namespace details
     {
         class registry;

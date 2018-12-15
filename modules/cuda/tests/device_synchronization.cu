@@ -2,16 +2,20 @@
 #include <MetaObject/cuda/Stream.hpp>
 #include <MetaObject/cuda/MemoryBlock.hpp>
 
+#include <MetaObject/thread/fiber_include.hpp>
+
 #include <boost/test/test_tools.hpp>
 #include <boost/test/auto_unit_test.hpp>
-#include <boost/thread.hpp>
-#include <boost/fiber/all.hpp>
+
+#include <MetaObject/thread/fiber_include.hpp>
 
 #include <thrust/fill.h>
 #include <thrust/device_ptr.h>
 
 #include <host_defines.h>
 #include <cuda_runtime_api.h>
+
+#include <thread>
 
 uint32_t divUp(const uint32_t total, const uint32_t threads)
 {
@@ -54,7 +58,7 @@ BOOST_AUTO_TEST_CASE(two_streams)
     waitKernel<<<1,1,0, stream1>>>(reinterpret_cast<const bool*>(mem.begin()));
 
     BOOST_REQUIRE(stream1.query() == false);
-    boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
     BOOST_REQUIRE(stream1.query() == false);
 
     setKernel<<<1, 1, 0, stream2>>>(reinterpret_cast<bool*>(mem.begin()));

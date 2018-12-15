@@ -29,12 +29,12 @@ namespace mo
     {
         void instCVRect(SystemTable* table)
         {
-            INSTANTIATE_META_PARAM(Size);
-            INSTANTIATE_META_PARAM(Rect);
-            INSTANTIATE_META_PARAM(Rect2d);
-            INSTANTIATE_META_PARAM(Rect2f);
-            INSTANTIATE_META_PARAM(std::vector<Rect>);
-            INSTANTIATE_META_PARAM(std::vector<Rect2f>);
+            INSTANTIATE_META_PARAM(Size, table);
+            INSTANTIATE_META_PARAM(Rect, table);
+            INSTANTIATE_META_PARAM(Rect2d, table);
+            INSTANTIATE_META_PARAM(Rect2f, table);
+            INSTANTIATE_META_PARAM(std::vector<Rect>, table);
+            INSTANTIATE_META_PARAM(std::vector<Rect2f>, table);
         }
     }
 }

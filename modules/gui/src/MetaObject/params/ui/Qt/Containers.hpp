@@ -1,7 +1,8 @@
 #pragma once
 #include "IHandler.hpp"
 #include "POD.hpp"
-#include <boost/fiber/recursive_timed_mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
+
 namespace mo
 {
     namespace UI
@@ -22,7 +23,12 @@ namespace mo
                 THandler<T2> _handler2;
 
               public:
-                THandler(IParamProxy& parent) : UiUpdateHandler(parent), _handler1(parent), _handler2(parent) {}
+                THandler(IParamProxy& parent)
+                    : UiUpdateHandler(parent)
+                    , _handler1(parent)
+                    , _handler2(parent)
+                {
+                }
                 void updateUi(const std::pair<T1, T2>& data)
                 {
                     _handler1.UpdateUi(data.first);
@@ -52,7 +58,10 @@ namespace mo
                 THandler<T, void> _data_handler;
 
               public:
-                THandler(IParamProxy& parent) : index(new QSpinBox()), UiUpdateHandler(parent), _data_handler(parent)
+                THandler(IParamProxy& parent)
+                    : index(new QSpinBox())
+                    , UiUpdateHandler(parent)
+                    , _data_handler(parent)
                 {
                     index->setMinimum(0);
                 }

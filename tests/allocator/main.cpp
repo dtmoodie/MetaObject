@@ -1,14 +1,8 @@
 #define BOOST_TEST_MAIN
 #include "MetaObject/core/detail/Allocator.hpp"
-#include "MetaObject/core/detail/AllocatorImpl.hpp"
 #include "MetaObject/core/detail/StlAllocator.hpp"
-#include "MetaObject/core/detail/allocator_policies/Combined-inl.hpp"
 #include "MetaObject/core/detail/allocator_policies/Continuous.hpp"
-#include "MetaObject/core/detail/allocator_policies/Lock-inl.hpp"
-#include "MetaObject/core/detail/allocator_policies/Pinned.hpp"
-#include "MetaObject/core/detail/allocator_policies/Pitched.hpp"
-#include "MetaObject/core/detail/allocator_policies/Stack-inl.hpp"
-#include "MetaObject/core/detail/opencv_allocator-inl.hpp"
+
 #include "MetaObject/logging/profiling.hpp"
 #include <boost/log/attributes.hpp>
 #include <boost/log/common.hpp>

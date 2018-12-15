@@ -6,8 +6,8 @@
 
 #define EXTERN_TYPE(TYPE)                                                                                              \
     template class mo::TInputParamPtr<mo::argument_type<void(TYPE)>::type>;                                            \
-    template class mo::TParamPtr<mo::argument_type<void(TYPE)>::type>;                                                 \
-    template class mo::TParam<mo::argument_type<void(TYPE)>::type>;                                                    \
+    template struct mo::TParamPtr<mo::argument_type<void(TYPE)>::type>;                                                 \
+    template struct mo::TParam<mo::argument_type<void(TYPE)>::type>;                                                    \
     template class mo::TParamOutput<mo::argument_type<void(TYPE)>::type>
 
 #define INSTANTIATE_META_PARAM(TYPE, TABLE)                                                                            \

@@ -21,7 +21,8 @@ https://github.com/dtmoodie/MetaObject
 #include "IParam.hpp"
 #include "TDataContainer.hpp"
 
-#include <boost/fiber/recursive_timed_mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
+
 #include <boost/thread/locks.hpp>
 namespace mo
 {

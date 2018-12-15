@@ -1,5 +1,6 @@
 #pragma once
-#include <boost/fiber/mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
+
 namespace mo
 {
     template <class BaseAllocator, class Mutex = boost::fibers::mutex>

@@ -1,9 +1,12 @@
 #ifndef MO_THREAD_FIBER_SCHEDULER_HPP
 #define MO_THREAD_FIBER_SCHEDULER_HPP
+#include "fiber_include.hpp"
+
 #include "FiberProperties.hpp"
+
 #include "detail/ContextQueue.hpp"
 
-#include <boost/fiber/all.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
 
 namespace mo
 {

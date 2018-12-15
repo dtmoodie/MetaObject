@@ -81,7 +81,7 @@ namespace mo
                     }
                     catch (cereal::Exception& e)
                     {
-                        MO_LOG(debug) << "Failed to deserialize " << param->getName() << " due to " << e.what();
+                        MO_LOG(debug, "Failed to deserialize {} due to {}",  param->getName(), e.what());
                         token.setModified(false);
                         return false;
                     }

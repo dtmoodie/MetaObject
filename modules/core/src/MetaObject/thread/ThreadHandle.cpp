@@ -2,8 +2,7 @@
 #include <MetaObject/thread/FiberProperties.hpp>
 #include <MetaObject/thread/Thread.hpp>
 
-#include <boost/fiber/fiber.hpp>
-#include <boost/fiber/scheduler.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
 
 namespace mo
 {

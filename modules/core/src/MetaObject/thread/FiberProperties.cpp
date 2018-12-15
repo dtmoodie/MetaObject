@@ -1,5 +1,4 @@
 #include "FiberProperties.hpp"
-#include <boost/fiber/context.hpp>
 
 namespace mo
 {

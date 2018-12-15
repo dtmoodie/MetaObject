@@ -60,8 +60,8 @@ struct Fixture
         factory.registerTranslationUnit();
         auto table = &this->table;
         std::cout << "Sytem table location: " << static_cast<void*>(table) << std::endl;
-        INSTANTIATE_META_PARAM(mo::ReadFile);
-        INSTANTIATE_META_PARAM(std::vector<int>);
+        INSTANTIATE_META_PARAM(mo::ReadFile, table);
+        INSTANTIATE_META_PARAM(std::vector<int>, table);
     }
     SystemTable table;
     mo::MetaObjectFactory factory;

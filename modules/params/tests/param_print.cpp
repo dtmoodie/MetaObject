@@ -4,7 +4,7 @@
 #include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/detail/print_data.hpp"
 
-#include <boost/fiber/recursive_timed_mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
 
 #include <ostream>
 

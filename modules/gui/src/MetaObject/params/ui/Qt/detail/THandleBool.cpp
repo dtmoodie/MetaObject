@@ -1,13 +1,15 @@
 #include "MetaObject/params/ui/Qt/POD.hpp"
 #include "MetaObject/params/ui/Qt/SignalProxy.hpp"
 #include "qcheckbox.h"
-#include <boost/fiber/recursive_timed_mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
 
 using namespace mo;
 using namespace mo::UI;
 using namespace mo::UI::qt;
 
-THandler<bool, void>::THandler(IParamProxy& parent) : UiUpdateHandler(parent), chkBox(nullptr)
+THandler<bool, void>::THandler(IParamProxy& parent)
+    : UiUpdateHandler(parent)
+    , chkBox(nullptr)
 {
 }
 

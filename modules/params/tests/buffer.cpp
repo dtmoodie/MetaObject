@@ -7,7 +7,7 @@
 #include <MetaObject/params/buffers/BufferFactory.hpp>
 #include <MetaObject/params/buffers/IBuffer.hpp>
 
-#include <boost/fiber/recursive_timed_mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
 
 #include <boost/thread.hpp>
 

@@ -1,6 +1,8 @@
 #ifndef MO_THREAD_CONTEXT_QUEUE_HPP
 #define MO_THREAD_CONTEXT_QUEUE_HPP
 
+#include <MetaObject/thread/fiber_include.hpp>
+
 #include "../PriorityLevels.hpp"
 #include "context_spinlock_queue.hpp"
 

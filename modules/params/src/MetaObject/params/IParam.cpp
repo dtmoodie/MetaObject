@@ -26,7 +26,8 @@ https://github.com/dtmoodie/MetaObject
 
 #include <algorithm>
 
-#include <boost/fiber/recursive_timed_mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
+
 #include <boost/thread/locks.hpp>
 
 namespace mo

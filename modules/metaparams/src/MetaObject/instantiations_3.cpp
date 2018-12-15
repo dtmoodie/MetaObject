@@ -26,11 +26,11 @@ namespace mo
     {
         void instCV(SystemTable* table)
         {
-            INSTANTIATE_META_PARAM(Point2f);
-            INSTANTIATE_META_PARAM(Point2d);
-            INSTANTIATE_META_PARAM(Point3d);
-            INSTANTIATE_META_PARAM(Point3f);
-            INSTANTIATE_META_PARAM(Point);
+            INSTANTIATE_META_PARAM(Point2f, table);
+            INSTANTIATE_META_PARAM(Point2d, table);
+            INSTANTIATE_META_PARAM(Point3d, table);
+            INSTANTIATE_META_PARAM(Point3f, table);
+            INSTANTIATE_META_PARAM(Point, table);
         }
     }
 }

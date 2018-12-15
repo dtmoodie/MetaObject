@@ -1,5 +1,6 @@
 #include "MetaObject/params/InputParam.hpp"
-#include <boost/fiber/recursive_timed_mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
+
 #include <boost/thread/locks.hpp>
 using namespace mo;
 

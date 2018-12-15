@@ -1,7 +1,8 @@
 #include "MetaObject/params/InputParamAny.hpp"
 #include "IDataContainer.hpp"
+#include <MetaObject/thread/fiber_include.hpp>
 #include <boost/thread/locks.hpp>
-#include <boost/fiber/recursive_timed_mutex.hpp>
+
 using namespace mo;
 
 InputParamAny::InputParamAny(const std::string& name)

@@ -1,11 +1,14 @@
-#include "MetaObject/types/file_types.hpp"
 #include "MetaObject/params/ui/Qt/POD.hpp"
-#include <boost/fiber/recursive_timed_mutex.hpp>
+#include "MetaObject/types/file_types.hpp"
+#include <MetaObject/thread/fiber_include.hpp>
+
 using namespace mo;
 using namespace mo::UI;
 using namespace mo::UI::qt;
 
-THandler<EnumParam, void>::THandler(IParamProxy& parent) : UiUpdateHandler(parent), enumCombo(nullptr)
+THandler<EnumParam, void>::THandler(IParamProxy& parent)
+    : UiUpdateHandler(parent)
+    , enumCombo(nullptr)
 {
 }
 

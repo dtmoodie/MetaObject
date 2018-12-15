@@ -1,5 +1,6 @@
 #include "obj.h"
-#include <boost/fiber/recursive_timed_mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
+
 void test_meta_object_slots::test_void()
 {
     ++call_count;

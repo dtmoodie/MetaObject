@@ -13,6 +13,7 @@ namespace mo
         struct Stream
         {
             using Ptr_t = std::shared_ptr<CUstream_st>;
+
             static Ptr_t create(const int priority = 0);
             static Stream& null();
 

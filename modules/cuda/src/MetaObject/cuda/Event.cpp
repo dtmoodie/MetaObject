@@ -2,7 +2,7 @@
 #include "Stream.hpp"
 #include <MetaObject/logging/logging.hpp>
 
-#include <boost/fiber/all.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
 
 #include <cuda_runtime_api.h>
 

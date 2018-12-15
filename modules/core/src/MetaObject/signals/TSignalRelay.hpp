@@ -3,7 +3,7 @@
 
 #include "MetaObject/logging/logging.hpp"
 #include <MetaObject/core/AsyncStream.hpp>
-#include <boost/fiber/mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
 
 #include <set>
 

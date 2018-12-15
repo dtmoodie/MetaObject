@@ -1,4 +1,3 @@
-#include "AllocatorImpl.hpp"
 #include "allocator_policies/Pool.hpp"
 
 namespace mo

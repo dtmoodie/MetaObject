@@ -3,7 +3,7 @@
 #include "ObjectConstructor.hpp"
 
 #include <MetaObject/logging/logging.hpp>
-#include <boost/fiber/mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
 
 #include <list>
 

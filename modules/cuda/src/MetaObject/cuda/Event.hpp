@@ -24,7 +24,7 @@ namespace mo
 
             /**
              * @brief queryCompletion check if the event has triggered
-             * @return
+             * @return true if complete, false if not complete
              */
             bool queryCompletion() const;
 
@@ -36,6 +36,9 @@ namespace mo
              */
             bool synchronize(const Duration timeout = 0 * ms);
 
+            /**
+             * @brief setCallback to be called on event completion
+             */
             void setCallback(std::function<void(void)>&& cb);
 
             operator cudaEvent_t();

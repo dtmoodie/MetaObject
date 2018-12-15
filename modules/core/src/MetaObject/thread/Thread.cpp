@@ -11,7 +11,7 @@
 #include "MetaObject/thread/ThreadRegistry.hpp"
 #include "MetaObject/thread/boost_thread.hpp"
 
-#include <boost/fiber/all.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
 
 #include <future>
 

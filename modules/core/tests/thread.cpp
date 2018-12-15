@@ -1,4 +1,5 @@
-#include <boost/fiber/all.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
+
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test_suite.hpp>
 

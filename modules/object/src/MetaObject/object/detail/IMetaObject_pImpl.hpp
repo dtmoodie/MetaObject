@@ -5,7 +5,7 @@
 #include "MetaObject/params/IParam.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "RuntimeObjectSystem/shared_ptr.hpp"
-#include <boost/fiber/recursive_timed_mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
 
 #include <list>
 #include <map>

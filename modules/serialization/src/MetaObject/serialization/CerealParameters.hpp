@@ -18,14 +18,13 @@ namespace cereal
             {
                 if (!func1(param, ar))
                 {
-                    MO_LOG(debug) << "Unable to deserialize " << param->getName() << " of type "
-                                  << param->getTypeInfo().name();
+                    MO_LOG(debug, "Unable to deserialize {} of type {}", param->getName(),param->getTypeInfo().name());
                 }
             }
             else
             {
-                MO_LOG(debug) << "No deserialization function exists for  " << param->getName() << " of type "
-                              << param->getTypeInfo().name();
+                MO_LOG(debug,  "No deserialization function exists for {} of type {}",param->getName(),
+                              param->getTypeInfo().name());
             }
         }
     }
@@ -41,14 +40,12 @@ namespace cereal
             {
                 if (!func1(param, ar))
                 {
-                    MO_LOG(debug) << "Unable to deserialize " << param->getName() << " of type "
-                                  << param->getTypeInfo().name();
+                    MO_LOG(debug, "Unable to deserialize {} of type {}",param->getName(), param->getTypeInfo().name());
                 }
             }
             else
             {
-                MO_LOG(debug) << "No serialization function exists for  " << param->getName() << " of type "
-                              << param->getTypeInfo().name();
+                MO_LOG(debug, "No serialization function exists for {} of type ", param->getName(),param->getTypeInfo().name());
             }
         }
     }

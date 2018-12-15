@@ -15,9 +15,9 @@
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 
+#include <MetaObject/thread/fiber_include.hpp>
 #include <boost/any.hpp>
-#include <boost/fiber/recursive_timed_mutex.hpp>
-#include <boost/fiber/recursive_timed_mutex.hpp>
+
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>
 #else

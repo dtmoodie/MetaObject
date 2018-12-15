@@ -1,8 +1,14 @@
-#include "MetaObject/core/metaobject_config.hpp"
+#include <MetaObject/core/metaobject_config.hpp>
+#include <MetaObject/serialization/cereal_map.hpp>
+
+#include <cereal/types/map.hpp>
+#include <cereal/types/string.hpp>
+
 #if MO_HAVE_OPENCV
-#include "MetaObject/metaparams/reflect/cv_types.hpp"
-#include "MetaObject/params/MetaParam.hpp"
-#include "ct/reflect/cerealize.hpp"
+#include <MetaObject/metaparams/reflect/cv_types.hpp>
+#include <MetaObject/params/MetaParam.hpp>
+#include <ct/reflect/cerealize.hpp>
+
 #if MO_HAVE_PYTHON
 #include <boost/python/object.hpp>
 #endif
@@ -74,14 +80,14 @@ namespace mo
     {
         void instCVVec(SystemTable* table)
         {
-            INSTANTIATE_META_PARAM(Scalar);
-            INSTANTIATE_META_PARAM(Vec2f);
-            INSTANTIATE_META_PARAM(Vec3f);
-            INSTANTIATE_META_PARAM(Vec2b);
-            INSTANTIATE_META_PARAM(Vec3b);
-            INSTANTIATE_META_PARAM(std::vector<Vec3b>);
+            INSTANTIATE_META_PARAM(Scalar, table);
+            INSTANTIATE_META_PARAM(Vec2f, table);
+            INSTANTIATE_META_PARAM(Vec3f, table);
+            INSTANTIATE_META_PARAM(Vec2b, table);
+            INSTANTIATE_META_PARAM(Vec3b, table);
+            INSTANTIATE_META_PARAM(std::vector<Vec3b>, table);
             typedef std::map<std::string, Vec3b> ClassColormap_t;
-            INSTANTIATE_META_PARAM(ClassColormap_t);
+            INSTANTIATE_META_PARAM(ClassColormap_t, table);
         }
     }
 }

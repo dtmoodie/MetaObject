@@ -112,11 +112,11 @@ namespace mo
     {
         void instMOTypes(SystemTable* table)
         {
-            INSTANTIATE_META_PARAM(ReadFile);
-            INSTANTIATE_META_PARAM(WriteFile);
-            INSTANTIATE_META_PARAM(ReadDirectory);
-            INSTANTIATE_META_PARAM(WriteDirectory);
-            INSTANTIATE_META_PARAM(EnumParam);
+            INSTANTIATE_META_PARAM(ReadFile, table);
+            INSTANTIATE_META_PARAM(WriteFile, table);
+            INSTANTIATE_META_PARAM(ReadDirectory, table);
+            INSTANTIATE_META_PARAM(WriteDirectory, table);
+            INSTANTIATE_META_PARAM(EnumParam, table);
         }
     }
 }

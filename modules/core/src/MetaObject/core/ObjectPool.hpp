@@ -34,14 +34,16 @@ namespace mo
             }
 
             Ptr non_owning(owning.get(), [owning, this](T*)
-            {
-                returnObject(std::move(owning));
-            });
+                {
+                    returnObject(std::move(owning));
+                });
             return non_owning;
         }
 
     private:
-        void returnObject(std::shared_ptr<T>&& obj)
+
+
+        void returnObject(const std::shared_ptr<T>& obj)
         {
             std::lock_guard<std::mutex> lock(m_mtx);
             m_objects.push_back(std::move(obj));

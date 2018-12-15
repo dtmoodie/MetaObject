@@ -2,7 +2,8 @@
 #define MO_THREAD_FIBER_PROPERTIES_HPP
 #include "PriorityLevels.hpp"
 
-#include <boost/fiber/properties.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
+
 #include <cstdint>
 
 namespace mo

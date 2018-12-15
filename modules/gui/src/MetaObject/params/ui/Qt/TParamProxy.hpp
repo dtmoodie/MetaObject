@@ -76,9 +76,9 @@ namespace mo
                             _param_handler.updateUi(token());
                             _param_handler.setUpdating(false);
                         }
-                        catch (mo::ExceptionWithCallStack<std::string>& exc)
+                        catch (...)
                         {
-                            (void)exc; // exception thrown if data hasn't been populated yet on some parameters
+
                         }
                     }
                     return output;

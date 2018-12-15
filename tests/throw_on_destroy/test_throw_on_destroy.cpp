@@ -1,4 +1,3 @@
-
 #define BOOST_TEST_MAIN
 
 #include "MetaObject/logging/logging.hpp"
@@ -9,13 +8,16 @@
 #define BOOST_TEST_MODULE __FILE__
 #include <boost/test/included/unit_test.hpp>
 #endif
+
+#include <boost/stacktrace.hpp>
+
 #include <iostream>
 #include <sstream>
 using namespace mo;
 
 bool throwing_function()
 {
-    THROW(debug) << "throwing from function";
+    THROW(debug, "throwing from function");
     return false;
 }
 
@@ -30,7 +32,10 @@ struct Throw_debug : public std::exception
         msg.str(std::string());
         msg << file << ":" << line << " " << error << " in function [" << function << "]";
         if (collect_callstack)
-            callstack = printCallstack(1, true);
+        {
+            boost::stacktrace::stacktrace st();
+            msg << st;
+        }
         return *this;
     }
 
@@ -63,6 +68,6 @@ BOOST_AUTO_TEST_CASE(throw_obj)
 
 BOOST_AUTO_TEST_CASE(signals_test)
 {
-    BOOST_REQUIRE_THROW(THROW(debug) << "test", mo::ExceptionWithCallStack<std::string>);
-    BOOST_REQUIRE_THROW(MO_ASSERT_EQ(throwing_function(), true), mo::ExceptionWithCallStack<std::string>);
+    BOOST_REQUIRE_THROW(THROW(debug, "test"), std::runtime_error);
+    BOOST_REQUIRE_THROW(MO_ASSERT_EQ(throwing_function(), true), std::runtime_error);
 }

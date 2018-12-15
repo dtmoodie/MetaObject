@@ -1,6 +1,7 @@
 #pragma once
 #include "MetaObject/serialization.hpp"
 #include <cereal/details/traits.hpp>
+#include <cereal/cereal.hpp>
 #include <map>
 #include <string>
 

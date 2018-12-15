@@ -23,8 +23,7 @@ https://github.com/dtmoodie/MetaObject
 
 #include "MetaObject/params/InputParam.hpp"
 
-#include <boost/fiber/condition_variable.hpp>
-#include <boost/fiber/recursive_timed_mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
 
 #include <map>
 
