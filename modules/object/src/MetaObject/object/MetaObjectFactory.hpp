@@ -73,7 +73,9 @@ namespace mo
     class MO_EXPORTS MetaObjectFactory
     {
       public:
-        MO_INLINE static std::shared_ptr<MetaObjectFactory> instance();
+        using Ptr_t = std::shared_ptr<MetaObjectFactory>;
+
+        MO_INLINE static Ptr_t instance();
 
         IMetaObject* create(const char* type_name, int64_t interface_id = -1);
         template <class T>

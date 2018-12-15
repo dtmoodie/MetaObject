@@ -56,7 +56,7 @@ build_callback* cb = nullptr;
 BOOST_AUTO_TEST_CASE(test_recompile)
 {
     cb = new build_callback;
-    MO_LOG(info) << "Current working directory " << boost::filesystem::current_path().string();
+    MO_LOG(info, "Current working directory {}", boost::filesystem::current_path().string());
     MetaObjectFactory::instance()->registerTranslationUnit();
 #ifdef _MSC_VER
     BOOST_REQUIRE(MetaObjectFactory::instance()->loadPlugin("./test_recompile_objectd.dll"));
@@ -193,11 +193,11 @@ BOOST_AUTO_TEST_CASE(test_reconnect_signals)
 
 BOOST_AUTO_TEST_CASE(test_input_output_param)
 {
-    auto ctx = mo::Context::create("test_input_output_param");
+    auto ctx = mo::AsyncStreamFactory::instance()->create("test_input_output_param");
     auto output = rcc::shared_ptr<test_meta_object_output>::create();
     auto input = rcc::shared_ptr<test_meta_object_input>::create();
-    input->setContext(ctx);
-    output->setContext(ctx);
+    input->setStream(ctx);
+    output->setStream(ctx);
     auto output_param = output->getOutput("test_output");
     BOOST_REQUIRE(output_param);
     auto input_param = input->getInput("test_input");

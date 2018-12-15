@@ -21,6 +21,11 @@
 #include "MetaObject/params/TParamPtr.hpp"
 //#include "MetaObject/params/RangedParam.hpp"
 #include <MetaObject/MetaParameters.hpp>
+
+#include <cereal/types/string.hpp>
+#include <cereal/types/utility.hpp>
+#include <cereal/types/vector.hpp>
+
 using namespace mo;
 MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)

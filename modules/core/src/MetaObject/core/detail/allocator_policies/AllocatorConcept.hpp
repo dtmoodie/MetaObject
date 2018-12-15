@@ -7,7 +7,7 @@ namespace mo
     struct AllocatorConcept
     {
         uint8_t* allocate(const uint64_t num_bytes, const uint64_t elem_size);
-        void deallocate(unsigned char* ptr, const uint64_t num_bytes);
+        void deallocate(uint8_t* ptr, const uint64_t num_bytes);
         void release();
     };
 }

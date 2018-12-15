@@ -81,24 +81,27 @@ struct GlobalFixture
 {
     ~GlobalFixture()
     {
-        mo::ThreadPool::instance()->cleanup();
-        mo::ThreadSpecificQueue::cleanup();
+        // mo::ThreadPool::instance()->cleanup();
+        // mo::ThreadSpecificQueue::cleanup();
     }
 };
+
 BOOST_GLOBAL_FIXTURE(GlobalFixture);
 struct BufferFixture
 {
     BufferFixture()
     {
+        stream = mo::AsyncStreamFactory::instance()->create();
         output_param.updatePtr(&output);
         input_param.setUserDataPtr(&input);
-        output_param.setContext(mo::Context::getCurrent());
-        input_param.setContext(mo::Context::getCurrent());
+        output_param.setStream(stream.get());
+        input_param.setStream(stream.get());
     }
     mo::TParamPtr<int> output_param;
     int output;
     mo::TInputParamPtr<int> input_param;
     const int* input;
+    mo::IAsyncStream::Ptr_t stream;
 };
 
 BOOST_FIXTURE_TEST_SUITE(buffer_suite, BufferFixture)
@@ -108,7 +111,7 @@ static const mo::BufferFlags buffer_test_cases[] = {
 
 BOOST_AUTO_PARAM_TEST_CASE(buffer_test, buffer_test_cases, end(buffer_test_cases))
 {
-    std::cout << "Testing " << mo::BufferFlagsToString(param) << std::endl;
+    std::cout << "Testing " << mo::bufferFlagsToString(param) << std::endl;
     auto buffer = std::shared_ptr<mo::IParam>(mo::buffer::BufferFactory::createBuffer(&output_param, param));
     BOOST_REQUIRE(buffer);
     auto buf = std::dynamic_pointer_cast<mo::buffer::IBuffer>(buffer);

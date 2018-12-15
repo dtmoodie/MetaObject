@@ -12,8 +12,8 @@ namespace mo
 
     struct MO_EXPORTS CPU
     {
-        static uint8_t* allocate(const uint64_t size);
-        static void deallocate(unsigned char* data);
+        static uint8_t* allocate(const uint64_t size, const int32_t elem_size = 1);
+        static void deallocate(uint8_t* data, const uint64_t size = 0);
     };
 
     template <class XPU>

@@ -9,14 +9,14 @@ namespace mo
     {
         struct MO_EXPORTS CUDA
         {
-            static uint8_t* allocate(const uint64_t size);
-            static void deallocate(void* data);
+            static uint8_t* allocate(const uint64_t size, const int32_t elem_size = 1);
+            static void deallocate(void* data, const uint64_t size = 0);
         };
 
         struct MO_EXPORTS HOST
         {
-            static uint8_t* allocate(const uint64_t size);
-            static void deallocate(void* data);
+            static uint8_t* allocate(const uint64_t size, const int32_t elem_size = 1);
+            static void deallocate(void* data, const uint64_t size = 0);
         };
 
         using HOSTMemoryBlock = MemoryBlock<HOST>;

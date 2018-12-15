@@ -20,7 +20,7 @@ namespace mo
       public:
         using ParentClass = ct::VariadicTypedef<MetaObject>;
         MetaObject();
-        virtual ~MetaObject();
+        virtual ~MetaObject() override;
 
         // Setup
         virtual void setStream(const IAsyncStreamPtr_t& ctx, bool overwrite = false) override;

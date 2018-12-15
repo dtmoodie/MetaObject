@@ -11,6 +11,6 @@ namespace mo
     class MO_EXPORTS ContinuousPolicy
     {
       public:
-        static void sizeNeeded(int rows, int cols, int elemSize, size_t& size_needed, size_t& stride);
+        void sizeNeeded(int rows, int cols, int elemSize, size_t& size_needed, size_t& stride);
     };
 }
