@@ -25,33 +25,15 @@ typedef int (*pop_f)();
 typedef void (*nvtx_name_thread_f)(uint32_t, const char*);
 typedef void (*nvtx_name_stream_f)(CUstream, const char*);
 
-typedef void (*rmt_push_cpu_f)(const char*, unsigned int*);
-typedef void (*rmt_pop_cpu_f)();
-typedef void (*rmt_push_cuda_f)(const char*, unsigned int*, void*);
-typedef void (*rmt_pop_cuda_f)(void*);
-typedef void (*rmt_set_thread_name_f)(const char*);
-
 #ifndef PROFILING_NONE
-push_f nvtx_push = nullptr;
-pop_f nvtx_pop = nullptr;
-nvtx_name_thread_f nvtx_name_thread = nullptr;
-nvtx_name_stream_f nvtx_name_stream = nullptr;
-
-// Remotery* rmt = nullptr;
-
-rmt_push_cpu_f rmt_push_cpu = nullptr;
-rmt_pop_cpu_f rmt_pop_cpu = nullptr;
-rmt_push_cuda_f rmt_push_gpu = nullptr;
-rmt_pop_cuda_f rmt_pop_gpu = nullptr;
-rmt_set_thread_name_f rmt_set_thread = nullptr;
+static push_f nvtx_push = nullptr;
+static pop_f nvtx_pop = nullptr;
+static nvtx_name_thread_f nvtx_name_thread = nullptr;
+static nvtx_name_stream_f nvtx_name_stream = nullptr;
 #endif
 
 void mo::setThreadName(const char* name)
 {
-    if (rmt_set_thread)
-    {
-        rmt_set_thread(name);
-    }
     if (nvtx_name_thread)
     {
         nvtx_name_thread(static_cast<uint32_t>(mo::getThisThread()), name);
@@ -79,10 +61,10 @@ void initNvtx()
     if (nvtx_handle)
     {
         getDefaultLogger().info("Loaded nvtx profiling module");
-        nvtx_push = (push_f)dlsym(nvtx_handle, "nvtxRangePushA");
-        nvtx_pop = (pop_f)dlsym(nvtx_handle, "nvtxRangePop");
-        nvtx_name_thread = (nvtx_name_thread_f)dlsym(nvtx_handle, "nvtxNameOsThreadA");
-        nvtx_name_stream = (nvtx_name_stream_f)dlsym(nvtx_handle, "nvtxNameCuStreamA");
+        nvtx_push = reinterpret_cast<push_f>(dlsym(nvtx_handle, "nvtxRangePushA"));
+        nvtx_pop = reinterpret_cast<pop_f>(dlsym(nvtx_handle, "nvtxRangePop"));
+        nvtx_name_thread = reinterpret_cast<nvtx_name_thread_f>(dlsym(nvtx_handle, "nvtxNameOsThreadA"));
+        nvtx_name_stream = reinterpret_cast<nvtx_name_stream_f>(dlsym(nvtx_handle, "nvtxNameCuStreamA"));
     }
     else
     {
@@ -120,12 +102,12 @@ void mo::setStreamName(const char* name, const cudaStream_t stream)
     }
 }
 
-scoped_profile::scoped_profile(const std::string& name)
-    : scoped_profile(name.c_str())
+ScopedProfile::ScopedProfile(const std::string& name)
+    : ScopedProfile(name.c_str())
 {
 }
 
-scoped_profile::scoped_profile(const char* name)
+ScopedProfile::ScopedProfile(const char* name)
 {
     if (nvtx_push)
     {
@@ -133,7 +115,7 @@ scoped_profile::scoped_profile(const char* name)
     }
 }
 
-scoped_profile::scoped_profile(const char* name, const char* func)
+ScopedProfile::ScopedProfile(const char* name, const char* func)
 {
     std::stringstream ss;
     ss << name;
@@ -147,7 +129,7 @@ scoped_profile::scoped_profile(const char* name, const char* func)
     }
 }
 
-scoped_profile::~scoped_profile()
+ScopedProfile::~ScopedProfile()
 {
     if (nvtx_pop)
     {

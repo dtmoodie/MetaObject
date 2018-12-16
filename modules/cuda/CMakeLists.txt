@@ -9,9 +9,15 @@ metaobject_declare_module(NAME cuda SRC src DEPENDS
 )
 
 if(BUILD_TESTS)
+    find_package(OpenCV QUIET COMPONENTS cudaarithm)
+
     file(GLOB_RECURSE tests "tests/*.cpp" "tests/*.cu")
     cuda_add_executable(test_mo_cuda ${tests})
-    target_link_libraries(test_mo_cuda metaobject_cuda)
+    target_include_directories(test_mo_cuda
+        PRIVATE ${OpenCV_INCLUDE_DIRS}
+    )
+
+    target_link_libraries(test_mo_cuda metaobject_cuda ${OpenCV_LIBRARIES})
     set_property(TARGET test_mo_cuda PROPERTY CXX_STANDARD 11)
 
     INCLUDE_DIRECTORIES("../core/src")
