@@ -123,7 +123,7 @@ namespace mo
                 if (m_ptr != m_data)
                 {
                     if (m_size)
-                        std::memcpy(m_data, m_ptr, std::min<int>(m_size, N) * sizeof(N));
+                        std::memcpy(m_data, m_ptr, std::min<int>(m_size, N) * sizeof(T));
                     if (m_owns_data)
                         delete[] m_ptr;
                     m_ptr = m_data;

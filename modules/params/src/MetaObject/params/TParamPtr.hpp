@@ -60,6 +60,7 @@ namespace mo
             {
                 TParam<T>::updateData(*m_ptr, header);
             }
+            return this;
         }
 
         // commit a Param's value copying metadata info from another parmaeter
@@ -70,6 +71,7 @@ namespace mo
             {
                 TParam<T>::updateData(*m_ptr, mo::tag::_param = other);
             }
+            return this;
         }
 
         std::ostream& print(std::ostream& os) const override
@@ -90,10 +92,12 @@ namespace mo
             TParam<T>::updateDataImpl(data);
             updateUserData(data->data);
         }
+
         T* ptr()
         {
             return m_ptr;
         }
+
         void updateUserData(const T& data)
         {
             if (&data != m_ptr)

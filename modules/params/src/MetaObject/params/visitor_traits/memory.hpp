@@ -12,7 +12,7 @@ namespace mo
         TTraits(std::shared_ptr<T>* ptr, const std::shared_ptr<T>* const_ptr) : m_ptr(ptr), m_const_ptr(const_ptr) {}
         virtual void visit(IReadVisitor* visitor) override
         {
-            uint64_t id = 0;
+            size_t id = 0;
 
             (*visitor)(&id, "id");
             if (id != 0)
@@ -40,10 +40,10 @@ namespace mo
 
         virtual void visit(IWriteVisitor* visitor) const override
         {
-            uint64_t id = 0;
+            size_t id = 0;
             if (m_const_ptr)
             {
-                id = uint64_t(m_const_ptr->get());
+                id = size_t(m_const_ptr->get());
                 auto ptr = visitor->getPointer<T>(id);
                 (*visitor)(&id, "id");
                 if (*m_const_ptr && ptr == nullptr)
@@ -53,7 +53,7 @@ namespace mo
             }
             else
             {
-                id = uint64_t(m_ptr->get());
+                id = size_t(m_ptr->get());
                 auto ptr = visitor->getPointer<T>(id);
                 (*visitor)(&id, "id");
                 if (*m_ptr && ptr == nullptr)
@@ -84,7 +84,7 @@ namespace mo
 
         virtual void visit(IReadVisitor* visitor) override
         {
-            uint64_t id = 0;
+            size_t id = 0;
             auto visitor_trait = visitor->traits();
 
             (*visitor)(&id, "id");
@@ -108,10 +108,10 @@ namespace mo
         {
             if (m_const_ptr)
             {
-                uint64_t id = 0;
+                size_t id = 0;
                 auto visitor_trait = visitor->traits();
 
-                id = uint64_t(*m_const_ptr);
+                id = size_t(*m_const_ptr);
                 auto ptr = visitor->getPointer<T>(id);
                 (*visitor)(&id, "id");
                 if (*m_const_ptr && ptr == nullptr)
@@ -121,10 +121,10 @@ namespace mo
             }
             else
             {
-                uint64_t id = 0;
+                size_t id = 0;
                 auto visitor_trait = visitor->traits();
 
-                id = uint64_t(*m_ptr);
+                id = size_t(*m_ptr);
                 auto ptr = visitor->getPointer<T>(id);
                 (*visitor)(&id, "id");
                 if (*m_ptr && ptr == nullptr)

@@ -33,9 +33,9 @@ namespace mo
 
     bool TTraits<std::string, void>::podKeys() const { return false; }
 
-    uint64_t TTraits<std::string, void>::getSize() const { return (m_ptr ? m_ptr->size() : m_const_ptr->size()); }
+    size_t TTraits<std::string, void>::getSize() const { return (m_ptr ? m_ptr->size() : m_const_ptr->size()); }
 
-    void TTraits<std::string, void>::setSize(const uint64_t num) { m_ptr->resize(num); }
+    void TTraits<std::string, void>::setSize(const size_t num) { m_ptr->resize(num); }
 
     const char* TTraits<std::string, void>::getName() const { return "std::string"; }
 }

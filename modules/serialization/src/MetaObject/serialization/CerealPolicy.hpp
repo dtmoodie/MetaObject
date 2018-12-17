@@ -74,7 +74,7 @@ namespace mo
                         return false;
                     }
                     auto token = typed->access();
-                    auto nvp = cereal::make_optional_nvp(param->getName(), (token)(), (token)());
+                    auto nvp = cereal::make_nvp(param->getName(), (token)());
                     try
                     {
                         ar(nvp);
@@ -90,13 +90,14 @@ namespace mo
                         token.setModified(false);
                         return false;
                     }
-
-                    if (nvp.success)
+                    // can't have a way of knowing if the value existed unless we use a hacked version of cereal
+                    // TODO figure out what do
+                    /*if (nvp.success)
                     {
                         return true;
-                    }
-                    token.setModified(false);
-                    return false;
+                    }*/
+                    //token.setModified(false);
+                    return true;
                 }
             };
         } // namespace Cereal

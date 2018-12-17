@@ -23,8 +23,14 @@ namespace mo
         {
         }
 
-        SmallVecBase& operator=(SmallVecBase&& )
+        SmallVecBase& operator=(SmallVecBase&& other)
         {
+            if(other.m_ptr)
+            {
+                std::swap(m_ptr, other.m_ptr);
+            }
+            std::swap(m_size, other.m_size);
+            return *this;
         }
 
         inline T* begin() { return m_ptr; }

@@ -2,7 +2,7 @@ FILE(GLOB_RECURSE src "src/*.hpp" "src/*.cu" "src/*.cpp")
 
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 5.0)
     message(STATUS "Compiling with boost fiber patches for nvidia jetson")
-    file(GLOB_RECURSE aux_src "jetson_patch/*.hpp", "jetson_patch/*.cpp")
+    file(GLOB_RECURSE aux_src "jetson_patch/*.hpp" "jetson_patch/*.cpp")
     LIST(APPEND src ${aux_src})
 endif()
 

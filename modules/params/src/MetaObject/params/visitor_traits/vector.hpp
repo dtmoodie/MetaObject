@@ -64,8 +64,8 @@ namespace mo
         virtual bool podValues() const override { return std::is_pod<T>::value; }
         virtual bool podKeys() const override { return false; }
 
-        virtual uint64_t getSize() const override { return (m_vec ? m_vec->size() : m_const_vec->size()); }
-        virtual void setSize(const uint64_t num) override { m_vec->resize(num); }
+        virtual size_t getSize() const override { return (m_vec ? m_vec->size() : m_const_vec->size()); }
+        virtual void setSize(const size_t num) override { m_vec->resize(num); }
 
         virtual const char* getName() const { return typeid(std::vector<T>).name(); }
       private:

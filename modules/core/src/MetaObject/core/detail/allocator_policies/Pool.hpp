@@ -17,14 +17,14 @@ namespace mo
         MemoryPool(const MemoryPool&) = delete;
         MemoryPool& operator=(const MemoryPool&) = delete;
 
-        uint8_t* allocate(const uint64_t num_bytes, const uint64_t elem_size);
+        uint8_t* allocate(const size_t num_bytes, const size_t elem_size);
 
-        void deallocate(uint8_t* ptr, const uint64_t num_bytes);
+        void deallocate(uint8_t* ptr, const size_t num_bytes);
 
         void release();
 
       private:
-        uint64_t m_initial_block_size;
+        size_t m_initial_block_size;
         std::list<std::unique_ptr<MemoryBlock<XPU>>> m_blocks;
     };
 
@@ -34,9 +34,9 @@ namespace mo
       public:
         PoolPolicy(const std::shared_ptr<MemoryPool<XPU>>& pool = MemoryPool<XPU>::create());
 
-        uint8_t* allocate(const uint64_t num_bytes, const uint64_t elem_size) override;
+        uint8_t* allocate(const size_t num_bytes, const size_t elem_size) override;
 
-        void deallocate(unsigned char* ptr, const uint64_t num_bytes) override;
+        void deallocate(unsigned char* ptr, const size_t num_bytes) override;
 
         void release();
 
@@ -63,7 +63,7 @@ namespace mo
     }
 
     template <class XPU>
-    uint8_t* MemoryPool<XPU>::allocate(const uint64_t num_bytes, const uint64_t elem_size)
+    uint8_t* MemoryPool<XPU>::allocate(const size_t num_bytes, const size_t elem_size)
     {
         uint8_t* ptr = nullptr;
         for (auto& itr : m_blocks)
@@ -87,11 +87,11 @@ namespace mo
     }
 
     template <class XPU>
-    void MemoryPool<XPU>::deallocate(uint8_t* ptr, const uint64_t num_bytes)
+    void MemoryPool<XPU>::deallocate(uint8_t* ptr, const size_t num_bytes)
     {
         for (auto& itr : m_blocks)
         {
-            if (itr->deAllocate(ptr, num_bytes))
+            if (itr->deallocate(ptr, num_bytes))
             {
                 return;
             }
@@ -111,13 +111,13 @@ namespace mo
     }
 
     template <class XPU>
-    uint8_t* PoolPolicy<XPU>::allocate(const uint64_t num_bytes, const uint64_t elem_size)
+    uint8_t* PoolPolicy<XPU>::allocate(const size_t num_bytes, const size_t elem_size)
     {
         return m_pool->allocate(num_bytes, elem_size);
     }
 
     template <class XPU>
-    void PoolPolicy<XPU>::deallocate(uint8_t* ptr, const uint64_t num_bytes)
+    void PoolPolicy<XPU>::deallocate(uint8_t* ptr, const size_t num_bytes)
     {
         m_pool->deallocate(ptr, num_bytes);
     }

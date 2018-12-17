@@ -6,30 +6,30 @@
 
 namespace mo
 {
-    MO_EXPORTS const uint8_t* alignMemory(const uint8_t* ptr, const uint64_t elemSize);
-    MO_EXPORTS uint8_t* alignMemory(uint8_t* ptr, const uint64_t elemSize);
-    MO_EXPORTS uint64_t alignmentOffset(const uint8_t* ptr, const uint64_t elemSize);
+    MO_EXPORTS const uint8_t* alignMemory(const uint8_t* ptr, const size_t elemSize);
+    MO_EXPORTS uint8_t* alignMemory(uint8_t* ptr, const size_t elemSize);
+    MO_EXPORTS size_t alignmentOffset(const uint8_t* ptr, const size_t elemSize);
 
     struct MO_EXPORTS CPU
     {
-        static uint8_t* allocate(const uint64_t size, const int32_t elem_size = 1);
-        static void deallocate(uint8_t* data, const uint64_t size = 0);
+        static uint8_t* allocate(const size_t size, const size_t elem_size = 1);
+        static void deallocate(uint8_t* data, const size_t size = 0);
     };
 
     template <class XPU>
     class MO_EXPORTS MemoryBlock
     {
       public:
-        MemoryBlock(const uint64_t size_);
+        MemoryBlock(const size_t size_);
         ~MemoryBlock();
 
-        uint8_t* allocate(const uint64_t size_, const uint64_t elemSize_);
-        bool deAllocate(uint8_t* ptr, const uint64_t num_elements);
+        uint8_t* allocate(const size_t size_, const size_t elemSize_);
+        bool deallocate(uint8_t* ptr, const size_t num_elements);
         const uint8_t* begin() const;
         const uint8_t* end() const;
         uint8_t* begin();
         uint8_t* end();
-        uint64_t size() const;
+        size_t size() const;
 
       protected:
         uint8_t* m_begin;
@@ -41,15 +41,15 @@ namespace mo
     class TMemoryBlock : public MemoryBlock<XPU>
     {
       public:
-        TMemoryBlock(const uint64_t num_elements);
+        TMemoryBlock(const size_t num_elements);
 
-        T* allocate(const uint64_t num_elements);
-        bool deAllocate(T* ptr, const uint64_t size);
+        T* allocate(const size_t num_elements);
+        bool deallocate(T* ptr, const size_t size);
         const T* begin() const;
         const T* end() const;
         T* begin();
         T* end();
-        uint64_t size() const;
+        size_t size() const;
     };
 
     using CPUMemoryBlock = MemoryBlock<CPU>;
@@ -60,7 +60,7 @@ namespace mo
     ////////////////////////////////////////////////////////////////////////////////
 
     template <class XPU>
-    MemoryBlock<XPU>::MemoryBlock(const uint64_t size_)
+    MemoryBlock<XPU>::MemoryBlock(const size_t size_)
     {
         m_begin = XPU::allocate(size_);
         m_end = m_begin + size_;
@@ -73,13 +73,13 @@ namespace mo
     }
 
     template <class XPU>
-    uint8_t* MemoryBlock<XPU>::allocate(const uint64_t size_, const uint64_t elem_size_)
+    uint8_t* MemoryBlock<XPU>::allocate(const size_t size_, const size_t elem_size_)
     {
         if (size_ > size())
         {
             return nullptr;
         }
-        std::vector<std::pair<uint64_t, uint8_t*>> candidates;
+        std::vector<std::pair<size_t, uint8_t*>> candidates;
         uint8_t* prev_end = m_begin;
         if (m_allocated_blocks.size())
         {
@@ -96,19 +96,19 @@ namespace mo
                 prev_end = itr.second;
             }
         }
-        if (static_cast<uint64_t>(m_end - prev_end) >= size_)
+        if (static_cast<size_t>(m_end - prev_end) >= size_)
         {
             auto alignment = alignmentOffset(prev_end, elem_size_);
-            if (static_cast<uint64_t>(m_end - prev_end + alignment) >= size_)
+            if (static_cast<size_t>(m_end - prev_end + alignment) >= size_)
             {
-                candidates.emplace_back(uint64_t(m_end - prev_end + alignment), prev_end + alignment);
+                candidates.emplace_back(size_t(m_end - prev_end + alignment), prev_end + alignment);
             }
         }
         // Find the smallest chunk of memory that fits our requirement, helps reduce fragmentation.
         auto min = std::min_element(
             candidates.begin(),
             candidates.end(),
-            [](const std::pair<uint64_t, unsigned char*>& first, const std::pair<uint64_t, unsigned char*>& second) {
+            [](const std::pair<size_t, unsigned char*>& first, const std::pair<size_t, unsigned char*>& second) {
                 return first.first < second.first;
             });
 
@@ -121,7 +121,7 @@ namespace mo
     }
 
     template <class XPU>
-    bool MemoryBlock<XPU>::deAllocate(uint8_t* ptr, const uint64_t /*size*/)
+    bool MemoryBlock<XPU>::deallocate(uint8_t* ptr, const size_t /*size*/)
     {
         if (ptr < m_begin || ptr > m_end)
             return false;
@@ -159,7 +159,7 @@ namespace mo
     }
 
     template <class XPU>
-    uint64_t MemoryBlock<XPU>::size() const
+    size_t MemoryBlock<XPU>::size() const
     {
         return m_end - m_begin;
     }
@@ -169,21 +169,21 @@ namespace mo
     //////////////////////////////////////////////////////////////////////////
 
     template <class T, class XPU>
-    TMemoryBlock<T, XPU>::TMemoryBlock(const uint64_t num_elements)
+    TMemoryBlock<T, XPU>::TMemoryBlock(const size_t num_elements)
         : MemoryBlock<XPU>(num_elements * sizeof(T))
     {
     }
 
     template <class T, class XPU>
-    T* TMemoryBlock<T, XPU>::allocate(const uint64_t num_elements)
+    T* TMemoryBlock<T, XPU>::allocate(const size_t num_elements)
     {
         return static_cast<T*>(static_cast<void*>(MemoryBlock<XPU>::allocate(num_elements * sizeof(T), sizeof(T))));
     }
 
     template <class T, class XPU>
-    bool TMemoryBlock<T, XPU>::deAllocate(T* ptr, const uint64_t num_elements)
+    bool TMemoryBlock<T, XPU>::deallocate(T* ptr, const size_t num_elements)
     {
-        return MemoryBlock<XPU>::deAllocate(static_cast<uint8_t*>(static_cast<void*>(ptr)), num_elements * sizeof(T));
+        return MemoryBlock<XPU>::deallocate(static_cast<uint8_t*>(static_cast<void*>(ptr)), num_elements * sizeof(T));
     }
 
     template <class T, class XPU>
@@ -211,7 +211,7 @@ namespace mo
     }
 
     template <class T, class XPU>
-    uint64_t TMemoryBlock<T, XPU>::size() const
+    size_t TMemoryBlock<T, XPU>::size() const
     {
         return MemoryBlock<XPU>::size() / sizeof(T);
     }

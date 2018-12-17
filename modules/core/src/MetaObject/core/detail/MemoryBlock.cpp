@@ -8,7 +8,7 @@
 namespace mo
 {
 
-    uint8_t* CPU::allocate(const uint64_t size, const int32_t)
+    uint8_t* CPU::allocate(const size_t size, const size_t)
     {
         uint8_t* ptr = nullptr;
         ptr = static_cast<uint8_t*>(malloc(size));
@@ -16,7 +16,7 @@ namespace mo
         return ptr;
     }
 
-    void CPU::deallocate(uint8_t* data, const uint64_t)
+    void CPU::deallocate(uint8_t* data, const size_t)
     {
         free(data);
     }

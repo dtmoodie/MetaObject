@@ -11,9 +11,9 @@ namespace mo
     class StackPolicy : public Allocator
     {
       public:
-        uint8_t* allocate(const uint64_t num_bytes, const uint64_t elem_size);
+        uint8_t* allocate(const size_t num_bytes, const size_t elem_size);
 
-        void deallocate(uint8_t* ptr, const uint64_t num_bytes);
+        void deallocate(uint8_t* ptr, const size_t num_bytes);
         void release();
 
       private:
@@ -22,7 +22,7 @@ namespace mo
         {
             uint8_t* ptr;
             clock_t free_time;
-            uint64_t size;
+            size_t size;
         };
         std::list<FreeMemory> m_deallocate_list;
         size_t m_deallocate_delay; // ms
@@ -35,7 +35,7 @@ namespace mo
     ///////////////////////////////////////////////////////////////////////////
 
     template <class XPU>
-    unsigned char* StackPolicy<XPU>::allocate(const uint64_t num_bytes, const uint64_t)
+    unsigned char* StackPolicy<XPU>::allocate(const size_t num_bytes, const size_t)
     {
         unsigned char* ptr = nullptr;
         for (auto itr = m_deallocate_list.begin(); itr != m_deallocate_list.end(); ++itr)
@@ -52,7 +52,7 @@ namespace mo
     }
 
     template <class XPU>
-    void StackPolicy<XPU>::deallocate(unsigned char* ptr, const uint64_t num_bytes)
+    void StackPolicy<XPU>::deallocate(unsigned char* ptr, const size_t num_bytes)
     {
         m_deallocate_list.push_back({ptr, clock(), num_bytes});
         clear();

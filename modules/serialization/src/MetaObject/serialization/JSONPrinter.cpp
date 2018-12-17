@@ -135,7 +135,7 @@ namespace mo
     {
         if (!name.empty())
         {
-            m_ar.setNext(name.c_str(), false);
+            m_ar.setNextName(name.c_str());
         }
         for (size_t i = 0; i < cnt; ++i)
         {
@@ -204,7 +204,7 @@ namespace mo
     {
         if (!name.empty())
         {
-            m_ar.setNext(name.c_str(), false);
+            m_ar.setNextName(name.c_str());
         }
         auto name_ptr = m_ar.getNodeName();
         m_ar.startNode();
@@ -223,7 +223,7 @@ namespace mo
     {
         if (!name.empty())
         {
-            m_ar.setNext(name.c_str(), false);
+            m_ar.setNextName(name.c_str());
         }
         if (val->type() != TypeInfo(typeid(std::string)))
         {
@@ -251,7 +251,7 @@ namespace mo
                 }
                 val->setSize(count);
                 m_ar.finishNode();
-                m_ar.setNext(parent_name, false);
+                m_ar.setNextName(parent_name);
                 m_ar.startNode();
             }
         }

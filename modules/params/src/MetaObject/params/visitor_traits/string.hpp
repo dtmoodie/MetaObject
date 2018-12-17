@@ -19,8 +19,8 @@ namespace mo
         virtual bool isContinuous() const override;
         virtual bool podValues() const override;
         virtual bool podKeys() const override;
-        virtual uint64_t getSize() const override;
-        virtual void setSize(const uint64_t num) override;
+        virtual size_t getSize() const override;
+        virtual void setSize(const size_t num) override;
         virtual const char* getName() const override;
 
       private:

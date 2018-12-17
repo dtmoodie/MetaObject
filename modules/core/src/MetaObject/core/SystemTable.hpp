@@ -205,7 +205,7 @@ namespace mo
             if (ptr == nullptr)
             {
                 ptr = table->setSingleton(ctr.createUnique());
-                mo::getDefaultLogger().info("Creating new {} singleton instance {} in system table ({})",
+                MO_LOG(info, "Creating new {} singleton instance {} in system table ({})",
                                             mo::TypeTable::instance(table).typeToName(mo::TypeInfo(typeid(U))),
                                             static_cast<const void*>(ptr),
                                             static_cast<const void*>(table));
@@ -224,7 +224,7 @@ namespace mo
             if (ptr == nullptr)
             {
                 ptr = table->setSingleton(ctr.createShared());
-                mo::getDefaultLogger().info("Creating new shared {} singleton instance {} in system table ({})",
+                MO_LOG(info, "Creating new shared {} singleton instance {} in system table ({})",
                                             mo::TypeTable::instance(table).typeToName(mo::TypeInfo(typeid(U))),
                                             static_cast<const void*>(ptr.get()),
                                             static_cast<const void*>(table));

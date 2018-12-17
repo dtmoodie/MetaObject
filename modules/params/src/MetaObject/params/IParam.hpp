@@ -248,7 +248,7 @@ namespace mo
         m_name = GetKeywordInputDefault<tag::param_name>("unnamed", args...);
         if (const Time* ts = GetKeywordInputOptional<tag::timestamp>(args...))
         {
-            m_header.timestamp = *ts;
+            m_header.timestamp.emplace(*ts);
         }
         m_mtx = nullptr;
         m_header.frame_number = GetKeywordInputDefault<tag::frame_number>(-1, args...);

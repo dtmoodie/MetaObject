@@ -121,13 +121,13 @@ namespace mo
         virtual bool isContinuous() const override { return false; }
         virtual bool podValues() const override { return std::is_pod<V>::value; }
         virtual bool podKeys() const override { return std::is_pod<K>::value; }
-        virtual uint64_t getSize() const override { return (m_ptr != nullptr) ? m_ptr->size() : m_const_ptr->size(); }
-        virtual void setSize(const uint64_t num) override { num_to_read = num; }
+        virtual size_t getSize() const override { return (m_ptr != nullptr) ? m_ptr->size() : m_const_ptr->size(); }
+        virtual void setSize(const size_t num) override { num_to_read = num; }
         virtual const char* getName() const { return typeid(std::map<K, V>).name(); }
       private:
         std::map<K, V>* m_ptr;
         const std::map<K, V>* m_const_ptr;
-        uint64_t num_to_read = 0;
+        size_t num_to_read = 0;
     };
 
     template <class V>
@@ -209,12 +209,12 @@ namespace mo
         virtual bool isContinuous() const override { return false; }
         virtual bool podValues() const override { return std::is_pod<V>::value; }
         virtual bool podKeys() const override { return std::is_pod<std::string>::value; }
-        virtual uint64_t getSize() const override { return (m_ptr != nullptr) ? m_ptr->size() : m_const_ptr->size(); }
-        virtual void setSize(const uint64_t num) override { num_to_read = num; }
+        virtual size_t getSize() const override { return (m_ptr != nullptr) ? m_ptr->size() : m_const_ptr->size(); }
+        virtual void setSize(const size_t num) override { num_to_read = num; }
         virtual const char* getName() const { return typeid(std::map<std::string, V>).name(); }
       private:
         std::map<std::string, V>* m_ptr;
         const std::map<std::string, V>* m_const_ptr;
-        uint64_t num_to_read = 0;
+        size_t num_to_read = 0;
     };
 }

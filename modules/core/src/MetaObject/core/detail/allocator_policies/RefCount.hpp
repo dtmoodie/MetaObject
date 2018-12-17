@@ -11,14 +11,14 @@ namespace mo
     {
       public:
         ~RefCountPolicy();
-        uint8_t* allocate(const uint64_t num_bytes, const uint64_t elem_size) override;
+        uint8_t* allocate(const size_t num_bytes, const size_t elem_size) override;
 
-        void deallocate(uint8_t* ptr, const uint64_t num_bytes) override;
+        void deallocate(uint8_t* ptr, const size_t num_bytes) override;
 
-        uint64_t refCount() const;
+        size_t refCount() const;
 
       private:
-        uint64_t m_ref_count = 0;
+        size_t m_ref_count = 0;
     };
 
     // Implemtation
@@ -34,7 +34,7 @@ namespace mo
     }
 
     template <class BaseAllocator>
-    uint8_t* RefCountPolicy<BaseAllocator>::allocate(const uint64_t num_bytes, const uint64_t elem_size)
+    uint8_t* RefCountPolicy<BaseAllocator>::allocate(const size_t num_bytes, const size_t elem_size)
     {
         auto ptr = BaseAllocator::allocate(num_bytes, elem_size);
         if (ptr)
@@ -45,14 +45,14 @@ namespace mo
     }
 
     template <class BaseAllocator>
-    void RefCountPolicy<BaseAllocator>::deallocate(uint8_t* ptr, const uint64_t num_bytes)
+    void RefCountPolicy<BaseAllocator>::deallocate(uint8_t* ptr, const size_t num_bytes)
     {
         BaseAllocator::deallocate(ptr, num_bytes);
         --m_ref_count;
     }
 
     template <class BaseAllocator>
-    uint64_t RefCountPolicy<BaseAllocator>::refCount() const
+    size_t RefCountPolicy<BaseAllocator>::refCount() const
     {
         return m_ref_count;
     }

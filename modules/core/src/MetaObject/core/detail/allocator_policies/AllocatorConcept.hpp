@@ -6,8 +6,8 @@ namespace mo
     template <class XPU>
     struct AllocatorConcept
     {
-        uint8_t* allocate(const uint64_t num_bytes, const uint64_t elem_size);
-        void deallocate(uint8_t* ptr, const uint64_t num_bytes);
+        uint8_t* allocate(const size_t num_bytes, const size_t elem_size);
+        void deallocate(uint8_t* ptr, const size_t num_bytes);
         void release();
     };
 }

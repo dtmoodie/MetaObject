@@ -39,7 +39,7 @@ namespace mo
 
     struct IStructTraits : public ITraits
     {
-        virtual uint64_t size() const = 0;
+        virtual size_t size() const = 0;
         virtual bool triviallySerializable() const = 0;
         virtual bool isPrimitiveType() const = 0;
         virtual const void* ptr() const = 0;
@@ -54,8 +54,8 @@ namespace mo
         virtual bool isContinuous() const = 0;
         virtual bool podValues() const = 0;
         virtual bool podKeys() const = 0;
-        virtual uint64_t getSize() const = 0;
-        virtual void setSize(const uint64_t num) = 0;
+        virtual size_t getSize() const = 0;
+        virtual void setSize(const size_t num) = 0;
     };
     template <class T>
     struct ArrayContainerTrait;

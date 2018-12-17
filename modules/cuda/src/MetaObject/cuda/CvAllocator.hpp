@@ -47,7 +47,7 @@ namespace mo
         template <class BASE_ALLOCATOR, class PADDING_POLICY>
         bool CvAllocator<BASE_ALLOCATOR, PADDING_POLICY>::allocate(GpuMat* mat, int rows, int cols, size_t elem_size)
         {
-            uint64_t size_needed, stride;
+            size_t size_needed, stride;
             m_pad_policy.sizeNeeded(rows, cols, elem_size, size_needed, stride);
             uint8_t* ptr = m_base_allocator.allocate(size_needed, elem_size);
             if (ptr == nullptr)

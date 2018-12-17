@@ -14,8 +14,8 @@ namespace mo
         typedef std::shared_ptr<Allocator> Ptr;
         typedef std::shared_ptr<const Allocator> ConstPtr;
 
-        virtual uint8_t* allocate(const uint64_t num_bytes, const uint64_t element_size = 1) = 0;
-        virtual void deallocate(uint8_t* ptr, const uint64_t num_bytes) = 0;
+        virtual uint8_t* allocate(const size_t num_bytes, const size_t element_size = 1) = 0;
+        virtual void deallocate(uint8_t* ptr, const size_t num_bytes) = 0;
 
         virtual void release();
 

@@ -50,13 +50,13 @@ namespace mo
         virtual bool isContinuous() const override { return true; }
         virtual bool podValues() const override { return std::is_pod<T>::value; }
         virtual bool podKeys() const override { return false; }
-        virtual uint64_t getSize() const override { return m_size; }
-        virtual void setSize(const uint64_t) override {}
+        virtual size_t getSize() const override { return m_size; }
+        virtual void setSize(const size_t) override {}
         virtual const char* getName() const { return typeid(T*).name(); }
 
       private:
         T* m_ptr;
         const T* m_const_ptr;
-        uint64_t m_size;
+        size_t m_size;
     };
 }

@@ -80,6 +80,7 @@ namespace mo
         {
             visitHelper(*visitor, *m_ptr, ct::Reflect<T>::end());
         }
+
         virtual void visit(IWriteVisitor* visitor) const override
         {
             if (m_const_ptr)
@@ -97,26 +98,31 @@ namespace mo
             return false;
         }
 
-        virtual uint64_t size() const override
+        virtual size_t size() const override
         {
             return sizeof(T);
         }
+
         virtual TypeInfo type() const
         {
             return TypeInfo(typeid(T));
         }
+
         virtual bool triviallySerializable() const override
         {
             return std::is_pod<T>::value;
         }
+
         virtual const void* ptr() const override
         {
             return m_ptr ? m_ptr : m_const_ptr;
         }
+
         virtual void* ptr() override
         {
             return m_ptr;
         }
+
         virtual const char* getName() const
         {
             return ct::Reflect<T>::getName();
