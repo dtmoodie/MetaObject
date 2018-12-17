@@ -1,6 +1,6 @@
 set(CUDA_NVCC_FLAGS "-std=c++11")
-if(HAVE_CUDA)
-    cuda_add_library(test_recompile_object SHARED obj.cpp obj.cu)
+if(NOT JETSON_COMPATABILITY)
+    cuda_add_library(test_recompile_object SHARED obj.cpp)
 else()
     add_library(test_recompile_object SHARED obj.cpp)
 endif()

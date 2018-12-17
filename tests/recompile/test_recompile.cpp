@@ -243,7 +243,7 @@ BOOST_AUTO_TEST_CASE(test_multiple_objects)
     BOOST_REQUIRE_EQUAL(obj2->test, 2);
 }
 
-#ifdef HAVE_CUDA
+/*#ifdef HAVE_CUDA
 BOOST_AUTO_TEST_CASE(test_cuda_recompile)
 {
     auto obj = rcc::shared_ptr<test_cuda_object>::create();
@@ -251,7 +251,7 @@ BOOST_AUTO_TEST_CASE(test_cuda_recompile)
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
     obj->run_kernel();
 }
-#endif
+#endif*/
 
 BOOST_AUTO_TEST_CASE(test_object_cleanup)
 {

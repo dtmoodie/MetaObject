@@ -29,6 +29,7 @@ set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 include(cmake/OpenCVPCHSupport.cmake)
+include(cmake/compatability.cmake)
 
 set(link_dirs_deb "")
 set(link_dirs_rel "")
