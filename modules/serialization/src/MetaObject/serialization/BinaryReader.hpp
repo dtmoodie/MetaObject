@@ -1,5 +1,5 @@
 #pragma once
-#include <MetaObject/params/DynamicVisitor.hpp>
+#include <MetaObject/visitation/DynamicVisitor.hpp>
 #include <iostream>
 #include <unordered_map>
 

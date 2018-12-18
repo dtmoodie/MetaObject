@@ -4,7 +4,7 @@
 #include "MetaObject/core.hpp"
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/params//ParamMacros.hpp"
-#include "MetaObject/params/DynamicVisitor.hpp"
+#include "MetaObject/visitation/DynamicVisitor.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/signals/TSignal.hpp"
