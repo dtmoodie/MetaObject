@@ -1,7 +1,6 @@
 #pragma once
 #include "MetaObject/serialization/SerializationFactory.hpp"
 #include <MetaObject/logging/logging.hpp>
-#include <MetaObject/object/IMetaObject.hpp>
 #include <MetaObject/object/MetaObjectFactory.hpp>
 #include <MetaObject/params/IParam.hpp>
 #include <RuntimeObjectSystem/IObject.h>

@@ -1,17 +1,6 @@
 #pragma once
 #include "IMetaObject.hpp"
-
-#define MO_OBJ_TOOLTIP(tooltip)                                                                                        \
-    static std::string getTooltipStatic()                                                                              \
-    {                                                                                                                  \
-        return tooltip;                                                                                                \
-    }
-
-#define MO_OBJ_DESCRIPTION(desc)                                                                                       \
-    static std::string getDescriptionStatic()                                                                          \
-    {                                                                                                                  \
-        return desc;                                                                                                   \
-    }
+#include "MetaObject/object/detail/MetaObjectMacros.hpp"
 
 namespace mo
 {

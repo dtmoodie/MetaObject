@@ -1,7 +1,7 @@
 #pragma once
 #include "Header.hpp"
 #include "IDataContainer.hpp"
-#include <MetaObject/params/IDynamicVisitor.hpp>
+#include <MetaObject/visitation/IDynamicVisitor.hpp>
 
 #include <ct/reflect/cerealize.hpp>
 

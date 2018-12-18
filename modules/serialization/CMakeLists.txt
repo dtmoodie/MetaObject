@@ -1,9 +1,11 @@
 metaobject_declare_module(NAME serialization
-    DEPENDS metaobject_core metaobject_params metaobject_object metaobject_types
+    DEPENDS metaobject_core metaobject_params metaobject_types cereal
 )
 
-target_include_directories(metaobject_serialization
-    PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/../../dependencies/cereal/include>
-)
 
-add_subdirectory(tests/virtual_visitor)
+if(BUILD_TESTS)
+    file(GLOB src "tests/*.cpp" "tests/*.hpp")
+    add_executable(test_mo_serialization ${src})
+    target_link_libraries(test_mo_serialization metaobject_serialization)
+    set_target_properties(test_mo_serialization PROPERTIES FOLDER Tests/metaobject/serialization)
+endif()

@@ -127,4 +127,6 @@ namespace mo
     This macro is used for marking the end of a class definition block
 */
 #define MO_END MO_END_(__COUNTER__)
+
+
 #include "MetaObjectMacrosImpl.hpp"

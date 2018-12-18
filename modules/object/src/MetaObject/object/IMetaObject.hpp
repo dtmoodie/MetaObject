@@ -3,7 +3,6 @@
 #include "MetaObject/core/detail/Time.hpp"
 #include "MetaObject/core/detail/forward.hpp"
 #include "MetaObject/detail/Export.hpp"
-#include "MetaObject/object.hpp"
 #include "MetaObject/params/detail/forward.hpp"
 
 #include <RuntimeObjectSystem/IObject.h>

@@ -31,6 +31,10 @@
 #include <map>
 #include <type_traits>
 
+#include <boost/test/auto_unit_test.hpp>
+#include <boost/test/test_tools.hpp>
+
+
 namespace cereal
 {
     //! Saving for std::map<std::string, std::string> for text based archives

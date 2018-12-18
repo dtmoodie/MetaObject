@@ -132,3 +132,16 @@ struct ReflectParent<ct::VariadicTypedef<Parent, Parents...>>
     REGISTERCLASS(TYPE, &TYPE##_info);
 
 #define MO_REGISTER_CLASS(TYPE) MO_REGISTER_OBJECT(TYPE)
+
+
+#define MO_OBJ_TOOLTIP(tooltip)                                                                                        \
+    static std::string getTooltipStatic()                                                                              \
+    {                                                                                                                  \
+        return tooltip;                                                                                                \
+    }
+
+#define MO_OBJ_DESCRIPTION(desc)                                                                                       \
+    static std::string getDescriptionStatic()                                                                          \
+    {                                                                                                                  \
+        return desc;                                                                                                   \
+    }
