@@ -5,8 +5,8 @@
 #include <cereal/types/string.hpp>
 
 #if MO_HAVE_OPENCV
-#include <MetaObject/metaparams/reflect/cv_types.hpp>
 #include <MetaObject/params/MetaParam.hpp>
+#include <MetaObject/types/opencv.hpp>
 #include <ct/reflect/cerealize.hpp>
 
 #if MO_HAVE_PYTHON
@@ -17,7 +17,6 @@ namespace ct
 {
     template <class T, size_t N>
     struct ArrayAdapter;
-
 }
 #if MO_HAVE_PYTHON
 namespace mo

@@ -16,7 +16,7 @@ namespace mo
     {
         auto accessor = ct::Reflect<T>::getAccessor(ct::Indexer<I>{});
         using RefType = typename ct::ReferenceType<typename decltype(accessor)::SetType>::Type;
-        auto ref = static_cast<RefType>(accessor.set(obj));
+        RefType ref = static_cast<RefType>(accessor.set(obj));
         visitor(&ref, ct::Reflect<T>::getName(ct::Indexer<I>{}));
     }
 

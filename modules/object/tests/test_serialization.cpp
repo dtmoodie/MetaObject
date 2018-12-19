@@ -27,6 +27,8 @@
 #include <MetaObject/types/file_types.hpp>
 #include <MetaObject/serialization/SerializationFactory.hpp>
 #include <MetaObject/serialization/CerealParameters.hpp>
+#include <MetaObject/visitation/visitor_traits/vector.hpp>
+
 
 #include <fstream>
 #include <istream>
@@ -56,7 +58,6 @@ SerializableObject::~SerializableObject()
 }
 
 MO_REGISTER_OBJECT(SerializableObject);
-
 
 template <class TYPE, class Resetter, class Setter, class Checker>
 void testParamSerialization(mo::IParam* param, const Resetter& resetter, const Setter& setter, const Checker& checkker)

@@ -39,10 +39,16 @@ namespace mo
 
     struct IStructTraits : public ITraits
     {
+        // sizeof(T)
         virtual size_t size() const = 0;
+        // can be serialized via a memcpy(ptr)
         virtual bool triviallySerializable() const = 0;
+        // if it can be serialized by one of the primitive supported types, such as
+        // struct{float x,y,z;} can be serialized as 3 floats in continuous memory
         virtual bool isPrimitiveType() const = 0;
+        // const ptr to type
         virtual const void* ptr() const = 0;
+        // non const ptr to type
         virtual void* ptr() = 0;
     };
 
@@ -318,11 +324,15 @@ namespace mo
         return *this;
     }
 
+    // In this case, T is some kind of struct that we do not have a specialization for
+    template <class T>
+    IWriteVisitor& visit(IWriteVisitor& visitor, const T* val, const std::string& name, const size_t cnt);
+
     template <class T>
     auto IWriteVisitor::operator()(const T* val, const std::string& name, const size_t cnt)
         -> enable_if_not_trait_exists<T, IWriteVisitor&>
     {
-        return *this;
+        return visit(*this, val, name, cnt);
     }
 }
 #include "VisitorTraits.hpp"

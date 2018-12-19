@@ -2,7 +2,7 @@
 #include "Header.hpp"
 #include "IDataContainer.hpp"
 #include <MetaObject/visitation/IDynamicVisitor.hpp>
-
+#include <MetaObject/visitation/visitor_traits/time.hpp>
 #include <ct/reflect/cerealize.hpp>
 
 #include <cereal/archives/binary.hpp>
@@ -129,43 +129,40 @@ namespace mo
     }
 }
 
-
-
 namespace cereal
 {
-   //! Saving for boost::optional
-   template <class Archive, class Optioned> inline
-      void save(Archive & ar, ::boost::optional<Optioned> const & optional)
-   {
-      bool init_flag(optional);
-      if (init_flag)
-      {
-         ar(cereal::make_nvp("initialized", true));
-         ar(cereal::make_nvp("value", optional.get()));
-      }
-      else
-      {
-         ar(cereal::make_nvp("initialized", false));
-      }
-   }
+    //! Saving for boost::optional
+    template <class Archive, class Optioned>
+    inline void save(Archive& ar, ::boost::optional<Optioned> const& optional)
+    {
+        bool init_flag(optional);
+        if (init_flag)
+        {
+            ar(cereal::make_nvp("initialized", true));
+            ar(cereal::make_nvp("value", optional.get()));
+        }
+        else
+        {
+            ar(cereal::make_nvp("initialized", false));
+        }
+    }
 
-   //! Loading for boost::optional
-   template <class Archive, class Optioned> inline
-      void load(Archive & ar, ::boost::optional<Optioned> & optional)
-   {
+    //! Loading for boost::optional
+    template <class Archive, class Optioned>
+    inline void load(Archive& ar, ::boost::optional<Optioned>& optional)
+    {
 
-      bool init_flag;
-      ar(cereal::make_nvp("initialized", init_flag));
-      if (init_flag)
-      {
-         Optioned val;
-         ar(cereal::make_nvp("value", val));
-         optional = val;
-      }
-      else
-      {
-         optional = ::boost::none; // this is all we need to do to reset the internal flag and value
-      }
-
-   }
+        bool init_flag;
+        ar(cereal::make_nvp("initialized", init_flag));
+        if (init_flag)
+        {
+            Optioned val;
+            ar(cereal::make_nvp("value", val));
+            optional = val;
+        }
+        else
+        {
+            optional = ::boost::none; // this is all we need to do to reset the internal flag and value
+        }
+    }
 } // namespace cereal
