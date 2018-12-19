@@ -1,3 +1,10 @@
+if(Boost_DIR)
+    set(BOOST_ROOT ${Boost_DIR})
+    if(EXISTS "${Boost_DIR}/stage/lib")
+        set(BOOST_LIBRARYDIR "${Boost_DIR}/stage/lib")
+    endif()
+endif()
+
 set(Boost_required_components system thread fiber filesystem)
 if(BUILD_TESTS)
     list(APPEND Boost_required_components unit_test_framework)
