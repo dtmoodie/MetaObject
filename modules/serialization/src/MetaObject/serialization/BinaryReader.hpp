@@ -10,7 +10,7 @@ namespace mo
       public:
         BinaryReader(std::istream& in);
         virtual ~BinaryReader() override;
-
+        virtual IReadVisitor& operator()(bool* ptr, const std::string& name, const size_t cnt) override;
         virtual IReadVisitor& operator()(char* ptr, const std::string& name, const size_t cnt) override;
         virtual IReadVisitor& operator()(int8_t* ptr, const std::string& name, const size_t cnt) override;
         virtual IReadVisitor& operator()(uint8_t* ptr, const std::string& name, const size_t cnt) override;

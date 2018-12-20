@@ -3,6 +3,7 @@
 #include <MetaObject/detail/Export.hpp>
 
 #if !(defined(__GNUC__) && __GNUC__ == 4 && defined(__NVCC__))
+#include <spdlog/fmt/fmt.h>
 #include <spdlog/spdlog.h>
 #endif
 

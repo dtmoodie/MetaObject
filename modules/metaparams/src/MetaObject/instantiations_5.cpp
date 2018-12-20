@@ -6,8 +6,10 @@
 #include "MetaObject/types/opencv.hpp"
 #include "ct/reflect.hpp"
 #include "ct/reflect/cerealize.hpp"
+#include <MetaObject/visitation/visitor_traits/vector.hpp>
 #include <boost/lexical_cast.hpp>
 #include <cereal/types/vector.hpp>
+
 #include <opencv2/core/types.hpp>
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS

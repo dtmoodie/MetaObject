@@ -12,6 +12,8 @@
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
 
+#include <MetaObject/visitation/visitor_traits/time.hpp>
+
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include <MetaObject/thread/fiber_include.hpp>

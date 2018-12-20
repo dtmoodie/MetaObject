@@ -11,6 +11,7 @@ namespace mo
         BinaryWriter(std::ostream& in);
         virtual ~BinaryWriter() override;
 
+        virtual IWriteVisitor& operator()(const bool* ptr, const std::string& name, const size_t cnt) override;
         virtual IWriteVisitor& operator()(const char* ptr, const std::string& name, const size_t cnt) override;
         virtual IWriteVisitor& operator()(const int8_t* ptr, const std::string& name, const size_t cnt) override;
         virtual IWriteVisitor& operator()(const uint8_t* ptr, const std::string& name, const size_t cnt) override;

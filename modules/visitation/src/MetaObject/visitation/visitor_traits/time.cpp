@@ -2,11 +2,12 @@
 
 namespace mo
 {
-    IWriteVisitor& visit(IWriteVisitor& visitor, mo::OptionalTime* time, const std::string&, const size_t)
+    template <>
+    IWriteVisitor& visit(IWriteVisitor& visitor, const mo::OptionalTime* time, const std::string&, const size_t)
     {
-        bool set(*time);
+        const bool set(*time);
         visitor(&set, "set");
-        if(set)
+        if (set)
         {
             auto sec = (*time)->seconds();
             visitor(&sec, "seconds");

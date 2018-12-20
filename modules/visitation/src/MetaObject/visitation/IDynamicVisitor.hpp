@@ -135,6 +135,7 @@ namespace mo
 
     struct IReadVisitor : public virtual IDynamicVisitor
     {
+        virtual IReadVisitor& operator()(bool* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual IReadVisitor& operator()(char* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual IReadVisitor& operator()(int8_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual IReadVisitor& operator()(uint8_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
@@ -173,6 +174,7 @@ namespace mo
 
     struct IWriteVisitor : public virtual IDynamicVisitor
     {
+        virtual IWriteVisitor& operator()(const bool* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual IWriteVisitor& operator()(const char* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual IWriteVisitor& operator()(const int8_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual IWriteVisitor& operator()(const uint8_t* val, const std::string& name = "", const size_t cnt = 1) = 0;

@@ -1,7 +1,22 @@
 file(GLOB_RECURSE src "src/*.cpp" "src/*.hpp" "src/*.h" "src/*.cu")
-metaobject_declare_module(NAME params SRC src DEPENDS metaobject_core ct metaobject_types metaobject_visitation)
-target_include_directories(metaobject_params PUBLIC $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>)
-target_include_directories(metaobject_params PUBLIC $<BUILD_INTERFACE:${cereal_INCLUDE_DIRS}>)
+metaobject_declare_module(NAME params
+    SRC src
+    DEPENDS
+        metaobject_core
+        ct
+        metaobject_types
+        metaobject_visitation
+)
+
+target_include_directories(metaobject_params
+    PUBLIC
+        $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
+)
+
+target_include_directories(metaobject_params
+    PUBLIC
+        $<BUILD_INTERFACE:${cereal_INCLUDE_DIRS}>
+)
 
 
 if(BUILD_TESTS)

@@ -4,13 +4,13 @@
 #include "MetaObject/core.hpp"
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/params//ParamMacros.hpp"
-#include "MetaObject/visitation/DynamicVisitor.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
 #include "MetaObject/types/file_types.hpp"
+#include "MetaObject/visitation/DynamicVisitor.hpp"
 
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
@@ -51,6 +51,13 @@ struct TestReadVisitor : public ReadCache
     {
         return *this;
     }
+
+    virtual IReadVisitor& operator()(bool* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+
     virtual IReadVisitor& operator()(char* val, const std::string& name = "", const size_t cnt = 1)
     {
         ++count;

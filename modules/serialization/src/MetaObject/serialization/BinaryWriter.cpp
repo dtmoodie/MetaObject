@@ -3,9 +3,14 @@
 namespace mo
 {
 
-    BinaryWriter::BinaryWriter(std::ostream& in) : m_os(in) {}
+    BinaryWriter::BinaryWriter(std::ostream& in)
+        : m_os(in)
+    {
+    }
 
-    BinaryWriter::~BinaryWriter() {}
+    BinaryWriter::~BinaryWriter()
+    {
+    }
 
     template <class T>
     IWriteVisitor& BinaryWriter::writeBinary(const T* ptr, const std::string&, const size_t cnt)
@@ -13,6 +18,11 @@ namespace mo
         const size_t size = sizeof(T) * cnt;
         m_os.write(reinterpret_cast<const char*>(ptr), static_cast<std::streamsize>(size));
         return *this;
+    }
+
+    IWriteVisitor& BinaryWriter::operator()(const bool* ptr, const std::string& name, const size_t cnt)
+    {
+        return writeBinary(ptr, name, cnt);
     }
 
     IWriteVisitor& BinaryWriter::operator()(const char* ptr, const std::string& name, const size_t cnt)

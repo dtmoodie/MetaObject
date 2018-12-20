@@ -10,6 +10,7 @@ namespace mo
     struct JSONWriter : public WriteCache
     {
         JSONWriter(std::ostream& os);
+        virtual IWriteVisitor& operator()(const bool* val, const std::string& name = "", const size_t cnt = 1) override;
         virtual IWriteVisitor& operator()(const char* val, const std::string& name = "", const size_t cnt = 1) override;
         virtual IWriteVisitor& operator()(const int8_t*, const std::string& name = "", const size_t cnt = 1) override;
         virtual IWriteVisitor& operator()(const uint8_t*, const std::string& name = "", const size_t cnt = 1) override;
@@ -38,6 +39,7 @@ namespace mo
     struct JSONReader : public ReadCache
     {
         JSONReader(std::istream& os);
+        virtual IReadVisitor& operator()(bool* val, const std::string& name = "", const size_t cnt = 1) override;
         virtual IReadVisitor& operator()(char* val, const std::string& name = "", const size_t cnt = 1) override;
         virtual IReadVisitor& operator()(int8_t*, const std::string& name = "", const size_t cnt = 1) override;
         virtual IReadVisitor& operator()(uint8_t*, const std::string& name = "", const size_t cnt = 1) override;
