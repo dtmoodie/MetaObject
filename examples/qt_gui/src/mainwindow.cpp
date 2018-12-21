@@ -6,6 +6,10 @@
 #include "MetaObject/params/ui/WidgetFactory.hpp"
 #include "ui_mainwindow.h"
 
+#include <MetaObject/visitation/visitor_traits/vector.hpp>
+#include <MetaObject/visitation/visitor_traits/string.hpp>
+#include <MetaObject/visitation/visitor_traits/pair.hpp>
+
 #include <MetaObject/thread/fiber_include.hpp>
 // The following lines are commented out to demonstrate user interface instantiation in a different translation unit
 // Since the instantiation library is included, instantiations of several types are registered with the full user

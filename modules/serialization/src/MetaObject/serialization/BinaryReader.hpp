@@ -20,7 +20,8 @@ namespace mo
         virtual IReadVisitor& operator()(uint32_t* ptr, const std::string& name, const size_t cnt) override;
         virtual IReadVisitor& operator()(int64_t* ptr, const std::string& name, const size_t cnt) override;
         virtual IReadVisitor& operator()(uint64_t* ptr, const std::string& name, const size_t cnt) override;
-
+        virtual IReadVisitor& operator()(long long* val, const std::string& name, const size_t cnt) override;
+        virtual IReadVisitor& operator()(unsigned long long* val, const std::string& name, const size_t cnt) override;
         virtual IReadVisitor& operator()(float* val, const std::string& name, const size_t cnt) override;
         virtual IReadVisitor& operator()(double*, const std::string&, const size_t cnt) override;
         virtual IReadVisitor& operator()(void*, const std::string&, const size_t cnt) override;

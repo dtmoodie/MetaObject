@@ -104,6 +104,18 @@ struct TestReadVisitor : public ReadCache
         return *this;
     }
 
+    virtual IReadVisitor& operator()(long long* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+
+    virtual IReadVisitor& operator()(unsigned long long* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+
     virtual IReadVisitor& operator()(float* val, const std::string& name = "", const size_t cnt = 1)
     {
         ++count;

@@ -8,8 +8,10 @@
 #include <ct/reflect.hpp>
 #include <ct/reflect/cerealize.hpp>
 #include <ct/reflect/compare.hpp>
+#include <ct/reflect/print-container-inl.hpp>
 
 #include <opencv2/core.hpp>
+#include <cereal/types/vector.hpp>
 
 #include <iostream>
 #include <memory>
@@ -97,19 +99,28 @@ struct Vec
     float x, y, z;
 };
 
+struct VecOwner
+{
+    std::vector<Vec> my_vecs;
+};
+
 namespace ct
 {
     REFLECT_BEGIN(TestPodStruct)
-        PUBLIC_ACCESS(x);
-        PUBLIC_ACCESS(y);
-        PUBLIC_ACCESS(z);
-        PUBLIC_ACCESS(id);
+        PUBLIC_ACCESS(x)
+        PUBLIC_ACCESS(y)
+        PUBLIC_ACCESS(z)
+        PUBLIC_ACCESS(id)
     REFLECT_END;
 
     REFLECT_BEGIN(Vec)
-        PUBLIC_ACCESS(x);
-        PUBLIC_ACCESS(y);
-        PUBLIC_ACCESS(z);
+        PUBLIC_ACCESS(x)
+        PUBLIC_ACCESS(y)
+        PUBLIC_ACCESS(z)
+    REFLECT_END;
+
+    REFLECT_BEGIN(VecOwner)
+        PUBLIC_ACCESS(my_vecs);
     REFLECT_END;
 }
 
@@ -145,5 +156,21 @@ void testTypes(Tester& tester)
         test_struct.z = 2;
         test_struct.id = 10;
         tester.test(test_struct);
+    }
+    {
+        std::vector<Vec> vec;
+        vec.push_back({0,1,2});
+        vec.push_back({3,4,5});
+        vec.push_back({6,7,8});
+        vec.push_back({9,10,11});
+        tester.test(vec);
+    }
+    {
+        VecOwner owner;
+        owner.my_vecs.push_back({0,1,2});
+        owner.my_vecs.push_back({3,4,5});
+        owner.my_vecs.push_back({6,7,8});
+        owner.my_vecs.push_back({9,10,11});
+        tester.test(owner);
     }
 }

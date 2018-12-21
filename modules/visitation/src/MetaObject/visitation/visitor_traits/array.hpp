@@ -52,7 +52,7 @@ namespace mo
         virtual bool podKeys() const override { return false; }
         virtual size_t getSize() const override { return m_size; }
         virtual void setSize(const size_t) override {}
-        virtual const char* getName() const { return typeid(T*).name(); }
+        virtual std::string getName() const { return TypeInfo(typeid(T*)).name(); }
 
       private:
         T* m_ptr;

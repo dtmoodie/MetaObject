@@ -1,4 +1,5 @@
 #include "JSONPrinter.hpp"
+#include <MetaObject/logging/logging.hpp>
 
 namespace mo
 {
@@ -14,13 +15,20 @@ namespace mo
         {
             m_ar.setNextName(name.c_str());
         }
-        else
+        if(cnt > 1)
         {
-        }
-        for (size_t i = 0; i < cnt; ++i)
+            m_ar.startNode();
+            m_ar.makeArray();
+            for (size_t i = 0; i < cnt; ++i)
+            {
+                m_ar(ptr[i]);
+            }
+            m_ar.finishNode();
+        }else
         {
-            m_ar(ptr[i]);
+            m_ar(ptr[0]);
         }
+
         return *this;
     }
 
@@ -70,6 +78,16 @@ namespace mo
     }
 
     IWriteVisitor& JSONWriter::operator()(const uint64_t* val, const std::string& name, const size_t cnt)
+    {
+        return writePod(val, name, cnt);
+    }
+
+    IWriteVisitor& JSONWriter::operator()(const long long* val, const std::string& name, const size_t cnt)
+    {
+        return writePod(val, name, cnt);
+    }
+
+    IWriteVisitor& JSONWriter::operator()(const unsigned long long* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
     }
@@ -148,14 +166,26 @@ namespace mo
         {
             m_ar.setNextName(name.c_str());
         }
+        auto node_name = m_ar.getNodeName();
+        if(cnt > 1)
+        {
+            m_ar.startNode();
+            cereal::size_type size;
+            m_ar.loadSize(size);
+            MO_ASSERT_EQ(size, cnt);
+        }
         for (size_t i = 0; i < cnt; ++i)
         {
+            node_name = m_ar.getNodeName();
             m_ar(ptr[i]);
-            auto name = m_ar.getNodeName();
-            if (name)
+            if (node_name)
             {
                 m_last_read_name = name;
             }
+        }
+        if(cnt > 1)
+        {
+            m_ar.finishNode();
         }
         return *this;
     }
@@ -206,6 +236,16 @@ namespace mo
     }
 
     IReadVisitor& JSONReader::operator()(uint64_t* val, const std::string& name, const size_t cnt)
+    {
+        return readPod(val, name, cnt);
+    }
+
+    IReadVisitor& JSONReader::operator()(long long* val, const std::string& name, const size_t cnt)
+    {
+        return readPod(val, name, cnt);
+    }
+
+    IReadVisitor& JSONReader::operator()(unsigned long long* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
     }

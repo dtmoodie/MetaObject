@@ -5,8 +5,8 @@ metaobject_declare_module(NAME visitation
 )
 
 if(BUILD_TESTS)
-    #file(GLOB src "tests/*.cpp" "tests/*.hpp")
-    #add_executable(test_mo_visitation ${src})
-    #target_link_libraries(test_mo_visitation metaobject_serialization)
-    #set_target_properties(test_mo_visitation PROPERTIES FOLDER Tests/metaobject/serialization)
+    file(GLOB src "tests/*.cpp" "tests/*.hpp")
+    add_executable(test_mo_visitation ${src})
+    target_link_libraries(test_mo_visitation metaobject_visitation)
+    set_target_properties(test_mo_visitation PROPERTIES FOLDER Tests/metaobject/visitation)
 endif()

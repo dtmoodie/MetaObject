@@ -34,7 +34,7 @@ namespace mo
         virtual void visit(IReadVisitor* visitor) = 0;
         virtual void visit(IWriteVisitor* visitor) const = 0;
         virtual TypeInfo type() const = 0;
-        virtual const char* getName() const = 0;
+        virtual std::string getName() const = 0;
     };
 
     struct IStructTraits : public ITraits
@@ -145,6 +145,10 @@ namespace mo
         virtual IReadVisitor& operator()(uint32_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual IReadVisitor& operator()(int64_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual IReadVisitor& operator()(uint64_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+
+        virtual IReadVisitor& operator()(long long* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual IReadVisitor& operator()(unsigned long long* val, const std::string& name = "", const size_t cnt = 1) = 0;
+
         virtual IReadVisitor& operator()(float* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual IReadVisitor& operator()(double* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual IReadVisitor& operator()(void* binary, const std::string& name = "", const size_t num_bytes = 1) = 0;
@@ -184,6 +188,9 @@ namespace mo
         virtual IWriteVisitor& operator()(const uint32_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual IWriteVisitor& operator()(const int64_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual IWriteVisitor& operator()(const uint64_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+
+        virtual IWriteVisitor& operator()(const long long* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual IWriteVisitor& operator()(const unsigned long long* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual IWriteVisitor& operator()(const float* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual IWriteVisitor& operator()(const double* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual IWriteVisitor& operator()(const void* binary, const std::string& name = "", const size_t bytes = 1) = 0;
@@ -305,6 +312,7 @@ namespace mo
     auto IReadVisitor::operator()(T* val, const std::string& name, const size_t cnt)
         -> enable_if_not_trait_exists<T, IReadVisitor&>
     {
+        return read(*this, val, name, cnt);
     }
 
     template <class T>
@@ -327,14 +335,14 @@ namespace mo
     }
 
     // In this case, T is some kind of struct that we do not have a specialization for
-    template <class T>
-    IWriteVisitor& visit(IWriteVisitor& visitor, const T* val, const std::string& name, const size_t cnt);
+    //template <class T>
+    //IWriteVisitor& visit(IWriteVisitor& visitor, const T* val, const std::string& name, const size_t cnt);
 
     template <class T>
     auto IWriteVisitor::operator()(const T* val, const std::string& name, const size_t cnt)
         -> enable_if_not_trait_exists<T, IWriteVisitor&>
     {
-        return visit(*this, val, name, cnt);
+        return write(*this, val, name, cnt);
     }
 }
 #include "VisitorTraits.hpp"

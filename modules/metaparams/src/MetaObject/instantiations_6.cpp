@@ -1,6 +1,9 @@
 #include "MetaObject/core/metaobject_config.hpp"
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include <MetaObject/params/MetaParam.hpp>
+#include <MetaObject/visitation/visitor_traits/filesystem.hpp>
+#include <MetaObject/visitation/visitor_traits/string.hpp>
+#include <MetaObject/visitation/visitor_traits/vector.hpp>
 
 #include "MetaObject/types/file_types.hpp"
 #include <MetaObject/params/AccessToken.hpp>

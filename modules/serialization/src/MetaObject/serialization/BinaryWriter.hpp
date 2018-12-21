@@ -22,6 +22,8 @@ namespace mo
         virtual IWriteVisitor& operator()(const int64_t* ptr, const std::string& name, const size_t cnt) override;
         virtual IWriteVisitor& operator()(const uint64_t* ptr, const std::string& name, const size_t cnt) override;
 
+        virtual IWriteVisitor& operator()(const long long* val, const std::string& name = "", const size_t cnt = 1) override;
+        virtual IWriteVisitor& operator()(const unsigned long long* val, const std::string& name = "", const size_t cnt = 1) override;
         virtual IWriteVisitor& operator()(const float* val, const std::string& name, const size_t cnt) override;
         virtual IWriteVisitor& operator()(const double*, const std::string&, const size_t) override;
         virtual IWriteVisitor& operator()(const void*, const std::string&, const size_t) override;

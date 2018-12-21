@@ -67,7 +67,7 @@ namespace mo
         virtual size_t getSize() const override { return (m_vec ? m_vec->size() : m_const_vec->size()); }
         virtual void setSize(const size_t num) override { m_vec->resize(num); }
 
-        virtual const char* getName() const { return typeid(std::vector<T>).name(); }
+        virtual std::string getName() const { return TypeInfo(typeid(std::vector<T>)).name(); }
       private:
         std::vector<T>* m_vec;
         const std::vector<T>* m_const_vec;

@@ -21,7 +21,7 @@ namespace mo
         virtual bool podKeys() const override;
         virtual size_t getSize() const override;
         virtual void setSize(const size_t num) override;
-        virtual const char* getName() const override;
+        virtual std::string getName() const override;
 
       private:
         std::string* m_ptr;

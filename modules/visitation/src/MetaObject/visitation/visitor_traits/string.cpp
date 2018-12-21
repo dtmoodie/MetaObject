@@ -65,7 +65,7 @@ namespace mo
         m_ptr->resize(num);
     }
 
-    const char* TTraits<std::string, void>::getName() const
+    std::string TTraits<std::string, void>::getName() const
     {
         return "std::string";
     }

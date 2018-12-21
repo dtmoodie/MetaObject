@@ -7,23 +7,26 @@ struct TestJson
     void test(const T& data)
     {
         T tmp = data;
-        std::stringstream ss;
+        std::stringstream dyn, stat;
         {
-            mo::JSONWriter printer(ss);
+            mo::JSONWriter printer(dyn);
             mo::IWriteVisitor& visitor = printer;
             visitor(&tmp);
-        }
-        ss.seekg(std::ios::beg);
-        std::cout << "------------------------------\nDynamic\n";
-        std::cout << ss.str() << std::endl;
-        std::cout << "------------------------------\nStatic\n";
-        {
-            cereal::JSONOutputArchive ar(std::cout);
-            ar(tmp);
+            dyn.seekg(std::ios::beg);
         }
 
         {
-            cereal::JSONInputArchive ar(ss);
+            cereal::JSONOutputArchive ar(stat);
+            ar(tmp);
+        }
+
+        std::cout << "------------------------------\nDynamic\n";
+        std::cout << dyn.str() << std::endl;
+        std::cout << "------------------------------\nStatic\n";
+        std::cout << stat.str() << std::endl;
+
+        {
+            cereal::JSONInputArchive ar(dyn);
             T tmp1;
             ar(tmp1);
             if (!ct::compare(tmp, tmp1, DebugEqual()))
@@ -34,8 +37,7 @@ struct TestJson
         }
 
         {
-            std::stringstream ss1(ss.str());
-            // TODO dynamic json deserialization
+            std::stringstream ss1(dyn.str());
             mo::JSONReader reader(ss1);
             mo::IReadVisitor& visitor = reader;
             T tmp1;
@@ -43,7 +45,20 @@ struct TestJson
             if (!ct::compare(tmp, tmp1, DebugEqual()))
             {
                 std::cout << "Failed to load from json " << ct::Reflect<T>::getName() << " correctly";
-                throw std::runtime_error("Dynamic Json deserialization failed");
+                throw std::runtime_error("Dynamic Json deserialization of dynamically built serialization failed");
+            }
+        }
+
+        {
+            std::stringstream ss1(stat.str());
+            mo::JSONReader reader(ss1);
+            mo::IReadVisitor& visitor = reader;
+            T tmp1;
+            visitor(&tmp1);
+            if (!ct::compare(tmp, tmp1, DebugEqual()))
+            {
+                std::cout << "Failed to load from json " << ct::Reflect<T>::getName() << " correctly";
+                throw std::runtime_error("Dynamic Json deserialization of statically built serialization failed");
             }
         }
     }

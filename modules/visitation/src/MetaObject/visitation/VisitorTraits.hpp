@@ -123,7 +123,7 @@ namespace mo
             return m_ptr;
         }
 
-        virtual const char* getName() const
+        virtual std::string getName() const
         {
             return ct::Reflect<T>::getName();
         }

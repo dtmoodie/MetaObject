@@ -1,4 +1,5 @@
 #pragma once
+#include <spdlog/fmt/fmt.h>
 
 #if defined(__GNUC__) && __GNUC__ == 4 && defined(__NVCC__)
 
@@ -40,7 +41,7 @@
     if (!(CHECK))                                                                                                      \
     THROW(error, #CHECK)
 
-#define MO_ASSERT_EQ(LHS, RHS) if(!(LHS) == !(RHS)) THROW(error, #LHS " != " #RHS " [{} != {}]", LHS, RHS)
+#define MO_ASSERT_EQ(LHS, RHS) if((LHS) != (RHS)) THROW(error, #LHS " != " #RHS " [{} != {}]", LHS, RHS)
 
 #define MO_ASSERT_FMT(CHECK, ...)                                                                                      \
     if (!(CHECK))                                                                                                      \

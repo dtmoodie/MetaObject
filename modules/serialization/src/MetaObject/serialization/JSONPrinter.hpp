@@ -20,7 +20,8 @@ namespace mo
         virtual IWriteVisitor& operator()(const uint32_t*, const std::string& name = "", const size_t cnt = 1) override;
         virtual IWriteVisitor& operator()(const int64_t*, const std::string& name = "", const size_t cnt = 1) override;
         virtual IWriteVisitor& operator()(const uint64_t*, const std::string& name = "", const size_t cnt = 1) override;
-
+        virtual IWriteVisitor& operator()(const long long* val, const std::string& name, const size_t cnt) override;
+        virtual IWriteVisitor& operator()(const unsigned long long* val, const std::string& name, const size_t cnt) override;
         virtual IWriteVisitor& operator()(const float* val, const std::string& name, const size_t cnt) override;
         virtual IWriteVisitor& operator()(const double*, const std::string&, const size_t) override;
         virtual IWriteVisitor& operator()(const void*, const std::string&, const size_t) override;
@@ -50,6 +51,8 @@ namespace mo
         virtual IReadVisitor& operator()(int64_t*, const std::string& name = "", const size_t cnt = 1) override;
         virtual IReadVisitor& operator()(uint64_t*, const std::string& name = "", const size_t cnt = 1) override;
 
+        virtual IReadVisitor& operator()(long long* val, const std::string& name, const size_t cnt) override;
+        virtual IReadVisitor& operator()(unsigned long long* val, const std::string& name, const size_t cnt) override;
         virtual IReadVisitor& operator()(float* val, const std::string& name, const size_t cnt) override;
         virtual IReadVisitor& operator()(double*, const std::string&, const size_t) override;
         virtual IReadVisitor& operator()(void*, const std::string&, const size_t) override;

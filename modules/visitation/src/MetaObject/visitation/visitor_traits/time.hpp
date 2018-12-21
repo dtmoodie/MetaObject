@@ -5,8 +5,8 @@
 
 namespace mo
 {
-    template <>
-    IWriteVisitor& visit(IWriteVisitor& visitor, const mo::OptionalTime* time, const std::string&, const size_t);
+    IReadVisitor& read(IReadVisitor& visitor, mo::OptionalTime* time, const std::string&, const size_t);
+    IWriteVisitor& write(IWriteVisitor& visitor, const mo::OptionalTime* time, const std::string&, const size_t);
 }
 
 #endif // MO_VISITOR_TRAITS_TIME_HPP

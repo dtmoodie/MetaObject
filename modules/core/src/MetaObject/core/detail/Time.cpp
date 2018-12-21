@@ -32,6 +32,11 @@ namespace mo
     {
     }
 
+    Time::Time(const double sec)
+    {
+        fromSeconds(sec);
+    }
+
     std::string Time::print() const
     {
         std::stringstream ss;
@@ -111,6 +116,11 @@ namespace mo
         ns -= s;
         auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(ns.time_since_epoch());
         return s.count() + (ms.count() / 1000.0);
+    }
+
+    void Time::fromSeconds(const double val)
+    {
+        // TODO
     }
 
     FrameNumber::FrameNumber(const uint64_t v)

@@ -20,8 +20,10 @@ namespace mo
         Time() = default;
         Time(const std::chrono::high_resolution_clock::time_point& t);
         Time(const Duration& d);
+        explicit Time(const double sec);
 
         double seconds() const;
+        void fromSeconds(const double);
 
         std::string print() const;
         void print(std::ostream& os,

@@ -68,7 +68,7 @@ namespace mo
         virtual TypeInfo type() const { return TypeInfo(typeid(KVP<T1, T2>)); }
         virtual const void* ptr() const { return m_ptr; }
         virtual void* ptr() { return m_ptr; }
-        virtual const char* getName() const { return typeid(KVP<T1, T2>).name(); }
+        virtual std::string getName() const { return TypeInfo(typeid(KVP<T1, T2>)).name(); }
 
       private:
         KVP<T1, T2>* m_ptr;
@@ -123,7 +123,7 @@ namespace mo
         virtual bool podKeys() const override { return std::is_pod<K>::value; }
         virtual size_t getSize() const override { return (m_ptr != nullptr) ? m_ptr->size() : m_const_ptr->size(); }
         virtual void setSize(const size_t num) override { num_to_read = num; }
-        virtual const char* getName() const { return typeid(std::map<K, V>).name(); }
+        virtual std::string getName() const { return TypeInfo(typeid(std::map<K, V>)).name(); }
       private:
         std::map<K, V>* m_ptr;
         const std::map<K, V>* m_const_ptr;
@@ -211,7 +211,7 @@ namespace mo
         virtual bool podKeys() const override { return std::is_pod<std::string>::value; }
         virtual size_t getSize() const override { return (m_ptr != nullptr) ? m_ptr->size() : m_const_ptr->size(); }
         virtual void setSize(const size_t num) override { num_to_read = num; }
-        virtual const char* getName() const { return typeid(std::map<std::string, V>).name(); }
+        virtual std::string getName() const { return TypeInfo(typeid(std::map<std::string, V>)).name(); }
       private:
         std::map<std::string, V>* m_ptr;
         const std::map<std::string, V>* m_const_ptr;

@@ -3,6 +3,7 @@
 
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include <MetaObject/visitation/visitor_traits/vector.hpp>
+#include <MetaObject/visitation/visitor_traits/string.hpp>
 
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS

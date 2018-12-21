@@ -61,6 +61,16 @@ namespace mo
             return m_ptr;
         }
 
+        TypeInfo type() const override
+        {
+            return TypeInfo(typeid(std::pair<T1, T2>));
+        }
+
+        std::string getName() const override
+        {
+            return TypeInfo(typeid(std::pair<T1, T2>)).name();
+        }
+
       private:
         std::pair<T1, T2>* m_ptr;
         const std::pair<T1, T2>* m_const_ptr;

@@ -1,6 +1,8 @@
 #include <MetaObject/core/metaobject_config.hpp>
 #include <MetaObject/serialization/cereal_map.hpp>
 #include <MetaObject/visitation/visitor_traits/array_adapter.hpp>
+#include <MetaObject/visitation/visitor_traits/vector.hpp>
+#include <MetaObject/visitation/visitor_traits/map.hpp>
 
 #include <cereal/types/map.hpp>
 #include <cereal/types/string.hpp>

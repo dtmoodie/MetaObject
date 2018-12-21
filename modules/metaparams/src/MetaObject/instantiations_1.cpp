@@ -14,8 +14,11 @@ namespace std
     }
 }
 
-#include "MetaObject/metaparams/MetaParamsInclude.hpp"
-#include "MetaObject/params/MetaParam.hpp"
+#include <MetaObject/metaparams/MetaParamsInclude.hpp>
+#include <MetaObject/params/MetaParam.hpp>
+#include <MetaObject/visitation/visitor_traits/string.hpp>
+#include <MetaObject/visitation/visitor_traits/map.hpp>
+
 #include <stdint.h>
 
 #include <cereal/cereal.hpp>

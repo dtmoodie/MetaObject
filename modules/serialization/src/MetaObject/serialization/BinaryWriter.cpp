@@ -70,6 +70,17 @@ namespace mo
         return writeBinary(ptr, name, cnt);
     }
 
+
+    IWriteVisitor& BinaryWriter::operator()(const long long* ptr, const std::string& name, const size_t cnt)
+    {
+        return writeBinary(ptr, name, cnt);
+    }
+
+    IWriteVisitor& BinaryWriter::operator()(const unsigned long long* ptr, const std::string& name, const size_t cnt)
+    {
+        return writeBinary(ptr, name, cnt);
+    }
+
     IWriteVisitor& BinaryWriter::operator()(const float* ptr, const std::string& name, const size_t cnt)
     {
         return writeBinary(ptr, name, cnt);

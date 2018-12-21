@@ -15,7 +15,7 @@ namespace mo
     template <class T>
     IReadVisitor& BinaryReader::readBinary(T* ptr, const size_t cnt)
     {
-        m_is.read(reinterpret_cast<char*>(ptr), cnt * sizeof(T));
+        m_is.read(reinterpret_cast<char*>(ptr), std::streamsize(cnt * sizeof(T)));
         return *this;
     }
 
@@ -69,6 +69,16 @@ namespace mo
         return readBinary(ptr, cnt);
     }
 
+    IReadVisitor& BinaryReader::operator()(long long* ptr, const std::string&, const size_t cnt)
+    {
+        return readBinary(ptr, cnt);
+    }
+
+    IReadVisitor& BinaryReader::operator()(unsigned long long* ptr, const std::string&, const size_t cnt)
+    {
+        return readBinary(ptr, cnt);
+    }
+
     IReadVisitor& BinaryReader::operator()(float* ptr, const std::string&, const size_t cnt)
     {
         return readBinary(ptr, cnt);
@@ -89,7 +99,7 @@ namespace mo
         return ReadCache::operator()(val, name);
     }
 
-    IReadVisitor& BinaryReader::operator()(IContainerTraits* val, const std::string& name)
+    IReadVisitor& BinaryReader::operator()(IContainerTraits* val, const std::string&)
     {
         uint64_t size = 0;
         readBinary(&size);
