@@ -2,8 +2,11 @@
 #include <MetaObject/visitation/IDynamicVisitor.hpp>
 #include <MetaObject/visitation/visitor_traits/array_adapter.hpp>
 #include <MetaObject/visitation/visitor_traits/vector.hpp>
+#include <MetaObject/visitation/visitor_traits/memory.hpp>
+#include <MetaObject/visitation/visitor_traits/map.hpp>
 
 #include <MetaObject/types/opencv.hpp>
+#include <MetaObject/serialization/cereal_map.hpp>
 
 #include <ct/reflect.hpp>
 #include <ct/reflect/cerealize.hpp>
@@ -12,6 +15,8 @@
 
 #include <opencv2/core.hpp>
 #include <cereal/types/vector.hpp>
+#include <cereal/types/memory.hpp>
+#include <cereal/types/map.hpp>
 
 #include <iostream>
 #include <memory>
@@ -103,7 +108,15 @@ struct VecOwner
 {
     std::vector<Vec> my_vecs;
 };
-
+namespace std
+{
+    template<class K, class V>
+    ostream& operator <<(ostream& os, const map<K, V>& m)
+    {
+        ct::printStruct(os, m);
+        return os;
+    }
+}
 namespace ct
 {
     REFLECT_BEGIN(TestPodStruct)
@@ -138,7 +151,7 @@ void testTypes(Tester& tester)
         double z = 3.14159;
         tester.test(z);
 
-        cv::Rect2f rectf(0.1, 0.2, 0.3, 0.4);
+        cv::Rect2f rectf(0.1f, 0.2f, 0.3f, 0.4f);
         tester.test(rectf);
 
         cv::Rect rect(0, 2, 3, 4);
@@ -172,5 +185,19 @@ void testTypes(Tester& tester)
         owner.my_vecs.push_back({6,7,8});
         owner.my_vecs.push_back({9,10,11});
         tester.test(owner);
+    }
+    {
+        std::shared_ptr<Vec> vec_ptr = std::make_shared<Vec>();
+        vec_ptr->x = 1.0;
+        vec_ptr->y = 2.0;
+        vec_ptr->z = 3.0;
+        tester.test(vec_ptr);
+    }
+    {
+        std::map<std::string, Vec> vec_map;
+        vec_map["asdf"] = Vec{0.1f, 0.2f, 0.3f};
+        vec_map["gfds"] = Vec{0.2f, 0.4f, 0.6f};
+        vec_map["fdsa"] = Vec{0.3f, 0.5f, 0.7f};
+        tester.test(vec_map);
     }
 }

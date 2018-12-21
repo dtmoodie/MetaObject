@@ -83,7 +83,7 @@ struct TestBinary
             std::shared_ptr<T> tmp2;
             visitor(&tmp, "value0");
             visitor(&tmp2, "value1");
-            if (!ct::compare(tmp, data, DebugEqual()))
+            if (!ct::compare(*tmp, *data, DebugEqual()))
             {
                 std::cout << "Failed to serialize " << ct::Reflect<T>::getName() << " correctly";
                 throw std::runtime_error("Serialization failed");

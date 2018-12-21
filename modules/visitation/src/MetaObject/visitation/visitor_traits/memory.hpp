@@ -69,7 +69,7 @@ namespace mo
         virtual TypeInfo type() const override { return TypeInfo(typeid(T)); }
         virtual const void* ptr() const override { return nullptr; }
         virtual void* ptr() override { return nullptr; }
-        virtual const char* getName() const { return typeid(std::shared_ptr<T>).name(); }
+        virtual std::string getName() const { return TypeInfo(typeid(std::shared_ptr<T>)).name(); }
       private:
         std::shared_ptr<T>* m_ptr;
         const std::shared_ptr<T>* m_const_ptr;
