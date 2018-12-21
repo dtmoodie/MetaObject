@@ -75,6 +75,45 @@ namespace mo
         const KVP<T1, T2>* m_const_ptr;
     };
 
+    template <class T1, class T2>
+    struct TTraits<KVP<T1, const T2&>, void> : public IStructTraits
+    {
+        using base = IStructTraits;
+
+        TTraits(KVP<T1, const T2&>* ptr, const KVP<T1, const T2&>* const_ptr) : m_ptr(ptr), m_const_ptr(const_ptr) {}
+
+        virtual void visit(IReadVisitor* ) override
+        {
+
+        }
+
+        virtual void visit(IWriteVisitor* visitor) const override
+        {
+            if (m_const_ptr)
+            {
+                (*visitor)(&m_const_ptr->key, "key");
+                (*visitor)(&m_const_ptr->value, "value");
+            }
+            else
+            {
+                (*visitor)(&m_ptr->key, "key");
+                (*visitor)(&m_ptr->value, "value");
+            }
+        }
+
+        virtual size_t size() const { return sizeof(KVP<T1, T2>); }
+        virtual bool triviallySerializable() const { return std::is_pod<T1>::value && std::is_pod<T2>::value; }
+        virtual bool isPrimitiveType() const { return false; }
+        virtual TypeInfo type() const { return TypeInfo(typeid(KVP<T1, T2>)); }
+        virtual const void* ptr() const { return m_ptr; }
+        virtual void* ptr() { return m_ptr; }
+        virtual std::string getName() const { return TypeInfo(typeid(KVP<T1, T2>)).name(); }
+
+      private:
+        KVP<T1, const T2&>* m_ptr;
+        const KVP<T1, const T2&>* m_const_ptr;
+    };
+
     template <class K, class V>
     struct TTraits<std::map<K, V>, void> : public IContainerTraits
     {

@@ -49,10 +49,34 @@ namespace mo
             return ptr + N;
         }
 
+        T operator[](const size_t i) const
+        {
+            return ptr[i];
+        }
+
+        T& operator[](const size_t i)
+        {
+            return ptr[i];
+        }
+
         T* ptr;
 
         template <class AR>
-        void serialize(AR& ar)
+        typename std::enable_if<cereal::traits::is_output_serializable<cereal::BinaryData<T>, AR>::value
+                          && std::is_arithmetic<T>::value>::type save(AR& ar) const
+        {
+            if (ptr)
+            {
+                for (size_t i = 0; i < N; ++i)
+                {
+                    ar(cereal::BinaryData<T>(ptr, N*sizeof(T)));
+                }
+            }
+        }
+
+        template <class AR>
+        typename std::enable_if<!cereal::traits::is_output_serializable<cereal::BinaryData<T>, AR>::value
+                          || !std::is_arithmetic<T>::value>::type save(AR& ar) const
         {
             if (ptr)
             {
@@ -63,6 +87,31 @@ namespace mo
                 }
             }
         }
+
+        template <class AR>
+        typename std::enable_if<cereal::traits::is_input_serializable<cereal::BinaryData<T>, AR>::value
+                          && std::is_arithmetic<T>::value>::type load(AR& ar)
+        {
+            if (ptr)
+            {
+                ar(cereal::BinaryData<T>(ptr, N*sizeof(T)));
+            }
+        }
+
+        template <class AR>
+        typename std::enable_if<!cereal::traits::is_input_serializable<cereal::BinaryData<T>, AR>::value
+                          || !std::is_arithmetic<T>::value>::type load(AR& ar)
+        {
+            if (ptr)
+            {
+                ar(cereal::make_size_tag(N));
+                for (int i = 0; i < N; ++i)
+                {
+                    ar(ptr[i]);
+                }
+            }
+        }
+
     };
 
     template <class T, size_t N>

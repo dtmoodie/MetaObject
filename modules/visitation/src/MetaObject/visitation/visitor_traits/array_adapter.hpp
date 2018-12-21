@@ -9,18 +9,13 @@ namespace mo
     template<class T, size_t N>
     IReadVisitor& read(IReadVisitor& visitor, ArrayAdapter<T, N>* val, const std::string&, const size_t)
     {
-        uint32_t n = 0;
-        visitor(&n, "len");
-        MO_ASSERT_EQ(n, N);
-        visitor(val->ptr, "data", n);
+        visitor(val->ptr, "data", N);
     }
 
     template <class T, size_t N>
     IWriteVisitor& write(IWriteVisitor& visitor, const ArrayAdapter<T, N>* val, const std::string&, const size_t)
     {
-        const uint32_t n = N;
-        visitor(&n, std::string("len"));
-        visitor(val->ptr, "data", n);
+        visitor(val->ptr, "data", N);
         return visitor;
     }
 

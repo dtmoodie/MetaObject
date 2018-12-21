@@ -60,6 +60,19 @@ namespace mo
         }
         return true;
     }
+
+    template<class T, size_t N>
+    bool operator==(const mo::ArrayAdapter<T, N>& lhs, const mo::ArrayAdapter<T, N>& rhs)
+    {
+        for(size_t i = 0; i < N; ++i)
+        {
+            if(lhs[i] != rhs[i])
+            {
+                return false;
+            }
+        }
+        return true;
+    }
 }
 
 struct DebugEqual
@@ -133,7 +146,7 @@ namespace ct
     REFLECT_END;
 
     REFLECT_BEGIN(VecOwner)
-        PUBLIC_ACCESS(my_vecs);
+        PUBLIC_ACCESS(my_vecs)
     REFLECT_END;
 }
 
@@ -159,9 +172,29 @@ void testTypes(Tester& tester)
 
         cv::Point2f point(0, 1);
         tester.test(point);
+        {
+            cv::Matx33f matx{0.0F, 1.0F, 2.0F, 3.0F, 4.0F, 5.0F, 6.0F, 7.0F, 8.0F};
+            tester.test(matx);
+        }
+        {
+            cv::Matx22f matx{0.0F, 1.0F, 2.0F, 3.0F};
+            tester.test(matx);
+        }
 
-        cv::Matx33f matx{0.0F, 1.0F, 2.0F, 3.0F, 4.0F, 5.0F, 6.0F, 7.0F, 8.0F};
-        tester.test(matx);
+        {
+            cv::Matx44f matx{0.0F, 1.0F, 2.0F, 3.0F, 4.0F, 5.0F, 6.0F, 7.0F, 8.0F,9.0F, 10.0F, 11.0F, 12.0F, 13.0F, 14.0F, 15.0F};
+            tester.test(matx);
+        }
+
+        {
+            cv::Vec2b vec{0, 1};
+            tester.test(vec);
+        }
+        {
+            cv::Vec2i vec{0, 3};
+            tester.test(vec);
+        }
+
 
         TestPodStruct test_struct;
         test_struct.x = 0;
@@ -200,4 +233,13 @@ void testTypes(Tester& tester)
         vec_map["fdsa"] = Vec{0.3f, 0.5f, 0.7f};
         tester.test(vec_map);
     }
+
+    {
+        std::map<uint32_t, Vec> vec_map;
+        vec_map[0] = Vec{0.1f, 0.2f, 0.3f};
+        vec_map[1] = Vec{0.2f, 0.4f, 0.6f};
+        vec_map[5] = Vec{0.3f, 0.5f, 0.7f};
+        tester.test(vec_map);
+    }
+
 }
