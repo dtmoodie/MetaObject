@@ -13,6 +13,13 @@ if(BUILD_TESTS)
 
     file(GLOB_RECURSE tests "tests/*.cpp" "tests/*.cu")
     cuda_add_executable(test_mo_cuda ${tests})
+
+    if(OpenCV_FOUND)
+        target_compile_definitions(test_mo_cuda
+            PRIVATE HAVE_OPENCV
+        )
+    endif()
+
     target_include_directories(test_mo_cuda
         PRIVATE ${OpenCV_INCLUDE_DIRS}
     )

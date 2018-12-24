@@ -6,8 +6,7 @@ if(JETSON_COMPATABILITY)
     LIST(APPEND src ${aux_src})
 endif()
 
-metaobject_declare_module(NAME core SRC src DEPENDS 
-    ${OpenCV_LIBS} 
+metaobject_declare_module(NAME core SRC src DEPENDS
     Boost::thread
     Boost::fiber
     Boost::system
@@ -42,8 +41,15 @@ foreach(example ${examples})
 endforeach()
 
 if(BUILD_TESTS)
+    find_package(OpenCV QUIET)
     file(GLOB_RECURSE tests "tests/*.cpp")
     add_executable(test_mo_core ${tests})
     target_link_libraries(test_mo_core metaobject_core)
+
+    if(OpenCV_FOUND)
+        target_compile_definitions(test_mo_core
+            PRIVATE HAVE_OPENCV
+        )
+    endif()
     set_property(TARGET test_mo_core PROPERTY CXX_STANDARD 11)
 endif()

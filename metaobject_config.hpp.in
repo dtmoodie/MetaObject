@@ -1,30 +1,5 @@
 #pragma once
 
 // clang-format off
-#define MO_HAVE_OPENCV @MO_HAVE_OPENCV@
-
-#define MO_HAVE_CUDA @MO_HAVE_CUDA@
-
-#define MO_HAVE_WT @MO_HAVE_WT@
-
-#define MO_HAVE_QT @MO_HAVE_QT@
-
-#define MO_HAVE_PYTHON @MO_HAVE_PYTHON@
-
-#if MO_HAVE_OPENCV
-
-    #ifdef HAVE_CUDA
-        #undef HAVE_CUDA
-    #endif
-
-    #include <opencv2/cvconfig.h>
-    #ifdef HAVE_CUDA
-        #define MO_OPENCV_HAVE_CUDA 1
-    #else
-        #define MO_OPENCV_HAVE_CUDA 0
-    #endif
-#else
-    #define MO_OPENCV_HAVE_CUDA 0
-#endif
 
 // clang-format on

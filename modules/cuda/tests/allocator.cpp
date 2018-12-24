@@ -1,3 +1,4 @@
+#ifdef HAVE_OPENCV
 #include <MetaObject/core/detail/Allocator.hpp>
 #include <MetaObject/core/detail/StlAllocator.hpp>
 #include <MetaObject/core/detail/Time.hpp>
@@ -298,3 +299,4 @@ BOOST_AUTO_TEST_CASE(async_transfer_rate_random)
         std::cout << "Pooled Allocation:  " << pooled_time << "\n";
     }
 }
+#endif

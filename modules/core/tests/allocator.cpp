@@ -1,3 +1,4 @@
+#ifdef HAVE_OPENCV
 #include <MetaObject/core/detail/Allocator.hpp>
 #include <MetaObject/core/detail/StlAllocator.hpp>
 #include <MetaObject/core/detail/Time.hpp>
@@ -200,3 +201,4 @@ BOOST_AUTO_TEST_CASE(test_cpu_combined_allocation)
               << " Random Allocation Pattern: " << mt_random_size << "\n"
               << " Set Allocation Pattern:    " << mt_set_size << "\n";
 }
+#endif
