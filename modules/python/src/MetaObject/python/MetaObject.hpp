@@ -77,7 +77,7 @@ namespace mo
                 {
                     if (param->checkFlags(mo::ParamFlags::Input_e))
                     {
-                        MO_LOG(warning) << "Setting of input parameters not implemented yet";
+                        MO_LOG(warn, "Setting of input parameters not implemented yet");
                         continue;
                     }
                     auto setter = python::DataConverterRegistry::instance()->getSetter(param->getTypeInfo());
@@ -85,18 +85,17 @@ namespace mo
                     {
                         if (!setter(param, args[i]))
                         {
-                            MO_LOG(debug) << "Unable to set " << param_names[i];
+                            MO_LOG(debug, "Unable to set {}", param_names[i]);
                         }
                     }
                     else
                     {
-                        MO_LOG(debug) << "No converter available for "
-                                      << mo::Demangle::typeToName(param->getTypeInfo());
+                        MO_LOG(debug, "No converter available for {}", mo::Demangle::typeToName(param->getTypeInfo()));
                     }
                 }
                 else
                 {
-                    MO_LOG(debug) << "No parameter named " << param_names[i];
+                    MO_LOG(debug, "No parameter named {} ", param_names[i]);
                 }
             }
         }
@@ -119,7 +118,7 @@ namespace mo
 
         CreateMetaObject(const std::vector<std::string>& param_names_)
         {
-            MO_CHECK_EQ(param_names_.size(), N);
+            MO_ASSERT_EQ(param_names_.size(), N);
             for (size_t i = 0; i < param_names_.size(); ++i)
             {
                 m_keywords[i] = (boost::python::arg(param_names_[i].c_str()) = boost::python::object());
@@ -161,7 +160,7 @@ namespace mo
 
         CreateMetaObject(const std::vector<std::string>& param_names_)
         {
-            MO_CHECK_EQ(param_names_.size(), N);
+            MO_ASSERT_EQ(param_names_.size(), N);
             for (size_t i = 0; i < param_names_.size(); ++i)
             {
                 m_keywords[i] = (boost::python::arg(param_names_[i].c_str()) = boost::python::object());

@@ -6,6 +6,86 @@
 
 namespace mo
 {
+    struct CvAllocatorProxy: public cv::MatAllocator
+    {
+        inline CvAllocatorProxy(mo::Allocator* allocator):
+            m_allocator(allocator)
+        {
+
+        }
+
+        inline cv::UMatData* allocate(int dims,
+                               const int* sizes,
+                               int type,
+                               void* data,
+                               size_t* step,
+                               int flags,
+                               cv::UMatUsageFlags usageFlags) const override
+        {
+            size_t total = static_cast<size_t>(CV_ELEM_SIZE(type));
+            for (int i = dims - 1; i >= 0; i--)
+            {
+                if (step)
+                {
+                    if (data && step[i] != CV_AUTOSTEP)
+                    {
+                        CV_Assert(total <= step[i]);
+                        total = step[i];
+                    }
+                    else
+                    {
+                        step[i] = total;
+                    }
+                }
+
+                total *= static_cast<size_t>(sizes[i]);
+            }
+
+            cv::UMatData* u = new cv::UMatData(this);
+            u->size = total;
+
+            if (data)
+            {
+                u->data = u->origdata = static_cast<uchar*>(data);
+                u->flags |= cv::UMatData::USER_ALLOCATED;
+            }
+            else
+            {
+                uint8_t* ptr = m_allocator->allocate(total, CV_ELEM_SIZE(type));
+                CV_Assert(ptr);
+                u->data = u->origdata = static_cast<uchar*>(ptr);
+            }
+        }
+
+        inline bool allocate(cv::UMatData* , int , cv::UMatUsageFlags ) const override
+        {
+            return false;
+        }
+
+        inline void deallocate(cv::UMatData* data) const
+        {
+            if (!data)
+            {
+                return;
+            }
+
+            CV_Assert(data->urefcount >= 0);
+            CV_Assert(data->refcount >= 0);
+
+            if (data->refcount == 0)
+            {
+                if (!(data->flags & cv::UMatData::USER_ALLOCATED))
+                {
+                    m_allocator->deallocate(data->origdata, data->size);
+                    data->origdata = nullptr;
+                }
+                delete data;
+            }
+        }
+    private:
+        mutable mo::Allocator* m_allocator;
+    };
+
     template <class BASE_ALLOCATOR>
     struct CvAllocator : public cv::MatAllocator
     {

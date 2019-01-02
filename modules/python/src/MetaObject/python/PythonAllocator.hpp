@@ -3,7 +3,7 @@
 #include "numpy/ndarraytypes.h"
 #include <MetaObject/Python.hpp>
 #include <MetaObject/core/detail/Allocator.hpp>
-#include <MetaObject/core/detail/opencv_allocator.hpp>
+
 #include <Python.h>
 #include <opencv2/core/mat.hpp>
 

@@ -9,7 +9,7 @@
 #ifdef _MSC_VER
 #include <boost/test/unit_test.hpp>
 #else
-#define BOOST_TEST_MODULE "core"
+#define BOOST_TEST_MODULE "object"
 #include <boost/test/included/unit_test.hpp>
 #endif
 

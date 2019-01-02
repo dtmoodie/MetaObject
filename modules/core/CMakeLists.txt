@@ -50,6 +50,7 @@ if(BUILD_TESTS)
         target_compile_definitions(test_mo_core
             PRIVATE HAVE_OPENCV
         )
+        target_link_libraries(test_mo_core ${OpenCV_LIBRARIES})
     endif()
     set_property(TARGET test_mo_core PROPERTY CXX_STANDARD 11)
 endif()

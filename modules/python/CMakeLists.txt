@@ -1,6 +1,10 @@
 if(MO_HAVE_PYTHON)
     LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
-    metaobject_declare_module(NAME python DEPENDS metaobject_core metaobject_object)
+    metaobject_declare_module(NAME python DEPENDS
+        metaobject_core
+        metaobject_object
+        metaobject_cuda
+    )
     target_include_directories(metaobject_python
         PUBLIC
             $<BUILD_INTERFACE:${PYTHON_INCLUDE_DIR}>

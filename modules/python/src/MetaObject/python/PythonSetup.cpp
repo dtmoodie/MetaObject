@@ -9,11 +9,14 @@
 #include "MetaObject/object/MetaObjectFactory.hpp"
 #include "MetaObject/params/ParamFactory.hpp"
 
+#include <MetaObject/core/detail/allocator_policies/opencv.hpp>
+
+#include <MetaObject/cuda/CvAllocator.hpp>
+
 #include "Parameters.hpp"
 #include "PythonAllocator.hpp"
 #include "PythonPolicy.hpp"
 #include "PythonSetup.hpp"
-#include <MetaObject/core/detail/opencv_allocator.hpp>
 #include <MetaObject/logging/logging.hpp>
 #include <MetaObject/logging/profiling.hpp>
 #include <signal.h> // SIGINT, etc
@@ -28,6 +31,7 @@
 #include <boost/python/raw_function.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/thread.hpp>
+#include <boost/stacktrace.hpp>
 #include <vector>
 
 namespace boost
@@ -56,7 +60,7 @@ namespace mo
 
     std::vector<std::string> listConstructableObjects()
     {
-        auto ctrs = mo::MetaObjectFactory::instance().getConstructors();
+        auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
         std::vector<std::string> output;
         for (auto ctr : ctrs)
         {
@@ -71,7 +75,7 @@ namespace mo
 
     std::vector<IObjectInfo*> listObjectInfos()
     {
-        auto ctrs = mo::MetaObjectFactory::instance().getConstructors();
+        auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
         std::vector<IObjectInfo*> output;
         for (auto ctr : ctrs)
         {
@@ -90,17 +94,23 @@ namespace mo
         void setLogLevel(const std::string& level)
         {
             if (level == "trace")
-                boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::trace);
-            if (level == "debug")
-                boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::debug);
-            if (level == "info")
-                boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
-            if (level == "warning")
-                boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::warning);
-            if (level == "error")
-                boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::error);
-            if (level == "fatal")
-                boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::fatal);
+            {
+            }else
+            if (level == "debug"){
+
+            }else
+            if (level == "info"){
+
+            }else
+            if (level == "warning"){
+
+            }else
+            if (level == "error"){
+
+            }else
+            if (level == "fatal"){
+
+            }
         }
 
         static std::vector<std::function<void(void)>> setup_functions;
@@ -145,7 +155,7 @@ namespace mo
             }
             else
             {
-                MO_LOG(warning) << "Interface id " << interface_id << " already registered";
+                MO_LOG(warn, "Interface id {} already registered", interface_id);
             }
         }
 
@@ -183,9 +193,9 @@ namespace mo
         rcc::InheritanceGraph createGraph()
         {
             rcc::InheritanceGraph graph;
-            auto system = mo::MetaObjectFactory::instance().getObjectSystem();
+            auto system = mo::MetaObjectFactory::instance()->getObjectSystem();
             auto ifaces = system->GetInterfaces();
-            MO_LOG(debug) << "Creating inheritance graph for " << ifaces.size() << " interfaces";
+            MO_LOG(debug, "Creating inheritance graph for {} interfaces", ifaces.size());
             // graph.interfaces.resize(ifaces.size());
             size_t i = 0;
             for (auto& info : ifaces)
@@ -214,9 +224,9 @@ namespace mo
 
         void registerObjects()
         {
-            MO_LOG(info) << "Constructable objects to python";
+            MO_LOG(info, "Constructable objects to python");
             auto graph = createGraph();
-            auto ctrs = mo::MetaObjectFactory::instance().getConstructors();
+            auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
             auto funcs = interfaceSetupFunctions();
             std::map<uint32_t, std::function<void(std::vector<IObjectConstructor*>&)>> func_map;
             for (auto& func : funcs)
@@ -257,7 +267,7 @@ namespace mo
 
         void registerInterfaces()
         {
-            MO_LOG(info) << "Registering interfaces to python";
+            MO_LOG(info, "Registering interfaces to python");
             auto graph = createGraph();
             auto funcs = interfaceSetupFunctions();
             std::map<uint32_t, std::function<void()>> func_map;
@@ -275,7 +285,9 @@ namespace mo
             {
             case SIGSEGV:
             {
-                std::cout << "Caught SIGSEGV " << mo::printCallstack(2, true);
+                boost::stacktrace::stacktrace st;
+
+                std::cout << "Caught SIGSEGV " << st;
                 std::terminate();
                 break;
             }
@@ -321,15 +333,29 @@ namespace mo
                 DEFAULT,
                 POOLED
             };
-            LibGuard()
-                : m_system_table(SystemTable::instance()), m_factory(m_system_table.get()),
-                  m_allocator(mo::Allocator::createAllocator()), m_cpu_allocator(m_allocator),
-                  m_gpu_allocator(m_allocator), m_numpy_allocator(&m_cpu_allocator)
+            LibGuard():
+                m_host_allocator(std::make_shared<CombinedPolicy<PoolPolicy<cuda::HOST>, StackPolicy<cuda::HOST>>>()),
+                m_device_allocator(std::make_shared<CombinedPolicy<PoolPolicy<cuda::CUDA>, StackPolicy<cuda::CUDA>>>()),
+                m_cv_cpu_allocator(m_host_allocator.get()),
+                m_cv_gpu_allocator(m_device_allocator.get())
+
             {
-                m_factory.registerTranslationUnit();
+                m_system_table = SystemTable::instance();
+                m_factory = mo::MetaObjectFactory::instance();
+                m_factory->registerTranslationUnit();
+
                 m_default_opencv_allocator = cv::Mat::getStdAllocator();
                 m_default_opencv_gpu_allocator = cv::cuda::GpuMat::defaultAllocator();
-                m_system_table->allocator = m_allocator;
+
+                {
+                    using Pool_t = mo::PoolPolicy<CPU>;
+                    using Stack_t = mo::StackPolicy<CPU>;
+                    using Allocator_t = mo::CombinedPolicy<Pool_t, Stack_t>;
+                    m_host_allocator = std::make_shared<Allocator_t>();
+
+                }
+
+
                 m_allocator->setDefaultAllocator(m_allocator);
                 m_factory.registerTranslationUnit();
                 auto ret = signal(SIGINT, &sig_handler);
@@ -362,10 +388,11 @@ namespace mo
             ~LibGuard() {}
 
             std::shared_ptr<SystemTable> m_system_table;
-            mo::MetaObjectFactory m_factory;
-            std::shared_ptr<mo::Allocator> m_allocator;
-            CvAllocatorProxy<CPU> m_cpu_allocator;
-            CvAllocatorProxy<GPU> m_gpu_allocator;
+            std::shared_ptr<mo::MetaObjectFactory> m_factory;
+            std::shared_ptr<mo::Allocator> m_host_allocator;
+            std::shared_ptr<mo::Allocator> m_device_allocator;
+            mo::CvAllocatorProxy m_cv_cpu_allocator;
+            mo::cuda::AllocatorProxy m_cv_gpu_allocator;
             mo::NumpyAllocator m_numpy_allocator;
             cv::MatAllocator* m_default_opencv_allocator = nullptr;
             cv::cuda::GpuMat::Allocator* m_default_opencv_gpu_allocator = nullptr;

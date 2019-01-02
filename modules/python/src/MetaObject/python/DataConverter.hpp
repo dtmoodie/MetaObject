@@ -80,14 +80,12 @@ namespace mo
                     else
                     {
 
-                        MO_LOG(debug) << "Failed to cast parameter (" << mo::Demangle::typeToName(param->getTypeInfo())
-                                      << ") to the correct type for " << mo::Demangle::typeToName(TypeInfo(typeid(T)));
+                        MO_LOG(debug, "Failed to cast parameter ({}) to the correct type for {}", mo::Demangle::typeToName(param->getTypeInfo()),  mo::Demangle::typeToName(TypeInfo(typeid(T))));
                     }
                 }
                 else
                 {
-                    MO_LOG(trace) << "Incorrect datatype input " << mo::Demangle::typeToName(param->getTypeInfo())
-                                  << " expcted " << mo::Demangle::typeToName(mo::TypeInfo(typeid(T)));
+                    MO_LOG(trace, "Incorrect datatype input {} expcted {}",mo::Demangle::typeToName(param->getTypeInfo()), mo::Demangle::typeToName(mo::TypeInfo(typeid(T))));
                 }
                 return {};
             }

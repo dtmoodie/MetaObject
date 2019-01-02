@@ -14,9 +14,11 @@ namespace mo
     {
         MetaParams::instantiatePOD(table);
         MetaParams::instantiateVectors(table);
+#ifdef HAVE_OPENCV
         MetaParams::instCV(table);
         MetaParams::instCVVec(table);
         MetaParams::instCVRect(table);
+#endif
         MetaParams::instMOTypes(table);
     }
 }

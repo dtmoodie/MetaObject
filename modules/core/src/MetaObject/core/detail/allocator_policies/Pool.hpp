@@ -38,7 +38,7 @@ namespace mo
 
         void deallocate(unsigned char* ptr, const size_t num_bytes) override;
 
-        void release();
+        void release() override;
 
       private:
         std::shared_ptr<MemoryPool<XPU>> m_pool;

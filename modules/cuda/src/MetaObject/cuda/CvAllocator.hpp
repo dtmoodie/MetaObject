@@ -2,6 +2,7 @@
 #define MO_CUDA_CV_ALLOCATOR_HPP
 #include "Allocator.hpp"
 
+#include <MetaObject/core/detail/Allocator.hpp>
 #include <MetaObject/core/detail/allocator_policies/Continuous.hpp>
 #include <MetaObject/logging/logging.hpp>
 
@@ -13,43 +14,29 @@ namespace mo
     {
         using GpuMat = cv::cuda::GpuMat;
 
-        template <class BASE_ALLOCATOR, class PADDING_POLICY = mo::ContinuousPolicy>
-        struct CvAllocator : public GpuMat::Allocator
+        template<class PADDING_POLICY = mo::ContinuousPolicy>
+        struct AllocatorProxy: public GpuMat::Allocator
         {
-            template <class... ARGS>
-            CvAllocator(ARGS&&... args);
-
-            CvAllocator(BASE_ALLOCATOR&& alloc = BASE_ALLOCATOR(), PADDING_POLICY&& pad = PADDING_POLICY());
-
-            bool allocate(GpuMat* mat, int rows, int cols, size_t elemSize) override;
-            void free(GpuMat* mat) override;
-
-          private:
+            inline AllocatorProxy(mo::Allocator* allocator);
+            inline bool allocate(GpuMat* mat, int rows, int cols, size_t elemSize) override;
+            inline void free(GpuMat* mat) override;
+        private:
+            mo::Allocator* m_allocator;
             PADDING_POLICY m_pad_policy;
-            BASE_ALLOCATOR m_base_allocator;
         };
 
-        template <class BASE_ALLOCATOR, class PADDING_POLICY>
-        template <class... ARGS>
-        CvAllocator<BASE_ALLOCATOR, PADDING_POLICY>::CvAllocator(ARGS&&... args)
-            : m_base_allocator(std::forward<ARGS>(args)...)
+        template<class PADDING_POLICY>
+        AllocatorProxy<PADDING_POLICY>::AllocatorProxy(mo::Allocator* allocator):
+            m_allocator(allocator)
         {
         }
 
-        template <class BASE_ALLOCATOR, class PADDING_POLICY>
-        CvAllocator<BASE_ALLOCATOR, PADDING_POLICY>::CvAllocator(BASE_ALLOCATOR&& alloc, PADDING_POLICY&& pad)
-            : m_pad_policy(pad)
-            , m_base_allocator(alloc)
-
-        {
-        }
-
-        template <class BASE_ALLOCATOR, class PADDING_POLICY>
-        bool CvAllocator<BASE_ALLOCATOR, PADDING_POLICY>::allocate(GpuMat* mat, int rows, int cols, size_t elem_size)
+        template<class PADDING_POLICY>
+        bool AllocatorProxy<PADDING_POLICY>::allocate(GpuMat* mat, int rows, int cols, size_t elem_size)
         {
             size_t size_needed, stride;
             m_pad_policy.sizeNeeded(rows, cols, elem_size, size_needed, stride);
-            uint8_t* ptr = m_base_allocator.allocate(size_needed, elem_size);
+            uint8_t* ptr = m_allocator->allocate(size_needed, elem_size);
             if (ptr == nullptr)
             {
                 return false;
@@ -61,10 +48,10 @@ namespace mo
             return true;
         }
 
-        template <class BASE_ALLOCATOR, class PADDING_POLICY>
-        void CvAllocator<BASE_ALLOCATOR, PADDING_POLICY>::free(GpuMat* mat)
+        template<class PADDING_POLICY>
+        void AllocatorProxy<PADDING_POLICY>::free(GpuMat* mat)
         {
-            m_base_allocator.deallocate(mat->datastart, mat->dataend - mat->datastart);
+            m_allocator->deallocate(mat->datastart, mat->dataend - mat->datastart);
         }
     }
 }

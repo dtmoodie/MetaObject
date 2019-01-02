@@ -14,10 +14,11 @@ namespace mo
 
         CombinedPolicy(const size_t threshold = 1 * 1024 * 512);
 
-        uint8_t* allocate(const size_t num_bytes, const size_t elem_size);
+        uint8_t* allocate(const size_t num_bytes, const size_t elem_size) override;
 
-        void deallocate(uint8_t* ptr, const size_t num_bytes);
-        void release();
+        void deallocate(uint8_t* ptr, const size_t num_bytes) override;
+        void release() override;
+
         void setThreshold(const size_t thresh);
         size_t getThreshold() const;
 
