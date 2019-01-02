@@ -1,7 +1,5 @@
 import metaobject as mo
 
-mo.plugins.loadPlugins('./Plugins')
-
 obj = mo.object.ExportRegionsOfInterest()
 
 print(len(obj.getInputs()))

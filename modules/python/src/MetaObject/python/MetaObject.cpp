@@ -62,7 +62,7 @@ namespace mo
             {
                 return;
             }
-            MO_LOG(info) << "Registering IMetaObject to python";
+            MO_LOG(info,  "Registering IMetaObject to python");
             boost::python::class_<IMetaObject, rcc::shared_ptr<IMetaObject>, boost::noncopyable> bpobj(
                 "IMetaObject", boost::python::no_init);
             bpobj.def("__repr__", &printObject<IMetaObject>);
@@ -95,8 +95,8 @@ namespace mo
                       (boost::python::arg("name")),
                       boost::python::return_internal_reference<>());
 
-            bpobj.def("getContext", &IMetaObject::getContext);
-            bpobj.def("setContext", &IMetaObject::setContext);
+            bpobj.def("getStream", &IMetaObject::getStream);
+            bpobj.def("setStream", &IMetaObject::setStream);
 
             boost::python::class_<IObjectConstructor, IObjectConstructor*, boost::noncopyable> ctrobj(
                 "IObjectConstructor", boost::python::no_init);
@@ -120,7 +120,7 @@ namespace mo
                 if (info->InheritsFrom(IMetaObject::getHash()))
                 {
                     const auto name = info->GetObjectName();
-                    MO_LOG(debug) << "Registering " << name << " to python";
+                    MO_LOG(debug, "Registering {} to python", name );
                     auto docstring = info->Print();
                     boost::python::class_<MetaObject,
                                           rcc::shared_ptr<MetaObject>,

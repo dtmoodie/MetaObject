@@ -94,7 +94,7 @@ namespace fmt
             PRINT_CUDA_ERR(cudaErrorIllegalAddress);
             PRINT_CUDA_ERR(cudaErrorInvalidPtx);
             PRINT_CUDA_ERR(cudaErrorInvalidGraphicsContext);
-#if CUDART_VERSION > 6500
+#if CUDART_VERSION > 8000
             PRINT_CUDA_ERR(cudaErrorNvlinkUncorrectable);
             PRINT_CUDA_ERR(cudaErrorJitCompilerNotFound);
             PRINT_CUDA_ERR(cudaErrorCooperativeLaunchTooLarge);

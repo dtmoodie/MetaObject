@@ -62,9 +62,7 @@ namespace mo
         {
             return getter(param);
         }
-        MO_LOG(trace) << "Accessor function not found for for " << mo::Demangle::typeToName(param->getTypeInfo())
-                      << " Available converters:\n"
-                      << printTypes();
+        MO_LOG(trace,  "Accessor function not found for for {} Available converters:\n {}", mo::Demangle::typeToName(param->getTypeInfo()), printTypes());
         return boost::python::object(std::string("No to python converter registered for " +
                                                  mo::TypeTable::instance().typeToName(param->getTypeInfo())));
     }
@@ -76,7 +74,7 @@ namespace mo
         {
             return setter(param, obj);
         }
-        MO_LOG(trace) << "Setter function not found for " << mo::Demangle::typeToName(param->getTypeInfo());
+        MO_LOG(trace,  "Setter function not found for {}", mo::Demangle::typeToName(param->getTypeInfo()));
         return false;
     }
 
@@ -134,7 +132,7 @@ namespace mo
             }
             catch (...)
             {
-                MO_LOG(warning) << "Callback invokation failed";
+                MO_LOG(warn, "Callback invokation failed");
             }
 
             // m_callback();
@@ -218,9 +216,10 @@ namespace mo
         // cs_obj.def("getName", &ICoordinateSystem::getName,
         // boost::python::return_value_policy<boost::python::reference_existing_object>());
 
-        boost::python::class_<Context, std::shared_ptr<Context>, boost::noncopyable>("Context", boost::python::no_init)
-            .add_property("name", &Context::name)
-            .add_property("thread_id", &Context::threadId);
+        boost::python::class_<IAsyncStream, std::shared_ptr<IAsyncStream>, boost::noncopyable>("AsyncStream", boost::python::no_init)
+            .add_property("name", &IAsyncStream::name)
+            .add_property("thread_id", &IAsyncStream::threadId)
+            .add_property("is_device", &IAsyncStream::isDeviceContext);
 
         boost::python::def("setDefaultBufferType", &setDefaultBufferType);
 

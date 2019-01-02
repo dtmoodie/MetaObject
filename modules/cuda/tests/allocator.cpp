@@ -13,7 +13,7 @@
 #include <MetaObject/core/detail/allocator_policies/Stack.hpp>
 #include <MetaObject/core/detail/allocator_policies/opencv.hpp>
 
-#include <MetaObject/cuda/CvAllocator.hpp>
+#include <MetaObject/cuda/opencv.hpp>
 #include <MetaObject/cuda/MemoryBlock.hpp>
 
 #include <opencv2/cudaarithm.hpp>
@@ -69,9 +69,9 @@ BOOST_AUTO_TEST_CASE(test_gpu_random_allocation_pattern)
     double default_allocator_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
     start = mo::Time::now();
-
-    mo::cuda::CvAllocator<CombinedPolicy<PoolPolicy<cuda::CUDA>, StackPolicy<cuda::CUDA>>> combined_allocator;
-    cv::cuda::GpuMat::setDefaultAllocator(&combined_allocator);
+    CombinedPolicy<PoolPolicy<cuda::CUDA>, StackPolicy<cuda::CUDA>> combined_allocator;
+    mo::cuda::AllocatorProxy<> combined_allocator_proxy(&combined_allocator);
+    cv::cuda::GpuMat::setDefaultAllocator(&combined_allocator_proxy);
     for (int i = 0; i < 1000; ++i)
     {
         cv::cuda::GpuMat X(1, std::min(1000, 1 + rand()), CV_32F);
@@ -122,9 +122,10 @@ BOOST_AUTO_TEST_CASE(test_gpu_static_allocation_pattern)
     const auto default_allocator_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
     // Custom allocator
-    mo::cuda::CvAllocator<PoolPolicy<cuda::CUDA>> pool_allocator;
+    PoolPolicy<cuda::CUDA> pool_allocator;
+    mo::cuda::AllocatorProxy<> pool_allocator_proxy(&pool_allocator);
 
-    cv::cuda::GpuMat::setDefaultAllocator(&pool_allocator);
+    cv::cuda::GpuMat::setDefaultAllocator(&pool_allocator_proxy);
     start = mo::Time::now();
     for (int i = 0; i < 1000; ++i)
     {
@@ -275,9 +276,10 @@ BOOST_AUTO_TEST_CASE(async_transfer_rate_random)
 
     {
         // mo::ConcreteAllocator<mo::CpuStackPolicy, mo::StackPolicy<cv::cuda::GpuMat, mo::ContinuousPolicy>> allocator;
-        mo::cuda::CvAllocator<PoolPolicy<cuda::CUDA>> gpu_allocator;
+        PoolPolicy<cuda::CUDA> gpu_allocator;
+        mo::cuda::AllocatorProxy<> gpu_allocator_proxy(&gpu_allocator);
 
-        cv::cuda::GpuMat::setDefaultAllocator(&gpu_allocator);
+        cv::cuda::GpuMat::setDefaultAllocator(&gpu_allocator_proxy);
         mo::CvAllocator<PoolPolicy<cuda::CUDA>> cpu_allocator;
         cv::Mat::setDefaultAllocator(&cpu_allocator);
         cv::cuda::Stream stream;

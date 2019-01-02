@@ -10,7 +10,7 @@
 #include <MetaObject/core/detail/allocator_policies/Stack.hpp>
 #include <MetaObject/core/detail/allocator_policies/opencv.hpp>
 
-#include <MetaObject/cuda/CvAllocator.hpp>
+#include <MetaObject/cuda/opencv.hpp>
 #include <MetaObject/cuda/MemoryBlock.hpp>
 
 #include <MetaObject/logging/logging.hpp>

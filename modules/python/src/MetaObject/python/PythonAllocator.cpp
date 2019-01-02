@@ -2,7 +2,7 @@
 #include "PythonAllocator.hpp"
 #include "MetaObject/logging/logging.hpp"
 #include <numpy/ndarrayobject.h>
-
+#include <opencv2/core.hpp>
 #include <boost/python.hpp>
 
 namespace mo

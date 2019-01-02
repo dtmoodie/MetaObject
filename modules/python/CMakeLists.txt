@@ -1,9 +1,10 @@
-if(MO_HAVE_PYTHON)
+if(MO_HAVE_PYTHON AND MO_HAVE_OPENCV)
     LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
     metaobject_declare_module(NAME python DEPENDS
         metaobject_core
         metaobject_object
         metaobject_cuda
+        ${OpenCV_LIBRARIES}
     )
     target_include_directories(metaobject_python
         PUBLIC
@@ -11,7 +12,12 @@ if(MO_HAVE_PYTHON)
             $<BUILD_INTERFACE:${NUMPY_INCLUDE_DIR}>
             $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
         )
-    target_link_libraries(metaobject_python optimized;${Boost_PYTHON_LIBRARY_RELEASE};debug;${Boost_PYTHON_LIBRARY_DEBUG} ${PYTHON_LIBRARY} ct)
+    target_link_libraries(metaobject_python
+        optimized;${Boost_PYTHON_LIBRARY_RELEASE}
+        debug;${Boost_PYTHON_LIBRARY_DEBUG}
+        ${PYTHON_LIBRARY}
+        ct
+    )
 
     if(UNIX)
         set(POSTFIX "")
@@ -21,6 +27,7 @@ if(MO_HAVE_PYTHON)
         get_target_property(out_dir metaobject_python ARCHIVE_OUTPUT_DIRECTORY)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/metaobject.py.in.unix ${out_dir}/metaobject.py @ONLY)
         add_custom_target(metaobject.py.in.unix ALL)
+        configure_file(${CMAKE_CURRENT_LIST_DIR}/tests/test_python.py ${out_dir}/metaobject_python_test.py @ONLY)
     else()
         get_target_property(out_dir metaobject_python ARCHIVE_OUTPUT_DIRECTORY)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/metaobject.py.in.win32 ${out_dir}/Debug/metaobject.py @ONLY)
@@ -29,9 +36,6 @@ if(MO_HAVE_PYTHON)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/tests/test_python.py ${out_dir}/Debug/metaobject_python_test.py @ONLY)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/tests/test_python.py ${out_dir}/RelWithDebInfo/metaobject_python_test.py @ONLY)
     endif(UNIX)
-    set(metaobject_param_include
-        "${metaobject_param_include}\n#ifdef slots\n#undef slots\n#endif\n#include <MetaObject/python/PythonPolicy.hpp>\n" CACHE INTERNAL "" FORCE
-    )
 
     if(BUILD_TESTS)
         add_executable(test_mo_python_init tests/python_init_param_setter.cpp)

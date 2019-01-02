@@ -1,37 +1,43 @@
-#include "ct/reflect.hpp"
-#include <opencv2/core/types.hpp>
-
-#include "DataConverter.hpp"
-#include "MetaObject.hpp"
-#include "MetaObject/core.hpp"
-#include "MetaObject/core/SystemTable.hpp"
-#include "MetaObject/object/IMetaObject.hpp"
-#include "MetaObject/object/MetaObjectFactory.hpp"
-#include "MetaObject/params/ParamFactory.hpp"
-
-#include <MetaObject/core/detail/allocator_policies/opencv.hpp>
-
-#include <MetaObject/cuda/CvAllocator.hpp>
-
 #include "Parameters.hpp"
 #include "PythonAllocator.hpp"
 #include "PythonPolicy.hpp"
 #include "PythonSetup.hpp"
+#include "DataConverter.hpp"
+#include "MetaObject.hpp"
+
+#include "ct/reflect.hpp"
+#include <opencv2/core/types.hpp>
+
+#include <MetaObject/core.hpp>
+#include <MetaObject/core/SystemTable.hpp>
+#include <MetaObject/object/IMetaObject.hpp>
+#include <MetaObject/object/MetaObjectFactory.hpp>
+#include <MetaObject/params/ParamFactory.hpp>
+#include <MetaObject/cuda/opencv.hpp>
+#include <MetaObject/cuda/MemoryBlock.hpp>
+
+#include <MetaObject/core/detail/allocator_policies/opencv.hpp>
+#include <MetaObject/core/detail/allocator_policies/Pool.hpp>
+#include <MetaObject/core/detail/allocator_policies/Stack.hpp>
+#include <MetaObject/core/detail/allocator_policies/Combined.hpp>
+
+
 #include <MetaObject/logging/logging.hpp>
 #include <MetaObject/logging/profiling.hpp>
+
 #include <signal.h> // SIGINT, etc
 
 #include <RuntimeObjectSystem/IRuntimeObjectSystem.h>
 #include <RuntimeObjectSystem/InheritanceGraph.hpp>
 #include <RuntimeObjectSystem/InterfaceDatabase.hpp>
 
-#include <boost/log/expressions.hpp>
 #include <boost/python.hpp>
 #include <boost/python/default_call_policies.hpp>
 #include <boost/python/raw_function.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/thread.hpp>
 #include <boost/stacktrace.hpp>
+
 #include <vector>
 
 namespace boost
@@ -333,12 +339,8 @@ namespace mo
                 DEFAULT,
                 POOLED
             };
-            LibGuard():
-                m_host_allocator(std::make_shared<CombinedPolicy<PoolPolicy<cuda::HOST>, StackPolicy<cuda::HOST>>>()),
-                m_device_allocator(std::make_shared<CombinedPolicy<PoolPolicy<cuda::CUDA>, StackPolicy<cuda::CUDA>>>()),
-                m_cv_cpu_allocator(m_host_allocator.get()),
-                m_cv_gpu_allocator(m_device_allocator.get())
 
+            LibGuard()
             {
                 m_system_table = SystemTable::instance();
                 m_factory = mo::MetaObjectFactory::instance();
@@ -348,31 +350,36 @@ namespace mo
                 m_default_opencv_gpu_allocator = cv::cuda::GpuMat::defaultAllocator();
 
                 {
-                    using Pool_t = mo::PoolPolicy<CPU>;
-                    using Stack_t = mo::StackPolicy<CPU>;
+                    using Pool_t = mo::PoolPolicy<cuda::HOST>;
+                    using Stack_t = mo::StackPolicy<cuda::HOST>;
                     using Allocator_t = mo::CombinedPolicy<Pool_t, Stack_t>;
                     m_host_allocator = std::make_shared<Allocator_t>();
-
+                    m_cv_cpu_allocator.reset(new mo::CvAllocatorProxy(m_host_allocator.get()));
+                }
+                {
+                    using Pool_t = mo::PoolPolicy<cuda::CUDA>;
+                    using Stack_t = mo::StackPolicy<cuda::CUDA>;
+                    using Allocator_t = mo::CombinedPolicy<Pool_t, Stack_t>;
+                    m_device_allocator = std::make_shared<Allocator_t>();
+                    m_cv_gpu_allocator.reset(new mo::cuda::AllocatorProxy<>(m_device_allocator.get()));
                 }
 
-
-                m_allocator->setDefaultAllocator(m_allocator);
-                m_factory.registerTranslationUnit();
+                m_factory->registerTranslationUnit();
                 auto ret = signal(SIGINT, &sig_handler);
                 if (ret == SIG_ERR)
                 {
-                    MO_LOG(warning) << "Error setting signal handler for SIGINT";
+                    MO_LOG(warn, "Error setting signal handler for SIGINT");
                 }
                 ret = signal(SIGSEGV, &sig_handler);
                 if (ret == SIG_ERR)
                 {
-                    MO_LOG(warning) << "Error setting signal handler for SIGSEGV";
+                    MO_LOG(warn, "Error setting signal handler for SIGSEGV");
                 }
                 int devices = cv::cuda::getCudaEnabledDeviceCount();
                 MO_ASSERT(devices);
                 cv::cuda::GpuMat mat(10, 10, CV_32F);
                 cv::Mat::setDefaultAllocator(&m_numpy_allocator);
-                cv::cuda::GpuMat::setDefaultAllocator(&m_gpu_allocator);
+                cv::cuda::GpuMat::setDefaultAllocator(m_cv_gpu_allocator.get());
                 m_callback_registry = python::ParamCallbackContainer::registry();
             }
 
@@ -389,10 +396,13 @@ namespace mo
 
             std::shared_ptr<SystemTable> m_system_table;
             std::shared_ptr<mo::MetaObjectFactory> m_factory;
+
             std::shared_ptr<mo::Allocator> m_host_allocator;
             std::shared_ptr<mo::Allocator> m_device_allocator;
-            mo::CvAllocatorProxy m_cv_cpu_allocator;
-            mo::cuda::AllocatorProxy m_cv_gpu_allocator;
+
+            std::unique_ptr<mo::CvAllocatorProxy> m_cv_cpu_allocator;
+            std::unique_ptr<mo::cuda::AllocatorProxy<>> m_cv_gpu_allocator;
+
             mo::NumpyAllocator m_numpy_allocator;
             cv::MatAllocator* m_default_opencv_allocator = nullptr;
             cv::cuda::GpuMat::Allocator* m_default_opencv_gpu_allocator = nullptr;
@@ -401,12 +411,14 @@ namespace mo
 
         std::shared_ptr<SystemTable> pythonSetup(const char* module_name_)
         {
-            mo::initProfiling();
-            boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
+
+
+            //boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
             std::string module_name(module_name_);
             mo::python::module_name = module_name;
             setupAllocator();
             boost::shared_ptr<LibGuard> lib_guard(new LibGuard());
+            mo::initProfiling();
             mo::initCoreModule(lib_guard->m_system_table.get());
             mo::setupEnums(module_name);
             setupParameters(module_name);
@@ -433,6 +445,7 @@ namespace mo
                 "LibGuard", boost::python::no_init);
             libguardobj.def("setAllocator", &LibGuard::setAllocator);
             boost::python::scope().attr("__libguard") = lib_guard;
+
             return lib_guard->m_system_table;
         }
     }
