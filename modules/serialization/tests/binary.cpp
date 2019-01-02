@@ -1,8 +1,9 @@
 #include <MetaObject/serialization/BinaryReader.hpp>
 #include <MetaObject/serialization/BinaryWriter.hpp>
 #include <cereal/archives/binary.hpp>
+#include <MetaObject/serialization/cereal_map.hpp>
 
-#include "common.hpp"
+#include <common.hpp>
 #include <fstream>
 #include <iostream>
 

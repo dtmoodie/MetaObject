@@ -6,7 +6,6 @@
 #include <MetaObject/visitation/visitor_traits/map.hpp>
 
 #include <MetaObject/types/opencv.hpp>
-#include <MetaObject/serialization/cereal_map.hpp>
 
 #include <ct/reflect.hpp>
 #include <ct/reflect/cerealize.hpp>

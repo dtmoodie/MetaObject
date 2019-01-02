@@ -2,11 +2,14 @@ metaobject_declare_module(NAME serialization
     DEPENDS metaobject_core metaobject_params metaobject_types cereal
 )
 
-
 if(BUILD_TESTS)
     find_package(OpenCV QUIET)
     file(GLOB_RECURSE src "tests/*.cpp" "tests/*.hpp")
     add_executable(test_mo_serialization ${src})
+    target_include_directories(test_mo_serialization
+        PRIVATE
+            "${CMAKE_CURRENT_LIST_DIR}/../visitation/tests"
+    )
 
     if(OpenCV_FOUND)
         target_compile_definitions(test_mo_serialization
