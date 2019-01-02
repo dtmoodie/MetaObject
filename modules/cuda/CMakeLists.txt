@@ -8,6 +8,10 @@ metaobject_declare_module(NAME cuda SRC src DEPENDS
     metaobject_core
 )
 
+target_link_libraries(metaobject_cuda
+    ${CUDA_CUDART_LIBRARY}
+)
+
 if(BUILD_TESTS)
     find_package(OpenCV QUIET COMPONENTS cudaarithm)
 

@@ -2,7 +2,7 @@
 
 namespace mo
 {
-    IReadVisitor& read(IReadVisitor& visitor, mo::OptionalTime* time, const std::string&, const size_t)
+    IReadVisitor& Visit<OptionalTime>::read(IReadVisitor& visitor, mo::OptionalTime* time, const std::string&, const size_t)
     {
         bool set = false;
         visitor(&set, "set");
@@ -15,7 +15,7 @@ namespace mo
         return visitor;
     }
 
-    IWriteVisitor& write(IWriteVisitor& visitor, const mo::OptionalTime* time, const std::string&, const size_t)
+    IWriteVisitor& Visit<OptionalTime>::write(IWriteVisitor& visitor, const mo::OptionalTime* time, const std::string&, const size_t)
     {
         const bool set(*time);
         visitor(&set, "set");
@@ -25,5 +25,11 @@ namespace mo
             visitor(&sec, "seconds");
         }
         return visitor;
+    }
+
+    void Visit<OptionalTime>::visit(StaticVisitor& visitor, const std::string& , const size_t )
+    {
+        visitor.visit<bool>("set");
+        visitor.visit<double>("seconds");
     }
 }

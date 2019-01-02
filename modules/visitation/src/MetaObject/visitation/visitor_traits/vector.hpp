@@ -1,75 +1,61 @@
 #pragma once
 #include "../DynamicVisitor.hpp"
+#include "../ContainerTraits.hpp"
 
 namespace mo
 {
-    template <class T>
-    struct TTraits<std::vector<T>, void> : public IContainerTraits
+    template<class T, class A>
+    struct IsContinuous<std::vector<T, A>>
     {
-        using base = IContainerTraits;
+        static constexpr const bool value = true;
+    };
 
-        TTraits(std::vector<T>* vec, const std::vector<T>* const_vec) : m_vec(vec), m_const_vec(const_vec) {}
-
-        virtual void visit(IReadVisitor* visitor) override
+    template<class T, class A>
+    struct Visit<std::vector<T, A>>
+    {
+        static IReadVisitor& read(IReadVisitor& visitor, std::vector<T, A>* val, const std::string& name, const size_t cnt)
         {
             if (IsPrimitive<T>::value)
             {
-                (*visitor)(m_vec->data(), "", m_vec->size());
+                visitor(val->data(), name, val->size());
             }
             else
             {
-                for (size_t i = 0; i < m_vec->size(); ++i)
+                for(auto& v : *val)
                 {
-                    (*visitor)(&(*m_vec)[i]);
+                    visitor(&v);
                 }
             }
+            return visitor;
         }
 
-        virtual void visit(IWriteVisitor* visitor) const override
+        static IWriteVisitor& write(IWriteVisitor& visitor, const std::vector<T, A>* val, const std::string& name, const size_t cnt)
         {
-            if (m_const_vec)
+            if (IsPrimitive<T>::value)
             {
-                if (IsPrimitive<T>::value)
-                {
-                    (*visitor)(m_const_vec->data(), "", m_const_vec->size());
-                }
-                else
-                {
-                    for (size_t i = 0; i < m_const_vec->size(); ++i)
-                    {
-                        (*visitor)(&(*m_const_vec)[i]);
-                    }
-                }
+                visitor(val->data(), name, val->size());
             }
             else
             {
-                if (IsPrimitive<T>::value)
+                for(const auto& v : *val)
                 {
-                    (*visitor)(m_vec->data(), "", m_vec->size());
-                }
-                else
-                {
-                    for (size_t i = 0; i < m_vec->size(); ++i)
-                    {
-                        (*visitor)(&(*m_vec)[i]);
-                    }
+                    visitor(&v);
                 }
             }
+            return visitor;
         }
+    };
 
-        virtual TypeInfo keyType() const override { return TypeInfo(typeid(void)); }
-        virtual TypeInfo valueType() const override { return TypeInfo(typeid(T)); }
-        virtual TypeInfo type() const { return TypeInfo(typeid(std::vector<T>)); }
-        virtual bool isContinuous() const override { return true; }
-        virtual bool podValues() const override { return std::is_pod<T>::value; }
-        virtual bool podKeys() const override { return false; }
+    template<class T, class A>
+    struct TTraits<std::vector<T, A>, void>: public ContainerBase<std::vector<T, A>>
+    {
+        TTraits(std::vector<T, A>* ptr):ContainerBase<std::vector<T, A>>(ptr){}
+    };
 
-        virtual size_t getSize() const override { return (m_vec ? m_vec->size() : m_const_vec->size()); }
-        virtual void setSize(const size_t num) override { m_vec->resize(num); }
+    template<class T, class A>
+    struct TTraits<const std::vector<T, A>, void>: public ContainerBase<const std::vector<T, A>>
+    {
+        TTraits(const std::vector<T, A>* ptr):ContainerBase<const std::vector<T, A>>(ptr){}
 
-        virtual std::string getName() const { return TypeInfo(typeid(std::vector<T>)).name(); }
-      private:
-        std::vector<T>* m_vec;
-        const std::vector<T>* m_const_vec;
     };
 }

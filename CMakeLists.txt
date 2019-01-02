@@ -175,7 +175,7 @@ endif(EXISTS ${metaparam_build_dir}/MetaObject/metaparams/MetaParamsInclude.hpp)
 target_include_directories(metaobject_metaparams PUBLIC $<BUILD_INTERFACE:${metaparam_build_dir}>)
 
 set(MetaObject_LIBRARIES "${metaobject_modules}" CACHE STRING "" FORCE)
-set(MetaObject_INCLUDE_DIRS "${metaobject_module_includes};${cereal_INCLUDE_DIRS};${RCC_INCLUDE_DIRS};${CMAKE_BINARY_DIR}/include" CACHE PATH "" FORCE)
+set(MetaObject_INCLUDE_DIRS "${metaobject_module_includes};${CMAKE_BINARY_DIR}/include" CACHE PATH "" FORCE)
 # -------------------- tests ----------------------------------
 if(BUILD_TESTS)
     add_subdirectory(tests)

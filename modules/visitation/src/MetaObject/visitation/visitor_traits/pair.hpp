@@ -10,53 +10,50 @@ namespace mo
     {
         using base = IStructTraits;
 
-        TTraits(std::pair<T1, T2>* ptr, const std::pair<T1, T2>* const_ptr)
+        TTraits(std::pair<T1, T2>* ptr)
             : m_ptr(ptr)
-            , m_const_ptr(const_ptr)
         {
         }
 
-        virtual void visit(IReadVisitor* visitor) override
+        void visit(IReadVisitor* visitor) override
         {
             (*visitor)(&m_ptr->first, "first");
             (*visitor)(&m_ptr->second, "second");
         }
 
-        virtual void visit(IWriteVisitor* visitor) const override
+        void visit(IWriteVisitor* visitor) const override
         {
-            if (m_const_ptr)
-            {
-                (*visitor)(&m_const_ptr->first, "first");
-                (*visitor)(&m_const_ptr->second, "second");
-            }
-            else
-            {
-                (*visitor)(&m_ptr->first, "first");
-                (*visitor)(&m_ptr->second, "second");
-            }
+            (*visitor)(&m_ptr->first, "first");
+            (*visitor)(&m_ptr->second, "second");
         }
 
-        virtual size_t size() const
+        void visit(StaticVisitor* visitor) const override
+        {
+            visitor->template visit<T1>("first");
+            visitor->template visit<T2>("second");
+        }
+
+        size_t size() const override
         {
             return sizeof(std::pair<T1, T2>);
         }
 
-        virtual bool triviallySerializable() const
+        bool triviallySerializable() const override
         {
             return std::is_pod<T1>::value && std::is_pod<T2>::value;
         }
 
-        virtual bool isPrimitiveType() const
+        bool isPrimitiveType() const override
         {
             return false;
         }
 
-        virtual const void* ptr() const
+        const void* ptr() const override
         {
-            return m_ptr ? m_ptr : m_const_ptr;
+            return m_ptr;
         }
 
-        virtual void* ptr()
+        void* ptr() override
         {
             return m_ptr;
         }
@@ -66,14 +63,70 @@ namespace mo
             return TypeInfo(typeid(std::pair<T1, T2>));
         }
 
-        std::string getName() const override
+      private:
+        std::pair<T1, T2>* m_ptr;
+    };
+
+    template <class T1, class T2>
+    struct TTraits<const std::pair<T1, T2>, void> : public IStructTraits
+    {
+        using base = IStructTraits;
+
+        TTraits(const std::pair<T1, T2>* ptr)
+            : m_ptr(ptr)
         {
-            return TypeInfo(typeid(std::pair<T1, T2>)).name();
+        }
+
+        void visit(IReadVisitor* visitor) override
+        {
+            (*visitor)(&m_ptr->first, "first");
+            (*visitor)(&m_ptr->second, "second");
+        }
+
+        void visit(IWriteVisitor* visitor) const override
+        {
+                (*visitor)(&m_ptr->first, "first");
+                (*visitor)(&m_ptr->second, "second");
+        }
+
+        void visit(StaticVisitor* visitor) const override
+        {
+            visitor->template visit<T1>("first");
+            visitor->template visit<T2>("second");
+        }
+
+        size_t size() const override
+        {
+            return sizeof(std::pair<T1, T2>);
+        }
+
+        bool triviallySerializable() const override
+        {
+            return std::is_pod<T1>::value && std::is_pod<T2>::value;
+        }
+
+        bool isPrimitiveType() const override
+        {
+            return false;
+        }
+
+        const void* ptr() const override
+        {
+            return m_ptr;
+        }
+
+        void* ptr() override
+        {
+            return nullptr;
+        }
+
+        TypeInfo type() const override
+        {
+            return TypeInfo(typeid(std::pair<T1, T2>));
         }
 
       private:
-        std::pair<T1, T2>* m_ptr;
-        const std::pair<T1, T2>* m_const_ptr;
+        const std::pair<T1, T2>* m_ptr;
     };
 }
 

@@ -6,18 +6,13 @@ metaobject_declare_module(NAME params
         ct
         metaobject_types
         metaobject_visitation
+        cereal
 )
 
 target_include_directories(metaobject_params
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
 )
-
-target_include_directories(metaobject_params
-    PUBLIC
-        $<BUILD_INTERFACE:${cereal_INCLUDE_DIRS}>
-)
-
 
 if(BUILD_TESTS)
     file(GLOB_RECURSE tests "tests/*.cpp")

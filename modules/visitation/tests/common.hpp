@@ -12,7 +12,10 @@
 #include <ct/reflect/compare.hpp>
 #include <ct/reflect/print-container-inl.hpp>
 
+#ifdef HAVE_OPENCV
 #include <opencv2/core.hpp>
+#endif
+
 #include <cereal/types/vector.hpp>
 #include <cereal/types/memory.hpp>
 #include <cereal/types/map.hpp>
@@ -163,6 +166,7 @@ void testTypes(Tester& tester)
         double z = 3.14159;
         tester.test(z);
 
+#ifdef HAVE_OPENCV
         cv::Rect2f rectf(0.1f, 0.2f, 0.3f, 0.4f);
         tester.test(rectf);
 
@@ -193,6 +197,7 @@ void testTypes(Tester& tester)
             cv::Vec2i vec{0, 3};
             tester.test(vec);
         }
+#endif
 
 
         TestPodStruct test_struct;

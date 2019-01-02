@@ -42,6 +42,11 @@ namespace mo
             }
         }
 
+        virtual void visit(StaticVisitor* visitor) const override
+        {
+            visitor->visit<T>("data");
+        }
+
         virtual TypeInfo keyType() const override { return TypeInfo(typeid(void)); }
         virtual TypeInfo valueType() const override { return TypeInfo(typeid(T)); }
 
@@ -52,7 +57,6 @@ namespace mo
         virtual bool podKeys() const override { return false; }
         virtual size_t getSize() const override { return m_size; }
         virtual void setSize(const size_t) override {}
-        virtual std::string getName() const { return TypeInfo(typeid(T*)).name(); }
 
       private:
         T* m_ptr;

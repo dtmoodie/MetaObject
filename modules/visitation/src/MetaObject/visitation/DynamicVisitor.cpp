@@ -2,12 +2,24 @@
 
 namespace mo
 {
+
+    std::string ITraits::getName() const
+    {
+        const auto t = type();
+        return t.name();
+    }
+
     CacheDataContainer::~CacheDataContainer()
     {
     }
 
     IDynamicVisitor::~IDynamicVisitor()
     {
+    }
+
+    StaticVisitor::~StaticVisitor()
+    {
+
     }
 
     ReadCache::ReadCache(const std::shared_ptr<Cache_t>& cache,

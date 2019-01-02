@@ -26,42 +26,42 @@ namespace mo
         }
     }
 
-    IReadVisitor& read(IReadVisitor& visitor, ReadFile* dir, const std::string& name, const size_t cnt)
+    IReadVisitor& Visit<ReadFile>::read(IReadVisitor& visitor, ReadFile* dir, const std::string& name, const size_t cnt)
     {
         return impl::read(visitor, dir, name, cnt);
     }
 
-    IReadVisitor& read(IReadVisitor& visitor, WriteFile* dir, const std::string& name, const size_t cnt)
+    IReadVisitor& Visit<WriteFile>::read(IReadVisitor& visitor, WriteFile* dir, const std::string& name, const size_t cnt)
     {
         return impl::read(visitor, dir, name, cnt);
     }
 
-    IReadVisitor& read(IReadVisitor& visitor, ReadDirectory* dir, const std::string& name, const size_t cnt)
+    IReadVisitor& Visit<ReadDirectory>::read(IReadVisitor& visitor, ReadDirectory* dir, const std::string& name, const size_t cnt)
     {
         return impl::read(visitor, dir, name, cnt);
     }
 
-    IReadVisitor& read(IReadVisitor& visitor, WriteDirectory* dir, const std::string& name, const size_t cnt)
+    IReadVisitor& Visit<WriteDirectory>::read(IReadVisitor& visitor, WriteDirectory* dir, const std::string& name, const size_t cnt)
     {
         return impl::read(visitor, dir, name, cnt);
     }
 
-    IWriteVisitor& write(IWriteVisitor& visitor, const ReadFile* file, const std::string& name, const size_t cnt)
+    IWriteVisitor& Visit<ReadFile>::write(IWriteVisitor& visitor, const ReadFile* file, const std::string& name, const size_t cnt)
     {
         return impl::write(visitor, file, name, cnt);
     }
 
-    IWriteVisitor& write(IWriteVisitor& visitor, const WriteFile* file, const std::string& name, const size_t cnt)
+    IWriteVisitor& Visit<WriteFile>::write(IWriteVisitor& visitor, const WriteFile* file, const std::string& name, const size_t cnt)
     {
         return impl::write(visitor, file, name, cnt);
     }
 
-    IWriteVisitor& write(IWriteVisitor& visitor, const ReadDirectory* dir, const std::string& name, const size_t cnt)
+    IWriteVisitor& Visit<ReadDirectory>::write(IWriteVisitor& visitor, const ReadDirectory* dir, const std::string& name, const size_t cnt)
     {
         return impl::write(visitor, dir, name, cnt);
     }
 
-    IWriteVisitor& write(IWriteVisitor& visitor, const WriteDirectory* dir, const std::string& name, const size_t cnt)
+    IWriteVisitor& Visit<WriteDirectory>::write(IWriteVisitor& visitor, const WriteDirectory* dir, const std::string& name, const size_t cnt)
     {
         return impl::write(visitor, dir, name, cnt);
     }

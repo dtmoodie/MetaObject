@@ -7,33 +7,48 @@
 namespace mo
 {
     template<class T, size_t N>
-    IReadVisitor& read(IReadVisitor& visitor, ArrayAdapter<T, N>* val, const std::string&, const size_t)
+    struct Visit<ArrayAdapter<T, N>>
     {
-        visitor(val->ptr, "data", N);
-    }
+        static IReadVisitor& read(IReadVisitor& visitor, ArrayAdapter<T, N>* val, const std::string&, const size_t)
+        {
+            visitor(val->ptr, "data", N);
+        }
 
-    template <class T, size_t N>
-    IWriteVisitor& write(IWriteVisitor& visitor, const ArrayAdapter<T, N>* val, const std::string&, const size_t)
-    {
-        visitor(val->ptr, "data", N);
-        return visitor;
-    }
+        static IWriteVisitor& write(IWriteVisitor& visitor, const ArrayAdapter<T, N>* val, const std::string&, const size_t)
+        {
+            visitor(val->ptr, "data", N);
+            return visitor;
+        }
+
+        static void visit(StaticVisitor&, const std::string& name, const size_t cnt)
+        {
+
+        }
+    };
 
     template<class T, size_t ROWS, size_t COLS>
-    IReadVisitor&
-    read(IReadVisitor& visitor, MatrixAdapter<T, ROWS, COLS>* val, const std::string&, const size_t)
+    struct Visit<MatrixAdapter<T, ROWS, COLS>>
     {
-        visitor(val->ptr, "data", ROWS * COLS);
-        return visitor;
-    }
+        static IReadVisitor&
+        read(IReadVisitor& visitor, MatrixAdapter<T, ROWS, COLS>* val, const std::string&, const size_t)
+        {
+            visitor(val->ptr, "data", ROWS * COLS);
+            return visitor;
+        }
 
-    template <class T, size_t ROWS, size_t COLS>
-    IWriteVisitor&
-    write(IWriteVisitor& visitor, const MatrixAdapter<T, ROWS, COLS>* val, const std::string&, const size_t)
-    {
-        visitor(val->ptr, "data", ROWS * COLS);
-        return visitor;
-    }
+        static IWriteVisitor&
+        write(IWriteVisitor& visitor, const MatrixAdapter<T, ROWS, COLS>* val, const std::string&, const size_t)
+        {
+            visitor(val->ptr, "data", ROWS * COLS);
+            return visitor;
+        }
+
+        static void
+        visit(StaticVisitor& visitor, const std::string& name, const size_t cnt)
+        {
+
+        }
+    };
 }
 
 #endif // MO_VISITATION_ARRAY_ADAPTER_HPP

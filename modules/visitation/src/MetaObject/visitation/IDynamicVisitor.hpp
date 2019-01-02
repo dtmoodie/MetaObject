@@ -28,13 +28,16 @@ namespace mo
     struct IDynamicVisitor;
     struct IReadVisitor;
     struct IWriteVisitor;
+    // visit an object without creating an object
+    struct StaticVisitor;
     struct ITraits
     {
         virtual ~ITraits() = default;
         virtual void visit(IReadVisitor* visitor) = 0;
         virtual void visit(IWriteVisitor* visitor) const = 0;
+        virtual void visit(StaticVisitor* visitor) const = 0;
         virtual TypeInfo type() const = 0;
-        virtual std::string getName() const = 0;
+        virtual std::string getName() const;
     };
 
     struct IStructTraits : public ITraits
@@ -89,20 +92,17 @@ namespace mo
     template <class T, class U = void>
     using enable_if_not_trait_exists = typename std::enable_if<!is_complete<TTraits<T>>::value, U>::type;
 
-    template <class T, class E = void>
-    struct IsPrimitive : public std::false_type
-    {
-    };
-
     template <class T>
-    struct IsPrimitive<T,
-                       typename std::enable_if<std::is_same<T, int8_t>::value || std::is_same<T, uint8_t>::value ||
-                                               std::is_same<T, int16_t>::value || std::is_same<T, uint16_t>::value ||
-                                               std::is_same<T, int32_t>::value || std::is_same<T, uint32_t>::value ||
-                                               std::is_same<T, int64_t>::value || std::is_same<T, uint64_t>::value ||
-                                               std::is_same<T, float>::value || std::is_same<T, double>::value ||
-                                               std::is_same<T, void>::value>::type> : public std::true_type
+    struct IsPrimitive
     {
+        using type = typename std::remove_cv<T>::type;
+        static constexpr const bool value = std::is_same<type, int8_t>::value || std::is_same<type, uint8_t>::value ||
+                                            std::is_same<type, int16_t>::value || std::is_same<type, uint16_t>::value ||
+                                            std::is_same<type, int32_t>::value || std::is_same<type, uint32_t>::value ||
+                                            std::is_same<type, int64_t>::value || std::is_same<type, uint64_t>::value ||
+                                            std::is_same<type, long long>::value || std::is_same<type, unsigned long long>::value ||
+                                            std::is_same<type, float>::value || std::is_same<type, double>::value ||
+                                            std::is_same<type, void*>::value || std::is_same<type, char>::value || std::is_same<type, bool>::value ;
     };
 
     struct VisitorTraits
@@ -217,6 +217,32 @@ namespace mo
         virtual void setSerializedPointer(const TypeInfo type, const uint64_t id, const void* ptr) = 0;
     };
 
+    struct StaticVisitor
+    {
+        virtual ~StaticVisitor();
+        template<class T>
+        void visit(const std::string& name, const size_t cnt = 1)
+        {
+            impl(name, cnt, static_cast<const T*>(nullptr));
+        }
+    private:
+        virtual void implDyn(const TypeInfo, const std::string& name, const size_t cnt) = 0;
+        template<class T>
+        auto impl(const std::string& name, const size_t cnt, const T*) -> typename std::enable_if<IsPrimitive<T>::value>::type;
+
+        void impl(const std::string& , const size_t , const void*){}
+
+        template<class T>
+        auto impl(const std::string& name, const size_t cnt, const T*) -> typename std::enable_if<!IsPrimitive<T>::value && !is_complete<TTraits<T>>::value>::type;
+
+        template<class T>
+        auto impl(const std::string& name, const size_t cnt, const T*) -> typename std::enable_if<!IsPrimitive<T>::value && is_complete<TTraits<T>>::value>::type;
+
+    };
+
+    template<class T>
+    struct Visit;
+
     template <class T>
     T* IReadVisitor::getPointer(const uint64_t id)
     {
@@ -280,13 +306,13 @@ namespace mo
     template <class T>
     TTraits<T> makeTraits(T* const val)
     {
-        return TTraits<T>(val, nullptr);
+        return TTraits<T>(val);
     }
 
     template <class T>
-    TTraits<T> makeTraits(const T* val)
+    TTraits<const T> makeTraits(const T* val)
     {
-        return TTraits<T>(nullptr, val);
+        return TTraits<const T>(val);
     }
 
     template <class T>
@@ -312,7 +338,7 @@ namespace mo
     auto IReadVisitor::operator()(T* val, const std::string& name, const size_t cnt)
         -> enable_if_not_trait_exists<T, IReadVisitor&>
     {
-        return read(*this, val, name, cnt);
+        return Visit<T>::read(*this, val, name, cnt);
     }
 
     template <class T>
@@ -342,7 +368,26 @@ namespace mo
     auto IWriteVisitor::operator()(const T* val, const std::string& name, const size_t cnt)
         -> enable_if_not_trait_exists<T, IWriteVisitor&>
     {
-        return write(*this, val, name, cnt);
+        return Visit<T>::write(*this, val, name, cnt);
+    }
+
+    template<class T>
+    auto StaticVisitor::impl(const std::string& name, const size_t cnt, const T*) -> typename std::enable_if<IsPrimitive<T>::value>::type
+    {
+        implDyn(TypeInfo(typeid(T)), name, cnt);
+    }
+
+    template<class T>
+    auto StaticVisitor::impl(const std::string& name, const size_t cnt, const T*) -> typename std::enable_if<!IsPrimitive<T>::value && !is_complete<TTraits<T>>::value>::type
+    {
+        Visit<T>::visit(*this, name, cnt);
+    }
+
+    template<class T>
+    auto StaticVisitor::impl(const std::string& name, const size_t cnt, const T*) -> typename std::enable_if<!IsPrimitive<T>::value && is_complete<TTraits<T>>::value>::type
+    {
+        auto trait = makeTraits<T>(static_cast<const T*>(nullptr));
+        static_cast<ITraits&>(trait).visit(this);
     }
 }
 #include "VisitorTraits.hpp"
