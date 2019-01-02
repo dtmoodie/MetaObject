@@ -13,7 +13,11 @@ struct Tester
         auto trait = mo::makeTraits<T>(static_cast<T*>(nullptr));
 
         const auto hash = hasher.generateObjecthash(&trait);
+
         m_hashes[mo::TypeInfo(typeid(T)).name()] = hash;
+
+        BOOST_REQUIRE(std::count(m_hash_list.begin(),m_hash_list.end(), hash) == 0);
+        m_hash_list.push_back(hash);
     }
 
     template<class T>
@@ -23,6 +27,7 @@ struct Tester
     }
 
     std::map<std::string, size_t> m_hashes;
+    std::vector<size_t> m_hash_list;
 };
 
 BOOST_AUTO_TEST_CASE(Hash)
