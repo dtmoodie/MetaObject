@@ -9,12 +9,12 @@ namespace mo
     template<class T, size_t N>
     struct Visit<ArrayAdapter<T, N>>
     {
-        static IReadVisitor& read(IReadVisitor& visitor, ArrayAdapter<T, N>* val, const std::string&, const size_t)
+        static ILoadVisitor& load(ILoadVisitor& visitor, ArrayAdapter<T, N>* val, const std::string&, const size_t)
         {
             visitor(val->ptr, "data", N);
         }
 
-        static IWriteVisitor& write(IWriteVisitor& visitor, const ArrayAdapter<T, N>* val, const std::string&, const size_t)
+        static ISaveVisitor& save(ISaveVisitor& visitor, const ArrayAdapter<T, N>* val, const std::string&, const size_t)
         {
             visitor(val->ptr, "data", N);
             return visitor;
@@ -29,15 +29,15 @@ namespace mo
     template<class T, size_t ROWS, size_t COLS>
     struct Visit<MatrixAdapter<T, ROWS, COLS>>
     {
-        static IReadVisitor&
-        read(IReadVisitor& visitor, MatrixAdapter<T, ROWS, COLS>* val, const std::string&, const size_t)
+        static ILoadVisitor&
+        load(ILoadVisitor& visitor, MatrixAdapter<T, ROWS, COLS>* val, const std::string&, const size_t)
         {
             visitor(val->ptr, "data", ROWS * COLS);
             return visitor;
         }
 
-        static IWriteVisitor&
-        write(IWriteVisitor& visitor, const MatrixAdapter<T, ROWS, COLS>* val, const std::string&, const size_t)
+        static ISaveVisitor&
+        save(ISaveVisitor& visitor, const MatrixAdapter<T, ROWS, COLS>* val, const std::string&, const size_t)
         {
             visitor(val->ptr, "data", ROWS * COLS);
             return visitor;

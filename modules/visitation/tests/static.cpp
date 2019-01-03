@@ -91,6 +91,7 @@ namespace ct
 
 BOOST_AUTO_TEST_CASE(DetectSimilarity)
 {
+
     {
         mo::HashVisitor hasher(true, false);
         const auto trait_a = mo::makeTraits(static_cast<VecA*>(nullptr));

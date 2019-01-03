@@ -28,8 +28,8 @@ https://github.com/dtmoodie/MetaObject
 
 namespace mo
 {
-    struct IReadVisitor;
-    struct IWriteVisitor;
+    struct ILoadVisitor;
+    struct ISaveVisitor;
     struct IDataContainer;
 
     using UpdateSignal_t = TSignal<Update_s>;
@@ -98,8 +98,8 @@ namespace mo
 
         virtual EnumClassBitset<ParamFlags> getFlags() const = 0;
 
-        virtual void visit(IReadVisitor&) = 0;
-        virtual void visit(IWriteVisitor&) const = 0;
+        virtual void visit(ILoadVisitor&) = 0;
+        virtual void visit(ISaveVisitor&) const = 0;
         virtual void visit(BinaryInputVisitor& ar) = 0;
         virtual void visit(BinaryOutputVisitor& ar) const = 0;
 

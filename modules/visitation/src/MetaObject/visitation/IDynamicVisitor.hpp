@@ -26,21 +26,30 @@ namespace mo
     };
 
     struct IDynamicVisitor;
-    struct IReadVisitor;
-    struct IWriteVisitor;
+    struct ILoadVisitor;
+    struct ISaveVisitor;
     // visit an object without creating an object
     struct StaticVisitor;
+
     struct ITraits
     {
-        virtual ~ITraits() = default;
-        virtual void visit(IReadVisitor* visitor) = 0;
-        virtual void visit(IWriteVisitor* visitor) const = 0;
-        virtual void visit(StaticVisitor* visitor) const = 0;
+        virtual ~ITraits();
         virtual TypeInfo type() const = 0;
         virtual std::string getName() const;
+        virtual void visit(StaticVisitor* visitor) const = 0;
     };
 
-    struct IStructTraits : public ITraits
+    struct ISaveTraits
+    {
+        virtual void save(ISaveVisitor* visitor) const = 0;
+    };
+
+    struct ILoadTraits
+    {
+        virtual void load(ILoadVisitor* visitor) = 0;
+    };
+
+    struct IStructTraits : virtual public ITraits
     {
         // sizeof(T)
         virtual size_t size() const = 0;
@@ -49,8 +58,18 @@ namespace mo
         // if it can be serialized by one of the primitive supported types, such as
         // struct{float x,y,z;} can be serialized as 3 floats in continuous memory
         virtual bool isPrimitiveType() const = 0;
+    };
+
+    struct ISaveStructTraits: virtual public IStructTraits, virtual public ISaveTraits
+    {
         // const ptr to type
         virtual const void* ptr() const = 0;
+        virtual size_t count() const = 0;
+        virtual void increment() = 0;
+    };
+
+    struct ILoadStructTraits: virtual public ISaveStructTraits, virtual public ILoadTraits
+    {
         // non const ptr to type
         virtual void* ptr() = 0;
     };
@@ -63,9 +82,18 @@ namespace mo
         virtual bool isContinuous() const = 0;
         virtual bool podValues() const = 0;
         virtual bool podKeys() const = 0;
+    };
+
+    struct ISaveContainerTraits: virtual public IContainerTraits, virtual public ISaveTraits
+    {
         virtual size_t getSize() const = 0;
+    };
+
+    struct ILoadContainerTraits: virtual public ISaveContainerTraits, virtual public ILoadTraits
+    {
         virtual void setSize(const size_t num) = 0;
     };
+
     template <class T>
     struct ArrayContainerTrait;
 
@@ -133,35 +161,35 @@ namespace mo
         virtual std::unique_ptr<CacheDataContainer>& accessCache(const std::string& name, const uint64_t id = 0) = 0;
     };
 
-    struct IReadVisitor : public virtual IDynamicVisitor
+    struct ILoadVisitor : public virtual IDynamicVisitor
     {
-        virtual IReadVisitor& operator()(char* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IReadVisitor& operator()(bool* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IReadVisitor& operator()(int8_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IReadVisitor& operator()(uint8_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IReadVisitor& operator()(int16_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IReadVisitor& operator()(uint16_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IReadVisitor& operator()(int32_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IReadVisitor& operator()(uint32_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IReadVisitor& operator()(int64_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IReadVisitor& operator()(uint64_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ILoadVisitor& operator()(char* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ILoadVisitor& operator()(bool* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ILoadVisitor& operator()(int8_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ILoadVisitor& operator()(uint8_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ILoadVisitor& operator()(int16_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ILoadVisitor& operator()(uint16_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ILoadVisitor& operator()(int32_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ILoadVisitor& operator()(uint32_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ILoadVisitor& operator()(int64_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ILoadVisitor& operator()(uint64_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
 
-        virtual IReadVisitor& operator()(long long* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IReadVisitor& operator()(unsigned long long* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ILoadVisitor& operator()(long long* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ILoadVisitor& operator()(unsigned long long* val, const std::string& name = "", const size_t cnt = 1) = 0;
 
-        virtual IReadVisitor& operator()(float* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IReadVisitor& operator()(double* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IReadVisitor& operator()(void* binary, const std::string& name = "", const size_t num_bytes = 1) = 0;
+        virtual ILoadVisitor& operator()(float* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ILoadVisitor& operator()(double* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ILoadVisitor& operator()(void* binary, const std::string& name = "", const size_t num_bytes = 1) = 0;
 
         template <class T>
         auto operator()(T* val, const std::string& name = "", const size_t cnt = 1)
-            -> enable_if_trait_exists<T, IReadVisitor&>;
+            -> enable_if_trait_exists<T, ILoadVisitor&>;
         template <class T>
         auto operator()(T* val, const std::string& name = "", const size_t cnt = 1)
-            -> enable_if_not_trait_exists<T, IReadVisitor&>;
+            -> enable_if_not_trait_exists<T, ILoadVisitor&>;
 
-        virtual IReadVisitor& operator()(IStructTraits* val, const std::string& name = "") = 0;
-        virtual IReadVisitor& operator()(IContainerTraits* val, const std::string& name = "") = 0;
+        virtual ILoadVisitor& operator()(ILoadStructTraits* val, const std::string& name = "") = 0;
+        virtual ILoadVisitor& operator()(ILoadContainerTraits* val, const std::string& name = "") = 0;
 
         template <class T>
         T* getPointer(const uint64_t id);
@@ -172,39 +200,42 @@ namespace mo
         virtual std::string getCurrentElementName() const = 0;
 
       protected:
+        ILoadVisitor& loadTrait(ILoadStructTraits* val, const std::string& name = ""){ return (*this)(val, name);}
+        ILoadVisitor& loadTrait(ILoadContainerTraits* val, const std::string& name = ""){ return (*this)(val, name);}
+
         virtual void* getPointer(const TypeInfo type, const uint64_t id) = 0;
         virtual void setSerializedPointer(const TypeInfo type, const uint64_t id, void* ptr) = 0;
     };
 
-    struct IWriteVisitor : public virtual IDynamicVisitor
+    struct ISaveVisitor : public virtual IDynamicVisitor
     {
-        virtual IWriteVisitor& operator()(const bool* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IWriteVisitor& operator()(const char* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IWriteVisitor& operator()(const int8_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IWriteVisitor& operator()(const uint8_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IWriteVisitor& operator()(const int16_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IWriteVisitor& operator()(const uint16_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IWriteVisitor& operator()(const int32_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IWriteVisitor& operator()(const uint32_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IWriteVisitor& operator()(const int64_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IWriteVisitor& operator()(const uint64_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ISaveVisitor& operator()(const bool* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ISaveVisitor& operator()(const char* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ISaveVisitor& operator()(const int8_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ISaveVisitor& operator()(const uint8_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ISaveVisitor& operator()(const int16_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ISaveVisitor& operator()(const uint16_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ISaveVisitor& operator()(const int32_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ISaveVisitor& operator()(const uint32_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ISaveVisitor& operator()(const int64_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ISaveVisitor& operator()(const uint64_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
 
-        virtual IWriteVisitor& operator()(const long long* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IWriteVisitor& operator()(const unsigned long long* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IWriteVisitor& operator()(const float* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IWriteVisitor& operator()(const double* val, const std::string& name = "", const size_t cnt = 1) = 0;
-        virtual IWriteVisitor& operator()(const void* binary, const std::string& name = "", const size_t bytes = 1) = 0;
-
-        template <class T>
-        auto operator()(const T* val, const std::string& name = "", const size_t cnt = 1)
-            -> enable_if_trait_exists<T, IWriteVisitor&>;
+        virtual ISaveVisitor& operator()(const long long* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ISaveVisitor& operator()(const unsigned long long* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ISaveVisitor& operator()(const float* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ISaveVisitor& operator()(const double* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ISaveVisitor& operator()(const void* binary, const std::string& name = "", const size_t bytes = 1) = 0;
 
         template <class T>
         auto operator()(const T* val, const std::string& name = "", const size_t cnt = 1)
-            -> enable_if_not_trait_exists<T, IWriteVisitor&>;
+            -> enable_if_trait_exists<T, ISaveVisitor&>;
 
-        virtual IWriteVisitor& operator()(const IStructTraits* val, const std::string& name = "") = 0;
-        virtual IWriteVisitor& operator()(const IContainerTraits* val, const std::string& name = "") = 0;
+        template <class T>
+        auto operator()(const T* val, const std::string& name = "", const size_t cnt = 1)
+            -> enable_if_not_trait_exists<T, ISaveVisitor&>;
+
+        virtual ISaveVisitor& operator()(ISaveStructTraits* val, const std::string& name = "") = 0;
+        virtual ISaveVisitor& operator()(ISaveContainerTraits* val, const std::string& name = "") = 0;
 
         template <class T>
         const T* getPointer(const uint64_t id);
@@ -213,6 +244,7 @@ namespace mo
         void setSerializedPointer(const T* ptr, const uint64_t id);
 
       protected:
+
         virtual const void* getPointer(const TypeInfo type, const uint64_t id) = 0;
         virtual void setSerializedPointer(const TypeInfo type, const uint64_t id, const void* ptr) = 0;
     };
@@ -246,27 +278,27 @@ namespace mo
     struct Visit;
 
     template <class T>
-    T* IReadVisitor::getPointer(const uint64_t id)
+    T* ILoadVisitor::getPointer(const uint64_t id)
     {
         void* ptr = getPointer(TypeInfo(typeid(T)), id);
         return static_cast<T*>(ptr);
     }
 
     template <class T>
-    void IReadVisitor::setSerializedPointer(T* ptr, const uint64_t id)
+    void ILoadVisitor::setSerializedPointer(T* ptr, const uint64_t id)
     {
         setSerializedPointer(TypeInfo(typeid(T)), id, ptr);
     }
 
     template <class T>
-    const T* IWriteVisitor::getPointer(const uint64_t id)
+    const T* ISaveVisitor::getPointer(const uint64_t id)
     {
         const void* ptr = getPointer(TypeInfo(typeid(T)), id);
         return static_cast<const T*>(ptr);
     }
 
     template <class T>
-    void IWriteVisitor::setSerializedPointer(const T* ptr, const uint64_t id)
+    void ISaveVisitor::setSerializedPointer(const T* ptr, const uint64_t id)
     {
         setSerializedPointer(TypeInfo(typeid(T)), id, ptr);
     }
@@ -306,71 +338,64 @@ namespace mo
     }
 
     template <class T>
-    TTraits<T> makeTraits(T* val)
+    auto makeTraits(T* val, const size_t cnt = 1)  -> typename std::enable_if<std::is_base_of<IStructTraits, TTraits<T>>::value, TTraits<T>>::type
+    {
+        return TTraits<T>(val, cnt);
+    }
+
+    template <class T>
+    auto makeTraits(const T* val, const size_t cnt = 1) -> typename std::enable_if<std::is_base_of<IStructTraits, TTraits<const T>>::value, TTraits<const T>>::type
+    {
+        return TTraits<const T>(val, cnt);
+    }
+
+    template <class T>
+    auto makeTraits(T* val, const size_t = 1)  -> typename std::enable_if<std::is_base_of<IContainerTraits, TTraits<T>>::value, TTraits<T>>::type
     {
         return TTraits<T>(val);
     }
 
     template <class T>
-    TTraits<const T> makeTraits(const T* val)
+    auto makeTraits(const T* val, const size_t = 1) -> typename std::enable_if<std::is_base_of<IContainerTraits, TTraits<const T>>::value, TTraits<const T>>::type
     {
         return TTraits<const T>(val);
     }
 
     template <class T>
-    auto IReadVisitor::operator()(T* val, const std::string& name, const size_t cnt)
-        -> enable_if_trait_exists<T, IReadVisitor&>
+    auto ILoadVisitor::operator()(T* val, const std::string& name, const size_t cnt)
+        -> enable_if_trait_exists<T, ILoadVisitor&>
     {
-        if (cnt == 1)
-        {
-            auto traits = makeTraits(val);
-            using base = typename decltype(traits)::base;
-            (*this)(static_cast<base*>(&traits), name);
-        }
-        else
-        {
-            ArrayContainerTrait<T> traits(val, nullptr, cnt);
-            using base = typename decltype(traits)::base;
-            (*this)(static_cast<base*>(&traits), name);
-        }
+        auto traits = makeTraits(val, cnt);
+        loadTrait(&traits, name);
         return *this;
     }
 
     template <class T>
-    auto IReadVisitor::operator()(T* val, const std::string& name, const size_t cnt)
-        -> enable_if_not_trait_exists<T, IReadVisitor&>
+    auto ILoadVisitor::operator()(T* val, const std::string& name, const size_t cnt)
+        -> enable_if_not_trait_exists<T, ILoadVisitor&>
     {
-        return Visit<T>::read(*this, val, name, cnt);
+        return Visit<T>::load(*this, val, name, cnt);
     }
 
     template <class T>
-    auto IWriteVisitor::operator()(const T* val, const std::string& name, const size_t cnt)
-        -> enable_if_trait_exists<T, IWriteVisitor&>
+    auto ISaveVisitor::operator()(const T* val, const std::string& name, const size_t cnt)
+        -> enable_if_trait_exists<T, ISaveVisitor&>
     {
-        if (cnt == 1)
-        {
-            auto traits = makeTraits(val);
-            using base = typename decltype(traits)::base;
-            (*this)(static_cast<base*>(&traits), name);
-        }
-        else
-        {
-            ArrayContainerTrait<T> traits(nullptr, val, cnt);
-            using base = typename decltype(traits)::base;
-            (*this)(static_cast<base*>(&traits), name);
-        }
+        auto traits = makeTraits(val, cnt);
+        using base = typename decltype(traits)::base;
+        (*this)(static_cast<base*>(&traits), name);
         return *this;
     }
 
     // In this case, T is some kind of struct that we do not have a specialization for
     //template <class T>
-    //IWriteVisitor& visit(IWriteVisitor& visitor, const T* val, const std::string& name, const size_t cnt);
+    //ISaveVisitor& visit(ISaveVisitor& visitor, const T* val, const std::string& name, const size_t cnt);
 
     template <class T>
-    auto IWriteVisitor::operator()(const T* val, const std::string& name, const size_t cnt)
-        -> enable_if_not_trait_exists<T, IWriteVisitor&>
+    auto ISaveVisitor::operator()(const T* val, const std::string& name, const size_t cnt)
+        -> enable_if_not_trait_exists<T, ISaveVisitor&>
     {
-        return Visit<T>::write(*this, val, name, cnt);
+        return Visit<T>::save(*this, val, name, cnt);
     }
 
     template<class T>
@@ -389,8 +414,8 @@ namespace mo
     template<class T>
     auto StaticVisitor::impl(const std::string& name, const size_t cnt, const T*) -> typename std::enable_if<!IsPrimitive<T>::value && is_complete<TTraits<T>>::value>::type
     {
-        const auto trait = makeTraits<T>(static_cast<const T*>(nullptr));
-        visit(static_cast<const ITraits*>(&trait), name, cnt);
+        const auto trait = makeTraits<T>(static_cast<const T*>(nullptr), cnt);
+        visit(dynamic_cast<const ITraits*>(&trait), name, cnt);
     }
 }
 #include "VisitorTraits.hpp"

@@ -9,7 +9,7 @@
 
 namespace mo
 {
-    struct IWriteVisitor;
+    struct ISaveVisitor;
     template <class T, size_t N>
     struct ArrayAdapter
     {

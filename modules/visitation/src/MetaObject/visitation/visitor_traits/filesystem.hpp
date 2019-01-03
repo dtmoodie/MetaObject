@@ -9,29 +9,29 @@ namespace mo
     template<>
     struct Visit<ReadFile>
     {
-        static IReadVisitor& read(IReadVisitor&, ReadFile*, const std::string& name, const size_t);
-        static IWriteVisitor& write(IWriteVisitor&, const ReadFile*, const std::string& name, const size_t);
+        static ILoadVisitor& load(ILoadVisitor&, ReadFile*, const std::string& name, const size_t);
+        static ISaveVisitor& save(ISaveVisitor&, const ReadFile*, const std::string& name, const size_t);
     };
 
     template<>
     struct Visit<WriteFile>
     {
-        static IReadVisitor& read(IReadVisitor&, WriteFile*, const std::string& name, const size_t);
-        static IWriteVisitor& write(IWriteVisitor&, const WriteFile*, const std::string& name, const size_t);
+        static ILoadVisitor& load(ILoadVisitor&, WriteFile*, const std::string& name, const size_t);
+        static ISaveVisitor& save(ISaveVisitor&, const WriteFile*, const std::string& name, const size_t);
     };
 
     template<>
     struct Visit<ReadDirectory>
     {
-        static IReadVisitor& read(IReadVisitor&, ReadDirectory*, const std::string& name, const size_t);
-        static IWriteVisitor& write(IWriteVisitor&, const ReadDirectory*, const std::string& name, const size_t);
+        static ILoadVisitor& load(ILoadVisitor&, ReadDirectory*, const std::string& name, const size_t);
+        static ISaveVisitor& save(ISaveVisitor&, const ReadDirectory*, const std::string& name, const size_t);
     };
 
     template<>
     struct Visit<WriteDirectory>
     {
-        static IReadVisitor& read(IReadVisitor&, WriteDirectory*, const std::string& name, const size_t);
-        static IWriteVisitor& write(IWriteVisitor&, const WriteDirectory*, const std::string& name, const size_t);
+        static ILoadVisitor& load(ILoadVisitor&, WriteDirectory*, const std::string& name, const size_t);
+        static ISaveVisitor& save(ISaveVisitor&, const WriteDirectory*, const std::string& name, const size_t);
     };
 }
 

@@ -1,9 +1,15 @@
 #include <MetaObject/visitation.hpp>
 #include "common.hpp"
+#include <MetaObject/visitation/visitor_traits/map.hpp>
+#include <MetaObject/visitation/visitor_traits/pair.hpp>
 namespace mo
 {
 void staticCheckFunction()
 {
+    TTraits<mo::KVP<unsigned int, int>> t0(nullptr, 0);
+    TTraits<std::map<std::string, int>> t1(nullptr);
+    TTraits<std::pair<std::string, std::string>> t2(nullptr, 0);
+    static_assert(std::is_base_of<IContainerTraits, TTraits<std::map<std::string, int>>>::value, "");
     static_assert(IsPrimitive<uint8_t>::value, "");
     static_assert(IsPrimitive<int8_t>::value, "");
     static_assert(IsPrimitive<uint16_t>::value, "");

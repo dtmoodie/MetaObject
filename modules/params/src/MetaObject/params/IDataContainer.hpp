@@ -13,8 +13,8 @@ namespace mo
     using BinaryInputVisitor = cereal::BinaryInputArchive;
     using BinaryOutputVisitor = cereal::BinaryOutputArchive;
 
-    struct IReadVisitor;
-    struct IWriteVisitor;
+    struct ILoadVisitor;
+    struct ISaveVisitor;
     struct Header;
 
     struct IDataContainer : public std::enable_shared_from_this<IDataContainer>
@@ -25,8 +25,8 @@ namespace mo
         virtual ~IDataContainer();
         virtual TypeInfo getType() const = 0;
 
-        virtual void visit(IReadVisitor&) = 0;
-        virtual void visit(IWriteVisitor&) const = 0;
+        virtual void visit(ILoadVisitor&) = 0;
+        virtual void visit(ISaveVisitor&) const = 0;
         virtual void visit(BinaryInputVisitor& ar) = 0;
         virtual void visit(BinaryOutputVisitor& ar) const = 0;
 

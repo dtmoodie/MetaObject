@@ -5,23 +5,45 @@
 namespace mo
 {
     template<class T>
-    struct MemoryBase : public IStructTraits
+    struct MemoryBase : public ILoadStructTraits
     {
-        using base = IStructTraits;
+        using base = ILoadStructTraits;
 
-        virtual size_t size() const override { return sizeof(T); }
-        virtual bool triviallySerializable() const override { return false; }
-        virtual bool isPrimitiveType() const override { return false; }
-        virtual TypeInfo type() const override { return TypeInfo(typeid(T)); }
-        virtual std::string getName() const { return TypeInfo(typeid(T)).name(); }
+        MemoryBase(const size_t count):m_count(count){}
+        size_t size() const override { return sizeof(T); }
+        bool triviallySerializable() const override { return false; }
+        bool isPrimitiveType() const override { return false; }
+        TypeInfo type() const override { return TypeInfo(typeid(T)); }
+        std::string getName() const override { return TypeInfo(typeid(T)).name(); }
+        size_t count() const override{return m_count;}
+
+    private:
+        size_t m_count;
+    };
+
+    template<class T>
+    struct MemoryBase<const T> : public ISaveStructTraits
+    {
+        using base = ISaveStructTraits;
+
+        MemoryBase(const size_t count):m_count(count){}
+        size_t size() const override { return sizeof(T); }
+        bool triviallySerializable() const override { return false; }
+        bool isPrimitiveType() const override { return false; }
+        TypeInfo type() const override { return TypeInfo(typeid(T)); }
+        std::string getName() const override { return TypeInfo(typeid(T)).name(); }
+        size_t count() const override{return m_count;}
+
+    private:
+        size_t m_count;
     };
 
     template <class T>
     struct TTraits<std::shared_ptr<T>, void> : public MemoryBase<T>
     {
-        TTraits(std::shared_ptr<T>* ptr) : m_ptr(ptr){}
+        TTraits(std::shared_ptr<T>* ptr, const size_t count) : m_ptr(ptr), MemoryBase<T>(count){}
 
-        void visit(IReadVisitor* visitor) override
+        void load(ILoadVisitor* visitor) override
         {
             size_t id = 0;
 
@@ -49,7 +71,7 @@ namespace mo
             }
         }
 
-        void visit(IWriteVisitor* visitor) const override
+        void save(ISaveVisitor* visitor) const override
         {
             size_t id = 0;
             id = size_t(m_ptr->get());
@@ -68,22 +90,17 @@ namespace mo
 
         void* ptr() override{return nullptr;}
         const void* ptr() const override{return nullptr;}
-
+        void increment() override{++m_ptr;}
       private:
         std::shared_ptr<T>* m_ptr;
     };
 
     template <class T>
-    struct TTraits<const std::shared_ptr<T>, void> : public MemoryBase<T>
+    struct TTraits<const std::shared_ptr<T>, void> : public MemoryBase<const T>, virtual public ISaveTraits
     {
-        TTraits(const std::shared_ptr<T>* ptr) : m_ptr(ptr){}
+        TTraits(const std::shared_ptr<T>* ptr, const size_t count) : m_ptr(ptr), MemoryBase<const T>(count){}
 
-        void visit(IReadVisitor* ) override
-        {
-            throw std::runtime_error("Tried to read into a const ptr");
-        }
-
-        virtual void visit(IWriteVisitor* visitor) const override
+        void save(ISaveVisitor* visitor) const override
         {
             size_t id = 0;
             id = size_t(m_ptr->get());
@@ -100,8 +117,8 @@ namespace mo
             visitor->template visit<T>("ptr");
         }
 
-        void* ptr() override{return nullptr;}
         const void* ptr() const override{return nullptr;}
+        void increment() override{++m_ptr;}
 
       private:
         const std::shared_ptr<T>* m_ptr;
@@ -111,9 +128,9 @@ namespace mo
     struct TTraits<T*, void> : public MemoryBase<T>
     {
 
-        TTraits(T** ptr) : m_ptr(ptr){}
+        TTraits(T** ptr, const size_t count) : m_ptr(ptr), MemoryBase<T>(count){}
 
-        virtual void visit(IReadVisitor* visitor) override
+        void load(ILoadVisitor* visitor) override
         {
             size_t id = 0;
             auto visitor_trait = visitor->traits();
@@ -135,7 +152,7 @@ namespace mo
             }
         }
 
-        virtual void visit(IWriteVisitor* visitor) const override
+        void save(ISaveVisitor* visitor) const override
         {
             size_t id = 0;
             auto visitor_trait = visitor->traits();
@@ -156,22 +173,18 @@ namespace mo
 
         void* ptr() override{return nullptr;}
         void* ptr() const override{return nullptr;}
+        void increment() const override{++m_ptr;}
       private:
         T** m_ptr;
     };
 
     template <class T>
-    struct TTraits<const T*, void> : public MemoryBase<T>
+    struct TTraits<const T*, void> : public MemoryBase<const T>
     {
 
-        TTraits(T** ptr) : m_ptr(ptr){}
+        TTraits(T** ptr, const size_t count) : m_ptr(ptr), MemoryBase<const T>(count){}
 
-        virtual void visit(IReadVisitor* visitor) override
-        {
-            throw std::runtime_error("Tried to read data into a const ptr");
-        }
-
-        virtual void visit(IWriteVisitor* visitor) const override
+        void visit(ILoadVisitor* visitor) const override
         {
             size_t id = 0;
             auto visitor_trait = visitor->traits();
@@ -192,6 +205,7 @@ namespace mo
 
         void* ptr() override{return nullptr;}
         void* ptr() const override{return nullptr;}
+        void increment() const override{++m_ptr;}
       private:
         T** m_ptr;
     };

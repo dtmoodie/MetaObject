@@ -1,7 +1,8 @@
-#include <MetaObject/serialization/BinaryReader.hpp>
-#include <MetaObject/serialization/BinaryWriter.hpp>
+#include <MetaObject/serialization/BinaryLoader.hpp>
+#include <MetaObject/serialization/BinarySaver.hpp>
 #include <cereal/archives/binary.hpp>
 #include <MetaObject/serialization/cereal_map.hpp>
+#include <MetaObject/core/detail/Time.hpp>
 
 #include <common.hpp>
 #include <fstream>
@@ -16,16 +17,16 @@ struct TestBinary
             std::ofstream ofs("test.bin", std::ios::binary | std::ios::out);
             std::ofstream ofs2("test_cereal.bin", std::ios::binary | std::ios::out);
             cereal::BinaryOutputArchive bar2(ofs2);
-            mo::BinaryWriter bar(ofs);
-            mo::IWriteVisitor& visitor = bar;
+            mo::BinarySaver bar(ofs);
+            mo::ISaveVisitor& visitor = bar;
             T tmp = data;
             visitor(&tmp, "value0");
             bar2(tmp);
         }
         {
             std::ifstream ifs("test.bin", std::ios::binary | std::ios::in);
-            mo::BinaryReader bar(ifs);
-            mo::IReadVisitor& visitor = bar;
+            mo::BinaryLoader bar(ifs);
+            mo::ILoadVisitor& visitor = bar;
 
             T tmp;
             visitor(&tmp, "value0");
@@ -38,8 +39,8 @@ struct TestBinary
 
         {
             std::ifstream ifs("test_cereal.bin", std::ios::binary | std::ios::in);
-            mo::BinaryReader bar(ifs);
-            mo::IReadVisitor& visitor = bar;
+            mo::BinaryLoader bar(ifs);
+            mo::ILoadVisitor& visitor = bar;
 
             T tmp;
             visitor(&tmp, "value0");
@@ -69,16 +70,16 @@ struct TestBinary
     {
         {
             std::ofstream ofs("test.bin", std::ios::binary | std::ios::out);
-            mo::BinaryWriter bar(ofs);
-            mo::IWriteVisitor& visitor = bar;
+            mo::BinarySaver bar(ofs);
+            mo::ISaveVisitor& visitor = bar;
             std::shared_ptr<T> tmp = data;
             visitor(&tmp, "value0");
             visitor(&tmp, "value1");
         }
         {
             std::ifstream ifs("test.bin", std::ios::binary | std::ios::in);
-            mo::BinaryReader bar(ifs);
-            mo::IReadVisitor& visitor = bar;
+            mo::BinaryLoader bar(ifs);
+            mo::ILoadVisitor& visitor = bar;
 
             std::shared_ptr<T> tmp;
             std::shared_ptr<T> tmp2;
@@ -103,4 +104,55 @@ BOOST_AUTO_TEST_CASE(BinarySerialization)
     TestBinary tester;
 
     testTypes(tester);
+}
+
+template<class T>
+void testBinarySpeed(size_t count)
+{
+    std::vector<T> vec(count);
+    std::cout << "------ " << mo::TypeInfo(typeid(T)).name() << " ------ " << std::endl;
+    {
+        mo::Time start = mo::Time::now();
+        std::ofstream ofs("test.bin", std::ios::binary | std::ios::out);
+        mo::BinarySaver bar(ofs);
+        mo::ISaveVisitor& visitor = bar;
+        visitor(&vec);
+        mo::Time end = mo::Time::now();
+        std::cout << "Dynamic binary write time: " << (end - start) << std::endl;
+    }
+    {
+        mo::Time start = mo::Time::now();
+        std::ifstream ifs("test.bin", std::ios::binary | std::ios::in);
+        mo::BinaryLoader bar(ifs);
+        mo::ILoadVisitor& visitor = bar;
+        std::vector<T> readin;
+        visitor(&readin);
+        mo::Time end = mo::Time::now();
+        std::cout << "Dynamic binary read time: " << (end - start) << std::endl;
+    }
+
+    {
+        mo::Time start = mo::Time::now();
+        std::ofstream ofs("test.bin", std::ios::binary | std::ios::out);
+        cereal::BinaryOutputArchive bar(ofs);
+        bar(vec);
+        mo::Time end = mo::Time::now();
+        std::cout << "Cereal binary write time: " << (end - start) << std::endl;
+    }
+
+    {
+        mo::Time start = mo::Time::now();
+        std::ifstream ofs("test.bin", std::ios::binary | std::ios::in);
+        cereal::BinaryInputArchive bar(ofs);
+        std::vector<T> readin;
+        bar(readin);
+        mo::Time end = mo::Time::now();
+        std::cout << "Cereal binary read time: " << (end - start) << std::endl;
+    }
+}
+
+BOOST_AUTO_TEST_CASE(BinarySerializationPerformance)
+{
+    testBinarySpeed<float>(1e9);
+    testBinarySpeed<TestPodStruct>(1e7);
 }

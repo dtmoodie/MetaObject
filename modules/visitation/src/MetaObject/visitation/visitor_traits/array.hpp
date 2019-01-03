@@ -13,7 +13,7 @@ namespace mo
             assert((m_ptr != nullptr) || (m_const_ptr != nullptr));
         }
 
-        virtual void visit(IReadVisitor* visitor) override
+        void visit(ILoadVisitor* visitor) override
         {
             if (m_ptr)
             {
@@ -24,7 +24,7 @@ namespace mo
             }
         }
 
-        virtual void visit(IWriteVisitor* visitor) const override
+        void visit(ISaveVisitor* visitor) const override
         {
             if (m_const_ptr)
             {
@@ -42,21 +42,21 @@ namespace mo
             }
         }
 
-        virtual void visit(StaticVisitor* visitor) const override
+        void visit(StaticVisitor* visitor) const override
         {
             visitor->visit<T>("data");
         }
 
-        virtual TypeInfo keyType() const override { return TypeInfo(typeid(void)); }
-        virtual TypeInfo valueType() const override { return TypeInfo(typeid(T)); }
+        TypeInfo keyType() const override { return TypeInfo(typeid(void)); }
+        TypeInfo valueType() const override { return TypeInfo(typeid(T)); }
 
-        virtual TypeInfo type() const override { return TypeInfo(typeid(T[])); }
+        TypeInfo type() const override { return TypeInfo(typeid(T[])); }
 
-        virtual bool isContinuous() const override { return true; }
-        virtual bool podValues() const override { return std::is_pod<T>::value; }
-        virtual bool podKeys() const override { return false; }
-        virtual size_t getSize() const override { return m_size; }
-        virtual void setSize(const size_t) override {}
+        bool isContinuous() const override { return true; }
+        bool podValues() const override { return std::is_pod<T>::value; }
+        bool podKeys() const override { return false; }
+        size_t getSize() const override { return m_size; }
+        void setSize(const size_t) override {}
 
       private:
         T* m_ptr;

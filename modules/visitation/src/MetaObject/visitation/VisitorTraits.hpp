@@ -12,7 +12,7 @@ namespace mo
     using Indexer = ct::Indexer<N>;
 
     template <class T, index_t I>
-    auto visitValue(IReadVisitor& visitor, T& obj, const Indexer<I> idx) -> ct::enable_if_member_setter<T, I>
+    auto visitValue(ILoadVisitor& visitor, T& obj, const Indexer<I> idx) -> ct::enable_if_member_setter<T, I>
     {
         auto accessor = ct::Reflect<T>::getAccessor(idx);
         using RefType = typename ct::ReferenceType<typename decltype(accessor)::SetType>::Type;
@@ -21,25 +21,25 @@ namespace mo
     }
 
     template <class T, index_t I>
-    auto visitValue(IReadVisitor&, T&, const Indexer<I>) -> ct::disable_if_member_setter<T, I>
+    auto visitValue(ILoadVisitor&, T&, const Indexer<I>) -> ct::disable_if_member_setter<T, I>
     {
     }
 
     template <class T>
-    void visitHelper(IReadVisitor& visitor, T& obj, const Indexer<0> idx)
+    void visitHelper(ILoadVisitor& visitor, T& obj, const Indexer<0> idx)
     {
         visitValue(visitor, obj, idx);
     }
 
     template <class T, index_t I>
-    void visitHelper(IReadVisitor& visitor, T& obj, const Indexer<I> idx)
+    void visitHelper(ILoadVisitor& visitor, T& obj, const Indexer<I> idx)
     {
         visitHelper(visitor, obj, --idx);
         visitValue(visitor, obj, idx);
     }
 
     template <class T, index_t I>
-    auto visitValue(IWriteVisitor& visitor, const T& obj, const ct::Indexer<I> idx) -> ct::enable_if_member_getter<T, I>
+    auto visitValue(ISaveVisitor& visitor, const T& obj, const ct::Indexer<I> idx) -> ct::enable_if_member_getter<T, I>
     {
         auto accessor = ct::Reflect<T>::getAccessor(idx);
         using RefType = typename ct::ReferenceType<typename decltype(accessor)::GetType>::ConstType;
@@ -48,18 +48,18 @@ namespace mo
     }
 
     template <class T, index_t I>
-    auto visitValue(IWriteVisitor&, const T&, const ct::Indexer<I>) -> ct::disable_if_member_getter<T, I>
+    auto visitValue(ISaveVisitor&, const T&, const ct::Indexer<I>) -> ct::disable_if_member_getter<T, I>
     {
     }
 
     template <class T>
-    void visitHelper(IWriteVisitor& visitor, const T& obj, const Indexer<0> idx)
+    void visitHelper(ISaveVisitor& visitor, const T& obj, const Indexer<0> idx)
     {
         visitValue(visitor, obj, idx);
     }
 
     template <class T, index_t I>
-    void visitHelper(IWriteVisitor& visitor, const T& obj, const Indexer<I> idx)
+    void visitHelper(ISaveVisitor& visitor, const T& obj, const Indexer<I> idx)
     {
         visitHelper(visitor, obj, --idx);
         visitValue(visitor, obj, idx);
@@ -92,85 +92,90 @@ namespace mo
     }
 
     template <class T>
-    struct TTraits<T, ct::enable_if_reflected<T>> : public IStructTraits
+    struct TTraits<T, ct::enable_if_reflected<T>> : public ILoadStructTraits
     {
-        using base = IStructTraits;
+        using base = ILoadStructTraits;
 
-        TTraits(T* ptr)
+        TTraits(T* ptr, const size_t count)
             : m_ptr(ptr)
+            , m_count(count)
         {
         }
 
-        virtual void visit(IReadVisitor* visitor) override
-        {
-            visitHelper(*visitor, *m_ptr, ct::Reflect<T>::end());
-        }
-
-        virtual void visit(IWriteVisitor* visitor) const override
+        void load(ILoadVisitor* visitor) override
         {
             visitHelper(*visitor, *m_ptr, ct::Reflect<T>::end());
         }
 
-        virtual void visit(StaticVisitor* visitor) const override
+        void save(ISaveVisitor* visitor) const override
+        {
+            visitHelper(*visitor, *m_ptr, ct::Reflect<T>::end());
+        }
+
+        void visit(StaticVisitor* visitor) const override
         {
             visitHelper<T>(*visitor, ct::Reflect<T>::end());
         }
 
-        virtual bool isPrimitiveType() const override
+        bool isPrimitiveType() const override
         {
             return false;
         }
 
-        virtual size_t size() const override
+        size_t size() const override
         {
             return sizeof(T);
         }
 
-        virtual TypeInfo type() const
+        TypeInfo type() const override
         {
             return TypeInfo(typeid(T));
         }
 
-        virtual bool triviallySerializable() const override
+        bool triviallySerializable() const override
         {
             return std::is_pod<T>::value;
         }
 
-        virtual const void* ptr() const override
+        const void* ptr() const override
         {
             return m_ptr;
         }
 
-        virtual void* ptr() override
+        void* ptr() override
         {
             return m_ptr;
         }
 
-        virtual std::string getName() const
+        std::string getName() const override
         {
             return ct::Reflect<T>::getName();
         }
 
+        size_t count() const override
+        {
+            return m_count;
+        }
+
+        void increment() override{++m_ptr;}
+
       private:
         T* m_ptr;
+        size_t m_count;
     };
 
     template <class T>
-    struct TTraits<const T, ct::enable_if_reflected<T>> : public IStructTraits
+    struct TTraits<const T, ct::enable_if_reflected<T>> : public ISaveStructTraits
     {
-        using base = IStructTraits;
+        using base = ISaveStructTraits;
 
-        TTraits(const T* ptr)
+        TTraits(const T* ptr, const size_t count)
             : m_const_ptr(ptr)
+            , m_count(count)
         {
         }
 
-        virtual void visit(IReadVisitor* ) override
-        {
-
-        }
-
-        virtual void visit(IWriteVisitor* visitor) const override
+        void save(ISaveVisitor* visitor) const override
         {
             if (m_const_ptr)
             {
@@ -178,47 +183,50 @@ namespace mo
             }
         }
 
-        virtual void visit(StaticVisitor* visitor) const override
+        void visit(StaticVisitor* visitor) const override
         {
             visitHelper<T>(*visitor, ct::Reflect<T>::end());
         }
 
-        virtual bool isPrimitiveType() const override
+        bool isPrimitiveType() const override
         {
             return false;
         }
 
-        virtual size_t size() const override
+        size_t size() const override
         {
             return sizeof(T);
         }
 
-        virtual TypeInfo type() const
+        TypeInfo type() const override
         {
             return TypeInfo(typeid(T));
         }
 
-        virtual bool triviallySerializable() const override
+        bool triviallySerializable() const override
         {
             return std::is_pod<T>::value;
         }
 
-        virtual const void* ptr() const override
+        const void* ptr() const override
         {
             return m_const_ptr;
         }
 
-        virtual void* ptr() override
-        {
-            return nullptr;
-        }
-
-        virtual std::string getName() const
+        std::string getName() const override
         {
             return ct::Reflect<T>::getName();
         }
 
+        size_t count() const override
+        {
+            return m_count;
+        }
+
+        void increment() override{++m_const_ptr;}
+
       private:
         const T* m_const_ptr;
+        size_t m_count;
     };
 }

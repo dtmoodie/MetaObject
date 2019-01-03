@@ -3,13 +3,13 @@
 
 namespace mo
 {
-    JSONWriter::JSONWriter(std::ostream& os)
+    JSONSaver::JSONSaver(std::ostream& os)
         : m_ar(os)
     {
     }
 
     template <class T>
-    IWriteVisitor& JSONWriter::writePod(const T* ptr, const std::string& name, const size_t cnt)
+    ISaveVisitor& JSONSaver::writePod(const T* ptr, const std::string& name, const size_t cnt)
     {
         if (!name.empty())
         {
@@ -32,95 +32,95 @@ namespace mo
         return *this;
     }
 
-    IWriteVisitor& JSONWriter::operator()(const bool* val, const std::string& name, const size_t cnt)
+    ISaveVisitor& JSONSaver::operator()(const bool* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
     }
 
-    IWriteVisitor& JSONWriter::operator()(const char* val, const std::string& name, const size_t cnt)
+    ISaveVisitor& JSONSaver::operator()(const char* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
     }
 
-    IWriteVisitor& JSONWriter::operator()(const int8_t* val, const std::string& name, const size_t cnt)
+    ISaveVisitor& JSONSaver::operator()(const int8_t* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
     }
 
-    IWriteVisitor& JSONWriter::operator()(const uint8_t* val, const std::string& name, const size_t cnt)
+    ISaveVisitor& JSONSaver::operator()(const uint8_t* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
     }
 
-    IWriteVisitor& JSONWriter::operator()(const int16_t* val, const std::string& name, const size_t cnt)
+    ISaveVisitor& JSONSaver::operator()(const int16_t* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
     }
 
-    IWriteVisitor& JSONWriter::operator()(const uint16_t* val, const std::string& name, const size_t cnt)
+    ISaveVisitor& JSONSaver::operator()(const uint16_t* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
     }
 
-    IWriteVisitor& JSONWriter::operator()(const int32_t* val, const std::string& name, const size_t cnt)
+    ISaveVisitor& JSONSaver::operator()(const int32_t* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
     }
 
-    IWriteVisitor& JSONWriter::operator()(const uint32_t* val, const std::string& name, const size_t cnt)
+    ISaveVisitor& JSONSaver::operator()(const uint32_t* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
     }
 
-    IWriteVisitor& JSONWriter::operator()(const int64_t* val, const std::string& name, const size_t cnt)
+    ISaveVisitor& JSONSaver::operator()(const int64_t* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
     }
 
-    IWriteVisitor& JSONWriter::operator()(const uint64_t* val, const std::string& name, const size_t cnt)
+    ISaveVisitor& JSONSaver::operator()(const uint64_t* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
     }
 
-    IWriteVisitor& JSONWriter::operator()(const long long* val, const std::string& name, const size_t cnt)
+    ISaveVisitor& JSONSaver::operator()(const long long* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
     }
 
-    IWriteVisitor& JSONWriter::operator()(const unsigned long long* val, const std::string& name, const size_t cnt)
+    ISaveVisitor& JSONSaver::operator()(const unsigned long long* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
     }
 
-    IWriteVisitor& JSONWriter::operator()(const float* val, const std::string& name, const size_t cnt)
+    ISaveVisitor& JSONSaver::operator()(const float* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
     }
 
-    IWriteVisitor& JSONWriter::operator()(const double* val, const std::string& name, const size_t cnt)
+    ISaveVisitor& JSONSaver::operator()(const double* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
     }
 
-    IWriteVisitor& JSONWriter::operator()(const void* val, const std::string& name, const size_t cnt)
+    ISaveVisitor& JSONSaver::operator()(const void* val, const std::string& name, const size_t cnt)
     {
         m_ar.saveBinaryValue(val, cnt, name.c_str());
         return *this;
     }
 
-    IWriteVisitor& JSONWriter::operator()(const IStructTraits* val, const std::string& name)
+    ISaveVisitor& JSONSaver::operator()(ISaveStructTraits* val, const std::string& name)
     {
         if (!name.empty())
         {
             m_ar.setNextName(name.c_str());
         }
         m_ar.startNode();
-        WriteCache::operator()(val, name);
+        SaveCache::operator()(val, name);
         m_ar.finishNode();
         return *this;
     }
 
-    IWriteVisitor& JSONWriter::operator()(const IContainerTraits* val, const std::string& name)
+    ISaveVisitor& JSONSaver::operator()(ISaveContainerTraits* val, const std::string& name)
     {
         if (!name.empty())
         {
@@ -134,7 +134,7 @@ namespace mo
                 m_ar.makeArray();
             }
         }
-        val->visit(this);
+        val->save(this);
         if (val->type() != TypeInfo(typeid(std::string)))
         {
             m_ar.finishNode();
@@ -142,7 +142,7 @@ namespace mo
         return *this;
     }
 
-    VisitorTraits JSONWriter::traits() const
+    VisitorTraits JSONSaver::traits() const
     {
         VisitorTraits out;
         out.supports_named_access = true;
@@ -151,16 +151,16 @@ namespace mo
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
-    ///                                      JSONReader
+    ///                                      JSONLoader
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-    JSONReader::JSONReader(std::istream& os)
+    JSONLoader::JSONLoader(std::istream& os)
         : m_ar(os)
     {
     }
 
     template <class T>
-    IReadVisitor& JSONReader::readPod(T* ptr, const std::string& name, const size_t cnt)
+    ILoadVisitor& JSONLoader::readPod(T* ptr, const std::string& name, const size_t cnt)
     {
         if (!name.empty())
         {
@@ -190,83 +190,83 @@ namespace mo
         return *this;
     }
 
-    IReadVisitor& JSONReader::operator()(bool* val, const std::string& name, const size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(bool* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
     }
 
-    IReadVisitor& JSONReader::operator()(char* val, const std::string& name, const size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(char* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
     }
 
-    IReadVisitor& JSONReader::operator()(int8_t* val, const std::string& name, const size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(int8_t* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
     }
 
-    IReadVisitor& JSONReader::operator()(uint8_t* val, const std::string& name, const size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(uint8_t* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
     }
 
-    IReadVisitor& JSONReader::operator()(int16_t* val, const std::string& name, const size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(int16_t* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
     }
 
-    IReadVisitor& JSONReader::operator()(uint16_t* val, const std::string& name, const size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(uint16_t* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
     }
 
-    IReadVisitor& JSONReader::operator()(int32_t* val, const std::string& name, const size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(int32_t* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
     }
 
-    IReadVisitor& JSONReader::operator()(uint32_t* val, const std::string& name, const size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(uint32_t* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
     }
 
-    IReadVisitor& JSONReader::operator()(int64_t* val, const std::string& name, const size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(int64_t* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
     }
 
-    IReadVisitor& JSONReader::operator()(uint64_t* val, const std::string& name, const size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(uint64_t* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
     }
 
-    IReadVisitor& JSONReader::operator()(long long* val, const std::string& name, const size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(long long* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
     }
 
-    IReadVisitor& JSONReader::operator()(unsigned long long* val, const std::string& name, const size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(unsigned long long* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
     }
 
-    IReadVisitor& JSONReader::operator()(float* val, const std::string& name, const size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(float* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
     }
 
-    IReadVisitor& JSONReader::operator()(double* val, const std::string& name, const size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(double* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
     }
 
-    IReadVisitor& JSONReader::operator()(void* val, const std::string& name, const size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(void* val, const std::string& name, const size_t cnt)
     {
         m_ar.loadBinaryValue(val, cnt, name.c_str());
         return *this;
     }
 
-    IReadVisitor& JSONReader::operator()(IStructTraits* val, const std::string& name)
+    ILoadVisitor& JSONLoader::operator()(ILoadStructTraits* val, const std::string& name)
     {
         if (!name.empty())
         {
@@ -275,7 +275,7 @@ namespace mo
         auto name_ptr = m_ar.getNodeName();
         m_ar.startNode();
 
-        ReadCache::operator()(val, name);
+        LoadCache::operator()(val, name);
         if (name_ptr)
         {
             m_last_read_name = name_ptr;
@@ -285,7 +285,7 @@ namespace mo
         return *this;
     }
 
-    IReadVisitor& JSONReader::operator()(IContainerTraits* val, const std::string& name)
+    ILoadVisitor& JSONLoader::operator()(ILoadContainerTraits* val, const std::string& name)
     {
         if (!name.empty())
         {
@@ -321,7 +321,7 @@ namespace mo
                 m_ar.startNode();
             }
         }
-        val->visit(this);
+        val->load(this);
         if (val->type() != TypeInfo(typeid(std::string)))
         {
             m_ar.finishNode();
@@ -329,7 +329,7 @@ namespace mo
         return *this;
     }
 
-    VisitorTraits JSONReader::traits() const
+    VisitorTraits JSONLoader::traits() const
     {
         VisitorTraits out;
         out.supports_named_access = true;
@@ -337,7 +337,7 @@ namespace mo
         return out;
     }
 
-    std::string JSONReader::getCurrentElementName() const
+    std::string JSONLoader::getCurrentElementName() const
     {
         return m_last_read_name;
     }

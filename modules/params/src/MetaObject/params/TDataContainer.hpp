@@ -25,8 +25,8 @@ namespace mo
 
         virtual TypeInfo getType() const;
 
-        virtual void visit(IReadVisitor&) override;
-        virtual void visit(IWriteVisitor&) const override;
+        virtual void visit(ILoadVisitor&) override;
+        virtual void visit(ISaveVisitor&) const override;
         virtual void visit(BinaryInputVisitor& ar) override;
         virtual void visit(BinaryOutputVisitor& ar) const override;
 
@@ -69,14 +69,14 @@ namespace mo
     }
 
     template <class T>
-    void TDataContainer<T>::visit(IReadVisitor& visitor)
+    void TDataContainer<T>::visit(ILoadVisitor& visitor)
     {
         visitor(&header, "header");
         visitor(&data, "data");
     }
 
     template <class T>
-    void TDataContainer<T>::visit(IWriteVisitor& visitor) const
+    void TDataContainer<T>::visit(ISaveVisitor& visitor) const
     {
         visitor(&header, "header");
         visitor(&data, "data");

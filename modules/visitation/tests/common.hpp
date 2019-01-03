@@ -133,6 +133,7 @@ namespace std
         return os;
     }
 }
+
 namespace ct
 {
     REFLECT_BEGIN(TestPodStruct)

@@ -27,7 +27,7 @@ namespace mo
     template<>
     struct Visit<std::string>
     {
-        static IReadVisitor& read(IReadVisitor&, std::string* str, const std::string& name, const size_t cnt);
-        static IWriteVisitor& write(IWriteVisitor&, const std::string* str, const std::string& name, const size_t cnt);
+        static ILoadVisitor& load(ILoadVisitor&, std::string* str, const std::string& name, const size_t cnt);
+        static ISaveVisitor& save(ISaveVisitor&, const std::string* str, const std::string& name, const size_t cnt);
     };
 }

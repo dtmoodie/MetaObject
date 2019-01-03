@@ -11,8 +11,8 @@ struct TestJson
         T tmp = data;
         std::stringstream dyn, stat;
         {
-            mo::JSONWriter printer(dyn);
-            mo::IWriteVisitor& visitor = printer;
+            mo::JSONSaver printer(dyn);
+            mo::ISaveVisitor& visitor = printer;
             visitor(&tmp);
             dyn.seekg(std::ios::beg);
         }
@@ -40,8 +40,8 @@ struct TestJson
 
         {
             std::stringstream ss1(dyn.str());
-            mo::JSONReader reader(ss1);
-            mo::IReadVisitor& visitor = reader;
+            mo::JSONLoader reader(ss1);
+            mo::ILoadVisitor& visitor = reader;
             T tmp1;
             visitor(&tmp1);
             if (!ct::compare(tmp, tmp1, DebugEqual()))
@@ -53,8 +53,8 @@ struct TestJson
 
         {
             std::stringstream ss1(stat.str());
-            mo::JSONReader reader(ss1);
-            mo::IReadVisitor& visitor = reader;
+            mo::JSONLoader reader(ss1);
+            mo::ILoadVisitor& visitor = reader;
             T tmp1;
             visitor(&tmp1);
             if (!ct::compare(tmp, tmp1, DebugEqual()))
@@ -71,8 +71,8 @@ struct TestJson
         std::shared_ptr<T> tmp = data;
         std::stringstream ss;
         {
-            mo::JSONWriter printer(ss);
-            mo::IWriteVisitor& visitor = printer;
+            mo::JSONSaver printer(ss);
+            mo::ISaveVisitor& visitor = printer;
             visitor(&tmp);
         }
         ss.seekg(std::ios::beg);

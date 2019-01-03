@@ -59,8 +59,8 @@ namespace mo
         virtual ConnectionPtr_t registerUpdateNotifier(ISlot* f) override;
         virtual ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr& relay) override;
 
-        virtual void visit(IReadVisitor&) override;
-        virtual void visit(IWriteVisitor&) const override;
+        virtual void visit(ILoadVisitor&) override;
+        virtual void visit(ISaveVisitor&) const override;
         virtual void visit(BinaryInputVisitor& ar);
         virtual void visit(BinaryOutputVisitor& ar) const;
 
@@ -220,7 +220,7 @@ namespace mo
     }
 
     template <class T>
-    void TParam<T>::visit(IReadVisitor& visitor)
+    void TParam<T>::visit(ILoadVisitor& visitor)
     {
         mo::Lock_t lock(this->mtx());
         if (_data)
@@ -230,7 +230,7 @@ namespace mo
     }
 
     template <class T>
-    void TParam<T>::visit(IWriteVisitor& visitor) const
+    void TParam<T>::visit(ISaveVisitor& visitor) const
     {
         mo::Lock_t lock(this->mtx());
         if (_data)

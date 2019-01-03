@@ -13,35 +13,15 @@ namespace mo
     template<class T, class A>
     struct Visit<std::vector<T, A>>
     {
-        static IReadVisitor& read(IReadVisitor& visitor, std::vector<T, A>* val, const std::string& name, const size_t cnt)
+        static ILoadVisitor& load(ILoadVisitor& visitor, std::vector<T, A>* val, const std::string& name, const size_t)
         {
-            if (IsPrimitive<T>::value)
-            {
-                visitor(val->data(), name, val->size());
-            }
-            else
-            {
-                for(auto& v : *val)
-                {
-                    visitor(&v);
-                }
-            }
+            visitor(val->data(), name, val->size());
             return visitor;
         }
 
-        static IWriteVisitor& write(IWriteVisitor& visitor, const std::vector<T, A>* val, const std::string& name, const size_t cnt)
+        static ISaveVisitor& save(ISaveVisitor& visitor, const std::vector<T, A>* val, const std::string& name, const size_t)
         {
-            if (IsPrimitive<T>::value)
-            {
-                visitor(val->data(), name, val->size());
-            }
-            else
-            {
-                for(const auto& v : *val)
-                {
-                    visitor(&v);
-                }
-            }
+            visitor(val->data(), name, val->size());
             return visitor;
         }
     };

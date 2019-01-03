@@ -165,7 +165,7 @@ TypeInfo InputParam::getTypeInfo() const
     return TypeInfo::Void();
 }
 
-void InputParam::visit(IReadVisitor& visitor)
+void InputParam::visit(ILoadVisitor& visitor)
 {
     IDataContainerPtr_t data;
     {
@@ -178,7 +178,7 @@ void InputParam::visit(IReadVisitor& visitor)
     }
 }
 
-void InputParam::visit(IWriteVisitor& visitor) const
+void InputParam::visit(ISaveVisitor& visitor) const
 {
     IDataContainerPtr_t data;
     {

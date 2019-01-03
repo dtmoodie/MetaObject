@@ -6,8 +6,8 @@ namespace mo
     // interfaces
     class ICoordinateSystem;
     class IParam;
-    struct IReadVisitor;
-    struct IWriteVisitor;
+    struct ILoadVisitor;
+    struct ISaveVisitor;
     struct IDynamicVisitor;
     class IParamServer;
 

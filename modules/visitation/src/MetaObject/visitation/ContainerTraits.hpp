@@ -13,15 +13,15 @@ namespace mo
     template<class T> void resize(T& container, const size_t size);
 
     template<class T>
-    struct ContainerBase: public IContainerTraits
+    struct ContainerBase: virtual public ILoadContainerTraits
     {
-        using base = IContainerTraits;
+        using base = ILoadContainerTraits;
 
         ContainerBase(T* ptr);
 
         // ITraits
-         void visit(IReadVisitor* visitor) override;
-         void visit(IWriteVisitor* visitor) const override;
+         void load(ILoadVisitor* visitor) override;
+         void save(ISaveVisitor* visitor) const override;
          void visit(StaticVisitor* visitor) const override;
          TypeInfo type() const override;
 
@@ -40,15 +40,14 @@ namespace mo
 
     // const specialization
     template<class T>
-    struct ContainerBase<const T>: public IContainerTraits
+    struct ContainerBase<const T>: virtual public ISaveContainerTraits
     {
-        using base = IContainerTraits;
+        using base = ISaveContainerTraits;
 
         ContainerBase(const T* ptr);
 
         // ITraits
-        void visit(IReadVisitor* visitor) override;
-        void visit(IWriteVisitor* visitor) const override;
+        void save(ISaveVisitor* visitor) const override;
         void visit(StaticVisitor* visitor) const override;
         TypeInfo type() const override;
 
@@ -59,7 +58,6 @@ namespace mo
         bool podValues() const override;
         bool podKeys() const override;
         size_t getSize() const override;
-        void setSize(const size_t num) override;
 
     private:
         const T* m_ptr;
@@ -82,15 +80,15 @@ namespace mo
 
     // ITraits
     template<class T>
-    void ContainerBase<T>::visit(IReadVisitor* visitor)
+    void ContainerBase<T>::load(ILoadVisitor* visitor)
     {
-        Visit<T>::read(*visitor, m_ptr, "", 1);
+        Visit<T>::load(*visitor, m_ptr, "", 1);
     }
 
     template<class T>
-    void ContainerBase<T>::visit(IWriteVisitor* visitor) const
+    void ContainerBase<T>::save(ISaveVisitor* visitor) const
     {
-        Visit<T>::write(*visitor, m_ptr, "", 1);
+        Visit<T>::save(*visitor, m_ptr, "", 1);
     }
 
     template<class T>
@@ -136,13 +134,7 @@ namespace mo
     template<class T>
     size_t ContainerBase<T>::getSize() const
     {
-        if(m_ptr)
-        {
-            return mo::getSize(*m_ptr);
-        }else
-        {
-            return 0;
-        }
+        return mo::getSize(*m_ptr);
     }
 
     template<class T>
@@ -169,15 +161,9 @@ namespace mo
     }
 
     template<class T>
-    void ContainerBase<const T>::visit(IReadVisitor*)
+    void ContainerBase<const T>::save(ISaveVisitor* visitor) const
     {
-        throw std::runtime_error("Attempted to read data into a const container");
-    }
-
-    template<class T>
-    void ContainerBase<const T>::visit(IWriteVisitor* visitor) const
-    {
-        Visit<T>::write(*visitor, m_ptr, "", 1);
+        Visit<T>::save(*visitor, m_ptr, "", 1);
     }
 
     template<class T>
@@ -226,16 +212,8 @@ namespace mo
         if(m_ptr)
         {
             return mo::getSize(*m_ptr);
-        }else
-        {
-            return 0;
         }
-    }
-
-    template<class T>
-    void ContainerBase<const T>::setSize(const size_t)
-    {
-        throw std::runtime_error("Attempted to resize a const container");
+        return 0;
     }
 
     template<class T>

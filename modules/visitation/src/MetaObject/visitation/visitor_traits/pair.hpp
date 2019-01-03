@@ -6,22 +6,23 @@
 namespace mo
 {
     template <class T1, class T2>
-    struct TTraits<std::pair<T1, T2>, void> : public IStructTraits
+    struct TTraits<std::pair<T1, T2>, void> : public ILoadStructTraits
     {
-        using base = IStructTraits;
+        using base = ILoadStructTraits;
 
-        TTraits(std::pair<T1, T2>* ptr)
+        TTraits(std::pair<T1, T2>* ptr, const size_t count)
             : m_ptr(ptr)
+            , m_count(count)
         {
         }
 
-        void visit(IReadVisitor* visitor) override
+        void load(ILoadVisitor* visitor) override
         {
             (*visitor)(&m_ptr->first, "first");
             (*visitor)(&m_ptr->second, "second");
         }
 
-        void visit(IWriteVisitor* visitor) const override
+        void save(ISaveVisitor* visitor) const override
         {
             (*visitor)(&m_ptr->first, "first");
             (*visitor)(&m_ptr->second, "second");
@@ -63,30 +64,32 @@ namespace mo
             return TypeInfo(typeid(std::pair<T1, T2>));
         }
 
+        size_t count() const override
+        {
+            return m_count;
+        }
+
+        void increment() override {++m_ptr;}
       private:
         std::pair<T1, T2>* m_ptr;
+        size_t m_count;
     };
 
     template <class T1, class T2>
-    struct TTraits<const std::pair<T1, T2>, void> : public IStructTraits
+    struct TTraits<const std::pair<T1, T2>, void> : public ISaveStructTraits
     {
-        using base = IStructTraits;
+        using base = ISaveStructTraits;
 
-        TTraits(const std::pair<T1, T2>* ptr)
+        TTraits(const std::pair<T1, T2>* ptr, const size_t count)
             : m_ptr(ptr)
+            , m_count(count)
         {
         }
 
-        void visit(IReadVisitor* visitor) override
+        void save(ISaveVisitor* visitor) const override
         {
             (*visitor)(&m_ptr->first, "first");
             (*visitor)(&m_ptr->second, "second");
-        }
-
-        void visit(IWriteVisitor* visitor) const override
-        {
-                (*visitor)(&m_ptr->first, "first");
-                (*visitor)(&m_ptr->second, "second");
         }
 
         void visit(StaticVisitor* visitor) const override
@@ -115,18 +118,21 @@ namespace mo
             return m_ptr;
         }
 
-        void* ptr() override
-        {
-            return nullptr;
-        }
-
         TypeInfo type() const override
         {
             return TypeInfo(typeid(std::pair<T1, T2>));
         }
 
+        size_t count() const override
+        {
+            return m_count;
+        }
+
+        void increment() override{++m_ptr;}
+
       private:
         const std::pair<T1, T2>* m_ptr;
+        size_t m_count;
     };
 }
 

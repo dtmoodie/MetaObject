@@ -40,93 +40,93 @@ struct WrappedParam
     }
 };
 
-struct TestReadVisitor : public ReadCache
+struct TestReadVisitor : public LoadCache
 {
     VisitorTraits traits() const
     {
         return {true, true};
     }
 
-    IReadVisitor& operator()(IContainerTraits*, const std::string&)
+    ILoadVisitor& operator()(ILoadContainerTraits*, const std::string&)
     {
         return *this;
     }
 
-    virtual IReadVisitor& operator()(bool* val, const std::string& name = "", const size_t cnt = 1)
-    {
-        ++count;
-        return *this;
-    }
-
-    virtual IReadVisitor& operator()(char* val, const std::string& name = "", const size_t cnt = 1)
-    {
-        ++count;
-        return *this;
-    }
-    virtual IReadVisitor& operator()(int8_t* val, const std::string& name = "", const size_t cnt = 1)
-    {
-        ++count;
-        return *this;
-    }
-    virtual IReadVisitor& operator()(uint8_t* val, const std::string& name = "", const size_t cnt = 1)
-    {
-        ++count;
-        return *this;
-    }
-    virtual IReadVisitor& operator()(int16_t* val, const std::string& name = "", const size_t cnt = 1)
-    {
-        ++count;
-        return *this;
-    }
-    virtual IReadVisitor& operator()(uint16_t* val, const std::string& name = "", const size_t cnt = 1)
-    {
-        ++count;
-        return *this;
-    }
-    virtual IReadVisitor& operator()(int32_t* val, const std::string& name = "", const size_t cnt = 1)
-    {
-        ++count;
-        return *this;
-    }
-    virtual IReadVisitor& operator()(uint32_t* val, const std::string& name = "", const size_t cnt = 1)
-    {
-        ++count;
-        return *this;
-    }
-    virtual IReadVisitor& operator()(int64_t* val, const std::string& name = "", const size_t cnt = 1)
-    {
-        ++count;
-        return *this;
-    }
-    virtual IReadVisitor& operator()(uint64_t* val, const std::string& name = "", const size_t cnt = 1)
+    virtual ILoadVisitor& operator()(bool* val, const std::string& name = "", const size_t cnt = 1)
     {
         ++count;
         return *this;
     }
 
-    virtual IReadVisitor& operator()(long long* val, const std::string& name = "", const size_t cnt = 1)
+    virtual ILoadVisitor& operator()(char* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual ILoadVisitor& operator()(int8_t* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual ILoadVisitor& operator()(uint8_t* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual ILoadVisitor& operator()(int16_t* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual ILoadVisitor& operator()(uint16_t* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual ILoadVisitor& operator()(int32_t* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual ILoadVisitor& operator()(uint32_t* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual ILoadVisitor& operator()(int64_t* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual ILoadVisitor& operator()(uint64_t* val, const std::string& name = "", const size_t cnt = 1)
     {
         ++count;
         return *this;
     }
 
-    virtual IReadVisitor& operator()(unsigned long long* val, const std::string& name = "", const size_t cnt = 1)
+    virtual ILoadVisitor& operator()(long long* val, const std::string& name = "", const size_t cnt = 1)
     {
         ++count;
         return *this;
     }
 
-    virtual IReadVisitor& operator()(float* val, const std::string& name = "", const size_t cnt = 1)
+    virtual ILoadVisitor& operator()(unsigned long long* val, const std::string& name = "", const size_t cnt = 1)
     {
         ++count;
         return *this;
     }
-    virtual IReadVisitor& operator()(double* val, const std::string& name = "", const size_t cnt = 1)
+
+    virtual ILoadVisitor& operator()(float* val, const std::string& name = "", const size_t cnt = 1)
     {
         ++count;
         return *this;
     }
-    virtual IReadVisitor& operator()(void* binary, const std::string& name = "", const size_t num_bytes = 1)
+    virtual ILoadVisitor& operator()(double* val, const std::string& name = "", const size_t cnt = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual ILoadVisitor& operator()(void* binary, const std::string& name = "", const size_t num_bytes = 1)
     {
         ++count;
         return *this;
