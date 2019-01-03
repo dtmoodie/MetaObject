@@ -20,9 +20,9 @@ namespace mo
             return visitor;
         }
 
-        static void visit(StaticVisitor&, const std::string& name, const size_t cnt)
+        static void visit(StaticVisitor& visitor, const std::string& name, const size_t cnt)
         {
-
+            visitor.template visit<T>("data", N);
         }
     };
 
@@ -46,7 +46,7 @@ namespace mo
         static void
         visit(StaticVisitor& visitor, const std::string& name, const size_t cnt)
         {
-
+            visitor.template visit<T>("data", ROWS * COLS);
         }
     };
 }

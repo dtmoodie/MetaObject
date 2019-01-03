@@ -225,6 +225,8 @@ namespace mo
         {
             impl(name, cnt, static_cast<const T*>(nullptr));
         }
+
+        virtual void visit(const ITraits*, const std::string& name, const size_t cnt = 1) = 0;
     private:
         virtual void implDyn(const TypeInfo, const std::string& name, const size_t cnt) = 0;
         template<class T>
@@ -304,7 +306,7 @@ namespace mo
     }
 
     template <class T>
-    TTraits<T> makeTraits(T* const val)
+    TTraits<T> makeTraits(T* val)
     {
         return TTraits<T>(val);
     }
@@ -380,14 +382,15 @@ namespace mo
     template<class T>
     auto StaticVisitor::impl(const std::string& name, const size_t cnt, const T*) -> typename std::enable_if<!IsPrimitive<T>::value && !is_complete<TTraits<T>>::value>::type
     {
+        implDyn(TypeInfo(typeid(T)), name, cnt);
         Visit<T>::visit(*this, name, cnt);
     }
 
     template<class T>
     auto StaticVisitor::impl(const std::string& name, const size_t cnt, const T*) -> typename std::enable_if<!IsPrimitive<T>::value && is_complete<TTraits<T>>::value>::type
     {
-        auto trait = makeTraits<T>(static_cast<const T*>(nullptr));
-        static_cast<ITraits&>(trait).visit(this);
+        const auto trait = makeTraits<T>(static_cast<const T*>(nullptr));
+        visit(static_cast<const ITraits*>(&trait), name, cnt);
     }
 }
 #include "VisitorTraits.hpp"
