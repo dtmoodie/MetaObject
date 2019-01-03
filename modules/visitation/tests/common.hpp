@@ -123,6 +123,7 @@ struct VecOwner
 {
     std::vector<Vec> my_vecs;
 };
+
 namespace std
 {
     template<class K, class V>
