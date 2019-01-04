@@ -114,9 +114,14 @@ namespace mo
         {
             m_ar.setNextName(name.c_str());
         }
-        m_ar.startNode();
-        SaveCache::operator()(val, name);
-        m_ar.finishNode();
+        const auto cnt = val->count();
+        for(size_t i = 0; i < cnt; ++i)
+        {
+            m_ar.startNode();
+            SaveCache::operator()(val, name);
+            val->increment();
+            m_ar.finishNode();
+        }
         return *this;
     }
 
@@ -272,16 +277,23 @@ namespace mo
         {
             m_ar.setNextName(name.c_str());
         }
-        auto name_ptr = m_ar.getNodeName();
-        m_ar.startNode();
 
-        LoadCache::operator()(val, name);
-        if (name_ptr)
+        const auto cnt = val->count();
+        for(auto i = 0; i < cnt; ++i)
         {
-            m_last_read_name = name_ptr;
+            auto name_ptr = m_ar.getNodeName();
+            m_ar.startNode();
+
+            LoadCache::operator()(val, name);
+            if (name_ptr)
+            {
+                m_last_read_name = name_ptr;
+            }
+            val->increment();
+
+            m_ar.finishNode();
         }
 
-        m_ar.finishNode();
         return *this;
     }
 

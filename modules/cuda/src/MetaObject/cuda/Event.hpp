@@ -42,7 +42,7 @@ namespace mo
             void setCallback(std::function<void(void)>&& cb);
 
             operator cudaEvent_t();
-            operator const cudaEvent_t() const;
+            operator cudaEvent_t const() const;
 
           private:
             struct Impl;

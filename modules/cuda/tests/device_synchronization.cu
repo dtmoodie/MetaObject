@@ -12,7 +12,7 @@
 #include <thrust/fill.h>
 #include <thrust/device_ptr.h>
 
-#include <host_defines.h>
+#include <cuda_device_runtime_api.h>
 #include <cuda_runtime_api.h>
 
 #include <thread>

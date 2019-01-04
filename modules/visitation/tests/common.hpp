@@ -75,6 +75,19 @@ namespace mo
         }
         return true;
     }
+
+    template<class K, class V>
+    bool operator==(const mo::KVP<K, V>& lhs, const mo::KVP<K, V>& rhs)
+    {
+        return lhs.key == rhs.key && lhs.value == rhs.value;
+    }
+
+    template<class K, class V>
+    std::ostream& operator<<(std::ostream& os, const mo::KVP<K, V>& rhs)
+    {
+        os << rhs.key << ":" << rhs.value;
+        return os;
+    }
 }
 
 struct DebugEqual
@@ -246,6 +259,12 @@ void testTypes(Tester& tester)
         vec_map[1] = Vec{0.2f, 0.4f, 0.6f};
         vec_map[5] = Vec{0.3f, 0.5f, 0.7f};
         tester.test(vec_map);
+    }
+    {
+        mo::KVP<uint32_t, Vec> kvp;
+        kvp.key = 10;
+        kvp.value = Vec{0.f,1.f,2.f};
+        tester.test(kvp);
     }
 
 }

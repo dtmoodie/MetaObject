@@ -95,11 +95,20 @@ namespace mo
     ILoadVisitor& BinaryLoader::operator()(ILoadStructTraits* val, const std::string& name)
     {
         const auto cnt = val->count();
-        for(size_t i = 0; cnt; ++i)
+        if(val->triviallySerializable())
         {
-            LoadCache::operator()(val, name);
-            val->increment();
+            auto ptr = val->ptr();
+            const auto sz = val->size() * cnt;
+            loadBinary(ptr, sz);
+        }else
+        {
+            for(size_t i = 0; i < cnt; ++i)
+            {
+                LoadCache::operator()(val, name);
+                val->increment();
+            }
         }
+
         return *this;
     }
 

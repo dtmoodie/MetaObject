@@ -90,17 +90,28 @@ namespace mo
 
     ISaveVisitor& BinarySaver::operator()(const void* ptr, const std::string& name, const size_t cnt)
     {
-        return saveBinary(reinterpret_cast<const char*>(ptr), name, cnt);
+        return saveBinary(static_cast<const char*>(ptr), name, cnt);
     }
 
     ISaveVisitor& BinarySaver::operator()(ISaveStructTraits* val, const std::string& name)
     {
+
         const auto cnt = val->count();
-        for(auto i = 0; i < cnt; ++i)
+
+        if(val->triviallySerializable())
         {
-            SaveCache::operator()(val, name);
-            val->increment();
+            auto ptr = val->ptr();
+            const auto sz = val->size() * cnt;
+            saveBinary(static_cast<const char*>(ptr),name,  sz);
+        }else
+        {
+            for(auto i = 0; i < cnt; ++i)
+            {
+                SaveCache::operator()(val, name);
+                val->increment();
+            }
         }
+
         return *this;
     }
 

@@ -31,6 +31,43 @@ namespace
         std::map<std::string, size_t> m_hashes;
         std::vector<size_t> m_hash_list;
     };
+
+    struct TrivialSerializableTester
+    {
+
+        template<class T>
+        typename std::enable_if<std::is_base_of<mo::IStructTraits, mo::TTraits<T>>::value>::type testImpl(const T& data)
+        {
+            auto trait = mo::makeTraits<T>(&data);
+            if(trait.triviallySerializable())
+            {
+                T tmp;
+                std::memcpy(&tmp, &data, sizeof(T));
+                if (!ct::compare(tmp, data, DebugEqual()))
+                {
+
+                }
+            }
+        }
+
+        template<class T>
+        typename std::enable_if<!std::is_base_of<mo::IStructTraits, mo::TTraits<T>>::value>::type testImpl(const T& )
+        {
+
+        }
+
+        template<class T>
+        typename std::enable_if<!std::is_arithmetic<T>::value>::type test(const T& data)
+        {
+            testImpl(data);
+        }
+
+        template<class T>
+        typename std::enable_if<std::is_arithmetic<T>::value>::type test(const T&)
+        {
+
+        }
+    };
 }
 
 BOOST_AUTO_TEST_CASE(Hash)
@@ -131,4 +168,10 @@ BOOST_AUTO_TEST_CASE(DetectSimilarity)
         BOOST_REQUIRE_NE(hash_a, hash_q);
         BOOST_REQUIRE_NE(hash_c, hash_q);
     }
+}
+
+BOOST_AUTO_TEST_CASE(TrivialSerializability)
+{
+    TrivialSerializableTester tester;
+    testTypes(tester);
 }
