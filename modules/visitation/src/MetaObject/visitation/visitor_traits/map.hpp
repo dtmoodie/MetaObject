@@ -13,6 +13,13 @@ namespace mo
         KVP() = default;
         KVP(const std::pair<const K, V>& other) : key(other.first), value(other.second) {}
 
+        template<class AR>
+        void serialize(AR& ar)
+        {
+            ar(key);
+            ar(value);
+        }
+
         K key;
         V value;
     };
@@ -22,6 +29,14 @@ namespace mo
     {
         KVP(std::pair<const K, V>& other) : key(other.first), value(other.second) {}
 
+
+        template<class AR>
+        void serialize(AR& ar)
+        {
+            ar(key);
+            ar(value);
+        }
+
         K key;
         V& value;
     };
@@ -30,6 +45,13 @@ namespace mo
     struct KVP<K, const V&>
     {
         KVP(const std::pair<const K, V>& other) : key(other.first), value(other.second) {}
+
+        template<class AR>
+        void serialize(AR& ar)
+        {
+            ar(key);
+            ar(value);
+        }
 
         K key;
         const V& value;

@@ -14,6 +14,12 @@ HashVisitor::HashVisitor(const bool hash_member_names, const bool hash_struct_na
 size_t HashVisitor::generateObjecthash(const IStructTraits *traits)
 {
     m_hash = 0;
+    if(m_hash_struct_names)
+    {
+        auto type = traits->type();
+        std::hash<std::string> hasher;
+        m_hash = ct::combineHash<size_t>(m_hash, hasher(type.name()));
+    }
     traits->visit(this);
     return m_hash;
 }
@@ -21,6 +27,12 @@ size_t HashVisitor::generateObjecthash(const IStructTraits *traits)
 size_t HashVisitor::generateObjecthash(const IContainerTraits* traits)
 {
     m_hash = 0;
+    if(m_hash_struct_names)
+    {
+        auto type = traits->type();
+        std::hash<std::string> hasher;
+        m_hash = ct::combineHash<size_t>(m_hash, hasher(type.name()));
+    }
     traits->visit(this);
     return m_hash;
 }
