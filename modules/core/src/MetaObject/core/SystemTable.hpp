@@ -25,7 +25,7 @@ namespace mo
     struct ISingletonContainer;
 }
 
-struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
+struct MO_EXPORTS SystemTable
 {
   public:
     using Ptr_t = std::shared_ptr<SystemTable>;
@@ -205,10 +205,11 @@ namespace mo
             if (ptr == nullptr)
             {
                 ptr = table->setSingleton(ctr.createUnique());
-                MO_LOG(info, "Creating new {} singleton instance {} in system table ({})",
-                                            mo::TypeTable::instance(table).typeToName(mo::TypeInfo(typeid(U))),
-                                            static_cast<const void*>(ptr),
-                                            static_cast<const void*>(table));
+                MO_LOG(info,
+                       "Creating new {} singleton instance {} in system table ({})",
+                       mo::TypeTable::instance(table).typeToName(mo::TypeInfo(typeid(U))),
+                       static_cast<const void*>(ptr),
+                       static_cast<const void*>(table));
             }
         }
         return ptr;
@@ -224,10 +225,11 @@ namespace mo
             if (ptr == nullptr)
             {
                 ptr = table->setSingleton(ctr.createShared());
-                MO_LOG(info, "Creating new shared {} singleton instance {} in system table ({})",
-                                            mo::TypeTable::instance(table).typeToName(mo::TypeInfo(typeid(U))),
-                                            static_cast<const void*>(ptr.get()),
-                                            static_cast<const void*>(table));
+                MO_LOG(info,
+                       "Creating new shared {} singleton instance {} in system table ({})",
+                       mo::TypeTable::instance(table).typeToName(mo::TypeInfo(typeid(U))),
+                       static_cast<const void*>(ptr.get()),
+                       static_cast<const void*>(table));
             }
         }
         return ptr;
