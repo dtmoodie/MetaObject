@@ -23,10 +23,9 @@ mo::ISingletonContainer::~ISingletonContainer()
 {
 }
 
-static std::weak_ptr<SystemTable> inst;
-
 std::shared_ptr<SystemTable> SystemTable::instanceImpl()
 {
+    static std::weak_ptr<SystemTable> inst;
     std::shared_ptr<SystemTable> output = inst.lock();
     if (!output)
     {
@@ -40,12 +39,8 @@ std::shared_ptr<SystemTable> SystemTable::instanceImpl()
 
 SystemTable::SystemTable()
 {
-    setAllocatorConstructor([]() -> mo::AllocatorPtr_t { return std::shared_ptr<Allocator_t>(); });
+    setAllocatorConstructor([]() -> mo::AllocatorPtr_t { return std::make_shared<Allocator_t>(); });
 
-    if (auto inst_ = inst.lock())
-    {
-        THROW(warn, "Can only create one system table per process");
-    }
 #ifdef HAVE_CUDA
     int count = 0;
     cudaError_t err = cudaGetDeviceCount(&count);
