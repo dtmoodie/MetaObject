@@ -1,6 +1,7 @@
 #pragma once
 #include "../IDynamicVisitor.hpp"
 #include "string.hpp"
+#include <cereal/cereal.hpp>
 
 #include <map>
 #include <utility>
@@ -11,13 +12,17 @@ namespace mo
     struct KVP
     {
         KVP() = default;
-        KVP(const std::pair<const K, V>& other) : key(other.first), value(other.second) {}
+        KVP(const std::pair<const K, V>& other)
+            : key(other.first)
+            , value(other.second)
+        {
+        }
 
-        template<class AR>
+        template <class AR>
         void serialize(AR& ar)
         {
-            ar(key);
-            ar(value);
+            ar(CEREAL_NVP(key));
+            ar(CEREAL_NVP(value));
         }
 
         K key;
@@ -27,14 +32,17 @@ namespace mo
     template <class K, class V>
     struct KVP<K, V&>
     {
-        KVP(std::pair<const K, V>& other) : key(other.first), value(other.second) {}
+        KVP(std::pair<const K, V>& other)
+            : key(other.first)
+            , value(other.second)
+        {
+        }
 
-
-        template<class AR>
+        template <class AR>
         void serialize(AR& ar)
         {
-            ar(key);
-            ar(value);
+            ar(CEREAL_NVP(key));
+            ar(CEREAL_NVP(value));
         }
 
         K key;
@@ -44,13 +52,17 @@ namespace mo
     template <class K, class V>
     struct KVP<K, const V&>
     {
-        KVP(const std::pair<const K, V>& other) : key(other.first), value(other.second) {}
+        KVP(const std::pair<const K, V>& other)
+            : key(other.first)
+            , value(other.second)
+        {
+        }
 
-        template<class AR>
+        template <class AR>
         void serialize(AR& ar)
         {
-            ar(key);
-            ar(value);
+            ar(CEREAL_NVP(key));
+            ar(CEREAL_NVP(value));
         }
 
         K key;
@@ -62,7 +74,11 @@ namespace mo
     {
         using base = ILoadStructTraits;
 
-        TTraits(KVP<T1, T2>* ptr, const size_t count) : m_ptr(ptr), m_count(count){}
+        TTraits(KVP<T1, T2>* ptr, const size_t count)
+            : m_ptr(ptr)
+            , m_count(count)
+        {
+        }
 
         void load(ILoadVisitor* visitor) override
         {
@@ -82,14 +98,39 @@ namespace mo
             visitor->template visit<T2>("value");
         }
 
-        size_t size() const  override { return sizeof(KVP<T1, T2>); }
-        bool triviallySerializable() const  override { return std::is_pod<T1>::value && std::is_pod<T2>::value; }
-        bool isPrimitiveType() const  override { return false; }
-        TypeInfo type() const  override { return TypeInfo(typeid(KVP<T1, T2>)); }
-        const void* ptr() const  override { return m_ptr; }
-        void* ptr() override { return m_ptr; }
-        size_t count() const override {return m_count;}
-        void increment() override {++m_ptr;}
+        size_t size() const override
+        {
+            return sizeof(KVP<T1, T2>);
+        }
+        bool triviallySerializable() const override
+        {
+            return std::is_pod<T1>::value && std::is_pod<T2>::value;
+        }
+        bool isPrimitiveType() const override
+        {
+            return false;
+        }
+        TypeInfo type() const override
+        {
+            return TypeInfo(typeid(KVP<T1, T2>));
+        }
+        const void* ptr() const override
+        {
+            return m_ptr;
+        }
+        void* ptr() override
+        {
+            return m_ptr;
+        }
+        size_t count() const override
+        {
+            return m_count;
+        }
+        void increment() override
+        {
+            ++m_ptr;
+        }
+
       private:
         KVP<T1, T2>* m_ptr;
         size_t m_count;
@@ -100,7 +141,11 @@ namespace mo
     {
         using base = ISaveStructTraits;
 
-        TTraits(const KVP<T1, T2>* ptr, const size_t count) : m_ptr(ptr), m_count(count){}
+        TTraits(const KVP<T1, T2>* ptr, const size_t count)
+            : m_ptr(ptr)
+            , m_count(count)
+        {
+        }
 
         void save(ISaveVisitor* visitor) const override
         {
@@ -114,14 +159,39 @@ namespace mo
             visitor->template visit<T2>("value");
         }
 
-        size_t size() const override { return sizeof(KVP<T1, T2>); }
-        bool triviallySerializable() const override { return std::is_pod<T1>::value && std::is_pod<T2>::value; }
-        bool isPrimitiveType() const override { return false; }
-        TypeInfo type() const override { return TypeInfo(typeid(KVP<T1, T2>)); }
-        const void* ptr() const override { return m_ptr; }
-        void* ptr() { return nullptr; }
-        size_t count() const override {return m_count;}
-        void increment() override{++m_ptr;}
+        size_t size() const override
+        {
+            return sizeof(KVP<T1, T2>);
+        }
+        bool triviallySerializable() const override
+        {
+            return std::is_pod<T1>::value && std::is_pod<T2>::value;
+        }
+        bool isPrimitiveType() const override
+        {
+            return false;
+        }
+        TypeInfo type() const override
+        {
+            return TypeInfo(typeid(KVP<T1, T2>));
+        }
+        const void* ptr() const override
+        {
+            return m_ptr;
+        }
+        void* ptr()
+        {
+            return nullptr;
+        }
+        size_t count() const override
+        {
+            return m_count;
+        }
+        void increment() override
+        {
+            ++m_ptr;
+        }
+
       private:
         const KVP<T1, T2>* m_ptr;
         size_t m_count;
@@ -132,7 +202,11 @@ namespace mo
     {
         using base = ISaveStructTraits;
 
-        TTraits(KVP<T1, const T2&>* ptr, const size_t count) : m_ptr(ptr), m_count(count) {}
+        TTraits(KVP<T1, const T2&>* ptr, const size_t count)
+            : m_ptr(ptr)
+            , m_count(count)
+        {
+        }
 
         void save(ISaveVisitor* visitor) const override
         {
@@ -146,13 +220,34 @@ namespace mo
             visitor->template visit<T2>("value");
         }
 
-        size_t size() const override{ return sizeof(KVP<T1, T2>); }
-        bool triviallySerializable() const override{ return std::is_pod<T1>::value && std::is_pod<T2>::value; }
-        bool isPrimitiveType() const override{ return false; }
-        TypeInfo type() const override{ return TypeInfo(typeid(KVP<T1, T2>)); }
-        const void* ptr() const override{ return m_ptr; }
-        size_t count() const override {return m_count;}
-        void increment() override {++m_ptr;}
+        size_t size() const override
+        {
+            return sizeof(KVP<T1, T2>);
+        }
+        bool triviallySerializable() const override
+        {
+            return std::is_pod<T1>::value && std::is_pod<T2>::value;
+        }
+        bool isPrimitiveType() const override
+        {
+            return false;
+        }
+        TypeInfo type() const override
+        {
+            return TypeInfo(typeid(KVP<T1, T2>));
+        }
+        const void* ptr() const override
+        {
+            return m_ptr;
+        }
+        size_t count() const override
+        {
+            return m_count;
+        }
+        void increment() override
+        {
+            ++m_ptr;
+        }
 
       private:
         KVP<T1, const T2&>* m_ptr;
@@ -164,7 +259,11 @@ namespace mo
     {
         using base = ISaveStructTraits;
 
-        TTraits(const KVP<T1, const T2&>* ptr, const size_t count) : m_ptr(ptr), m_count(count) {}
+        TTraits(const KVP<T1, const T2&>* ptr, const size_t count)
+            : m_ptr(ptr)
+            , m_count(count)
+        {
+        }
 
         void save(ISaveVisitor* visitor) const override
         {
@@ -178,28 +277,68 @@ namespace mo
             visitor->template visit<T2>("value");
         }
 
-        size_t size() const override { return sizeof(KVP<T1, T2>); }
-        bool triviallySerializable() const override { return std::is_pod<T1>::value && std::is_pod<T2>::value; }
-        bool isPrimitiveType() const override { return false; }
-        TypeInfo type() const override { return TypeInfo(typeid(KVP<T1, T2>)); }
-        const void* ptr() const override { return m_ptr; }
-        size_t count() const override {return m_count;}
-        void increment() override {++m_ptr;}
+        size_t size() const override
+        {
+            return sizeof(KVP<T1, T2>);
+        }
+        bool triviallySerializable() const override
+        {
+            return false;
+        }
+        bool isPrimitiveType() const override
+        {
+            return false;
+        }
+        TypeInfo type() const override
+        {
+            return TypeInfo(typeid(KVP<T1, T2>));
+        }
+        const void* ptr() const override
+        {
+            return m_ptr;
+        }
+        size_t count() const override
+        {
+            return m_count;
+        }
+        void increment() override
+        {
+            ++m_ptr;
+        }
+
       private:
         const KVP<T1, const T2&>* m_ptr;
         size_t m_count;
     };
 
-    template<class K, class V, bool LOAD>
-    struct MapBase: public ISaveContainerTraits
+    template <class K, class V, bool LOAD>
+    struct MapBase : public ISaveContainerTraits
     {
         using base = ISaveContainerTraits;
-        TypeInfo keyType() const override { return TypeInfo(typeid(K)); }
-        TypeInfo valueType() const override { return TypeInfo(typeid(V)); }
-        TypeInfo type() const override{ return TypeInfo(typeid(std::map<K, V>)); }
-        bool isContinuous() const override { return false; }
-        bool podValues() const override { return std::is_pod<V>::value; }
-        bool podKeys() const override { return std::is_pod<K>::value; }
+        TypeInfo keyType() const override
+        {
+            return TypeInfo(typeid(K));
+        }
+        TypeInfo valueType() const override
+        {
+            return TypeInfo(typeid(V));
+        }
+        TypeInfo type() const override
+        {
+            return TypeInfo(typeid(std::map<K, V>));
+        }
+        bool isContinuous() const override
+        {
+            return false;
+        }
+        bool podValues() const override
+        {
+            return std::is_pod<V>::value;
+        }
+        bool podKeys() const override
+        {
+            return std::is_pod<K>::value;
+        }
 
         void visit(StaticVisitor* visitor) const override
         {
@@ -208,16 +347,34 @@ namespace mo
         }
     };
 
-    template<class K, class V>
-    struct MapBase<K, V, true>: public ILoadContainerTraits
+    template <class K, class V>
+    struct MapBase<K, V, true> : public ILoadContainerTraits
     {
         using base = ILoadContainerTraits;
-        TypeInfo keyType() const override { return TypeInfo(typeid(K)); }
-        TypeInfo valueType() const override { return TypeInfo(typeid(V)); }
-        TypeInfo type() const override{ return TypeInfo(typeid(std::map<K, V>)); }
-        bool isContinuous() const override { return false; }
-        bool podValues() const override { return std::is_pod<V>::value; }
-        bool podKeys() const override { return std::is_pod<K>::value; }
+        TypeInfo keyType() const override
+        {
+            return TypeInfo(typeid(K));
+        }
+        TypeInfo valueType() const override
+        {
+            return TypeInfo(typeid(V));
+        }
+        TypeInfo type() const override
+        {
+            return TypeInfo(typeid(std::map<K, V>));
+        }
+        bool isContinuous() const override
+        {
+            return false;
+        }
+        bool podValues() const override
+        {
+            return std::is_pod<V>::value;
+        }
+        bool podKeys() const override
+        {
+            return std::is_pod<K>::value;
+        }
 
         void visit(StaticVisitor* visitor) const override
         {
@@ -226,7 +383,7 @@ namespace mo
         }
     };
 
-    template<class K, class V>
+    template <class K, class V>
     void load(ILoadVisitor& visitor, std::map<K, V>& map, const size_t num_to_read)
     {
         for (size_t i = 0; i < num_to_read; ++i)
@@ -237,7 +394,7 @@ namespace mo
         }
     }
 
-    template<class K, class V>
+    template <class K, class V>
     void save(ISaveVisitor& visitor, const std::map<K, V>& map)
     {
         for (auto itr = map.begin(); itr != map.end(); ++itr)
@@ -250,7 +407,10 @@ namespace mo
     template <class K, class V>
     struct TTraits<std::map<K, V>, void> : public MapBase<K, V, true>
     {
-        TTraits(std::map<K, V>* ptr) : m_ptr(ptr){}
+        TTraits(std::map<K, V>* ptr)
+            : m_ptr(ptr)
+        {
+        }
 
         void load(ILoadVisitor* visitor_) override
         {
@@ -262,8 +422,15 @@ namespace mo
             mo::save(*visitor_, *m_ptr);
         }
 
-        size_t getSize() const override { return m_ptr->size();}
-        void setSize(const size_t num) override { num_to_read = num; }
+        size_t getSize() const override
+        {
+            return m_ptr->size();
+        }
+        void setSize(const size_t num) override
+        {
+            num_to_read = num;
+        }
+
       private:
         std::map<K, V>* m_ptr;
         size_t num_to_read = 0;
@@ -272,20 +439,27 @@ namespace mo
     template <class K, class V>
     struct TTraits<const std::map<K, V>, void> : public MapBase<K, V, false>
     {
-        TTraits(const std::map<K, V>* ptr) : m_ptr(ptr){}
+        TTraits(const std::map<K, V>* ptr)
+            : m_ptr(ptr)
+        {
+        }
 
         void save(ISaveVisitor* visitor_) const override
         {
             mo::save(*visitor_, *m_ptr);
         }
 
-        size_t getSize() const override { return m_ptr->size();}
+        size_t getSize() const override
+        {
+            return m_ptr->size();
+        }
+
       private:
         const std::map<K, V>* m_ptr;
         size_t num_to_read = 0;
     };
 
-    template<class V>
+    template <class V>
     void load(ILoadVisitor& visitor, std::map<std::string, V>& map, const size_t num_to_read)
     {
         const auto trait = visitor.traits();
@@ -308,7 +482,7 @@ namespace mo
         }
     }
 
-    template<class V>
+    template <class V>
     void save(ISaveVisitor& visitor, const std::map<std::string, V>& map)
     {
         const auto trait = visitor.traits();
@@ -328,7 +502,7 @@ namespace mo
     }
 
     template <class V>
-    struct TTraits<std::map<std::string, V>, void>  : virtual public MapBase<std::string, V, true>
+    struct TTraits<std::map<std::string, V>, void> : virtual public MapBase<std::string, V, true>
     {
         TTraits(std::map<std::string, V>* ptr)
             : m_ptr(ptr)
@@ -343,12 +517,17 @@ namespace mo
         void save(ISaveVisitor* visitor_) const override
         {
             mo::save(*visitor_, *m_ptr);
-
         }
 
-        size_t getSize() const override { return m_ptr->size();}
+        size_t getSize() const override
+        {
+            return m_ptr->size();
+        }
 
-        void setSize(const size_t num) override { num_to_read = num; }
+        void setSize(const size_t num) override
+        {
+            num_to_read = num;
+        }
 
       private:
         std::map<std::string, V>* m_ptr;
@@ -356,7 +535,7 @@ namespace mo
     };
 
     template <class V>
-    struct TTraits<const std::map<std::string, V>, void>  : virtual public MapBase<std::string, V, false>
+    struct TTraits<const std::map<std::string, V>, void> : virtual public MapBase<std::string, V, false>
     {
         TTraits(const std::map<std::string, V>* ptr)
             : m_ptr(ptr)
@@ -368,7 +547,10 @@ namespace mo
             mo::save(*visitor_, *m_ptr);
         }
 
-        size_t getSize() const override { return m_ptr->size();}
+        size_t getSize() const override
+        {
+            return m_ptr->size();
+        }
 
       private:
         const std::map<std::string, V>* m_ptr;
