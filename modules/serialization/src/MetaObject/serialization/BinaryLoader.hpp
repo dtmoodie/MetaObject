@@ -33,7 +33,8 @@ namespace mo
 
       private:
         template <class T>
-        ILoadVisitor& loadBinary(T* ptr,  size_t cnt = 1);
+        ILoadVisitor& loadBinary(T* ptr, size_t cnt = 1);
+        ILoadVisitor& loadBinary(void* ptr, size_t cnt = 1);
 
         std::istream& m_is;
     };

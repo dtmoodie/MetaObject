@@ -8,12 +8,16 @@ namespace mo
     {
     }
 
-
-
     template <class T>
     ILoadVisitor& BinaryLoader::loadBinary(T* ptr, const size_t cnt)
     {
         m_is.read(static_cast<char*>(static_cast<void*>(ptr)), std::streamsize(cnt * sizeof(T)));
+        return *this;
+    }
+
+    ILoadVisitor& BinaryLoader::loadBinary(void* ptr, const size_t cnt)
+    {
+        m_is.read(static_cast<char*>(static_cast<void*>(ptr)), std::streamsize(cnt));
         return *this;
     }
 
@@ -95,14 +99,15 @@ namespace mo
     ILoadVisitor& BinaryLoader::operator()(ILoadStructTraits* val, const std::string& name)
     {
         const auto cnt = val->count();
-        if(val->triviallySerializable())
+        if (val->triviallySerializable())
         {
             auto ptr = val->ptr();
             const auto sz = val->size() * cnt;
             loadBinary(ptr, sz);
-        }else
+        }
+        else
         {
-            for(size_t i = 0; i < cnt; ++i)
+            for (size_t i = 0; i < cnt; ++i)
             {
                 LoadCache::operator()(val, name);
                 val->increment();
