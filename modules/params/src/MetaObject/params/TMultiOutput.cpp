@@ -86,34 +86,43 @@ namespace mo
         return os;
     }
 
-    void IMultiOutput::visit(mo::ILoadVisitor& visitor)
+    void IMultiOutput::load(mo::ILoadVisitor& visitor)
     {
         auto out = getOutputParam();
         if (out)
         {
-            out->visit(visitor);
+            out->load(visitor);
         }
     }
 
-    void IMultiOutput::visit(mo::ISaveVisitor& visitor) const
+    void IMultiOutput::save(mo::ISaveVisitor& visitor) const
     {
         auto out = getOutputParam();
         if (out)
         {
-            out->visit(visitor);
+            out->save(visitor);
         }
     }
 
-    void IMultiOutput::visit(BinaryInputVisitor& ar)
+    void IMultiOutput::load(BinaryInputVisitor& ar)
     {
         auto out = getOutputParam();
         if (out)
         {
-            out->visit(ar);
+            out->load(ar);
         }
     }
 
-    void IMultiOutput::visit(BinaryOutputVisitor& ar) const
+    void IMultiOutput::save(BinaryOutputVisitor& ar) const
+    {
+        auto out = getOutputParam();
+        if (out)
+        {
+            out->save(ar);
+        }
+    }
+
+    void IMultiOutput::visit(StaticVisitor& ar) const
     {
         auto out = getOutputParam();
         if (out)

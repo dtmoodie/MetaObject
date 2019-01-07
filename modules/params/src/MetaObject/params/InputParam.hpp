@@ -55,15 +55,16 @@ namespace mo
 
         std::ostream& print(std::ostream& os) const override;
 
-        virtual TypeInfo getTypeInfo() const override;
+        TypeInfo getTypeInfo() const override;
 
-        virtual void visit(ILoadVisitor&) override;
-        virtual void visit(ISaveVisitor&) const override;
-        virtual void visit(BinaryInputVisitor&) override;
-        virtual void visit(BinaryOutputVisitor& ar) const override;
+        void load(ILoadVisitor&) override;
+        void save(ISaveVisitor&) const override;
+        void load(BinaryInputVisitor&) override;
+        void save(BinaryOutputVisitor& ar) const override;
+        void visit(StaticVisitor& visitor) const override;
 
-        virtual IContainerPtr_t getData(const Header& desired = Header()) override;
-        virtual IContainerConstPtr_t getData(const Header& desired = Header()) const override;
+        IContainerPtr_t getData(const Header& desired = Header()) override;
+        IContainerConstPtr_t getData(const Header& desired = Header()) const override;
 
       protected:
         virtual void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) = 0;

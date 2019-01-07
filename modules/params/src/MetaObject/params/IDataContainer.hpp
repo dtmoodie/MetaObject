@@ -15,6 +15,7 @@ namespace mo
 
     struct ILoadVisitor;
     struct ISaveVisitor;
+    struct StaticVisitor;
     struct Header;
 
     struct IDataContainer : public std::enable_shared_from_this<IDataContainer>
@@ -25,10 +26,11 @@ namespace mo
         virtual ~IDataContainer();
         virtual TypeInfo getType() const = 0;
 
-        virtual void visit(ILoadVisitor&) = 0;
-        virtual void visit(ISaveVisitor&) const = 0;
-        virtual void visit(BinaryInputVisitor& ar) = 0;
-        virtual void visit(BinaryOutputVisitor& ar) const = 0;
+        virtual void load(ILoadVisitor&) = 0;
+        virtual void save(ISaveVisitor&) const = 0;
+        virtual void load(BinaryInputVisitor& ar) = 0;
+        virtual void save(BinaryOutputVisitor& ar) const = 0;
+        virtual void visit(StaticVisitor&) const = 0;
 
         virtual const Header& getHeader() const = 0;
     };

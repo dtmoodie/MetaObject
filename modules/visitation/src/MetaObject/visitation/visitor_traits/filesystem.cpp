@@ -6,7 +6,7 @@ namespace mo
 {
     namespace impl
     {
-        template<class T>
+        template <class T>
         ISaveVisitor& save(ISaveVisitor& visitor, const T* file, const std::string& name, const size_t cnt)
         {
             MO_ASSERT_EQ(cnt, 1);
@@ -15,7 +15,7 @@ namespace mo
             return visitor;
         }
 
-        template<class T>
+        template <class T>
         ILoadVisitor& load(ILoadVisitor& visitor, T* file, const std::string& name, const size_t cnt)
         {
             MO_ASSERT_EQ(cnt, 1);
@@ -31,38 +31,69 @@ namespace mo
         return impl::load(visitor, dir, name, cnt);
     }
 
-    ILoadVisitor& Visit<WriteFile>::load(ILoadVisitor& visitor, WriteFile* dir, const std::string& name, const size_t cnt)
+    ILoadVisitor&
+    Visit<WriteFile>::load(ILoadVisitor& visitor, WriteFile* dir, const std::string& name, const size_t cnt)
     {
         return impl::load(visitor, dir, name, cnt);
     }
 
-    ILoadVisitor& Visit<ReadDirectory>::load(ILoadVisitor& visitor, ReadDirectory* dir, const std::string& name, const size_t cnt)
+    ILoadVisitor&
+    Visit<ReadDirectory>::load(ILoadVisitor& visitor, ReadDirectory* dir, const std::string& name, const size_t cnt)
     {
         return impl::load(visitor, dir, name, cnt);
     }
 
-    ILoadVisitor& Visit<WriteDirectory>::load(ILoadVisitor& visitor, WriteDirectory* dir, const std::string& name, const size_t cnt)
+    ILoadVisitor&
+    Visit<WriteDirectory>::load(ILoadVisitor& visitor, WriteDirectory* dir, const std::string& name, const size_t cnt)
     {
         return impl::load(visitor, dir, name, cnt);
     }
 
-    ISaveVisitor& Visit<ReadFile>::save(ISaveVisitor& visitor, const ReadFile* file, const std::string& name, const size_t cnt)
+    ISaveVisitor&
+    Visit<ReadFile>::save(ISaveVisitor& visitor, const ReadFile* file, const std::string& name, const size_t cnt)
     {
         return impl::save(visitor, file, name, cnt);
     }
 
-    ISaveVisitor& Visit<WriteFile>::save(ISaveVisitor& visitor, const WriteFile* file, const std::string& name, const size_t cnt)
+    ISaveVisitor&
+    Visit<WriteFile>::save(ISaveVisitor& visitor, const WriteFile* file, const std::string& name, const size_t cnt)
     {
         return impl::save(visitor, file, name, cnt);
     }
 
-    ISaveVisitor& Visit<ReadDirectory>::save(ISaveVisitor& visitor, const ReadDirectory* dir, const std::string& name, const size_t cnt)
+    ISaveVisitor& Visit<ReadDirectory>::save(ISaveVisitor& visitor,
+                                             const ReadDirectory* dir,
+                                             const std::string& name,
+                                             const size_t cnt)
     {
         return impl::save(visitor, dir, name, cnt);
     }
 
-    ISaveVisitor& Visit<WriteDirectory>::save(ISaveVisitor& visitor, const WriteDirectory* dir, const std::string& name, const size_t cnt)
+    ISaveVisitor& Visit<WriteDirectory>::save(ISaveVisitor& visitor,
+                                              const WriteDirectory* dir,
+                                              const std::string& name,
+                                              const size_t cnt)
     {
         return impl::save(visitor, dir, name, cnt);
+    }
+
+    StaticVisitor& Visit<ReadFile>::visit(StaticVisitor& visitor, const std::string& name, const size_t cnt)
+    {
+        visitor.template visit<ReadFile>(name, cnt);
+    }
+
+    StaticVisitor& Visit<WriteFile>::visit(StaticVisitor& visitor, const std::string& name, const size_t cnt)
+    {
+        visitor.template visit<WriteFile>(name, cnt);
+    }
+
+    StaticVisitor& Visit<ReadDirectory>::visit(StaticVisitor& visitor, const std::string& name, const size_t cnt)
+    {
+        visitor.template visit<ReadDirectory>(name, cnt);
+    }
+
+    StaticVisitor& Visit<WriteDirectory>::visit(StaticVisitor& visitor, const std::string& name, const size_t cnt)
+    {
+        visitor.template visit<WriteDirectory>(name, cnt);
     }
 }

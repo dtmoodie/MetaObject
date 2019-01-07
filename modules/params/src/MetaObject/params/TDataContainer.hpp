@@ -25,10 +25,12 @@ namespace mo
 
         virtual TypeInfo getType() const;
 
-        virtual void visit(ILoadVisitor&) override;
-        virtual void visit(ISaveVisitor&) const override;
-        virtual void visit(BinaryInputVisitor& ar) override;
-        virtual void visit(BinaryOutputVisitor& ar) const override;
+        void load(ILoadVisitor&) override;
+        void save(ISaveVisitor&) const override;
+        void load(BinaryInputVisitor& ar) override;
+        void save(BinaryOutputVisitor& ar) const override;
+        static void visitStatic(StaticVisitor&);
+        void visit(StaticVisitor&) const override;
 
         virtual const Header& getHeader() const;
 
@@ -69,28 +71,41 @@ namespace mo
     }
 
     template <class T>
-    void TDataContainer<T>::visit(ILoadVisitor& visitor)
+    void TDataContainer<T>::load(ILoadVisitor& visitor)
     {
         visitor(&header, "header");
         visitor(&data, "data");
     }
 
     template <class T>
-    void TDataContainer<T>::visit(ISaveVisitor& visitor) const
+    void TDataContainer<T>::save(ISaveVisitor& visitor) const
     {
         visitor(&header, "header");
         visitor(&data, "data");
     }
 
     template <class T>
-    void TDataContainer<T>::visit(BinaryInputVisitor& ar)
+    void TDataContainer<T>::visitStatic(StaticVisitor& visitor)
+    {
+        visitor.template visit<Header>("header");
+        visitor.template visit<T>("data");
+    }
+
+    template <class T>
+    void TDataContainer<T>::visit(StaticVisitor& visitor) const
+    {
+        visitStatic(visitor);
+    }
+
+    template <class T>
+    void TDataContainer<T>::load(BinaryInputVisitor& ar)
     {
         ar(CEREAL_NVP(header));
         ar(CEREAL_NVP(data));
     }
 
     template <class T>
-    void TDataContainer<T>::visit(BinaryOutputVisitor& ar) const
+    void TDataContainer<T>::save(BinaryOutputVisitor& ar) const
     {
         ar(CEREAL_NVP(header));
         ar(CEREAL_NVP(data));

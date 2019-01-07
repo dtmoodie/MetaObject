@@ -77,7 +77,7 @@ namespace mo
         virtual void Init(bool firstInit) = 0; // inherited from RCC, thus the PascalCase
         virtual void initCustom(bool firstInit) = 0;
         virtual void bindSlots(bool firstInit) = 0;
-        virtual void inTParams(bool firstInit) = 0;
+        virtual void initParams(bool firstInit) = 0;
         virtual int initSignals(bool firstInit) = 0;
 
         virtual void Serialize(ISimpleSerializer* pSerializer) = 0; // Inherit from RCC's IObject

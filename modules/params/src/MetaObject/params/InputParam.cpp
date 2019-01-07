@@ -165,7 +165,7 @@ TypeInfo InputParam::getTypeInfo() const
     return TypeInfo::Void();
 }
 
-void InputParam::visit(ILoadVisitor& visitor)
+void InputParam::load(ILoadVisitor& visitor)
 {
     IDataContainerPtr_t data;
     {
@@ -174,11 +174,11 @@ void InputParam::visit(ILoadVisitor& visitor)
     }
     if (data)
     {
-        data->visit(visitor);
+        data->load(visitor);
     }
 }
 
-void InputParam::visit(ISaveVisitor& visitor) const
+void InputParam::save(ISaveVisitor& visitor) const
 {
     IDataContainerPtr_t data;
     {
@@ -187,11 +187,11 @@ void InputParam::visit(ISaveVisitor& visitor) const
     }
     if (data)
     {
-        data->visit(visitor);
+        data->save(visitor);
     }
 }
 
-void InputParam::visit(BinaryInputVisitor& ar)
+void InputParam::load(BinaryInputVisitor& ar)
 {
     IDataContainerPtr_t data;
     {
@@ -200,11 +200,11 @@ void InputParam::visit(BinaryInputVisitor& ar)
     }
     if (data)
     {
-        data->visit(ar);
+        data->load(ar);
     }
 }
 
-void InputParam::visit(BinaryOutputVisitor& ar) const
+void InputParam::save(BinaryOutputVisitor& ar) const
 {
     IDataContainerPtr_t data;
     {
@@ -213,8 +213,19 @@ void InputParam::visit(BinaryOutputVisitor& ar) const
     }
     if (data)
     {
-        data->visit(ar);
+        data->save(ar);
     }
+}
+
+void InputParam::visit(StaticVisitor& visitor) const
+{
+    IDataContainerPtr_t data;
+    {
+        Lock_t lock(mtx());
+        data = m_current_data;
+    }
+    MO_ASSERT(data);
+    data->visit(visitor);
 }
 
 void InputParam::onInputUpdate(const IDataContainerPtr_t& data, IParam* param, UpdateFlags)

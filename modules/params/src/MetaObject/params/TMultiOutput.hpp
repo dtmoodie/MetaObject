@@ -27,10 +27,11 @@ namespace mo
 
         std::ostream& print(std::ostream& os) const override;
 
-        virtual void visit(ILoadVisitor&) override;
-        virtual void visit(ISaveVisitor&) const override;
-        virtual void visit(BinaryInputVisitor& ar) override;
-        virtual void visit(BinaryOutputVisitor& ar) const override;
+        void load(ILoadVisitor&) override;
+        void save(ISaveVisitor&) const override;
+        void load(BinaryInputVisitor& ar) override;
+        void save(BinaryOutputVisitor& ar) const override;
+        void visit(StaticVisitor&) const override;
 
         IContainerPtr_t getData(const Header& header) override;
         IContainerConstPtr_t getData(const Header& header) const override;

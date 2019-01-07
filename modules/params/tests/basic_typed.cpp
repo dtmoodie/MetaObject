@@ -52,81 +52,81 @@ struct TestReadVisitor : public LoadCache
         return *this;
     }
 
-    virtual ILoadVisitor& operator()(bool* val, const std::string& name = "", const size_t cnt = 1)
+    virtual ILoadVisitor& operator()(bool*, const std::string& = "", const size_t = 1)
     {
         ++count;
         return *this;
     }
 
-    virtual ILoadVisitor& operator()(char* val, const std::string& name = "", const size_t cnt = 1)
+    virtual ILoadVisitor& operator()(char*, const std::string& = "", const size_t = 1)
     {
         ++count;
         return *this;
     }
-    virtual ILoadVisitor& operator()(int8_t* val, const std::string& name = "", const size_t cnt = 1)
+    virtual ILoadVisitor& operator()(int8_t*, const std::string& = "", const size_t = 1)
     {
         ++count;
         return *this;
     }
-    virtual ILoadVisitor& operator()(uint8_t* val, const std::string& name = "", const size_t cnt = 1)
+    virtual ILoadVisitor& operator()(uint8_t*, const std::string& = "", const size_t = 1)
     {
         ++count;
         return *this;
     }
-    virtual ILoadVisitor& operator()(int16_t* val, const std::string& name = "", const size_t cnt = 1)
+    virtual ILoadVisitor& operator()(int16_t*, const std::string& = "", const size_t = 1)
     {
         ++count;
         return *this;
     }
-    virtual ILoadVisitor& operator()(uint16_t* val, const std::string& name = "", const size_t cnt = 1)
+    virtual ILoadVisitor& operator()(uint16_t*, const std::string& = "", const size_t = 1)
     {
         ++count;
         return *this;
     }
-    virtual ILoadVisitor& operator()(int32_t* val, const std::string& name = "", const size_t cnt = 1)
+    virtual ILoadVisitor& operator()(int32_t*, const std::string& = "", const size_t = 1)
     {
         ++count;
         return *this;
     }
-    virtual ILoadVisitor& operator()(uint32_t* val, const std::string& name = "", const size_t cnt = 1)
+    virtual ILoadVisitor& operator()(uint32_t*, const std::string& = "", const size_t = 1)
     {
         ++count;
         return *this;
     }
-    virtual ILoadVisitor& operator()(int64_t* val, const std::string& name = "", const size_t cnt = 1)
+    virtual ILoadVisitor& operator()(int64_t*, const std::string& = "", const size_t = 1)
     {
         ++count;
         return *this;
     }
-    virtual ILoadVisitor& operator()(uint64_t* val, const std::string& name = "", const size_t cnt = 1)
-    {
-        ++count;
-        return *this;
-    }
-
-    virtual ILoadVisitor& operator()(long long* val, const std::string& name = "", const size_t cnt = 1)
+    virtual ILoadVisitor& operator()(uint64_t*, const std::string& = "", const size_t = 1)
     {
         ++count;
         return *this;
     }
 
-    virtual ILoadVisitor& operator()(unsigned long long* val, const std::string& name = "", const size_t cnt = 1)
+    virtual ILoadVisitor& operator()(long long*, const std::string& = "", const size_t = 1)
     {
         ++count;
         return *this;
     }
 
-    virtual ILoadVisitor& operator()(float* val, const std::string& name = "", const size_t cnt = 1)
+    virtual ILoadVisitor& operator()(unsigned long long*, const std::string& = "", const size_t = 1)
     {
         ++count;
         return *this;
     }
-    virtual ILoadVisitor& operator()(double* val, const std::string& name = "", const size_t cnt = 1)
+
+    virtual ILoadVisitor& operator()(float*, const std::string& = "", const size_t = 1)
     {
         ++count;
         return *this;
     }
-    virtual ILoadVisitor& operator()(void* binary, const std::string& name = "", const size_t num_bytes = 1)
+    virtual ILoadVisitor& operator()(double*, const std::string& = "", const size_t = 1)
+    {
+        ++count;
+        return *this;
+    }
+    virtual ILoadVisitor& operator()(void*, const std::string& = "", const size_t = 1)
     {
         ++count;
         return *this;
@@ -200,8 +200,9 @@ BOOST_FIXTURE_TEST_CASE(read_visit_param, WrappedParam<int>)
     param.updateData(100);
     TestReadVisitor visitor;
     BOOST_REQUIRE_EQUAL(visitor.count, 0);
-    param.visit(visitor);
-    BOOST_REQUIRE_EQUAL(visitor.count, 1);
+    param.load(visitor);
+    // visit header.frame_number, header.timestamp, and param.data
+    BOOST_REQUIRE_EQUAL(visitor.count, 3);
 }
 
 BOOST_FIXTURE_TEST_CASE(param_update, WrappedParam<int>)

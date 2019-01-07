@@ -26,12 +26,13 @@ namespace mo
         virtual bool acceptsInput(IParam* param) const;
         virtual bool acceptsType(const TypeInfo& type) const;
 
-        virtual TypeInfo getTypeInfo() const override;
+        TypeInfo getTypeInfo() const override;
 
-        virtual void visit(ILoadVisitor&) override;
-        virtual void visit(ISaveVisitor&) const override;
-        virtual void visit(BinaryInputVisitor& ar) override;
-        virtual void visit(BinaryOutputVisitor& ar) const override;
+        void load(ILoadVisitor&) override;
+        void save(ISaveVisitor&) const override;
+        void load(BinaryInputVisitor& ar) override;
+        void save(BinaryOutputVisitor& ar) const override;
+        void visit(StaticVisitor&) const override;
 
         virtual IContainerPtr_t getData(const Header& desired = Header()) override;
         virtual IContainerConstPtr_t getData(const Header& desired = Header()) const override;
@@ -122,25 +123,31 @@ namespace mo
     }
 
     template <class T>
-    void ITInputParam<T>::visit(ILoadVisitor& visitor)
+    void ITInputParam<T>::load(ILoadVisitor& visitor)
     {
-        InputParam::visit(visitor);
+        InputParam::load(visitor);
     }
 
     template <class T>
-    void ITInputParam<T>::visit(ISaveVisitor& visitor) const
+    void ITInputParam<T>::save(ISaveVisitor& visitor) const
     {
-        InputParam::visit(visitor);
+        InputParam::save(visitor);
     }
 
     template <class T>
-    void ITInputParam<T>::visit(BinaryInputVisitor& ar)
+    void ITInputParam<T>::load(BinaryInputVisitor& ar)
     {
-        InputParam::visit(ar);
+        InputParam::load(ar);
     }
 
     template <class T>
-    void ITInputParam<T>::visit(BinaryOutputVisitor& ar) const
+    void ITInputParam<T>::save(BinaryOutputVisitor& ar) const
+    {
+        InputParam::save(ar);
+    }
+
+    template <class T>
+    void ITInputParam<T>::visit(StaticVisitor& ar) const
     {
         InputParam::visit(ar);
     }

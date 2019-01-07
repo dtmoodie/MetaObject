@@ -56,13 +56,14 @@ namespace mo
 
         TypeInfo getTypeInfo() const override;
 
-        virtual ConnectionPtr_t registerUpdateNotifier(ISlot* f) override;
-        virtual ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr& relay) override;
+        ConnectionPtr_t registerUpdateNotifier(ISlot* f) override;
+        ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr& relay) override;
 
-        virtual void visit(ILoadVisitor&) override;
-        virtual void visit(ISaveVisitor&) const override;
-        virtual void visit(BinaryInputVisitor& ar);
-        virtual void visit(BinaryOutputVisitor& ar) const;
+        void load(ILoadVisitor&) override;
+        void save(ISaveVisitor&) const override;
+        void load(BinaryInputVisitor& ar) override;
+        void save(BinaryOutputVisitor& ar) const override;
+        void visit(StaticVisitor&) const override;
 
         bool isValid() const;
         ConstAccessToken<T> read() const;
@@ -220,43 +221,49 @@ namespace mo
     }
 
     template <class T>
-    void TParam<T>::visit(ILoadVisitor& visitor)
+    void TParam<T>::load(ILoadVisitor& visitor)
     {
         mo::Lock_t lock(this->mtx());
         if (_data)
         {
-            _data->visit(visitor);
+            _data->load(visitor);
         }
     }
 
     template <class T>
-    void TParam<T>::visit(ISaveVisitor& visitor) const
+    void TParam<T>::save(ISaveVisitor& visitor) const
     {
         mo::Lock_t lock(this->mtx());
         if (_data)
         {
-            _data->visit(visitor);
+            _data->save(visitor);
         }
     }
 
     template <class T>
-    void TParam<T>::visit(BinaryInputVisitor& ar)
+    void TParam<T>::load(BinaryInputVisitor& ar)
     {
         mo::Lock_t lock(this->mtx());
         if (_data)
         {
-            _data->visit(ar);
+            _data->load(ar);
         }
     }
 
     template <class T>
-    void TParam<T>::visit(BinaryOutputVisitor& ar) const
+    void TParam<T>::save(BinaryOutputVisitor& ar) const
     {
         mo::Lock_t lock(this->mtx());
         if (_data)
         {
-            _data->visit(ar);
+            _data->save(ar);
         }
+    }
+
+    template <class T>
+    void TParam<T>::visit(StaticVisitor& visitor) const
+    {
+        TDataContainer<T>::visitStatic(visitor);
     }
 
     template <class T>

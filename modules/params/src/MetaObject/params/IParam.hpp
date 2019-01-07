@@ -98,10 +98,11 @@ namespace mo
 
         virtual EnumClassBitset<ParamFlags> getFlags() const = 0;
 
-        virtual void visit(ILoadVisitor&) = 0;
-        virtual void visit(ISaveVisitor&) const = 0;
-        virtual void visit(BinaryInputVisitor& ar) = 0;
-        virtual void visit(BinaryOutputVisitor& ar) const = 0;
+        virtual void load(ILoadVisitor&) = 0;
+        virtual void save(ISaveVisitor&) const = 0;
+        virtual void load(BinaryInputVisitor& ar) = 0;
+        virtual void save(BinaryOutputVisitor& ar) const = 0;
+        virtual void visit(StaticVisitor&) const = 0;
 
         virtual IContainerPtr_t getData(const Header& desired = Header()) = 0;
         virtual IContainerConstPtr_t getData(const Header& desired = Header()) const = 0;

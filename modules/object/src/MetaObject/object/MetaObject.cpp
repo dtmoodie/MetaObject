@@ -116,7 +116,7 @@ namespace mo
 
     void MetaObject::Init(bool firstInit)
     {
-        inTParams(firstInit);
+        initParams(firstInit);
         initSignals(firstInit);
         bindSlots(firstInit);
         initCustom(firstInit);
@@ -167,7 +167,7 @@ namespace mo
                                "Unable to find {} in  reinitializing",
                                param_connection.output_param,
                                obj->GetTypeName());
-                        obj->inTParams(firstInit);
+                        obj->initParams(firstInit);
                         output = obj->getOutput(param_connection.output_param);
                         if (output == nullptr)
                         {
