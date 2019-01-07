@@ -1,9 +1,9 @@
 #pragma once
 #include <MetaObject/visitation/IDynamicVisitor.hpp>
 #include <MetaObject/visitation/visitor_traits/array_adapter.hpp>
-#include <MetaObject/visitation/visitor_traits/vector.hpp>
-#include <MetaObject/visitation/visitor_traits/memory.hpp>
 #include <MetaObject/visitation/visitor_traits/map.hpp>
+#include <MetaObject/visitation/visitor_traits/memory.hpp>
+#include <MetaObject/visitation/visitor_traits/vector.hpp>
 
 #include <MetaObject/types/opencv.hpp>
 
@@ -16,9 +16,9 @@
 #include <opencv2/core.hpp>
 #endif
 
-#include <cereal/types/vector.hpp>
-#include <cereal/types/memory.hpp>
 #include <cereal/types/map.hpp>
+#include <cereal/types/memory.hpp>
+#include <cereal/types/vector.hpp>
 
 #include <iostream>
 #include <memory>
@@ -63,12 +63,12 @@ namespace mo
         return true;
     }
 
-    template<class T, size_t N>
+    template <class T, size_t N>
     bool operator==(const mo::ArrayAdapter<T, N>& lhs, const mo::ArrayAdapter<T, N>& rhs)
     {
-        for(size_t i = 0; i < N; ++i)
+        for (size_t i = 0; i < N; ++i)
         {
-            if(lhs[i] != rhs[i])
+            if (lhs[i] != rhs[i])
             {
                 return false;
             }
@@ -76,13 +76,13 @@ namespace mo
         return true;
     }
 
-    template<class K, class V>
+    template <class K, class V>
     bool operator==(const mo::KVP<K, V>& lhs, const mo::KVP<K, V>& rhs)
     {
         return lhs.key == rhs.key && lhs.value == rhs.value;
     }
 
-    template<class K, class V>
+    template <class K, class V>
     std::ostream& operator<<(std::ostream& os, const mo::KVP<K, V>& rhs)
     {
         os << rhs.key << ":" << rhs.value;
@@ -139,8 +139,8 @@ struct VecOwner
 
 namespace std
 {
-    template<class K, class V>
-    ostream& operator <<(ostream& os, const map<K, V>& m)
+    template <class K, class V>
+    ostream& operator<<(ostream& os, const map<K, V>& m)
     {
         ct::printStruct(os, m);
         return os;
@@ -200,7 +200,8 @@ void testTypes(Tester& tester)
         }
 
         {
-            cv::Matx44f matx{0.0F, 1.0F, 2.0F, 3.0F, 4.0F, 5.0F, 6.0F, 7.0F, 8.0F,9.0F, 10.0F, 11.0F, 12.0F, 13.0F, 14.0F, 15.0F};
+            cv::Matx44f matx{
+                0.0F, 1.0F, 2.0F, 3.0F, 4.0F, 5.0F, 6.0F, 7.0F, 8.0F, 9.0F, 10.0F, 11.0F, 12.0F, 13.0F, 14.0F, 15.0F};
             tester.test(matx);
         }
 
@@ -214,7 +215,6 @@ void testTypes(Tester& tester)
         }
 #endif
 
-
         TestPodStruct test_struct;
         test_struct.x = 0;
         test_struct.y = 1;
@@ -224,18 +224,18 @@ void testTypes(Tester& tester)
     }
     {
         std::vector<Vec> vec;
-        vec.push_back({0,1,2});
-        vec.push_back({3,4,5});
-        vec.push_back({6,7,8});
-        vec.push_back({9,10,11});
+        vec.push_back({0, 1, 2});
+        vec.push_back({3, 4, 5});
+        vec.push_back({6, 7, 8});
+        vec.push_back({9, 10, 11});
         tester.test(vec);
     }
     {
         VecOwner owner;
-        owner.my_vecs.push_back({0,1,2});
-        owner.my_vecs.push_back({3,4,5});
-        owner.my_vecs.push_back({6,7,8});
-        owner.my_vecs.push_back({9,10,11});
+        owner.my_vecs.push_back({0, 1, 2});
+        owner.my_vecs.push_back({3, 4, 5});
+        owner.my_vecs.push_back({6, 7, 8});
+        owner.my_vecs.push_back({9, 10, 11});
         tester.test(owner);
     }
     {
@@ -254,17 +254,17 @@ void testTypes(Tester& tester)
     }
 
     {
+        mo::KVP<uint32_t, Vec> kvp;
+        kvp.key = 10;
+        kvp.value = Vec{0.f, 1.f, 2.f};
+        tester.test(kvp);
+    }
+
+    {
         std::map<uint32_t, Vec> vec_map;
         vec_map[0] = Vec{0.1f, 0.2f, 0.3f};
         vec_map[1] = Vec{0.2f, 0.4f, 0.6f};
         vec_map[5] = Vec{0.3f, 0.5f, 0.7f};
         tester.test(vec_map);
     }
-    {
-        mo::KVP<uint32_t, Vec> kvp;
-        kvp.key = 10;
-        kvp.value = Vec{0.f,1.f,2.f};
-        tester.test(kvp);
-    }
-
 }
