@@ -7,6 +7,7 @@
 
 struct CUevent_st;
 using cudaEvent_t = CUevent_st*;
+using constCudaEvent_t = CUevent_st const*;
 
 namespace mo
 {
@@ -42,7 +43,7 @@ namespace mo
             void setCallback(std::function<void(void)>&& cb);
 
             operator cudaEvent_t();
-            operator const cudaEvent_t() const;
+            operator constCudaEvent_t() const;
 
           private:
             struct Impl;

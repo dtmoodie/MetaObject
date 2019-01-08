@@ -102,7 +102,7 @@ namespace mo
             return nullptr;
         }
 
-        Event::operator cudaEvent_t const() const
+        Event::operator constCudaEvent_t() const
         {
             std::lock_guard<boost::fibers::mutex> lock(m_impl->m_mtx);
             if (m_impl->m_event)

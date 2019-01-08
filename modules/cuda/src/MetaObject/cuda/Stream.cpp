@@ -49,7 +49,7 @@ namespace mo
             return m_stream.get();
         }
 
-        Stream::operator cudaStream_t const () const
+        Stream::operator CUstream_st const*() const
         {
             return m_stream.get();
         }
