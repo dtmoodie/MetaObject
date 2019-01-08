@@ -1,5 +1,5 @@
 #pragma once
-#include <MetaObject/core/Demangle.hpp>
+#include <MetaObject/core/TypeTable.hpp>
 #include <MetaObject/core/metaobject_config.hpp>
 
 #include "ct/reflect/print.hpp"
@@ -19,7 +19,7 @@ namespace mo
     auto printImpl(std::ostream& os, const T & /*data*/) ->
         typename std::enable_if<!ct::StreamWritable<T>::value>::type
     {
-        os << "No stringifier available for " << mo::Demangle::typeToName(mo::TypeInfo(typeid(T))) << std::endl;
+        os << "No stringifier available for " << mo::TypeTable::instance().typeToName(mo::TypeInfo(typeid(T))) << std::endl;
     }
 
     template <class T>

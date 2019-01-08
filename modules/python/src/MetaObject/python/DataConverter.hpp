@@ -1,5 +1,5 @@
 #pragma once
-#include "MetaObject/core/Demangle.hpp"
+#include "MetaObject/core/TypeTable.hpp"
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/params/AccessToken.hpp"
 #include "MetaObject/params/IParam.hpp"
@@ -80,12 +80,12 @@ namespace mo
                     else
                     {
 
-                        MO_LOG(debug, "Failed to cast parameter ({}) to the correct type for {}", mo::Demangle::typeToName(param->getTypeInfo()),  mo::Demangle::typeToName(TypeInfo(typeid(T))));
+                        MO_LOG(debug, "Failed to cast parameter ({}) to the correct type for {}", mo::TypeTable::instance().typeToName(param->getTypeInfo()),  mo::TypeTable::instance().typeToName(TypeInfo(typeid(T))));
                     }
                 }
                 else
                 {
-                    MO_LOG(trace, "Incorrect datatype input {} expcted {}",mo::Demangle::typeToName(param->getTypeInfo()), mo::Demangle::typeToName(mo::TypeInfo(typeid(T))));
+                    MO_LOG(trace, "Incorrect datatype input {} expcted {}",mo::TypeTable::instance().typeToName(param->getTypeInfo()), mo::TypeTable::instance().typeToName(mo::TypeInfo(typeid(T))));
                 }
                 return {};
             }

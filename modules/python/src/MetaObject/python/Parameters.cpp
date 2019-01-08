@@ -1,5 +1,5 @@
 #include "Parameters.hpp"
-#include "MetaObject/core/Demangle.hpp"
+#include "MetaObject/core/TypeTable.hpp"
 #include "MetaObject/core/TypeTable.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/params/ICoordinateSystem.hpp"
@@ -50,7 +50,7 @@ namespace mo
         std::stringstream ss;
         for (auto& type : types)
         {
-            ss << mo::Demangle::typeToName(type) << "\n";
+            ss << mo::TypeTable::instance().typeToName(type) << "\n";
         }
         return ss.str();
     }
@@ -62,7 +62,7 @@ namespace mo
         {
             return getter(param);
         }
-        MO_LOG(trace,  "Accessor function not found for for {} Available converters:\n {}", mo::Demangle::typeToName(param->getTypeInfo()), printTypes());
+        MO_LOG(trace,  "Accessor function not found for for {} Available converters:\n {}", mo::TypeTable::instance().typeToName(param->getTypeInfo()), printTypes());
         return boost::python::object(std::string("No to python converter registered for " +
                                                  mo::TypeTable::instance().typeToName(param->getTypeInfo())));
     }
@@ -74,13 +74,13 @@ namespace mo
         {
             return setter(param, obj);
         }
-        MO_LOG(trace,  "Setter function not found for {}", mo::Demangle::typeToName(param->getTypeInfo()));
+        MO_LOG(trace,  "Setter function not found for {}", mo::TypeTable::instance().typeToName(param->getTypeInfo()));
         return false;
     }
 
     std::string getDataTypeName(const mo::ParamBase* param)
     {
-        return mo::Demangle::typeToName(param->getTypeInfo());
+        return mo::TypeTable::instance().typeToName(param->getTypeInfo());
     }
 
     python::ParamCallbackContainer::ParamCallbackContainer(mo::IParam* ptr, const boost::python::object& obj)

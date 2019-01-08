@@ -1,5 +1,5 @@
 #pragma once
-#include <MetaObject/core/Demangle.hpp>
+#include <MetaObject/core/TypeTable.hpp>
 #include <MetaObject/params/ITAccessibleParam.hpp>
 #include <MetaObject/params/MetaParam.hpp>
 #include <MetaObject/params/ui/WT.hpp>

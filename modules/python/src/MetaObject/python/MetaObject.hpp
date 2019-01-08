@@ -90,7 +90,7 @@ namespace mo
                     }
                     else
                     {
-                        MO_LOG(debug, "No converter available for {}", mo::Demangle::typeToName(param->getTypeInfo()));
+                        MO_LOG(debug, "No converter available for {}", mo::TypeTable::instance().typeToName(param->getTypeInfo()));
                     }
                 }
                 else

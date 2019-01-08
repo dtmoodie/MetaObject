@@ -1,4 +1,4 @@
-#include "MetaObject/core/Demangle.hpp"
+#include "MetaObject/core/TypeTable.hpp"
 #include "MetaObject/object/IMetaObjectInfo.hpp"
 #include "MetaObject/params/ParamInfo.hpp"
 #include "MetaObject/signals/SignalInfo.hpp"
@@ -144,7 +144,7 @@ std::string IMetaObjectInfo::Print(Verbosity verbosity) const
             {
             }
 
-            ss << " [" << mo::Demangle::typeToName(param->getDataType()) << "]\n";
+            ss << " [" << mo::TypeTable::instance().typeToName(param->getDataType()) << "]\n";
             const auto& tooltip = param->getTooltip();
             if (!tooltip.empty())
             {

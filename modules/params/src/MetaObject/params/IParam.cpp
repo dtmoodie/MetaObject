@@ -19,7 +19,7 @@ https://github.com/dtmoodie/MetaObject
 #include "MetaObject/params/IParam.hpp"
 #include "ICoordinateSystem.hpp"
 #include "IDataContainer.hpp"
-#include "MetaObject/core/Demangle.hpp"
+#include "MetaObject/core/TypeTable.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/TSignalRelay.hpp"
 #include "MetaObject/signals/TSlot.hpp"
@@ -323,7 +323,7 @@ namespace mo
     std::ostream& IParam::print(std::ostream& os) const
     {
         os << getTreeName();
-        os << " [" << mo::Demangle::typeToName(getTypeInfo()) << "]";
+        os << " [" << mo::TypeTable::instance().typeToName(getTypeInfo()) << "]";
         auto ts = getTimestamp();
         if (ts)
         {

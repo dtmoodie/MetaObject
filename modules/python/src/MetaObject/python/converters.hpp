@@ -1,5 +1,5 @@
 #pragma once
-#include "MetaObject/core/Demangle.hpp"
+#include "MetaObject/core/TypeTable.hpp"
 #include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/logging/logging.hpp"
 #include "MetaObject/python/FunctionSignatureBuilder.hpp"
@@ -379,7 +379,7 @@ namespace mo
                 static bool registered = false;
                 if (registered)
                     return;
-                boost::python::class_<T> bpobj(name ? name : mo::Demangle::typeToName(mo::TypeInfo(typeid(T))).c_str(),
+                boost::python::class_<T> bpobj(name ? name : mo::TypeTable::instance().typeToName(mo::TypeInfo(typeid(T))).c_str(),
                                                boost::python::no_init);
                 addPropertyHelper<T>(bpobj, ct::Reflect<T>::end());
                 addInit<T>(bpobj);
@@ -398,7 +398,7 @@ namespace mo
                 if (name_)
                     name = name_;
                 else
-                    name = mo::Demangle::typeToName(mo::TypeInfo(typeid(T)));
+                    name = mo::TypeTable::instance().typeToName(mo::TypeInfo(typeid(T)));
                 name += "List";
                 boost::python::class_<std::vector<T>> bpobj(name.c_str());
                 bpobj.def(boost::python::vector_indexing_suite<std::vector<T>>());

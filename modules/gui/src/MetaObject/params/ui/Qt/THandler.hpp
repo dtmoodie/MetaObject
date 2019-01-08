@@ -1,7 +1,7 @@
 #pragma once
 #include "IHandler.hpp"
 #include "IParamProxy.hpp"
-#include "MetaObject/core/Demangle.hpp"
+#include <MetaObject/core/TypeTable.hpp>
 #include "MetaObject/logging/logging.hpp"
 
 class QWidget;
@@ -23,7 +23,7 @@ namespace mo
               public:
                 THandler(IParamProxy& parent) : _parent(parent)
                 {
-                    MO_LOG(debug, "Creating handler for default unspecialized param {}", Demangle::typeToName(mo::TypeInfo(typeid(T))));
+                    MO_LOG(debug, "Creating handler for default unspecialized param {}", TypeTable::instance().typeToName(TypeInfo(typeid(T))));
                 }
 
                 // Update user interface from parameter update
@@ -37,7 +37,7 @@ namespace mo
 
                 virtual std::vector<QWidget*> getUiWidgets(QWidget* parent)
                 {
-                    MO_LOG(debug, "Creating widget for default unspecialized param {}", Demangle::typeToName(mo::TypeInfo(typeid(T))));
+                    MO_LOG(debug, "Creating widget for default unspecialized param {}", TypeTable::instance().typeToName(TypeInfo(typeid(T))));
                     return std::vector<QWidget*>();
                 }
                 inline void setUpdating(bool val = true) {}

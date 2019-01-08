@@ -71,12 +71,12 @@ void testParamSerialization(mo::IParam* param, const Resetter& resetter, const S
         auto serializer = mo::SerializationFactory::instance()->getSerializer<OutputArchive>(param->getTypeInfo());
         if (!serializer)
         {
-            std::cout << "Missing serializer for " << mo::Demangle::typeToName(param->getTypeInfo()) << '\n';
+            std::cout << "Missing serializer for " << mo::TypeTable::instance().typeToName(param->getTypeInfo()) << '\n';
             std::cout << "Have serializers for \n";
             const auto serializers = mo::SerializationFactory::instance()->listSerializableTypes();
             for (const auto& type : serializers)
             {
-                std::cout << "  " << mo::Demangle::typeToName(type) << '\n';
+                std::cout << "  " << mo::TypeTable::instance().typeToName(type) << '\n';
             }
             std::cout << std::endl;
         }

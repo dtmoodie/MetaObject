@@ -1,6 +1,6 @@
 #include "MetaObject/object/IMetaObject.hpp"
 
-#include "MetaObject/core/Demangle.hpp"
+#include "MetaObject/core/TypeTable.hpp"
 #include "MetaObject/logging/logging.hpp"
 #include "MetaObject/object/RelayManager.hpp"
 #include "MetaObject/object/detail/IMetaObjectImpl.hpp"
@@ -805,7 +805,7 @@ namespace mo
                     MO_LOG(warn,
                            "Unable to create {} for datatype {}",
                            bufferFlagsToString(type_),
-                           Demangle::typeToName(output->getTypeInfo()));
+                           TypeTable::instance().typeToName(output->getTypeInfo()));
                     return false;
                 }
                 std::string buffer_type = bufferFlagsToString(type_);
@@ -820,9 +820,9 @@ namespace mo
                     MO_LOG(debug,
                            "Failed to connect output {} [{}] to input {} [{}]",
                            output->getName(),
-                           Demangle::typeToName(output->getTypeInfo()),
+                           TypeTable::instance().typeToName(output->getTypeInfo()),
                            dynamic_cast<IParam*>(input)->getName(),
-                           Demangle::typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()));
+                           TypeTable::instance().typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()));
                     return false;
                 }
             }
@@ -845,9 +845,9 @@ namespace mo
                             MO_LOG(debug,
                                    "Failed to connect output {} [{}] to input {} [{}]",
                                    output->getName(),
-                                   Demangle::typeToName(output->getTypeInfo()),
+                                   TypeTable::instance().typeToName(output->getTypeInfo()),
                                    dynamic_cast<IParam*>(input)->getName(),
-                                   Demangle::typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()));
+                                   TypeTable::instance().typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()));
                             return false;
                         }
                     }
@@ -855,7 +855,7 @@ namespace mo
                     {
                         MO_LOG(debug,
                                "No buffer of desired type found for type {}",
-                               Demangle::typeToName(output->getTypeInfo()));
+                               TypeTable::instance().typeToName(output->getTypeInfo()));
                     }
                 }
                 else
@@ -871,9 +871,9 @@ namespace mo
                         MO_LOG(debug,
                                "Failed to connect output {} [{}] to input {} [{}]",
                                output->getName(),
-                               Demangle::typeToName(output->getTypeInfo()),
+                               TypeTable::instance().typeToName(output->getTypeInfo()),
                                dynamic_cast<IParam*>(input)->getName(),
-                               Demangle::typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()));
+                               TypeTable::instance().typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()));
                         return false;
                     }
                 }
@@ -890,9 +890,9 @@ namespace mo
                     MO_LOG(debug,
                            "Failed to connect output {} [{}] to input {} [{}]",
                            output->getName(),
-                           Demangle::typeToName(output->getTypeInfo()),
+                           TypeTable::instance().typeToName(output->getTypeInfo()),
                            dynamic_cast<IParam*>(input)->getName(),
-                           Demangle::typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()));
+                           TypeTable::instance().typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()));
                     return false;
                 }
             }
@@ -900,7 +900,7 @@ namespace mo
         MO_LOG(debug,
                "Input {} does not accept input of type {}",
                input->getTreeName(),
-               Demangle::typeToName(output->getTypeInfo()));
+               TypeTable::instance().typeToName(output->getTypeInfo()));
         return false;
     }
 
