@@ -198,6 +198,11 @@ namespace mo
     template <class T, class U = T>
     T* singleton(SystemTable* table, const mo::ObjectConstructor<U>& ctr = ObjectConstructor<U>())
     {
+        auto module = PerModuleInterface::GetInstance();
+        if (module->GetSystemTable() == nullptr && table != nullptr)
+        {
+            module->SetSystemTable(table);
+        }
         T* ptr = nullptr;
         if (table)
         {
