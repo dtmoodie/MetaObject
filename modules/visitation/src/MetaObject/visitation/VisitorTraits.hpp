@@ -17,7 +17,7 @@ namespace mo
     auto visitValue(ILoadVisitor& visitor, T& obj, const Indexer<I> idx) -> ct::enable_if_member_setter<T, I>
     {
         auto accessor = ct::Reflect<T>::getAccessor(idx);
-        using RefType = typename ct::ReferenceType<typename decltype(accessor)::SetType>::Type;
+        using RefType = typename ct::ReferenceType<typename decltype(accessor)::Set_t>::Type;
         RefType ref = static_cast<RefType>(accessor.set(obj));
         visitor(&ref, ct::Reflect<T>::getName(idx));
     }
@@ -44,7 +44,7 @@ namespace mo
     auto visitValue(ISaveVisitor& visitor, const T& obj, const ct::Indexer<I> idx) -> ct::enable_if_member_getter<T, I>
     {
         auto accessor = ct::Reflect<T>::getAccessor(idx);
-        using RefType = typename ct::ReferenceType<typename decltype(accessor)::GetType>::ConstType;
+        using RefType = typename ct::ReferenceType<typename decltype(accessor)::Get_t>::ConstType;
         RefType ref = static_cast<RefType>(accessor.get(obj));
         visitor(&ref, ct::Reflect<T>::getName(idx));
     }
@@ -70,7 +70,7 @@ namespace mo
     template <class T, index_t I>
     auto visitValue(StaticVisitor& visitor, const Indexer<I> idx) -> ct::enable_if_member_getter<T, I>
     {
-        using Type = typename decltype(ct::Reflect<T>::getAccessor(idx))::GetType;
+        using Type = typename decltype(ct::Reflect<T>::getAccessor(idx))::Get_t;
         visitor.visit<Type>(ct::Reflect<T>::getName(idx));
     }
 

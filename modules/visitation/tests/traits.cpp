@@ -16,6 +16,7 @@ struct PrintVisitor : public mo::StaticVisitor
         trait->visit(this);
         indent -= 2;
     }
+
     void implDyn(const mo::TypeInfo type, const std::string& name, const size_t cnt) override
     {
         for (int i = 0; i < indent; ++i)
