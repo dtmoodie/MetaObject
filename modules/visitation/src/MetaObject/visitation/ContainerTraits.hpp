@@ -1,8 +1,8 @@
 #ifndef MO_VISITATION_CONTAINER_TRAITS_HPP
 #define MO_VISITATION_CONTAINER_TRAITS_HPP
 #include "IDynamicVisitor.hpp"
+#include <MetaObject/logging/logging.hpp>
 #include <ct/TypeTraits.hpp>
-
 namespace mo
 {
     template <class T>

@@ -1,20 +1,20 @@
 #pragma once
-#include <MetaObject/visitation/IDynamicVisitor.hpp>
+#ifdef HAVE_OPENCV
+#include <MetaObject/types/opencv.hpp>
+#include <opencv2/core.hpp>
+#endif
+
+#include <MetaObject/visitation.hpp>
+
 #include <MetaObject/visitation/visitor_traits/array_adapter.hpp>
 #include <MetaObject/visitation/visitor_traits/map.hpp>
 #include <MetaObject/visitation/visitor_traits/memory.hpp>
 #include <MetaObject/visitation/visitor_traits/vector.hpp>
 
-#include <MetaObject/types/opencv.hpp>
-
 #include <ct/reflect.hpp>
 #include <ct/reflect/cerealize.hpp>
 #include <ct/reflect/compare.hpp>
 #include <ct/reflect/print-container-inl.hpp>
-
-#ifdef HAVE_OPENCV
-#include <opencv2/core.hpp>
-#endif
 
 #include <cereal/types/map.hpp>
 #include <cereal/types/memory.hpp>

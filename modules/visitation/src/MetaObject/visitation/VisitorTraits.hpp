@@ -96,12 +96,13 @@ namespace mo
     struct TTraits<T, ct::enable_if_reflected<T>> : public ILoadStructTraits
     {
         using base = ILoadStructTraits;
+        static mo::TraitRegisterer<T> reg;
 
         TTraits(T* ptr, const size_t count)
             : m_ptr(ptr)
             , m_count(count)
         {
-            static mo::TraitRegisterer<T> reg;
+            (void)reg;
         }
 
         void load(ILoadVisitor* visitor) override
@@ -184,12 +185,13 @@ namespace mo
     struct TTraits<const T, ct::enable_if_reflected<T>> : public ISaveStructTraits
     {
         using base = ISaveStructTraits;
+        static mo::TraitRegisterer<const T> reg;
 
-        TTraits(const T* ptr, const size_t count)
+        TTraits(const T* ptr = nullptr, const size_t count = 0)
             : m_const_ptr(ptr)
             , m_count(count)
         {
-            static mo::TraitRegisterer<const T> reg(nullptr, 0);
+            (void)reg;
         }
 
         void save(ISaveVisitor* visitor) const override
@@ -255,6 +257,12 @@ namespace mo
         const T* m_const_ptr;
         size_t m_count;
     };
+
+    template <class T>
+    TraitRegisterer<T> TTraits<T, ct::enable_if_reflected<T>>::reg;
+
+    template <class T>
+    TraitRegisterer<const T> TTraits<const T, ct::enable_if_reflected<T>>::reg;
 }
 
 #endif // MO_VISITATION_VISITORTRAITS_HPP

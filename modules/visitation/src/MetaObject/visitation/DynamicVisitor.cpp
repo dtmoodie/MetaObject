@@ -3,10 +3,6 @@
 namespace mo
 {
 
-    ITraits::~ITraits()
-    {
-    }
-
     std::string ITraits::getName() const
     {
         const auto t = type();
@@ -23,7 +19,6 @@ namespace mo
 
     StaticVisitor::~StaticVisitor()
     {
-
     }
 
     LoadCache::LoadCache(const std::shared_ptr<Cache_t>& cache,
@@ -102,7 +97,7 @@ namespace mo
 
     //////////////////////// write cache
     SaveCache::SaveCache(const std::shared_ptr<Cache_t>& cache,
-                           const std::shared_ptr<SerializedPointerMap_t>& pointer_map)
+                         const std::shared_ptr<SerializedPointerMap_t>& pointer_map)
     {
         setSerializedPointers(pointer_map);
         setCache(cache);

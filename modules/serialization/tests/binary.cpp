@@ -1,10 +1,12 @@
+#include "common.hpp"
+
 #include <MetaObject/core/detail/Time.hpp>
 #include <MetaObject/serialization/BinaryLoader.hpp>
 #include <MetaObject/serialization/BinarySaver.hpp>
 #include <MetaObject/serialization/cereal_map.hpp>
+
 #include <cereal/archives/binary.hpp>
 
-#include <common.hpp>
 #include <fstream>
 #include <iostream>
 

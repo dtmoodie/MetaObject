@@ -2,6 +2,7 @@
 #define MO_VISITATION_TRAIT_REGISTRY_HPP
 
 #include "TraitInterface.hpp"
+#include <MetaObject/core/SystemTable.hpp>
 #include <MetaObject/core/detail/ObjectConstructor.hpp>
 
 #include <memory>
@@ -16,6 +17,7 @@ namespace mo
         ~TraitRegistry();
 
         static TraitRegistry& instance();
+        static TraitRegistry& instance(SystemTable*);
 
         template <class TRAIT, class... Args>
         void registerTrait(const TypeInfo type, Args... args);
@@ -39,10 +41,15 @@ namespace mo
     template <class TYPE>
     struct TraitRegisterer
     {
-        template <class... Args>
-        TraitRegisterer(Args... args)
+
+        TraitRegisterer()
         {
-            TraitRegistry::instance().template registerTrait<TTraits<TYPE, void>>(TypeInfo(typeid(TYPE)), args...);
+            SystemTable::staticDispatchToSystemTable([](SystemTable* table) { registerType(table); });
+        }
+        static void registerType(SystemTable* table)
+        {
+            TraitRegistry::instance(table).template registerTrait<TTraits<TYPE, void>>(
+                TypeInfo(typeid(TYPE)), nullptr, 0);
         }
     };
 }

@@ -9,6 +9,7 @@ namespace ct
     template <class T, int R>
     struct Reflect<cv::Vec<T, R>>
     {
+        using DataType = cv::Vec<T, R>;
         static constexpr int N = 0;
         static constexpr int SPECIALIZED = true;
         static constexpr ct::Accessor<mo::ArrayAdapter<const T, R> (*)(const cv::Vec<T, R>&),
@@ -44,6 +45,7 @@ namespace ct
     template <class T>
     struct Reflect<cv::Scalar_<T>>
     {
+        using DataType = cv::Scalar_<T>;
         static constexpr int N = 0;
         static constexpr int SPECIALIZED = true;
 
@@ -74,6 +76,7 @@ namespace ct
     template <class T, int ROWS, int COLS>
     struct Reflect<cv::Matx<T, ROWS, COLS>>
     {
+        using DataType = cv::Matx<T, ROWS, COLS>;
         static constexpr int N = 0;
         static constexpr int SPECIALIZED = true;
 

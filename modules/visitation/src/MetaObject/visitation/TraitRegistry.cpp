@@ -25,9 +25,18 @@ namespace mo
         }
     };
 
+    TraitRegistry& TraitRegistry::instance(SystemTable* table)
+    {
+        auto inst = singleton<TraitRegistry>(table);
+        MO_ASSERT(inst);
+        return *inst;
+    }
+
     TraitRegistry& TraitRegistry::instance()
     {
-        return *singleton<TraitRegistry>();
+        auto inst = singleton<TraitRegistry>();
+        MO_ASSERT(inst);
+        return *inst;
     }
 
     TraitRegistry::TraitRegistry()

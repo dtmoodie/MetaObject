@@ -2,8 +2,6 @@
 #define MO_VISITATION_IDYNAMICVISITOR_HPP
 
 #include "TraitInterface.hpp"
-#include "VisitorTraits.hpp"
-#include "visitor_traits/array.hpp"
 #include <MetaObject/detail/TypeInfo.hpp>
 
 #include <cstdint>
@@ -217,6 +215,10 @@ namespace mo
             typename std::enable_if<!IsPrimitive<T>::value && is_complete<TTraits<T>>::value>::type;
     };
 
+    ///////////////////////////////////////////////////////////////////////////////
+    ///             IMPLEMENTATION
+    ///////////////////////////////////////////////////////////////////////////////
+
     template <class T>
     struct Visit;
 
@@ -335,8 +337,6 @@ namespace mo
     }
 
     // In this case, T is some kind of struct that we do not have a specialization for
-    // template <class T>
-    // ISaveVisitor& visit(ISaveVisitor& visitor, const T* val, const std::string& name, const size_t cnt);
 
     template <class T>
     auto ISaveVisitor::operator()(const T* val, const std::string& name, const size_t cnt)
