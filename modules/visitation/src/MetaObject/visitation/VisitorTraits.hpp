@@ -1,6 +1,8 @@
-#pragma once
-#include "IDynamicVisitor.hpp"
-#include "MetaObject/detail/TypeInfo.hpp"
+#ifndef MO_VISITATION_VISITORTRAITS_HPP
+#define MO_VISITATION_VISITORTRAITS_HPP
+#include "TraitRegistry.hpp"
+
+#include <MetaObject/logging/logging.hpp>
 
 #include <ct/TypeTraits.hpp>
 #include <ct/reflect.hpp>
@@ -65,26 +67,25 @@ namespace mo
         visitValue(visitor, obj, idx);
     }
 
-    template<class T, index_t I>
+    template <class T, index_t I>
     auto visitValue(StaticVisitor& visitor, const Indexer<I> idx) -> ct::enable_if_member_getter<T, I>
     {
         using Type = typename decltype(ct::Reflect<T>::getAccessor(idx))::GetType;
         visitor.visit<Type>(ct::Reflect<T>::getName(idx));
     }
 
-    template<class T, index_t I>
+    template <class T, index_t I>
     auto visitValue(StaticVisitor&, const Indexer<I>) -> ct::disable_if_member_getter<T, I>
     {
-
     }
 
-    template<class T>
+    template <class T>
     void visitHelper(StaticVisitor& visitor, const Indexer<0> idx)
     {
         visitValue<T>(visitor, idx);
     }
 
-    template<class T, index_t I>
+    template <class T, index_t I>
     void visitHelper(StaticVisitor& visitor, const Indexer<I> idx)
     {
         visitHelper<T>(visitor, --idx);
@@ -100,6 +101,7 @@ namespace mo
             : m_ptr(ptr)
             , m_count(count)
         {
+            static mo::TraitRegisterer<T> reg;
         }
 
         void load(ILoadVisitor* visitor) override
@@ -142,9 +144,20 @@ namespace mo
             return m_ptr;
         }
 
+        void setInstance(const void*, const TypeInfo) override
+        {
+            MO_LOG(warn, "Const casting a const void*");
+        }
+
         void* ptr() override
         {
             return m_ptr;
+        }
+
+        void setInstance(void* ptr, const TypeInfo type_) override
+        {
+            MO_ASSERT(type_ == type());
+            m_ptr = static_cast<T*>(ptr);
         }
 
         std::string getName() const override
@@ -157,7 +170,10 @@ namespace mo
             return m_count;
         }
 
-        void increment() override{++m_ptr;}
+        void increment() override
+        {
+            ++m_ptr;
+        }
 
       private:
         T* m_ptr;
@@ -173,6 +189,7 @@ namespace mo
             : m_const_ptr(ptr)
             , m_count(count)
         {
+            static mo::TraitRegisterer<const T> reg(nullptr, 0);
         }
 
         void save(ISaveVisitor* visitor) const override
@@ -213,6 +230,12 @@ namespace mo
             return m_const_ptr;
         }
 
+        void setInstance(const void* ptr, const TypeInfo type_) override
+        {
+            MO_ASSERT(type_ == type());
+            m_const_ptr = static_cast<const T*>(ptr);
+        }
+
         std::string getName() const override
         {
             return ct::Reflect<T>::getName();
@@ -223,10 +246,15 @@ namespace mo
             return m_count;
         }
 
-        void increment() override{++m_const_ptr;}
+        void increment() override
+        {
+            ++m_const_ptr;
+        }
 
       private:
         const T* m_const_ptr;
         size_t m_count;
     };
 }
+
+#endif // MO_VISITATION_VISITORTRAITS_HPP

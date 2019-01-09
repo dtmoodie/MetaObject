@@ -1,9 +1,15 @@
 #include "MetaObject/thread/ThreadPool.hpp"
+#include "MetaObject/thread/FiberScheduler.hpp"
 #include "MetaObject/thread/Thread.hpp"
+
 using namespace mo;
 
 ThreadPool::~ThreadPool()
 {
+    for (auto sched : m_schedulers)
+    {
+        sched->releaseAssistant();
+    }
     cleanup();
 }
 

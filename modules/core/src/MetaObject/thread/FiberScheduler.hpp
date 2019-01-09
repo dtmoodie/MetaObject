@@ -38,6 +38,8 @@ namespace mo
 
         boost::fibers::context* steal();
 
+        void releaseAssistant();
+
       private:
         using Queue = boost::fibers::scheduler::ready_queue_type;
 

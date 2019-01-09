@@ -69,7 +69,22 @@ namespace mo
             return m_count;
         }
 
-        void increment() override {++m_ptr;}
+        void increment() override
+        {
+            ++m_ptr;
+        }
+
+        void setInstance(void* ptr, const TypeInfo type_) override
+        {
+            MO_ASSERT(type_ == type());
+            m_ptr = static_cast<std::pair<T1, T2>*>(ptr);
+        }
+
+        void setInstance(const void*, const TypeInfo) override
+        {
+            THROW(warn, "Attempting to set const ptr");
+        }
+
       private:
         std::pair<T1, T2>* m_ptr;
         size_t m_count;
@@ -128,7 +143,16 @@ namespace mo
             return m_count;
         }
 
-        void increment() override{++m_ptr;}
+        void increment() override
+        {
+            ++m_ptr;
+        }
+
+        void setInstance(const void* ptr, const TypeInfo type_) override
+        {
+            MO_ASSERT(type_ == type());
+            m_ptr = static_cast<const std::pair<T1, T2>*>(ptr);
+        }
 
       private:
         const std::pair<T1, T2>* m_ptr;

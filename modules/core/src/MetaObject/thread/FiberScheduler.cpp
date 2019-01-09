@@ -206,7 +206,7 @@ namespace mo
     {
         if (m_is_worker)
         {
-            if ((std::chrono::steady_clock::time_point::max)() == time_point)
+            if (std::chrono::steady_clock::time_point::max() == time_point)
             {
                 std::unique_lock<std::mutex> lk{m_mtx};
                 m_cv.wait(lk, [this]() { return m_flag; });
@@ -230,5 +230,10 @@ namespace mo
             lk.unlock();
             m_cv.notify_all();
         }
+    }
+
+    void PriorityScheduler::releaseAssistant()
+    {
+        m_assistant.reset();
     }
 }

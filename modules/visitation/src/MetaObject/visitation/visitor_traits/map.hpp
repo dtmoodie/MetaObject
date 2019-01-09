@@ -102,33 +102,51 @@ namespace mo
         {
             return sizeof(KVP<T1, T2>);
         }
+
         bool triviallySerializable() const override
         {
             return std::is_pod<T1>::value && std::is_pod<T2>::value;
         }
+
         bool isPrimitiveType() const override
         {
             return false;
         }
+
         TypeInfo type() const override
         {
             return TypeInfo(typeid(KVP<T1, T2>));
         }
+
         const void* ptr() const override
         {
             return m_ptr;
         }
+
         void* ptr() override
         {
             return m_ptr;
         }
+
         size_t count() const override
         {
             return m_count;
         }
+
         void increment() override
         {
             ++m_ptr;
+        }
+
+        void setInstance(void* ptr, const TypeInfo type_) override
+        {
+            MO_ASSERT(type_ == type());
+            m_ptr = static_cast<KVP<T1, T2>*>(ptr);
+        }
+
+        void setInstance(const void*, const TypeInfo) override
+        {
+            THROW(warn, "Attempting to set const ptr instance");
         }
 
       private:
@@ -167,29 +185,41 @@ namespace mo
         {
             return std::is_pod<T1>::value && std::is_pod<T2>::value;
         }
+
         bool isPrimitiveType() const override
         {
             return false;
         }
+
         TypeInfo type() const override
         {
             return TypeInfo(typeid(KVP<T1, T2>));
         }
+
         const void* ptr() const override
         {
             return m_ptr;
         }
+
         void* ptr()
         {
             return nullptr;
         }
+
         size_t count() const override
         {
             return m_count;
         }
+
         void increment() override
         {
             ++m_ptr;
+        }
+
+        void setInstance(const void* ptr, const TypeInfo type_) override
+        {
+            MO_ASSERT(type_ == type());
+            m_ptr = static_cast<const KVP<T1, T2>*>(ptr);
         }
 
       private:
@@ -224,29 +254,40 @@ namespace mo
         {
             return sizeof(KVP<T1, T2>);
         }
+
         bool triviallySerializable() const override
         {
             return std::is_pod<T1>::value && std::is_pod<T2>::value;
         }
+
         bool isPrimitiveType() const override
         {
             return false;
         }
+
         TypeInfo type() const override
         {
-            return TypeInfo(typeid(KVP<T1, T2>));
+            return TypeInfo(typeid(KVP<T1, const T2&>));
         }
+
         const void* ptr() const override
         {
             return m_ptr;
         }
+
         size_t count() const override
         {
             return m_count;
         }
+
         void increment() override
         {
             ++m_ptr;
+        }
+
+        void setInstance(const void*, const TypeInfo) override
+        {
+            THROW(warn, "Attempting to set const ptr");
         }
 
       private:
@@ -281,29 +322,41 @@ namespace mo
         {
             return sizeof(KVP<T1, T2>);
         }
+
         bool triviallySerializable() const override
         {
             return false;
         }
+
         bool isPrimitiveType() const override
         {
             return false;
         }
+
         TypeInfo type() const override
         {
-            return TypeInfo(typeid(KVP<T1, T2>));
+            return TypeInfo(typeid(KVP<T1, const T2&>));
         }
+
         const void* ptr() const override
         {
             return m_ptr;
         }
+
         size_t count() const override
         {
             return m_count;
         }
+
         void increment() override
         {
             ++m_ptr;
+        }
+
+        void setInstance(const void* ptr, const TypeInfo type_) override
+        {
+            MO_ASSERT(type_ == type());
+            m_ptr = static_cast<const KVP<T1, const T2&>*>(ptr);
         }
 
       private:
@@ -407,6 +460,7 @@ namespace mo
     template <class K, class V>
     struct TTraits<std::map<K, V>, void> : public MapBase<K, V, true>
     {
+        using Base_t = MapBase<K, V, true>;
         TTraits(std::map<K, V>* ptr)
             : m_ptr(ptr)
         {
@@ -426,9 +480,21 @@ namespace mo
         {
             return m_ptr->size();
         }
+
         void setSize(const size_t num) override
         {
             num_to_read = num;
+        }
+
+        void setInstance(void* ptr, const TypeInfo type_) override
+        {
+            MO_ASSERT(type_ == Base_t::type());
+            m_ptr = static_cast<std::map<K, V>*>(ptr);
+        }
+
+        void setInstance(const void*, const TypeInfo) override
+        {
+            THROW(warn, "Attempting to set const ptr");
         }
 
       private:
@@ -439,6 +505,7 @@ namespace mo
     template <class K, class V>
     struct TTraits<const std::map<K, V>, void> : public MapBase<K, V, false>
     {
+        using Base_t = MapBase<K, V, false>;
         TTraits(const std::map<K, V>* ptr)
             : m_ptr(ptr)
         {
@@ -452,6 +519,12 @@ namespace mo
         size_t getSize() const override
         {
             return m_ptr->size();
+        }
+
+        void setInstance(const void* ptr, const TypeInfo type_) override
+        {
+            MO_ASSERT(type_ == Base_t::type());
+            m_ptr = static_cast<const std::map<K, V>*>(ptr);
         }
 
       private:
@@ -504,6 +577,7 @@ namespace mo
     template <class V>
     struct TTraits<std::map<std::string, V>, void> : virtual public MapBase<std::string, V, true>
     {
+        using Base_t = MapBase<std::string, V, true>;
         TTraits(std::map<std::string, V>* ptr)
             : m_ptr(ptr)
         {
@@ -529,6 +603,17 @@ namespace mo
             num_to_read = num;
         }
 
+        void setInstance(void* ptr, const TypeInfo type_) override
+        {
+            MO_ASSERT(type_ == Base_t::type());
+            m_ptr = static_cast<std::map<std::string, V>*>(ptr);
+        }
+
+        void setInstance(const void*, const TypeInfo) override
+        {
+            THROW(warn, "Attempgint to set const ptr");
+        }
+
       private:
         std::map<std::string, V>* m_ptr;
         size_t num_to_read = 0;
@@ -537,6 +622,7 @@ namespace mo
     template <class V>
     struct TTraits<const std::map<std::string, V>, void> : virtual public MapBase<std::string, V, false>
     {
+        using Base_t = MapBase<std::string, V, false>;
         TTraits(const std::map<std::string, V>* ptr)
             : m_ptr(ptr)
         {
@@ -550,6 +636,12 @@ namespace mo
         size_t getSize() const override
         {
             return m_ptr->size();
+        }
+
+        void setInstance(const void* ptr, const TypeInfo type_) override
+        {
+            MO_ASSERT(type_ == Base_t::type());
+            m_ptr = static_cast<const std::map<std::string, V>*>(ptr);
         }
 
       private:

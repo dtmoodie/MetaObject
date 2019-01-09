@@ -92,7 +92,7 @@ namespace
             BOOST_REQUIRE_EQUAL(buffer->getSize(), 10);
         }
 
-        void testMultiThreaded(const bool dropping)
+        int testMultiThreaded(const bool dropping)
         {
             int read_values = 0;
             buffer->clear();
@@ -102,7 +102,7 @@ namespace
                 for (int i = 0; i < 10000; ++i)
                 {
                     bool result = false;
-                    for (int j = 0; j < 10 && !result; ++j)
+                    for (int j = 0; j < 15 && !result; ++j)
                     {
                         result = input_param.getTypedData(&data, Header(i * ms));
                         boost::this_thread::sleep_for(boost::chrono::nanoseconds(10));
@@ -114,7 +114,7 @@ namespace
                         BOOST_REQUIRE_EQUAL(data, i);
                         ++read_values;
                     }
-                    auto wait = rand() % 20 + 20;
+                    auto wait = rand() % 20 + 10;
                     boost::this_thread::sleep_for(boost::chrono::nanoseconds(wait));
                     if (boost::this_thread::interruption_requested())
                     {
@@ -130,7 +130,7 @@ namespace
                 boost::this_thread::sleep_for(boost::chrono::nanoseconds(33));
             }
             thread.join();
-            BOOST_REQUIRE(dropping || read_values == 10000);
+            return read_values;
         }
     };
 }
@@ -141,7 +141,8 @@ BOOST_FIXTURE_TEST_CASE(TestReadMap, Fixture)
     buffer->setFrameBufferCapacity(10);
     fill(100);
     BOOST_REQUIRE_EQUAL(buffer->getSize(), 100);
-    testMultiThreaded(false);
+    const auto read_values = testMultiThreaded(false);
+    BOOST_REQUIRE_EQUAL(read_values, 10000);
 }
 
 BOOST_FIXTURE_TEST_CASE(TestReadStream, Fixture)
@@ -149,7 +150,8 @@ BOOST_FIXTURE_TEST_CASE(TestReadStream, Fixture)
     init(STREAM_BUFFER);
     testRead();
     testPruning();
-    testMultiThreaded(false);
+    const auto read_values = testMultiThreaded(false);
+    BOOST_REQUIRE_EQUAL(read_values, 10000);
 }
 
 BOOST_FIXTURE_TEST_CASE(TestReadBlockingStream, Fixture)
@@ -157,7 +159,8 @@ BOOST_FIXTURE_TEST_CASE(TestReadBlockingStream, Fixture)
     init(BLOCKING_STREAM_BUFFER);
     testRead();
     testPruning();
-    testMultiThreaded(false);
+    const auto read_values = testMultiThreaded(false);
+    BOOST_REQUIRE_EQUAL(read_values, 10000);
 }
 
 BOOST_FIXTURE_TEST_CASE(TestReadDroppingStream, Fixture)
@@ -165,7 +168,8 @@ BOOST_FIXTURE_TEST_CASE(TestReadDroppingStream, Fixture)
     init(DROPPING_STREAM_BUFFER);
     testRead();
     testPruning();
-    testMultiThreaded(true);
+    const auto read_values = testMultiThreaded(true);
+    BOOST_REQUIRE_GT(read_values, 1000);
 }
 
 BOOST_FIXTURE_TEST_CASE(TestReadNearestNeighbor, Fixture)

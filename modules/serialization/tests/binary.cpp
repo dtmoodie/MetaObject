@@ -1,8 +1,8 @@
+#include <MetaObject/core/detail/Time.hpp>
 #include <MetaObject/serialization/BinaryLoader.hpp>
 #include <MetaObject/serialization/BinarySaver.hpp>
-#include <cereal/archives/binary.hpp>
 #include <MetaObject/serialization/cereal_map.hpp>
-#include <MetaObject/core/detail/Time.hpp>
+#include <cereal/archives/binary.hpp>
 
 #include <common.hpp>
 #include <fstream>
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE(BinarySerialization)
     testTypes(tester);
 }
 
-template<class T>
+template <class T>
 void testBinarySpeed(size_t count)
 {
     std::vector<T> vec(count);
@@ -118,7 +118,10 @@ void testBinarySpeed(size_t count)
         mo::ISaveVisitor& visitor = bar;
         visitor(&vec);
         mo::Time end = mo::Time::now();
-        std::cout << "Dynamic binary write time: " << (end - start) << std::endl;
+        std::cout << "Dynamic binary write time: ";
+        mo::Time delta(end - start);
+        delta.print(std::cout, false, false, true, true, true);
+        std::cout << std::endl;
     }
     {
         mo::Time start = mo::Time::now();
@@ -128,7 +131,10 @@ void testBinarySpeed(size_t count)
         std::vector<T> readin;
         visitor(&readin);
         mo::Time end = mo::Time::now();
-        std::cout << "Dynamic binary read time: " << (end - start) << std::endl;
+        std::cout << "Dynamic binary read time: ";
+        mo::Time delta(end - start);
+        delta.print(std::cout, false, false, true, true, true);
+        std::cout << std::endl;
     }
 
     {
@@ -137,7 +143,10 @@ void testBinarySpeed(size_t count)
         cereal::BinaryOutputArchive bar(ofs);
         bar(vec);
         mo::Time end = mo::Time::now();
-        std::cout << "Cereal binary write time: " << (end - start) << std::endl;
+        std::cout << "Cereal binary write time: ";
+        mo::Time delta(end - start);
+        delta.print(std::cout, false, false, true, true, true);
+        std::cout << std::endl;
     }
 
     {
@@ -147,7 +156,11 @@ void testBinarySpeed(size_t count)
         std::vector<T> readin;
         bar(readin);
         mo::Time end = mo::Time::now();
-        std::cout << "Cereal binary read time: " << (end - start) << std::endl;
+
+        std::cout << "Cereal binary read time: ";
+        mo::Time delta(end - start);
+        delta.print(std::cout, false, false, true, true, true);
+        std::cout << std::endl;
     }
 }
 

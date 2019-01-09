@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MO_CORE_LOGGING_HPP
+#define MO_CORE_LOGGING_HPP
 
 #include <MetaObject/detail/Export.hpp>
 
@@ -26,3 +27,4 @@ namespace mo
     MO_EXPORTS spdlog::logger& getDefaultLogger();
 
 } // namespace mo
+#endif // MO_CORE_LOGGING_HPP

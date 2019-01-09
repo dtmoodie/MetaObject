@@ -63,7 +63,7 @@ Thread::~Thread()
         MO_LOG(warn, "{} did not join after waiting 10 seconds");
     }
 
-    MO_LOG(info, "{} shutdown complete");
+    MO_LOG(info, "{} shutdown complete", m_name);
 }
 
 struct ThreadExit

@@ -19,16 +19,21 @@ namespace mo
         std::string typeToName(const TypeInfo& type);
         const TypeInfo nameToType(const std::string& name);
 
-        template<class T>
+        template <class T>
         void registerType(const char* name);
 
         void registerType(const TypeInfo& info, const char* name);
 
         std::vector<TypeInfo> listKnownTypes();
 
-
       private:
         std::map<TypeInfo, std::string> m_types;
 
     }; // class TypeTable
+
+    template <class T>
+    void TypeTable::registerType(const char* name)
+    {
+        registerType(TypeInfo(typeid(T)), name);
+    }
 } // namespace mo

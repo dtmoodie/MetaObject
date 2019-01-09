@@ -1,8 +1,8 @@
 #pragma once
 #include "Export.hpp"
+#include <ostream>
 #include <string>
 #include <typeinfo>
-
 namespace mo
 {
     class MO_EXPORTS TypeInfo
@@ -52,6 +52,8 @@ namespace mo
     {
         return *this == TypeInfo(typeid(T));
     }
+
+    MO_EXPORTS std::ostream& operator<<(std::ostream& os, const TypeInfo& type);
 }
 
 namespace std

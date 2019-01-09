@@ -1,5 +1,7 @@
-#pragma once
+#ifndef MO_LOGGING_LOGGING_MACROS_HPP
+#define MO_LOGGING_LOGGING_MACROS_HPP
 #include <spdlog/fmt/fmt.h>
+#include <spdlog/fmt/ostr.h>
 
 #if defined(__GNUC__) && __GNUC__ == 4 && defined(__NVCC__)
 
@@ -41,7 +43,9 @@
     if (!(CHECK))                                                                                                      \
     THROW(error, #CHECK)
 
-#define MO_ASSERT_EQ(LHS, RHS) if((LHS) != (RHS)) THROW(error, #LHS " != " #RHS " [{} != {}]", LHS, RHS)
+#define MO_ASSERT_EQ(LHS, RHS)                                                                                         \
+    if ((LHS) != (RHS))                                                                                                \
+    THROW(error, #LHS " != " #RHS " [{} != {}]", LHS, RHS)
 
 #define MO_ASSERT_FMT(CHECK, ...)                                                                                      \
     if (!(CHECK))                                                                                                      \
@@ -49,3 +53,5 @@
 
 #define MO_LOG(LEVEL, ...) mo::getDefaultLogger().LEVEL(__VA_ARGS__)
 #endif
+
+#endif // MO_LOGGING_LOGGING_MACROS_HPP

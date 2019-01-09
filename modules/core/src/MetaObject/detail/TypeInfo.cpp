@@ -5,7 +5,9 @@
 #include <cxxabi.h>
 #include <memory>
 #endif
+#include <MetaObject/core/TypeTable.hpp>
 #include <cassert>
+
 namespace mo
 {
 
@@ -50,7 +52,8 @@ namespace mo
         int status = -4; // some arbitrary value to eliminate the compiler warning
 
         // enable c++11 by passing the flag -std=c++11 to g++
-        std::unique_ptr<char, void (*)(void*)> res{abi::__cxa_demangle(pInfo_->name(), NULL, NULL, &status), std::free};
+        std::unique_ptr<char, void (*)(void*)> res{abi::__cxa_demangle(pInfo_->name(), nullptr, nullptr, &status),
+                                                   std::free};
 
         return (status == 0) ? res.get() : pInfo_->name();
 #endif
@@ -98,6 +101,12 @@ namespace mo
     bool operator>=(const TypeInfo& lhs, const TypeInfo& rhs)
     {
         return !(lhs < rhs);
+    }
+
+    std::ostream& operator<<(std::ostream& os, const TypeInfo& type)
+    {
+        os << TypeTable::instance().typeToName(type);
+        return os;
     }
 
 } // namespace mo
