@@ -1,7 +1,7 @@
 #ifndef MO_VISITOR_TRAITS_TIME_HPP
 #define MO_VISITOR_TRAITS_TIME_HPP
 #include <MetaObject/core/detail/Time.hpp>
-#include <MetaObject/visitation/IDynamicVisitor.hpp>
+#include <MetaObject/runtime_reflection/IDynamicVisitor.hpp>
 
 namespace mo
 {

@@ -12,7 +12,7 @@
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
 
-#include <MetaObject/visitation/visitor_traits/time.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/time.hpp>
 
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"

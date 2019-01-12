@@ -1,5 +1,5 @@
 #include "common.hpp"
-#include <MetaObject/visitation/TraitRegistry.hpp>
+#include <MetaObject/runtime_reflection/TraitRegistry.hpp>
 
 struct PrintVisitor : public mo::StaticVisitor
 {

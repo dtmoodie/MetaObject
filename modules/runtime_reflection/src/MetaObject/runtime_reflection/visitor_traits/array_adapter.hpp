@@ -1,7 +1,7 @@
 #ifndef MO_VISITATION_ARRAY_ADAPTER_HPP
 #define MO_VISITATION_ARRAY_ADAPTER_HPP
 #include <MetaObject/types/ArrayAdapater.hpp>
-#include <MetaObject/visitation/IDynamicVisitor.hpp>
+#include <MetaObject/runtime_reflection/IDynamicVisitor.hpp>
 #include <MetaObject/logging/logging.hpp>
 
 namespace mo

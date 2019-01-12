@@ -1,6 +1,6 @@
 #pragma once
 
-#include "MetaObject/visitation/DynamicVisitor.hpp"
+#include "MetaObject/runtime_reflection/DynamicVisitor.hpp"
 
 #include <cereal/archives/json.hpp>
 #include <iostream>

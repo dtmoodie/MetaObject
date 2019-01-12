@@ -2,8 +2,8 @@
 #include "ct/reflect/cerealize.hpp"
 
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
-#include <MetaObject/visitation/visitor_traits/vector.hpp>
-#include <MetaObject/visitation/visitor_traits/string.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/string.hpp>
 
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS

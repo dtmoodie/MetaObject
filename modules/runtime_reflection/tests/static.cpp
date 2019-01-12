@@ -1,7 +1,7 @@
 #include "common.hpp"
 
-#include <MetaObject/visitation.hpp>
-#include <MetaObject/visitation/HashVisitor.hpp>
+#include <MetaObject/runtime_reflection.hpp>
+#include <MetaObject/runtime_reflection/HashVisitor.hpp>
 
 namespace
 {

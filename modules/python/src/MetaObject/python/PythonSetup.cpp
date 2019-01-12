@@ -1,26 +1,25 @@
-#include "Parameters.hpp"
-#include "PythonAllocator.hpp"
-#include "PythonPolicy.hpp"
 #include "PythonSetup.hpp"
 #include "DataConverter.hpp"
 #include "MetaObject.hpp"
+#include "Parameters.hpp"
+#include "PythonAllocator.hpp"
+#include "PythonPolicy.hpp"
 
 #include "ct/reflect.hpp"
 #include <opencv2/core/types.hpp>
 
 #include <MetaObject/core.hpp>
 #include <MetaObject/core/SystemTable.hpp>
+#include <MetaObject/cuda/MemoryBlock.hpp>
+#include <MetaObject/cuda/opencv.hpp>
 #include <MetaObject/object/IMetaObject.hpp>
 #include <MetaObject/object/MetaObjectFactory.hpp>
 #include <MetaObject/params/ParamFactory.hpp>
-#include <MetaObject/cuda/opencv.hpp>
-#include <MetaObject/cuda/MemoryBlock.hpp>
 
-#include <MetaObject/core/detail/allocator_policies/opencv.hpp>
+#include <MetaObject/core/detail/allocator_policies/Combined.hpp>
 #include <MetaObject/core/detail/allocator_policies/Pool.hpp>
 #include <MetaObject/core/detail/allocator_policies/Stack.hpp>
-#include <MetaObject/core/detail/allocator_policies/Combined.hpp>
-
+#include <MetaObject/core/detail/allocator_policies/opencv.hpp>
 
 #include <MetaObject/logging/logging.hpp>
 #include <MetaObject/logging/profiling.hpp>
@@ -35,16 +34,22 @@
 #include <boost/python/default_call_policies.hpp>
 #include <boost/python/raw_function.hpp>
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
-#include <boost/thread.hpp>
 #include <boost/stacktrace.hpp>
+#include <boost/thread.hpp>
 
 #include <vector>
 
 namespace boost
 {
-    inline const mo::ParamBase* get_pointer(const mo::ParamBase* ptr) { return ptr; }
+    inline const mo::ParamBase* get_pointer(const mo::ParamBase* ptr)
+    {
+        return ptr;
+    }
 
-    inline const mo::ICoordinateSystem* get_pointer(const mo::ICoordinateSystem* cs) { return cs; }
+    inline const mo::ICoordinateSystem* get_pointer(const mo::ICoordinateSystem* cs)
+    {
+        return cs;
+    }
 
     inline const mo::ICoordinateSystem* get_pointer(const std::shared_ptr<mo::ICoordinateSystem>& ptr)
     {
@@ -58,11 +63,20 @@ namespace mo
 
     void setupPlugins(const std::string& module_name);
 
-    inline const mo::ParamBase* get_pointer(const mo::ParamBase* ptr) { return ptr; }
+    inline const mo::ParamBase* get_pointer(const mo::ParamBase* ptr)
+    {
+        return ptr;
+    }
 
-    inline const mo::ICoordinateSystem* get_pointer(const mo::ICoordinateSystem* cs) { return cs; }
+    inline const mo::ICoordinateSystem* get_pointer(const mo::ICoordinateSystem* cs)
+    {
+        return cs;
+    }
 
-    inline mo::ICoordinateSystem* get_pointer(const std::shared_ptr<mo::ICoordinateSystem>& ptr) { return ptr.get(); }
+    inline mo::ICoordinateSystem* get_pointer(const std::shared_ptr<mo::ICoordinateSystem>& ptr)
+    {
+        return ptr.get();
+    }
 
     std::vector<std::string> listConstructableObjects()
     {
@@ -101,21 +115,21 @@ namespace mo
         {
             if (level == "trace")
             {
-            }else
-            if (level == "debug"){
-
-            }else
-            if (level == "info"){
-
-            }else
-            if (level == "warning"){
-
-            }else
-            if (level == "error"){
-
-            }else
-            if (level == "fatal"){
-
+            }
+            else if (level == "debug")
+            {
+            }
+            else if (level == "info")
+            {
+            }
+            else if (level == "warning")
+            {
+            }
+            else if (level == "error")
+            {
+            }
+            else if (level == "fatal")
+            {
             }
         }
 
@@ -134,9 +148,15 @@ namespace mo
         static bool setup = false;
         static std::string module_name;
 
-        std::string getModuleName() { return module_name; }
+        std::string getModuleName()
+        {
+            return module_name;
+        }
 
-        void setModuleName(const std::string& name) { module_name = name; }
+        void setModuleName(const std::string& name)
+        {
+            module_name = name;
+        }
 
         void registerSetupFunction(std::function<void(void)>&& func)
         {
@@ -283,7 +303,9 @@ namespace mo
             }
             registerInterfacesHelper(graph, func_map);
         }
-        void cvErrorHandler() {}
+        void cvErrorHandler()
+        {
+        }
 
         void sig_handler(int s)
         {
@@ -392,7 +414,9 @@ namespace mo
                 }
             }
 
-            ~LibGuard() {}
+            ~LibGuard()
+            {
+            }
 
             std::shared_ptr<SystemTable> m_system_table;
             std::shared_ptr<mo::MetaObjectFactory> m_factory;
@@ -411,9 +435,6 @@ namespace mo
 
         std::shared_ptr<SystemTable> pythonSetup(const char* module_name_)
         {
-
-
-            //boost::log::core::get()->set_filter(boost::log::trivial::severity >= boost::log::trivial::info);
             std::string module_name(module_name_);
             mo::python::module_name = module_name;
             setupAllocator();

@@ -6,7 +6,7 @@
 #include "MetaObject/types/opencv.hpp"
 #include "ct/reflect.hpp"
 #include "ct/reflect/cerealize.hpp"
-#include <MetaObject/visitation/visitor_traits/vector.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
 #include <boost/lexical_cast.hpp>
 #include <cereal/types/vector.hpp>
 

@@ -2,7 +2,7 @@
 #define MO_VISITATION_FILESYSTEM_HPP
 
 #include <MetaObject/types/file_types.hpp>
-#include <MetaObject/visitation/IDynamicVisitor.hpp>
+#include <MetaObject/runtime_reflection/IDynamicVisitor.hpp>
 
 namespace mo
 {

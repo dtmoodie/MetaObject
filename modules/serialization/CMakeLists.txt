@@ -8,7 +8,7 @@ if(BUILD_TESTS)
     add_executable(test_mo_serialization ${src})
     target_include_directories(test_mo_serialization
         PRIVATE
-            "${CMAKE_CURRENT_LIST_DIR}/../visitation/tests"
+            "${CMAKE_CURRENT_LIST_DIR}/../runtime_reflection/tests"
     )
 
     if(OpenCV_FOUND)

@@ -1,7 +1,7 @@
-#include <MetaObject/visitation.hpp>
+#include <MetaObject/runtime_reflection.hpp>
 #include "common.hpp"
-#include <MetaObject/visitation/visitor_traits/map.hpp>
-#include <MetaObject/visitation/visitor_traits/pair.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/map.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/pair.hpp>
 namespace mo
 {
 void staticCheckFunction()

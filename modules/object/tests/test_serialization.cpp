@@ -27,7 +27,7 @@
 #include <MetaObject/types/file_types.hpp>
 #include <MetaObject/serialization/SerializationFactory.hpp>
 #include <MetaObject/serialization/CerealParameters.hpp>
-#include <MetaObject/visitation/visitor_traits/vector.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
 
 
 #include <fstream>

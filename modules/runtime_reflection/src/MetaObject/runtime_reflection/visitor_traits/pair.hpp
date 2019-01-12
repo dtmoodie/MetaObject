@@ -1,6 +1,6 @@
 #ifndef MO_VISITATION_PAIR_HPP
 #define MO_VISITATION_PAIR_HPP
-#include <MetaObject/visitation/VisitorTraits.hpp>
+#include <MetaObject/runtime_reflection/VisitorTraits.hpp>
 #include <type_traits>
 
 namespace mo

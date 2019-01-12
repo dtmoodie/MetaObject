@@ -4,12 +4,12 @@
 #include <opencv2/core.hpp>
 #endif
 
-#include <MetaObject/visitation.hpp>
+#include <MetaObject/runtime_reflection.hpp>
 
-#include <MetaObject/visitation/visitor_traits/array_adapter.hpp>
-#include <MetaObject/visitation/visitor_traits/map.hpp>
-#include <MetaObject/visitation/visitor_traits/memory.hpp>
-#include <MetaObject/visitation/visitor_traits/vector.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/array_adapter.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/map.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/memory.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
 
 #include <ct/reflect.hpp>
 #include <ct/reflect/cerealize.hpp>

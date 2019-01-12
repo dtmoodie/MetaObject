@@ -1,6 +1,6 @@
 #include "filesystem.hpp"
 #include <MetaObject/logging/logging.hpp>
-#include <MetaObject/visitation/visitor_traits/string.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/string.hpp>
 
 namespace mo
 {

@@ -10,7 +10,7 @@
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
 #include "MetaObject/types/file_types.hpp"
-#include "MetaObject/visitation.hpp"
+#include "MetaObject/runtime_reflection.hpp"
 
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"

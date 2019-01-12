@@ -5,7 +5,7 @@ metaobject_declare_module(NAME params
         metaobject_core
         ct
         metaobject_types
-        metaobject_visitation
+        metaobject_runtime_reflection
         cereal
 )
 
