@@ -10,7 +10,7 @@
 #include <MetaObject/thread/fiber_include.hpp>
 
 #include <boost/thread.hpp>
-
+#include <set>
 using namespace mo;
 
 namespace
@@ -99,14 +99,31 @@ namespace
 
             auto read_func = [this, dropping, &read_values]() {
                 int data;
+                std::set<int> read_values_;
                 for (int i = 0; i < 10000; ++i)
                 {
                     bool result = false;
-                    for (int j = 0; j < 15 && !result; ++j)
+                    if(!dropping)
                     {
-                        result = input_param.getTypedData(&data, Header(i * ms));
-                        boost::this_thread::sleep_for(boost::chrono::nanoseconds(10));
+                        for (int j = 0; j < 15 && !result; ++j)
+                        {
+                            result = input_param.getTypedData(&data, Header(i * ms));
+                            boost::this_thread::sleep_for(boost::chrono::nanoseconds(10));
+                        }
+                    }else
+                    {
+                        int new_value;
+                        result = input_param.getTypedData(&new_value, Header(i*ms));
+                        if(new_value == data || result == false)
+                        {
+                            continue;
+                        }
+                        BOOST_REQUIRE(read_values_.find(new_value) == read_values_.end());
+                        read_values_.insert(new_value);
+
+                        data = new_value;
                     }
+
 
                     BOOST_REQUIRE(result || dropping);
                     if (result)
@@ -120,6 +137,10 @@ namespace
                     {
                         return;
                     }
+                }
+                if(dropping)
+                {
+                    read_values = read_values_.size();
                 }
             };
             boost::thread thread(read_func);
