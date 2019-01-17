@@ -1,9 +1,11 @@
 #pragma once
-#include "MetaObject/core/detail/Enums.hpp"
-#include "MetaObject/core/detail/Time.hpp"
-#include "MetaObject/core/detail/forward.hpp"
-#include "MetaObject/detail/Export.hpp"
-#include "MetaObject/params/detail/forward.hpp"
+#include "TInterface.hpp"
+
+#include <MetaObject/core/detail/Enums.hpp>
+#include <MetaObject/core/detail/Time.hpp>
+#include <MetaObject/core/detail/forward.hpp>
+#include <MetaObject/detail/Export.hpp>
+#include <MetaObject/params/detail/forward.hpp>
 
 #include <RuntimeObjectSystem/IObject.h>
 #include <RuntimeObjectSystem/shared_ptr.hpp>

@@ -6,6 +6,7 @@ include(cmake/dependencies/cuda.cmake)
 include(cmake/dependencies/rcc.cmake)
 include(cmake/dependencies/qt5.cmake)
 include(cmake/dependencies/wt.cmake)
+add_subdirectory(dependencies/ct)
 INCLUDE_DIRECTORIES(dependencies/spdlog/include)
 
 
