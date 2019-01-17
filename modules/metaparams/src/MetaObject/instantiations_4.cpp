@@ -1,5 +1,5 @@
 #include <MetaObject/core/metaobject_config.hpp>
-#include <MetaObject/serialization/cereal_map.hpp>
+#include <MetaObject/types/cereal_map.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/array_adapter.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/map.hpp>

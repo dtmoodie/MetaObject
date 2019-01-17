@@ -24,7 +24,7 @@ namespace std
 #include <cereal/cereal.hpp>
 #include <cereal/types/string.hpp>
 #include <cereal/types/map.hpp>
-#include <MetaObject/serialization/cereal_map.hpp>
+#include <MetaObject/types/cereal_map.hpp>
 
 #ifdef emit
 #undef emit

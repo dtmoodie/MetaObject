@@ -1,5 +1,5 @@
 #include <common.hpp>
-#include <MetaObject/serialization/cereal_map.hpp>
+#include <MetaObject/types/cereal_map.hpp>
 
 #include <MetaObject/serialization/JSONPrinter.hpp>
 

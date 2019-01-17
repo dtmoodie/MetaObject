@@ -3,7 +3,7 @@
 #include <MetaObject/core/detail/Time.hpp>
 #include <MetaObject/serialization/BinaryLoader.hpp>
 #include <MetaObject/serialization/BinarySaver.hpp>
-#include <MetaObject/serialization/cereal_map.hpp>
+#include <MetaObject/types/cereal_map.hpp>
 
 #include <cereal/archives/binary.hpp>
 

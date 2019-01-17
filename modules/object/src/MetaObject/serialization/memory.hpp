@@ -1,5 +1,4 @@
 #pragma once
-#include "MetaObject/serialization/SerializationFactory.hpp"
 #include <MetaObject/logging/logging.hpp>
 #include <MetaObject/object/MetaObjectFactory.hpp>
 #include <MetaObject/params/IParam.hpp>
@@ -16,16 +15,6 @@
 
 namespace cereal
 {
-    /*template <class AR>
-    void save(AR& ar, const mo::IParam* param)
-    {
-        auto serializer = mo::SerializationFactory::instance()->getSerializer<AR>(param->getTypeInfo());
-        if (serializer)
-        {
-            serializer(param, ar);
-        }
-    }*/
-
     template <class AR>
     void save(AR& ar, const mo::IMetaObject& obj)
     {
