@@ -36,6 +36,9 @@ if(MO_HAVE_PYTHON AND MO_HAVE_OPENCV)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/tests/test_python.py ${out_dir}/Debug/metaobject_python_test.py @ONLY)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/tests/test_python.py ${out_dir}/RelWithDebInfo/metaobject_python_test.py @ONLY)
     endif(UNIX)
+    set(metaobject_param_include
+        "${metaobject_param_include}\n#ifdef slots\n#undef slots\n#endif\n#include <MetaObject/python/PythonPolicy.hpp>\n" CACHE INTERNAL "" FORCE
+    )
 
     if(BUILD_TESTS)
         add_executable(test_mo_python_init tests/python_init_param_setter.cpp)
