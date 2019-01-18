@@ -44,5 +44,7 @@ if(MO_HAVE_PYTHON AND MO_HAVE_OPENCV)
         add_executable(test_mo_python_init tests/python_init_param_setter.cpp)
         set_target_properties(test_mo_python_init PROPERTIES FOLDER Tests/MetaObject/python)
         target_link_libraries(test_mo_python_init ct metaobject_python)
+
+        add_test(NAME test_mo_python COMMAND python2 test_mo_python.py)
     endif()
 endif()

@@ -1,7 +1,6 @@
 
 #define BOOST_TEST_MAIN
 #define _VARIADIC_MAX 10
-#include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/object/detail/IMetaObjectImpl.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"

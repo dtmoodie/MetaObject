@@ -37,9 +37,8 @@
 
 struct SystemTable;
 
-namespace mo
-{
-    METAPARAMTERS_EXPORTS void initMetaParamsModule(SystemTable* table = nullptr);
+extern "C" {
+    METAPARAMTERS_EXPORTS void initMetaParamsModule(SystemTable* table);
 }
 
 META_PARAM_EXTERN(bool)

@@ -74,7 +74,11 @@ namespace mo
             std::is_same<type, int16_t>::value || std::is_same<type, uint16_t>::value ||
             std::is_same<type, int32_t>::value || std::is_same<type, uint32_t>::value ||
             std::is_same<type, int64_t>::value || std::is_same<type, uint64_t>::value ||
+#ifdef ENVIRONMENT64
             std::is_same<type, long long>::value || std::is_same<type, unsigned long long>::value ||
+#else
+        std::is_same<type, long int>::value || std::is_same<type, unsigned long int>::value ||
+#endif
             std::is_same<type, float>::value || std::is_same<type, double>::value || std::is_same<type, void*>::value ||
             std::is_same<type, char>::value || std::is_same<type, bool>::value;
     };

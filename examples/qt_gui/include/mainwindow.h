@@ -1,6 +1,6 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
-
+#include <MetaObject/core/SystemTable.hpp>
 #include <QMainWindow>
 #include <memory>
 #ifdef HAVE_OPENCV
@@ -42,6 +42,7 @@ class MainWindow : public QMainWindow
     std::vector<cv::Point2f> testRefVec;
     std::vector<cv::Scalar> testRefScalar;
 #endif
+    SystemTable::Ptr_t m_system_table;
 };
 
 #endif // MAINWINDOW_H

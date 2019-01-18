@@ -35,7 +35,8 @@ MainWindow::MainWindow(QWidget* parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
 {
-    mo::initMetaParamsModule();
+    m_system_table = SystemTable::instance();
+    initMetaParamsModule(m_system_table.get());
     ui->setupUi(this);
     {
         /*auto param = new mo::RangedParam<std::vector<float>>(0.0,20,"vector float");

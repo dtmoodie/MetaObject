@@ -57,6 +57,37 @@ namespace boost
     }
 }
 
+namespace
+{
+#ifndef _MSC_VER
+#include <dlfcn.h>
+        void loadMetaParams(SystemTable* table)
+        {
+            void* handle = dlopen("libmetaobject_metaparams.so", RTLD_NOW | RTLD_GLOBAL);
+            if(nullptr == handle )
+            {
+                handle = dlopen("libmetaobject_metaparamsd.so", RTLD_NOW | RTLD_GLOBAL);
+            }
+            if(nullptr == handle)
+            {
+                MO_LOG(info, "Unable to load metaparams");
+                return;
+            }
+            auto* init = reinterpret_cast<void(*)(SystemTable*)>(dlsym(handle, "initMetaParamsModule"));
+            if(init)
+            {
+                init(table);
+            }
+
+        }
+#else
+        void loadMetaParams()
+        {
+
+        }
+#endif
+}
+
 namespace mo
 {
     void setupEnums(const std::string& module_name);
@@ -354,6 +385,7 @@ namespace mo
             }
         }
 
+
         struct LibGuard
         {
             enum AllocatorMode
@@ -466,6 +498,7 @@ namespace mo
                 "LibGuard", boost::python::no_init);
             libguardobj.def("setAllocator", &LibGuard::setAllocator);
             boost::python::scope().attr("__libguard") = lib_guard;
+            loadMetaParams(lib_guard->m_system_table.get());
 
             return lib_guard->m_system_table;
         }

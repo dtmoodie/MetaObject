@@ -1,6 +1,7 @@
 #include <map>
 #include <ostream>
 #include <string>
+
 namespace std
 {
     template <class K, class V>
@@ -26,15 +27,6 @@ namespace std
 #include <cereal/types/map.hpp>
 #include <MetaObject/types/cereal_map.hpp>
 
-#ifdef emit
-#undef emit
-#endif
-#ifdef HAVE_WT
-#define WT_NO_SLOT_MACROS
-#include "MetaObject/params/ui/Wt/IParamProxy.hpp"
-#include "MetaObject/params/ui/Wt/POD.hpp"
-#include "MetaObject/params/ui/Wt/String.hpp"
-#endif
 
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS

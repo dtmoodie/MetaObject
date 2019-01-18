@@ -1,3 +1,5 @@
+#include "MetaParameters.hpp"
+#include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 struct SystemTable;
 namespace mo
 {
@@ -10,15 +12,19 @@ namespace mo
         void instCVRect(SystemTable* table);
         void instMOTypes(SystemTable* table);
     }
-    void initMetaParamsModule(SystemTable* table)
-    {
-        MetaParams::instantiatePOD(table);
-        MetaParams::instantiateVectors(table);
+
+}
+extern "C"{
+void initMetaParamsModule(SystemTable* table)
+{
+    PerModuleInterface::GetInstance()->SetSystemTable(table);
+    mo::MetaParams::instantiatePOD(table);
+    mo::MetaParams::instantiateVectors(table);
 #ifdef HAVE_OPENCV
-        MetaParams::instCV(table);
-        MetaParams::instCVVec(table);
-        MetaParams::instCVRect(table);
+    mo::MetaParams::instCV(table);
+    mo::MetaParams::instCVVec(table);
+    mo::MetaParams::instCVRect(table);
 #endif
-        MetaParams::instMOTypes(table);
-    }
+    mo::MetaParams::instMOTypes(table);
+}
 }

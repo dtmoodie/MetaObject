@@ -97,7 +97,7 @@ struct TestReadVisitor : public LoadCache
         ++count;
         return *this;
     }
-
+#ifdef ENVIRONMENT64
     virtual ILoadVisitor& operator()(long long*, const std::string& = "", const size_t = 1)
     {
         ++count;
@@ -109,7 +109,19 @@ struct TestReadVisitor : public LoadCache
         ++count;
         return *this;
     }
+#else
+    virtual ILoadVisitor& operator()(long int*, const std::string& = "", const size_t = 1)
+    {
+        ++count;
+        return *this;
+    }
 
+    virtual ILoadVisitor& operator()(unsigned long int*, const std::string& = "", const size_t = 1)
+    {
+        ++count;
+        return *this;
+    }
+#endif
     virtual ILoadVisitor& operator()(float*, const std::string& = "", const size_t = 1)
     {
         ++count;

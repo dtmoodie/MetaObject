@@ -1,6 +1,5 @@
 #define BOOST_TEST_MAIN
 #include "MetaObject/core/detail/Allocator.hpp"
-#include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/object/detail/IMetaObjectImpl.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"

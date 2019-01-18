@@ -1,6 +1,5 @@
 #define BOOST_TEST_DYN_LINK
 #define BOOST_TEST_MAIN
-#include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/logging/CompileLogger.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
