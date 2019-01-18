@@ -1,5 +1,4 @@
 #include "MetaObject/core/SystemTable.hpp"
-#include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/object/MetaObject.hpp"
 #include "MetaObject/object/RelayManager.hpp"
 #include "MetaObject/object/detail/IMetaObjectImpl.hpp"

@@ -20,9 +20,13 @@ namespace mo
         ISaveVisitor& operator()(const uint32_t* ptr, const std::string& name, const size_t cnt) override;
         ISaveVisitor& operator()(const int64_t* ptr, const std::string& name, const size_t cnt) override;
         ISaveVisitor& operator()(const uint64_t* ptr, const std::string& name, const size_t cnt) override;
-
+#ifdef ENVIRONMENT64
         ISaveVisitor& operator()(const long long* val, const std::string& name = "", const size_t cnt = 1) override;
         ISaveVisitor& operator()(const unsigned long long* val, const std::string& name = "", const size_t cnt = 1) override;
+#else
+        ISaveVisitor& operator()(const long int* val, const std::string& name = "", const size_t cnt = 1) override;
+        ISaveVisitor& operator()(const unsigned long int* val, const std::string& name = "", const size_t cnt = 1) override;
+#endif
         ISaveVisitor& operator()(const float* val, const std::string& name, const size_t cnt) override;
         ISaveVisitor& operator()(const double*, const std::string&, const size_t) override;
         ISaveVisitor& operator()(const void*, const std::string&, const size_t) override;

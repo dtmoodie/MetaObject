@@ -70,7 +70,7 @@ namespace mo
     {
         return loadBinary(ptr, cnt);
     }
-
+#ifdef ENVIRONMENT64
     ILoadVisitor& BinaryLoader::operator()(long long* ptr, const std::string&, const size_t cnt)
     {
         return loadBinary(ptr, cnt);
@@ -80,7 +80,17 @@ namespace mo
     {
         return loadBinary(ptr, cnt);
     }
+#else
+    ILoadVisitor& BinaryLoader::operator()(long int* ptr, const std::string&, const size_t cnt)
+    {
+        return loadBinary(ptr, cnt);
+    }
 
+    ILoadVisitor& BinaryLoader::operator()(unsigned long int* ptr, const std::string&, const size_t cnt)
+    {
+        return loadBinary(ptr, cnt);
+    }
+#endif
     ILoadVisitor& BinaryLoader::operator()(float* ptr, const std::string&, const size_t cnt)
     {
         return loadBinary(ptr, cnt);

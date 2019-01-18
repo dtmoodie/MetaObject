@@ -9,6 +9,23 @@
 #include <string>
 #include <type_traits>
 
+#if defined(_WIN32) || defined(_WIN64)
+#if _WIN64
+#define ENVIRONMENT64
+#else
+#define ENVIRONMENT32
+#endif
+#endif
+
+// Check GCC
+#if __GNUC__
+#if __x86_64__ || __ppc64__
+#define ENVIRONMENT64
+#else
+#define ENVIRONMENT32
+#endif
+#endif
+
 namespace mo
 {
     struct CacheDataContainer
@@ -102,10 +119,15 @@ namespace mo
         virtual ILoadVisitor& operator()(uint32_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual ILoadVisitor& operator()(int64_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual ILoadVisitor& operator()(uint64_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
-
+#ifdef ENVIRONMENT64
         virtual ILoadVisitor& operator()(long long* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual ILoadVisitor&
         operator()(unsigned long long* val, const std::string& name = "", const size_t cnt = 1) = 0;
+#else
+        virtual ILoadVisitor& operator()(long int* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ILoadVisitor&
+        operator()(unsigned long int* val, const std::string& name = "", const size_t cnt = 1) = 0;
+#endif
 
         virtual ILoadVisitor& operator()(float* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual ILoadVisitor& operator()(double* val, const std::string& name = "", const size_t cnt = 1) = 0;
@@ -155,10 +177,15 @@ namespace mo
         virtual ISaveVisitor& operator()(const uint32_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual ISaveVisitor& operator()(const int64_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual ISaveVisitor& operator()(const uint64_t* val, const std::string& name = "", const size_t cnt = 1) = 0;
-
+#ifdef ENVIRONMENT64
         virtual ISaveVisitor& operator()(const long long* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual ISaveVisitor&
         operator()(const unsigned long long* val, const std::string& name = "", const size_t cnt = 1) = 0;
+#else
+        virtual ISaveVisitor& operator()(const long int* val, const std::string& name = "", const size_t cnt = 1) = 0;
+        virtual ISaveVisitor&
+        operator()(const unsigned long int* val, const std::string& name = "", const size_t cnt = 1) = 0;
+#endif
         virtual ISaveVisitor& operator()(const float* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual ISaveVisitor& operator()(const double* val, const std::string& name = "", const size_t cnt = 1) = 0;
         virtual ISaveVisitor& operator()(const void* binary, const std::string& name = "", const size_t bytes = 1) = 0;

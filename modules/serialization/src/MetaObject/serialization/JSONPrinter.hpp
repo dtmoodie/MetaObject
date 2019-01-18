@@ -10,25 +10,30 @@ namespace mo
     struct JSONSaver : public SaveCache
     {
         JSONSaver(std::ostream& os);
-        virtual ISaveVisitor& operator()(const bool* val, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ISaveVisitor& operator()(const char* val, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ISaveVisitor& operator()(const int8_t*, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ISaveVisitor& operator()(const uint8_t*, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ISaveVisitor& operator()(const int16_t*, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ISaveVisitor& operator()(const uint16_t*, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ISaveVisitor& operator()(const int32_t*, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ISaveVisitor& operator()(const uint32_t*, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ISaveVisitor& operator()(const int64_t*, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ISaveVisitor& operator()(const uint64_t*, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ISaveVisitor& operator()(const long long* val, const std::string& name, const size_t cnt) override;
-        virtual ISaveVisitor& operator()(const unsigned long long* val, const std::string& name, const size_t cnt) override;
-        virtual ISaveVisitor& operator()(const float* val, const std::string& name, const size_t cnt) override;
-        virtual ISaveVisitor& operator()(const double*, const std::string&, const size_t) override;
-        virtual ISaveVisitor& operator()(const void*, const std::string&, const size_t) override;
-        virtual ISaveVisitor& operator()(ISaveStructTraits* val, const std::string& name = "") override;
-        virtual ISaveVisitor& operator()(ISaveContainerTraits* val, const std::string& name = "") override;
+        ISaveVisitor& operator()(const bool* val, const std::string& name = "", const size_t cnt = 1) override;
+        ISaveVisitor& operator()(const char* val, const std::string& name = "", const size_t cnt = 1) override;
+        ISaveVisitor& operator()(const int8_t*, const std::string& name = "", const size_t cnt = 1) override;
+        ISaveVisitor& operator()(const uint8_t*, const std::string& name = "", const size_t cnt = 1) override;
+        ISaveVisitor& operator()(const int16_t*, const std::string& name = "", const size_t cnt = 1) override;
+        ISaveVisitor& operator()(const uint16_t*, const std::string& name = "", const size_t cnt = 1) override;
+        ISaveVisitor& operator()(const int32_t*, const std::string& name = "", const size_t cnt = 1) override;
+        ISaveVisitor& operator()(const uint32_t*, const std::string& name = "", const size_t cnt = 1) override;
+        ISaveVisitor& operator()(const int64_t*, const std::string& name = "", const size_t cnt = 1) override;
+        ISaveVisitor& operator()(const uint64_t*, const std::string& name = "", const size_t cnt = 1) override;
+#ifdef ENVIRONMENT64
+        ISaveVisitor& operator()(const long long* val, const std::string& name, const size_t cnt) override;
+        ISaveVisitor& operator()(const unsigned long long* val, const std::string& name, const size_t cnt) override;
+#else
+        ISaveVisitor& operator()(const long int* val, const std::string& name, const size_t cnt) override;
+        ISaveVisitor& operator()(const unsigned long int* val, const std::string& name, const size_t cnt) override;
+#endif
+        ISaveVisitor& operator()(const float* val, const std::string& name, const size_t cnt) override;
+        ISaveVisitor& operator()(const double*, const std::string&, const size_t) override;
+        ISaveVisitor& operator()(const void*, const std::string&, const size_t) override;
+        ISaveVisitor& operator()(ISaveStructTraits* val, const std::string& name = "") override;
+        ISaveVisitor& operator()(ISaveContainerTraits* val, const std::string& name = "") override;
 
-        virtual VisitorTraits traits() const override;
+        VisitorTraits traits() const override;
 
       private:
         template <class T>
@@ -40,28 +45,32 @@ namespace mo
     struct JSONLoader : public LoadCache
     {
         JSONLoader(std::istream& os);
-        virtual ILoadVisitor& operator()(bool* val, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ILoadVisitor& operator()(char* val, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ILoadVisitor& operator()(int8_t*, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ILoadVisitor& operator()(uint8_t*, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ILoadVisitor& operator()(int16_t*, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ILoadVisitor& operator()(uint16_t*, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ILoadVisitor& operator()(int32_t*, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ILoadVisitor& operator()(uint32_t*, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ILoadVisitor& operator()(int64_t*, const std::string& name = "", const size_t cnt = 1) override;
-        virtual ILoadVisitor& operator()(uint64_t*, const std::string& name = "", const size_t cnt = 1) override;
+        ILoadVisitor& operator()(bool* val, const std::string& name = "", const size_t cnt = 1) override;
+        ILoadVisitor& operator()(char* val, const std::string& name = "", const size_t cnt = 1) override;
+        ILoadVisitor& operator()(int8_t*, const std::string& name = "", const size_t cnt = 1) override;
+        ILoadVisitor& operator()(uint8_t*, const std::string& name = "", const size_t cnt = 1) override;
+        ILoadVisitor& operator()(int16_t*, const std::string& name = "", const size_t cnt = 1) override;
+        ILoadVisitor& operator()(uint16_t*, const std::string& name = "", const size_t cnt = 1) override;
+        ILoadVisitor& operator()(int32_t*, const std::string& name = "", const size_t cnt = 1) override;
+        ILoadVisitor& operator()(uint32_t*, const std::string& name = "", const size_t cnt = 1) override;
+        ILoadVisitor& operator()(int64_t*, const std::string& name = "", const size_t cnt = 1) override;
+        ILoadVisitor& operator()(uint64_t*, const std::string& name = "", const size_t cnt = 1) override;
+#ifdef ENVIRONMENT64
+        ILoadVisitor& operator()(long long* val, const std::string& name, const size_t cnt) override;
+        ILoadVisitor& operator()(unsigned long long* val, const std::string& name, const size_t cnt) override;
+#else
+        ILoadVisitor& operator()(long int* val, const std::string& name, const size_t cnt) override;
+        ILoadVisitor& operator()(unsigned long int* val, const std::string& name, const size_t cnt) override;
+#endif
+        ILoadVisitor& operator()(float* val, const std::string& name, const size_t cnt) override;
+        ILoadVisitor& operator()(double*, const std::string&, const size_t) override;
+        ILoadVisitor& operator()(void*, const std::string&, const size_t) override;
+        ILoadVisitor& operator()(ILoadStructTraits* val, const std::string& name = "") override;
+        ILoadVisitor& operator()(ILoadContainerTraits* val, const std::string& name = "") override;
 
-        virtual ILoadVisitor& operator()(long long* val, const std::string& name, const size_t cnt) override;
-        virtual ILoadVisitor& operator()(unsigned long long* val, const std::string& name, const size_t cnt) override;
-        virtual ILoadVisitor& operator()(float* val, const std::string& name, const size_t cnt) override;
-        virtual ILoadVisitor& operator()(double*, const std::string&, const size_t) override;
-        virtual ILoadVisitor& operator()(void*, const std::string&, const size_t) override;
-        virtual ILoadVisitor& operator()(ILoadStructTraits* val, const std::string& name = "") override;
-        virtual ILoadVisitor& operator()(ILoadContainerTraits* val, const std::string& name = "") override;
+        VisitorTraits traits() const override;
 
-        virtual VisitorTraits traits() const override;
-
-        virtual std::string getCurrentElementName() const override;
+        std::string getCurrentElementName() const override;
 
       private:
         template <class T>

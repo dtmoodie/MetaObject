@@ -5,7 +5,6 @@
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/facilities/empty.hpp>
 #endif
-#include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/core/detail/forward.hpp"
 #include "MetaObject/signals/SlotInfo.hpp"
 #include "MetaObject/signals/TSlot.hpp"
@@ -16,7 +15,7 @@
     mo::TSlot<RETURN(__VA_ARGS__)> COMBINE(_slot_##NAME##_, N);                                                        \
     template <class V, class F, class... Args>                                                                         \
     inline void reflectHelper(                                                                                         \
-        V& visitor, F visit_filter, mo::MemberFilter<mo::SLOTS> filter, mo::_counter_<N> cnt, Args&&... args)          \
+        V& visitor, F visit_filter, mo::MemberFilter<mo::SLOTS> filter, const ct::Indexer<N> cnt, Args&&... args)          \
     {                                                                                                                  \
         visitor(mo::tagSlot(COMBINE(_slot_##NAME##_, N)),                                                              \
                 mo::tagFunction(static_cast<RETURN (THIS_CLASS::*)(__VA_ARGS__)>(&THIS_CLASS::NAME)),                  \
@@ -27,7 +26,7 @@
     }                                                                                                                  \
     template <class V, class F, class... Args>                                                                         \
     static inline void reflectHelperStatic(                                                                            \
-        V& visitor, F visit_filter, mo::MemberFilter<mo::SLOTS> filter, mo::_counter_<N> cnt, Args&&... args)          \
+        V& visitor, F visit_filter, mo::MemberFilter<mo::SLOTS> filter, const ct::Indexer<N> cnt, Args&&... args)          \
     {                                                                                                                  \
         visitor(mo::tagFunction(static_cast<RETURN (THIS_CLASS::*)(__VA_ARGS__)>(&THIS_CLASS::NAME)),                  \
                 mo::Name(#NAME),                                                                                       \
@@ -48,7 +47,7 @@
     static inline void reflectHelperStatic(V& visitor,                                                                 \
                                            mo::VisitationFilter<mo::LIST> visit_filter,                                \
                                            mo::MemberFilter<mo::SLOTS> filter,                                         \
-                                           mo::_counter_<N> cnt,                                                       \
+                                           const ct::Indexer<N> cnt,                                                       \
                                            Args&&... args)                                                             \
     {                                                                                                                  \
         visitor(mo::tagStaticFunction(static_cast<RETURN (*)(__VA_ARGS__)>(&THIS_CLASS::NAME)),                        \
@@ -64,7 +63,7 @@
     static inline void reflectHelperStatic(V& visitor,                                                                 \
                                            mo::VisitationFilter<mo::LIST> visit_filter,                                \
                                            mo::MemberFilter<mo::SLOTS> filter,                                         \
-                                           mo::_counter_<N> cnt,                                                       \
+                                           const ct::Indexer<N> cnt,                                                       \
                                            Args&&... args)                                                             \
     {                                                                                                                  \
         visitor(mo::tagStaticFunction(static_cast<RETURN (*)()>(&THIS_CLASS::NAME)),                                   \
@@ -79,7 +78,7 @@
     mo::TSlot<RETURN(void)> COMBINE(_slot_##NAME##_, N);                                                               \
     template <class V, class F, class... Args>                                                                         \
     inline void reflectHelper(                                                                                         \
-        V& visitor, F visit_filter, mo::MemberFilter<mo::SLOTS> filter, mo::_counter_<N> cnt, Args&&... args)          \
+        V& visitor, F visit_filter, mo::MemberFilter<mo::SLOTS> filter, const ct::Indexer<N> cnt, Args&&... args)          \
     {                                                                                                                  \
         visitor(mo::tagSlot(COMBINE(_slot_##NAME##_, N)),                                                              \
                 mo::tagFunction(static_cast<RETURN (THIS_CLASS::*)()>(&THIS_CLASS::NAME)),                             \
@@ -90,7 +89,7 @@
     }                                                                                                                  \
     template <class V, class F, class... Args>                                                                         \
     static inline void reflectHelperStatic(                                                                            \
-        V& visitor, F visit_filter, mo::MemberFilter<mo::SLOTS> filter, mo::_counter_<N> cnt, Args&&... args)          \
+        V& visitor, F visit_filter, mo::MemberFilter<mo::SLOTS> filter, const ct::Indexer<N> cnt, Args&&... args)          \
     {                                                                                                                  \
         visitor(mo::tagFunction(static_cast<RETURN (THIS_CLASS::*)()>(&THIS_CLASS::NAME)),                             \
                 mo::Name(#NAME),                                                                                       \
@@ -130,16 +129,16 @@
 #define SLOT_13(RETURN, N, NAME, ...) SLOT_N(NAME, N, RETURN, __VA_ARGS__)
 
 #define DESCRIBE_SLOT_(NAME, DESCRIPTION, N)                                                                           \
-    std::string _slot_description_by_name(const std::string& name, mo::_counter_<N> dummy)                             \
+    std::string _slot_description_by_name(const std::string& name, const ct::Indexer<N> dummy)                             \
     {                                                                                                                  \
         (void)dummy;                                                                                                   \
         if (name == #NAME)                                                                                             \
             return DESCRIPTION;                                                                                        \
     }                                                                                                                  \
-    std::vector<slot_info> _list_slots(mo::_counter_<N> dummy)                                                         \
+    std::vector<slot_info> _list_slots(const ct::Indexer<N> idx)                                                         \
     {                                                                                                                  \
         (void)dummy;                                                                                                   \
-        auto slot_info = _list_slots(mo::_counter_<N - 1>());                                                          \
+        auto slot_info = _list_slots(--idx);                                                          \
         for (auto& info : slot_info)                                                                                   \
         {                                                                                                              \
             if (info.name == #NAME)                                                                                    \
@@ -151,9 +150,9 @@
     }
 
 #define SLOT_TOOLTIP_(name, tooltip, N)                                                                                \
-    static void _list_slots(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy)                                  \
+    static void _list_slots(std::vector<mo::SlotInfo*>& info, const ct::Indexer<N> idx)                                  \
     {                                                                                                                  \
-        _list_slots(info, --dummy);                                                                                    \
+        _list_slots(info, --idx);                                                                                    \
         for (auto it : info)                                                                                           \
         {                                                                                                              \
             if (it->name == #name)                                                                                     \

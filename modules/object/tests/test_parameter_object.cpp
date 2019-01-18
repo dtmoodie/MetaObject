@@ -1,5 +1,4 @@
 #include "MetaObject/core/SystemTable.hpp"
-#include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/logging/CompileLogger.hpp"
 #include "MetaObject/object/MetaObject.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"

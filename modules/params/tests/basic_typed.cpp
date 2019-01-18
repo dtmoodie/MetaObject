@@ -1,8 +1,5 @@
 
-#define BOOST_TEST_MAIN
-
 #include "MetaObject/core.hpp"
-#include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/params/ParamMacros.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
@@ -18,12 +15,9 @@
 #include <MetaObject/thread/fiber_include.hpp>
 #include <boost/any.hpp>
 
-#ifdef _MSC_VER
-#include <boost/test/unit_test.hpp>
-#else
-#define BOOST_TEST_MODULE "Param"
-#include <boost/test/included/unit_test.hpp>
-#endif
+
+#include <boost/test/test_tools.hpp>
+#include <boost/test/unit_test_suite.hpp>
 
 #include <iostream>
 

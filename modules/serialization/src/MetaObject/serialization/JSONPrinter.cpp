@@ -81,7 +81,7 @@ namespace mo
     {
         return writePod(val, name, cnt);
     }
-
+#ifdef ENVIRONMENT64
     ISaveVisitor& JSONSaver::operator()(const long long* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
@@ -91,7 +91,17 @@ namespace mo
     {
         return writePod(val, name, cnt);
     }
+#else
+    ISaveVisitor& JSONSaver::operator()(const long int* val, const std::string& name, const size_t cnt)
+    {
+        return writePod(val, name, cnt);
+    }
 
+    ISaveVisitor& JSONSaver::operator()(const unsigned long int* val, const std::string& name, const size_t cnt)
+    {
+        return writePod(val, name, cnt);
+    }
+#endif
     ISaveVisitor& JSONSaver::operator()(const float* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
@@ -244,7 +254,7 @@ namespace mo
     {
         return readPod(val, name, cnt);
     }
-
+#ifdef ENVIRONMENT64
     ILoadVisitor& JSONLoader::operator()(long long* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
@@ -254,7 +264,17 @@ namespace mo
     {
         return readPod(val, name, cnt);
     }
+#else
+    ILoadVisitor& JSONLoader::operator()(long int* val, const std::string& name, const size_t cnt)
+    {
+        return readPod(val, name, cnt);
+    }
 
+    ILoadVisitor& JSONLoader::operator()(unsigned long int* val, const std::string& name, const size_t cnt)
+    {
+        return readPod(val, name, cnt);
+    }
+#endif
     ILoadVisitor& JSONLoader::operator()(float* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
@@ -279,7 +299,7 @@ namespace mo
         }
 
         const auto cnt = val->count();
-        for(auto i = 0; i < cnt; ++i)
+        for(size_t i = 0; i < cnt; ++i)
         {
             auto name_ptr = m_ar.getNodeName();
             m_ar.startNode();

@@ -1,6 +1,5 @@
 #pragma once
 #include "MetaObject/core/TypeTable.hpp"
-#include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/logging/logging.hpp"
 #include "MetaObject/python/FunctionSignatureBuilder.hpp"
 #include "MetaObject/python/converters.hpp"

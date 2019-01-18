@@ -20,8 +20,13 @@ namespace mo
         ILoadVisitor& operator()(uint32_t* ptr, const std::string& name, const size_t cnt) override;
         ILoadVisitor& operator()(int64_t* ptr, const std::string& name, const size_t cnt) override;
         ILoadVisitor& operator()(uint64_t* ptr, const std::string& name, const size_t cnt) override;
+#ifdef ENVIRONMENT64
         ILoadVisitor& operator()(long long* val, const std::string& name, const size_t cnt) override;
         ILoadVisitor& operator()(unsigned long long* val, const std::string& name, const size_t cnt) override;
+#else
+        ILoadVisitor& operator()(long int* val, const std::string& name, const size_t cnt) override;
+        ILoadVisitor& operator()(unsigned long int* val, const std::string& name, const size_t cnt) override;
+#endif
         ILoadVisitor& operator()(float* val, const std::string& name, const size_t cnt) override;
         ILoadVisitor& operator()(double*, const std::string&, const size_t cnt) override;
         ILoadVisitor& operator()(void*, const std::string&, const size_t cnt) override;

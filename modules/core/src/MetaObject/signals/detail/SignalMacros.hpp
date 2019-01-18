@@ -5,7 +5,6 @@
 #include <boost/preprocessor/facilities/empty.hpp>
 #endif
 
-#include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/core/detail/HelperMacros.hpp"
 #include "MetaObject/signals/SignalInfo.hpp"
 #include "MetaObject/signals/TSignal.hpp"
@@ -56,12 +55,12 @@
 
 #define INIT_SIGNALS_(N, C, RETURN, NAME, ...)                                                                         \
     template<class V, class F, class ... Args>                                                                                  \
-    inline void reflectHelper(V& visitor, F visit_filter, mo::MemberFilter<mo::SIGNALS> filter, mo::_counter_<C> cnt, Args&&... args){                                                                                                                  \
+    inline void reflectHelper(V& visitor, F visit_filter, mo::MemberFilter<mo::SIGNALS> filter, const ct::Indexer<C> cnt, Args&&... args){                                                                                                                  \
         visitor(mo::tagSignal(COMBINE(_sig_##NAME##_, N)), mo::Name(#NAME), cnt, std::forward<Args>(args)...);         \
         reflectHelper(visitor, visit_filter, filter, --cnt, std::forward<Args>(args)...);                                            \
     }                                                                                                                  \
     template<class V, class F, class ... Args>                                                                                  \
-    static inline void reflectHelperStatic(V& visitor, F visit_filter, mo::MemberFilter<mo::SIGNALS> filter, mo::_counter_<C> cnt, Args&&... args){                                                                                                                  \
+    static inline void reflectHelperStatic(V& visitor, F visit_filter, mo::MemberFilter<mo::SIGNALS> filter, const ct::Indexer<C> cnt, Args&&... args){                                                                                                                  \
         visitor(mo::tagType<RETURN(__VA_ARGS__)>(), mo::Name(#NAME), cnt, std::forward<Args>(args)...);         \
         reflectHelperStatic(visitor, visit_filter, filter, --cnt, std::forward<Args>(args)...);                                            \
     }                                                                                                                  \
@@ -85,9 +84,9 @@
     INIT_SIGNALS_(N, __COUNTER__, RETURN, NAME, __VA_ARGS__)
 
 #define DESCRIBE_SIGNAL_(NAME, DESCRIPTION, N)                                                                         \
-    std::vector<slot_info> _list_signals(mo::_counter_<N> dummy)                                                       \
+    std::vector<slot_info> _list_signals(const ct::Indexer<N> dummy)                                                       \
     {                                                                                                                  \
-        auto signal_info = _list_signals(mo::_counter_<N - 1>());                                                      \
+        auto signal_info = _list_signals(--dummy);                                                      \
         for (auto& info : signal_info)                                                                                 \
         {                                                                                                              \
             if (info.name == #NAME)                                                                                    \

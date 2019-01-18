@@ -1,5 +1,5 @@
 #pragma once
-#include <MetaObject/core/detail/Counter.hpp>
+#include <ct/Indexer.hpp>
 #include <MetaObject/detail/TypeInfo.hpp>
 #include <tuple>
 
@@ -16,12 +16,12 @@ namespace mo
         template <class... Args>
         bool apply(const mo::TypeInfo& type, Args&&... args)
         {
-            return applyImpl(_counter_<static_cast<int>(sizeof...(T)) - 1>(), type, std::forward<Args>(args)...);
+            return applyImpl(ct::Indexer<static_cast<int>(sizeof...(T)) - 1>{}, type, std::forward<Args>(args)...);
         }
 
       private:
         template <class... Args>
-        bool applyImpl(_counter_<0>, const mo::TypeInfo& type, Args&&... args)
+        bool applyImpl(const ct::Indexer<0>, const mo::TypeInfo& type, Args&&... args)
         {
             typedef typename std::tuple_element<0, std::tuple<T...>>::type Type;
             if (mo::TypeInfo(typeid(Type)) == type)
@@ -34,7 +34,7 @@ namespace mo
 
         template <int I, class... Args>
         bool
-        applyImpl(_counter_<I> cnt, const typename std::enable_if<I != 0, mo::TypeInfo>::type& type, Args&&... args)
+        applyImpl(const ct::Indexer<I> cnt, const typename std::enable_if<I != 0, mo::TypeInfo>::type& type, Args&&... args)
         {
             typedef typename std::tuple_element<I, std::tuple<T...>>::type Type;
             if (mo::TypeInfo(typeid(Type)) == type)
@@ -59,12 +59,12 @@ namespace mo
         template <class... Args>
         bool apply(const mo::TypeInfo& type, Args&&... args)
         {
-            return applyImpl(_counter_<static_cast<int>(sizeof...(T)) - 1>(), type, std::forward<Args>(args)...);
+            return applyImpl(ct::Indexer<static_cast<int>(sizeof...(T)) - 1>{}, type, std::forward<Args>(args)...);
         }
 
       private:
         template <class... Args>
-        bool applyImpl(_counter_<0>, const mo::TypeInfo& type, Args&&... args)
+        bool applyImpl(const ct::Indexer<0>, const mo::TypeInfo& type, Args&&... args)
         {
             typedef typename std::tuple_element<0, std::tuple<T...>>::type Type;
             if (mo::TypeInfo(typeid(Type)) == type)
@@ -77,7 +77,7 @@ namespace mo
 
         template <int I, class... Args>
         bool
-        applyImpl(_counter_<I> cnt, const typename std::enable_if<I != 0, mo::TypeInfo>::type& type, Args&&... args)
+        applyImpl(const ct::Indexer<I> cnt, const typename std::enable_if<I != 0, mo::TypeInfo>::type& type, Args&&... args)
         {
             typedef typename std::tuple_element<I, std::tuple<T...>>::type Type;
             if (mo::TypeInfo(typeid(Type)) == type)

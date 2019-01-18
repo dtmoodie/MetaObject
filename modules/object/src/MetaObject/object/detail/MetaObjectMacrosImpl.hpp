@@ -1,12 +1,17 @@
 #pragma once
-#include "MetaObject/core/detail/Counter.hpp"
+
 #include "MetaObject/object/MetaObjectFactory.hpp"
 #include "MetaObject/object/MetaObjectInfo.hpp"
 #include "MetaObject/object/MetaObjectPolicy.hpp"
+
+#include <ct/VariadicTypedef.hpp>
+#include <ct/Indexer.hpp>
+
 #include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
-#include "ct/VariadicTypedef.hpp"
 #include <RuntimeObjectSystem/shared_ptr.hpp>
+
 #include <boost/preprocessor.hpp>
+
 #include <string>
 #include <type_traits>
 #include <vector>
@@ -20,22 +25,22 @@ namespace mo
 }
 
 #define REFLECT_START(N_)                                                                                              \
-    template <class V, int N, class F, class T, class... Args>                                                         \
-    inline void reflectHelper(V& visitor, F filter, T type, mo::_counter_<N> dummy, Args&&... args)                    \
+    template <class V, ct::index_t N, class F, class T, class... Args>                                                         \
+    inline void reflectHelper(V& visitor, F filter, T type, const ct::Indexer<N> dummy, Args&&... args)                    \
     {                                                                                                                  \
         reflectHelper(visitor, filter, type, --dummy, args...);                                                        \
     }                                                                                                                  \
     template <class V, class F, class T, class... Args>                                                                \
-    inline void reflectHelper(V&, F, T, mo::_counter_<N_>, Args&&...)                                                  \
+    inline void reflectHelper(V&, F, T, const ct::Indexer<N_>, Args&&...)                                                  \
     {                                                                                                                  \
     }                                                                                                                  \
-    template <class V, int N, class F, class T, class... Args>                                                         \
-    static inline void reflectHelperStatic(V& visitor, F filter, T type, mo::_counter_<N> dummy, Args&&... args)       \
+    template <class V, ct::index_t N, class F, class T, class... Args>                                                         \
+    static inline void reflectHelperStatic(V& visitor, F filter, T type, const ct::Indexer<N> dummy, Args&&... args)       \
     {                                                                                                                  \
         reflectHelperStatic(visitor, filter, type, --dummy, args...);                                                  \
     }                                                                                                                  \
     template <class V, class F, class T, class... Args>                                                                \
-    static inline void reflectHelperStatic(V&, F, T, mo::_counter_<N_>, Args&&...)                                     \
+    static inline void reflectHelperStatic(V&, F, T, const ct::Indexer<N_>, Args&&...)                                     \
     {                                                                                                                  \
     }
 
@@ -107,13 +112,13 @@ struct ReflectParent<ct::VariadicTypedef<Parent, Parents...>>
     inline void reflect(V& visitor, F filter, T type, Args&&... args)                                                  \
     {                                                                                                                  \
         ReflectParent<ParentClass>::visit(this, visitor, filter, type, std::forward<Args>(args)...);                   \
-        reflectHelper(visitor, filter, type, mo::_counter_<N>(), std::forward<Args>(args)...);                         \
+        reflectHelper(visitor, filter, type, ct::Indexer<N>{}, std::forward<Args>(args)...);                         \
     }                                                                                                                  \
     template <class V, class F, class T, class... Args>                                                                \
     static inline void reflectStatic(V& visitor, F filter, T type, Args&&... args)                                     \
     {                                                                                                                  \
         ReflectParent<ParentClass>::visit(visitor, filter, type, std::forward<Args>(args)...);                         \
-        reflectHelperStatic(visitor, filter, type, mo::_counter_<N>(), std::forward<Args>(args)...);                   \
+        reflectHelperStatic(visitor, filter, type, ct::Indexer<N>{}, std::forward<Args>(args)...);                   \
     }
 
 #define MO_ABSTRACT_(N_, CLASS_NAME, ...)                                                                              \

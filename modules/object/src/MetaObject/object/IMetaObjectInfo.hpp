@@ -1,7 +1,9 @@
-#pragma once
-#include "MetaObject/detail/Export.hpp"
-#include "MetaObject/detail/TypeInfo.hpp"
-#include "RuntimeObjectSystem/IObjectInfo.h"
+#ifndef MO_OBJECT_IMETA_OBJECT_INFO_HPP
+#define MO_OBJECT_IMETA_OBJECT_INFO_HPP
+
+#include <MetaObject/detail/Export.hpp>
+#include <MetaObject/detail/TypeInfo.hpp>
+#include <RuntimeObjectSystem/IObjectInfo.h>
 
 #include <vector>
 namespace mo
@@ -24,3 +26,5 @@ namespace mo
         virtual std::vector<std::pair<ISlot*, std::string>> getStaticSlots() const { return {}; }
     };
 }
+
+#endif // MO_OBJECT_IMETA_OBJECT_INFO_HPP

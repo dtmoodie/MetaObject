@@ -65,13 +65,4 @@ namespace cereal
         ar(cereal::make_nvp("object", *m));
     }
 
-    template <class AR, class T>
-    void save(AR& ar, rcc::weak_ptr<T> const& m)
-    {
-    }
-
-    template <class AR, class T>
-    void load(AR& ar, rcc::weak_ptr<T>& m)
-    {
-    }
 }

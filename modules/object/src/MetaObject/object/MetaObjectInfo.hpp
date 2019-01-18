@@ -1,7 +1,7 @@
-#pragma once
+#ifndef MO_OBJECT_META_OBJECT_INFO_HPP
+#define MO_OBJECT_META_OBJECT_INFO_HPP
 #include "IMetaObjectInfo.hpp"
 
-#include "MetaObject/core/detail/Counter.hpp"
 #include "MetaObject/core/detail/HelperMacros.hpp"
 #include "MetaObject/core/detail/Placeholders.hpp"
 
@@ -15,7 +15,10 @@
 #include "MetaObject/signals/SignalInfo.hpp"
 #include "MetaObject/signals/SlotInfo.hpp"
 
+#include <RuntimeObjectSystem/ISimpleSerializer.h>
+
 #include "ct/VariadicTypedef.hpp"
+#include <ct/Indexer.hpp>
 
 #include <type_traits>
 
@@ -32,11 +35,11 @@ namespace mo
     struct TMetaObjectInterfaceHelper : public T
     {
         template <class DType, class BufferFlags>
-        inline void operator()(const mo::Data<DType>& data,
+        inline void operator()(const mo::Data<DType>&,
                                const mo::Name& name,
                                const mo::Param<BufferFlags>& param,
-                               int32_t N,
-                               bool first_init)
+                               const int32_t,
+                               const bool)
         {
             param.get()->setName(name.get());
             T::addParam(param.get());
@@ -46,8 +49,8 @@ namespace mo
         inline void operator()(const mo::Data<DType>& data,
                                const mo::Name& name,
                                const mo::Param<mo::TParamPtr<DType>>& param,
-                               int32_t N,
-                               bool first_init)
+                               const int32_t,
+                               const bool )
         {
             param.get()->setName(name.get());
             param.get()->updatePtr(data.get());
@@ -58,8 +61,8 @@ namespace mo
         inline void operator()(const mo::Data<DType>& data,
                                const mo::Name& name,
                                const mo::Param<mo::TParamOutput<DType>>& param,
-                               int32_t N,
-                               bool first_init)
+                               const int32_t,
+                               const bool)
         {
             param.get()->setName(name.get());
             param.get()->updatePtr(data.get());
@@ -70,8 +73,8 @@ namespace mo
         inline void operator()(const mo::Data<DType const*>& data,
                                const mo::Name& name,
                                const mo::Param<mo::TInputParamPtr<DType>>& param,
-                               int32_t N,
-                               bool first_init)
+                               const int32_t,
+                               const bool)
         {
             param.get()->setName(name.get());
             param.get()->setUserDataPtr(data.get());
@@ -82,8 +85,8 @@ namespace mo
         inline void operator()(const mo::Data<std::tuple<const DTypes*...>>& data,
                                const mo::Name& name,
                                const mo::Param<mo::TMultiInput<DTypes...>>& param,
-                               int32_t N,
-                               bool first_init)
+                               const int32_t,
+                               const bool )
         {
             param.get()->setName(name.get());
             param.get()->setUserDataPtr(data.get());
@@ -93,8 +96,8 @@ namespace mo
         template <class... DTypes>
         inline void operator()(const mo::Name& name,
                                const mo::Param<mo::TMultiOutput<DTypes...>>& param,
-                               int32_t N,
-                               bool first_init)
+                               const int32_t,
+                               const bool )
         {
             param.get()->setName(name.get());
             T::addParam(param.get());
@@ -109,41 +112,64 @@ namespace mo
             T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::STATE>(), first_init);
         }
 
-        template <class AR>
-        struct SerializeVisitor
+
+        struct LoadVisitorHelper
         {
-            AR& ar;
-            template <class DType>
-            inline void operator()(const mo::Data<DType>& data, const mo::Name& name)
+            template<class DType, class ParamType, ct::index_t N>
+            inline void operator()(mo::Data<DType> data, mo::Name name, ParamType, const ct::Indexer<N>)
             {
-                ar(name.get(), data.get());
+                visitor(data.get(), name.get());
+            }
+
+            ILoadVisitor& visitor;
+        };
+
+        void load(ILoadVisitor& visitor)
+        {
+            LoadVisitorHelper vis{visitor};
+            T::reflect(vis, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::CONTROL>());
+            T::reflect(vis, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::STATE>());
+        }
+
+        struct SaveVisitorHelper
+        {
+            template<class DType, class ParamType, ct::index_t N>
+            inline void operator()(const mo::Data<DType>& data, const mo::Name& name, ParamType, const ct::Indexer<N>)
+            {
+                visitor(data.get(), name.get());
+            }
+
+            ISaveVisitor& visitor;
+        };
+
+        void save(ISaveVisitor& visitor) override
+        {
+            SaveVisitorHelper vis{visitor};
+            T::reflect(vis, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::CONTROL>());
+            T::reflect(vis, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::STATE>());
+        }
+
+        struct RCCSerializationVisitor
+        {
+            ISimpleSerializer* serializer;
+            template<class DType, class ParamType>
+            inline void operator()(const mo::Data<DType>& data, const mo::Name& name, ParamType, ct::index_t)
+            {
+                serializer->SerializeProperty(name.get(), *data.get());
             }
         };
 
-        template <class AR>
-        void loadParams(AR& ar)
-        {
-            SerializeVisitor<AR> visitor{ar};
-            T::reflect(visitor, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::CONTROL>());
-            T::reflect(visitor, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::STATE>());
-        }
-
-        template <class AR>
-        void saveParams(AR& ar)
-        {
-            SerializeVisitor<AR> visitor{ar};
-            T::reflect(visitor, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::CONTROL>());
-            T::reflect(visitor, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::STATE>());
-        }
-
         void serializeParams(ISimpleSerializer* serializer) override
         {
+            RCCSerializationVisitor visitor{serializer};
+            T::reflect(visitor, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::CONTROL>());
+            T::reflect(visitor, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::STATE>());
         }
 
         struct ParamInfoVisitor
         {
-            template <int32_t N>
-            inline void operator()(const mo::Name& name, const Type& type, mo::_counter_<N>)
+            template <ct::index_t N>
+            inline void operator()(const mo::Name& name, const Type& type, ct::Indexer<N>)
             {
                 static mo::ParamInfo info(type.get(), name.get(), "", "", flags);
                 vec.push_back(&info);
@@ -196,8 +222,8 @@ namespace mo
         template <class R, class... Args>
         inline void operator()(const mo::Signal<mo::TSignal<R(Args...)>>& data,
                                const mo::Name& name,
-                               int N,
-                               bool first_init,
+                               const int,
+                               const bool,
                                int32_t* counter)
         {
             // TODO finish signal initialization
@@ -214,8 +240,8 @@ namespace mo
 
         struct SignalInfoVisitor
         {
-            template <int N>
-            inline void operator()(const mo::Type& type, const mo::Name& name, mo::_counter_<N>)
+            template <ct::index_t N>
+            inline void operator()(const mo::Type& type, const mo::Name& name, const ct::Indexer<N>)
             {
                 static mo::SignalInfo info{type.get(), std::string(name.get()), "", ""};
                 vec.push_back(&info);
@@ -272,19 +298,19 @@ namespace mo
 
         struct SlotInfoVisitor
         {
-            template <class R, class T1, class... Args, int N>
+            template <class R, class T1, class... Args, ct::index_t N>
             inline void operator()(const mo::NamedType<R (T1::*)(Args...), Function>& /*fptr*/,
                                    const mo::Name& name,
-                                   mo::_counter_<N>)
+                                   ct::Indexer<N>)
             {
                 static mo::SlotInfo info{mo::TypeInfo(typeid(R(Args...))), std::string(name.get()), "", "", false};
                 vec.push_back(&info);
             }
 
-            template <class R, class... Args, int N>
+            template <class R, class... Args, ct::index_t N>
             inline void operator()(const mo::NamedType<R (*)(Args...), StaticFunction>& /*fptr*/,
                                    const mo::Name& name,
-                                   mo::_counter_<N>)
+                                   ct::Indexer<N>)
             {
                 static mo::SlotInfo info{mo::TypeInfo(typeid(R(Args...))), std::string(name.get()), "", "", true};
                 vec.push_back(&info);
@@ -314,18 +340,18 @@ namespace mo
         {
             std::vector<std::pair<mo::ISlot*, std::string>>& slot_vec;
 
-            template <class R, class... Args, int N>
+            template <class R, class... Args, ct::index_t N>
             inline void operator()(const mo::NamedType<R (*)(Args...), StaticFunction>& fptr,
                                    const mo::Name& name,
-                                   mo::_counter_<N>)
+                                   const ct::Indexer<N>)
             {
                 static mo::TSlot<R(Args...)> slot = variadicBind(fptr.get(), make_int_sequence<sizeof...(Args)>{});
                 slot_vec.push_back(std::make_pair(&slot, name.get()));
             }
 
-            template <class R, class T1, class... Args, int N>
+            template <class R, class T1, class... Args, ct::index_t N>
             inline void
-            operator()(const mo::NamedType<R (T1::*)(Args...), Function>&, const mo::Name&, mo::_counter_<N>)
+            operator()(const mo::NamedType<R (T1::*)(Args...), Function>&, const mo::Name&, ct::Indexer<N>)
             {
             }
         };
@@ -505,3 +531,4 @@ namespace mo
         }
     };
 }
+#endif

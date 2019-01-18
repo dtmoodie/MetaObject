@@ -13,7 +13,7 @@ namespace mo
 
         void visit(const ITraits*, const std::string& name, const size_t cnt = 1) override;
     protected:
-        virtual void implDyn(const TypeInfo, const std::string& name, const size_t cnt);
+        void implDyn(const TypeInfo, const std::string& name, const size_t cnt) override;
         size_t m_hash;
         bool m_hash_member_names;
         bool m_hash_struct_names;

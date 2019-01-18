@@ -33,7 +33,7 @@
     inline void reflectHelper(V& visitor,                                                                              \
                               mo::VisitationFilter<mo::INIT> filter,                                                   \
                               T param_type,                                                                            \
-                              mo::_counter_<__COUNTER__> cnt,                                                          \
+                              const ct::Indexer<__COUNTER__> cnt,                                                          \
                               Args&&... args)                                                                          \
     {                                                                                                                  \
         name##_param.appendFlags(flags);                                                                               \

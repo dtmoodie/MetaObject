@@ -1,5 +1,3 @@
-#include "MetaObject/core/detail/Counter.hpp"
-
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"

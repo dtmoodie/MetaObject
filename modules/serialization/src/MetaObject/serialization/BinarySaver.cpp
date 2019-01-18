@@ -67,7 +67,7 @@ namespace mo
         return saveBinary(ptr, name, cnt);
     }
 
-
+#ifdef ENVIRONMENT64
     ISaveVisitor& BinarySaver::operator()(const long long* ptr, const std::string& name, const size_t cnt)
     {
         return saveBinary(ptr, name, cnt);
@@ -77,6 +77,17 @@ namespace mo
     {
         return saveBinary(ptr, name, cnt);
     }
+#else
+    ISaveVisitor& BinarySaver::operator()(const long int* ptr, const std::string& name, const size_t cnt)
+    {
+        return saveBinary(ptr, name, cnt);
+    }
+
+    ISaveVisitor& BinarySaver::operator()(const unsigned long int* ptr, const std::string& name, const size_t cnt)
+    {
+        return saveBinary(ptr, name, cnt);
+    }
+#endif
 
     ISaveVisitor& BinarySaver::operator()(const float* ptr, const std::string& name, const size_t cnt)
     {

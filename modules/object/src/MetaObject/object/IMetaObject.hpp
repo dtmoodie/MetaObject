@@ -15,26 +15,7 @@
 
 namespace mo
 {
-    /*
-      The IMetaObject interface class defines interfaces for introspection and serialization
-      A IMetaObject derivative should use the IMetaObject macros for defining Params, signals,
-      and slots.
-      Params - Outputs, Inputs, Control, and State.
-       - Outputs Params are shared with other IMetaObjects
-       - Inputs Params are read from other IMetaObjects
-       - Control Params are user set settings
-       - State Params are used status introspection
-     Signals
-      - functions that are called by an IMetaObject that invoke all Connected slots
-      - must have void return type
-      - must handle asynchronous operation
-     Slots
-      - functions that are called when a signal is invoked
-      - must have void return type
-      - should be called on the thread of the owning context
-      - Slots with a return value can only have a 1 to 1 mapping, thus the Connection of a signal
-        to a slot with a return will only call the most recent slot that was Connected to it.
-    */
+
     template <class T>
     struct TMetaObjectInterfaceHelper;
 
@@ -80,11 +61,16 @@ namespace mo
         virtual void initCustom(bool firstInit) = 0;
         virtual void bindSlots(bool firstInit) = 0;
         virtual void initParams(bool firstInit) = 0;
-        virtual int initSignals(bool firstInit) = 0;
+        virtual int  initSignals(bool firstInit) = 0;
 
+        // These serializers are only used for runtime recompilation, they are not used for serialization to
+        // from disk
         virtual void Serialize(ISimpleSerializer* pSerializer) = 0; // Inherit from RCC's IObject
         virtual void serializeConnections(ISimpleSerializer* pSerializer) = 0;
         virtual void serializeParams(ISimpleSerializer* pSerializer) = 0;
+
+        virtual void load(ILoadVisitor& visitor) = 0;
+        virtual void save(ISaveVisitor& visitor) = 0;
 
         // ------- Introspection
         // Get vector of info objects for each corresponding introspection class

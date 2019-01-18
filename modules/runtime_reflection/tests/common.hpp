@@ -29,7 +29,47 @@
 
 namespace mo
 {
+    struct PrintVisitor : public mo::StaticVisitor
+    {
+        int indent = 2;
 
+        void visit(const mo::ITraits* trait, const std::string& name, const size_t cnt = 1) override
+        {
+            for (int i = 0; i < indent; ++i)
+            {
+                std::cout << ' ';
+            }
+            indent += 2;
+            std::cout << name << ": " << trait->getName() << std::endl;
+            m_path.push_back(trait->getName());
+            trait->visit(this);
+            indent -= 2;
+            m_path.pop_back();
+        }
+
+        void implDyn(const mo::TypeInfo type, const std::string& name, const size_t cnt) override
+        {
+            for (int i = 0; i < indent; ++i)
+            {
+                std::cout << ' ';
+            }
+            std::cout << name << ": " << mo::TypeTable::instance().typeToName(type) << std::endl;
+            m_items.push_back(getName() + "." + name);
+        }
+
+        std::string getName()
+        {
+            std::stringstream ss;
+            for(const std::string& path : m_path)
+            {
+                ss << path;
+                ss << '.';
+            }
+            return std::move(ss).str();
+        }
+        std::vector<std::string> m_path;
+        std::vector<std::string> m_items;
+    };
     template <class T, size_t ROWS, size_t COLS>
     bool operator==(const mo::MatrixAdapter<T, ROWS, COLS>& lhs, const mo::MatrixAdapter<T, ROWS, COLS>& rhs)
     {
