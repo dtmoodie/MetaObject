@@ -118,6 +118,9 @@ namespace mo
         virtual std::vector<ISlot*> getSlots(const std::string& name) const = 0;
         virtual std::vector<std::pair<ISlot*, std::string>> getSlots(const TypeInfo& signature) const = 0;
         virtual ISlot* getSlot(const std::string& name, const TypeInfo& signature) const = 0;
+        template <class T>
+        TSlot<T>* getSlot(const std::string& name) const;
+
         virtual UpdateSlot_t* getSlot_param_updated() const = 0;
 
         virtual int disconnectByName(const std::string& name) = 0;

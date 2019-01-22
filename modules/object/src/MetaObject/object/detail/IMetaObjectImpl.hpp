@@ -86,7 +86,7 @@ namespace mo
     }
 
     template <class T>
-    TSlot<T>* MetaObject::getSlot(const std::string& name) const
+    TSlot<T>* IMetaObject::getSlot(const std::string& name) const
     {
         return dynamic_cast<TSlot<T>*>(this->getSlot(name, TypeInfo(typeid(T))));
     }

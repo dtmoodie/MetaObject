@@ -130,8 +130,7 @@ namespace mo
         TParam<T>* getParam(const std::string& name) const;
         template <class T>
         TParam<T>* getParamOptional(const std::string& name) const;
-        template <class T>
-        TSlot<T>* getSlot(const std::string& name) const;
+
 
       protected:
         virtual IParam* addParam(IParamPtr_t param) override;

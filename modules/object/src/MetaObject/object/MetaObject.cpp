@@ -123,7 +123,7 @@ namespace mo
         auto params = getParams();
         for (auto param : params)
         {
-            auto update_slot = getSlot<Update_s>("on_" + param->getName() + "_modified");
+            auto update_slot = IMetaObject::template getSlot<Update_s>("on_" + param->getName() + "_modified");
             if (update_slot)
             {
                 auto connection = param->registerUpdateNotifier(update_slot);
@@ -136,7 +136,7 @@ namespace mo
                                         this);
                 }
             }
-            auto delete_slot = getSlot<void(IParam const*)>("on_" + param->getName() + "_deleted");
+            auto delete_slot = IMetaObject::template getSlot<void(IParam const*)>("on_" + param->getName() + "_deleted");
             if (delete_slot)
             {
                 auto connection = param->registerDeleteNotifier(delete_slot);
