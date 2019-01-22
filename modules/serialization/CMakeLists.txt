@@ -13,7 +13,7 @@ if(BUILD_TESTS)
 
     if(OpenCV_FOUND)
         target_compile_definitions(test_mo_serialization
-            PRIVATE HAVE_OPENCV
+            PRIVATE MO_HAVE_OPENCV
         )
         target_link_libraries(test_mo_serialization ${OpenCV_LIBRARIES})
     endif()
