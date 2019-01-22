@@ -60,11 +60,32 @@ struct MetaObjectFactory::impl
     TSignal<void(void)> on_constructor_added;
 };
 
+std::shared_ptr<MetaObjectFactory> MetaObjectFactory::instance(SystemTable* table)
+{
+    MO_ASSERT(table != nullptr);
+    std::shared_ptr<MetaObjectFactory> ptr;
+    auto module = PerModuleInterface::GetInstance();
+    auto table_ = module->GetSystemTable();
+    if(table_)
+    {
+        MO_ASSERT(table == table_);
+    }else
+    {
+        module->SetSystemTable(table);
+    }
+    if (table)
+    {
+        ptr = sharedSingleton<MetaObjectFactory>(table, mo::ObjectConstructor<MetaObjectFactory>(table));
+    }
+    return ptr;
+}
+
 MetaObjectFactory::MetaObjectFactory(SystemTable* table)
 {
-
     _pimpl.reset(new impl(table));
 }
+
+
 
 MetaObjectFactory::~MetaObjectFactory()
 {
@@ -213,6 +234,7 @@ IObjectInfo* MetaObjectFactory::getObjectInfo(const char* type_name) const
     }
     return nullptr;
 }
+
 std::vector<IObjectInfo*> MetaObjectFactory::getAllObjectInfo() const
 {
     std::vector<IObjectInfo*> output;
@@ -376,6 +398,11 @@ bool MetaObjectFactory::loadPlugin(const std::string& fullPluginPath)
     std::string old_name = mo::getThisThreadName();
     MO_LOG(info, "Loading {}", fullPluginPath);
     boost::filesystem::path path(fullPluginPath);
+    if(!boost::filesystem::exists(path))
+    {
+        MO_LOG(warn, "{} does not exist", fullPluginPath);
+        return false;
+    }
     std::string base = path.stem().replace_extension("").string();
     mo::setThisThreadName(base.substr(3));
     boost::posix_time::ptime start = boost::posix_time::microsec_clock::universal_time();
@@ -470,6 +497,7 @@ bool MetaObjectFactory::abortCompilation()
 {
     return _pimpl->obj_system.AbortCompilation();
 }
+
 bool MetaObjectFactory::checkCompile()
 {
     static boost::posix_time::ptime prevTime = boost::posix_time::microsec_clock::universal_time();
@@ -480,14 +508,17 @@ bool MetaObjectFactory::checkCompile()
     _pimpl->obj_system.GetFileChangeNotifier()->Update(float(delta.total_milliseconds()) / 1000.0f);
     return isCurrentlyCompiling();
 }
+
 bool MetaObjectFactory::isCurrentlyCompiling()
 {
     return _pimpl->obj_system.GetIsCompiling();
 }
+
 bool MetaObjectFactory::isCompileComplete()
 {
     return _pimpl->obj_system.GetIsCompiledComplete();
 }
+
 bool MetaObjectFactory::swapObjects()
 {
     if (isCompileComplete())
@@ -496,9 +527,11 @@ bool MetaObjectFactory::swapObjects()
     }
     return false;
 }
+
 void MetaObjectFactory::setCompileCallback(std::function<void(const std::string, int)>& f)
 {
 }
+
 std::shared_ptr<Connection> MetaObjectFactory::connectConstructorAdded(TSlot<void(void)>* slot)
 {
     return _pimpl->on_constructor_added.connect(slot);

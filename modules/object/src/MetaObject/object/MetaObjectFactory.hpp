@@ -76,6 +76,7 @@ namespace mo
         using Ptr_t = std::shared_ptr<MetaObjectFactory>;
 
         MO_INLINE static Ptr_t instance();
+        static Ptr_t instance(SystemTable* table);
 
         IMetaObject* create(const char* type_name, int64_t interface_id = -1);
         template <class T>
@@ -143,14 +144,14 @@ namespace mo
         if (module)
         {
             auto table = module->GetSystemTable();
-            if (table)
-            {
-                ptr = sharedSingleton<MetaObjectFactory>(table, mo::ObjectConstructor<MetaObjectFactory>(table));
-            }
+            return instance(table);
+
         }
         MO_ASSERT(ptr);
         return ptr;
     }
+
+
 
     template <class T>
     T* MetaObjectFactory::create(const char* type_name)
