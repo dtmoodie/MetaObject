@@ -20,7 +20,7 @@ if(BUILD_TESTS)
 
     if(OpenCV_FOUND)
         target_compile_definitions(test_mo_cuda
-            PRIVATE HAVE_OPENCV
+            PRIVATE MO_HAVE_OPENCV
         )
         target_include_directories(test_mo_cuda
             PRIVATE ${OpenCV_INCLUDE_DIRS}
