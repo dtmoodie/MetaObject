@@ -75,7 +75,7 @@ namespace mo
 #define TOOLTIP_(NAME, TOOLTIP_, N)                                                                                    \
     template <class C, class V, class... Args>                                                                         \
     static inline void reflectHelper(                                                                                  \
-        C* obj, V& visitor, mo::VisitationFilter<mo::TOOLTIP> filter, const ct::Indexer<__COUNTER__> cnt, Args&&... args)  \
+        C* , V& visitor, mo::VisitationFilter<mo::TOOLTIP> filter, const ct::Indexer<__COUNTER__> cnt, Args&&... args)  \
     {                                                                                                                  \
         visitor(mo::Name(#NAME), mo::Tooltip(TOOLTIP_), cnt, std::forward<Args>(args)...);                             \
         reflectHelper(visitor, filter, --cnt, std::forward<Args>(args)...);                                            \
