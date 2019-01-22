@@ -1,5 +1,5 @@
 #pragma once
-#ifdef HAVE_OPENCV
+#ifdef MO_HAVE_OPENCV
 #include <MetaObject/types/opencv.hpp>
 #include <opencv2/core.hpp>
 #endif
@@ -221,7 +221,7 @@ void testTypes(Tester& tester)
         double z = 3.14159;
         tester.test(z);
 
-#ifdef HAVE_OPENCV
+#ifdef MO_HAVE_OPENCV
         cv::Rect2f rectf(0.1f, 0.2f, 0.3f, 0.4f);
         tester.test(rectf);
 
