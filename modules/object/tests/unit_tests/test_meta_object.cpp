@@ -25,54 +25,52 @@
 
 using namespace mo;
 
-struct test_meta_obj_empty : public MetaObject
+struct MetaObjectEmpty : public MetaObject
 {
-    MO_BEGIN(test_meta_obj_empty);
+    MO_BEGIN(MetaObjectEmpty)
 
     MO_END;
 };
 
-struct test_meta_obj_params : public MetaObject
+
+struct MetaObjectSignals : public MetaObject
 {
+    MO_BEGIN(MetaObjectSignals)
+    MO_SIGNAL(void, test_void)
+    MO_SIGNAL(void, test_int, int)
+    MO_END
 };
 
-struct test_meta_object_signals : public MetaObject
+struct MetaObjectSlots : public MetaObject
 {
-    MO_BEGIN(test_meta_object_signals);
-    MO_SIGNAL(void, test_void);
-    MO_SIGNAL(void, test_int, int);
-    MO_END;
-};
-
-struct test_meta_object_slots : public MetaObject
-{
-    MO_BEGIN(test_meta_object_slots);
-    MO_SLOT(void, test_void);
-    MO_SLOT(void, test_void, int);
-    MO_END;
+    MO_BEGIN(MetaObjectSlots)
+    MO_SLOT(void, test_void)
+    MO_SLOT(void, test_void, int)
+    MO_END
     int slot_called = 0;
 };
-void test_meta_object_slots::test_void()
+
+void MetaObjectSlots::test_void()
 {
     std::cout << "test_void called\n";
     ++slot_called;
 }
-void test_meta_object_slots::test_void(int)
+void MetaObjectSlots::test_void(int)
 {
 }
 
-struct test_meta_object_callback : public MetaObject
+struct MetaObjectCallback : public MetaObject
 {
-    MO_BEGIN(test_meta_object_callback);
-    MO_SLOT(int, test_int);
-    MO_SLOT(void, test_void);
-    MO_END;
+    MO_BEGIN(MetaObjectCallback)
+    MO_SLOT(int, test_int)
+    MO_SLOT(void, test_void)
+    MO_END
 };
-int test_meta_object_callback::test_int()
+int MetaObjectCallback::test_int()
 {
     return 5;
 }
-void test_meta_object_callback::test_void()
+void MetaObjectCallback::test_void()
 {
 }
 
@@ -118,9 +116,9 @@ struct MetaObjectSubscriber : public MetaObject
     }
 };
 
-MO_REGISTER_OBJECT(test_meta_object_signals)
-MO_REGISTER_OBJECT(test_meta_object_slots)
-MO_REGISTER_OBJECT(test_meta_object_callback)
+MO_REGISTER_OBJECT(MetaObjectSignals)
+MO_REGISTER_OBJECT(MetaObjectSlots)
+MO_REGISTER_OBJECT(MetaObjectCallback)
 MO_REGISTER_OBJECT(MetaObjectPublisher)
 MO_REGISTER_OBJECT(MetaObjectSubscriber)
 MO_REGISTER_OBJECT(Paramed_object)
@@ -149,7 +147,7 @@ BOOST_AUTO_TEST_CASE(test_meta_object_static_introspection_global)
 
 BOOST_AUTO_TEST_CASE(test_meta_object_static_introspection_specific)
 {
-    auto info = MetaObjectInfoDatabase::instance()->getMetaObjectInfo("test_meta_object_signals");
+    auto info = MetaObjectInfoDatabase::instance()->getMetaObjectInfo("MetaObjectSignals");
     BOOST_REQUIRE(info);
     std::cout << info->Print() << std::endl;
 }
@@ -157,7 +155,7 @@ BOOST_AUTO_TEST_CASE(test_meta_object_static_introspection_specific)
 BOOST_AUTO_TEST_CASE(test_meta_object_dynamic_introspection)
 {
     RelayManager mgr;
-    auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_signals");
+    auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSignals");
     auto obj = constructor->Construct();
     auto state = constructor->GetState(obj->GetPerTypeId());
     auto weak_ptr = state->GetWeakPtr();
@@ -180,7 +178,7 @@ BOOST_AUTO_TEST_CASE(test_meta_object_dynamic_introspection)
 BOOST_AUTO_TEST_CASE(test_meta_object_dynamic_access)
 {
     RelayManager mgr;
-    auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_signals");
+    auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSignals");
     auto obj = constructor->Construct();
     auto meta_obj = dynamic_cast<IMetaObject*>(obj);
     meta_obj->Init(true);
@@ -190,7 +188,7 @@ BOOST_AUTO_TEST_CASE(test_meta_object_dynamic_access)
     BOOST_REQUIRE_EQUAL(signals_.size(), 4);
     int input_Param = 0;
     int call_value = 5;
-    test_meta_object_signals* T = dynamic_cast<test_meta_object_signals*>(meta_obj);
+    MetaObjectSignals* T = dynamic_cast<MetaObjectSignals*>(meta_obj);
     std::shared_ptr<mo::ISlot> slot(new mo::TSlot<void(int)>(
         std::bind([&input_Param](int value) { input_Param += value; }, std::placeholders::_1)));
     auto Connection = mgr.connect(slot.get(), "test_int");
@@ -204,9 +202,9 @@ BOOST_AUTO_TEST_CASE(test_meta_object_dynamic_access)
 BOOST_AUTO_TEST_CASE(test_meta_object_external_slot)
 {
     RelayManager mgr;
-    auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_signals");
+    auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSignals");
     auto obj = constructor->Construct();
-    auto meta_obj = dynamic_cast<test_meta_object_signals*>(obj);
+    auto meta_obj = dynamic_cast<MetaObjectSignals*>(obj);
     meta_obj->setupSignals(&mgr);
     meta_obj->Init(true);
     bool slot_called = false;
@@ -221,11 +219,11 @@ BOOST_AUTO_TEST_CASE(test_meta_object_external_slot)
 BOOST_AUTO_TEST_CASE(test_meta_object_internal_slot)
 {
     RelayManager mgr;
-    auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_slots");
+    auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSlots");
     BOOST_REQUIRE(constructor);
     auto obj = constructor->Construct();
     BOOST_REQUIRE(obj);
-    auto meta_obj = dynamic_cast<test_meta_object_slots*>(obj);
+    auto meta_obj = dynamic_cast<MetaObjectSlots*>(obj);
     // auto slot = meta_obj->getSlot_test_void<void()>();
     // auto overload = meta_obj->getSlot_test_void<void(int)>();
     meta_obj->Init(true);
@@ -241,16 +239,16 @@ BOOST_AUTO_TEST_CASE(test_meta_object_internal_slot)
 BOOST_AUTO_TEST_CASE(inter_object_T)
 {
     RelayManager mgr;
-    auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_signals");
+    auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSignals");
     BOOST_REQUIRE(constructor);
     auto obj = constructor->Construct();
     BOOST_REQUIRE(obj);
-    auto signal_object = dynamic_cast<test_meta_object_signals*>(obj);
+    auto signal_object = dynamic_cast<MetaObjectSignals*>(obj);
     signal_object->setupSignals(&mgr);
     signal_object->Init(true);
-    constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_slots");
+    constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSlots");
     obj = constructor->Construct();
-    auto slot_object = dynamic_cast<test_meta_object_slots*>(obj);
+    auto slot_object = dynamic_cast<MetaObjectSlots*>(obj);
     slot_object->setupSignals(&mgr);
     slot_object->Init(true);
 
@@ -265,16 +263,16 @@ BOOST_AUTO_TEST_CASE(inter_object_T)
 BOOST_AUTO_TEST_CASE(inter_object_named)
 {
     RelayManager mgr;
-    auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_signals");
+    auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSignals");
     BOOST_REQUIRE(constructor);
     auto obj = constructor->Construct();
     BOOST_REQUIRE(obj);
-    auto signal_object = dynamic_cast<test_meta_object_signals*>(obj);
+    auto signal_object = dynamic_cast<MetaObjectSignals*>(obj);
     signal_object->setupSignals(&mgr);
     signal_object->Init(true);
-    constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_slots");
+    constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSlots");
     obj = constructor->Construct();
-    auto slot_object = dynamic_cast<test_meta_object_slots*>(obj);
+    auto slot_object = dynamic_cast<MetaObjectSlots*>(obj);
     slot_object->setupSignals(&mgr);
     slot_object->Init(true);
 
@@ -289,11 +287,11 @@ BOOST_AUTO_TEST_CASE(rest)
 {
     RelayManager mgr;
     {
-        auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_callback");
+        auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectCallback");
         BOOST_REQUIRE(constructor);
         auto obj = constructor->Construct();
         BOOST_REQUIRE(obj);
-        test_meta_object_callback* meta_obj = dynamic_cast<test_meta_object_callback*>(obj);
+        MetaObjectCallback* meta_obj = dynamic_cast<MetaObjectCallback*>(obj);
         meta_obj->Init(true);
         meta_obj->setupSignals(&mgr);
         TSignal<int(void)> signal;
@@ -305,16 +303,16 @@ BOOST_AUTO_TEST_CASE(rest)
         delete obj;
     }
     {
-        auto constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_callback");
+        auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectCallback");
         BOOST_REQUIRE(constructor);
         auto obj = constructor->Construct();
         BOOST_REQUIRE(obj);
         obj->Init(true);
-        test_meta_object_callback* cb = dynamic_cast<test_meta_object_callback*>(obj);
-        constructor = MetaObjectFactory::instance()->getConstructor("test_meta_object_slots");
+        MetaObjectCallback* cb = dynamic_cast<MetaObjectCallback*>(obj);
+        constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSlots");
         obj = constructor->Construct();
         obj->Init(true);
-        test_meta_object_slots* slot = dynamic_cast<test_meta_object_slots*>(obj);
+        MetaObjectSlots* slot = dynamic_cast<MetaObjectSlots*>(obj);
         cb->test_void();
         delete cb;
         delete slot;

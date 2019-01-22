@@ -20,6 +20,7 @@ struct GlobalFixture
     {
         mo::params::init(m_system_table.get());
         mo::MetaObjectFactory::instance()->registerTranslationUnit();
+        BOOST_REQUIRE(mo::MetaObjectFactory::instance()->loadPlugin("libmo_objectplugind.so"));
     }
 
     ~GlobalFixture()

@@ -27,21 +27,21 @@ RUNTIME_COMPILER_SOURCEDEPENDENCY_EXT(".cu")
 #endif
 
 using namespace mo;
-struct DLL_EXPORTS test_meta_object_signals : public MetaObject
+struct DLL_EXPORTS MetaObjectSignals : public MetaObject
 {
-    ~test_meta_object_signals()
+    ~MetaObjectSignals()
     {
         std::cout << "Deleting object\n";
     }
-    MO_BEGIN(test_meta_object_signals)
+    MO_BEGIN(MetaObjectSignals)
     MO_SIGNAL(void, test_void)
     MO_SIGNAL(void, test_int, int)
     MO_END
 };
 
-struct DLL_EXPORTS test_meta_object_slots : public MetaObject
+struct DLL_EXPORTS MetaObjectSlots : public MetaObject
 {
-    MO_BEGIN(test_meta_object_slots)
+    MO_BEGIN(MetaObjectSlots)
     MO_SLOT(void, test_void)
     MO_SLOT(void, test_int, int)
     STATE(int, call_count, 0)

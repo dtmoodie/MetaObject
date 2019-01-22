@@ -11,7 +11,7 @@
 #include <fstream>
 #include <istream>
 
-#ifdef HAVE_OPENCV
+#ifdef MO_HAVE_OPENCV
 #include <opencv2/core.hpp>
 #endif
 

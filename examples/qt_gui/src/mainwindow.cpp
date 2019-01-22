@@ -17,6 +17,7 @@
 // included, so a few of the Params will use the default met Param
 //#include "MetaObject/params/ui/Qt/POD.hpp"
 #ifdef HAVE_OPENCV
+#include "MetaObject/types/opencv.hpp"
 //#include "MetaObject/params/ui/Qt/OpenCV.hpp"
 #endif
 //#include "MetaObject/params/ui/Qt/Containers.hpp"

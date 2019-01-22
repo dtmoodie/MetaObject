@@ -70,13 +70,13 @@ BOOST_AUTO_TEST_CASE(test_recompile)
 BOOST_AUTO_TEST_CASE(test_obj_swap)
 {
     auto constructor = MetaObjectFactory::instance()->getObjectSystem()->GetObjectFactorySystem()->GetConstructor(
-        "test_meta_object_signals");
+        "MetaObjectSignals");
     auto obj = constructor->Construct();
     BOOST_REQUIRE(obj);
     auto state = constructor->GetState(obj->GetPerTypeId());
     BOOST_REQUIRE(state);
     auto ptr = state->GetSharedPtr();
-    rcc::shared_ptr<test_meta_object_signals> T_ptr(ptr);
+    rcc::shared_ptr<MetaObjectSignals> T_ptr(ptr);
     BOOST_REQUIRE(!T_ptr.empty());
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
     BOOST_REQUIRE(!T_ptr.empty());
@@ -87,14 +87,14 @@ BOOST_AUTO_TEST_CASE(test_obj_swap)
 
 BOOST_AUTO_TEST_CASE(test_pointer_mechanics)
 {
-    auto obj = test_meta_object_signals::create();
+    auto obj = MetaObjectSignals::create();
     BOOST_REQUIRE(!obj.empty());
     BOOST_REQUIRE(obj.GetState());
     BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 1);
     BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 1);
     // Test construction of weak pointers from shared pointers
     {
-        rcc::weak_ptr<test_meta_object_signals> weak_ptr(obj);
+        rcc::weak_ptr<MetaObjectSignals> weak_ptr(obj);
         BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 1);
         BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 2);
     }
@@ -131,7 +131,7 @@ BOOST_AUTO_TEST_CASE(test_pointer_mechanics)
 
     // Test shared pointer mechanics
     {
-        rcc::shared_ptr<test_meta_object_signals> shared(obj);
+        rcc::shared_ptr<MetaObjectSignals> shared(obj);
         BOOST_REQUIRE_EQUAL(obj.GetState()->ObjectCount(), 2);
         BOOST_REQUIRE_EQUAL(obj.GetState()->StateCount(), 2);
     }
@@ -169,14 +169,14 @@ BOOST_AUTO_TEST_CASE(test_pointer_mechanics)
 
 BOOST_AUTO_TEST_CASE(test_creation_function)
 {
-    auto obj = test_meta_object_signals::create();
+    auto obj = MetaObjectSignals::create();
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
 }
 
 BOOST_AUTO_TEST_CASE(test_reconnect_signals)
 {
-    auto emitter = test_meta_object_signals::create();
-    auto receiver = test_meta_object_slots::create();
+    auto emitter = MetaObjectSignals::create();
+    auto receiver = MetaObjectSlots::create();
     // auto state = signals->getConstructor()->GetState(signals->GetPerTypeId());
     IMetaObject::connect(emitter.get(), "test_int", receiver.get(), "test_int");
     int value = 5;

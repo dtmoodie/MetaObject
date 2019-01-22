@@ -1,18 +1,18 @@
 #include "obj.h"
 #include <MetaObject/thread/fiber_include.hpp>
 
-void test_meta_object_slots::test_void()
+void MetaObjectSlots::test_void()
 {
     ++call_count;
 }
 
-void test_meta_object_slots::test_int(int value)
+void MetaObjectSlots::test_int(int value)
 {
     call_count += value;
 }
 
-MO_REGISTER_OBJECT(test_meta_object_signals);
-MO_REGISTER_OBJECT(test_meta_object_slots);
+MO_REGISTER_OBJECT(MetaObjectSignals);
+MO_REGISTER_OBJECT(MetaObjectSlots);
 MO_REGISTER_OBJECT(test_meta_object_parameters);
 MO_REGISTER_OBJECT(test_meta_object_output);
 MO_REGISTER_OBJECT(test_meta_object_input);
