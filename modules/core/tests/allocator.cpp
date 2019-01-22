@@ -1,4 +1,4 @@
-#ifdef HAVE_OPENCV
+#ifdef MO_HAVE_OPENCV
 #include <MetaObject/core/detail/Allocator.hpp>
 #include <MetaObject/core/detail/StlAllocator.hpp>
 #include <MetaObject/core/detail/Time.hpp>
