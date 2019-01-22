@@ -39,9 +39,9 @@ namespace mo
         template <class T>
         struct ToPythonDataConverter<T, ct::enable_if_reflected<T>>
         {
-            ToPythonDataConverter(SystemTable* /*table*/, const char* name)
+            ToPythonDataConverter(SystemTable* table, const char* name)
             {
-                python::registerSetupFunction(std::bind(&python::detail::pythonizeData<T>, name));
+                python::registerSetupFunction(table, std::bind(&python::detail::pythonizeData<T>, name));
             }
         };
 
@@ -50,45 +50,45 @@ namespace mo
             T,
             typename std::enable_if<!ct::Reflect<T>::SPECIALIZED && !ct::is_container<T>::value>::type>
         {
-            ToPythonDataConverter(SystemTable* /*table*/, const char* name)
+            ToPythonDataConverter(SystemTable* table, const char* name)
             {
-                python::registerSetupFunction(std::bind(&python::detail::pythonizeData<T>, name));
+                python::registerSetupFunction(table, std::bind(&python::detail::pythonizeData<T>, name));
             }
         };
 
         template <class K, class V>
         struct ToPythonDataConverter<std::map<K, V>, void>
         {
-            ToPythonDataConverter(SystemTable* /*table*/, const char* name)
+            ToPythonDataConverter(SystemTable* table, const char* name)
             {
-                python::registerSetupFunction(std::bind(&python::detail::pythonizeData<std::map<K, V>>, name));
+                python::registerSetupFunction(table, std::bind(&python::detail::pythonizeData<std::map<K, V>>, name));
             }
         };
 
         template <class T>
         struct ToPythonDataConverter<std::vector<T>, ct::enable_if_reflected<T>>
         {
-            ToPythonDataConverter(SystemTable* /*table*/, const char* name)
+            ToPythonDataConverter(SystemTable* table, const char* name)
             {
-                python::registerSetupFunction(std::bind(&python::detail::pythonizeData<std::vector<T>>, name));
+                python::registerSetupFunction(table, std::bind(&python::detail::pythonizeData<std::vector<T>>, name));
             }
         };
 
         template <>
         struct ToPythonDataConverter<std::string, void>
         {
-            ToPythonDataConverter(SystemTable* /*table*/, const char* name)
+            ToPythonDataConverter(SystemTable* table, const char* name)
             {
-                python::registerSetupFunction(std::bind(&python::detail::pythonizeData<std::string>, name));
+                python::registerSetupFunction(table, std::bind(&python::detail::pythonizeData<std::string>, name));
             }
         };
 
         template <class T>
         struct ToPythonDataConverter<std::vector<T>, ct::enable_if_not_reflected<T>>
         {
-            ToPythonDataConverter(SystemTable* /*table*/, const char* name)
+            ToPythonDataConverter(SystemTable* table, const char* name)
             {
-                python::registerSetupFunction(std::bind(&python::detail::pythonizeData<std::vector<T>>, name));
+                python::registerSetupFunction(table, std::bind(&python::detail::pythonizeData<std::vector<T>>, name));
             }
         };
 

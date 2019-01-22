@@ -24,6 +24,7 @@ namespace mo
             typedef std::function<boost::python::object(const mo::ParamBase*)> Get_t;
 
             static DataConverterRegistry* instance();
+            static DataConverterRegistry* instance(SystemTable* table);
             void registerConverters(const mo::TypeInfo& type, const Set_t& setter, const Get_t& getter);
             Set_t getSetter(const mo::TypeInfo& type);
             Get_t getGetter(const mo::TypeInfo& type);
@@ -36,9 +37,9 @@ namespace mo
         template <class T>
         struct ParamConverter
         {
-            ParamConverter()
+            ParamConverter(SystemTable* table)
             {
-                DataConverterRegistry::instance()->registerConverters(
+                DataConverterRegistry::instance(table)->registerConverters(
                     mo::TypeInfo(typeid(T)),
                     std::bind(&ParamConverter<T>::set, std::placeholders::_1, std::placeholders::_2),
                     std::bind(&ParamConverter<T>::get, std::placeholders::_1));

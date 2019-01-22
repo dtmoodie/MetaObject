@@ -1,7 +1,5 @@
 import metaobject as mo
 
-obj = mo.object.ExportRegionsOfInterest()
-
 print(len(obj.getInputs()))
 params = obj.getParams()
 print(params[1].data)

@@ -29,7 +29,7 @@ using namespace mo;
 
 namespace mo
 {
-#if MO_HAVE_PYTHON
+#ifdef MO_HAVE_PYTHON
 #include <boost/python.hpp>
     namespace python
     {
@@ -123,9 +123,3 @@ namespace mo
         }
     }
 }
-
-EXTERN_TYPE(ReadFile);
-EXTERN_TYPE(WriteFile);
-EXTERN_TYPE(ReadDirectory);
-EXTERN_TYPE(WriteDirectory);
-EXTERN_TYPE(EnumParam);

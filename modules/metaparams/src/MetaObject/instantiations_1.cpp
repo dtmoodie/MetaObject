@@ -38,6 +38,7 @@ namespace std
 #else
 #define MO_EXPORTS
 #endif
+
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 
 namespace mo
@@ -65,19 +66,3 @@ namespace mo
         }
     }
 }
-EXTERN_TYPE(bool);
-EXTERN_TYPE(int);
-EXTERN_TYPE(unsigned short);
-EXTERN_TYPE(unsigned int);
-EXTERN_TYPE(char);
-EXTERN_TYPE(unsigned char);
-EXTERN_TYPE(long);
-EXTERN_TYPE(long long);
-#ifndef __arm__
-EXTERN_TYPE(size_t);
-#endif
-EXTERN_TYPE(float);
-EXTERN_TYPE(double);
-EXTERN_TYPE(std::string);
-typedef std::map<std::string, std::string> StringMap;
-EXTERN_TYPE(StringMap);

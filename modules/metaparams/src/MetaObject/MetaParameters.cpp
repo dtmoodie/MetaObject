@@ -12,19 +12,23 @@ namespace mo
         void instCVRect(SystemTable* table);
         void instMOTypes(SystemTable* table);
     }
+    void initMetaParamsModule(SystemTable* table)
+    {
+        PerModuleInterface::GetInstance()->SetSystemTable(table);
+        mo::MetaParams::instantiatePOD(table);
+        mo::MetaParams::instantiateVectors(table);
+    #ifdef MO_HAVE_OPENCV
+        mo::MetaParams::instCV(table);
+        mo::MetaParams::instCVVec(table);
+        mo::MetaParams::instCVRect(table);
+    #endif
+        mo::MetaParams::instMOTypes(table);
+    }
 
 }
 extern "C"{
-void initMetaParamsModule(SystemTable* table)
-{
-    PerModuleInterface::GetInstance()->SetSystemTable(table);
-    mo::MetaParams::instantiatePOD(table);
-    mo::MetaParams::instantiateVectors(table);
-#ifdef HAVE_OPENCV
-    mo::MetaParams::instCV(table);
-    mo::MetaParams::instCVVec(table);
-    mo::MetaParams::instCVRect(table);
-#endif
-    mo::MetaParams::instMOTypes(table);
-}
+    void initModuleWithSystemTable(SystemTable* table)
+    {
+        mo::initMetaParamsModule(table);
+    }
 }

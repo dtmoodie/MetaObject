@@ -37,11 +37,12 @@
 
 struct SystemTable;
 
-extern "C" {
+namespace mo
+{
     METAPARAMTERS_EXPORTS void initMetaParamsModule(SystemTable* table);
 }
 
-META_PARAM_EXTERN(bool)
+/*META_PARAM_EXTERN(bool)
 META_PARAM_EXTERN(int)
 META_PARAM_EXTERN(unsigned short)
 META_PARAM_EXTERN(unsigned int)
@@ -95,3 +96,4 @@ META_PARAM_EXTERN(mo::WriteFile);
 META_PARAM_EXTERN(mo::ReadDirectory);
 META_PARAM_EXTERN(mo::WriteDirectory);
 META_PARAM_EXTERN(mo::EnumParam);
+*/

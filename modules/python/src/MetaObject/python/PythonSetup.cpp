@@ -73,7 +73,7 @@ namespace
                 MO_LOG(info, "Unable to load metaparams");
                 return;
             }
-            auto* init = reinterpret_cast<void(*)(SystemTable*)>(dlsym(handle, "initMetaParamsModule"));
+            auto* init = reinterpret_cast<void(*)(SystemTable*)>(dlsym(handle, "initModuleWithSystemTable"));
             if(init)
             {
                 init(table);
@@ -163,37 +163,35 @@ namespace mo
             {
             }
         }
-
-        static std::vector<std::function<void(void)>> setup_functions;
-
-        std::map<uint32_t,
-                 std::pair<std::function<void(void)>, std::function<void(std::vector<IObjectConstructor*>&)>>>&
-        interfaceSetupFunctions()
+        struct PythonSetup
         {
-            static std::map<
-                uint32_t,
-                std::pair<std::function<void(void)>, std::function<void(std::vector<IObjectConstructor*>&)>>>
-                data;
-            return data;
-        }
-        static bool setup = false;
-        static std::string module_name;
+            using InterfaceSetup_t = std::function<void(void)>;
+            using ObjectSetup_t = std::function<void(std::vector<IObjectConstructor*>&)>;
+
+            std::vector<std::function<void(void)>> setup_functions;
+            std::string module_name;
+            std::map<uint32_t,std::pair<InterfaceSetup_t, ObjectSetup_t>> interface_setup_functions;
+
+            bool setup = false;
+        };
 
         std::string getModuleName()
         {
-            return module_name;
+            return singleton<PythonSetup>()->module_name;
         }
 
         void setModuleName(const std::string& name)
         {
-            module_name = name;
+            singleton<PythonSetup>()->module_name = name;
         }
 
-        void registerSetupFunction(std::function<void(void)>&& func)
+        void registerSetupFunction(SystemTable* table, std::function<void(void)>&& func)
         {
-            if (!setup)
+            PythonSetup* inst = singleton<PythonSetup>(table);
+
+            if (!inst->setup)
             {
-                setup_functions.emplace_back(std::move(func));
+                inst->setup_functions.emplace_back(std::move(func));
             }
             else
             {
@@ -201,11 +199,11 @@ namespace mo
             }
         }
 
-        void registerInterfaceSetupFunction(uint32_t interface_id,
+        void registerInterfaceSetupFunction(SystemTable* table, uint32_t interface_id,
                                             std::function<void(void)>&& interface_func,
                                             std::function<void(std::vector<IObjectConstructor*>&)>&& func)
         {
-            auto& data = interfaceSetupFunctions();
+            auto& data = singleton<PythonSetup>(table)->interface_setup_functions;
             if (data.find(interface_id) == data.end())
             {
                 data[interface_id] = {std::move(interface_func), std::move(func)};
@@ -284,9 +282,9 @@ namespace mo
             MO_LOG(info, "Constructable objects to python");
             auto graph = createGraph();
             auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
-            auto funcs = interfaceSetupFunctions();
+            auto setup = singleton<PythonSetup>();
             std::map<uint32_t, std::function<void(std::vector<IObjectConstructor*>&)>> func_map;
-            for (auto& func : funcs)
+            for (auto& func : setup->interface_setup_functions)
             {
                 func_map[func.first] = func.second.second;
             }
@@ -326,9 +324,9 @@ namespace mo
         {
             MO_LOG(info, "Registering interfaces to python");
             auto graph = createGraph();
-            auto funcs = interfaceSetupFunctions();
+            auto setup = singleton<PythonSetup>();
             std::map<uint32_t, std::function<void()>> func_map;
-            for (auto& func : funcs)
+            for (auto& func : setup->interface_setup_functions)
             {
                 func_map[func.first] = func.second.first;
             }
@@ -468,7 +466,9 @@ namespace mo
         std::shared_ptr<SystemTable> pythonSetup(const char* module_name_)
         {
             std::string module_name(module_name_);
-            mo::python::module_name = module_name;
+            auto table = SystemTable::instance();
+            PythonSetup* setup = singleton<PythonSetup>(table.get());
+            setup->module_name = module_name;
             setupAllocator();
             boost::shared_ptr<LibGuard> lib_guard(new LibGuard());
             mo::initProfiling();
@@ -479,16 +479,15 @@ namespace mo
             boost::python::def("listObjectInfos", &listObjectInfos);
             boost::python::def("log", &setLogLevel);
 
-            for (const auto& func : mo::python::setup_functions)
+            loadMetaParams(lib_guard->m_system_table.get());
+
+            for (const auto& func : setup->setup_functions)
             {
                 func();
             }
-            // RegisterInterface<IMetaObject> metaobject(&mo::python::setupInterface, &mo::python::setupObjects);
             setupInterface();
-            // registerInterfaceSetupFunction(
-            //    IMetaObject::getHash(), &mo::python::setupInterface, &mo::python::setupObjects);
             setupPlugins(module_name);
-            mo::python::setup = true;
+            setup->setup = true;
 
             boost::python::enum_<LibGuard::AllocatorMode>("AllocatorMode")
                 .value("Default", LibGuard::DEFAULT)
@@ -498,7 +497,7 @@ namespace mo
                 "LibGuard", boost::python::no_init);
             libguardobj.def("setAllocator", &LibGuard::setAllocator);
             boost::python::scope().attr("__libguard") = lib_guard;
-            loadMetaParams(lib_guard->m_system_table.get());
+
 
             return lib_guard->m_system_table;
         }

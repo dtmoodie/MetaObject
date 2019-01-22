@@ -1,11 +1,20 @@
 #include "DataConverter.hpp"
 #include "MetaObject/core/detail/singleton.hpp"
+#include <MetaObject/core/SystemTable.hpp>
 
 namespace mo
 {
     namespace python
     {
-        DataConverterRegistry* DataConverterRegistry::instance() { return uniqueSingleton<DataConverterRegistry>(); }
+        DataConverterRegistry* DataConverterRegistry::instance()
+        {
+            return singleton<DataConverterRegistry>();
+        }
+
+        DataConverterRegistry* DataConverterRegistry::instance(SystemTable* table)
+        {
+            return singleton<DataConverterRegistry>(table);
+        }
 
         void
         DataConverterRegistry::registerConverters(const mo::TypeInfo& type, const Set_t& setter, const Get_t& getter)

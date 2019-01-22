@@ -1,5 +1,5 @@
 #include "MetaObject/core/metaobject_config.hpp"
-#if MO_HAVE_OPENCV
+#ifdef MO_HAVE_OPENCV
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "MetaObject/params/MetaParam.hpp"
 #include "MetaObject/types/opencv.hpp"
@@ -18,6 +18,7 @@
 #endif
 
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
+#include <opencv2/core/types.hpp>
 using namespace cv;
 
 namespace mo
@@ -34,10 +35,5 @@ namespace mo
         }
     }
 }
-EXTERN_TYPE(Point2f);
-EXTERN_TYPE(Point2d);
-EXTERN_TYPE(Point3d);
-EXTERN_TYPE(Point3f);
-EXTERN_TYPE(Point);
 
 #endif

@@ -36,12 +36,3 @@ namespace mo
         }
     }
 }
-
-EXTERN_TYPE(std::vector<int>);
-EXTERN_TYPE(std::vector<unsigned short>);
-EXTERN_TYPE(std::vector<unsigned int>);
-EXTERN_TYPE(std::vector<char>);
-EXTERN_TYPE(std::vector<unsigned char>);
-EXTERN_TYPE(std::vector<float>);
-EXTERN_TYPE(std::vector<double>);
-EXTERN_TYPE(std::vector<std::string>);

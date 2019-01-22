@@ -1,4 +1,5 @@
 #include "MetaObject/core/metaobject_config.hpp"
+
 #if MO_HAVE_OPENCV
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "MetaObject/params/MetaParam.hpp"
@@ -40,10 +41,5 @@ namespace mo
         }
     }
 }
-EXTERN_TYPE(Size);
-EXTERN_TYPE(Rect);
-EXTERN_TYPE(Rect2d);
-EXTERN_TYPE(Rect2f);
-EXTERN_TYPE(std::vector<Rect>);
-EXTERN_TYPE(std::vector<Rect2f>);
+
 #endif

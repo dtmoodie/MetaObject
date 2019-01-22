@@ -14,12 +14,13 @@ namespace mo
     namespace python
     {
         std::shared_ptr<SystemTable> MO_EXPORTS pythonSetup(const char* module_name);
-        void MO_EXPORTS registerSetupFunction(std::function<void(void)>&& func);
+        void MO_EXPORTS registerSetupFunction(SystemTable* table, std::function<void(void)>&& func);
         void MO_EXPORTS setLogLevel(const std::string& level);
         void MO_EXPORTS
-        registerInterfaceSetupFunction(uint32_t interface_id,
+        registerInterfaceSetupFunction(SystemTable* table, uint32_t interface_id,
                                        std::function<void(void)>&& interface_function,
                                        std::function<void(std::vector<IObjectConstructor*>&)>&& object_function);
+
         void MO_EXPORTS registerObjects();
         void MO_EXPORTS registerInterfaces();
 
