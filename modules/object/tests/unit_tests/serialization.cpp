@@ -11,10 +11,6 @@
 #include <fstream>
 #include <istream>
 
-#ifdef MO_HAVE_OPENCV
-#include <opencv2/core.hpp>
-#endif
-
 #include <boost/test/test_tools.hpp>
 #include <boost/test/auto_unit_test.hpp>
 
@@ -24,25 +20,6 @@
 using namespace mo;
 using namespace test;
 
-BOOST_AUTO_TEST_CASE(constructor)
-{
-    {
-        auto inst = mo::MetaObjectFactory::instance()->create("SerializableObject");
-        BOOST_REQUIRE_NE(inst, nullptr);
-    }
-    {
-        auto inst = SerializableObject::create();
-        BOOST_REQUIRE_NE(inst, nullptr);
-    }
-}
-
-BOOST_AUTO_TEST_CASE(initialization)
-{
-    auto inst = SerializableObject::create();
-    BOOST_REQUIRE_NE(inst, nullptr);
-    BOOST_REQUIRE_EQUAL(inst->test, 5);
-    BOOST_REQUIRE_EQUAL(inst->test2, 6);
-}
 
 BOOST_AUTO_TEST_CASE(serialization_of_params)
 {

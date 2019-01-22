@@ -24,10 +24,11 @@ using namespace test;
 BOOST_AUTO_TEST_CASE(object_print)
 {
     auto info = mo::MetaObjectFactory::instance()->getObjectInfo("DerivedSignals");
+    BOOST_REQUIRE(info);
     info->Print();
 }
 
-BOOST_AUTO_TEST_CASE(Param_static)
+BOOST_AUTO_TEST_CASE(param_static)
 {
     auto param_info = TMetaObjectInterfaceHelper<DerivedParams>::getParamInfoStatic();
     if (param_info.size() == 1)
@@ -77,48 +78,6 @@ BOOST_AUTO_TEST_CASE(slots_static)
     itr = std::find_if(slot_info.begin(), slot_info.end(), [](SlotInfo* info) { return info->name == "derived_slot"; });
     BOOST_REQUIRE(itr != slot_info.end());
     BOOST_REQUIRE((*itr)->signature == TypeInfo(typeid(void(int))));
-}
-
-BOOST_AUTO_TEST_CASE(Param_dynamic)
-{
-    auto derived_obj = DerivedParams::create();
-    BOOST_REQUIRE_EQUAL(derived_obj->base_param, 5);
-    BOOST_REQUIRE_EQUAL(derived_obj->derived_param, 10);
-    derived_obj->base_param = 10;
-    derived_obj->derived_param = 100;
-    derived_obj->initParams(true);
-    BOOST_REQUIRE_EQUAL(derived_obj->base_param, 5);
-    BOOST_REQUIRE_EQUAL(derived_obj->derived_param, 10);
-}
-
-BOOST_AUTO_TEST_CASE(call_base_slot)
-{
-    auto derived_obj = DerivedSignals::create();
-    TSignal<void(int)> sig;
-    derived_obj->connectByName("base_slot", &sig);
-    BOOST_REQUIRE_EQUAL(derived_obj->base_count, 0);
-    sig(100);
-    BOOST_REQUIRE_EQUAL(derived_obj->base_count, 100);
-}
-
-BOOST_AUTO_TEST_CASE(call_derived_slot)
-{
-    auto derived_obj = DerivedSignals::create();
-    TSignal<void(int)> sig;
-    derived_obj->connectByName("derived_slot", &sig);
-    BOOST_REQUIRE_EQUAL(derived_obj->derived_count, 0);
-    sig(100);
-    BOOST_REQUIRE_EQUAL(derived_obj->derived_count, 100);
-}
-
-BOOST_AUTO_TEST_CASE(call_overloaded_slot)
-{
-    auto derived_obj = DerivedSignals::create();
-    TSignal<void(int)> sig;
-    derived_obj->connectByName("override_slot", &sig);
-    BOOST_REQUIRE_EQUAL(derived_obj->derived_count, 0);
-    sig(100);
-    BOOST_REQUIRE_EQUAL(derived_obj->derived_count, 300);
 }
 
 BOOST_AUTO_TEST_CASE(diamond)

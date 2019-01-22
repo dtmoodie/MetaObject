@@ -1,3 +1,4 @@
+#include "Objects.hpp"
 #include <MetaObject/core/SystemTable.hpp>
 #include <MetaObject/object/MetaObjectFactory.hpp>
 #include <MetaObject/params.hpp>
@@ -20,7 +21,7 @@ struct GlobalFixture
     {
         mo::params::init(m_system_table.get());
         mo::MetaObjectFactory::instance()->registerTranslationUnit();
-        BOOST_REQUIRE(mo::MetaObjectFactory::instance()->loadPlugin("libmo_objectplugind.so"));
+        test::setupPlugin(m_system_table.get());
     }
 
     ~GlobalFixture()

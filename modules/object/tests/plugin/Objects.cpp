@@ -1,5 +1,5 @@
 #include "Objects.hpp"
-
+#include <MetaObject/object/detail/IMetaObjectImpl.hpp>
 namespace test
 {
     SerializableObject::~SerializableObject()
@@ -45,20 +45,20 @@ namespace test
         this->updateParam<int>("int_value", value);
     }
 
-    void MetaObjectSubscriber::onParamUpdate(IParam*, Header, UpdateFlags) override
+    void MetaObjectSubscriber::onParamUpdate(IParam*, Header, UpdateFlags)
     {
         ++update_count;
     }
 
-    void MetaObjectPublisher::onParamUpdate(IParam*, Header, UpdateFlags) override
+    void MetaObjectPublisher::onParamUpdate(IParam*, Header, UpdateFlags)
     {
         ++update_count;
     }
-
+    void setupPlugin(SystemTable* table)
+    {
+        MetaObjectFactory::instance(table)->setupObjectConstructors(PerModuleInterface::GetInstance());
+    }
 }
-
-
-
 
 using namespace test;
 MO_REGISTER_OBJECT(SerializableObject);

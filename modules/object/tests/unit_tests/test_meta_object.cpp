@@ -1,3 +1,5 @@
+#include "Objects.hpp"
+
 #include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/object/MetaObject.hpp"
 #include "MetaObject/object/RelayManager.hpp"
@@ -25,108 +27,19 @@
 
 using namespace mo;
 
-struct MetaObjectEmpty : public MetaObject
-{
-    MO_BEGIN(MetaObjectEmpty)
-
-    MO_END;
-};
 
 
-struct MetaObjectSignals : public MetaObject
-{
-    MO_BEGIN(MetaObjectSignals)
-    MO_SIGNAL(void, test_void)
-    MO_SIGNAL(void, test_int, int)
-    MO_END
-};
+using namespace test;
 
-struct MetaObjectSlots : public MetaObject
-{
-    MO_BEGIN(MetaObjectSlots)
-    MO_SLOT(void, test_void)
-    MO_SLOT(void, test_void, int)
-    MO_END
-    int slot_called = 0;
-};
 
-void MetaObjectSlots::test_void()
-{
-    std::cout << "test_void called\n";
-    ++slot_called;
-}
-void MetaObjectSlots::test_void(int)
-{
-}
 
-struct MetaObjectCallback : public MetaObject
-{
-    MO_BEGIN(MetaObjectCallback)
-    MO_SLOT(int, test_int)
-    MO_SLOT(void, test_void)
-    MO_END
-};
-int MetaObjectCallback::test_int()
-{
-    return 5;
-}
-void MetaObjectCallback::test_void()
-{
-}
 
-struct MetaObjectPublisher : public MetaObject
-{
-    MO_BEGIN(MetaObjectPublisher)
-    PARAM(int, test_int, 5)
-    TOOLTIP(test_int, "test tooltip")
-    MO_END
 
-    void onParamUpdate(IParam*, Header, UpdateFlags) override
-    {
-        ++update_count;
-    }
-    int update_count = 0;
-};
-
-struct Paramed_object : public MetaObject
-{
-    MO_BEGIN(Paramed_object);
-    PARAM(int, int_value, 0);
-    PARAM(float, float_value, 0);
-    PARAM(double, double_value, 0);
-
-    INPUT(int, int_input, 0);
-    OUTPUT(int, int_output, 0);
-    MO_END;
-    void update(int value)
-    {
-        this->updateParam<int>("int_value", value);
-    }
-};
-
-struct MetaObjectSubscriber : public MetaObject
-{
-    MO_BEGIN(MetaObjectSubscriber);
-    INPUT(int, test_int, nullptr);
-    MO_END;
-    int update_count = 0;
-    void onParamUpdate(IParam*, Header, UpdateFlags) override
-    {
-        ++update_count;
-    }
-};
-
-MO_REGISTER_OBJECT(MetaObjectSignals)
-MO_REGISTER_OBJECT(MetaObjectSlots)
-MO_REGISTER_OBJECT(MetaObjectCallback)
-MO_REGISTER_OBJECT(MetaObjectPublisher)
-MO_REGISTER_OBJECT(MetaObjectSubscriber)
-MO_REGISTER_OBJECT(Paramed_object)
 
 BOOST_AUTO_TEST_CASE(access_Param)
 {
 
-    auto obj = rcc::shared_ptr<Paramed_object>::create();
+    auto obj = rcc::shared_ptr<ParamedObject>::create();
     obj->getParam<int>("int_value");
     obj->getParam<double>("double_value");
     // TODO fix unit test

@@ -140,4 +140,5 @@ namespace test
             MO_SLOT(void, test_void)
         MO_END
     };
+    void setupPlugin(SystemTable* table);
 }
