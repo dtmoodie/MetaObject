@@ -85,8 +85,6 @@ MetaObjectFactory::MetaObjectFactory(SystemTable* table)
     _pimpl.reset(new impl(table));
 }
 
-
-
 MetaObjectFactory::~MetaObjectFactory()
 {
 }
@@ -119,6 +117,7 @@ IMetaObject* MetaObjectFactory::create(const char* type_name, int64_t interface_
     }
     return nullptr;
 }
+
 IMetaObject* MetaObjectFactory::get(ObjectId id, const char* type_name)
 {
     AUDynArray<IObjectConstructor*> constructors;
@@ -246,6 +245,7 @@ std::vector<IObjectInfo*> MetaObjectFactory::getAllObjectInfo() const
     }
     return output;
 }
+
 void MetaObjectFactory::setupObjectConstructors(IPerModuleInterface* pPerModuleInterface)
 {
     getObjectSystem()->SetupObjectConstructors(pPerModuleInterface);
