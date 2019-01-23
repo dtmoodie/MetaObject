@@ -209,7 +209,7 @@ namespace mo
             ptr = table->getSingleton<T>();
             if (ptr == nullptr)
             {
-                ptr = table->setSingleton(ctr.createUnique());
+                ptr = table->setSingleton<T>(ctr.createUnique());
                 MO_LOG(info,
                        "Creating new {} singleton instance {} in system table ({})",
                        mo::TypeTable::instance(table).typeToName(mo::TypeInfo(typeid(U))),
@@ -229,7 +229,7 @@ namespace mo
             ptr = table->getSharedSingleton<T>();
             if (ptr == nullptr)
             {
-                ptr = table->setSingleton(ctr.createShared());
+                ptr = table->setSingleton<T>(ctr.createShared());
                 MO_LOG(info,
                        "Creating new shared {} singleton instance {} in system table ({})",
                        mo::TypeTable::instance(table).typeToName(mo::TypeInfo(typeid(U))),
