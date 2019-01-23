@@ -52,47 +52,10 @@ namespace mo
         unsigned int m_id = 0;
     };
 
-    template <>
-    struct ObjectConstructor<MetaObjectFactory>
-    {
-        using SharedPtr_t = std::shared_ptr<MetaObjectFactory>;
-        using UniquePtr_t = std::unique_ptr<MetaObjectFactory>;
-
-        ObjectConstructor(SystemTable* table);
-
-        SharedPtr_t createShared() const;
-
-        UniquePtr_t createUnique() const;
-
-        MetaObjectFactory* create() const;
-
-      private:
-        SystemTable* table;
-    };
-
     class MO_EXPORTS MetaObjectFactory
     {
       public:
         using Ptr_t = std::shared_ptr<MetaObjectFactory>;
-
-        MO_INLINE static Ptr_t instance();
-        static Ptr_t instance(SystemTable* table);
-
-        IMetaObject* create(const char* type_name, int64_t interface_id = -1);
-        template <class T>
-        T* create(const char* type_name);
-        IMetaObject* get(ObjectId id, const char* type_name);
-
-        std::vector<std::string> listConstructableObjects(int interface_id = -1) const;
-        std::string printAllObjectInfo(int64_t interface_id = -1) const;
-
-        std::vector<IObjectConstructor*> getConstructors(int64_t interface_id = -1) const;
-        IObjectConstructor* getConstructor(const char* type_name) const;
-        IObjectInfo* getObjectInfo(const char* type_name) const;
-        std::vector<IObjectInfo*> getAllObjectInfo() const;
-
-        bool loadPlugin(const std::string& filename);
-        int loadPlugins(const std::string& path = "./");
 
         enum PluginVerbosity
         {
@@ -101,40 +64,52 @@ namespace mo
             debug  // info + build info
         };
 
-        std::vector<std::string> listLoadedPlugins(PluginVerbosity verbosity = brief) const;
-        std::vector<PluginInfo> listLoadedPluginInfo() const;
+        MO_INLINE static Ptr_t instance();
+        static Ptr_t instance(SystemTable* table);
+
+        MetaObjectFactory() = default;
+        virtual ~MetaObjectFactory();
+
+        virtual IMetaObject* create(const char* type_name, int64_t interface_id = -1) = 0;
+        template <class T>
+        T* create(const char* type_name);
+
+        virtual IMetaObject* get(ObjectId id, const char* type_name) = 0;
+
+        virtual std::vector<std::string> listConstructableObjects(int interface_id = -1) const = 0;
+        virtual std::string printAllObjectInfo(int64_t interface_id = -1) const = 0;
+
+        virtual std::vector<IObjectConstructor*> getConstructors(int64_t interface_id = -1) const = 0;
+        virtual IObjectConstructor* getConstructor(const char* type_name) const = 0;
+        virtual IObjectInfo* getObjectInfo(const char* type_name) const = 0;
+        virtual std::vector<IObjectInfo*> getAllObjectInfo() const = 0;
+
+        virtual bool loadPlugin(const std::string& filename) = 0;
+        virtual int loadPlugins(const std::string& path = "./") = 0;
+
+        virtual std::vector<std::string> listLoadedPlugins(PluginVerbosity verbosity = brief) const = 0;
+        virtual std::vector<PluginInfo> listLoadedPluginInfo() const = 0;
 
         // This function is inlined to guarantee it exists in the calling translation unit, which
         // thus makes certain to load the correct PerModuleInterface instance
         MO_INLINE void registerTranslationUnit();
-        void setupObjectConstructors(IPerModuleInterface* pPerModuleInterface);
-        IRuntimeObjectSystem* getObjectSystem();
+        virtual void setupObjectConstructors(IPerModuleInterface* pPerModuleInterface) = 0;
+        virtual IRuntimeObjectSystem* getObjectSystem() = 0;
 
         // Recompilation stuffs
-        bool abortCompilation();
-        bool checkCompile();
-        bool isCurrentlyCompiling();
-        bool isCompileComplete();
-        bool swapObjects();
-        void setCompileCallback(std::function<void(const std::string, int)>& f);
-        std::shared_ptr<Connection> connectConstructorAdded(TSlot<void(void)>* slot);
+        virtual bool abortCompilation() = 0;
+        virtual bool checkCompile() = 0;
+        virtual bool isCurrentlyCompiling() = 0;
+        virtual bool isCompileComplete() = 0;
+        virtual bool swapObjects() = 0;
+        virtual void setCompileCallback(std::function<void(const std::string, int)>& f) = 0;
+        virtual std::shared_ptr<Connection> connectConstructorAdded(TSlot<void(void)>* slot) = 0;
 
         template <class T>
         std::vector<IObjectConstructor*> getConstructors();
 
         template <class T>
         std::vector<typename T::InterfaceInfo*> getObjectInfos();
-
-        ~MetaObjectFactory();
-
-      protected:
-        friend struct ObjectConstructor<MetaObjectFactory>;
-
-        MetaObjectFactory(SystemTable* table);
-
-      private:
-        struct impl;
-        std::unique_ptr<impl> _pimpl;
     };
 
     MO_INLINE std::shared_ptr<MetaObjectFactory> MetaObjectFactory::instance()
@@ -150,8 +125,6 @@ namespace mo
         MO_ASSERT(ptr);
         return ptr;
     }
-
-
 
     template <class T>
     T* MetaObjectFactory::create(const char* type_name)
