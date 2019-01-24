@@ -6,7 +6,30 @@
 
 namespace mo
 {
-    bool loadPlugin(std::string str) { return mo::MetaObjectFactory::instance()->loadPlugin(str); }
+
+    bool loadPlugin(std::string str)
+    {
+        if(mo::MetaObjectFactory::instance()->loadPlugin(str))
+        {
+            auto module_name = python::getModuleName();
+            boost::python::object plugins_module(boost::python::handle<>(
+                boost::python::borrowed(PyImport_AddModule((module_name + ".plugins").c_str()))));
+            boost::python::import(module_name.c_str()).attr("plugins") = plugins_module;
+            // set the current scope to the new sub-module
+            boost::python::scope plugins_scope = plugins_module;
+            auto plugin_names = mo::MetaObjectFactory::instance()->listLoadedPluginInfo();
+            for (auto& name : plugin_names)
+            {
+                boost::shared_ptr<PluginInfo> plugin(new PluginInfo(name));
+                boost::python::import(module_name.c_str()).attr("plugins").attr(name.getPluginName().c_str()) =
+                    plugin;
+            }
+            mo::python::registerInterfaces();
+            mo::python::registerObjects();
+            return true;
+        }
+        return false;
+    }
 
     int loadPluginsInternal(std::string dir)
     {
@@ -33,7 +56,6 @@ namespace mo
     {
         auto nplugins = loadPluginsInternal(dir);
         mo::python::registerInterfaces();
-
         mo::python::registerObjects();
         return nplugins;
     }

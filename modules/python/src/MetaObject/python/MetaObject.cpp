@@ -155,6 +155,6 @@ namespace mo
             boost::python::implicitly_convertible<rcc::shared_ptr<MetaObject>, rcc::shared_ptr<IMetaObject>>();
         }
 
-        // static RegisterInterface<IMetaObject> g_register(&setupInterface, &setupObjects);
+        static RegisterInterface<IMetaObject> g_register(&setupInterface, &setupObjects);
     }
 }

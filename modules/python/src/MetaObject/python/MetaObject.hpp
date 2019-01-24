@@ -251,15 +251,17 @@ namespace mo
             auto getter = python::DataConverterRegistry::instance()->getGetter(param_info->getDataType());
             if (setter && getter)
             {
-                bpobj.def(("get_" + param_info->getName()).c_str(),
-                          std::function<boost::python::object(const T&)>(
-                              std::bind(getParamHelper<T>, getter, param_info->getName(), std::placeholders::_1)));
+                std::function<boost::python::object(const T&)> getter_func(std::bind(getParamHelper<T>, getter, param_info->getName(), std::placeholders::_1));
+                std::function<bool(T&, const boost::python::object&)> setter_func(std::bind(setParamHelper<T>,
+                                                                                setter,
+                                                                                param_info->getName(),
+                                                                                std::placeholders::_1,
+                                                                                std::placeholders::_2));
+                bpobj.add_property(param_info->getName().c_str(), getter_func, setter_func);
+                /*bpobj.def(("get_" + param_info->getName()).c_str(),
+                          );
                 bpobj.def(("set_" + param_info->getName()).c_str(),
-                          std::function<bool(T&, const boost::python::object&)>(std::bind(setParamHelper<T>,
-                                                                                          setter,
-                                                                                          param_info->getName(),
-                                                                                          std::placeholders::_1,
-                                                                                          std::placeholders::_2)));
+                          );*/
             }
         }
     }

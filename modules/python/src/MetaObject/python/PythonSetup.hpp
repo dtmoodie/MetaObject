@@ -1,6 +1,9 @@
 #pragma once
-#include "MetaObject/detail/Export.hpp"
+#include <MetaObject/detail/Export.hpp>
+#include <MetaObject/core/SystemTable.hpp>
+
 #include <boost/python/object_fwd.hpp>
+
 #include <cstdint>
 #include <functional>
 #include <memory>
@@ -32,7 +35,10 @@ namespace mo
         {
             RegisterInterface(void (*setup)(), void (*construct)(std::vector<IObjectConstructor*>&))
             {
-                registerInterfaceSetupFunction(T::getHash(), setup, construct);
+                SystemTable::staticDispatchToSystemTable([setup, construct](SystemTable* table)
+                {
+                    registerInterfaceSetupFunction(table, T::getHash(), setup, construct);
+                });
             }
         };
     }
