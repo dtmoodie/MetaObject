@@ -86,6 +86,39 @@ namespace mo
             return os;
         }
 
+        bool isValid() const override
+        {
+            return TParam<T>::isValid() || m_ptr != nullptr;
+        }
+
+
+        ConstAccessToken<T> read() const
+        {
+            mo::Lock_t lock(this->mtx());
+            if(TParam<T>::isValid())
+            {
+                return TParam<T>::read();
+            }else
+            {
+                MO_ASSERT(m_ptr != nullptr);
+                return {std::move(lock), *this, *m_ptr};
+            }
+        }
+
+
+        AccessToken<T> access()
+        {
+            mo::Lock_t lock(this->mtx());
+            if(TParam<T>::isValid())
+            {
+                return TParam<T>::access();
+            }else
+            {
+                MO_ASSERT(m_ptr != nullptr);
+                return {std::move(lock), *this, *m_ptr};
+            }
+        }
+
       protected:
         void updateDataImpl(const TContainerPtr_t& data)
         {

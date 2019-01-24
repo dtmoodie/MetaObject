@@ -65,9 +65,9 @@ namespace mo
         void save(BinaryOutputVisitor& ar) const override;
         void visit(StaticVisitor&) const override;
 
-        bool isValid() const;
-        ConstAccessToken<T> read() const;
-        AccessToken<T> access();
+        virtual bool isValid() const;
+        virtual ConstAccessToken<T> read() const;
+        virtual AccessToken<T> access();
 
         IContainerPtr_t getData(const Header& desired = Header());
         IContainerConstPtr_t getData(const Header& desired = Header()) const;
