@@ -76,7 +76,7 @@ namespace test
     struct MetaObjectPublisher : public MetaObject
     {
         MO_BEGIN(MetaObjectPublisher)
-        PARAM(int, test_int, 5)
+            PARAM(int, test_int, 5)
             TOOLTIP(test_int, "test tooltip")
         MO_END
 
