@@ -427,8 +427,8 @@ namespace mo
                 {
                     MO_LOG(warn, "Error setting signal handler for SIGSEGV");
                 }
-                int devices = cv::cuda::getCudaEnabledDeviceCount();
-                MO_ASSERT(devices);
+                const auto num_cuda_devices = cv::cuda::getCudaEnabledDeviceCount();
+                MO_ASSERT(num_cuda_devices > 0);
                 cv::cuda::GpuMat mat(10, 10, CV_32F);
                 cv::Mat::setDefaultAllocator(&m_numpy_allocator);
                 cv::cuda::GpuMat::setDefaultAllocator(m_cv_gpu_allocator.get());
@@ -442,10 +442,6 @@ namespace mo
                     m_numpy_allocator.default_allocator = m_default_opencv_allocator;
                     cv::cuda::GpuMat::setDefaultAllocator(m_default_opencv_gpu_allocator);
                 }
-            }
-
-            ~LibGuard()
-            {
             }
 
             std::shared_ptr<SystemTable> m_system_table;
