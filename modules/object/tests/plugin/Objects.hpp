@@ -19,6 +19,7 @@ namespace test
 
         MO_BEGIN(Base)
             PARAM(int, base_param, 5)
+            PARAM_UPDATE_SLOT(base_param)
             MO_SIGNAL(void, base_signal, int)
             MO_SLOT(void, base_slot, int)
             MO_SLOT(void, override_slot, int)
@@ -30,7 +31,7 @@ namespace test
     struct DerivedParams : virtual public Base
     {
         MO_DERIVE(DerivedParams, Base)
-            PARAM(int, derived_param, 10)
+            REFLECT_INTERNAL_MEMBER(int, derived_param)
         MO_END
     };
 
@@ -57,19 +58,22 @@ namespace test
     struct MultipleInheritance: virtual public DerivedParams, virtual public DerivedSignals
     {
         MO_DERIVE(MultipleInheritance, DerivedParams, DerivedSignals)
-
+            // TODO remove once we support empty classes
+            PARAM(int, dummy, 0)
         MO_END
     };
 
     struct Base1 : public TInterface<Base1, MetaObject>
     {
         MO_BEGIN(Base1)
+            PARAM(int, dummy, 0)
         MO_END
     };
 
     struct Derived1 : public TInterface<Derived1, Base1>
     {
         MO_DERIVE(Derived1, Base1)
+            PARAM(int, dummy, 0)
         MO_END
     };
 
@@ -77,7 +81,7 @@ namespace test
     {
         MO_BEGIN(MetaObjectPublisher)
             PARAM(int, test_int, 5)
-            TOOLTIP(test_int, "test tooltip")
+            //TOOLTIP(test_int, "test tooltip")
         MO_END
 
         void onParamUpdate(IParam*, Header, UpdateFlags) override;
@@ -91,7 +95,7 @@ namespace test
         PARAM(float, float_value, 0)
         PARAM(double, double_value, 0)
 
-        INPUT(int, int_input, 0)
+        INPUT(int, int_input)
         OUTPUT(int, int_output, 0)
         MO_END
         void update(int value);
@@ -100,7 +104,7 @@ namespace test
     struct MetaObjectSubscriber : public MetaObject
     {
         MO_BEGIN(MetaObjectSubscriber)
-        INPUT(int, test_int, nullptr)
+            INPUT(int, test_int)
         MO_END
 
         int update_count = 0;

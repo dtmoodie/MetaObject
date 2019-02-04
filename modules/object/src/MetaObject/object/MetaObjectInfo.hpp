@@ -103,13 +103,25 @@ namespace mo
             T::addParam(param.get());
         }
 
+        void initParamsRecurse(std::map<std::string, std::pair<void*, mo::TypeInfo>>& params, const bool first_init, const ct::Indexer<0> idx)
+        {
+            const auto ptr = ct::Reflect<T>::getPtr(idx);
+
+        }
+
+        template<ct::index_t I>
+        void initParamsRecurse(std::map<std::string, std::pair<void*, mo::TypeInfo>>& params, const bool first_init, const ct::Indexer<I> idx)
+        {
+            const auto ptr = ct::Reflect<T>::getPtr(idx);
+
+            initParamsRecurse(params, first_init, --idx);
+
+        }
+
         void initParams(bool first_init) override
         {
-            T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::CONTROL>(), first_init);
-            T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::INPUT>(), first_init);
-            T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::OUTPUT>(), first_init);
-            T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::STATUS>(), first_init);
-            T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::STATE>(), first_init);
+            std::map<std::string, std::pair<void*, mo::TypeInfo>> params;
+            initParamsRecurse(params, first_init, ct::Reflect<T>::end());
         }
 
 
@@ -127,8 +139,7 @@ namespace mo
         void load(ILoadVisitor& visitor)
         {
             LoadVisitorHelper vis{visitor};
-            T::reflect(vis, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::CONTROL>());
-            T::reflect(vis, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::STATE>());
+
         }
 
         struct SaveVisitorHelper
@@ -145,8 +156,7 @@ namespace mo
         void save(ISaveVisitor& visitor) override
         {
             SaveVisitorHelper vis{visitor};
-            T::reflect(vis, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::CONTROL>());
-            T::reflect(vis, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::STATE>());
+
         }
 
         struct RCCSerializationVisitor
@@ -162,8 +172,7 @@ namespace mo
         void serializeParams(ISimpleSerializer* serializer) override
         {
             RCCSerializationVisitor visitor{serializer};
-            T::reflect(visitor, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::CONTROL>());
-            T::reflect(visitor, mo::VisitationFilter<mo::SERIALIZE>(), mo::MemberFilter<mo::STATE>());
+
         }
 
         struct ParamInfoVisitor
@@ -199,16 +208,15 @@ namespace mo
         {
             {
                 ParamInfoVisitor visitor{vec, mo::ParamFlags::Control_e};
-                T::reflectStatic(visitor, mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::CONTROL>());
             }
             {
                 ParamInfoVisitor visitor{vec, mo::ParamFlags::Input_e};
-                T::reflectStatic(visitor, mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::INPUT>());
+
             }
 
             {
                 ParamInfoVisitor visitor{vec, mo::ParamFlags::Output_e};
-                T::reflectStatic(visitor, mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::OUTPUT>());
+
             }
         }
 
@@ -234,7 +242,6 @@ namespace mo
         int initSignals(bool first_init) override
         {
             int32_t count = 0;
-            T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::SIGNALS>(), first_init, &count);
             return count;
         }
 
@@ -268,9 +275,7 @@ namespace mo
 
         static void getSignalInfoStatic(std::vector<mo::SignalInfo*>& vec)
         {
-            SignalInfoVisitor visitor{vec};
-            // visitor.getSignalInfoParents(static_cast<typename T::ParentClass*>(nullptr));
-            T::reflectStatic(visitor, mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::SIGNALS>());
+
         }
 
         static std::vector<mo::SignalInfo*> getSignalInfoStatic()
@@ -293,7 +298,7 @@ namespace mo
 
         void bindSlots(bool first_init) override
         {
-            T::reflect(*this, mo::VisitationFilter<mo::INIT>(), mo::MemberFilter<mo::SLOTS>(), first_init);
+
         }
 
         struct SlotInfoVisitor
@@ -359,16 +364,12 @@ namespace mo
         static std::vector<std::pair<mo::ISlot*, std::string>> getStaticSlots()
         {
             std::vector<std::pair<mo::ISlot*, std::string>> static_slots;
-            StaticSlotVisitor visitor{static_slots};
-            T::reflectStatic(visitor, mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::SLOTS>());
+
             return static_slots;
         }
 
         static void getSlotInfoStatic(std::vector<mo::SlotInfo*>& vec)
         {
-            SlotInfoVisitor visitor{vec};
-            // visitor.getSlotInfoParents(static_cast<typename T::ParentClass*>(nullptr));
-            T::reflectStatic(visitor, mo::VisitationFilter<mo::LIST>(), mo::MemberFilter<mo::SLOTS>());
         }
 
         static std::vector<mo::SlotInfo*> getSlotInfoStatic()

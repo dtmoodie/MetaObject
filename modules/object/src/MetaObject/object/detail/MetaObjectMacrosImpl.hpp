@@ -50,11 +50,7 @@ namespace mo
     REFLECT_START(N_)                                                                                                  \
     static rcc::shared_ptr<THIS_CLASS::InterfaceHelper<CLASS_NAME>> create();
 
-#define MO_DERIVE_(N_, CLASS_NAME, ...)                                                                                \
-    using THIS_CLASS = CLASS_NAME;                                                                                     \
-    using ParentClass = ct::VariadicTypedef<__VA_ARGS__>;                                                              \
-    REFLECT_START(N_)                                                                                                  \
-    static rcc::shared_ptr<THIS_CLASS::InterfaceHelper<CLASS_NAME>> create();
+
 
 template <class T>
 struct ReflectParent;
@@ -106,20 +102,6 @@ struct ReflectParent<ct::VariadicTypedef<Parent, Parents...>>
         ReflectParent<ct::VariadicTypedef<Parents...>>::visit(visitor, filter, type, std::forward<Args>(args)...);
     }
 };
-
-#define MO_END_(N)                                                                                                     \
-    template <class V, class F, class T, class... Args>                                                                \
-    inline void reflect(V& visitor, F filter, T type, Args&&... args)                                                  \
-    {                                                                                                                  \
-        ReflectParent<ParentClass>::visit(this, visitor, filter, type, std::forward<Args>(args)...);                   \
-        reflectHelper(visitor, filter, type, ct::Indexer<N>{}, std::forward<Args>(args)...);                         \
-    }                                                                                                                  \
-    template <class V, class F, class T, class... Args>                                                                \
-    static inline void reflectStatic(V& visitor, F filter, T type, Args&&... args)                                     \
-    {                                                                                                                  \
-        ReflectParent<ParentClass>::visit(visitor, filter, type, std::forward<Args>(args)...);                         \
-        reflectHelperStatic(visitor, filter, type, ct::Indexer<N>{}, std::forward<Args>(args)...);                   \
-    }
 
 #define MO_ABSTRACT_(N_, CLASS_NAME, ...)                                                                              \
     using THIS_CLASS = CLASS_NAME;                                                                                     \

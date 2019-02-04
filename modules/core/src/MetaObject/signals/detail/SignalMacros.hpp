@@ -81,7 +81,7 @@
 #define MO_SIGNAL_(N, RETURN, NAME, ...)                                                                               \
     mo::TSignal<RETURN(__VA_ARGS__)> COMBINE(_sig_##NAME##_, N);                                                       \
     SIGNAL_CALL(N, NAME, RETURN, ##__VA_ARGS__)                                                                        \
-    INIT_SIGNALS_(N, __COUNTER__, RETURN, NAME, __VA_ARGS__)
+    PUBLIC_ACCESS(COMBINE(_sig_##NAME##_, N))
 
 #define DESCRIBE_SIGNAL_(NAME, DESCRIPTION, N)                                                                         \
     std::vector<slot_info> _list_signals(const ct::Indexer<N> dummy)                                                       \

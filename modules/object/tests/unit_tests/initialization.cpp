@@ -9,11 +9,14 @@ BOOST_AUTO_TEST_CASE(constructor)
     {
         auto inst = mo::MetaObjectFactory::instance()->create("SerializableObject");
         BOOST_REQUIRE_NE(inst, nullptr);
+        rcc::shared_ptr<SerializableObject> casted(inst);
+        BOOST_REQUIRE_NE(casted, nullptr);
     }
     {
         auto inst = SerializableObject::create();
         BOOST_REQUIRE_NE(inst, nullptr);
     }
+
 }
 
 

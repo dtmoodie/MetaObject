@@ -5,6 +5,12 @@ namespace test
     SerializableObject::~SerializableObject()
     {
     }
+
+    void Base::on_base_param_modified(mo::IParam*, mo::Header, mo::UpdateFlags)
+    {
+
+    }
+
     void Base::base_slot(int value)
     {
         base_count += value;

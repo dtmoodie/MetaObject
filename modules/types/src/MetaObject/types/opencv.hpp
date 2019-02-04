@@ -10,14 +10,15 @@ namespace ct
     struct Reflect<cv::Vec<T, R>>
     {
         using DataType = cv::Vec<T, R>;
-        static constexpr int N = 0;
+        static constexpr int NUM_FIELDS = 1;
         static constexpr int SPECIALIZED = true;
-        static constexpr ct::Accessor<mo::ArrayAdapter<const T, R> (*)(const cv::Vec<T, R>&),
-                                      mo::ArrayAdapter<T, R> (*)(cv::Vec<T, R>&)>
-        getAccessor(const ct::Indexer<0>)
+
+        using PropertyPointer = ct::MemberPropertyPointer<mo::ArrayAdapter<const T, R>(*)(const DataType&), mo::ArrayAdapter<T, R>(*)(DataType&)>;
+
+        static constexpr auto getPtr(const ct::Indexer<0>) ->PropertyPointer
         {
-            return {[](const cv::Vec<T, R>& data) -> mo::ArrayAdapter<const T, R> { return &data.val[0]; },
-                    [](cv::Vec<T, R>& data) -> mo::ArrayAdapter<T, R> { return &data.val[0]; }};
+            return PropertyPointer("data", [](const cv::Vec<T, R>& data) -> mo::ArrayAdapter<const T, R> { return &data.val[0]; },
+                    [](cv::Vec<T, R>& data) -> mo::ArrayAdapter<T, R> { return &data.val[0]; });
         }
 
         static constexpr mo::ArrayAdapter<T, R> get(cv::Vec<T, R>& data, Indexer<0>)
@@ -36,9 +37,9 @@ namespace ct
         {
             return "cv::Vec_<T, R>";
         }
-        static constexpr ct::Indexer<N> end()
+        static constexpr ct::Indexer<0> end()
         {
-            return ct::Indexer<N>{};
+            return ct::Indexer<0>{};
         }
     };
 
@@ -46,20 +47,15 @@ namespace ct
     struct Reflect<cv::Scalar_<T>>
     {
         using DataType = cv::Scalar_<T>;
-        static constexpr int N = 0;
+        static constexpr int NUM_FIELDS = 1;
         static constexpr int SPECIALIZED = true;
+        using PropertyPointer = ct::MemberPropertyPointer<mo::ArrayAdapter<const T, 4>(*)(const DataType&), mo::ArrayAdapter<T, 4>(*)(DataType&)>;
 
-        static constexpr ct::Accessor<mo::ArrayAdapter<const T, 4> (*)(const cv::Scalar_<T>&),
-                                      mo::ArrayAdapter<T, 4> (*)(cv::Scalar_<T>&)>
-        getAccessor(const ct::Indexer<0>)
+        static constexpr auto getPtr(const ct::Indexer<0>) ->
+            PropertyPointer
         {
-            return {[](const cv::Scalar_<T>& data) -> mo::ArrayAdapter<const T, 4> { return &data.val[0]; },
-                    [](cv::Scalar_<T>& data) -> mo::ArrayAdapter<T, 4> { return &data.val[0]; }};
-        }
-
-        static constexpr const char* getName(Indexer<0>)
-        {
-            return "data";
+            return PropertyPointer("data", [](const DataType& data) -> mo::ArrayAdapter<const T, 4> { return &data.val[0]; },
+                    [](DataType& data) -> mo::ArrayAdapter<T, 4> { return &data.val[0]; });
         }
 
         static constexpr const char* getName()
@@ -67,9 +63,9 @@ namespace ct
             return "cv::Scalar_<T>";
         }
 
-        static constexpr ct::Indexer<N> end()
+        static constexpr ct::Indexer<0> end()
         {
-            return ct::Indexer<N>{};
+            return ct::Indexer<0>{};
         }
     };
 
@@ -77,24 +73,20 @@ namespace ct
     struct Reflect<cv::Matx<T, ROWS, COLS>>
     {
         using DataType = cv::Matx<T, ROWS, COLS>;
-        static constexpr int N = 0;
+        static constexpr int NUM_FIELDS = 1;
         static constexpr int SPECIALIZED = true;
 
         using Mat_t = cv::Matx<T, ROWS, COLS>;
 
         using ConstAdapater_t = mo::MatrixAdapter<const T, ROWS, COLS>;
         using Adapter_t = mo::MatrixAdapter<T, ROWS, COLS>;
-        using Accessor_t = Accessor<ConstAdapater_t (*)(const Mat_t&), Adapter_t (*)(Mat_t&)>;
 
-        static constexpr Accessor_t getAccessor(const ct::Indexer<0>)
+        using PropertyPointer_t = ct::MemberPropertyPointer<ConstAdapater_t(*)(const DataType&), Adapter_t(*)(DataType&)>;
+
+        static constexpr PropertyPointer_t getPtr(const ct::Indexer<0>)
         {
-            return Accessor_t([](const Mat_t& data) -> ConstAdapater_t { return &data.val[0]; },
+            return PropertyPointer_t("data", [](const Mat_t& data) -> ConstAdapater_t { return &data.val[0]; },
                               [](Mat_t& data) -> Adapter_t { return &data.val[0]; });
-        }
-
-        static constexpr const char* getName(Indexer<0>)
-        {
-            return "data";
         }
 
         static constexpr const char* getName()
@@ -102,9 +94,9 @@ namespace ct
             return "cv::Matx_<T, ROWS, COLS>";
         }
 
-        static constexpr ct::Indexer<N> end()
+        static constexpr ct::Indexer<0> end()
         {
-            return ct::Indexer<N>{};
+            return ct::Indexer<0>{};
         }
     };
 

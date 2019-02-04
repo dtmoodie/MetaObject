@@ -14,16 +14,16 @@ namespace mo
     using Indexer = ct::Indexer<N>;
 
     template <class T, index_t I>
-    auto visitValue(ILoadVisitor& visitor, T& obj, const Indexer<I> idx) -> ct::enable_if_member_setter<T, I>
+    auto visitValue(ILoadVisitor& visitor, T& obj, const Indexer<I> idx) -> ct::DisableIfMemberFunction<T, I>
     {
-        auto accessor = ct::Reflect<T>::getAccessor(idx);
-        using RefType = typename ct::ReferenceType<typename decltype(accessor)::Set_t>::Type;
-        RefType ref = static_cast<RefType>(accessor.set(obj));
-        visitor(&ref, ct::Reflect<T>::getName(idx));
+        auto accessor = ct::Reflect<T>::getPtr(idx);
+        using RefType = typename ct::ReferenceType<typename ct::SetType<decltype(accessor)>::type>::Type;
+        RefType ref = static_cast<RefType>(ct::set(accessor, obj));
+        visitor(&ref, ct::getName<I, T>());
     }
 
     template <class T, index_t I>
-    auto visitValue(ILoadVisitor&, T&, const Indexer<I>) -> ct::disable_if_member_setter<T, I>
+    auto visitValue(ILoadVisitor&, T&, const Indexer<I>) -> ct::EnableIfMemberFunction<T, I>
     {
     }
 
@@ -41,16 +41,16 @@ namespace mo
     }
 
     template <class T, index_t I>
-    auto visitValue(ISaveVisitor& visitor, const T& obj, const ct::Indexer<I> idx) -> ct::enable_if_member_getter<T, I>
+    auto visitValue(ISaveVisitor& visitor, const T& obj, const ct::Indexer<I> idx) -> ct::DisableIfMemberFunction<T, I>
     {
-        auto accessor = ct::Reflect<T>::getAccessor(idx);
-        using RefType = typename ct::ReferenceType<typename decltype(accessor)::Get_t>::ConstType;
-        RefType ref = static_cast<RefType>(accessor.get(obj));
-        visitor(&ref, ct::Reflect<T>::getName(idx));
+        auto accessor = ct::Reflect<T>::getPtr(idx);
+        using RefType = typename ct::ReferenceType<typename ct::GetType<decltype(accessor)>::type>::ConstType;
+        RefType ref = static_cast<RefType>(ct::get(accessor, obj));
+        visitor(&ref, ct::getName<I, T>());
     }
 
     template <class T, index_t I>
-    auto visitValue(ISaveVisitor&, const T&, const ct::Indexer<I>) -> ct::disable_if_member_getter<T, I>
+    auto visitValue(ISaveVisitor&, const T&, const ct::Indexer<I>) -> ct::EnableIfMemberFunction<T, I>
     {
     }
 
@@ -68,14 +68,14 @@ namespace mo
     }
 
     template <class T, index_t I>
-    auto visitValue(StaticVisitor& visitor, const Indexer<I> idx) -> ct::enable_if_member_getter<T, I>
+    auto visitValue(StaticVisitor& visitor, const Indexer<I> idx) -> ct::DisableIfMemberFunction<T, I>
     {
-        using Type = typename decltype(ct::Reflect<T>::getAccessor(idx))::Get_t;
-        visitor.visit<Type>(ct::Reflect<T>::getName(idx));
+        using Type = typename ct::GetType<decltype(ct::Reflect<T>::getPtr(idx))>::type;
+        visitor.visit<typename std::decay<Type>::type>(ct::getName<I, T>());
     }
 
     template <class T, index_t I>
-    auto visitValue(StaticVisitor&, const Indexer<I>) -> ct::disable_if_member_getter<T, I>
+    auto visitValue(StaticVisitor&, const Indexer<I>) -> ct::EnableIfMemberFunction<T, I>
     {
     }
 
@@ -93,7 +93,7 @@ namespace mo
     }
 
     template <class T>
-    struct TTraits<T, ct::enable_if_reflected<T>> : public ILoadStructTraits
+    struct TTraits<T, ct::EnableIfReflected<T>> : public ILoadStructTraits
     {
         using base = ILoadStructTraits;
         static mo::TraitRegisterer<T> reg;
@@ -182,7 +182,7 @@ namespace mo
     };
 
     template <class T>
-    struct TTraits<const T, ct::enable_if_reflected<T>> : public ISaveStructTraits
+    struct TTraits<const T, ct::EnableIfReflected<T>> : public ISaveStructTraits
     {
         using base = ISaveStructTraits;
         static mo::TraitRegisterer<const T> reg;
@@ -259,10 +259,10 @@ namespace mo
     };
 
     template <class T>
-    TraitRegisterer<T> TTraits<T, ct::enable_if_reflected<T>>::reg;
+    TraitRegisterer<T> TTraits<T, ct::EnableIfReflected<T>>::reg;
 
     template <class T>
-    TraitRegisterer<const T> TTraits<const T, ct::enable_if_reflected<T>>::reg;
+    TraitRegisterer<const T> TTraits<const T, ct::EnableIfReflected<T>>::reg;
 }
 
 #endif // MO_VISITATION_VISITORTRAITS_HPP

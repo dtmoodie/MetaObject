@@ -17,3 +17,5 @@ assert(obj.test2 == 20)
 obj = mo.object.DerivedSignals()
 
 assert(obj.base_param == 5)
+
+types = mo.listConstructableObjects()

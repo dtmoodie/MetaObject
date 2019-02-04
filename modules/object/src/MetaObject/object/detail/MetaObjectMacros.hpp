@@ -108,14 +108,19 @@ namespace mo
    These two macros (MO_BEGIN kept for backwards compatibility) are used to define an
    interface base class.
 */
-#define MO_BEGIN(CLASS_NAME) MO_BEGIN_1(CLASS_NAME, __COUNTER__)
-#define MO_BASE(CLASS_NAME) MO_BEGIN_1(CLASS_NAME, __COUNTER__)
+#define MO_BEGIN(CLASS_NAME) REFLECT_INTERNAL_START(CLASS_NAME) \
+    static rcc::shared_ptr<DataType::InterfaceHelper<DataType>> create();
+
+#define MO_BASE(CLASS_NAME) REFLECT_INTERNAL_START(CLASS_NAME)
 
 /*
     These two macros are used for defining a concrete class that has a valid implementation
 */
-#define MO_DERIVE(CLASS_NAME, ...) MO_DERIVE_(__COUNTER__, CLASS_NAME, __VA_ARGS__)
-#define MO_CONCRETE(CLASS_NAME, ...) MO_DERIVE_(__COUNTER__, CLASS_NAME, __VA_ARGS__)
+#define MO_DERIVE(CLASS_NAME, ...)                                         \
+    REFLECT_INTERNAL_DERIVED(CLASS_NAME, __VA_ARGS__)                      \
+    static rcc::shared_ptr<DataType::InterfaceHelper<DataType>> create();
+
+#define MO_CONCRETE(CLASS_NAME, ...) MO_DERIVE(CLASS_NAME, __VA_ARGS__)
 
 /*
    This macro is used for defining a abstract class that derives from N interfaces without a
@@ -126,7 +131,7 @@ namespace mo
 /*
     This macro is used for marking the end of a class definition block
 */
-#define MO_END MO_END_(__COUNTER__)
+#define MO_END REFLECT_INTERNAL_END
 
 
 #include "MetaObjectMacrosImpl.hpp"

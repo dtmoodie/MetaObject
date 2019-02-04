@@ -7,10 +7,33 @@
 #include "MetaObject/params/detail/ParamMacrosImpl.hpp"
 #include "MetaObject/types/file_types.hpp"
 
-#define PARAM(type_, name, ...)                                                                                        \
-    mo::TParamPtr<type_> name##_param;                                                                                 \
-    type_ name = __VA_ARGS__;                                                                                          \
-    VISIT(name, mo::CONTROL, __VA_ARGS__)
+namespace mo
+{
+    enum ParamReflectionFlags: ct::Flag_t
+    {
+        kCONTROL = 1 << (ct::CT_RESERVED_FLAG_BITS + 1),
+        kSTATE = kCONTROL << 1,
+        kSTATUS = kSTATE << 1,
+        kINPUT = kSTATUS << 1,
+        kOUTPUT = kINPUT << 1,
+
+        kOPTIONAL = kOUTPUT << 1,
+        kSOURCE = kOPTIONAL << 1,
+
+        kSIGNAL = kSOURCE << 1,
+        kSLOT = kSIGNAL << 1
+    };
+}
+
+#define REFLECT_INTERNAL_WITH_FLAG(FLAGS, TYPE, NAME, ...)                                                             \
+    TYPE NAME = __VA_ARGS__;                                                                                           \
+    constexpr static auto getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_START - 1>)                             \
+      -> decltype(ct::makeMemberObjectPointer<FLAGS>(#NAME, &DataType::NAME))                                          \
+    {   return ct::makeMemberObjectPointer<FLAGS>(#NAME, &DataType::NAME); }
+
+#define PARAM(TYPE, NAME, ...)                          \
+    REFLECT_INTERNAL_MEMBER(mo::TParamPtr<TYPE>, NAME##_param) \
+    REFLECT_INTERNAL_WITH_FLAG(mo::kCONTROL, TYPE, NAME, __VA_ARGS__)
 
 #define ENUM_PARAM(name, ...)                                                                                          \
     mo::TParamPtr<mo::EnumParam> name##_param;                                                                         \
@@ -19,57 +42,26 @@
 
 #define RANGED_PARAM(type, name, init, min, max)
 
-#define INPUT(type_, name, init)                                                                                       \
-    mo::TInputParamPtr<type_>::Input_t name = init;                                                                    \
-    mo::TInputParamPtr<type_> name##_param;                                                                            \
-    VISIT(name, mo::INPUT, init)
+#define INPUT(TYPE, NAME)                                                                 \
+    REFLECT_INTERNAL_WITH_FLAG(mo::kOUTPUT, mo::TInputParamPtr<TYPE>::Input_t, NAME, nullptr)   \
+    REFLECT_INTERNAL_MEMBER(mo::TInputParamPtr<TYPE>, NAME##_param)
 
-#define OPTIONAL_INPUT(type, name, init)                                                                               \
-    INPUT(type, name, init)                                                                                            \
-    APPEND_FLAGS(name, mo::ParamFlags::Optional_e)
+#define OPTIONAL_INPUT(type, name)                                                                        \
+    REFLECT_INTERNAL_WITH_FLAGS(mo::kOUTPUT | mo::kOPTIONAL, mo::TInputParamPtr<type_>::Input_t, nullptr)   \
+    REFLECT_INTERNAL(mo::TInputParamPtr<TYPE>, name##_param)
 
-#define APPEND_FLAGS(name, flags)                                                                                      \
-    template <class V, class T, class... Args>                                                                         \
-    inline void reflectHelper(V& visitor,                                                                              \
-                              mo::VisitationFilter<mo::INIT> filter,                                                   \
-                              T param_type,                                                                            \
-                              const ct::Indexer<__COUNTER__> cnt,                                                          \
-                              Args&&... args)                                                                          \
-    {                                                                                                                  \
-        name##_param.appendFlags(flags);                                                                               \
-        reflectHelper(visitor, filter, param_type, --cnt, std::forward<Args>(args)...);                                \
-    }
+#define STATE(TYPE, NAME, ...)                                                                                       \
+    REFLECT_INTERNAL_MEMBER(mo::TParamPtr<TYPE>, NAME##_param)                                                               \
+    REFLECT_INTERNAL_WITH_FLAG(mo::kSTATE, TYPE, NAME, __VA_ARGS__)
 
-#define STATE(type_, name, init)                                                                                       \
-    type_ name;                                                                                                        \
-    mo::TParamPtr<type_> name##_param;                                                                                 \
-    VISIT(name, mo::STATE, init)
+#define STATUS(TYPE, NAME, ...)                                                                                      \
+    REFLECT_INTERNAL_MEMBER(mo::TParamPtr<TYPE>, NAME##_param)                                                               \
+    REFLECT_INTERNAL_WITH_FLAG(mo::kSTATUS, TYPE, NAME, __VA_ARGS__)
 
-#define PERSISTENT_(type_, name, N)                                                                                    \
-    mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param;                                                  \
-    INIT_(name, N)                                                                                                     \
-    LOAD_SAVE_(name, N)
+#define OUTPUT(TYPE, NAME, ...)                                                                                      \
+    REFLECT_INTERNAL_MEMBER(mo::TParamOutput<TYPE>, NAME##_param)                                                               \
+    REFLECT_INTERNAL_WITH_FLAG(mo::kOUTPUT, TYPE, NAME, __VA_ARGS__)
 
-#define PERSISTENT(type_, name)                                                                                        \
-    mo::argument_type<void(type_)>::type name;                                                                         \
-    PERSISTENT_(type, name, __COUNTER__)
-
-#define INIT(name, init) INIT_(name, init, __COUNTER__)
-
-#define STATUS(type_, name, init)                                                                                      \
-    mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param;                                                  \
-    mo::argument_type<void(type_)>::type name = init;                                                                  \
-    STATUS_(type_, name, init, __COUNTER__)
-
-#define TOOLTIP(name, TOOLTIP) TOOLTIP_(name, TOOLTIP, __COUNTER__)
-
-#define DESCRIPTION(name, DESCRIPTION)
-
-#define OUTPUT(type_, name, init)                                                                                      \
-    mo::TParamOutput<type_> name##_param;                                                                              \
-    type_ name = init;                                                                                                 \
-    VISIT(name, mo::OUTPUT, init)
-
-#define SOURCE(type, name, init)                                                                                       \
-    OUTPUT(type, name, init)                                                                                           \
-    APPEND_FLAGS(name, mo::ParamFlags::Source_e)
+#define SOURCE(type, name, ...)                                                                                       \
+    REFLECT_INTERNAL_MEMBER(mo::TParamOutput<TYPE>, NAME##_param)                                                               \
+    REFLECT_INTERNAL_WITH_FLAG(mo::kSOURCE, TYPE, NAME, __VA_ARGS__)

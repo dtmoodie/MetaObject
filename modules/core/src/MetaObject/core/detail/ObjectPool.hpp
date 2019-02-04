@@ -14,7 +14,7 @@ namespace mo
     {
         using Ptr_t = std::shared_ptr<T>;
 
-        ObjectPool(const uint64_t initial_pool_size, const ObjectConstructor<T>& ctr = ObjectConstructor<T>())
+        ObjectPool(const uint64_t initial_pool_size = 0, const ObjectConstructor<T>& ctr = ObjectConstructor<T>())
             : m_ctr(ctr)
         {
             for (uint64_t i = 0; i < initial_pool_size; ++i)
@@ -22,11 +22,6 @@ namespace mo
                 Ptr_t obj = m_ctr.createShared();
                 returnObject(obj);
             }
-        }
-
-        ObjectPool(const ObjectConstructor<T>& ctr = ObjectConstructor<T>())
-            : m_ctr(ctr)
-        {
         }
 
         Ptr_t get()

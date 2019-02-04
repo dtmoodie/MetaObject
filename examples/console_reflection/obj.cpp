@@ -9,7 +9,7 @@ class ConcreteImplementation : public ExampleInterface
     MO_DERIVE(ConcreteImplementation, ExampleInterface)
     PARAM(int, integer_Param, 0)
     PARAM(float, float_Param, 0.0)
-    INPUT(int, input_int_Param, nullptr)
+    INPUT(int, input_int_Param)
     OUTPUT(int, output_int_Param, 0)
     MO_END
     static void PrintHelp()

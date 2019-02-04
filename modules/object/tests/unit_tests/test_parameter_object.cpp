@@ -40,7 +40,7 @@ struct output_parametered_object : public MetaObject
 struct input_parametered_object : public MetaObject
 {
     MO_BEGIN(input_parametered_object)
-    INPUT(int, test_input, nullptr)
+    INPUT(int, test_input)
     MO_END;
 };
 

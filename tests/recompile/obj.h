@@ -70,7 +70,7 @@ struct DLL_EXPORTS test_meta_object_output : public MetaObject
 struct DLL_EXPORTS test_meta_object_input : public MetaObject
 {
     MO_BEGIN(test_meta_object_input)
-    INPUT(int, test_input, nullptr)
+    INPUT(int, test_input)
     MO_END
     int param_update_call_count = 0;
     virtual void onParamUpdate(IParam*, Header, UpdateFlags) override
