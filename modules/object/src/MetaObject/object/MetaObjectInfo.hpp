@@ -50,7 +50,7 @@ namespace mo
                                const mo::Name& name,
                                const mo::Param<mo::TParamPtr<DType>>& param,
                                const int32_t,
-                               const bool )
+                               const bool)
         {
             param.get()->setName(name.get());
             param.get()->updatePtr(data.get());
@@ -86,7 +86,7 @@ namespace mo
                                const mo::Name& name,
                                const mo::Param<mo::TMultiInput<DTypes...>>& param,
                                const int32_t,
-                               const bool )
+                               const bool)
         {
             param.get()->setName(name.get());
             param.get()->setUserDataPtr(data.get());
@@ -94,28 +94,28 @@ namespace mo
         }
 
         template <class... DTypes>
-        inline void operator()(const mo::Name& name,
-                               const mo::Param<mo::TMultiOutput<DTypes...>>& param,
-                               const int32_t,
-                               const bool )
+        inline void
+        operator()(const mo::Name& name, const mo::Param<mo::TMultiOutput<DTypes...>>& param, const int32_t, const bool)
         {
             param.get()->setName(name.get());
             T::addParam(param.get());
         }
 
-        void initParamsRecurse(std::map<std::string, std::pair<void*, mo::TypeInfo>>& params, const bool first_init, const ct::Indexer<0> idx)
+        void initParamsRecurse(std::map<std::string, std::pair<void*, mo::TypeInfo>>& params,
+                               const bool first_init,
+                               const ct::Indexer<0> idx)
         {
             const auto ptr = ct::Reflect<T>::getPtr(idx);
-
         }
 
-        template<ct::index_t I>
-        void initParamsRecurse(std::map<std::string, std::pair<void*, mo::TypeInfo>>& params, const bool first_init, const ct::Indexer<I> idx)
+        template <ct::index_t I>
+        void initParamsRecurse(std::map<std::string, std::pair<void*, mo::TypeInfo>>& params,
+                               const bool first_init,
+                               const ct::Indexer<I> idx)
         {
-            const auto ptr = ct::Reflect<T>::getPtr(idx);
+            // const auto ptr = ct::Reflect<T>::getPtr(idx);
 
             initParamsRecurse(params, first_init, --idx);
-
         }
 
         void initParams(bool first_init) override
@@ -124,10 +124,9 @@ namespace mo
             initParamsRecurse(params, first_init, ct::Reflect<T>::end());
         }
 
-
         struct LoadVisitorHelper
         {
-            template<class DType, class ParamType, ct::index_t N>
+            template <class DType, class ParamType, ct::index_t N>
             inline void operator()(mo::Data<DType> data, mo::Name name, ParamType, const ct::Indexer<N>)
             {
                 visitor(data.get(), name.get());
@@ -139,12 +138,11 @@ namespace mo
         void load(ILoadVisitor& visitor)
         {
             LoadVisitorHelper vis{visitor};
-
         }
 
         struct SaveVisitorHelper
         {
-            template<class DType, class ParamType, ct::index_t N>
+            template <class DType, class ParamType, ct::index_t N>
             inline void operator()(const mo::Data<DType>& data, const mo::Name& name, ParamType, const ct::Indexer<N>)
             {
                 visitor(data.get(), name.get());
@@ -156,13 +154,12 @@ namespace mo
         void save(ISaveVisitor& visitor) override
         {
             SaveVisitorHelper vis{visitor};
-
         }
 
         struct RCCSerializationVisitor
         {
             ISimpleSerializer* serializer;
-            template<class DType, class ParamType>
+            template <class DType, class ParamType>
             inline void operator()(const mo::Data<DType>& data, const mo::Name& name, ParamType, ct::index_t)
             {
                 serializer->SerializeProperty(name.get(), *data.get());
@@ -172,7 +169,6 @@ namespace mo
         void serializeParams(ISimpleSerializer* serializer) override
         {
             RCCSerializationVisitor visitor{serializer};
-
         }
 
         struct ParamInfoVisitor
@@ -211,12 +207,10 @@ namespace mo
             }
             {
                 ParamInfoVisitor visitor{vec, mo::ParamFlags::Input_e};
-
             }
 
             {
                 ParamInfoVisitor visitor{vec, mo::ParamFlags::Output_e};
-
             }
         }
 
@@ -275,7 +269,6 @@ namespace mo
 
         static void getSignalInfoStatic(std::vector<mo::SignalInfo*>& vec)
         {
-
         }
 
         static std::vector<mo::SignalInfo*> getSignalInfoStatic()
@@ -298,7 +291,6 @@ namespace mo
 
         void bindSlots(bool first_init) override
         {
-
         }
 
         struct SlotInfoVisitor
@@ -355,8 +347,7 @@ namespace mo
             }
 
             template <class R, class T1, class... Args, ct::index_t N>
-            inline void
-            operator()(const mo::NamedType<R (T1::*)(Args...), Function>&, const mo::Name&, ct::Indexer<N>)
+            inline void operator()(const mo::NamedType<R (T1::*)(Args...), Function>&, const mo::Name&, ct::Indexer<N>)
             {
             }
         };

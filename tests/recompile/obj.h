@@ -33,7 +33,7 @@ struct DLL_EXPORTS MetaObjectSignals : public MetaObject
     {
         std::cout << "Deleting object\n";
     }
-    MO_BEGIN(MetaObjectSignals)
+    MO_BEGIN
     MO_SIGNAL(void, test_void)
     MO_SIGNAL(void, test_int, int)
     MO_END
@@ -41,7 +41,7 @@ struct DLL_EXPORTS MetaObjectSignals : public MetaObject
 
 struct DLL_EXPORTS MetaObjectSlots : public MetaObject
 {
-    MO_BEGIN(MetaObjectSlots)
+    MO_BEGIN
     MO_SLOT(void, test_void)
     MO_SLOT(void, test_int, int)
     STATE(int, call_count, 0)
@@ -50,14 +50,14 @@ struct DLL_EXPORTS MetaObjectSlots : public MetaObject
 
 struct DLL_EXPORTS test_meta_object_parameters : public MetaObject
 {
-    MO_BEGIN(test_meta_object_parameters)
+    MO_BEGIN
     PARAM(int, test, 5)
     MO_END
 };
 
 struct DLL_EXPORTS test_meta_object_output : public MetaObject
 {
-    MO_BEGIN(test_meta_object_output)
+    MO_BEGIN
     OUTPUT(int, test_output, 0)
     MO_END
     int param_update_call_count = 0;
@@ -69,7 +69,7 @@ struct DLL_EXPORTS test_meta_object_output : public MetaObject
 
 struct DLL_EXPORTS test_meta_object_input : public MetaObject
 {
-    MO_BEGIN(test_meta_object_input)
+    MO_BEGIN
     INPUT(int, test_input)
     MO_END
     int param_update_call_count = 0;
@@ -82,7 +82,7 @@ struct DLL_EXPORTS test_meta_object_input : public MetaObject
 #ifdef HAVE_CUDA
 struct DLL_EXPORTS test_cuda_object : public MetaObject
 {
-    MO_BEGIN(test_cuda_object)
+    MO_BEGIN
     PARAM(int, test, 0)
     MO_END
     void run_kernel();

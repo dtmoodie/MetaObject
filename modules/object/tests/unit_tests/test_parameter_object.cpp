@@ -27,7 +27,7 @@ using namespace mo;
 
 struct output_parametered_object : public MetaObject
 {
-    MO_BEGIN(output_parametered_object)
+    MO_BEGIN
     OUTPUT(int, test_output, 0);
     OUTPUT(double, test_double, 0.0);
     MO_END;
@@ -39,7 +39,7 @@ struct output_parametered_object : public MetaObject
 
 struct input_parametered_object : public MetaObject
 {
-    MO_BEGIN(input_parametered_object)
+    MO_BEGIN
     INPUT(int, test_input)
     MO_END;
 };

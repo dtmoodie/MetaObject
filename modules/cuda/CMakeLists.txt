@@ -28,7 +28,6 @@ if(BUILD_TESTS)
     endif()
 
     target_link_libraries(test_mo_cuda metaobject_cuda ${OpenCV_LIBRARIES})
-    set_property(TARGET test_mo_cuda PROPERTY CXX_STANDARD 11)
     add_test(NAME test_mo_cuda COMMAND test_mo_cuda)
 
     INCLUDE_DIRECTORIES("../core/src")

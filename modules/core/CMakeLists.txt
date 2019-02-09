@@ -10,7 +10,7 @@ metaobject_declare_module(NAME core SRC src DEPENDS
     Boost::thread
     Boost::fiber
     Boost::system
-    cereal 
+    cereal
     RuntimeObjectSystem
 )
 
@@ -52,6 +52,4 @@ if(BUILD_TESTS)
         )
         target_link_libraries(test_mo_core ${OpenCV_LIBRARIES})
     endif()
-    set_property(TARGET test_mo_core PROPERTY CXX_STANDARD 11)
-    #add_test(NAME test_mo_core COMMAND test_mo_core)
 endif()

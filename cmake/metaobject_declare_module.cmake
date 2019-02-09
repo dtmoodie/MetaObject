@@ -24,7 +24,7 @@ function(metaobject_declare_module)
         rcc_link_lib(metaobject_${metaobject_declare_module_NAME} ${metaobject_declare_module_DEPENDS})
     endif()
 
-    set_property(TARGET metaobject_${metaobject_declare_module_NAME} PROPERTY CXX_STANDARD 11)
+
 
     if(UNIX)
         target_compile_options(metaobject_${metaobject_declare_module_NAME} PUBLIC "-fPIC;-Wl,--no-undefined")

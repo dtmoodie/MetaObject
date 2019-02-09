@@ -6,7 +6,7 @@
 class ConcreteImplementation : public ExampleInterface
 {
   public:
-    MO_DERIVE(ConcreteImplementation, ExampleInterface)
+    MO_DERIVE(ExampleInterface)
     PARAM(int, integer_Param, 0)
     PARAM(float, float_Param, 0.0)
     INPUT(int, input_int_Param)
