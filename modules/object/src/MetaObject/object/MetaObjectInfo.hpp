@@ -123,8 +123,10 @@ namespace mo
             constexpr const ct::index_t J = ct::indexOfField<T>(ct::getName<I, T>().slice(0, -6));
             ct::StaticInequality<ct::index_t, J, -1>{};
             auto wrapped_field_ptr = ct::Reflect<T>::getPtr(Indexer<J>{});
-
-            ct::get(ptr, *this).updatePtr(&ct::get(wrapped_field_ptr, *this), false);
+            auto param_ptr = &ct::get(ptr, *this);
+            param_ptr->setName(ct::getName<I, T>().slice(0, -6));
+            param_ptr->updatePtr(&ct::get(wrapped_field_ptr, *this), false);
+            T::addParam(param_ptr);
         }
 
         template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
