@@ -31,7 +31,7 @@ namespace test
     struct DerivedParams : virtual public Base
     {
         MO_DERIVE(Base)
-        REFLECT_INTERNAL_MEMBER(int, derived_param)
+        PARAM(int, derived_param, 0)
         MO_END
     };
 

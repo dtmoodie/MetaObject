@@ -70,6 +70,7 @@ namespace mo
 
         std::map<std::string, std::map<TypeInfo, ISignal*>> _signals;
         std::map<std::string, std::map<TypeInfo, ISlot*>> _slots;
+        std::vector<std::unique_ptr<ISlot>> m_implicit_slots;
 
         std::map<std::string, IParam*> _params; // statically defined in object
 

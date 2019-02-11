@@ -6,7 +6,7 @@
 
 using namespace test;
 
-template<class SIG>
+template <class SIG>
 void testGetSignal(const std::string& name, IMetaObject* obj)
 {
     auto signal = obj->getSignal(name, TypeInfo(typeid(SIG)));
@@ -30,15 +30,12 @@ BOOST_AUTO_TEST_CASE(signal_init_and_access)
 BOOST_AUTO_TEST_CASE(signal_reception)
 {
     int value = 0;
-    mo::TSlot<void(int)> m_slot([&value](int val)
-    {
-        value = val;
-    });
+    mo::TSlot<void(int)> m_slot([&value](int val) { value = val; });
     auto obj = DerivedSignals::create();
     BOOST_REQUIRE(obj);
 
     RelayManager mgr;
-    BOOST_REQUIRE_EQUAL(obj->setupSignals(&mgr), 7);
+    BOOST_REQUIRE_EQUAL(obj->setupSignals(&mgr), 8);
     auto connection = mgr.connect(&m_slot, "base_signal", nullptr);
     BOOST_REQUIRE(connection);
 

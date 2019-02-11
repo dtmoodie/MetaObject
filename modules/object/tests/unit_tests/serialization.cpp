@@ -1,25 +1,24 @@
-#include <RuntimeObjectSystem/SimpleSerializer/SimpleSerializer.h>
 #include "Objects.hpp"
+#include <RuntimeObjectSystem/SimpleSerializer/SimpleSerializer.h>
 
-#include <MetaObject/serialization/JSONPrinter.hpp>
 #include <MetaObject/serialization/BinaryLoader.hpp>
 #include <MetaObject/serialization/BinarySaver.hpp>
+#include <MetaObject/serialization/JSONPrinter.hpp>
 
-#include <cereal/archives/json.hpp>
 #include <cereal/archives/binary.hpp>
+#include <cereal/archives/json.hpp>
 
 #include <fstream>
 #include <istream>
 
-#include <boost/test/test_tools.hpp>
 #include <boost/test/auto_unit_test.hpp>
+#include <boost/test/test_tools.hpp>
 
 #include <boost/thread.hpp>
 #include <iostream>
 
 using namespace mo;
 using namespace test;
-
 
 BOOST_AUTO_TEST_CASE(serialization_of_params)
 {
@@ -51,7 +50,9 @@ BOOST_AUTO_TEST_CASE(statically_typed_serialization_json)
         mo::JSONSaver saver(ss);
         inst->save(saver);
     }
+
     ss.seekg(0);
+    std::cout << ss.str() << std::endl;
     inst->test = 0;
     inst->test2 = 0;
     {

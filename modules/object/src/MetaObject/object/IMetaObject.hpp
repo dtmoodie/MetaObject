@@ -61,7 +61,7 @@ namespace mo
         virtual void initCustom(bool firstInit) = 0;
         virtual void bindSlots(bool firstInit) = 0;
         virtual void initParams(bool firstInit) = 0;
-        virtual int  initSignals(bool firstInit) = 0;
+        virtual int initSignals(bool firstInit) = 0;
 
         // These serializers are only used for runtime recompilation, they are not used for serialization to
         // from disk
@@ -70,7 +70,7 @@ namespace mo
         virtual void serializeParams(ISimpleSerializer* pSerializer) = 0;
 
         virtual void load(ILoadVisitor& visitor) = 0;
-        virtual void save(ISaveVisitor& visitor) = 0;
+        virtual void save(ISaveVisitor& visitor) const = 0;
 
         // ------- Introspection
         // Get vector of info objects for each corresponding introspection class
@@ -176,6 +176,7 @@ namespace mo
 
         virtual void addSignal(ISignal* signal, const std::string& name) = 0;
         virtual void addSlot(ISlot* slot, const std::string& name) = 0;
+        virtual void addSlot(std::unique_ptr<ISlot>&& slot, const std::string& name) = 0;
         virtual void setParamRoot(const std::string& root) = 0;
         virtual void addConnection(ConnectionPtr_t&& Connection,
                                    const std::string& signal_name,

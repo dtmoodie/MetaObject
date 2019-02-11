@@ -21,6 +21,14 @@
 using namespace mo;
 using namespace test;
 
+BOOST_AUTO_TEST_CASE(compile_time_print)
+{
+    ct::printStructInfo<test::Base>(std::cout);
+    std::cout << std::endl;
+
+    ct::printStructInfo<test::DerivedParams>(std::cout);
+}
+
 BOOST_AUTO_TEST_CASE(object_print)
 {
     auto info = mo::MetaObjectFactory::instance()->getObjectInfo("DerivedSignals");
@@ -64,7 +72,7 @@ BOOST_AUTO_TEST_CASE(signals_static)
 BOOST_AUTO_TEST_CASE(slots_static)
 {
     auto slot_info = TMetaObjectInterfaceHelper<DerivedSignals>::getSlotInfoStatic();
-    BOOST_REQUIRE_EQUAL(slot_info.size(), 3);
+    BOOST_REQUIRE_EQUAL(slot_info.size(), 4);
 
     auto itr =
         std::find_if(slot_info.begin(), slot_info.end(), [](SlotInfo* info) { return info->name == "override_slot"; });

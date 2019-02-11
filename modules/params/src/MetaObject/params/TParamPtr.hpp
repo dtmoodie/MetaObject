@@ -30,27 +30,26 @@ namespace mo
                   bool owns_data = false)
             : TParam<T>(name, type)
             , m_ptr(ptr)
-            , m_owns_data(owns_data)
         {
+            if (owns_data)
+            {
+                m_owner.reset(ptr);
+            }
         }
 
         ~TParamPtr()
         {
-            if (m_owns_data)
-            {
-                delete m_ptr;
-            }
         }
 
         void updatePtr(T* ptr, bool owns_data = false)
         {
             Lock_t lock(this->mtx());
-            if (m_ptr && m_owns_data)
+            m_owner.reset();
+            if (owns_data)
             {
-                delete m_ptr;
+                m_owner.reset(ptr);
             }
             m_ptr = ptr;
-            m_owns_data = owns_data;
         }
 
         virtual IParam* emitUpdate(const Header& header, UpdateFlags = ValueUpdated_e) override
@@ -91,28 +90,28 @@ namespace mo
             return TParam<T>::isValid() || m_ptr != nullptr;
         }
 
-
         ConstAccessToken<T> read() const
         {
             mo::Lock_t lock(this->mtx());
-            if(TParam<T>::isValid())
+            if (TParam<T>::isValid())
             {
                 return TParam<T>::read();
-            }else
+            }
+            else
             {
                 MO_ASSERT(m_ptr != nullptr);
                 return {std::move(lock), *this, *m_ptr};
             }
         }
 
-
         AccessToken<T> access()
         {
             mo::Lock_t lock(this->mtx());
-            if(TParam<T>::isValid())
+            if (TParam<T>::isValid())
             {
                 return TParam<T>::access();
-            }else
+            }
+            else
             {
                 MO_ASSERT(m_ptr != nullptr);
                 return {std::move(lock), *this, *m_ptr};
@@ -144,7 +143,7 @@ namespace mo
 
       private:
         T* m_ptr;
-        bool m_owns_data;
+        std::unique_ptr<T> m_owner;
     };
 
     template <typename T>

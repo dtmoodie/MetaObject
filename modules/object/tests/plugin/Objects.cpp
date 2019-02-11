@@ -1,14 +1,40 @@
 #include "Objects.hpp"
 #include <MetaObject/object/detail/IMetaObjectImpl.hpp>
+
+#include <ct/static_asserts.hpp>
+
 namespace test
 {
+    void staticChecks()
+    {
+        ct::StaticEquality<uint32_t, test::MetaObjectSlots::NUM_FIELDS, 2>{};
+        ct::StaticEquality<uint32_t, ct::Reflect<test::MetaObjectSlots>::Bases_t::NUM_FIELDS, 0>{};
+        ct::StaticEquality<uint32_t, ct::Reflect<test::MetaObjectSlots>::START_INDEX, 0>{};
+        ct::StaticEquality<uint32_t, test::MetaObjectSlots::REFLECTION_COUNT, 2>{};
+        ct::StaticEquality<uint32_t, ct::Reflect<test::MetaObjectSlots>::END_INDEX, 2>{};
+
+        auto ptr0 = test::MetaObjectSlots::getPtr(ct::Indexer<0>{});
+        auto ptr1 = test::MetaObjectSlots::getPtr(ct::Indexer<1>{});
+
+        ct::StaticEquality<uint32_t, test::Base::NUM_FIELDS, 6>{};
+
+        ct::StaticEquality<uint32_t, ct::Reflect<test::Base>::NUM_FIELDS, 6>{};
+        ct::StaticEquality<uint32_t, ct::Reflect<test::Base>::START_INDEX, 0>{};
+        ct::StaticEquality<uint32_t, ct::Reflect<test::Base>::END_INDEX, 6>{};
+
+        ct::StaticEquality<uint32_t, test::DerivedParams::NUM_FIELDS, 2>{};
+
+        ct::StaticEquality<uint32_t, ct::Reflect<test::DerivedParams>::NUM_FIELDS, 8>{};
+        ct::StaticEquality<uint32_t, ct::Reflect<test::DerivedParams>::START_INDEX, 6>{};
+        ct::StaticEquality<uint32_t, ct::Reflect<test::DerivedParams>::END_INDEX, 8>{};
+    }
+
     SerializableObject::~SerializableObject()
     {
     }
 
     void Base::on_base_param_modified(mo::IParam*, mo::Header, mo::UpdateFlags)
     {
-
     }
 
     void Base::base_slot(int value)
@@ -36,7 +62,6 @@ namespace test
     void MetaObjectSlots::test_void(int)
     {
     }
-
 
     int MetaObjectCallback::test_int()
     {

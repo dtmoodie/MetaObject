@@ -136,7 +136,8 @@ namespace mo
                                         this);
                 }
             }
-            auto delete_slot = IMetaObject::template getSlot<void(IParam const*)>("on_" + param->getName() + "_deleted");
+            auto delete_slot =
+                IMetaObject::template getSlot<void(IParam const*)>("on_" + param->getName() + "_deleted");
             if (delete_slot)
             {
                 auto connection = param->registerDeleteNotifier(delete_slot);
@@ -1194,6 +1195,12 @@ namespace mo
     void MetaObject::addSlot(ISlot* slot, const std::string& name)
     {
         _pimpl->_slots[name][slot->getSignature()] = slot;
+    }
+
+    void MetaObject::addSlot(std::unique_ptr<ISlot>&& slot, const std::string& name)
+    {
+        addSlot(slot.get(), name);
+        _pimpl->m_implicit_slots.emplace_back(std::move(slot));
     }
 
     void MetaObject::addSignal(ISignal* sig, const std::string& name)

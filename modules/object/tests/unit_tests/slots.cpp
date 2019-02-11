@@ -6,7 +6,7 @@
 
 using namespace test;
 
-template<class SIG>
+template <class SIG>
 void testGetSlot(const std::string& name, IMetaObject* obj)
 {
     auto slot = obj->getSlot(name, TypeInfo(typeid(SIG)));
@@ -27,7 +27,7 @@ BOOST_AUTO_TEST_CASE(slot_init_and_get)
     testGetSlot<void(int)>("base_slot", obj.get());
     testGetSlot<void(int)>("override_slot", obj.get());
 
-    BOOST_REQUIRE_EQUAL(all_slots.size(), 3);
+    BOOST_REQUIRE_EQUAL(all_slots.size(), 4);
 }
 
 BOOST_AUTO_TEST_CASE(slot_reception)
@@ -55,7 +55,6 @@ BOOST_AUTO_TEST_CASE(slot_reception)
     slot = obj->IMetaObject::template getSlot<void(int)>("override_slot");
     (*slot)(10);
     BOOST_REQUIRE_EQUAL(obj->derived_count, 50);
-
 }
 
 BOOST_AUTO_TEST_CASE(call_base_slot)

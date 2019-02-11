@@ -131,21 +131,21 @@ namespace mo
         template <class T>
         TParam<T>* getParamOptional(const std::string& name) const;
 
-
       protected:
-        virtual IParam* addParam(IParamPtr_t param) override;
-        virtual IParam* addParam(IParam* param) override;
+        IParam* addParam(IParamPtr_t param) override;
+        IParam* addParam(IParam* param) override;
 
-        virtual void addSignal(ISignal* signal, const std::string& name) override;
-        virtual void addSlot(ISlot* slot, const std::string& name) override;
-        virtual void setParamRoot(const std::string& root) override;
-        virtual void addConnection(ConnectionPtr_t&& Connection,
-                                   const std::string& signal_name,
-                                   const std::string& slot_name,
-                                   const TypeInfo& signature,
-                                   IMetaObject* obj = nullptr) override;
+        void addSignal(ISignal* signal, const std::string& name) override;
+        void addSlot(ISlot* slot, const std::string& name) override;
+        void addSlot(std::unique_ptr<ISlot>&& slot, const std::string& name) override;
+        void setParamRoot(const std::string& root) override;
+        void addConnection(ConnectionPtr_t&& Connection,
+                           const std::string& signal_name,
+                           const std::string& slot_name,
+                           const TypeInfo& signature,
+                           IMetaObject* obj = nullptr) override;
 
-        virtual void onParamUpdate(IParam*, Header, UpdateFlags) override;
+        void onParamUpdate(IParam*, Header, UpdateFlags) override;
 
         template <class T>
         TParam<T>* updateParam(const std::string& name,
