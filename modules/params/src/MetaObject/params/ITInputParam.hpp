@@ -18,13 +18,13 @@ namespace mo
         using TUpdateSlot_t = typename TParam<T>::TUpdateSlot_t;
 
         ITInputParam(const std::string& name = "");
-        ~ITInputParam() override;
+        ~ITInputParam() override = default;
 
-        bool setInput(const std::shared_ptr<IParam>& input);
-        bool setInput(IParam* input);
+        bool setInput(const std::shared_ptr<IParam>& input) override;
+        bool setInput(IParam* input) override;
 
-        virtual bool acceptsInput(IParam* param) const;
-        virtual bool acceptsType(const TypeInfo& type) const;
+        virtual bool acceptsInput(IParam* param) const override;
+        virtual bool acceptsType(const TypeInfo& type) const override;
 
         TypeInfo getTypeInfo() const override;
 
@@ -34,22 +34,24 @@ namespace mo
         void save(BinaryOutputVisitor& ar) const override;
         void visit(StaticVisitor&) const override;
 
-        virtual IContainerPtr_t getData(const Header& desired = Header()) override;
-        virtual IContainerConstPtr_t getData(const Header& desired = Header()) const override;
+        IContainerPtr_t getData(const Header& desired = Header()) override;
+        IContainerConstPtr_t getData(const Header& desired = Header()) const override;
 
       protected:
         void updateDataImpl(const TContainerPtr_t& data)
         {
             {
                 mo::Lock_t lock(this->mtx());
-                TParam<T>::_data = data;
+                TParam<T>::updateDataImpl(data);
             }
-            emitUpdate(IDataContainer::Ptr(TParam<T>::_data), InputUpdated_e);
-            TParam<T>::emitTypedUpdate(TParam<T>::_data, InputUpdated_e);
+            emitUpdate(IDataContainer::Ptr(TParam<T>::getData()), InputUpdated_e);
+            TParam<T>::emitTypedUpdate(TParam<T>::getTypedData(), InputUpdated_e);
         }
-        virtual void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags)
+
+        void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) override
         {
         }
+
         virtual void onInputUpdate(TContainerPtr_t, IParam*, UpdateFlags);
 
       private:
@@ -68,11 +70,6 @@ namespace mo
                                         std::placeholders::_1,
                                         std::placeholders::_2,
                                         std::placeholders::_3);
-    }
-
-    template <class T>
-    ITInputParam<T>::~ITInputParam()
-    {
     }
 
     template <class T>
@@ -95,7 +92,7 @@ namespace mo
             if (InputParam::setInput(param))
             {
                 m_typed_connection = param->registerUpdateNotifier(&m_typed_update_slot);
-                TParam<T>::_data = param->getTypedData<T>();
+                TParam<T>::updateData(param->getTypedData<T>());
                 return true;
             }
         }
@@ -110,10 +107,7 @@ namespace mo
             auto out_param = dynamic_cast<OutputParam*>(param);
             return out_param->providesOutput(getTypeInfo());
         }
-        else
-        {
-            return param->getTypeInfo() == getTypeInfo();
-        }
+        return param->getTypeInfo() == getTypeInfo();
     }
 
     template <class T>

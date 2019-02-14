@@ -27,14 +27,7 @@
 
 using namespace mo;
 
-
-
 using namespace test;
-
-
-
-
-
 
 BOOST_AUTO_TEST_CASE(access_Param)
 {
@@ -278,6 +271,7 @@ BOOST_AUTO_TEST_CASE(test_params)
     BOOST_REQUIRE_EQUAL(subscriber->update_count, 1);
     publisher->test_int_param.updateData(10);
 
+    BOOST_REQUIRE(subscriber->test_int != nullptr);
     BOOST_REQUIRE_EQUAL((*subscriber->test_int), 10);
     BOOST_REQUIRE_EQUAL(publisher->update_count, 1);
     BOOST_REQUIRE_EQUAL(subscriber->update_count, 2);

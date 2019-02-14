@@ -3,18 +3,17 @@
 #include "MetaObject/params/ParamMacros.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
+#include "MetaObject/runtime_reflection.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
 #include "MetaObject/types/file_types.hpp"
-#include "MetaObject/runtime_reflection.hpp"
 
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 
 #include <MetaObject/thread/fiber_include.hpp>
 #include <boost/any.hpp>
-
 
 #include <boost/test/test_tools.hpp>
 #include <boost/test/unit_test_suite.hpp>
@@ -172,7 +171,7 @@ BOOST_FIXTURE_TEST_CASE(read_from_param, WrappedParam<int>)
     BOOST_REQUIRE(param.getTypedData(&val));
     BOOST_REQUIRE_EQUAL(val, 100);
 
-    auto container = param.getTypedData<int>(Header());
+    auto container = param.template getTypedData<int>(Header());
     BOOST_REQUIRE(container);
     BOOST_REQUIRE_EQUAL(container->data, 100);
 }

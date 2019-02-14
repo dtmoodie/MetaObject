@@ -3,7 +3,9 @@
 
 #include <MetaObject/params/TMultiInput-inl.hpp>
 #include <MetaObject/params/TMultiOutput.hpp>
+#include <MetaObject/params/TParamOutput.hpp>
 #include <MetaObject/params/TParamPtr.hpp>
+
 #include <MetaObject/thread/fiber_include.hpp>
 
 #include <iostream>
@@ -42,10 +44,6 @@ namespace
     {
         Fixture()
         {
-            int_out.updatePtr(&int_val);
-            float_out.updatePtr(&float_val);
-            double_out.updatePtr(&double_val);
-
             multi_input.setMtx(&mtx);
             multi_input.setUserDataPtr(&inputs);
         }

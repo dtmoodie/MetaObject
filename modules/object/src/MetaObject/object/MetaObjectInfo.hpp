@@ -1,5 +1,6 @@
 #ifndef MO_OBJECT_META_OBJECT_INFO_HPP
 #define MO_OBJECT_META_OBJECT_INFO_HPP
+
 #include "IMetaObjectInfo.hpp"
 
 #include "MetaObject/core/detail/HelperMacros.hpp"
@@ -11,14 +12,17 @@
 #include "MetaObject/params/ParamInfo.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
+#include <MetaObject/params/TParamOutput.hpp>
 
 #include "MetaObject/signals/SignalInfo.hpp"
 #include "MetaObject/signals/SlotInfo.hpp"
 
 #include <RuntimeObjectSystem/ISimpleSerializer.h>
 
-#include "ct/VariadicTypedef.hpp"
 #include <ct/Indexer.hpp>
+#include <ct/VariadicTypedef.hpp>
+#include <ct/reflect/metadata.hpp>
+#include <ct/reflect/visitor.hpp>
 
 #include <type_traits>
 
@@ -118,6 +122,18 @@ namespace mo
         }
 
         template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
+        void initParam(ct::MemberObjectPointer<mo::TInputParamPtr<DTYPE> CTYPE::*, FLAGS, METADATA> ptr, ct::Indexer<I>)
+        {
+            constexpr const ct::index_t J = ct::indexOfField<T>(ct::getName<I, T>().slice(0, -6));
+            ct::StaticInequality<ct::index_t, J, -1>{};
+            auto wrapped_field_ptr = ct::Reflect<T>::getPtr(Indexer<J>{});
+            auto param_ptr = &ct::get(ptr, *this);
+            param_ptr->setName(ct::getName<I, T>().slice(0, -6));
+            param_ptr->setUserDataPtr(&ct::get(wrapped_field_ptr, *this));
+            T::addParam(param_ptr);
+        }
+
+        template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
         void initParam(ct::MemberObjectPointer<mo::TParamPtr<DTYPE> CTYPE::*, FLAGS, METADATA> ptr, ct::Indexer<I>)
         {
             constexpr const ct::index_t J = ct::indexOfField<T>(ct::getName<I, T>().slice(0, -6));
@@ -130,7 +146,26 @@ namespace mo
         }
 
         template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
-        void initParam(ct::MemberObjectPointer<DTYPE CTYPE::*, FLAGS, METADATA> ptr, ct::Indexer<I> idx)
+        void initParam(ct::MemberObjectPointer<mo::TParamPtr<DTYPE> CTYPE::*, FLAGS, ct::Initializer<DTYPE>> ptr,
+                       ct::Indexer<I>)
+        {
+            constexpr const ct::index_t J = ct::indexOfField<T>(ct::getName<I, T>().slice(0, -6));
+            ct::StaticInequality<ct::index_t, J, -1>{};
+            auto wrapped_field_ptr = ct::Reflect<T>::getPtr(Indexer<J>{});
+            auto param_ptr = &ct::get(ptr, *this);
+            param_ptr->setName(ct::getName<I, T>().slice(0, -6));
+            param_ptr->updatePtr(&ct::get(wrapped_field_ptr, *this), false);
+            auto initializer = ct::getMetadata(ptr);
+            if (initializer)
+            {
+                ct::set(wrapped_field_ptr, *this) = (*initializer)();
+            }
+
+            T::addParam(param_ptr);
+        }
+
+        template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
+        void initParam(ct::MemberObjectPointer<DTYPE CTYPE::*, FLAGS, METADATA>, ct::Indexer<I>)
         {
             // ignore for now, added in the above initParam for TParamPtr
         }
@@ -552,63 +587,63 @@ namespace mo
             return T::getStaticSlots();
         }
 
-        std::vector<ParamInfo*> getParamInfo() const
+        std::vector<ParamInfo*> getParamInfo() const override
         {
             std::vector<ParamInfo*> info;
             getParamInfoStatic(info);
             return info;
         }
 
-        std::vector<SignalInfo*> getSignalInfo() const
+        std::vector<SignalInfo*> getSignalInfo() const override
         {
             std::vector<SignalInfo*> info;
             getSignalInfoStatic(info);
             return info;
         }
 
-        std::vector<SlotInfo*> getSlotInfo() const
+        std::vector<SlotInfo*> getSlotInfo() const override
         {
             std::vector<SlotInfo*> info;
             getSlotInfoStatic(info);
             return info;
         }
 
-        std::string getObjectTooltip() const
+        std::string getObjectTooltip() const override
         {
             return tooltipStatic();
         }
 
-        std::string getObjectHelp() const
+        std::string getObjectHelp() const override
         {
             return descriptionStatic();
         }
 
-        TypeInfo getTypeInfo() const
+        TypeInfo getTypeInfo() const override
         {
             return getTypeInfoStatic();
         }
 
-        std::string GetObjectName() const
+        std::string GetObjectName() const override
         {
             return T::GetTypeNameStatic();
         }
 
-        unsigned int GetInterfaceId() const
+        unsigned int GetInterfaceId() const override
         {
             return T::getHash();
         }
 
-        virtual std::string GetInterfaceName() const
+        std::string GetInterfaceName() const override
         {
             return T::GetInterfaceName();
         }
 
-        virtual IObjectConstructor* GetConstructor() const
+        IObjectConstructor* GetConstructor() const override
         {
             return T::GetConstructorStatic();
         }
 
-        virtual bool InheritsFrom(InterfaceID iid) const override
+        bool InheritsFrom(InterfaceID iid) const override
         {
             return T::InheritsFrom(iid);
         }

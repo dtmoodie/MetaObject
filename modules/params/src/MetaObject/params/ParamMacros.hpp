@@ -1,11 +1,13 @@
 #pragma once
 
-#include "MetaObject/core/detail/HelperMacros.hpp"
-#include "MetaObject/params/IParam.hpp"
-#include "MetaObject/params/TInputParam.hpp"
-#include "MetaObject/params/TParamPtr.hpp"
-#include "MetaObject/params/detail/ParamMacrosImpl.hpp"
-#include "MetaObject/types/file_types.hpp"
+#include <MetaObject/core/detail/HelperMacros.hpp>
+#include <MetaObject/params/IParam.hpp>
+#include <MetaObject/params/TInputParam.hpp>
+#include <MetaObject/params/TParamOutput.hpp>
+#include <MetaObject/params/TParamPtr.hpp>
+#include <MetaObject/params/detail/ParamMacrosImpl.hpp>
+
+#include <ct/reflect/metadata.hpp>
 
 namespace mo
 {
@@ -59,9 +61,17 @@ namespace mo
     REFLECT_INTERNAL_MEMBER(mo::TParamPtr<TYPE>, NAME##_param)                                                         \
     REFLECT_INTERNAL_WITH_FLAG(mo::kSTATUS, TYPE, NAME, __VA_ARGS__)
 
-#define OUTPUT(TYPE, NAME, ...)                                                                                        \
-    REFLECT_INTERNAL_MEMBER(mo::TParamOutput<TYPE>, NAME##_param)                                                      \
-    REFLECT_INTERNAL_WITH_FLAG(mo::kOUTPUT, TYPE, NAME, __VA_ARGS__)
+#define OUTPUT(TYPE, NAME, INIT)                                                                                       \
+    mo::TParamOutput<TYPE> NAME;                                                                                       \
+    inline static TYPE init##NAME()                                                                                    \
+    {                                                                                                                  \
+        return INIT;                                                                                                   \
+    }                                                                                                                  \
+    constexpr static auto getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_START>)                                 \
+    {                                                                                                                  \
+        return ct::makeMemberObjectPointer(                                                                            \
+            #NAME, &DataType::NAME, ct::Initializer<TYPE>(&DataType::init##NAME, #INIT));                              \
+    }
 
 #define SOURCE(type, name, ...)                                                                                        \
     REFLECT_INTERNAL_MEMBER(mo::TParamOutput<TYPE>, NAME##_param)                                                      \

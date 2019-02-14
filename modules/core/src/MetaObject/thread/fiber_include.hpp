@@ -17,30 +17,32 @@
 #include <MetaObject/thread/boost_patch/spinlock_ttas_adaptive_futex.hpp>
 #include <MetaObject/thread/boost_patch/spinlock_ttas_futex.hpp>
 
-#include <MetaObject/thread/boost_patch/exceptions.hpp>
 #include <MetaObject/thread/boost_patch/context.hpp>
+#include <MetaObject/thread/boost_patch/exceptions.hpp>
+
 #ifdef BOOST_FIBERS_FIBER_H
 #error "Must include this before boost/fiber/fiber.hpp"
 #endif
+
 #include <MetaObject/thread/boost_patch/fiber.hpp>
 
 #include <MetaObject/thread/boost_patch/scheduler.hpp>
 
+#include <MetaObject/thread/boost_patch/condition_variable.hpp>
 #include <MetaObject/thread/boost_patch/mutex.hpp>
 #include <MetaObject/thread/boost_patch/recursive_mutex.hpp>
-#include <MetaObject/thread/boost_patch/condition_variable.hpp>
 
 #else
 #include <boost/fiber/condition_variable.hpp>
 #include <boost/fiber/context.hpp>
 #include <boost/fiber/detail/spinlock.hpp>
+#include <boost/fiber/fiber.hpp>
+#include <boost/fiber/mutex.hpp>
 #include <boost/fiber/recursive_timed_mutex.hpp>
 #include <boost/fiber/scheduler.hpp>
-#include <boost/fiber/mutex.hpp>
-#include <boost/fiber/fiber.hpp>
 #endif
 
 #include <boost/fiber/detail/config.hpp>
 #include <boost/fiber/properties.hpp>
-
+#include <boost/thread/lock_types.hpp>
 #endif // MO_THREAD_FIBER_INCLUDE_HPP

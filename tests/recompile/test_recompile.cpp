@@ -69,8 +69,8 @@ BOOST_AUTO_TEST_CASE(test_recompile)
 
 BOOST_AUTO_TEST_CASE(test_obj_swap)
 {
-    auto constructor = MetaObjectFactory::instance()->getObjectSystem()->GetObjectFactorySystem()->GetConstructor(
-        "MetaObjectSignals");
+    auto constructor =
+        MetaObjectFactory::instance()->getObjectSystem()->GetObjectFactorySystem()->GetConstructor("MetaObjectSignals");
     auto obj = constructor->Construct();
     BOOST_REQUIRE(obj);
     auto state = constructor->GetState(obj->GetPerTypeId());
@@ -207,19 +207,19 @@ BOOST_AUTO_TEST_CASE(test_input_output_param)
     BOOST_REQUIRE(IMetaObject::connectInput(output.get(), output_param, input.get(), input_param));
     BOOST_REQUIRE_EQUAL(input->param_update_call_count, 1);
     BOOST_REQUIRE_EQUAL(output->param_update_call_count, 0);
-    output->test_output_param.updateData(5);
+    output->test_output.updateData(5);
     BOOST_REQUIRE_EQUAL(output->param_update_call_count, 1);
     BOOST_REQUIRE_EQUAL(input->param_update_call_count, 2);
     BOOST_REQUIRE(input->test_input);
     BOOST_REQUIRE(input->test_input_param.getData());
-    BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
+    BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output.value());
     BOOST_REQUIRE_EQUAL(MetaObjectFactory::instance()->getObjectSystem()->TestBuildAllRuntimeSourceFiles(cb, true), 0);
     BOOST_REQUIRE_EQUAL(input->param_update_call_count, 1);
-    output->test_output_param.updateData(10);
+    output->test_output.updateData(10);
     BOOST_REQUIRE_EQUAL(input->param_update_call_count, 2);
     BOOST_REQUIRE(input->test_input_param.getData());
     BOOST_REQUIRE(input->test_input);
-    BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
+    BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output.value());
     BOOST_REQUIRE_EQUAL(*input->test_input, 10);
 }
 

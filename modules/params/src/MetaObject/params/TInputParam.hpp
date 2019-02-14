@@ -44,19 +44,20 @@ namespace mo
         {
         }
 
-        bool setInput(const std::shared_ptr<IParam>& input)
+        bool setInput(const std::shared_ptr<IParam>& input) override
         {
             return ITInputParam<T>::setInput(input);
         }
 
-        bool setInput(IParam* input)
+        bool setInput(IParam* input) override
         {
             Lock_t lock(this->mtx());
             if (ITInputParam<T>::setInput(input))
             {
-                if (m_user_var && TParam<T>::_data)
+                auto data = TParam<T>::getTypedData();
+                if (data)
                 {
-                    *m_user_var = &TParam<T>::_data->data;
+                    updateDataImpl(data);
                 }
                 return true;
             }
@@ -70,7 +71,7 @@ namespace mo
         }
 
       protected:
-        virtual void updateDataImpl(const TContainerPtr_t& data) override
+        void updateDataImpl(const TContainerPtr_t& data)
         {
             Lock_t lock(this->mtx());
             ITInputParam<T>::updateDataImpl(data);

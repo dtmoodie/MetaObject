@@ -1,7 +1,7 @@
 #pragma once
-#include "ITParam.hpp"
 #include "MetaParam.hpp"
 #include "OutputParam.hpp"
+#include "TParam.hpp"
 #include "detail/print_data.hpp"
 
 namespace mo
@@ -37,9 +37,7 @@ namespace mo
             }
         }
 
-        ~TParamPtr()
-        {
-        }
+        ~TParamPtr() = default;
 
         void updatePtr(T* ptr, bool owns_data = false)
         {
@@ -52,7 +50,7 @@ namespace mo
             m_ptr = ptr;
         }
 
-        virtual IParam* emitUpdate(const Header& header, UpdateFlags = ValueUpdated_e) override
+        IParam* emitUpdate(const Header& header, UpdateFlags = ValueUpdated_e) override
         {
             Lock_t lock(this->mtx());
             if (m_ptr)
@@ -63,7 +61,7 @@ namespace mo
         }
 
         // commit a Param's value copying metadata info from another parmaeter
-        virtual IParam* emitUpdate(const IParam& other, UpdateFlags flags_ = ValueUpdated_e) override
+        IParam* emitUpdate(const IParam& other, UpdateFlags = ValueUpdated_e) override
         {
             Lock_t lock(this->mtx());
             if (m_ptr)
@@ -97,11 +95,9 @@ namespace mo
             {
                 return TParam<T>::read();
             }
-            else
-            {
-                MO_ASSERT(m_ptr != nullptr);
-                return {std::move(lock), *this, *m_ptr};
-            }
+
+            MO_ASSERT(m_ptr != nullptr);
+            return {std::move(lock), *this, *m_ptr};
         }
 
         AccessToken<T> access()
@@ -111,11 +107,9 @@ namespace mo
             {
                 return TParam<T>::access();
             }
-            else
-            {
-                MO_ASSERT(m_ptr != nullptr);
-                return {std::move(lock), *this, *m_ptr};
-            }
+
+            MO_ASSERT(m_ptr != nullptr);
+            return {std::move(lock), *this, *m_ptr};
         }
 
       protected:
@@ -157,30 +151,26 @@ namespace mo
                   bool owns_data = false)
             : TParam<T>(name, type)
             , m_ptr(ptr)
-            , m_owns_data(owns_data)
         {
-        }
-
-        ~TParamPtr()
-        {
-            if (m_owns_data)
+            if (owns_data)
             {
-                delete m_ptr;
+                m_owner.reset(ptr);
             }
         }
 
         void updatePtr(std::shared_ptr<T>* ptr, bool owns_data = false)
         {
             Lock_t lock(this->mtx());
-            if (m_ptr && m_owns_data)
+            m_owner.reset();
+            if (owns_data)
             {
-                delete m_ptr;
+                m_owner.reset(ptr);
             }
+
             m_ptr = ptr;
-            m_owns_data = owns_data;
         }
 
-        virtual void updateData(const TContainerPtr_t& data) override
+        void updateData(const TContainerPtr_t& data) override
         {
             TParam<T>::updateData(data);
             updateUserData(data);
@@ -201,6 +191,7 @@ namespace mo
       protected:
         void updateUserData(const TContainerPtr_t& data)
         {
+            TParam<T>::updateDataImpl(data);
             if (m_ptr)
             {
                 *m_ptr = data;
@@ -213,40 +204,6 @@ namespace mo
 
       private:
         std::shared_ptr<T>* m_ptr;
-        bool m_owns_data;
-    };
-
-    /*!
-     * TParamOutput is used with the OUTPUT macro.  In this case, the param owns the data and the owning parent object
-     * owns a reference to the data which is updated by the param's reset function.
-     */
-    template <typename T>
-    struct MO_EXPORTS TParamOutput : virtual public TParamPtr<T>, virtual public OutputParam
-    {
-        TParamOutput()
-            : IParam(mo::tag::_param_flags = mo::ParamFlags::Output_e)
-        {
-        }
-
-        virtual std::vector<TypeInfo> listOutputTypes() const override
-        {
-            return {TypeInfo(typeid(T))};
-        }
-        ParamBase* getOutputParam(const TypeInfo) override
-        {
-            return this;
-        }
-        const ParamBase* getOutputParam(const TypeInfo) const override
-        {
-            return this;
-        }
-        ParamBase* getOutputParam() override
-        {
-            return this;
-        }
-        const ParamBase* getOutputParam() const override
-        {
-            return this;
-        }
+        std::unique_ptr<std::shared_ptr<T>> m_owner;
     };
 }

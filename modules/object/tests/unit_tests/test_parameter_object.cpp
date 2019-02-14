@@ -33,7 +33,10 @@ struct output_parametered_object : public MetaObject
     MO_END;
     void increment()
     {
-        test_output++;
+        // wut, get access token, get ref to data, increment
+        test_output.access()()++;
+        // old way
+        // test_output++;
     }
 };
 
@@ -54,13 +57,13 @@ BOOST_AUTO_TEST_CASE(input_parameter_manual)
     mo::MetaObjectFactory::instance();
     auto input = input_parametered_object::create();
     auto output = output_parametered_object::create();
-    input->test_input_param.setInput(&output->test_output_param);
+    BOOST_REQUIRE(input->test_input_param.setInput(&output->test_output));
     BOOST_REQUIRE(input->test_input == nullptr);
-    output->test_output_param.updateData(10);
+    output->test_output.updateData(10);
     BOOST_REQUIRE(input->test_input != nullptr);
     BOOST_REQUIRE(*input->test_input == 10);
 
-    BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
+    BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output.access()());
 }
 
 BOOST_AUTO_TEST_CASE(input_parameter_programatic)
@@ -77,9 +80,9 @@ BOOST_AUTO_TEST_CASE(input_parameter_programatic)
     BOOST_REQUIRE(input_param);
     BOOST_REQUIRE(input_param->setInput(output_));
     BOOST_REQUIRE(input->test_input == nullptr);
-    output->test_output_param.updateData(10);
+    output->test_output.updateData(10);
     BOOST_REQUIRE(input->test_input != nullptr);
-    BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output);
+    BOOST_REQUIRE_EQUAL(*input->test_input, output->test_output.access()());
 }
 
 /*BOOST_AUTO_TEST_CASE(buffered_input)
@@ -168,7 +171,7 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
     auto buffer = buffer::BufferFactory::createBuffer(output_, mo::STREAM_BUFFER);
     BOOST_REQUIRE(buffer);
     BOOST_REQUIRE(input_param->setInput(buffer));
-    output->test_output_param.updateData(0, 0);
+    output->test_output.updateData(0, 0);
 
     std::thread background_thread([&input]() {
         for (int i = 0; i < 1000; ++i)
@@ -186,7 +189,7 @@ BOOST_AUTO_TEST_CASE(threaded_stream_buffer)
 
     for (int i = 1; i < 1000; ++i)
     {
-        output->test_output_param.updateData(i * 10, i);
+        output->test_output.updateData(i * 10, i);
     }
     background_thread.join();
 }
