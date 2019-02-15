@@ -15,7 +15,8 @@ cache:
 
 before_script:
   - sudo -E ./scripts/travis/install-deps.sh
+  - sudo -E ./scripts/build_boost.sh
 
 script:
-  - mkdir -p build && cd build && cmake .. -DCUDA_CUDA_LIBRARY=/usr/local/nvidia/lib64/libcuda.so -DRCC_VERBOSE_CONFIG=ON
+  - mkdir -p build && cd build && cmake .. -DCUDA_CUDA_LIBRARY=/usr/local/nvidia/lib64/libcuda.so -DRCC_VERBOSE_CONFIG=ON -DBOOST_ROOT=../scripts/boost_1_69_0 -DBOOST_LIBRARYDIR=../scripts/boost_1_69_0/stage/lib
   - make all
