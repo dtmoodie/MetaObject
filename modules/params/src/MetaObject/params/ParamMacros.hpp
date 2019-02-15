@@ -27,11 +27,16 @@ namespace mo
     };
 }
 
-#define REFLECT_INTERNAL_WITH_FLAG(FLAGS, TYPE, NAME, ...)                                                             \
-    TYPE NAME = __VA_ARGS__;                                                                                           \
+#define REFLECT_INTERNAL_WITH_FLAG(FLAGS, TYPE, NAME, INIT)                                                            \
+    TYPE NAME = INIT;                                                                                                  \
+    static inline TYPE initializer_##NAME()                                                                            \
+    {                                                                                                                  \
+        return INIT;                                                                                                   \
+    }                                                                                                                  \
     constexpr static auto getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_START>)                                 \
     {                                                                                                                  \
-        return ct::makeMemberObjectPointer<FLAGS>(#NAME, &DataType::NAME);                                             \
+        return ct::makeMemberObjectPointer<FLAGS>(                                                                     \
+            #NAME, &DataType::NAME, ct::makeInitializer(&DataType::initializer_##NAME, #INIT));                        \
     }
 
 #define PARAM(TYPE, NAME, ...)                                                                                         \

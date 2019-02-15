@@ -9,7 +9,7 @@ namespace std
     template <class T>
     class shared_ptr;
 }
-
+class SystemTable;
 namespace mo
 {
     class IParam;
@@ -22,6 +22,9 @@ namespace mo
         {
           public:
             using BufferConstructor = std::function<IBuffer*()>;
+
+            static std::shared_ptr<BufferFactory> instance(SystemTable*);
+            static std::shared_ptr<BufferFactory> instance();
             static void registerConstructor(const BufferConstructor& constructor, BufferFlags buffer);
             static IBuffer* createBuffer(IParam* param, BufferFlags flags);
             static IBuffer* createBuffer(const std::shared_ptr<IParam>& param, BufferFlags flags);

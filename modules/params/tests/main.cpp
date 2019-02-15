@@ -14,6 +14,7 @@ struct GlobalFixture
     GlobalFixture()
         : m_system_table(SystemTable::instance())
     {
+
     }
 
     ~GlobalFixture()
@@ -25,3 +26,11 @@ struct GlobalFixture
 };
 
 BOOST_GLOBAL_FIXTURE(GlobalFixture);
+
+BOOST_AUTO_TEST_CASE(TestInitialization)
+{
+    auto table = SystemTable::instance();
+    BOOST_REQUIRE(table != nullptr);
+
+
+}

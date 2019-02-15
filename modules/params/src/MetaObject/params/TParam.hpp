@@ -72,29 +72,6 @@ namespace mo
         IContainerPtr_t getData(const Header& desired = Header()) override;
         IContainerConstPtr_t getData(const Header& desired = Header()) const override;
 
-        template <class U = T>
-        typename TDataContainer<T>::Ptr getTypedData(const Header& desired = Header())
-        {
-            return getDataImpl(desired);
-        }
-
-        template <class U = T>
-        typename TDataContainer<T>::ConstPtr getTypedData(const Header& desired = Header()) const
-        {
-            return getDataImpl(desired);
-        }
-
-        bool getTypedData(T* data_, const Header& desired = Header()) const
-        {
-            auto data = getDataImpl(desired);
-            if (data)
-            {
-                *data_ = data->data;
-                return true;
-            }
-            return false;
-        }
-
         T value() const
         {
             MO_ASSERT(m_data);
@@ -105,7 +82,7 @@ namespace mo
         typename TDataContainer<T>::Ptr getDataImpl(const Header& desired = Header());
         typename TDataContainer<T>::ConstPtr getDataImpl(const Header& desired = Header()) const;
 
-        void updateDataImpl(const TContainerPtr_t& data);
+        virtual void updateDataImpl(const TContainerPtr_t& data, mo::UpdateFlags fg = ValueUpdated_e);
 
         void emitTypedUpdate(TContainerPtr_t data, UpdateFlags flags)
         {
@@ -208,7 +185,7 @@ namespace mo
     }
 
     template <class T>
-    void TParam<T>::updateDataImpl(const TContainerPtr_t& data)
+    void TParam<T>::updateDataImpl(const TContainerPtr_t& data, mo::UpdateFlags fg)
     {
         if (!data->header.frame_number.valid())
         {
@@ -224,8 +201,8 @@ namespace mo
             mo::Lock_t lock(this->mtx());
             m_data = data;
         }
-        emitUpdate(IDataContainer::Ptr(data), ValueUpdated_e);
-        m_typed_update_signal(data, this, ValueUpdated_e);
+        emitUpdate(IDataContainer::Ptr(data), fg);
+        m_typed_update_signal(data, this, fg);
     }
 
     template <class T>

@@ -353,6 +353,20 @@ namespace mo
                                                            TYPE);
             }
         };
+
+
+        IBuffer* IBuffer::create(BufferFlags type)
+        {
+            switch(type)
+            {
+            case MAP_BUFFER: return new Map("", Map::GROW, Map::EXACT);
+            case STREAM_BUFFER: return new Map("", Map::PRUNE, Map::EXACT);
+            case BLOCKING_STREAM_BUFFER: return new Map("", Map::BLOCK, Map::EXACT);
+            case DROPPING_STREAM_BUFFER: return new Map("", Map::DROP, Map::EXACT);
+            case NEAREST_NEIGHBOR_BUFFER: return new Map("", Map::BLOCK, Map::NEAREST);
+            default: return nullptr;
+            }
+        }
         static MapConstructor<Map::GROW, Map::EXACT, MAP_BUFFER> g_map_ctr;
         static MapConstructor<Map::PRUNE, Map::EXACT, STREAM_BUFFER> g_stream_ctr;
         static MapConstructor<Map::BLOCK, Map::EXACT, BLOCKING_STREAM_BUFFER> g_blocking_ctr;

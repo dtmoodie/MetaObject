@@ -55,7 +55,10 @@ namespace
 
         void testInput(int val)
         {
+
+            BOOST_REQUIRE_EQUAL(mo::get<const int*>(inputs), static_cast<void*>(nullptr));
             BOOST_REQUIRE(multi_input.setInput(&int_out));
+
             BOOST_REQUIRE(multi_input.getInputParam());
 
             BOOST_REQUIRE_EQUAL(multi_input.getInputParam(), &int_out);
@@ -81,7 +84,10 @@ namespace
         {
             int callback_called = 0;
             mo::TParam<int>::TUpdateSlot_t int_callback([&callback_called](
-                mo::TParam<int>::TContainerPtr_t, mo::IParam*, mo::UpdateFlags) { ++callback_called; });
+                mo::TParam<int>::TContainerPtr_t, mo::IParam*, mo::UpdateFlags)
+            {
+                ++callback_called;
+            });
             auto connection = multi_input.registerUpdateNotifier(&int_callback);
 
             BOOST_REQUIRE(connection);

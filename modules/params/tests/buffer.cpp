@@ -6,7 +6,7 @@
 #include <MetaObject/params/TParamPtr.hpp>
 #include <MetaObject/params/buffers/BufferFactory.hpp>
 #include <MetaObject/params/buffers/IBuffer.hpp>
-
+#include <MetaObject/params/buffers/Buffers.hpp>
 #include <MetaObject/thread/fiber_include.hpp>
 
 #include <boost/thread.hpp>
@@ -37,7 +37,9 @@ namespace
             BOOST_REQUIRE_EQUAL(param.getName(), "pub");
             BOOST_REQUIRE(param.getData() == nullptr);
 
-            buffer.reset(buffer::BufferFactory::createBuffer(&param, buffer_type));
+            //buffer.reset(buffer::BufferFactory::createBuffer(&param, buffer_type));
+            buffer.reset(mo::buffer::IBuffer::create(buffer_type));
+            buffer->setInput(&param);
             BOOST_REQUIRE(buffer);
             BOOST_REQUIRE(input_param.setInput(buffer.get()));
         }
@@ -97,50 +99,56 @@ namespace
             int read_values = 0;
             buffer->clear();
 
-            auto read_func = [this, dropping, &read_values]() {
-                int data;
-                std::set<int> read_values_;
-                for (int i = 0; i < 10000; ++i)
-                {
-                    bool result = false;
-                    if(!dropping)
+            auto read_func = [this, dropping, &read_values]()
+            {
+                try{
+                    int data;
+                    std::set<int> read_values_;
+                    for (int i = 0; i < 10000; ++i)
                     {
-                        for (int j = 0; j < 15 && !result; ++j)
+                        bool result = false;
+                        if(!dropping)
                         {
-                            result = input_param.getTypedData(&data, Header(i * ms));
-                            boost::this_thread::sleep_for(boost::chrono::nanoseconds(10));
-                        }
-                    }else
-                    {
-                        int new_value;
-                        result = input_param.getTypedData(&new_value, Header(i*ms));
-                        if(new_value == data || result == false)
+                            for (int j = 0; j < 15 && !result; ++j)
+                            {
+                                result = input_param.getTypedData(&data, Header(i * ms));
+                                boost::this_thread::sleep_for(boost::chrono::nanoseconds(10));
+                            }
+                        }else
                         {
-                            continue;
+                            int new_value;
+                            result = input_param.getTypedData(&new_value, Header(i*ms));
+                            if(new_value == data || result == false)
+                            {
+                                continue;
+                            }
+                            BOOST_REQUIRE(read_values_.find(new_value) == read_values_.end());
+                            read_values_.insert(new_value);
+
+                            data = new_value;
                         }
-                        BOOST_REQUIRE(read_values_.find(new_value) == read_values_.end());
-                        read_values_.insert(new_value);
 
-                        data = new_value;
+
+                        BOOST_REQUIRE(result || dropping);
+                        if (result)
+                        {
+                            BOOST_REQUIRE_EQUAL(data, i);
+                            ++read_values;
+                        }
+                        auto wait = rand() % 20 + 10;
+                        boost::this_thread::sleep_for(boost::chrono::nanoseconds(wait));
+                        if (boost::this_thread::interruption_requested())
+                        {
+                            return;
+                        }
                     }
-
-
-                    BOOST_REQUIRE(result || dropping);
-                    if (result)
+                    if(dropping)
                     {
-                        BOOST_REQUIRE_EQUAL(data, i);
-                        ++read_values;
+                        read_values = read_values_.size();
                     }
-                    auto wait = rand() % 20 + 10;
-                    boost::this_thread::sleep_for(boost::chrono::nanoseconds(wait));
-                    if (boost::this_thread::interruption_requested())
-                    {
-                        return;
-                    }
-                }
-                if(dropping)
+                }catch(...)
                 {
-                    read_values = read_values_.size();
+
                 }
             };
             boost::thread thread(read_func);

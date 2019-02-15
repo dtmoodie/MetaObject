@@ -113,9 +113,9 @@ namespace mo
         }
 
       protected:
-        void updateDataImpl(const TContainerPtr_t& data)
+        void updateDataImpl(const TContainerPtr_t& data, mo::UpdateFlags fg) override
         {
-            TParam<T>::updateDataImpl(data);
+            TParam<T>::updateDataImpl(data, fg);
             updateUserData(data->data);
         }
 
@@ -189,6 +189,13 @@ namespace mo
         }
 
       protected:
+
+        void updateDataImpl(const TContainerPtr_t& data, mo::UpdateFlags fg) override
+        {
+            TParam<T>::updateDataImpl(data, fg);
+            updateUserData(data);
+        }
+
         void updateUserData(const TContainerPtr_t& data)
         {
             TParam<T>::updateDataImpl(data);

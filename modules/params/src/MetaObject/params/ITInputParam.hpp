@@ -38,14 +38,10 @@ namespace mo
         IContainerConstPtr_t getData(const Header& desired = Header()) const override;
 
       protected:
-        void updateDataImpl(const TContainerPtr_t& data)
+        void updateDataImpl(const TContainerPtr_t& data, UpdateFlags fg = InputUpdated_e) override
         {
-            {
-                mo::Lock_t lock(this->mtx());
-                TParam<T>::updateDataImpl(data);
-            }
-            emitUpdate(IDataContainer::Ptr(TParam<T>::getData()), InputUpdated_e);
-            TParam<T>::emitTypedUpdate(TParam<T>::getTypedData(), InputUpdated_e);
+            TParam<T>::updateDataImpl(data, fg);
+            //emitUpdate(IDataContainer::Ptr(data), InputUpdated_e);
         }
 
         void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) override
@@ -170,7 +166,7 @@ namespace mo
         }
         if (header.stream == getStream())
         {
-            TParam<T>::updateData(data);
+            updateDataImpl(data, InputUpdated_e);
         }
     }
 

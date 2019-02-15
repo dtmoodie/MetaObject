@@ -54,7 +54,7 @@ namespace mo
             Lock_t lock(this->mtx());
             if (ITInputParam<T>::setInput(input))
             {
-                auto data = TParam<T>::getTypedData();
+                auto data = TParam<T>::template getTypedData<T>();
                 if (data)
                 {
                     updateDataImpl(data);
@@ -71,10 +71,10 @@ namespace mo
         }
 
       protected:
-        void updateDataImpl(const TContainerPtr_t& data)
+        void updateDataImpl(const TContainerPtr_t& data, mo::UpdateFlags fg = InputUpdated_e) override
         {
             Lock_t lock(this->mtx());
-            ITInputParam<T>::updateDataImpl(data);
+            ITInputParam<T>::updateDataImpl(data, fg);
             if (m_user_var)
             {
                 *m_user_var = &data->data;
