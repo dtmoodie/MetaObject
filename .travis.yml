@@ -21,3 +21,7 @@ before_script:
 script:
   - mkdir -p build && cd build && cmake .. -DCUDA_CUDA_LIBRARY=/usr/local/nvidia/lib64/libcuda.so -DBOOST_ROOT=/home/travis/build/dtmoodie/MetaObject/boost_1_69_0 -DBOOST_LIBRARYDIR=/home/travis/build/dtmoodie/MetaObject/boost_1_69_0/stage/lib
   - make all
+  - ./test_mo_system_table
+  - ./test_mo_params
+  - ./test_mo_serialization
+  - ./test_mo_object
