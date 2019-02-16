@@ -11,5 +11,5 @@ cd boost_*
   variant=release \
   link=shared \
   define=BOOST_NO_CXX14_CONSTEXPR \
-  --reconfigure
+  --reconfigure > /dev/null
 
