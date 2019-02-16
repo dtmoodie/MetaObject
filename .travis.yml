@@ -16,7 +16,6 @@ cache:
 before_script:
   - sudo -E ./scripts/travis/install-deps.sh
   - sudo -E ./scripts/build_boost.sh
-  - sudo apt-get install -y libopencv-core-dev
 
 script:
   - mkdir -p build && cd build && cmake .. -DCUDA_CUDA_LIBRARY=/usr/local/nvidia/lib64/libcuda.so -DBOOST_ROOT=/home/travis/build/dtmoodie/MetaObject/boost_1_69_0 -DBOOST_LIBRARYDIR=/home/travis/build/dtmoodie/MetaObject/boost_1_69_0/stage/lib
