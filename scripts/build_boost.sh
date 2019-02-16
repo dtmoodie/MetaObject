@@ -1,6 +1,6 @@
 wget https://dl.bintray.com/boostorg/release/1.69.0/source/boost_1_69_0.tar.gz
 
-tar xvf boost_1*
+tar xf boost_1*
 
 cd boost_*
 
