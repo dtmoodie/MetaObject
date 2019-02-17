@@ -1,5 +1,5 @@
 version: 1.0.{build}
-clone_depth: 1
+clone_depth: 5
 
 image:
 - Previous Visual Studio 2017
