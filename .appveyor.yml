@@ -9,6 +9,8 @@ image:
 - Previous Ubuntu
 
 before_build:
+- cd metaobject && git submodule update --init --recursive
+
 - cmd: >-
    if not exist "build" mkdir build
    
