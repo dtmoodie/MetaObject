@@ -1,3 +1,4 @@
+version: 1.0.{build}
 clone_depth: 5
 
 environment:
@@ -11,35 +12,25 @@ environment:
 configuration:
   - Release
 
-platform:
-  - x64
-  - Win32
+image:
+- Previous Visual Studio 2017
+- Visual Studio 2017
+- Visual Studio 2015
+- Ubuntu
+- Previous Ubuntu
 
-#branches:
-  #only:
-    #- master
+- cmd: >-
+   if not exist "build" mkdir build
+   cd build
+   cmake .. -DBOOST_ROOT=C:\Libraries\boost_1_67_0 -DBOOST_LIBRARYDIR=C:\Libraries\boost_1_67_0\stage\lib -DBUILD_EXAMPLES=OFF
 
-before_build:
-  - mkdir build
-  - cd build
-  - set PATH=%QTDIR%\bin;%PATH%
-  - cmd: if "%platform%"=="Win32" cmake "-G%GENERATOR32%" -DCMAKE_PREFIX_PATH="%QTDIR32%/lib/cmake/Qt5" -DBOOST_ROOT="%BOOST_ROOT%"..
-  - cmd: if "%platform%"=="x64"   cmake "-G%GENERATOR64%" -DCMAKE_PREFIX_PATH="%QTDIR64%/lib/cmake/Qt5" -DBOOST_ROOT="%BOOST_ROOT%" ..
+- sh: >-
+    mkdir -p build
+    cd build
+    cmake .. -DBOOST_ROOT=C:\Libraries\boost_1_67_0 -DBOOST_LIBRARYDIR=C:\Libraries\boost_1_67_0\stage\lib
 
-build:
-  parallel: true
-  project: C:\projects\MetaObject\build\MetaObject.sln
+build_script:
+- cmd: >-
+    msbuild ct.sln
+- sh: make
 
-#build_script:
-  #- msbuild MetaObject.sln /t:build /p:Configuration=Release
-
-#deploy:
-  #release: $(APPVEYOR_REPO_TAG_NAME)
-  #provider: GitHub
-  #artifact: /.*\.exe/
-  #auth_token:
-    #secure: j0nBV9xVItdG3j6d0gHoyvrzi7TOhAy9/QIeyCbFeP8PTqq7DPr1oYwL5WIkPaXe
-  #draft: false
-  #prerelease: false
-  #on:
-    #appveyor_repo_tag: true
