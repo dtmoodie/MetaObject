@@ -168,6 +168,29 @@ void testBinarySpeed(size_t count)
 
 BOOST_AUTO_TEST_CASE(BinarySerializationPerformance)
 {
-    testBinarySpeed<float>(1e9);
-    testBinarySpeed<TestPodStruct>(1e7);
+    int size = 9;
+    bool success = false;
+    while(!success)
+    {
+        try{
+            testBinarySpeed<float>(std::exp(size));
+            success = true;
+        }catch(std::bad_alloc)
+        {
+            size -= 1;
+        }
+    }
+    success = false;
+    size = 7;
+    while(!success)
+    {
+        try
+        {
+            testBinarySpeed<TestPodStruct>(std::exp(size));
+            success = true;
+        }catch(std::bad_alloc)
+        {
+            size -= 1;
+        }
+    }
 }
