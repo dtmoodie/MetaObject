@@ -8,6 +8,7 @@ image:
 - Ubuntu
 - Previous Ubuntu
 
+before_build:
 - cmd: >-
    if not exist "build" mkdir build
    
@@ -24,7 +25,7 @@ image:
 
 build_script:
 - cmd: >-
-    msbuild ct.sln
+    msbuild metaobject.sln
     
 - sh: make
 
