@@ -1,16 +1,5 @@
 version: 1.0.{build}
-clone_depth: 5
-
-environment:
-  QTDIR32: C:\Qt\5.7\msvc2015
-  QTDIR64: C:\Qt\5.7\msvc2015_64
-  GENERATOR64: "Visual Studio 14 Win64"
-  GENERATOR32: "Visual Studio 14"
-  CONFIG: Release
-  BOOST_ROOT: C:\Libraries\boost_1_62_0
-
-configuration:
-  - Release
+clone_depth: 1
 
 image:
 - Previous Visual Studio 2017
@@ -36,5 +25,6 @@ image:
 build_script:
 - cmd: >-
     msbuild ct.sln
+    
 - sh: make
 
