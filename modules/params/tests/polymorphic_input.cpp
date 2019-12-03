@@ -1,12 +1,11 @@
-#include <boost/test/test_tools.hpp>
-#include <boost/test/unit_test_suite.hpp>
-
 #include <MetaObject/params/TMultiInput-inl.hpp>
 #include <MetaObject/params/TMultiOutput.hpp>
 #include <MetaObject/params/TParamOutput.hpp>
 #include <MetaObject/params/TParamPtr.hpp>
 
 #include <MetaObject/thread/fiber_include.hpp>
+
+#include <gtest/gtest.h>
 
 #include <iostream>
 
@@ -37,10 +36,10 @@ void clearInputs(std::tuple<const int*, const float*, const double*>& inputs)
     std::get<1>(inputs) = nullptr;
     std::get<2>(inputs) = nullptr;
 }
+
 namespace
 {
-
-    struct Fixture
+    struct Fixture : ::testing::Test
     {
         Fixture()
         {
@@ -50,49 +49,47 @@ namespace
 
         void checkInit()
         {
-            BOOST_REQUIRE(multi_input.getInputParam() == nullptr);
+            ASSERT_EQ(multi_input.getInputParam(), nullptr);
         }
 
         void testInput(int val)
         {
 
-            BOOST_REQUIRE_EQUAL(mo::get<const int*>(inputs), static_cast<void*>(nullptr));
-            BOOST_REQUIRE(multi_input.setInput(&int_out));
+            ASSERT_EQ(mo::get<const int*>(inputs), static_cast<void*>(nullptr));
+            ASSERT_EQ(multi_input.setInput(&int_out), true);
 
-            BOOST_REQUIRE(multi_input.getInputParam());
+            ASSERT_NE(multi_input.getInputParam(), nullptr);
 
-            BOOST_REQUIRE_EQUAL(multi_input.getInputParam(), &int_out);
+            ASSERT_EQ(multi_input.getInputParam(), &int_out);
             int_out.updateData(val);
 
-            BOOST_REQUIRE_NE(mo::get<const int*>(inputs), static_cast<void*>(nullptr));
-            BOOST_REQUIRE_EQUAL(*mo::get<const int*>(inputs), 6);
-            BOOST_REQUIRE(printInputs(inputs));
+            ASSERT_NE(mo::get<const int*>(inputs), static_cast<void*>(nullptr));
+            ASSERT_EQ(*mo::get<const int*>(inputs), 6);
+            ASSERT_EQ(printInputs(inputs), true);
 
             int_out.updateData(5);
 
-            BOOST_REQUIRE_NE(mo::get<const int*>(inputs), static_cast<void*>(nullptr));
-            BOOST_REQUIRE_EQUAL(*mo::get<const int*>(inputs), 5);
+            ASSERT_NE(mo::get<const int*>(inputs), static_cast<void*>(nullptr));
+            ASSERT_EQ(*mo::get<const int*>(inputs), 5);
 
             auto data = multi_input.getData(mo::Header());
-            BOOST_REQUIRE(printInputs(inputs));
+            ASSERT_EQ(printInputs(inputs), true);
 
-            BOOST_REQUIRE(data);
-            BOOST_REQUIRE(data->getType() == mo::TypeInfo(typeid(int)));
+            ASSERT_NE(data, nullptr);
+            ASSERT_EQ(data->getType(), mo::TypeInfo(typeid(int)));
         }
 
         void testCallbacks()
         {
             int callback_called = 0;
-            mo::TParam<int>::TUpdateSlot_t int_callback([&callback_called](
-                mo::TParam<int>::TContainerPtr_t, mo::IParam*, mo::UpdateFlags)
-            {
-                ++callback_called;
-            });
+            mo::TParam<int>::TUpdateSlot_t int_callback([&callback_called](mo::TParam<int>::TContainerPtr_t,
+                                                                           mo::IParam*,
+                                                                           mo::UpdateFlags) { ++callback_called; });
             auto connection = multi_input.registerUpdateNotifier(&int_callback);
 
-            BOOST_REQUIRE(connection);
+            ASSERT_NE(connection, nullptr);
             int_out.updateData(10);
-            BOOST_REQUIRE_EQUAL(callback_called, 1);
+            ASSERT_EQ(callback_called, 1);
         }
 
         std::tuple<const int*, const float*, const double*> inputs;
@@ -111,14 +108,14 @@ namespace
 
         mo::TMultiOutput<int, float, double> multi_output;
     };
-}
-BOOST_FIXTURE_TEST_CASE(init, Fixture)
+} // namespace
+TEST_F(Fixture, init)
 {
     checkInit();
-    BOOST_REQUIRE(!printInputs(inputs));
+    ASSERT_NE(printInputs(inputs), true);
 }
 
-BOOST_FIXTURE_TEST_CASE(int_subscribe, Fixture)
+TEST_F(Fixture, int_subscribe)
 {
     testInput(6);
     testCallbacks();

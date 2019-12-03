@@ -1,3 +1,4 @@
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include "Parameters.hpp"
 #include "MetaObject/core/TypeTable.hpp"
 #include "MetaObject/core/TypeTable.hpp"
@@ -50,7 +51,7 @@ namespace mo
         std::stringstream ss;
         for (auto& type : types)
         {
-            ss << mo::TypeTable::instance().typeToName(type) << "\n";
+            ss << mo::TypeTable::instance()->typeToName(type) << "\n";
         }
         return ss.str();
     }
@@ -62,9 +63,12 @@ namespace mo
         {
             return getter(param);
         }
-        MO_LOG(trace,  "Accessor function not found for for {} Available converters:\n {}", mo::TypeTable::instance().typeToName(param->getTypeInfo()), printTypes());
+        MO_LOG(trace,
+               "Accessor function not found for for {} Available converters:\n {}",
+               mo::TypeTable::instance()->typeToName(param->getTypeInfo()),
+               printTypes());
         return boost::python::object(std::string("No to python converter registered for " +
-                                                 mo::TypeTable::instance().typeToName(param->getTypeInfo())));
+                                                 mo::TypeTable::instance()->typeToName(param->getTypeInfo())));
     }
 
     bool setData(mo::IParam* param, const boost::python::object& obj)
@@ -74,13 +78,13 @@ namespace mo
         {
             return setter(param, obj);
         }
-        MO_LOG(trace,  "Setter function not found for {}", mo::TypeTable::instance().typeToName(param->getTypeInfo()));
+        MO_LOG(trace, "Setter function not found for {}", mo::TypeTable::instance()->typeToName(param->getTypeInfo()));
         return false;
     }
 
     std::string getDataTypeName(const mo::ParamBase* param)
     {
-        return mo::TypeTable::instance().typeToName(param->getTypeInfo());
+        return mo::TypeTable::instance()->typeToName(param->getTypeInfo());
     }
 
     python::ParamCallbackContainer::ParamCallbackContainer(mo::IParam* ptr, const boost::python::object& obj)
@@ -107,7 +111,7 @@ namespace mo
         {
             return;
         }
-        python::PyEnsureGIL lock;
+        ct::PyEnsureGIL lock;
         if (!m_callback)
         {
             return;
@@ -144,14 +148,14 @@ namespace mo
         m_ptr = nullptr;
     }
 
-    auto python::ParamCallbackContainer::registry() -> std::shared_ptr<Registry>
+    auto python::ParamCallbackContainer::registry() -> std::shared_ptr<Registry_t>
     {
-        static std::weak_ptr<Registry>* g_registry = nullptr;
-        std::shared_ptr<Registry> out;
+        static std::weak_ptr<Registry_t>* g_registry = nullptr;
+        std::shared_ptr<Registry_t> out;
         if (g_registry == nullptr)
         {
-            g_registry = new std::weak_ptr<Registry>();
-            out = std::make_shared<Registry>();
+            g_registry = new std::weak_ptr<Registry_t>();
+            out = std::make_shared<Registry_t>();
             *g_registry = out;
         }
         else
@@ -165,11 +169,14 @@ namespace mo
     {
         auto registry = python::ParamCallbackContainer::registry();
         (*registry)[param].emplace_back(
-            python::ParamCallbackContainer::Ptr(new python::ParamCallbackContainer(param, obj)));
+            python::ParamCallbackContainer::Ptr_t(new python::ParamCallbackContainer(param, obj)));
     }
 
     std::string printTime(const mo::Time& ts)
     {
+        std::stringstream ss;
+        ss << ts;
+        return ss.str();
     }
 
     const mo::Time& getTime(const mo::OptionalTime& ts)
@@ -216,10 +223,11 @@ namespace mo
         // cs_obj.def("getName", &ICoordinateSystem::getName,
         // boost::python::return_value_policy<boost::python::reference_existing_object>());
 
-        boost::python::class_<IAsyncStream, std::shared_ptr<IAsyncStream>, boost::noncopyable>("AsyncStream", boost::python::no_init)
+        boost::python::class_<IAsyncStream, std::shared_ptr<IAsyncStream>, boost::noncopyable>("AsyncStream",
+                                                                                               boost::python::no_init)
             .add_property("name", &IAsyncStream::name)
             .add_property("thread_id", &IAsyncStream::threadId)
-            .add_property("is_device", &IAsyncStream::isDeviceContext);
+            .add_property("is_device", &IAsyncStream::isDeviceStream);
 
         boost::python::def("setDefaultBufferType", &setDefaultBufferType);
 

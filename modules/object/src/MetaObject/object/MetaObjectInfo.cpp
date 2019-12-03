@@ -121,22 +121,22 @@ std::string IMetaObjectInfo::Print(Verbosity verbosity) const
             {
                 ss << " ";
             }
-            const auto type = param->getBufferFlags();
-            if (type.test(ParamFlags::Control_e))
+            const auto type = param->getParamFlags();
+            if (type.test(ParamFlags::kCONTROL))
             {
                 ss << "C";
             }
             else
             {
             }
-            if (type.test(ParamFlags::Input_e))
+            if (type.test(ParamFlags::kINPUT))
             {
                 ss << "I";
             }
             else
             {
             }
-            if (type.test(ParamFlags::Output_e))
+            if (type.test(ParamFlags::kOUTPUT))
             {
                 ss << "O";
             }
@@ -144,7 +144,7 @@ std::string IMetaObjectInfo::Print(Verbosity verbosity) const
             {
             }
 
-            ss << " [" << mo::TypeTable::instance().typeToName(param->getDataType()) << "]\n";
+            ss << " [" << mo::TypeTable::instance()->typeToName(param->getDataType()) << "]\n";
             const auto& tooltip = param->getTooltip();
             if (!tooltip.empty())
             {

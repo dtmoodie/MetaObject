@@ -1,82 +1,64 @@
 #pragma once
+#include <MetaObject/detail/Export.hpp>
+
 #include "MetaObject/core/detail/Enums.hpp"
 #include "MetaObject/params/NamedParam.hpp"
 #include <MetaObject/core/detail/Time.hpp>
+
 #include <memory>
 
 namespace mo
 {
-    class IAsyncStream;
-    class ICoordinateSystem;
+    struct IAsyncStream;
+    struct ICoordinateSystem;
     class IParam;
 
-    MO_KEYWORD_INPUT(timestamp, mo::Time)
-    MO_KEYWORD_INPUT(frame_number, uint64_t)
+    /*MO_KEYWORD_INPUT(frame_number, uint64_t)
     MO_KEYWORD_INPUT(coordinate_system, const std::shared_ptr<ICoordinateSystem>)
     MO_KEYWORD_INPUT(stream, IAsyncStream*)
     MO_KEYWORD_INPUT(param_name, std::string)
     MO_KEYWORD_INPUT(tree_root, std::string)
-    MO_KEYWORD_INPUT(param_flags, EnumClassBitset<ParamFlags>)
+    MO_KEYWORD_INPUT(param_flags, ParamFlags)*/
 
-    namespace tag
+    namespace tags
     {
-        struct param;
-    } // namespace tag
-
-    namespace kwargs
-    {
-        template <>
-        struct TaggedArgument<tag::param> : public TaggedBase
+        struct Timestamp
         {
-            typedef tag::param TagType;
-            explicit TaggedArgument(const IParam& val)
-                : arg(&val)
-            {
-            }
-
-            const void* get() const
-            {
-                return arg;
-            }
-
-          protected:
-            const void* arg;
         };
 
-        template <>
-        struct MO_EXPORTS TKeyword<tag::param>
+        struct FrameNumber
         {
-            static TKeyword instance;
-            TaggedArgument<tag::param> operator=(const IParam& data);
         };
 
-    } // namespace kwargs
-
-    namespace tag
-    {
-        struct param
+        struct Stream
         {
-            typedef IParam Type;
-            typedef const Type& ConstRef;
-            typedef Type& Ref;
-            typedef ConstRef StorageType;
-            typedef const void* VoidType;
-            template <typename T>
-            static constexpr bool AllowedType()
-            {
-                return std::is_same<Type, T>::value;
-            }
-            static VoidType GetPtr(const Type& arg)
-            {
-                return &arg;
-            }
-            template <class T>
-            static VoidType GetPtr(const T& arg)
-            {
-                (void)arg;
-                return nullptr;
-            }
-        }; // struct param
-        static mo::kwargs::TKeyword<param>& _param = mo::kwargs::TKeyword<param>::instance;
-    } // namespace tag
-}
+        };
+        struct Name
+        {
+        };
+        struct Flags
+        {
+        };
+        struct Param
+        {
+        };
+    } // namespace tags
+    namespace params
+    {
+        using Timestamp = TNamedParam<tags::Timestamp, Time>;
+        using FrameNumber = TNamedParam<tags::FrameNumber, uint64_t>;
+        using Stream = TNamedParam<tags::Stream, IAsyncStream*>;
+        using Name = TNamedParam<tags::Name, std::string>;
+        using Flags = TNamedParam<tags::Flags, ParamFlags>;
+        using Param = TNamedParam<tags::Param, const IParam*>;
+
+    }
+    
+    static constexpr TKeyword<params::Timestamp> timestamp;
+    static constexpr TKeyword<params::FrameNumber> fn;
+    static constexpr TKeyword<params::Stream> stream;
+    static constexpr TKeyword<params::Name> name;
+    static constexpr TKeyword<params::Flags> flags;
+    static constexpr TKeyword<params::Param> param;
+
+} // namespace mo

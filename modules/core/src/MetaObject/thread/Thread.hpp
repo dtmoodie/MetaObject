@@ -36,7 +36,7 @@ namespace mo
         void setName(const std::string& name);
 
         ThreadPool* pool() const;
-        IAsyncStreamPtr_t asyncStream(const Duration timeout = 5 * second) const;
+        IAsyncStreamPtr_t asyncStream(Duration timeout = 5 * second) const;
 
       private:
         void main();

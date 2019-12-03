@@ -1,4 +1,4 @@
-#include "Objects.hpp"
+#include "TestObjects.hpp"
 
 #include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/object/MetaObject.hpp"
@@ -19,262 +19,258 @@
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 #include <MetaObject/thread/fiber_include.hpp>
 
-#include <boost/test/auto_unit_test.hpp>
-#include <boost/test/test_tools.hpp>
-#include <boost/test/unit_test_suite.hpp>
-
+#include <gtest/gtest.h>
 #include <iostream>
 
 using namespace mo;
 
 using namespace test;
 
-BOOST_AUTO_TEST_CASE(access_Param)
+TEST(object, param_access)
 {
 
     auto obj = rcc::shared_ptr<ParamedObject>::create();
     obj->getParam<int>("int_value");
     obj->getParam<double>("double_value");
     // TODO fix unit test
-    // BOOST_REQUIRE_EQUAL(obj->getParamValue<int>("int_value"), 0);
+    // ASSERT_EQ(obj->getParamValue<int>("int_value"), 0);
     obj->update(10);
-    // BOOST_REQUIRE_EQUAL(obj->getParamValue<int>("int_value"), 10);
+    // ASSERT_EQ(obj->getParamValue<int>("int_value"), 10);
 }
 
-BOOST_AUTO_TEST_CASE(test_meta_object_static_introspection_global)
+TEST(object, static_introspection_global)
 {
     auto info = MetaObjectInfoDatabase::instance()->getMetaObjectInfo();
-    BOOST_REQUIRE(info.size());
+    ASSERT_GT(info.size(), 0);
     for (auto& item : info)
     {
         std::cout << item->Print() << std::endl;
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_meta_object_static_introspection_specific)
+TEST(object, static_introspection_specific)
 {
     auto info = MetaObjectInfoDatabase::instance()->getMetaObjectInfo("MetaObjectSignals");
-    BOOST_REQUIRE(info);
+    ASSERT_NE(info, nullptr);
     std::cout << info->Print() << std::endl;
 }
 
-BOOST_AUTO_TEST_CASE(test_meta_object_dynamic_introspection)
+TEST(object, dynamic_introspection)
 {
-    RelayManager mgr;
+    auto mgr = std::make_shared<RelayManager>();
     auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSignals");
     auto obj = constructor->Construct();
-    auto state = constructor->GetState(obj->GetPerTypeId());
-    auto weak_ptr = state->GetWeakPtr();
-    {
-        auto ptr = state->GetSharedPtr();
-        rcc::shared_ptr<IMetaObject> meta_obj(ptr);
-        meta_obj->setupSignals(&mgr);
-        meta_obj->Init(true);
-        auto signal_info = meta_obj->getSignalInfo();
-        BOOST_REQUIRE(!weak_ptr.empty());
-        BOOST_REQUIRE_EQUAL(signal_info.size(), 2);
-
-        auto signals_ = meta_obj->getSignals();
-        BOOST_REQUIRE_EQUAL(signals_.size(), 4);
-    }
-    BOOST_REQUIRE(weak_ptr.empty());
-    BOOST_REQUIRE_EQUAL(constructor->GetNumberConstructedObjects(), 0);
+    rcc::shared_ptr<IMetaObject> meta_obj(obj);
+    meta_obj->setupSignals(mgr);
+    meta_obj->Init(true);
+    auto signal_info = meta_obj->getSignalInfo();
+    ASSERT_EQ(signal_info.size(), 2);
+    auto signals_ = meta_obj->getSignals();
+    ASSERT_EQ(signals_.size(), 4);
 }
 
-BOOST_AUTO_TEST_CASE(test_meta_object_dynamic_access)
+TEST(object, dynamic_access)
 {
-    RelayManager mgr;
+    auto mgr = std::make_shared<RelayManager>();
     auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSignals");
     auto obj = constructor->Construct();
-    auto meta_obj = dynamic_cast<IMetaObject*>(obj);
+    rcc::shared_ptr<IMetaObject> meta_obj(obj);
     meta_obj->Init(true);
-    meta_obj->setupSignals(&mgr);
+    meta_obj->setupSignals(mgr);
 
     auto signals_ = meta_obj->getSignals();
-    BOOST_REQUIRE_EQUAL(signals_.size(), 4);
+    ASSERT_EQ(signals_.size(), 4);
     int input_Param = 0;
     int call_value = 5;
-    MetaObjectSignals* T = dynamic_cast<MetaObjectSignals*>(meta_obj);
+    rcc::shared_ptr<MetaObjectSignals> T(meta_obj);
     std::shared_ptr<mo::ISlot> slot(new mo::TSlot<void(int)>(
         std::bind([&input_Param](int value) { input_Param += value; }, std::placeholders::_1)));
-    auto Connection = mgr.connect(slot.get(), "test_int");
+    auto connection = mgr->connect(slot.get(), "test_int");
     T->sig_test_int(call_value);
-    BOOST_REQUIRE_EQUAL(input_Param, 5);
+    ASSERT_EQ(input_Param, 5);
     T->sig_test_int(call_value);
-    BOOST_REQUIRE_EQUAL(input_Param, 10);
-    delete obj;
+    ASSERT_EQ(input_Param, 10);
 }
 
-BOOST_AUTO_TEST_CASE(test_meta_object_external_slot)
+TEST(object, external_slot)
 {
-    RelayManager mgr;
+    auto mgr = std::make_shared<RelayManager>();
     auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSignals");
     auto obj = constructor->Construct();
-    auto meta_obj = dynamic_cast<MetaObjectSignals*>(obj);
-    meta_obj->setupSignals(&mgr);
+    rcc::shared_ptr<MetaObjectSignals> meta_obj(obj);
+    meta_obj->setupSignals(mgr);
     meta_obj->Init(true);
     bool slot_called = false;
     TSlot<void(int)> int_slot([&slot_called](int value) { slot_called = value == 5; });
-    BOOST_REQUIRE(meta_obj->connectByName("test_int", &int_slot));
+    ASSERT_EQ(meta_obj->connectByName("test_int", &int_slot), true);
     int desired_value = 5;
     meta_obj->sig_test_int(desired_value);
-    BOOST_REQUIRE(slot_called);
-    delete obj;
+    ASSERT_EQ(slot_called, true);
 }
 
-BOOST_AUTO_TEST_CASE(test_meta_object_internal_slot)
+TEST(object, internal_slot)
 {
-    RelayManager mgr;
+    auto mgr = std::make_shared<RelayManager>();
     auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSlots");
-    BOOST_REQUIRE(constructor);
+    ASSERT_NE(constructor, nullptr);
     auto obj = constructor->Construct();
-    BOOST_REQUIRE(obj);
-    auto meta_obj = dynamic_cast<MetaObjectSlots*>(obj);
+    ASSERT_NE(obj, nullptr);
+    rcc::shared_ptr<MetaObjectSlots> meta_obj(obj);
+    ASSERT_NE(meta_obj, nullptr);
     // auto slot = meta_obj->getSlot_test_void<void()>();
     // auto overload = meta_obj->getSlot_test_void<void(int)>();
     meta_obj->Init(true);
-    meta_obj->setupSignals(&mgr);
+    meta_obj->setupSignals(mgr);
     TSignal<void(void)> signal;
-    BOOST_REQUIRE(meta_obj->connectByName("test_void", &signal));
+    ASSERT_EQ(meta_obj->connectByName("test_void", &signal), true);
     signal();
-    BOOST_REQUIRE_EQUAL(meta_obj->slot_called, 1);
+    ASSERT_EQ(meta_obj->slot_called_count, 1);
     signal();
-    BOOST_REQUIRE_EQUAL(meta_obj->slot_called, 2);
-    delete obj;
+    ASSERT_EQ(meta_obj->slot_called_count, 2);
 }
-BOOST_AUTO_TEST_CASE(inter_object_T)
+
+TEST(object, inter_object)
 {
-    RelayManager mgr;
+    auto mgr = std::make_shared<RelayManager>();
     auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSignals");
-    BOOST_REQUIRE(constructor);
+    ASSERT_NE(constructor, nullptr);
     auto obj = constructor->Construct();
-    BOOST_REQUIRE(obj);
-    auto signal_object = dynamic_cast<MetaObjectSignals*>(obj);
-    signal_object->setupSignals(&mgr);
+    ASSERT_NE(obj, nullptr);
+    rcc::shared_ptr<MetaObjectSignals> signal_object(obj);
+    signal_object->setupSignals(mgr);
     signal_object->Init(true);
     constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSlots");
     obj = constructor->Construct();
-    auto slot_object = dynamic_cast<MetaObjectSlots*>(obj);
-    slot_object->setupSignals(&mgr);
+    rcc::shared_ptr<MetaObjectSlots> slot_object(obj);
+    slot_object->setupSignals(mgr);
     slot_object->Init(true);
 
-    BOOST_REQUIRE(
-        IMetaObject::connect(signal_object, "test_void", slot_object, "test_void", TypeInfo(typeid(void(void)))));
+    ASSERT_TRUE(
+        IMetaObject::connect(*signal_object, "test_void", *slot_object, "test_void", TypeInfo(typeid(void(void)))));
     signal_object->sig_test_void();
-    BOOST_REQUIRE_EQUAL(slot_object->slot_called, 1);
-    delete obj;
-    delete signal_object;
+    ASSERT_EQ(slot_object->slot_called_count, 1);
 }
 
-BOOST_AUTO_TEST_CASE(inter_object_named)
+TEST(object, inter_object_named)
 {
-    RelayManager mgr;
+    auto mgr = std::make_shared<RelayManager>();
     auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSignals");
-    BOOST_REQUIRE(constructor);
+    ASSERT_NE(constructor, nullptr);
     auto obj = constructor->Construct();
-    BOOST_REQUIRE(obj);
-    auto signal_object = dynamic_cast<MetaObjectSignals*>(obj);
-    signal_object->setupSignals(&mgr);
+    ASSERT_NE(obj, nullptr);
+    rcc::shared_ptr<MetaObjectSignals> signal_object(obj);
+    signal_object->setupSignals(mgr);
     signal_object->Init(true);
     constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSlots");
+    ASSERT_NE(constructor, nullptr);
     obj = constructor->Construct();
-    auto slot_object = dynamic_cast<MetaObjectSlots*>(obj);
-    slot_object->setupSignals(&mgr);
+    rcc::shared_ptr<MetaObjectSlots> slot_object(obj);
+    ASSERT_NE(slot_object, nullptr);
+    slot_object->setupSignals(mgr);
     slot_object->Init(true);
 
-    BOOST_REQUIRE_EQUAL(IMetaObject::connect(signal_object, "test_void", slot_object, "test_void"), 1);
+    ASSERT_EQ(IMetaObject::connect(*signal_object, "test_void", *slot_object, "test_void"), 1);
     signal_object->sig_test_void();
-    BOOST_REQUIRE_EQUAL(slot_object->slot_called, 1);
-    delete obj;
-    delete signal_object;
+    ASSERT_EQ(slot_object->slot_called_count, 1);
 }
 
-BOOST_AUTO_TEST_CASE(rest)
+TEST(object, rest)
 {
-    RelayManager mgr;
+    auto mgr = std::make_shared<RelayManager>();
     {
         auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectCallback");
-        BOOST_REQUIRE(constructor);
+        ASSERT_NE(constructor, nullptr);
         auto obj = constructor->Construct();
-        BOOST_REQUIRE(obj);
-        MetaObjectCallback* meta_obj = dynamic_cast<MetaObjectCallback*>(obj);
+        ASSERT_NE(obj, nullptr);
+        rcc::shared_ptr<MetaObjectCallback> meta_obj(obj);
         meta_obj->Init(true);
-        meta_obj->setupSignals(&mgr);
+        meta_obj->setupSignals(mgr);
         TSignal<int(void)> signal;
         auto slot = meta_obj->getSlot("test_int", TypeInfo(typeid(int(void))));
-        BOOST_REQUIRE(slot);
-        auto Connection = slot->connect(&signal);
-        BOOST_REQUIRE(Connection);
-        BOOST_REQUIRE_EQUAL(signal(), 5);
-        delete obj;
+        ASSERT_NE(slot, nullptr);
+        auto connection = slot->connect(&signal);
+        ASSERT_NE(connection, nullptr);
+        ASSERT_EQ(signal(), 5);
     }
     {
         auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectCallback");
-        BOOST_REQUIRE(constructor);
+        ASSERT_NE(constructor, nullptr);
         auto obj = constructor->Construct();
-        BOOST_REQUIRE(obj);
+        ASSERT_NE(obj, nullptr);
         obj->Init(true);
-        MetaObjectCallback* cb = dynamic_cast<MetaObjectCallback*>(obj);
+        rcc::shared_ptr<MetaObjectCallback> cb(obj);
         constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSlots");
         obj = constructor->Construct();
         obj->Init(true);
-        MetaObjectSlots* slot = dynamic_cast<MetaObjectSlots*>(obj);
+        rcc::shared_ptr<MetaObjectSlots> slot(obj);
         cb->test_void();
-        delete cb;
-        delete slot;
     }
     {
         auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectPublisher");
-        BOOST_REQUIRE(constructor);
+        ASSERT_NE(constructor, nullptr);
         auto obj = constructor->Construct();
-        BOOST_REQUIRE(obj);
+        ASSERT_NE(obj, nullptr);
         obj->Init(true);
-        MetaObjectPublisher* ptr = dynamic_cast<MetaObjectPublisher*>(obj);
-        BOOST_REQUIRE(ptr);
+        rcc::shared_ptr<MetaObjectPublisher> ptr(obj);
+        ASSERT_NE(ptr, nullptr);
     }
 }
 
-BOOST_AUTO_TEST_CASE(test_params)
+void testParams(mo::BufferFlags flags)
 {
-    RelayManager mgr;
-    auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectPublisher");
-    auto obj = constructor->Construct();
-    obj->Init(true);
+    auto stream = mo::AsyncStream::create();
+    auto mgr = std::make_shared<RelayManager>();
+    auto publisher = MetaObjectPublisher::create();
+    ASSERT_NE(publisher, nullptr);
+    ASSERT_EQ(publisher->getStream().get(), stream.get());
+    auto num_signals = publisher->setupSignals(mgr);
+    EXPECT_GT(num_signals, 0);
 
-    MetaObjectPublisher* publisher = dynamic_cast<MetaObjectPublisher*>(obj);
-
-    BOOST_REQUIRE(publisher->getStream() == nullptr);
-    auto num_signals = publisher->setupSignals(&mgr);
-
-    BOOST_REQUIRE(publisher->getParam("test_int") != nullptr);
+    ASSERT_NE(publisher->getParam("test_int"), nullptr);
     auto params = publisher->getParams();
-    BOOST_REQUIRE_EQUAL(params.size(), 1);
+    ASSERT_EQ(params.size(), 1);
 
-    constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectSubscriber");
-    obj = constructor->Construct();
-    obj->Init(true);
-    MetaObjectSubscriber* subscriber = dynamic_cast<MetaObjectSubscriber*>(obj);
-    BOOST_REQUIRE(subscriber->getStream() == nullptr);
-    subscriber->setupSignals(&mgr);
+    auto subscriber = MetaObjectSubscriber::create();
+    ASSERT_EQ(subscriber->getStream().get(), stream.get());
+    ASSERT_EQ(subscriber->getStream().get(), publisher->getStream().get());
+    subscriber->setupSignals(mgr);
 
-    BOOST_REQUIRE_EQUAL(publisher->update_count, 0);
-    BOOST_REQUIRE_EQUAL(subscriber->update_count, 0);
+    ASSERT_EQ(publisher->update_count, 0);
+    ASSERT_EQ(subscriber->update_count, 0);
 
     auto input_param = subscriber->getInput("test_int");
-    BOOST_REQUIRE(input_param);
+    ASSERT_NE(input_param, nullptr);
 
     auto output_param = publisher->getParam("test_int");
-    BOOST_REQUIRE(output_param);
+    ASSERT_NE(output_param, nullptr);
 
-    BOOST_REQUIRE_EQUAL(subscriber->update_count, 0);
-    BOOST_REQUIRE(subscriber->connectInput("test_int", publisher, output_param));
-    BOOST_REQUIRE_EQUAL(subscriber->update_count, 1);
-    publisher->test_int_param.updateData(10);
+    ASSERT_EQ(subscriber->update_count, 0);
+    ASSERT_TRUE(subscriber->connectInput("test_int", publisher.get(), "test_int", flags));
+    ASSERT_EQ(subscriber->update_count, 2);
+    publisher->test_int.updateData(10);
 
-    BOOST_REQUIRE(subscriber->test_int != nullptr);
-    BOOST_REQUIRE_EQUAL((*subscriber->test_int), 10);
-    BOOST_REQUIRE_EQUAL(publisher->update_count, 1);
-    BOOST_REQUIRE_EQUAL(subscriber->update_count, 2);
+    if (flags & ct::value(mo::BufferFlags::FORCE_BUFFERED))
+    {
+        subscriber->test_int_param.getData();
+    }
 
-    delete obj;
+    ASSERT_NE(subscriber->test_int, nullptr);
+    ASSERT_EQ((*subscriber->test_int), 10);
+    ASSERT_EQ(publisher->update_count, 1);
+    ASSERT_EQ(subscriber->update_count, 3);
+}
+
+TEST(object, params)
+{
+    testParams(mo::BufferFlags::DEFAULT);
+}
+
+TEST(object, map_params)
+{
+    testParams(mo::BufferFlags(mo::BufferFlags::MAP_BUFFER | ct::value(mo::BufferFlags::FORCE_BUFFERED)));
+}
+
+TEST(object, stream_params)
+{
+    testParams(mo::BufferFlags(mo::BufferFlags::STREAM_BUFFER | ct::value(mo::BufferFlags::FORCE_BUFFERED)));
 }

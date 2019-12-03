@@ -15,7 +15,7 @@ namespace mo
     {
         struct Stream;
 
-        struct Event
+        struct MO_EXPORTS Event
         {
             static std::shared_ptr<CUevent_st> create();
 
@@ -35,7 +35,7 @@ namespace mo
              * @param timeout how long to wait, 0 = infinity
              * @return true on completion, false on timeout exceeded
              */
-            bool synchronize(const Duration timeout = 0 * ms);
+            bool synchronize(Duration timeout = 0 * ms) const;
 
             /**
              * @brief setCallback to be called on event completion
@@ -46,10 +46,12 @@ namespace mo
             operator constCudaEvent_t() const;
 
           private:
+            // Private implementation to prevent mass inclusion of boost fiber
+            // need to hide boost fiber from nvcc otherwise it will fail to compile on many platforms
             struct Impl;
             std::shared_ptr<Impl> m_impl;
         };
-    }
+    } // namespace cuda
 
     template <>
     struct ObjectConstructor<CUevent_st>
@@ -61,6 +63,6 @@ namespace mo
             return cuda::Event::create();
         }
     };
-}
+} // namespace mo
 
 #endif // MO_CUDA_EVENT_HPP

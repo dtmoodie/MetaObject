@@ -1,6 +1,9 @@
 #pragma once
+#include "../ContainerTraits.hpp"
 #include "../IDynamicVisitor.hpp"
+#include "../type_traits.hpp"
 #include "string.hpp"
+
 #include <cereal/cereal.hpp>
 
 #include <map>
@@ -18,633 +21,161 @@ namespace mo
         {
         }
 
-        template <class AR>
-        void serialize(AR& ar)
-        {
-            ar(CEREAL_NVP(key));
-            ar(CEREAL_NVP(value));
-        }
-
         K key;
         V value;
     };
 
+    template <class T1, class T2>
+    struct TTraits<KVP<T1, const T2&>, 6> : StructBase<KVP<T1, const T2&>>
+    {
+        void load(ILoadVisitor&, void*, const std::string&, size_t) const override
+        {
+            THROW(warn, "Unable to load to a const KVP");
+        }
+
+        void save(ISaveVisitor& visitor, const void* inst, const std::string&, size_t) const override
+        {
+            auto ptr = this->ptr(inst);
+            visitor(&ptr->key, "key");
+            visitor(&ptr->value, "value");
+        }
+
+        void visit(StaticVisitor& visitor, const std::string&) const override
+        {
+            visitor.template visit<T1>("key");
+            visitor.template visit<T2>("value");
+        }
+
+        bool triviallySerializable() const override
+        {
+            return false;
+        }
+    };
+
     template <class K, class V>
-    struct KVP<K, V&>
+    struct TTraits<std::map<K, V>, 4> : ContainerBase<std::map<K, V>, V, K>
     {
-        KVP(std::pair<const K, V>& other)
-            : key(other.first)
-            , value(other.second)
+        void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t cnt) const override
         {
+            MO_ASSERT_EQ(cnt, 1);
+            auto ptr = static_cast<std::map<K, V>*>(inst);
+            auto size = visitor.getCurrentContainerSize();
+            for (size_t i = 0; i < size; ++i)
+            {
+                KVP<K, V> kvp;
+                visitor(&kvp);
+                (*ptr)[std::move(kvp.key)] = std::move(kvp.value);
+            }
         }
 
-        template <class AR>
-        void serialize(AR& ar)
+        void save(ISaveVisitor& visitor, const void* inst, const std::string&, size_t cnt) const override
         {
-            ar(CEREAL_NVP(key));
-            ar(CEREAL_NVP(value));
+            MO_ASSERT_EQ(cnt, 1);
+            auto ptr = static_cast<const std::map<K, V>*>(inst);
+            for (auto itr = ptr->begin(); itr != ptr->end(); ++itr)
+            {
+                KVP<K, const V&> pair(*itr);
+                visitor(&pair);
+            }
         }
 
-        K key;
-        V& value;
-    };
-
-    template <class K, class V>
-    struct KVP<K, const V&>
-    {
-        KVP(const std::pair<const K, V>& other)
-            : key(other.first)
-            , value(other.second)
+        void visit(StaticVisitor& visitor, const std::string&) const override
         {
+            visitor.template visit<K>("keys");
+            visitor.template visit<V>("values");
         }
 
-        template <class AR>
-        void serialize(AR& ar)
-        {
-            ar(CEREAL_NVP(key));
-            ar(CEREAL_NVP(value));
-        }
-
-        K key;
-        const V& value;
-    };
-
-    template <class T1, class T2>
-    struct TTraits<KVP<T1, T2>, void> : public ILoadStructTraits
-    {
-        using base = ILoadStructTraits;
-
-        TTraits(KVP<T1, T2>* ptr, const size_t count)
-            : m_ptr(ptr)
-            , m_count(count)
-        {
-        }
-
-        void load(ILoadVisitor* visitor) override
-        {
-            (*visitor)(&m_ptr->key, "key");
-            (*visitor)(&m_ptr->value, "value");
-        }
-
-        void save(ISaveVisitor* visitor) const override
-        {
-            (*visitor)(&m_ptr->key, "key");
-            (*visitor)(&m_ptr->value, "value");
-        }
-
-        void visit(StaticVisitor* visitor) const override
-        {
-            visitor->template visit<T1>("key");
-            visitor->template visit<T2>("value");
-        }
-
-        size_t size() const override
-        {
-            return sizeof(KVP<T1, T2>);
-        }
-
-        bool triviallySerializable() const override
-        {
-            return std::is_pod<T1>::value && std::is_pod<T2>::value;
-        }
-
-        bool isPrimitiveType() const override
-        {
-            return false;
-        }
-
-        TypeInfo type() const override
-        {
-            return TypeInfo(typeid(KVP<T1, T2>));
-        }
-
-        const void* ptr() const override
-        {
-            return m_ptr;
-        }
-
-        void* ptr() override
-        {
-            return m_ptr;
-        }
-
-        size_t count() const override
-        {
-            return m_count;
-        }
-
-        void increment() override
-        {
-            ++m_ptr;
-        }
-
-        void setInstance(void* ptr, const TypeInfo type_) override
-        {
-            MO_ASSERT(type_ == type());
-            m_ptr = static_cast<KVP<T1, T2>*>(ptr);
-        }
-
-        void setInstance(const void*, const TypeInfo) override
-        {
-            THROW(warn, "Attempting to set const ptr instance");
-        }
-
-      private:
-        KVP<T1, T2>* m_ptr;
-        size_t m_count;
-    };
-
-    template <class T1, class T2>
-    struct TTraits<const KVP<T1, T2>, void> : public ISaveStructTraits
-    {
-        using base = ISaveStructTraits;
-
-        TTraits(const KVP<T1, T2>* ptr, const size_t count)
-            : m_ptr(ptr)
-            , m_count(count)
-        {
-        }
-
-        void save(ISaveVisitor* visitor) const override
-        {
-            (*visitor)(&m_ptr->key, "key");
-            (*visitor)(&m_ptr->value, "value");
-        }
-
-        void visit(StaticVisitor* visitor) const override
-        {
-            visitor->template visit<T1>("key");
-            visitor->template visit<T2>("value");
-        }
-
-        size_t size() const override
-        {
-            return sizeof(KVP<T1, T2>);
-        }
-        bool triviallySerializable() const override
-        {
-            return std::is_pod<T1>::value && std::is_pod<T2>::value;
-        }
-
-        bool isPrimitiveType() const override
-        {
-            return false;
-        }
-
-        TypeInfo type() const override
-        {
-            return TypeInfo(typeid(KVP<T1, T2>));
-        }
-
-        const void* ptr() const override
-        {
-            return m_ptr;
-        }
-
-        void* ptr()
-        {
-            return nullptr;
-        }
-
-        size_t count() const override
-        {
-            return m_count;
-        }
-
-        void increment() override
-        {
-            ++m_ptr;
-        }
-
-        void setInstance(const void* ptr, const TypeInfo type_) override
-        {
-            MO_ASSERT(type_ == type());
-            m_ptr = static_cast<const KVP<T1, T2>*>(ptr);
-        }
-
-      private:
-        const KVP<T1, T2>* m_ptr;
-        size_t m_count;
-    };
-
-    template <class T1, class T2>
-    struct TTraits<KVP<T1, const T2&>, void> : public ISaveStructTraits
-    {
-        using base = ISaveStructTraits;
-
-        TTraits(KVP<T1, const T2&>* ptr, const size_t count)
-            : m_ptr(ptr)
-            , m_count(count)
-        {
-        }
-
-        void save(ISaveVisitor* visitor) const override
-        {
-            (*visitor)(&m_ptr->key, "key");
-            (*visitor)(&m_ptr->value, "value");
-        }
-
-        void visit(StaticVisitor* visitor) const override
-        {
-            visitor->template visit<T1>("key");
-            visitor->template visit<T2>("value");
-        }
-
-        size_t size() const override
-        {
-            return sizeof(KVP<T1, T2>);
-        }
-
-        bool triviallySerializable() const override
-        {
-            return std::is_pod<T1>::value && std::is_pod<T2>::value;
-        }
-
-        bool isPrimitiveType() const override
-        {
-            return false;
-        }
-
-        TypeInfo type() const override
-        {
-            return TypeInfo(typeid(KVP<T1, const T2&>));
-        }
-
-        const void* ptr() const override
-        {
-            return m_ptr;
-        }
-
-        size_t count() const override
-        {
-            return m_count;
-        }
-
-        void increment() override
-        {
-            ++m_ptr;
-        }
-
-        void setInstance(const void*, const TypeInfo) override
-        {
-            THROW(warn, "Attempting to set const ptr");
-        }
-
-      private:
-        KVP<T1, const T2&>* m_ptr;
-        size_t m_count;
-    };
-
-    template <class T1, class T2>
-    struct TTraits<const KVP<T1, const T2&>, void> : public ISaveStructTraits
-    {
-        using base = ISaveStructTraits;
-
-        TTraits(const KVP<T1, const T2&>* ptr, const size_t count)
-            : m_ptr(ptr)
-            , m_count(count)
-        {
-        }
-
-        void save(ISaveVisitor* visitor) const override
-        {
-            (*visitor)(&m_ptr->key, "key");
-            (*visitor)(&m_ptr->value, "value");
-        }
-
-        void visit(StaticVisitor* visitor) const override
-        {
-            visitor->template visit<T1>("key");
-            visitor->template visit<T2>("value");
-        }
-
-        size_t size() const override
-        {
-            return sizeof(KVP<T1, T2>);
-        }
-
-        bool triviallySerializable() const override
-        {
-            return false;
-        }
-
-        bool isPrimitiveType() const override
-        {
-            return false;
-        }
-
-        TypeInfo type() const override
-        {
-            return TypeInfo(typeid(KVP<T1, const T2&>));
-        }
-
-        const void* ptr() const override
-        {
-            return m_ptr;
-        }
-
-        size_t count() const override
-        {
-            return m_count;
-        }
-
-        void increment() override
-        {
-            ++m_ptr;
-        }
-
-        void setInstance(const void* ptr, const TypeInfo type_) override
-        {
-            MO_ASSERT(type_ == type());
-            m_ptr = static_cast<const KVP<T1, const T2&>*>(ptr);
-        }
-
-      private:
-        const KVP<T1, const T2&>* m_ptr;
-        size_t m_count;
-    };
-
-    template <class K, class V, bool LOAD>
-    struct MapBase : public ISaveContainerTraits
-    {
-        using base = ISaveContainerTraits;
-        TypeInfo keyType() const override
-        {
-            return TypeInfo(typeid(K));
-        }
-        TypeInfo valueType() const override
-        {
-            return TypeInfo(typeid(V));
-        }
-        TypeInfo type() const override
-        {
-            return TypeInfo(typeid(std::map<K, V>));
-        }
         bool isContinuous() const override
         {
             return false;
         }
-        bool podValues() const override
+
+        size_t getContainerSize(const void* inst) const override
         {
-            return std::is_pod<V>::value;
-        }
-        bool podKeys() const override
-        {
-            return std::is_pod<K>::value;
+            auto p = this->ptr(inst);
+            return p->size();
         }
 
-        void visit(StaticVisitor* visitor) const override
+        void setContainerSize(size_t, void*) const override
         {
-            visitor->template visit<K>("key");
-            visitor->template visit<V>("value");
         }
     };
 
-    template <class K, class V>
-    struct MapBase<K, V, true> : public ILoadContainerTraits
+    template <class V>
+    struct TTraits<std::map<std::string, V>, 5> : virtual ContainerBase<std::map<std::string, V>, V, std::string>
     {
-        using base = ILoadContainerTraits;
-        TypeInfo keyType() const override
+        void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t cnt) const override
         {
-            return TypeInfo(typeid(K));
+            MO_ASSERT_EQ(cnt, 1);
+            auto& map = *this->ptr(inst);
+            const auto trait = visitor.traits();
+            auto sz = visitor.getCurrentContainerSize();
+            for (size_t i = 0; i < sz; ++i)
+            {
+                std::string key;
+                V val;
+                if (trait.supports_named_access)
+                {
+                    visitor(&val);
+                    key = visitor.getCurrentElementName();
+                }
+                else
+                {
+                    visitor(&key);
+                    visitor(&val);
+                }
+
+                map[std::move(key)] = std::move(val);
+            }
         }
-        TypeInfo valueType() const override
+
+        void save(ISaveVisitor& visitor, const void* inst, const std::string&, size_t cnt) const override
         {
-            return TypeInfo(typeid(V));
+            MO_ASSERT_EQ(cnt, 1);
+            const auto& map = *this->ptr(inst);
+            const auto trait = visitor.traits();
+            for (auto itr = map.begin(); itr != map.end(); ++itr)
+            {
+                if (trait.supports_named_access)
+                {
+                    visitor(&itr->second, itr->first);
+                }
+                else
+                {
+                    std::string key = itr->first;
+                    visitor(&key);
+                    visitor(&itr->second);
+                }
+            }
         }
-        TypeInfo type() const override
+
+        void visit(StaticVisitor& visitor, const std::string&) const override
         {
-            return TypeInfo(typeid(std::map<K, V>));
+            visitor.template visit<std::string>("keys");
+            visitor.template visit<V>("values");
         }
+
         bool isContinuous() const override
         {
             return false;
         }
-        bool podValues() const override
+
+        size_t getContainerSize(const void* inst) const override
         {
-            return std::is_pod<V>::value;
-        }
-        bool podKeys() const override
-        {
-            return std::is_pod<K>::value;
+            auto p = this->ptr(inst);
+            return p->size();
         }
 
-        void visit(StaticVisitor* visitor) const override
+        void setContainerSize(size_t, void*) const override
         {
-            visitor->template visit<K>("key");
-            visitor->template visit<V>("value");
         }
     };
+} // namespace mo
 
-    template <class K, class V>
-    void load(ILoadVisitor& visitor, std::map<K, V>& map, const size_t num_to_read)
-    {
-        for (size_t i = 0; i < num_to_read; ++i)
-        {
-            KVP<K, V> kvp;
-            visitor(&kvp);
-            map[std::move(kvp.key)] = std::move(kvp.value);
-        }
-    }
-
-    template <class K, class V>
-    void save(ISaveVisitor& visitor, const std::map<K, V>& map)
-    {
-        for (auto itr = map.begin(); itr != map.end(); ++itr)
-        {
-            KVP<K, const V&> pair(*itr);
-            visitor(&pair);
-        }
-    }
-
-    template <class K, class V>
-    struct TTraits<std::map<K, V>, void> : public MapBase<K, V, true>
-    {
-        using Base_t = MapBase<K, V, true>;
-        TTraits(std::map<K, V>* ptr)
-            : m_ptr(ptr)
-        {
-        }
-
-        void load(ILoadVisitor* visitor_) override
-        {
-            mo::load(*visitor_, *m_ptr, num_to_read);
-        }
-
-        void save(ISaveVisitor* visitor_) const override
-        {
-            mo::save(*visitor_, *m_ptr);
-        }
-
-        size_t getSize() const override
-        {
-            return m_ptr->size();
-        }
-
-        void setSize(const size_t num) override
-        {
-            num_to_read = num;
-        }
-
-        void setInstance(void* ptr, const TypeInfo type_) override
-        {
-            MO_ASSERT(type_ == Base_t::type());
-            m_ptr = static_cast<std::map<K, V>*>(ptr);
-        }
-
-        void setInstance(const void*, const TypeInfo) override
-        {
-            THROW(warn, "Attempting to set const ptr");
-        }
-
-      private:
-        std::map<K, V>* m_ptr;
-        size_t num_to_read = 0;
-    };
-
-    template <class K, class V>
-    struct TTraits<const std::map<K, V>, void> : public MapBase<K, V, false>
-    {
-        using Base_t = MapBase<K, V, false>;
-        TTraits(const std::map<K, V>* ptr)
-            : m_ptr(ptr)
-        {
-        }
-
-        void save(ISaveVisitor* visitor_) const override
-        {
-            mo::save(*visitor_, *m_ptr);
-        }
-
-        size_t getSize() const override
-        {
-            return m_ptr->size();
-        }
-
-        void setInstance(const void* ptr, const TypeInfo type_) override
-        {
-            MO_ASSERT(type_ == Base_t::type());
-            m_ptr = static_cast<const std::map<K, V>*>(ptr);
-        }
-
-      private:
-        const std::map<K, V>* m_ptr;
-        size_t num_to_read = 0;
-    };
-
-    template <class V>
-    void load(ILoadVisitor& visitor, std::map<std::string, V>& map, const size_t num_to_read)
-    {
-        const auto trait = visitor.traits();
-        for (size_t i = 0; i < num_to_read; ++i)
-        {
-            std::string key;
-            V val;
-            if (trait.supports_named_access)
-            {
-                visitor(&val);
-                key = visitor.getCurrentElementName();
-            }
-            else
-            {
-                visitor(&key);
-                visitor(&val);
-            }
-
-            map[std::move(key)] = std::move(val);
-        }
-    }
-
-    template <class V>
-    void save(ISaveVisitor& visitor, const std::map<std::string, V>& map)
-    {
-        const auto trait = visitor.traits();
-        for (auto itr = map.begin(); itr != map.end(); ++itr)
-        {
-            if (trait.supports_named_access)
-            {
-                visitor(&itr->second, itr->first);
-            }
-            else
-            {
-                std::string key = itr->first;
-                visitor(&key);
-                visitor(&itr->second);
-            }
-        }
-    }
-
-    template <class V>
-    struct TTraits<std::map<std::string, V>, void> : virtual public MapBase<std::string, V, true>
-    {
-        using Base_t = MapBase<std::string, V, true>;
-        TTraits(std::map<std::string, V>* ptr)
-            : m_ptr(ptr)
-        {
-        }
-
-        void load(ILoadVisitor* visitor_) override
-        {
-            mo::load(*visitor_, *m_ptr, num_to_read);
-        }
-
-        void save(ISaveVisitor* visitor_) const override
-        {
-            mo::save(*visitor_, *m_ptr);
-        }
-
-        size_t getSize() const override
-        {
-            return m_ptr->size();
-        }
-
-        void setSize(const size_t num) override
-        {
-            num_to_read = num;
-        }
-
-        void setInstance(void* ptr, const TypeInfo type_) override
-        {
-            MO_ASSERT(type_ == Base_t::type());
-            m_ptr = static_cast<std::map<std::string, V>*>(ptr);
-        }
-
-        void setInstance(const void*, const TypeInfo) override
-        {
-            THROW(warn, "Attempgint to set const ptr");
-        }
-
-      private:
-        std::map<std::string, V>* m_ptr;
-        size_t num_to_read = 0;
-    };
-
-    template <class V>
-    struct TTraits<const std::map<std::string, V>, void> : virtual public MapBase<std::string, V, false>
-    {
-        using Base_t = MapBase<std::string, V, false>;
-        TTraits(const std::map<std::string, V>* ptr)
-            : m_ptr(ptr)
-        {
-        }
-
-        void save(ISaveVisitor* visitor_) const override
-        {
-            mo::save(*visitor_, *m_ptr);
-        }
-
-        size_t getSize() const override
-        {
-            return m_ptr->size();
-        }
-
-        void setInstance(const void* ptr, const TypeInfo type_) override
-        {
-            MO_ASSERT(type_ == Base_t::type());
-            m_ptr = static_cast<const std::map<std::string, V>*>(ptr);
-        }
-
-      private:
-        const std::map<std::string, V>* m_ptr;
-    };
-}
+namespace ct
+{
+    REFLECT_TEMPLATED_BEGIN(mo::KVP)
+        PUBLIC_ACCESS(key)
+        PUBLIC_ACCESS(value)
+    REFLECT_END;
+} // namespace ct

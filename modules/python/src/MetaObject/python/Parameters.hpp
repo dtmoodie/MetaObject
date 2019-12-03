@@ -15,10 +15,10 @@ namespace mo
 
         struct ParamCallbackContainer
         {
-            using Ptr = std::unique_ptr<ParamCallbackContainer>;
-            using Registry = std::map<mo::ParamBase*, std::vector<Ptr>>;
+            using Ptr_t = std::unique_ptr<ParamCallbackContainer>;
+            using Registry_t = std::map<mo::ParamBase*, std::vector<Ptr_t>>;
 
-            static std::shared_ptr<Registry> registry();
+            static std::shared_ptr<Registry_t> registry();
             ParamCallbackContainer(mo::IParam* ptr, const boost::python::object& obj);
 
             void onParamUpdate(IParam*, Header, UpdateFlags);

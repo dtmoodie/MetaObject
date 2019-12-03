@@ -1,52 +1,67 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include "PythonAllocator.hpp"
 #include "MetaObject/logging/logging.hpp"
+#include <boost/python.hpp>
 #include <numpy/ndarrayobject.h>
 #include <opencv2/core.hpp>
-#include <boost/python.hpp>
+
+namespace ct
+{
+
+    boost::python::object PythonConverter<cv::Mat, 5, void>::convertToPython(const cv::Mat& mat)
+    {
+        if (!mat.empty())
+        {
+            auto alloc = dynamic_cast<const mo::NumpyAllocator*>(mat.u->currAllocator);
+            if (alloc)
+            {
+                auto arr = alloc->toPython(mat);
+                if (arr)
+                {
+                    return boost::python::object(boost::python::handle<>(arr));
+                }
+            }
+        }
+        return {};
+    }
+
+    bool PythonConverter<cv::Mat, 5, void>::convertFromPython(const boost::python::object& obj, cv::Mat& result)
+    {
+        PyObject* o = obj.ptr();
+        if (PyArray_Check(o))
+        {
+            auto alloc = dynamic_cast<mo::NumpyAllocator*>(cv::Mat::getDefaultAllocator());
+            if (alloc)
+            {
+                result = alloc->fromPython(o);
+                return true;
+            }
+        }
+        return false;
+    }
+
+    void PythonConverter<cv::Mat, 5, void>::registerToPython(const char*)
+    {
+    }
+
+    PyEnsureGIL::PyEnsureGIL()
+        : _state(PyGILState_Ensure())
+    {
+    }
+
+    PyEnsureGIL::~PyEnsureGIL()
+    {
+        PyGILState_Release(_state);
+    }
+}
 
 namespace mo
 {
-    namespace python
-    {
-        template <>
-        boost::python::object convertToPython(const cv::Mat& mat)
-        {
-            if (!mat.empty())
-            {
-                const NumpyAllocator* alloc = dynamic_cast<const NumpyAllocator*>(mat.u->currAllocator);
-                if (alloc)
-                {
-                    auto arr = alloc->toPython(mat);
-                    if (arr)
-                    {
-                        return boost::python::object(boost::python::handle<>(arr));
-                    }
-                }
-            }
-            return {};
-        }
-
-        template <>
-        void convertFromPython(const boost::python::object& obj, cv::Mat& result)
-        {
-            PyObject* o = obj.ptr();
-            if (PyArray_Check(o))
-            {
-                NumpyAllocator* alloc = dynamic_cast<NumpyAllocator*>(cv::Mat::getDefaultAllocator());
-                if (alloc)
-                {
-                    result = alloc->fromPython(o);
-                }
-            }
-        }
-        PyEnsureGIL::PyEnsureGIL() : _state(PyGILState_Ensure()) {}
-        PyEnsureGIL::~PyEnsureGIL() { PyGILState_Release(_state); }
-    }
-
     struct NumpyDeallocator
     {
-        NumpyDeallocator(cv::UMatData* data_, const NumpyAllocator* allocator_) : data(data_), allocator(allocator_)
+        NumpyDeallocator(cv::UMatData* data_, const NumpyAllocator* allocator_)
+            : data(data_)
+            , allocator(allocator_)
         {
             CV_XADD(&data_->refcount, 1);
         }
@@ -80,9 +95,14 @@ namespace mo
         importNumpy();
     }
 
-    NumpyAllocator::NumpyAllocator(cv::MatAllocator* default_allocator_) : default_allocator(default_allocator_) {}
+    NumpyAllocator::NumpyAllocator(cv::MatAllocator* default_allocator_)
+        : default_allocator(default_allocator_)
+    {
+    }
 
-    NumpyAllocator::~NumpyAllocator() {}
+    NumpyAllocator::~NumpyAllocator()
+    {
+    }
 
     cv::Mat NumpyAllocator::fromPython(PyObject* o) const
     {
@@ -316,7 +336,7 @@ namespace mo
             total_size += cn;
         }
         auto u = mat.u;
-        python::PyEnsureGIL gil;
+        ct::PyEnsureGIL gil;
 
         PyObject* o = PyArray_SimpleNewFromData(dims, _sizes, typenum, mat.data);
         boost::python::object base(boost::shared_ptr<NumpyDeallocator>(new NumpyDeallocator(u, this)));
@@ -352,6 +372,7 @@ namespace mo
             PyObject* o = static_cast<PyObject*>(u->userdata);
             // May needa  GIL lock here, not sure.  If we crash, we crash...
             Py_DECREF(o);
+            delete u;
         }
         else
         {

@@ -18,7 +18,7 @@ namespace mo
 
                 {
                     _item_text->setText(param_->getTreeName());
-                    _item_text->setToolTip(mo::TypeTable::instance().typeToName(param_->getTypeInfo()));
+                    _item_text->setToolTip(mo::TypeTable::instance()->typeToName(param_->getTypeInfo()));
                     _combo_box->changed().connect(std::bind([this]() {
                         if (onInputSelected)
                             onInputSelected(_combo_box->currentText());

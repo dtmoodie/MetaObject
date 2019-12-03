@@ -7,7 +7,7 @@
 #include <unordered_map>
 namespace mo
 {
-    struct JSONSaver : public SaveCache
+    struct MO_EXPORTS JSONSaver : public SaveCache
     {
         JSONSaver(std::ostream& os);
         ISaveVisitor& operator()(const bool* val, const std::string& name = "", const size_t cnt = 1) override;
@@ -21,8 +21,11 @@ namespace mo
         ISaveVisitor& operator()(const int64_t*, const std::string& name = "", const size_t cnt = 1) override;
         ISaveVisitor& operator()(const uint64_t*, const std::string& name = "", const size_t cnt = 1) override;
 #ifdef ENVIRONMENT64
+
+#ifndef _MSC_VER
         ISaveVisitor& operator()(const long long* val, const std::string& name, const size_t cnt) override;
         ISaveVisitor& operator()(const unsigned long long* val, const std::string& name, const size_t cnt) override;
+#endif
 #else
         ISaveVisitor& operator()(const long int* val, const std::string& name, const size_t cnt) override;
         ISaveVisitor& operator()(const unsigned long int* val, const std::string& name, const size_t cnt) override;
@@ -30,8 +33,10 @@ namespace mo
         ISaveVisitor& operator()(const float* val, const std::string& name, const size_t cnt) override;
         ISaveVisitor& operator()(const double*, const std::string&, const size_t) override;
         ISaveVisitor& operator()(const void*, const std::string&, const size_t) override;
-        ISaveVisitor& operator()(ISaveStructTraits* val, const std::string& name = "") override;
-        ISaveVisitor& operator()(ISaveContainerTraits* val, const std::string& name = "") override;
+        ISaveVisitor&
+        operator()(IStructTraits* val, const void* inst, const std::string& name = "", size_t cnt = 1) override;
+        ISaveVisitor&
+        operator()(IContainerTraits* val, const void* inst, const std::string& name = "", size_t cnt = 1) override;
 
         VisitorTraits traits() const override;
 
@@ -42,7 +47,7 @@ namespace mo
         cereal::JSONOutputArchive m_ar;
     };
 
-    struct JSONLoader : public LoadCache
+    struct MO_EXPORTS JSONLoader : public LoadCache
     {
         JSONLoader(std::istream& os);
         ILoadVisitor& operator()(bool* val, const std::string& name = "", const size_t cnt = 1) override;
@@ -56,8 +61,10 @@ namespace mo
         ILoadVisitor& operator()(int64_t*, const std::string& name = "", const size_t cnt = 1) override;
         ILoadVisitor& operator()(uint64_t*, const std::string& name = "", const size_t cnt = 1) override;
 #ifdef ENVIRONMENT64
+#ifndef _MSC_VER
         ILoadVisitor& operator()(long long* val, const std::string& name, const size_t cnt) override;
         ILoadVisitor& operator()(unsigned long long* val, const std::string& name, const size_t cnt) override;
+#endif
 #else
         ILoadVisitor& operator()(long int* val, const std::string& name, const size_t cnt) override;
         ILoadVisitor& operator()(unsigned long int* val, const std::string& name, const size_t cnt) override;
@@ -65,12 +72,14 @@ namespace mo
         ILoadVisitor& operator()(float* val, const std::string& name, const size_t cnt) override;
         ILoadVisitor& operator()(double*, const std::string&, const size_t) override;
         ILoadVisitor& operator()(void*, const std::string&, const size_t) override;
-        ILoadVisitor& operator()(ILoadStructTraits* val, const std::string& name = "") override;
-        ILoadVisitor& operator()(ILoadContainerTraits* val, const std::string& name = "") override;
+        ILoadVisitor& operator()(IStructTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
+        ILoadVisitor&
+        operator()(IContainerTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
 
         VisitorTraits traits() const override;
 
         std::string getCurrentElementName() const override;
+        size_t getCurrentContainerSize() const override;
 
       private:
         template <class T>
@@ -78,5 +87,6 @@ namespace mo
 
         cereal::JSONInputArchive m_ar;
         std::string m_last_read_name;
+        size_t m_current_size;
     };
-}
+} // namespace mo

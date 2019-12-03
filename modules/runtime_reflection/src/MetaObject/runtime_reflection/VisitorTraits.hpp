@@ -1,11 +1,13 @@
 #ifndef MO_VISITATION_VISITORTRAITS_HPP
 #define MO_VISITATION_VISITORTRAITS_HPP
 #include "TraitRegistry.hpp"
+#include "type_traits.hpp"
+#include "StructTraits.hpp"
 
 #include <MetaObject/logging/logging.hpp>
 
-#include <ct/TypeTraits.hpp>
 #include <ct/reflect.hpp>
+#include <ct/type_traits.hpp>
 
 namespace mo
 {
@@ -14,16 +16,16 @@ namespace mo
     using Indexer = ct::Indexer<N>;
 
     template <class T, index_t I>
-    auto visitValue(ILoadVisitor& visitor, T& obj, const Indexer<I> idx) -> ct::DisableIfMemberFunction<T, I>
+    auto visitValue(ILoadVisitor& visitor, T& obj, const Indexer<I> idx) -> ct::EnableIf<ct::IsWritable<T, I>::value>
     {
         auto accessor = ct::Reflect<T>::getPtr(idx);
         using RefType = typename ct::ReferenceType<typename ct::SetType<decltype(accessor)>::type>::Type;
-        RefType ref = static_cast<RefType>(ct::set(accessor, obj));
+        RefType ref = static_cast<RefType>(accessor.set(obj));
         visitor(&ref, ct::getName<I, T>());
     }
 
     template <class T, index_t I>
-    auto visitValue(ILoadVisitor&, T&, const Indexer<I>) -> ct::EnableIfMemberFunction<T, I>
+    auto visitValue(ILoadVisitor&, T&, const Indexer<I>) -> ct::EnableIf<!ct::IsWritable<T, I>::value>
     {
     }
 
@@ -41,16 +43,17 @@ namespace mo
     }
 
     template <class T, index_t I>
-    auto visitValue(ISaveVisitor& visitor, const T& obj, const ct::Indexer<I> idx) -> ct::DisableIfMemberFunction<T, I>
+    auto visitValue(ISaveVisitor& visitor, const T& obj, const ct::Indexer<I> idx)
+        -> ct::EnableIf<ct::IsWritable<T, I>::value>
     {
         auto accessor = ct::Reflect<T>::getPtr(idx);
         using RefType = typename ct::ReferenceType<typename ct::GetType<decltype(accessor)>::type>::ConstType;
-        RefType ref = static_cast<RefType>(ct::get(accessor, obj));
+        RefType ref = static_cast<RefType>(accessor.get(obj));
         visitor(&ref, ct::getName<I, T>());
     }
 
     template <class T, index_t I>
-    auto visitValue(ISaveVisitor&, const T&, const ct::Indexer<I>) -> ct::EnableIfMemberFunction<T, I>
+    auto visitValue(ISaveVisitor&, const T&, const ct::Indexer<I>) -> ct::EnableIf<!ct::IsWritable<T, I>::value>
     {
     }
 
@@ -93,176 +96,35 @@ namespace mo
     }
 
     template <class T>
-    struct TTraits<T, ct::EnableIfReflected<T>> : public ILoadStructTraits
+    struct TTraits<T, 4, ct::EnableIfReflected<T>> : public StructBase<T>
     {
-        using base = ILoadStructTraits;
-        static mo::TraitRegisterer<T> reg;
-
-        TTraits(T* ptr, const size_t count)
-            : m_ptr(ptr)
-            , m_count(count)
+        TTraits()
         {
-            (void)reg;
         }
 
-        void load(ILoadVisitor* visitor) override
+        void load(ILoadVisitor& visitor, void* instance, const std::string& , size_t ) const override
         {
-            visitHelper(*visitor, *m_ptr, ct::Reflect<T>::end());
+            auto ptr = static_cast<T*>(instance);
+            visitHelper(visitor, *ptr, ct::Reflect<T>::end());
         }
 
-        void save(ISaveVisitor* visitor) const override
+        void save(ISaveVisitor& visitor, const void* instance, const std::string&, size_t) const override
         {
-            visitHelper(*visitor, *m_ptr, ct::Reflect<T>::end());
+            auto ptr = static_cast<const T*>(instance);
+            visitHelper(visitor, *ptr, ct::Reflect<T>::end());
         }
 
-        void visit(StaticVisitor* visitor) const override
+        void visit(StaticVisitor& visitor, const std::string&) const override
         {
-            visitHelper<T>(*visitor, ct::Reflect<T>::end());
+            visitHelper<T>(visitor, ct::Reflect<T>::end());
         }
 
-        bool isPrimitiveType() const override
-        {
-            return false;
-        }
-
-        size_t size() const override
-        {
-            return sizeof(T);
-        }
-
-        TypeInfo type() const override
-        {
-            return TypeInfo(typeid(T));
-        }
-
-        bool triviallySerializable() const override
-        {
-            return std::is_pod<T>::value;
-        }
-
-        const void* ptr() const override
-        {
-            return m_ptr;
-        }
-
-        void setInstance(const void*, const TypeInfo) override
-        {
-            MO_LOG(warn, "Const casting a const void*");
-        }
-
-        void* ptr() override
-        {
-            return m_ptr;
-        }
-
-        void setInstance(void* ptr, const TypeInfo type_) override
-        {
-            MO_ASSERT(type_ == type());
-            m_ptr = static_cast<T*>(ptr);
-        }
-
-        std::string getName() const override
+        std::string name() const override
         {
             return ct::Reflect<T>::getName();
         }
-
-        size_t count() const override
-        {
-            return m_count;
-        }
-
-        void increment() override
-        {
-            ++m_ptr;
-        }
-
-      private:
-        T* m_ptr;
-        size_t m_count;
     };
 
-    template <class T>
-    struct TTraits<const T, ct::EnableIfReflected<T>> : public ISaveStructTraits
-    {
-        using base = ISaveStructTraits;
-        static mo::TraitRegisterer<const T> reg;
-
-        TTraits(const T* ptr = nullptr, const size_t count = 0)
-            : m_const_ptr(ptr)
-            , m_count(count)
-        {
-            (void)reg;
-        }
-
-        void save(ISaveVisitor* visitor) const override
-        {
-            if (m_const_ptr)
-            {
-                visitHelper(*visitor, *m_const_ptr, ct::Reflect<T>::end());
-            }
-        }
-
-        void visit(StaticVisitor* visitor) const override
-        {
-            visitHelper<T>(*visitor, ct::Reflect<T>::end());
-        }
-
-        bool isPrimitiveType() const override
-        {
-            return false;
-        }
-
-        size_t size() const override
-        {
-            return sizeof(T);
-        }
-
-        TypeInfo type() const override
-        {
-            return TypeInfo(typeid(T));
-        }
-
-        bool triviallySerializable() const override
-        {
-            return std::is_pod<T>::value;
-        }
-
-        const void* ptr() const override
-        {
-            return m_const_ptr;
-        }
-
-        void setInstance(const void* ptr, const TypeInfo type_) override
-        {
-            MO_ASSERT(type_ == type());
-            m_const_ptr = static_cast<const T*>(ptr);
-        }
-
-        std::string getName() const override
-        {
-            return ct::Reflect<T>::getName();
-        }
-
-        size_t count() const override
-        {
-            return m_count;
-        }
-
-        void increment() override
-        {
-            ++m_const_ptr;
-        }
-
-      private:
-        const T* m_const_ptr;
-        size_t m_count;
-    };
-
-    template <class T>
-    TraitRegisterer<T> TTraits<T, ct::EnableIfReflected<T>>::reg;
-
-    template <class T>
-    TraitRegisterer<const T> TTraits<const T, ct::EnableIfReflected<T>>::reg;
 }
 
 #endif // MO_VISITATION_VISITORTRAITS_HPP

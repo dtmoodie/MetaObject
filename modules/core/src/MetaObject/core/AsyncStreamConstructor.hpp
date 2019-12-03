@@ -4,17 +4,22 @@
 
 namespace mo
 {
-    class IAsyncStream;
-    struct AsyncStreamConstructor
+    struct IAsyncStream;
+    struct MO_EXPORTS AsyncStreamConstructor
     {
         using Ptr_t = std::shared_ptr<IAsyncStream>;
 
+        AsyncStreamConstructor() = default;
+        AsyncStreamConstructor(const AsyncStreamConstructor&) = default;
+        AsyncStreamConstructor(AsyncStreamConstructor&&) = default;
+        AsyncStreamConstructor& operator=(const AsyncStreamConstructor&) = default;
+        AsyncStreamConstructor& operator=(AsyncStreamConstructor&&) = default;
         virtual ~AsyncStreamConstructor();
 
-        virtual uint32_t priority(const int32_t device_id) = 0;
+        virtual uint32_t priority(int32_t device_id) = 0;
         virtual Ptr_t create(const std::string& name,
-                             const int32_t device_id,
-                             const PriorityLevels device_priority,
-                             const PriorityLevels thread_priority) = 0;
+                             int32_t device_id,
+                             PriorityLevels device_priority,
+                             PriorityLevels thread_priority) = 0;
     };
-}
+} // namespace mo

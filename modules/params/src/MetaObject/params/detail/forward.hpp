@@ -4,7 +4,7 @@
 namespace mo
 {
     // interfaces
-    class ICoordinateSystem;
+    struct ICoordinateSystem;
     class IParam;
     struct ILoadVisitor;
     struct ISaveVisitor;

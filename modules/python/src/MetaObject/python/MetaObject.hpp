@@ -11,19 +11,19 @@ namespace boost
         {
 
             template <class T, class... Args>
-            inline boost::mpl::vector<T, Args...> get_signature(std::function<T(Args...)>, void* = 0)
+            inline boost::mpl::vector<T, Args...> get_signature(std::function<T(Args...)>, void* = nullptr)
             {
                 return boost::mpl::vector<T, Args...>();
             }
-        }
-    }
-}
+        } // namespace detail
+    }     // namespace python
+} // namespace boost
 
-#include <MetaObject/core/detail/Placeholders.hpp>
 #include <MetaObject/object/IMetaObjectInfo.hpp>
 #include <MetaObject/params/ParamInfo.hpp>
 #include <MetaObject/python/DataConverter.hpp>
 #include <MetaObject/python/SlotInvoker.hpp>
+#include <MetaObject/python/lambda.hpp>
 #include <MetaObject/signals/SlotInfo.hpp>
 
 #include <Python.h>
@@ -38,7 +38,7 @@ namespace mo
     {
         void MO_EXPORTS setupObjects(std::vector<IObjectConstructor*>& ctrs);
         void MO_EXPORTS setupInterface();
-    }
+    } // namespace python
 
     template <class T>
     std::string printObject(const T* obj)
@@ -75,7 +75,7 @@ namespace mo
                 IParam* param = obj->getParamOptional(param_names[i]);
                 if (param)
                 {
-                    if (param->checkFlags(mo::ParamFlags::Input_e))
+                    if (param->checkFlags(mo::ParamFlags::kINPUT))
                     {
                         MO_LOG(warn, "Setting of input parameters not implemented yet");
                         continue;
@@ -90,7 +90,9 @@ namespace mo
                     }
                     else
                     {
-                        MO_LOG(debug, "No converter available for {}", mo::TypeTable::instance().typeToName(param->getTypeInfo()));
+                        MO_LOG(debug,
+                               "No converter available for {}",
+                               mo::TypeTable::instance()->typeToName(param->getTypeInfo()));
                     }
                 }
                 else
@@ -105,16 +107,16 @@ namespace mo
     std::function<R(Args...)> ctrBind(R (*p)(IObjectConstructor* ctr, std::vector<std::string>, Args...),
                                       IObjectConstructor* ctr,
                                       std::vector<std::string> param_names,
-                                      int_sequence<Is...>)
+                                      ct::int_sequence<Is...>)
     {
-        return std::bind(p, ctr, param_names, placeholder_template<Is>{}...);
+        return std::bind(p, ctr, param_names, ct::placeholder_template<Is>{}...);
     }
 
     template <int N, class T, class Storage, class... Args>
     struct CreateMetaObject<N, T, Storage, ct::VariadicTypedef<Args...>>
     {
         static const int size = N;
-        typedef Storage ConstructedType;
+        using ConstructedType = Storage;
 
         CreateMetaObject(const std::vector<std::string>& param_names_)
         {
@@ -127,8 +129,7 @@ namespace mo
 
         static ConstructedType create(IObjectConstructor* ctr, std::vector<std::string> param_names, Args... args)
         {
-            IObject* obj = ctr->Construct();
-            rcc::shared_ptr<T> ptr(obj);
+            rcc::shared_ptr<T> ptr = ctr->Construct();
             ptr->Init(true);
             initializeParameters<T>(ptr, param_names, {args...});
             return ptr;
@@ -140,7 +141,7 @@ namespace mo
             return ctrBind(&CreateMetaObject<N, T, Storage, ct::VariadicTypedef<Args...>>::create,
                            ctr,
                            param_names,
-                           make_int_sequence<N>{});
+                           ct::make_int_sequence<N>{});
         }
 
         boost::python::detail::keyword_range range() const
@@ -156,7 +157,7 @@ namespace mo
     struct CreateMetaObject<N, T, Storage, ct::VariadicTypedef<void>>
     {
         static const int size = N;
-        typedef Storage ConstructedType;
+        using ConstructedType = Storage;
 
         CreateMetaObject(const std::vector<std::string>& param_names_)
         {
@@ -169,8 +170,7 @@ namespace mo
 
         static ConstructedType create(IObjectConstructor* ctr, std::vector<std::string> param_names)
         {
-            IObject* obj = ctr->Construct();
-            rcc::shared_ptr<T> ptr(obj);
+            rcc::shared_ptr<T> ptr = ctr->Construct();
             ptr->Init(true);
             initializeParameters<T>(ptr, param_names, {});
             return ptr;
@@ -196,8 +196,8 @@ namespace mo
               template <int N1, class T1, class S, class... Args> class Creator = CreateMetaObject>
     boost::python::object makeConstructorHelper(IObjectConstructor* ctr, const std::vector<std::string>& param_names)
     {
-        typedef typename FunctionSignatureBuilder<boost::python::object, N - 1>::VariadicTypedef_t Signature_t;
-        typedef Creator<N, T, Storage, Signature_t> Creator_t;
+        using Signature_t = typename FunctionSignatureBuilder<boost::python::object, N - 1>::VariadicTypedef_t;
+        using Creator_t = Creator<N, T, Storage, Signature_t>;
         Creator_t creator(param_names);
         return boost::python::make_constructor(
             Creator_t::bind(ctr, param_names), boost::python::default_call_policies(), creator);
@@ -242,7 +242,7 @@ namespace mo
     }
 
     template <class T, class BP>
-    void addParamAccessors(BP& bpobj, IMetaObjectInfo* minfo)
+    void addParamAccessors(BP& bpobj, const IMetaObjectInfo* minfo)
     {
         std::vector<ParamInfo*> param_infos = minfo->getParamInfo();
         for (auto param_info : param_infos)
@@ -251,12 +251,10 @@ namespace mo
             auto getter = python::DataConverterRegistry::instance()->getGetter(param_info->getDataType());
             if (setter && getter)
             {
-                std::function<boost::python::object(const T&)> getter_func(std::bind(getParamHelper<T>, getter, param_info->getName(), std::placeholders::_1));
-                std::function<bool(T&, const boost::python::object&)> setter_func(std::bind(setParamHelper<T>,
-                                                                                setter,
-                                                                                param_info->getName(),
-                                                                                std::placeholders::_1,
-                                                                                std::placeholders::_2));
+                std::function<boost::python::object(const T&)> getter_func(
+                    std::bind(getParamHelper<T>, getter, param_info->getName(), std::placeholders::_1));
+                std::function<bool(T&, const boost::python::object&)> setter_func(std::bind(
+                    setParamHelper<T>, setter, param_info->getName(), std::placeholders::_1, std::placeholders::_2));
                 bpobj.add_property(param_info->getName().c_str(), getter_func, setter_func);
                 /*bpobj.def(("get_" + param_info->getName()).c_str(),
                           );
@@ -268,26 +266,27 @@ namespace mo
 
     template <class R, class T, class... Args, int... Is>
     std::function<R(T&, const Args&...)>
-    slotBind(R (*p)(const std::string&, T&, const Args&...), const std::string& slot_name, int_sequence<Is...>)
+    slotBind(R (*p)(const std::string&, T&, const Args&...), const std::string& slot_name, ct::int_sequence<Is...>)
     {
-        return std::bind(p, slot_name, placeholder_template<Is>{}...);
+        return std::bind(p, slot_name, ct::placeholder_template<Is>{}...);
     }
 
     template <class R, class T, int... Is>
-    std::function<R(T&)> slotBind(R (*p)(const std::string&, T&), const std::string& slot_name, int_sequence<1>)
+    std::function<R(T&)> slotBind(R (*p)(const std::string&, T&), const std::string& slot_name, ct::int_sequence<1>)
     {
         return std::bind(p, slot_name, std::placeholders::_1);
     }
 
     template <class R, class... Args, int... Is>
-    std::function<R(Args...)>
-    staticSlotBind(R (*p)(mo::TSlot<R(Args...)>*, const Args&...), mo::TSlot<R(Args...)>* slot_ptr, int_sequence<Is...>)
+    std::function<R(Args...)> staticSlotBind(R (*p)(mo::TSlot<R(Args...)>*, const Args&...),
+                                             mo::TSlot<R(Args...)>* slot_ptr,
+                                             ct::int_sequence<Is...>)
     {
-        return std::bind(p, slot_ptr, placeholder_template<Is>{}...);
+        return std::bind(p, slot_ptr, ct::placeholder_template<Is>{}...);
     }
 
     template <class T, class R, class... Args, class BP>
-    void addSlotAccessors(BP& bpobj, IMetaObjectInfo* minfo)
+    void addSlotAccessors(BP& bpobj, const IMetaObjectInfo* minfo)
     {
         std::vector<SlotInfo*> slot_infos = minfo->getSlotInfo();
         for (SlotInfo* slot_info : slot_infos)
@@ -297,7 +296,7 @@ namespace mo
                 bpobj.def(slot_info->name.c_str(),
                           std::function<R(T&, const Args&...)>(slotBind(&mo::python::SlotInvoker<T, R(Args...)>::invoke,
                                                                         slot_info->name,
-                                                                        make_int_sequence<sizeof...(Args) + 1>{})));
+                                                                        ct::make_int_sequence<sizeof...(Args) + 1>{})));
                 if (slot_info->is_static)
                 {
                     bpobj.staticmethod(slot_info->name.c_str());
@@ -313,7 +312,7 @@ namespace mo
     struct StaticSlotAccessor<R(Args...)>
     {
         template <class T, class BP>
-        static void add(BP& bpobj, IMetaObjectInfo* minfo)
+        static void add(BP& bpobj, const IMetaObjectInfo* minfo)
         {
             auto static_slots = minfo->getStaticSlots();
             for (const auto& slot : static_slots)
@@ -325,7 +324,7 @@ namespace mo
                               std::function<R(const Args&...)>(
                                   staticSlotBind(&mo::python::StaticSlotInvoker<R(Args...)>::invoke,
                                                  tslot,
-                                                 make_int_sequence<sizeof...(Args)>{})));
+                                                 ct::make_int_sequence<sizeof...(Args)>{})));
                     bpobj.staticmethod(slot.second.c_str());
                 }
             }
@@ -347,11 +346,15 @@ namespace mo
 
     template <class T,
               class Storage = rcc::shared_ptr<T>,
-              template <int N, class T1, class Storage, class... Args> class Creator = CreateMetaObject,
+              template <int N, class T1, class S, class... Args> class Creator = CreateMetaObject,
               class ParamPolicy = DefaultParamPolicy>
     boost::python::object makeConstructor(IObjectConstructor* ctr, ParamPolicy policy = ParamPolicy())
     {
-        IMetaObjectInfo* minfo = dynamic_cast<IMetaObjectInfo*>(ctr->GetObjectInfo());
+        auto minfo = dynamic_cast<const IMetaObjectInfo*>(ctr->GetObjectInfo());
+        if (!minfo)
+        {
+            return {};
+        }
         std::vector<ParamInfo*> param_info = minfo->getParamInfo();
         auto param_names = policy(param_info);
         switch (param_names.size())
@@ -415,7 +418,7 @@ namespace mo
         }
         return boost::python::object();
     }
-}
+} // namespace mo
 
 namespace boost
 {
@@ -428,6 +431,6 @@ namespace boost
             {
                 static const bool value = true;
             };
-        }
-    }
-}
+        } // namespace detail
+    }     // namespace python
+} // namespace boost

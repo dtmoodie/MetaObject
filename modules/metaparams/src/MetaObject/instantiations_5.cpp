@@ -1,10 +1,12 @@
 #include "MetaObject/core/metaobject_config.hpp"
 
 #if MO_HAVE_OPENCV
+#include "MetaObject/types/opencv.hpp"
+
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "MetaObject/params/MetaParam.hpp"
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
-#include "MetaObject/types/opencv.hpp"
+
 #include "ct/reflect.hpp"
 #include "ct/reflect/cerealize.hpp"
 #include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
@@ -24,7 +26,7 @@
 #endif
 
 using namespace cv;
-static_assert(ct::Reflect<cv::Rect>::SPECIALIZED, "Specialization not working for cv::Rect");
+static_assert(ct::IsReflected<cv::Rect>::value, "Specialization not working for cv::Rect");
 
 namespace mo
 {
@@ -39,7 +41,7 @@ namespace mo
             INSTANTIATE_META_PARAM(std::vector<Rect>, table);
             INSTANTIATE_META_PARAM(std::vector<Rect2f>, table);
         }
-    }
-}
+    } // namespace MetaParams
+} // namespace mo
 
 #endif

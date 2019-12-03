@@ -1,6 +1,7 @@
 import metaobject as mo
-
-assert(mo.plugins.loadPlugin('libmo_objectplugind.so'))
+import glob
+plugin = glob.glob('libmo_objectplugin*.so')
+assert(mo.plugins.loadPlugin(plugin[0]))
 print(mo.listConstructableObjects())
 
 obj = mo.object.SerializableObject()
@@ -19,3 +20,14 @@ obj = mo.object.DerivedSignals()
 assert(obj.base_param == 5)
 
 types = mo.listConstructableObjects()
+
+pt = mo.datatypes.Point2d(x=1, y=2)
+
+assert(pt.x == 1.0)
+assert(pt.y == 2.0)
+pt.x = 2.0
+pt.y = 3.0
+assert(pt.x == 2.0)
+assert(pt.y == 3.0)
+
+print('Success')

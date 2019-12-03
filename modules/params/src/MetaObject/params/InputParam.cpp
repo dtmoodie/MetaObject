@@ -5,8 +5,7 @@
 using namespace mo;
 
 InputParam::InputParam()
-    : IParam("", mo::ParamFlags::Input_e)
-    , m_input_param(nullptr)
+    : IParam("", mo::ParamFlags::kINPUT)
 {
     m_delete_slot = std::bind(&InputParam::onInputDelete, this, std::placeholders::_1);
     m_update_slot = std::bind(
@@ -78,7 +77,7 @@ OptionalTime InputParam::getInputTimestamp()
     return {};
 }
 
-uint64_t InputParam::getInputFrameNumber()
+FrameNumber InputParam::getInputFrameNumber()
 {
     Lock_t lock(mtx());
     if (m_input_param)
@@ -140,7 +139,7 @@ bool InputParam::setInput(IParam* param)
     param->subscribe();
     param->registerUpdateNotifier(&m_update_slot);
     param->registerDeleteNotifier(&m_delete_slot);
-    emitUpdate(Header(), UpdateFlags::InputSet_e);
+    emitUpdate(Header(), UpdateFlags::kINPUT_SET);
     return true;
 }
 
@@ -233,14 +232,32 @@ void InputParam::onInputUpdate(const IDataContainerPtr_t& data, IParam* param, U
     if (data->getHeader().stream == getStream())
     {
         m_current_data = data;
-        emitUpdate(data, InputUpdated_e);
+        emitUpdate(data, UpdateFlags::kINPUT_UPDATED);
     }
     else
     {
         // mer figure out what do
-        if (param->checkFlags(ParamFlags::Buffer_e))
+        if (param->checkFlags(ParamFlags::kBUFFER))
         {
-            emitUpdate(data, BufferUpdated_e);
+            emitUpdate(data, UpdateFlags::kBUFFER_UPDATED);
         }
     }
+}
+
+OptionalTime InputParam::getTimestamp() const
+{
+    if (m_current_data)
+    {
+        return m_current_data->getHeader().timestamp;
+    }
+    return {};
+}
+
+FrameNumber InputParam::getFrameNumber() const
+{
+    if (m_current_data)
+    {
+        return m_current_data->getHeader().frame_number;
+    }
+    return {};
 }

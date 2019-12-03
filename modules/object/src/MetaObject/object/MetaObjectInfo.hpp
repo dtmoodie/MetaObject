@@ -4,7 +4,6 @@
 #include "IMetaObjectInfo.hpp"
 
 #include "MetaObject/core/detail/HelperMacros.hpp"
-#include "MetaObject/core/detail/Placeholders.hpp"
 
 #include "MetaObject/object/MetaObjectInfoDatabase.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
@@ -40,7 +39,7 @@ namespace mo
         auto serialize(const ct::MemberObjectPointer<DTYPE CTYPE::*, FLAGS, METADATA> ptr)
             -> ct::EnableIf<!std::is_const<typename std::remove_pointer<DTYPE>::type>::value>
         {
-            m_visitor(&ct::set(ptr, *m_this), ptr.m_name);
+            m_visitor(&ptr.set(*m_this), ptr.m_name);
         }
 
         template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA>
@@ -59,7 +58,7 @@ namespace mo
         auto serialize(const ct::MemberObjectPointer<DTYPE CTYPE::*, FLAGS, METADATA> ptr)
             -> ct::EnableIf<!std::is_const<typename std::remove_pointer<DTYPE>::type>::value>
         {
-            m_visitor(&ct::get(ptr, *m_this), ptr.m_name);
+            m_visitor(&ptr.get(*m_this), ptr.m_name);
         }
 
         template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA>
@@ -77,7 +76,7 @@ namespace mo
         template <class PTR>
         void serialize(const PTR ptr)
         {
-            m_serializer->SerializeProperty(ptr.m_name, ct::get(ptr, *m_this));
+            m_serializer->SerializeProperty(ptr.getName().cStr(), ptr.set(*m_this));
         }
 
         ISimpleSerializer* m_serializer;
@@ -87,37 +86,18 @@ namespace mo
     template <class T>
     struct TMetaObjectInterfaceHelper : public T
     {
-
-        template <index_t I, class U, ct::Flag_t FLAGS, class METADATA, class... PTRS>
-        void initSlot(Indexer<I>, ct::MemberFunctionPointers<U, FLAGS, METADATA, PTRS...> ptrs)
+        template <class U1, class U2, ct::Flag_t F, class M>
+        void initParam(ct::MemberPropertyPointer<U1, U2, F, M>, ct::index_t)
         {
-            using BoundSig_t = typename std::decay<decltype(std::get<I>(ptrs.m_ptrs))>::type::BoundSig_t;
-            std::unique_ptr<mo::ISlot> slot(new mo::TSlot<BoundSig_t>(ptrs.template bind<I>(this)));
-            this->addSlot(std::move(slot), ptrs.m_name);
-        }
-
-        template <class U, ct::Flag_t FLAGS, class METADATA, class... PTRS>
-        void initSlotRecurse(Indexer<0> idx, ct::MemberFunctionPointers<U, FLAGS, METADATA, PTRS...> ptrs)
-        {
-            initSlot(idx, ptrs);
-        }
-
-        template <ct::index_t I, class U, ct::Flag_t FLAGS, class METADATA, class... PTRS>
-        void initSlotRecurse(Indexer<I> idx, ct::MemberFunctionPointers<U, FLAGS, METADATA, PTRS...> ptrs)
-        {
-            initSlot(idx, ptrs);
-            initSlotRecurse(--idx, ptrs);
-        }
-
-        template <class U, ct::Flag_t FLAGS, class METADATA, class... PTRS, ct::index_t I>
-        void initParam(ct::MemberFunctionPointers<U, FLAGS, METADATA, PTRS...> ptrs, ct::Indexer<I>)
-        {
-            // register a slot here
-            initSlotRecurse(Indexer<sizeof...(PTRS)-1>{}, ptrs);
         }
 
         template <class U, ct::Flag_t FLAGS, class METADATA, class... PTRS, ct::index_t I>
         void initParam(ct::StaticFunctions<U, FLAGS, METADATA, PTRS...>, ct::Indexer<I>)
+        {
+        }
+
+        template <class U, ct::Flag_t FLAGS, class METADATA, class... PTRS, ct::index_t I>
+        void initParam(ct::MemberFunctionPointers<U, FLAGS, METADATA, PTRS...>, ct::Indexer<I>)
         {
         }
 
@@ -127,17 +107,23 @@ namespace mo
             constexpr const ct::index_t J = ct::indexOfField<T>(ct::getName<I, T>().slice(0, -6));
             ct::StaticInequality<ct::index_t, J, -1>{};
             auto wrapped_field_ptr = ct::Reflect<T>::getPtr(Indexer<J>{});
-            auto param_ptr = &ct::get(ptr, *this);
+            auto param_ptr = &ptr.set(*this);
             param_ptr->setName(ct::getName<I, T>().slice(0, -6));
-            param_ptr->setUserDataPtr(&ct::get(wrapped_field_ptr, *this));
+            param_ptr->setUserDataPtr(&wrapped_field_ptr.set(*this));
             T::addParam(param_ptr);
         }
 
-        template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
-        void initParam(ct::MemberObjectPointer<mo::TParamOutput<DTYPE> CTYPE::*, FLAGS, METADATA> ptr, ct::Indexer<I>)
+        template <class DTYPE, class CTYPE, uint64_t PARAM_FLAGS, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
+        void initParam(ct::MemberObjectPointer<mo::TParamOutput<DTYPE, PARAM_FLAGS> CTYPE::*, FLAGS, METADATA> ptr,
+                       ct::Indexer<I>)
         {
-            auto param_ptr = &ct::get(ptr, *this);
+            auto param_ptr = &ptr.set(*this);
             param_ptr->setName(ct::getName<I, T>());
+            auto initializer = ct::metadata<ct::Initializer<DTYPE>>(ptr);
+            if (initializer)
+            {
+                param_ptr->updateData(initializer->getInitialValue());
+            }
             T::addParam(param_ptr);
         }
 
@@ -147,13 +133,13 @@ namespace mo
             constexpr const ct::index_t J = ct::indexOfField<T>(ct::getName<I, T>().slice(0, -6));
             ct::StaticInequality<ct::index_t, J, -1>{};
             auto wrapped_field_ptr = ct::Reflect<T>::getPtr(Indexer<J>{});
-            auto param_ptr = &ct::get(ptr, *this);
+            auto param_ptr = &ptr.set(*this);
             param_ptr->setName(ct::getName<I, T>().slice(0, -6));
-            param_ptr->updatePtr(&ct::get(wrapped_field_ptr, *this), false);
-            auto initializer = ct::getMetadata<ct::Initializer<DTYPE>>(wrapped_field_ptr);
+            param_ptr->updatePtr(&wrapped_field_ptr.set(*this), false);
+            auto initializer = ct::metadata<ct::Initializer<DTYPE>>(wrapped_field_ptr);
             if (initializer)
             {
-                ct::set(wrapped_field_ptr, *this) = initializer->getInitialValue();
+                wrapped_field_ptr.set(*this) = initializer->getInitialValue();
             }
             T::addParam(param_ptr);
         }
@@ -164,7 +150,7 @@ namespace mo
             // ignore for now, added in the above initParam for TParamPtr
         }
 
-        void initParamsRecurse(const bool first_init, const ct::Indexer<0> idx)
+        void initParamsRecurse(const bool, const ct::Indexer<0> idx)
         {
             const auto ptr = ct::Reflect<T>::getPtr(idx);
             initParam(ptr, idx);
@@ -202,9 +188,15 @@ namespace mo
         {
         }
 
-        template <class SERIALIZER, class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
+        template <class SERIALIZER,
+                  class DTYPE,
+                  class CTYPE,
+                  mo::ParamFlags::EnumValueType PARAM_FLAGS,
+                  ct::Flag_t FLAGS,
+                  class METADATA,
+                  ct::index_t I>
         void serializeParam(SERIALIZER&,
-                            ct::MemberObjectPointer<mo::TParamOutput<DTYPE> CTYPE::*, FLAGS, METADATA>,
+                            ct::MemberObjectPointer<mo::TParamOutput<DTYPE, PARAM_FLAGS> CTYPE::*, FLAGS, METADATA>,
                             ct::Indexer<I>) const
         {
         }
@@ -269,11 +261,21 @@ namespace mo
 
         template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
         static void paramInfo(std::vector<mo::ParamInfo*>& vec,
+                              ct::MemberObjectPointer<mo::TInputParamPtr<DTYPE> CTYPE::*, FLAGS, METADATA> ptr,
+                              ct::Indexer<I>)
+        {
+            static mo::ParamInfo param_info(
+                mo::TypeInfo(typeid(DTYPE)), ptr.m_name.slice(0, -6).toString(), "", "", mo::ParamFlags::kINPUT, "");
+            vec.push_back(&param_info);
+        }
+
+        template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
+        static void paramInfo(std::vector<mo::ParamInfo*>& vec,
                               ct::MemberObjectPointer<mo::TParamPtr<DTYPE> CTYPE::*, FLAGS, METADATA> ptr,
                               ct::Indexer<I>)
         {
             static mo::ParamInfo param_info(
-                mo::TypeInfo(typeid(DTYPE)), ptr.m_name, "", "", mo::ParamFlags::Control_e, "");
+                mo::TypeInfo(typeid(DTYPE)), ptr.m_name.slice(0, -6).toString(), "", "", mo::ParamFlags::kCONTROL, "");
             vec.push_back(&param_info);
         }
 
@@ -326,7 +328,7 @@ namespace mo
                        const ct::Indexer<I>,
                        const bool)
         {
-            this->addSignal(&ct::get(ptr, *this), ptr.m_name);
+            this->addSignal(&ptr.set(*this), ptr.m_name);
             return 1;
         }
 
@@ -378,7 +380,7 @@ namespace mo
         };
 
         template <class PTR, ct::index_t I>
-        static void signalInfo(std::vector<mo::SignalInfo*>& vec, PTR ptr, ct::Indexer<I> idx)
+        static void signalInfo(std::vector<mo::SignalInfo*>&, PTR, ct::Indexer<I>)
         {
             // ignore for now, added in the above initParam for TParamPtr
         }
@@ -386,7 +388,7 @@ namespace mo
         template <class SIG, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
         static void signalInfo(std::vector<mo::SignalInfo*>& vec,
                                ct::MemberObjectPointer<TSignal<SIG> CTYPE::*, FLAGS, METADATA> ptr,
-                               ct::Indexer<I> idx)
+                               ct::Indexer<I>)
         {
             // ignore for now, added in the above initParam for TParamPtr
             static SignalInfo info{mo::TypeInfo(typeid(SIG)), ptr.m_name, "", ""};
@@ -426,12 +428,61 @@ namespace mo
                                int /*N*/,
                                bool /*first_init*/)
         {
-            (*data.get()) = variadicBind(fptr.get(), static_cast<T*>(this), make_int_sequence<sizeof...(Args)>{});
+            (*data.get()) =
+                ct::variadicBind(fptr.get(), static_cast<T*>(this), ct::make_int_sequence<sizeof...(Args)>{});
             this->addSlot(data.get(), name.get());
+        }
+
+        template <index_t I, class U, ct::Flag_t FLAGS, class METADATA, class... PTRS>
+        void bindSlot(Indexer<I>, ct::MemberFunctionPointers<U, FLAGS, METADATA, PTRS...> ptrs)
+        {
+            using BoundSig_t = typename std::decay<decltype(std::get<I>(ptrs.m_ptrs))>::type::BoundSig_t;
+            std::unique_ptr<mo::ISlot> slot(new mo::TSlot<BoundSig_t>(ptrs.template bind<I>(this)));
+            this->addSlot(std::move(slot), ptrs.m_name);
+        }
+
+        template <class U, ct::Flag_t FLAGS, class METADATA, class... PTRS>
+        void bindSlotRecurse(Indexer<0> idx, ct::MemberFunctionPointers<U, FLAGS, METADATA, PTRS...> ptrs)
+        {
+            bindSlot(idx, ptrs);
+        }
+
+        template <ct::index_t I, class U, ct::Flag_t FLAGS, class METADATA, class... PTRS>
+        void bindSlotRecurse(Indexer<I> idx, ct::MemberFunctionPointers<U, FLAGS, METADATA, PTRS...> ptrs)
+        {
+            bindSlot(idx, ptrs);
+            bindSlotRecurse(--idx, ptrs);
+        }
+
+        template <class U, ct::Flag_t FLAGS, class METADATA, class... PTRS, ct::index_t I>
+        void bindSlot(ct::MemberFunctionPointers<U, FLAGS, METADATA, PTRS...> ptrs, ct::Indexer<I>)
+        {
+            // register a slot here
+            bindSlotRecurse(Indexer<sizeof...(PTRS) - 1>{}, ptrs);
+        }
+
+        template <class PTR, ct::index_t I>
+        void bindSlot(PTR, ct::Indexer<I>)
+        {
+        }
+
+        void bindSlotsRecurse(const bool, const ct::Indexer<0> idx)
+        {
+            const auto ptr = ct::Reflect<T>::getPtr(idx);
+            bindSlot(ptr, idx);
+        }
+
+        template <ct::index_t I>
+        void bindSlotsRecurse(const bool first_init, const ct::Indexer<I> idx)
+        {
+            const auto ptr = ct::Reflect<T>::getPtr(idx);
+            bindSlot(ptr, idx);
+            bindSlotsRecurse(first_init, --idx);
         }
 
         void bindSlots(bool first_init) override
         {
+            bindSlotsRecurse(first_init, ct::Reflect<T>::end());
         }
 
         static std::vector<std::pair<mo::ISlot*, std::string>> getStaticSlots()
@@ -470,14 +521,13 @@ namespace mo
                              ct::MemberFunctionPointers<U, FLAGS, METADATA, PTRS...> ptrs,
                              ct::Indexer<I> idx)
         {
-            slotInfo(vec, ptrs, idx, ct::Indexer<sizeof...(PTRS)-1>{});
+            slotInfo(vec, ptrs, idx, ct::Indexer<sizeof...(PTRS) - 1>{});
         }
 
         // Static functions
         template <class U, ct::Flag_t FLAGS, class METADATA, class... PTRS, ct::index_t I>
-        static void slotInfo(std::vector<mo::SlotInfo*>& vec,
-                             ct::StaticFunctions<U, FLAGS, METADATA, PTRS...> ptrs,
-                             ct::Indexer<I> idx)
+        static void
+        slotInfo(std::vector<mo::SlotInfo*>&, ct::StaticFunctions<U, FLAGS, METADATA, PTRS...>, ct::Indexer<I>)
         {
             // slotInfo(vec, ptrs, idx, ct::Indexer<sizeof...(PTRS)-1>{});
         }
@@ -643,8 +693,8 @@ namespace mo
         }
 
       private:
-        DEFINE_HAS_STATIC_FUNCTION(HasTooltip, getTooltipStatic, std::string (*)(void));
-        DEFINE_HAS_STATIC_FUNCTION(HasDescription, getDescriptionStatic, std::string (*)(void));
+        DEFINE_HAS_STATIC_FUNCTION(HasTooltip, getTooltipStatic, std::string);
+        DEFINE_HAS_STATIC_FUNCTION(HasDescription, getDescriptionStatic, std::string);
         template <class U>
         static std::string _get_tooltip_helper(typename std::enable_if<HasTooltip<U>::value, void>::type* = 0)
         {
@@ -666,5 +716,5 @@ namespace mo
             return "";
         }
     };
-}
+} // namespace mo
 #endif

@@ -1,12 +1,11 @@
 #pragma once
 #include <MetaObject/detail/Export.hpp>
-#include <stddef.h>
+#include <cstddef>
 namespace mo
 {
     /*!
     * \brief The ContinuousPolicy class allocates memory with zero padding
     *        wich allows for nice reshaping operations
-    *
     */
     class MO_EXPORTS ContinuousPolicy
     {

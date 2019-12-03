@@ -2,42 +2,42 @@
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
 #include "MetaObject/thread/ThreadRegistry.hpp"
+#include <MetaObject/core/AsyncStreamFactory.hpp>
 
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 
 #include <MetaObject/thread/fiber_include.hpp>
 
-#include <boost/test/test_tools.hpp>
-#include <boost/test/unit_test_suite.hpp>
-
 #include <boost/thread.hpp>
 #include <iostream>
 
+#include "gtest/gtest.h"
+
 using namespace mo;
 
-BOOST_AUTO_TEST_CASE(signals)
+TEST(signals, single_threaded)
 {
     TSignal<int(int)> signal;
     {
         TSlot<int(int)> slot([](int val) { return val * 2; });
         signal.connect(&slot);
 
-        BOOST_CHECK_EQUAL(signal(4), 8);
-        BOOST_CHECK_EQUAL(signal(8), 16);
+        ASSERT_EQ(signal(4), 8);
+        ASSERT_EQ(signal(8), 16);
     }
-    BOOST_CHECK_THROW(signal(4), std::runtime_error);
+    ASSERT_THROW(signal(4), mo::TExceptionWithCallstack<std::runtime_error>);
 }
 
-BOOST_AUTO_TEST_CASE(threaded_signal)
+TEST(signals, multi_threaded)
 {
     auto stream = mo::AsyncStreamFactory::instance()->create();
     IAsyncStreamPtr_t thread_ctx;
 
     TSlot<void(int)> slot = TSlot<void(int)>(std::bind(
         [&thread_ctx](int value) -> void {
-            BOOST_REQUIRE_EQUAL(thread_ctx->threadId(), mo::getThisThread());
-            BOOST_REQUIRE_EQUAL(5, value);
+            ASSERT_EQ(thread_ctx->threadId(), mo::getThisThread());
+            ASSERT_EQ(5, value);
         },
         std::placeholders::_1));
 

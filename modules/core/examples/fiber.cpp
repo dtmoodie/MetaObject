@@ -1,5 +1,6 @@
 #include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 
+#include <MetaObject/core/AsyncStreamFactory.hpp>
 #include <MetaObject/core/IAsyncStream.hpp>
 #include <MetaObject/core/SystemTable.hpp>
 
@@ -12,7 +13,7 @@ int main()
     auto table = SystemTable::instance();
     auto module = PerModuleInterface::GetInstance();
     module->SetSystemTable(table.get());
-    std::shared_ptr<mo::ThreadPool> pool = mo::sharedSingleton<mo::ThreadPool>(table.get());
+    std::shared_ptr<mo::ThreadPool> pool = table->getSingleton<mo::ThreadPool>();
     boost::fibers::use_scheduling_algorithm<mo::PriorityScheduler>(pool);
 
     auto stream = mo::AsyncStreamFactory::instance(table.get())->create();

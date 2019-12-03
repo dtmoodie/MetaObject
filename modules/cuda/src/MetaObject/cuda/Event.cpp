@@ -16,11 +16,54 @@ namespace mo
 
         struct Event::Impl
         {
-            boost::fibers::mutex m_mtx;
-            std::shared_ptr<CUevent_st> m_event;
+            mutable boost::fibers::mutex m_mtx;
+            mutable std::shared_ptr<CUevent_st> m_event;
             std::function<void(void)> m_cb;
             ObjectPool<CUevent_st>* m_event_pool;
-            mutable bool m_complete;
+            volatile mutable bool m_complete;
+
+            bool queryCompletion() const
+            {
+                std::lock_guard<boost::fibers::mutex> lock(m_mtx);
+                if (m_complete)
+                {
+                    return m_complete;
+                }
+
+                MO_ASSERT(m_event != nullptr);
+                if (cudaEventQuery(m_event.get()) == cudaSuccess)
+                {
+                    m_complete = true;
+                    m_event.reset();
+                }
+                return m_complete;
+            }
+
+            bool synchronize(const Duration timeout = 0 * ms) const
+            {
+                if (m_complete)
+                {
+                    return true;
+                }
+                MO_ASSERT(m_event != nullptr);
+                if (timeout == 0 * ms)
+                {
+                    while (!queryCompletion())
+                    {
+                        boost::this_fiber::yield();
+                    }
+                    return m_complete;
+                }
+                auto now = Time::now();
+                const auto end = now + timeout;
+
+                while (now <= end && !queryCompletion())
+                {
+                    boost::this_fiber::yield();
+                    now = Time::now();
+                }
+                return m_complete;
+            }
         };
 
         std::shared_ptr<CUevent_st> Event::create()
@@ -48,48 +91,12 @@ namespace mo
 
         bool Event::queryCompletion() const
         {
-            std::lock_guard<boost::fibers::mutex> lock(m_impl->m_mtx);
-            if (m_impl->m_complete)
-            {
-                return m_impl->m_complete;
-            }
-
-            MO_ASSERT(m_impl->m_event != nullptr);
-            if (cudaEventQuery(m_impl->m_event.get()) == cudaSuccess)
-            {
-                m_impl->m_complete = true;
-                m_impl->m_event.reset();
-            }
-            return m_impl->m_complete;
+            return m_impl->queryCompletion();
         }
 
-        bool Event::synchronize(const Duration timeout)
+        bool Event::synchronize(const Duration timeout) const
         {
-            if (m_impl->m_complete)
-            {
-                return true;
-            }
-            MO_ASSERT(m_impl->m_event != nullptr);
-            if (timeout == 0 * ms)
-            {
-                while (!queryCompletion())
-                {
-                    boost::this_fiber::yield();
-                }
-                return m_impl->m_complete;
-            }
-            else
-            {
-                auto now = Time::now();
-                const auto end = now + timeout;
-
-                while (now <= end && !queryCompletion())
-                {
-                    boost::this_fiber::yield();
-                    now = Time::now();
-                }
-                return m_impl->m_complete;
-            }
+            return m_impl->synchronize(timeout);
         }
 
         Event::operator cudaEvent_t()
@@ -118,9 +125,10 @@ namespace mo
             MO_ASSERT(m_impl->m_event != nullptr);
             MO_ASSERT(!m_impl->m_cb);
             m_impl->m_cb = std::move(cb);
-            boost::fibers::fiber fib([this]() {
-                synchronize();
-                m_impl->m_cb();
+            auto impl = m_impl;
+            boost::fibers::fiber fib([impl]() {
+                impl->synchronize();
+                impl->m_cb();
             });
             fib.detach();
         }

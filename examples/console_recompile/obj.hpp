@@ -5,7 +5,7 @@
 
 struct printable : public mo::MetaObject
 {
-    MO_BEGIN
+    MO_BEGIN(printable)
     // TODO remove once we sort out structs with no fields
     PARAM(int, tmp, 0)
     MO_END;

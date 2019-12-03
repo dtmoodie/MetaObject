@@ -15,7 +15,14 @@ cache:
 
 before_script:
   - sudo -E ./scripts/travis/install-deps.sh
+  - cd .. && sudo -E ./MetaObject/scripts/build_boost.sh c++11 && cd MetaObject
+  - wget https://github.com/Kitware/CMake/releases/download/v3.14.4/cmake-3.14.4-Linux-x86_64.sh && chmod +x cmake-3.14.4-Linux-x86_64.sh && sudo ./cmake-3.14.4-Linux-x86_64.sh --prefix=/usr/local --exclude-subdir --skip-license && rm ./cmake-3.14.4-Linux-x86_64.sh
 
 script:
-  - mkdir -p build && cd build && cmake .. -DCUDA_CUDA_LIBRARY=/usr/local/nvidia/lib64/libcuda.so -DRCC_VERBOSE_CONFIG=ON
+  - mkdir -p build && cd build && /usr/local/bin/cmake .. -DBUILD_EXAMPLES=OFF -DCUDA_CUDA_LIBRARY=/usr/local/nvidia/lib64/libcuda.so -DBOOST_ROOT=/home/travis/build/dtmoodie/boost_1_69_0 -DBOOST_LIBRARYDIR=/home/travis/build/dtmoodie/boost_1_69_0/stage/lib -DCMAKE_VERBOSE_MAKEFILE=ON
   - make all
+  - ./test_mo_params
+  - ./test_mo_serialization
+  - ./test_mo_object 
+  - ./test_mo_runtime_reflection
+  - ./test_mo_core

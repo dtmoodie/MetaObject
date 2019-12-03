@@ -101,7 +101,20 @@ namespace fmt
 #endif
             PRINT_CUDA_ERR(cudaErrorStartupFailure);
             PRINT_CUDA_ERR(cudaErrorApiFailureBase);
+#if CUDART_VERSION >= 10000
+            PRINT_CUDA_ERR(cudaErrorSystemNotReady);
+            PRINT_CUDA_ERR(cudaErrorStreamCaptureImplicit);
+            PRINT_CUDA_ERR(cudaErrorIllegalState);
+            PRINT_CUDA_ERR(cudaErrorStreamCaptureUnsupported);
+            PRINT_CUDA_ERR(cudaErrorStreamCaptureInvalidated);
+            PRINT_CUDA_ERR(cudaErrorStreamCaptureMerge);
+            PRINT_CUDA_ERR(cudaErrorStreamCaptureUnmatched);
+            PRINT_CUDA_ERR(cudaErrorStreamCaptureUnjoined);
+            PRINT_CUDA_ERR(cudaErrorStreamCaptureIsolation);
+            PRINT_CUDA_ERR(cudaErrorCapturedEvent);
+#endif
         }
+        return "No conversion for this error code";
     }
 }
 

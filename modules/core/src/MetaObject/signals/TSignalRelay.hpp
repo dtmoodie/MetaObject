@@ -19,32 +19,32 @@ namespace mo
     {
     };
 
-    class IAsyncStream;
+    struct IAsyncStream;
     template <class... T, class Mutex>
     class TSignalRelay<void(T...), Mutex> : public ISignalRelay
     {
       public:
-        using Ptr = std::shared_ptr<TSignalRelay<void(T...)>>;
-        using ConstPtr = std::shared_ptr<const TSignalRelay<void(T...)>>;
+        using Ptr_t = std::shared_ptr<TSignalRelay<void(T...)>>;
+        using ConstPtr_t = std::shared_ptr<const TSignalRelay<void(T...)>>;
 
         void operator()(TSignal<void(T...)>* sig, const T&... args);
         void operator()(const T&... args);
         void operator()(IAsyncStream* ctx, const T&... args);
-        const TypeInfo& getSignature() const;
-        bool hasSlots() const;
+        const TypeInfo& getSignature() const override;
+        bool hasSlots() const override;
 
       protected:
         friend TSignal<void(T...)>;
         friend TSlot<void(T...)>;
 
-        bool connect(ISlot* slot);
-        bool connect(ISignal* signal);
+        bool connect(ISlot* slot) override;
+        bool connect(ISignal* signal) override;
 
         bool connect(TSlot<void(T...)>* slot);
         bool connect(TSignal<void(T...)>* sig);
 
-        bool disconnect(ISlot* slot);
-        bool disconnect(ISignal* signal);
+        bool disconnect(ISlot* slot) override;
+        bool disconnect(ISignal* signal) override;
 
         std::set<TSlot<void(T...)>*> m_slots;
         Mutex m_mtx;
@@ -55,28 +55,28 @@ namespace mo
     class TSignalRelay<R(T...), Mutex> : public ISignalRelay
     {
       public:
-        using Ptr = std::shared_ptr<TSignalRelay<R(T...)>>;
-        using ConstPtr = std::shared_ptr<const TSignalRelay<R(T...)>>;
+        using Ptr_t = std::shared_ptr<TSignalRelay<R(T...)>>;
+        using ConstPtr_t = std::shared_ptr<const TSignalRelay<R(T...)>>;
 
         TSignalRelay();
         R operator()(TSignal<R(T...)>* sig, const T&... args);
         R operator()(const T&... args);
         R operator()(IAsyncStream* ctx, const T&... args);
-        const TypeInfo& getSignature() const;
-        bool hasSlots() const;
+        const TypeInfo& getSignature() const override;
+        bool hasSlots() const override;
 
       protected:
         friend TSignal<R(T...)>;
         friend TSlot<R(T...)>;
 
-        bool connect(ISlot* slot);
-        bool connect(ISignal* signal);
+        bool connect(ISlot* slot) override;
+        bool connect(ISignal* signal) override;
 
         bool connect(TSlot<R(T...)>* slot);
         bool connect(TSignal<R(T...)>* sig);
 
-        bool disconnect(ISlot* slot);
-        bool disconnect(ISignal* signal);
+        bool disconnect(ISlot* slot) override;
+        bool disconnect(ISignal* signal) override;
 
         TSlot<R(T...)>* m_slot;
         Mutex m_mtx;
@@ -150,10 +150,8 @@ namespace mo
 
                     continue;
                 }
-                else
-                {
-                    THROW(error, "Not implemented yet");
-                }
+
+                THROW(error, "Not implemented yet");
             }
             (*slot)(args...);
         }
@@ -230,7 +228,7 @@ namespace mo
     }
 
     template <class R, class... T, class Mutex>
-    R TSignalRelay<R(T...), Mutex>::operator()(TSignal<R(T...)>* sig, const T&... args)
+    R TSignalRelay<R(T...), Mutex>::operator()(TSignal<R(T...)>*, const T&... args)
     {
         std::lock_guard<Mutex> lock(m_mtx);
         if (m_slot)
@@ -242,7 +240,7 @@ namespace mo
     }
 
     template <class R, class... T, class Mutex>
-    R TSignalRelay<R(T...), Mutex>::operator()(IAsyncStream* ctx, const T&... args)
+    R TSignalRelay<R(T...), Mutex>::operator()(IAsyncStream*, const T&... args)
     {
         std::lock_guard<Mutex> lock(m_mtx);
         if (m_slot)
@@ -258,7 +256,9 @@ namespace mo
     {
         std::lock_guard<Mutex> lock(m_mtx);
         if (m_slot && *m_slot)
+        {
             return (*m_slot)(args...);
+        }
         THROW(debug, "Slot not connected");
         return R();
     }
@@ -329,4 +329,3 @@ namespace mo
         return *m_slot;
     }
 }
-#include "detail/TSignalRelayImpl.hpp"

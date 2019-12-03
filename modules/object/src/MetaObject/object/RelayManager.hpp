@@ -26,9 +26,16 @@ namespace mo
     class MO_EXPORTS RelayManager
     {
       public:
+        static MO_INLINE std::shared_ptr<RelayManager> instance();
+        static std::shared_ptr<RelayManager> instance(SystemTable* table);
+
         RelayManager();
+        RelayManager(const RelayManager&) = delete;
+        RelayManager(RelayManager&&) noexcept = delete;
         ~RelayManager();
-        static inline RelayManager* instance();
+
+        RelayManager& operator=(const RelayManager&) = delete;
+        RelayManager& operator=(RelayManager&&) noexcept = delete;
 
         std::shared_ptr<Connection> connect(ISlot* slot, const std::string& name, IMetaObject* obj = nullptr);
         std::shared_ptr<Connection> connect(ISignal* signal, const std::string& name, IMetaObject* obj = nullptr);
@@ -67,10 +74,11 @@ namespace mo
 
       private:
         struct impl;
-        impl* _pimpl;
+        std::unique_ptr<impl> _pimpl;
         mutable std::mutex mtx;
     };
-    RelayManager* RelayManager::instance()
+
+    std::shared_ptr<RelayManager> RelayManager::instance()
     {
         return singleton<RelayManager>();
     }

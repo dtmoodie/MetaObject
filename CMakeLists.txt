@@ -6,10 +6,11 @@ PROJECT(MetaObject
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 CMAKE_POLICY(SET CMP0020 NEW)
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/CMakeMacros.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/metaobject_declare_plugin.cmake")
+include("${CMAKE_CURRENT_LIST_DIR}/cmake/setup_msvc_target.cmake")
+
 list(APPEND CMAKE_MODULE_PATH "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(link_libs "")
 
 option(BUILD_TESTS "Build tests" ON)
@@ -23,17 +24,12 @@ option(WITH_CUDA "Enable CUDA recompilation" ON)
 option(WITH_WT "Enable WT support" OFF)
 
 
-if(BUILD_TESTS)
-    include(CTest)
-endif()
-
-
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 set(CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
-include(cmake/OpenCVPCHSupport.cmake)
 include(cmake/compatability.cmake)
+include(cmake/cotire.cmake)
 
 set(link_dirs_deb "")
 set(link_dirs_rel "")
@@ -50,7 +46,6 @@ set(MO_HAVE_WT 0 CACHE BOOL INTERNAL FORCE)
 include(cmake/metaobject_dependencies.cmake)
 
 configure_file(metaobject_config.hpp.in ${CMAKE_BINARY_DIR}/include/MetaObject/core/metaobject_config.hpp @ONLY)
-include_directories(${CMAKE_BINARY_DIR}/include)
 
 if(WIN32)
   set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} /EHsc /FC /Zi /MP /Zm512 /bigobj /FS")
@@ -160,10 +155,20 @@ file(GLOB children RELATIVE "${basedir}/${curdir}" "${basedir}/${curdir}/*")
 endmacro()
 set(metaobject_module_includes "" CACHE INTERNAL "" FORCE)
 
-SUBDIRLIST(modules "${CMAKE_CURRENT_LIST_DIR}/modules")
-foreach( module ${modules})
-    add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/modules/${module})
-endforeach()
+if(BUILD_TESTS)
+    enable_testing()
+endif(BUILD_TESTS)
+
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/modules/core)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/modules/params)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/modules/types)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/modules/cuda)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/modules/metaparams)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/modules/runtime_reflection)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/modules/serialization)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/modules/object)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/modules/python)
+add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/modules/gui)
 
 get_target_property(metaparam_build_dir metaobject_metaparams BINARY_DIR)
 file(MAKE_DIRECTORY ${metaparam_build_dir}/MetaObject/metaparams)
@@ -180,23 +185,19 @@ target_include_directories(metaobject_metaparams PUBLIC $<BUILD_INTERFACE:${meta
 
 set(MetaObject_LIBRARIES "${metaobject_modules}" CACHE STRING "" FORCE)
 set(MetaObject_INCLUDE_DIRS "${metaobject_module_includes};${CMAKE_BINARY_DIR}/include" CACHE PATH "" FORCE)
-# -------------------- tests ----------------------------------
-if(BUILD_TESTS)
-    add_subdirectory(tests)
-endif(BUILD_TESTS)
 
 # ---------------------- status message -----------------------------
 message(STATUS
     "-- MetaObject config\n"
-    "  C++ flags \t${CMAKE_CXX_FLAGS}\n"
-    "  C++ Rel flags\t${CMAKE_CXX_FLAGS_RELEASE}\n"
-    "  C++ Deb flags\t${CMAKE_CXX_FLAGS_DEBUG}\n"
-    "  OpenCV\t\t${OpenCV_VERSION} - ${OpenCV_DIR}\n"
-    "  Qt5\t\t${Qt5_VERSION}\n"
-    "  Python\t\t${MO_PYTHON_STATUS}\n"
-    "  Wt\t\t${Wt_FOUND}\n"
-    "  Tests\t\t${Boost_UNIT_TEST_FRAMEWORK_FOUND}\n"
-    "  CUDA\t\t${CUDA_FOUND}\n"
+    "  C++ flags      ${CMAKE_CXX_FLAGS}\n"
+    "  C++ Rel flags  ${CMAKE_CXX_FLAGS_RELEASE}\n"
+    "  C++ Deb flags  ${CMAKE_CXX_FLAGS_DEBUG}\n"
+    "  OpenCV         ${OpenCV_VERSION} - ${OpenCV_DIR}\n"
+    "  Qt5            ${Qt5_VERSION}\n"
+    "  Python         ${MO_PYTHON_STATUS}\n"
+    "  Wt             ${Wt_FOUND}\n"
+    "  Tests          ${Boost_UNIT_TEST_FRAMEWORK_FOUND}\n"
+    "  CUDA           ${CUDA_FOUND}\n"
 )
 
 # ----------------------- examples ---------------------------

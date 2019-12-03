@@ -1,11 +1,11 @@
 #include <MetaObject/thread/fiber_include.hpp>
 
-#include <boost/test/test_tools.hpp>
-#include <boost/test/unit_test_suite.hpp>
-
 #include <MetaObject/core/SystemTable.hpp>
+#include <MetaObject/thread/FiberScheduler.hpp>
 #include <MetaObject/thread/Thread.hpp>
 #include <MetaObject/thread/ThreadPool.hpp>
+
+#include "gtest/gtest.h"
 
 #include <iostream>
 
@@ -13,14 +13,14 @@ using namespace mo;
 
 namespace
 {
-    struct RawFiberFixture
+    struct RawFiberFixture: ::testing::Test
     {
         volatile int count = 0;
         RawFiberFixture()
         {
-            mo::ThreadPool* pool = mo::singleton<mo::ThreadPool>();
+            auto pool = mo::singleton<mo::ThreadPool>();
             auto schedulers = pool->getSchedulers();
-            BOOST_REQUIRE_EQUAL(schedulers.size(), 1);
+            EXPECT_EQ(schedulers.size(), 1);
         }
 
         void testWork()
@@ -36,7 +36,7 @@ namespace
             {
                 boost::this_fiber::sleep_for(1 * ms);
                 ++count;
-                BOOST_REQUIRE(count < 100);
+                ASSERT_LT(count, 100);
             }
         }
 
@@ -81,27 +81,28 @@ namespace
             boost::this_fiber::sleep_for(100 * ms);
             exit_loop = true;
             const uint32_t count = loop_count;
-            BOOST_REQUIRE_GT(count, 0);
+            ASSERT_GT(count, 0);
             boost::this_fiber::sleep_for(100 * ms);
-            BOOST_REQUIRE_LT(loop_count, count + 100);
+            ASSERT_LT(loop_count, count + 100);
 
             loop_count = 0;
 
             boost::this_fiber::sleep_for(1000 * ms);
-            BOOST_REQUIRE_EQUAL(loop_count, 0);
+            ASSERT_EQ(loop_count, 0);
 
             loop2();
 
             boost::this_fiber::sleep_for(1000 * ms);
-            BOOST_REQUIRE_EQUAL(loop_count, 100);
+            ASSERT_EQ(loop_count, 100);
         }
     };
 
-    struct StreamFixture
+    struct StreamFixture: ::testing::Test
     {
         IAsyncStreamPtr_t m_stream;
 
         StreamFixture()
+            : execution_count(0)
         {
             m_stream = std::make_shared<AsyncStream>();
         }
@@ -127,7 +128,7 @@ namespace
             boost::this_fiber::sleep_for(100 * ms);
             stop = true;
             boost::this_fiber::sleep_for(10 * ms);
-            BOOST_REQUIRE_GT(count, 80);
+            ASSERT_GT(count, 80);
         }
 
         void testEventSimple()
@@ -138,7 +139,7 @@ namespace
             m_stream->pushEvent([this]() { ++execution_count; }, 15);
 
             boost::this_fiber::sleep_for(1 * ms);
-            BOOST_REQUIRE_EQUAL(execution_count, 1);
+            ASSERT_EQ(execution_count, 1);
         }
 
         void testEventComplex()
@@ -146,7 +147,7 @@ namespace
             execution_count = 0;
             for (uint32_t i = 0; i < 5; ++i)
             {
-                m_stream->pushEvent([this]() {}, i);
+                m_stream->pushEvent([]() {}, i);
             }
 
             m_stream->pushEvent([this]() { ++execution_count; }, 15);
@@ -154,39 +155,39 @@ namespace
             m_stream->pushEvent([this]() { ++execution_count; }, 15);
 
             boost::this_fiber::sleep_for(1 * ms);
-            BOOST_REQUIRE_EQUAL(execution_count, 1);
+            ASSERT_EQ(execution_count, 1);
         }
 
         void testWorkPriority()
         {
             bool higher_priority_executed = false;
             bool lower_priority_executed = false;
-            mo::ThreadPool* pool = mo::singleton<mo::ThreadPool>();
+            auto pool = mo::singleton<mo::ThreadPool>();
             auto schedulers = pool->getSchedulers();
             m_stream->pushWork([&lower_priority_executed, &higher_priority_executed]() {
                 lower_priority_executed = true;
-                BOOST_REQUIRE(higher_priority_executed);
+                ASSERT_EQ(higher_priority_executed, true);
             });
 
             m_stream->pushWork(
                 [&lower_priority_executed, &higher_priority_executed]() {
                     higher_priority_executed = true;
-                    BOOST_REQUIRE(lower_priority_executed == false);
+                    ASSERT_EQ(lower_priority_executed, false);
                 },
                 HIGHEST);
             boost::this_fiber::sleep_for(1 * ms);
 
-            BOOST_REQUIRE(higher_priority_executed);
-            BOOST_REQUIRE(lower_priority_executed);
+            ASSERT_EQ(higher_priority_executed, true);
+            ASSERT_EQ(lower_priority_executed, true);
         }
 
         volatile std::atomic<uint32_t> execution_count;
 
         void testSpawningOfAssistant()
         {
-            mo::ThreadPool* pool = mo::singleton<mo::ThreadPool>();
+            auto pool = mo::singleton<mo::ThreadPool>();
             auto schedulers = pool->getSchedulers();
-            BOOST_REQUIRE_EQUAL(schedulers.size(), 1);
+            ASSERT_EQ(schedulers.size(), 1);
 
             execution_count = 0;
 
@@ -200,49 +201,53 @@ namespace
             }
             uint32_t count = execution_count;
             schedulers = pool->getSchedulers();
-            BOOST_REQUIRE_EQUAL(schedulers.size(), 2);
-            BOOST_REQUIRE_GT(count, 0);
+            ASSERT_EQ(schedulers.size(), 2);
+            ASSERT_GT(count, 0);
             boost::this_fiber::sleep_for(2 * second);
             count = execution_count;
-            BOOST_REQUIRE_EQUAL(count, 1000);
+            ASSERT_EQ(count, 1000);
         }
     };
 }
 
-BOOST_AUTO_TEST_SUITE(threading_tests)
-
-BOOST_FIXTURE_TEST_CASE(work, RawFiberFixture)
+TEST_F(RawFiberFixture, work)
 {
     testWork();
 }
 
-BOOST_FIXTURE_TEST_CASE(event, RawFiberFixture)
+TEST_F(RawFiberFixture, event)
 {
     testEvent();
 }
 
-BOOST_FIXTURE_TEST_CASE(loop, RawFiberFixture)
+TEST_F(RawFiberFixture, loop)
 {
     testLoop();
 }
 
-BOOST_FIXTURE_TEST_CASE(stream_loop, StreamFixture)
+TEST_F(StreamFixture, stream_loop)
 {
     testLoop();
 }
 
-BOOST_FIXTURE_TEST_CASE(priority, StreamFixture)
+TEST_F(StreamFixture, priority)
 {
     testWorkPriority();
 }
 
-BOOST_FIXTURE_TEST_CASE(stream_event_simple, StreamFixture)
+TEST_F(StreamFixture, stream_event_simple)
 {
     testEventSimple();
 }
 
-BOOST_FIXTURE_TEST_CASE(spawn_assistant, StreamFixture)
+TEST_F(StreamFixture, spawn_assistant)
 {
     testSpawningOfAssistant();
+    auto pool = mo::singleton<mo::ThreadPool>();
+    auto schedulers = pool->getSchedulers();
+    schedulers[0]->releaseAssistant();
+    pool->cleanup();
+    schedulers = pool->getSchedulers();
+    ASSERT_EQ(schedulers.size(), 1);
 }
-}
+

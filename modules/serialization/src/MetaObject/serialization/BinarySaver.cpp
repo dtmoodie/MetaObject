@@ -1,5 +1,5 @@
 #include "BinarySaver.hpp"
-
+#include <ct/types/TArrayView.hpp>
 namespace mo
 {
 
@@ -7,7 +7,6 @@ namespace mo
         : m_os(in)
     {
     }
-
 
     template <class T>
     ISaveVisitor& BinarySaver::saveBinary(const T* ptr, const std::string&, const size_t cnt)
@@ -68,6 +67,8 @@ namespace mo
     }
 
 #ifdef ENVIRONMENT64
+
+#ifndef _MSC_VER
     ISaveVisitor& BinarySaver::operator()(const long long* ptr, const std::string& name, const size_t cnt)
     {
         return saveBinary(ptr, name, cnt);
@@ -77,6 +78,8 @@ namespace mo
     {
         return saveBinary(ptr, name, cnt);
     }
+#endif
+
 #else
     ISaveVisitor& BinarySaver::operator()(const long int* ptr, const std::string& name, const size_t cnt)
     {
@@ -104,33 +107,32 @@ namespace mo
         return saveBinary(static_cast<const char*>(ptr), name, cnt);
     }
 
-    ISaveVisitor& BinarySaver::operator()(ISaveStructTraits* val, const std::string& name)
+    ISaveVisitor& BinarySaver::operator()(IStructTraits* trait, const void* val, const std::string& name, size_t cnt)
     {
-
-        const auto cnt = val->count();
-
-        if(val->triviallySerializable())
+        if (trait->triviallySerializable())
         {
-            auto ptr = val->ptr();
-            const auto sz = val->size() * cnt;
-            saveBinary(static_cast<const char*>(ptr),name,  sz);
-        }else
+            auto ptr = val;
+            const auto sz = trait->size() * cnt;
+            saveBinary(static_cast<const char*>(ptr), name, sz);
+        }
+        else
         {
-            for(auto i = 0; i < cnt; ++i)
+            auto ptr = ct::ptrCast<const uint8_t>(val);
+            for (size_t i = 0; i < cnt; ++i)
             {
-                SaveCache::operator()(val, name);
-                val->increment();
+                SaveCache::operator()(trait, ct::ptrCast<const void>(ptr), name, 1);
+                ptr += trait->size();
             }
         }
 
         return *this;
     }
 
-    ISaveVisitor& BinarySaver::operator()( ISaveContainerTraits* val, const std::string&)
+    ISaveVisitor& BinarySaver::operator()(IContainerTraits* val, const void* inst, const std::string& name, size_t cnt)
     {
-        uint64_t num_vals = val->getSize();
+        uint64_t num_vals = val->getContainerSize(inst);
         saveBinary(&num_vals);
-        val->save(this);
+        val->save(*this, inst, name, cnt);
         return *this;
     }
 

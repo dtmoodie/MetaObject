@@ -1,27 +1,12 @@
-#include <MetaObject/core/SystemTable.hpp>
+#include <MetaObject/core.hpp>
 
-#define BOOST_TEST_MAIN
-#include <boost/test/detail/throw_exception.hpp>
-#ifdef _MSC_VER
-#include <boost/test/unit_test.hpp>
-#else
-#define BOOST_TEST_MODULE "serialization"
-#include <boost/test/included/unit_test.hpp>
-#endif
+#include <gtest/gtest.h>
 
-struct GlobalFixture
+int main(int argc, char** argv)
 {
-    GlobalFixture()
-        : m_system_table(SystemTable::instance())
-    {
-    }
+    ::testing::InitGoogleTest(&argc, argv);
+    auto table = SystemTable::instance();
+    auto result = RUN_ALL_TESTS();
+    return result;
+}
 
-    ~GlobalFixture()
-    {
-        m_system_table.reset();
-    }
-
-    SystemTable::Ptr_t m_system_table;
-};
-
-BOOST_GLOBAL_FIXTURE(GlobalFixture);

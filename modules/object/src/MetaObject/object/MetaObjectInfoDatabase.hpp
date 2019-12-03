@@ -1,7 +1,9 @@
 #pragma once
 #include "MetaObject/detail/Export.hpp"
+#include <memory>
 #include <string>
 #include <vector>
+#include <map>
 namespace mo
 {
     class IMetaObjectInfo;
@@ -17,8 +19,6 @@ namespace mo
 
       private:
         MetaObjectInfoDatabase();
-        ~MetaObjectInfoDatabase();
-        struct impl;
-        impl* _pimpl;
+        std::map<std::string, IMetaObjectInfo*> info;
     };
 }

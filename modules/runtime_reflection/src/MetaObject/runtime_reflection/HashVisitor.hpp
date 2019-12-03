@@ -4,12 +4,12 @@
 
 namespace mo
 {
-    struct HashVisitor: public StaticVisitor
+    struct MO_EXPORTS HashVisitor: public StaticVisitor
     {
         HashVisitor(const bool hash_member_names = true, const bool hash_struct_names = true);
 
-        size_t generateObjecthash(const IStructTraits* traits);
-        size_t generateObjecthash(const IContainerTraits* traits);
+        size_t generateObjecthash(const IStructTraits* traits, const std::string& name = "");
+        size_t generateObjecthash(const IContainerTraits* traits, const std::string& name = "");
 
         void visit(const ITraits*, const std::string& name, const size_t cnt = 1) override;
     protected:

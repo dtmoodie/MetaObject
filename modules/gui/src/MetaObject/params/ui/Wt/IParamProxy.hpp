@@ -36,9 +36,9 @@ namespace mo
               protected:
                 template <class T, class E>
                 friend class TDataProxy;
-                virtual void onParamUpdate(mo::Context* ctx, mo::IParam* param) = 0;
+                virtual void onParamUpdate(mo::IAsyncStream* ctx, mo::IParam* param) = 0;
                 virtual void onUiUpdate() = 0;
-                mo::TSlot<void(mo::Context*, mo::IParam*)> _onUpdateSlot;
+                mo::TSlot<void(mo::IAsyncStream*, mo::IParam*)> _onUpdateSlot;
                 std::shared_ptr<mo::Connection> _onUpdateConnection;
                 MainApplication* _app;
             };
@@ -57,9 +57,9 @@ namespace mo
               protected:
                 template <class T, class E>
                 friend class TDataProxy;
-                virtual void onParamUpdate(mo::Context* ctx, mo::IParam* param) = 0;
+                virtual void onParamUpdate(mo::IAsyncStream* ctx, mo::IParam* param) = 0;
                 virtual void onUiUpdate() = 0;
-                mo::TSlot<void(mo::Context*, mo::IParam*)> _onUpdateSlot;
+                mo::TSlot<void(mo::IAsyncStream*, mo::IParam*)> _onUpdateSlot;
                 std::shared_ptr<mo::Connection> _onUpdateConnection;
                 MainApplication* _app;
             };
@@ -98,7 +98,7 @@ namespace mo
                     , _data_proxy()
                 {
                     auto token = param_->access();
-                    _data_proxy.CreateUi(this, token(), param_->checkFlags(ParamFlags::State_e));
+                    _data_proxy.CreateUi(this, token(), param_->checkFlags(ParamFlags::kSTATE));
                 }
                 void SetTooltip(const std::string& tip)
                 {
@@ -106,7 +106,7 @@ namespace mo
                 }
 
               protected:
-                void onParamUpdate(mo::Context* ctx, mo::IParam* param)
+                void onParamUpdate(mo::IAsyncStream* ctx, mo::IParam* param)
                 {
                     auto token = _param->access();
                     _app->getUpdateLock();
@@ -155,17 +155,17 @@ namespace mo
                     if (IPlotProxy* parent = dynamic_cast<IPlotProxy*>(parent_))
                     {
                         _data_proxy.CreateUi(
-                            parent, token(), param_->checkFlags(ParamFlags::State_e), param_->getTreeName());
+                            parent, token(), param_->checkFlags(ParamFlags::kSTATE), param_->getTreeName());
                     }
                     else
                     {
                         _data_proxy.CreateUi(
-                            this, token(), param_->checkFlags(ParamFlags::State_e), param_->getTreeName());
+                            this, token(), param_->checkFlags(ParamFlags::kSTATE), param_->getTreeName());
                     }
                 }
 
               protected:
-                void onParamUpdate(mo::Context* ctx, mo::IParam* param)
+                void onParamUpdate(mo::IAsyncStream* ctx, mo::IParam* param)
                 {
                     auto token = _param->access();
                     _app->getUpdateLock();

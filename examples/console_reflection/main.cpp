@@ -19,8 +19,8 @@ int main()
     // Print static object info
     for (IObjectConstructor* constructor : constructors)
     {
-        IObjectInfo* info = constructor->GetObjectInfo();
-        if (ExampleInterfaceInfo* interface_info = dynamic_cast<ExampleInterfaceInfo*>(info))
+        const IObjectInfo* info = constructor->GetObjectInfo();
+        if (const ExampleInterfaceInfo* interface_info = dynamic_cast<const ExampleInterfaceInfo*>(info))
         {
             interface_info->PrintHelp();
         }

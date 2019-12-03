@@ -3,17 +3,18 @@
 #include <cstdint>
 namespace mo
 {
+    // Keeps track of how much memory it has allocated
     template <class Allocator>
     struct UsagePolicy : public Allocator
     {
-        uint8_t* allocate(const size_t num_bytes, const size_t elem_size) override;
+        uint8_t* allocate(size_t num_bytes, size_t elem_size) override;
 
-        void deallocate(uint8_t* ptr, const size_t num_bytes) override;
+        void deallocate(uint8_t* ptr, size_t num_bytes) override;
 
         size_t usage() const;
 
       protected:
-        const size_t m_usage = 0;
+        size_t m_usage = 0;
     };
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////

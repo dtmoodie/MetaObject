@@ -9,7 +9,7 @@
  */
 struct ExampleInterfaceInfo : public mo::IMetaObjectInfo
 {
-    virtual void PrintHelp() = 0;
+    virtual void PrintHelp() const = 0;
 };
 
 namespace mo
@@ -25,7 +25,7 @@ namespace mo
          * \brief PrintHelp calls the static function PrintHelp in the concrete implementation
          *        'Type'
          */
-        virtual void PrintHelp()
+        virtual void PrintHelp() const
         {
             return Type::PrintHelp();
         }
@@ -48,9 +48,9 @@ class ExampleInterface : public TInterface<ExampleInterface, mo::MetaObject>
 
     // These macros are needed to initialize some reflection code
 
-    MO_BEGIN
-    MEMBER_FUNCTION(foo, &ExampleInterface::foo)
-    MO_END
+    MO_BEGIN(ExampleInterface)
+        MEMBER_FUNCTION(foo)
+    MO_END;
 
     // The one virtual function to be called from this interface.
     virtual void foo() = 0;

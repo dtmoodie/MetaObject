@@ -23,4 +23,6 @@
 #define MO_INLINE inline __attribute__((always_inline))
 #endif
 
+#define MO_XINLINE MO_INLINE
+
 #endif

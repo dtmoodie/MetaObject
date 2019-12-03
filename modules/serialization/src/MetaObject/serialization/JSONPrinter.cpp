@@ -1,5 +1,6 @@
 #include "JSONPrinter.hpp"
 #include <MetaObject/logging/logging.hpp>
+#include <ct/types/TArrayView.hpp>
 
 namespace mo
 {
@@ -15,7 +16,7 @@ namespace mo
         {
             m_ar.setNextName(name.c_str());
         }
-        if(cnt > 1)
+        if (cnt > 1)
         {
             m_ar.startNode();
             m_ar.makeArray();
@@ -24,7 +25,8 @@ namespace mo
                 m_ar(ptr[i]);
             }
             m_ar.finishNode();
-        }else
+        }
+        else
         {
             m_ar(ptr[0]);
         }
@@ -82,6 +84,7 @@ namespace mo
         return writePod(val, name, cnt);
     }
 #ifdef ENVIRONMENT64
+#ifndef _MSC_VER
     ISaveVisitor& JSONSaver::operator()(const long long* val, const std::string& name, const size_t cnt)
     {
         return writePod(val, name, cnt);
@@ -91,6 +94,7 @@ namespace mo
     {
         return writePod(val, name, cnt);
     }
+#endif
 #else
     ISaveVisitor& JSONSaver::operator()(const long int* val, const std::string& name, const size_t cnt)
     {
@@ -118,24 +122,24 @@ namespace mo
         return *this;
     }
 
-    ISaveVisitor& JSONSaver::operator()(ISaveStructTraits* val, const std::string& name)
+    ISaveVisitor& JSONSaver::operator()(IStructTraits* val, const void* inst, const std::string& name, size_t cnt)
     {
         if (!name.empty())
         {
             m_ar.setNextName(name.c_str());
         }
-        const auto cnt = val->count();
-        for(size_t i = 0; i < cnt; ++i)
+        const uint8_t* ptr = ct::ptrCast<const uint8_t>(inst);
+        for (size_t i = 0; i < cnt; ++i)
         {
             m_ar.startNode();
-            SaveCache::operator()(val, name);
-            val->increment();
+            SaveCache::operator()(val, ct::ptrCast<const void>(ptr), name, 1);
+            ptr += val->size();
             m_ar.finishNode();
         }
         return *this;
     }
 
-    ISaveVisitor& JSONSaver::operator()(ISaveContainerTraits* val, const std::string& name)
+    ISaveVisitor& JSONSaver::operator()(IContainerTraits* val, const void* inst, const std::string& name, size_t cnt)
     {
         if (!name.empty())
         {
@@ -149,7 +153,13 @@ namespace mo
                 m_ar.makeArray();
             }
         }
-        val->save(this);
+        if (val->type() == TypeInfo::create<std::string>())
+        {
+            m_ar.writeName();
+            m_ar.saveValue(*static_cast<const std::string*>(inst));
+            return *this;
+        }
+        val->save(*this, inst, name, cnt);
         if (val->type() != TypeInfo(typeid(std::string)))
         {
             m_ar.finishNode();
@@ -182,7 +192,7 @@ namespace mo
             m_ar.setNextName(name.c_str());
         }
         auto node_name = m_ar.getNodeName();
-        if(cnt > 1)
+        if (cnt > 1)
         {
             m_ar.startNode();
             cereal::size_type size;
@@ -198,7 +208,7 @@ namespace mo
                 m_last_read_name = name;
             }
         }
-        if(cnt > 1)
+        if (cnt > 1)
         {
             m_ar.finishNode();
         }
@@ -255,6 +265,7 @@ namespace mo
         return readPod(val, name, cnt);
     }
 #ifdef ENVIRONMENT64
+#ifndef _MSC_VER
     ILoadVisitor& JSONLoader::operator()(long long* val, const std::string& name, const size_t cnt)
     {
         return readPod(val, name, cnt);
@@ -264,6 +275,7 @@ namespace mo
     {
         return readPod(val, name, cnt);
     }
+#endif
 #else
     ILoadVisitor& JSONLoader::operator()(long int* val, const std::string& name, const size_t cnt)
     {
@@ -291,47 +303,60 @@ namespace mo
         return *this;
     }
 
-    ILoadVisitor& JSONLoader::operator()(ILoadStructTraits* val, const std::string& name)
+    ILoadVisitor& JSONLoader::operator()(IStructTraits* val, void* inst, const std::string& name, size_t cnt)
     {
         if (!name.empty())
         {
             m_ar.setNextName(name.c_str());
         }
-
-        const auto cnt = val->count();
-        for(size_t i = 0; i < cnt; ++i)
+        auto ptr = ct::ptrCast<uint8_t>(inst);
+        for (size_t i = 0; i < cnt; ++i)
         {
             auto name_ptr = m_ar.getNodeName();
             m_ar.startNode();
 
-            LoadCache::operator()(val, name);
+            LoadCache::operator()(val, ct::ptrCast<void>(ptr), name, 1);
             if (name_ptr)
             {
                 m_last_read_name = name_ptr;
             }
-            val->increment();
-
+            ptr += val->size();
             m_ar.finishNode();
         }
 
         return *this;
     }
 
-    ILoadVisitor& JSONLoader::operator()(ILoadContainerTraits* val, const std::string& name)
+    ILoadVisitor& JSONLoader::operator()(IContainerTraits* val, void* inst, const std::string& name, size_t cnt)
     {
+        MO_ASSERT_EQ(cnt, 1);
+        std::string container_name = name;
+        const std::string node_name = m_ar.getNodeName();
+        if (val->type() == TypeInfo::create<std::string>() && name == node_name)
+        {
+            std::string val;
+            m_ar.loadValue(val);
+            *static_cast<std::string*>(inst) = val;
+            return *this;
+        }
         if (!name.empty())
         {
             m_ar.setNextName(name.c_str());
         }
         if (val->type() != TypeInfo(typeid(std::string)))
         {
-            auto parent_name = m_ar.getNodeName();
             m_ar.startNode();
+            if (node_name == name)
+            {
+                container_name.clear();
+            }
+
             if (val->keyType() != TypeInfo(typeid(std::string)))
             {
                 uint64_t size;
                 m_ar.loadSize(size);
-                val->setSize(size);
+                val->setContainerSize(size, inst);
+                m_current_size = size;
             }
             else
             {
@@ -347,13 +372,14 @@ namespace mo
                     m_ar.startNode();
                     m_ar.finishNode();
                 }
-                val->setSize(count);
+                val->setContainerSize(count, inst);
+                m_current_size = count;
                 m_ar.finishNode();
-                m_ar.setNextName(parent_name);
+                m_ar.setNextName(node_name.c_str());
                 m_ar.startNode();
             }
         }
-        val->load(this);
+        val->load(*this, inst, container_name, cnt);
         if (val->type() != TypeInfo(typeid(std::string)))
         {
             m_ar.finishNode();
@@ -373,4 +399,9 @@ namespace mo
     {
         return m_last_read_name;
     }
-}
+
+    size_t JSONLoader::getCurrentContainerSize() const
+    {
+        return m_current_size;
+    }
+} // namespace mo

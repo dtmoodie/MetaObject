@@ -27,7 +27,7 @@ namespace mo
 
     TraitRegistry& TraitRegistry::instance(SystemTable* table)
     {
-        auto inst = singleton<TraitRegistry>(table);
+        auto inst = table->getSingleton<TraitRegistry>();
         MO_ASSERT(inst);
         return *inst;
     }
@@ -47,7 +47,24 @@ namespace mo
     {
     }
 
-    const std::unordered_map<TypeInfo, std::unique_ptr<ITraits>>& TraitRegistry::getTraits()
+    void TraitRegistry::registerTrait(TypeInfo type, const ITraits* trait)
+    {
+        SystemTable::dispatchToSystemTable([type, trait](SystemTable* table)
+        {
+            TraitRegistry::instance(table).registerTraitImpl(type, trait);
+        });
+    }
+
+    void TraitRegistry::registerTraitImpl(TypeInfo type, const ITraits* trait)
+    {
+        auto itr = m_traits.find(type);
+        if(itr == m_traits.end())
+        {
+            m_traits[type] = trait;
+        }
+    }
+
+    std::unordered_map<TypeInfo, const ITraits*> TraitRegistry::getTraits()
     {
         return m_traits;
     }

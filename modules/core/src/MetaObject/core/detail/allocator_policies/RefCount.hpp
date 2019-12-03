@@ -6,14 +6,22 @@
 
 namespace mo
 {
+
+    // Maintain a reference count to the number of allocated blocks of data out of this allocator
+    // Then warn on delete with non zero ref count
     template <class BaseAllocator>
     class RefCountPolicy : public BaseAllocator
     {
       public:
+        RefCountPolicy() = default;
+        RefCountPolicy(const RefCountPolicy&) = default;
+        RefCountPolicy(RefCountPolicy&&) noexcept = default;
+        RefCountPolicy& operator=(const RefCountPolicy&) = default;
+        RefCountPolicy& operator=(RefCountPolicy&&) noexcept = default;
         ~RefCountPolicy();
-        uint8_t* allocate(const size_t num_bytes, const size_t elem_size) override;
+        uint8_t* allocate(size_t num_bytes, size_t elem_size) override;
 
-        void deallocate(uint8_t* ptr, const size_t num_bytes) override;
+        void deallocate(uint8_t* ptr, size_t num_bytes) override;
 
         size_t refCount() const;
 
@@ -28,8 +36,7 @@ namespace mo
     {
         if (m_ref_count != 0)
         {
-
-            MO_LOG(warn, "Trying to delete allocator with {}  mats still referencing it", m_ref_count);
+            MO_LOG(warn, "Trying to delete allocator with {} data still referencing it", m_ref_count);
         }
     }
 

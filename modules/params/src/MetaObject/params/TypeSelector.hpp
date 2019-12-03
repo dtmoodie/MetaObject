@@ -1,17 +1,17 @@
 #pragma once
-#include <ct/Indexer.hpp>
 #include <MetaObject/detail/TypeInfo.hpp>
+#include <ct/Indexer.hpp>
 #include <tuple>
 
 namespace mo
 {
-    /*template <class F, class T>
-    struct TypeSelector;*/
-
     template <class F, class... T>
     struct TypeSelector
     {
-        TypeSelector(F& functor) : m_func(functor) {}
+        TypeSelector(F& functor)
+            : m_func(functor)
+        {
+        }
 
         template <class... Args>
         bool apply(const mo::TypeInfo& type, Args&&... args)
@@ -23,7 +23,7 @@ namespace mo
         template <class... Args>
         bool applyImpl(const ct::Indexer<0>, const mo::TypeInfo& type, Args&&... args)
         {
-            typedef typename std::tuple_element<0, std::tuple<T...>>::type Type;
+            using Type = typename std::tuple_element<0, std::tuple<T...>>::type;
             if (mo::TypeInfo(typeid(Type)) == type)
             {
                 m_func.template apply<Type>(std::forward<Args>(args)...);
@@ -33,19 +33,17 @@ namespace mo
         }
 
         template <int I, class... Args>
-        bool
-        applyImpl(const ct::Indexer<I> cnt, const typename std::enable_if<I != 0, mo::TypeInfo>::type& type, Args&&... args)
+        bool applyImpl(const ct::Indexer<I> cnt,
+                       const typename std::enable_if<I != 0, mo::TypeInfo>::type& type,
+                       Args&&... args)
         {
-            typedef typename std::tuple_element<I, std::tuple<T...>>::type Type;
+            using Type = typename std::tuple_element<I, std::tuple<T...>>::type;
             if (mo::TypeInfo(typeid(Type)) == type)
             {
                 m_func.template apply<Type>(std::forward<Args>(args)...);
                 return true;
             }
-            else
-            {
-                return applyImpl(--cnt, type, std::forward<Args>(args)...);
-            }
+            return applyImpl(--cnt, type, std::forward<Args>(args)...);
         }
 
         F& m_func;
@@ -54,7 +52,10 @@ namespace mo
     template <class F, class... T>
     struct TypeSelector<F, std::tuple<T...>>
     {
-        TypeSelector(F& functor) : m_func(functor) {}
+        TypeSelector(F& functor)
+            : m_func(functor)
+        {
+        }
 
         template <class... Args>
         bool apply(const mo::TypeInfo& type, Args&&... args)
@@ -66,7 +67,7 @@ namespace mo
         template <class... Args>
         bool applyImpl(const ct::Indexer<0>, const mo::TypeInfo& type, Args&&... args)
         {
-            typedef typename std::tuple_element<0, std::tuple<T...>>::type Type;
+            using Type = typename std::tuple_element<0, std::tuple<T...>>::type;
             if (mo::TypeInfo(typeid(Type)) == type)
             {
                 m_func.template apply<Type>(std::forward<Args>(args)...);
@@ -76,19 +77,17 @@ namespace mo
         }
 
         template <int I, class... Args>
-        bool
-        applyImpl(const ct::Indexer<I> cnt, const typename std::enable_if<I != 0, mo::TypeInfo>::type& type, Args&&... args)
+        bool applyImpl(const ct::Indexer<I> cnt,
+                       const typename std::enable_if<I != 0, mo::TypeInfo>::type& type,
+                       Args&&... args)
         {
-            typedef typename std::tuple_element<I, std::tuple<T...>>::type Type;
+            using Type = typename std::tuple_element<I, std::tuple<T...>>::type;
             if (mo::TypeInfo(typeid(Type)) == type)
             {
                 m_func.template apply<Type>(std::forward<Args>(args)...);
                 return true;
             }
-            else
-            {
-                return applyImpl(--cnt, type, std::forward<Args>(args)...);
-            }
+            return applyImpl(--cnt, type, std::forward<Args>(args)...);
         }
 
         F& m_func;
@@ -97,7 +96,10 @@ namespace mo
     template <class F, class... T>
     struct TypeLoop
     {
-        TypeLoop(F& func) : m_func(func) {}
+        TypeLoop(F& func)
+            : m_func(func)
+        {
+        }
         template <class... Args>
         void apply(Args&&... args)
         {
@@ -108,13 +110,13 @@ namespace mo
         template <class... Args>
         void applyImpl(std::integral_constant<int, 0>, Args&&... args)
         {
-            typedef typename std::tuple_element<0, std::tuple<T...>>::type Type;
+            using Type = typename std::tuple_element<0, std::tuple<T...>>::type;
             m_func.template apply<Type>(std::forward<Args>(args)...);
         }
         template <int I, class... Args>
         void applyImpl(std::integral_constant<int, I>, Args&&... args)
         {
-            typedef typename std::tuple_element<I, std::tuple<T...>>::type Type;
+            using Type = typename std::tuple_element<I, std::tuple<T...>>::type;
             m_func.template apply<Type>(std::forward<Args>(args)...);
             applyImpl(std::integral_constant<int, I - 1>(), std::forward<Args>(args)...);
         }

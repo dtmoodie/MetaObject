@@ -1,9 +1,8 @@
+
+
 #include "MetaObject/core/detail/MemoryBlock.hpp"
 #include "MetaObject/core/detail/Allocator.hpp"
 #include <MetaObject/logging/logging.hpp>
-#include <algorithm>
-#include <utility>
-#include <vector>
 
 namespace mo
 {
@@ -21,5 +20,5 @@ namespace mo
         free(data);
     }
 
-    template class MemoryBlock<CPU>;
+    template struct MemoryBlock<CPU>;
 }

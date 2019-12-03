@@ -10,11 +10,12 @@ Connection::~Connection()
 {
 }
 
-SlotConnection::SlotConnection(ISlot* slot, std::shared_ptr<ISignalRelay> relay)
+SlotConnection::SlotConnection(ISlot* slot, const std::shared_ptr<ISignalRelay>& relay)
     : _slot(slot)
     , _relay(relay)
 {
 }
+
 SlotConnection::~SlotConnection()
 {
     // disconnect();
@@ -49,7 +50,7 @@ bool ClassConnection::disconnect()
     return false;
 }
 
-SignalConnection::SignalConnection(ISignal* signal, std::shared_ptr<ISignalRelay> relay)
+SignalConnection::SignalConnection(ISignal* signal, const std::shared_ptr<ISignalRelay>& relay)
     : _signal(signal)
     , _relay(relay)
 {
@@ -62,4 +63,15 @@ bool SignalConnection::disconnect()
         return _signal->disconnect(_relay);
     }
     return false;
+}
+
+ConnectionSet::ConnectionSet(std::vector<Connection::Ptr_t>&& connections)
+    : m_connections(connections)
+{
+}
+
+bool ConnectionSet::disconnect()
+{
+    m_connections.clear();
+    return true;
 }

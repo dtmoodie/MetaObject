@@ -1,5 +1,4 @@
 #include "MetaObject/params/ParamFactory.hpp"
-#include "MetaObject/core/detail/singleton.hpp"
 #include "MetaObject/logging/logging.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include <map>
@@ -13,7 +12,7 @@ struct ParamFactory::impl
 };
 
 ParamFactory::ParamFactory()
-    : m_pimpl(std::unique_ptr<ParamFactory::impl>(new ParamFactory::impl()))
+    : m_pimpl(new ParamFactory::impl())
 {
 }
 
@@ -24,7 +23,7 @@ ParamFactory::~ParamFactory()
 
 ParamFactory* ParamFactory::instance()
 {
-    return uniqueSingleton<ParamFactory>();
+    return singleton<ParamFactory>().get();
 }
 
 void ParamFactory::registerConstructor(const TypeInfo& data_type, create_f function, BufferFlags param_type)

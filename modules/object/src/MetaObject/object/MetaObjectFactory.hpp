@@ -70,19 +70,19 @@ namespace mo
         MetaObjectFactory() = default;
         virtual ~MetaObjectFactory();
 
-        virtual IMetaObject* create(const char* type_name, int64_t interface_id = -1) = 0;
+        virtual rcc::shared_ptr<IMetaObject> create(const char* type_name, int64_t interface_id = -1) = 0;
         template <class T>
-        T* create(const char* type_name);
+        rcc::shared_ptr<T> create(const char* type_name);
 
-        virtual IMetaObject* get(ObjectId id, const char* type_name) = 0;
+        virtual rcc::shared_ptr<IMetaObject> get(ObjectId id, const char* type_name) = 0;
 
         virtual std::vector<std::string> listConstructableObjects(int interface_id = -1) const = 0;
         virtual std::string printAllObjectInfo(int64_t interface_id = -1) const = 0;
 
         virtual std::vector<IObjectConstructor*> getConstructors(int64_t interface_id = -1) const = 0;
         virtual IObjectConstructor* getConstructor(const char* type_name) const = 0;
-        virtual IObjectInfo* getObjectInfo(const char* type_name) const = 0;
-        virtual std::vector<IObjectInfo*> getAllObjectInfo() const = 0;
+        virtual const IObjectInfo* getObjectInfo(const char* type_name) const = 0;
+        virtual std::vector<const IObjectInfo*> getAllObjectInfo() const = 0;
 
         virtual bool loadPlugin(const std::string& filename) = 0;
         virtual int loadPlugins(const std::string& path = "./") = 0;
@@ -110,26 +110,23 @@ namespace mo
 
         template <class T>
         std::vector<typename T::InterfaceInfo*> getObjectInfos();
+
+        template <class TINFO, class SCORING_FUNCTOR>
+        IObjectConstructor* selectBestObjectConstructor(int64_t interface_id, SCORING_FUNCTOR&& scorer) const;
+
+        template <class T, class TINFO, class SCORING_FUNCTOR>
+        rcc::shared_ptr<T> createBestObject(int64_t interface_id, SCORING_FUNCTOR&& scorer) const;
     };
 
     MO_INLINE std::shared_ptr<MetaObjectFactory> MetaObjectFactory::instance()
     {
-        std::shared_ptr<MetaObjectFactory> ptr;
-        auto module = PerModuleInterface::GetInstance();
-        if (module)
-        {
-            auto table = module->GetSystemTable();
-            return instance(table);
-
-        }
-        MO_ASSERT(ptr);
-        return ptr;
+        return singleton<MetaObjectFactory>();
     }
 
     template <class T>
-    T* MetaObjectFactory::create(const char* type_name)
+    rcc::shared_ptr<T> MetaObjectFactory::create(const char* type_name)
     {
-        return static_cast<T*>(create(type_name, T::s_interfaceID));
+        return create(type_name, T::s_interfaceID);
     }
 
     template <class T>
@@ -145,9 +142,11 @@ namespace mo
         std::vector<typename T::InterfaceInfo*> output;
         for (auto constructor : constructors)
         {
-            typename T::InterfaceInfo* info = dynamic_cast<typename T::InterfaceInfo*>(constructor->GetObjectInfo());
+            const auto* info = dynamic_cast<const typename T::InterfaceInfo*>(constructor->GetObjectInfo());
             if (info)
+            {
                 output.push_back(info);
+            }
         }
         return output;
     }
@@ -156,6 +155,47 @@ namespace mo
     {
         auto module = PerModuleInterface::GetInstance();
         setupObjectConstructors(module);
+    }
+
+    template <class TINFO, class SCORING_FUNCTOR>
+    IObjectConstructor* MetaObjectFactory::selectBestObjectConstructor(int64_t interface_id,
+                                                                       SCORING_FUNCTOR&& scorer) const
+    {
+        IObjectConstructor* best = nullptr;
+        int32_t priority = 0;
+        const auto ctrs = getConstructors(interface_id);
+
+        for (auto ctr : ctrs)
+        {
+            const auto info = ctr->GetObjectInfo();
+            const auto tinfo = dynamic_cast<const TINFO*>(info);
+            if (tinfo)
+            {
+                auto score = scorer(*tinfo);
+                if (score > priority)
+                {
+                    best = ctr;
+                    priority = score;
+                }
+            }
+        }
+        return best;
+    }
+
+    template <class T, class TINFO, class SCORING_FUNCTOR>
+    rcc::shared_ptr<T> MetaObjectFactory::createBestObject(int64_t interface_id, SCORING_FUNCTOR&& scorer) const
+    {
+        auto ctr = selectBestObjectConstructor<TINFO>(interface_id, scorer);
+        if (ctr)
+        {
+            auto obj = ctr->Construct();
+            if (obj)
+            {
+                obj->Init(true);
+                return rcc::shared_ptr<T>(obj);
+            }
+        }
+        return {};
     }
 
 } // namespace mo

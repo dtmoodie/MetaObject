@@ -1,9 +1,7 @@
 #include <MetaObject/runtime_reflection.hpp>
 #include <MetaObject/params.hpp>
 
-#include <boost/test/test_tools.hpp>
-#include <boost/test/unit_test_suite.hpp>
-
+#include <gtest/gtest.h>
 
 #include "../../runtime_reflection/tests/common.hpp"
 
@@ -58,13 +56,13 @@ void acceptsPtr(const int64_t* ptr)
 
 }
 
-BOOST_AUTO_TEST_CASE(Reflect)
+TEST(runtime_reflection, reflect)
 {
     ReflectTester tester;
     testTypes(tester);
 }
 
-BOOST_AUTO_TEST_CASE(Serialize)
+TEST(runtime_reflection, serialize)
 {
 
 }

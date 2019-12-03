@@ -1,21 +1,21 @@
-#ifdef MO_HAVE_OPENCV
 #include <MetaObject/core/detail/Allocator.hpp>
 #include <MetaObject/core/detail/StlAllocator.hpp>
 #include <MetaObject/core/detail/Time.hpp>
 
+#include <MetaObject/core/detail/StlAllocator.hpp>
 #include <MetaObject/core/detail/allocator_policies/Combined.hpp>
 #include <MetaObject/core/detail/allocator_policies/Continuous.hpp>
 #include <MetaObject/core/detail/allocator_policies/Lock.hpp>
 #include <MetaObject/core/detail/allocator_policies/Pool.hpp>
 #include <MetaObject/core/detail/allocator_policies/Stack.hpp>
-#include <MetaObject/core/detail/allocator_policies/opencv.hpp>
 
-#include <boost/test/auto_unit_test.hpp>
-#include <boost/test/test_tools.hpp>
+#include "gtest/gtest.h"
 
 using namespace mo;
+#ifdef HAVE_OPENCV
+#include <MetaObject/core/detail/allocator_policies/opencv.hpp>
 
-BOOST_AUTO_TEST_CASE(test_cpu_pooled_allocation)
+TEST(allocation, cpu_pooled)
 {
     auto start = Time::now();
 
@@ -73,10 +73,10 @@ BOOST_AUTO_TEST_CASE(test_cpu_pooled_allocation)
     std::cout << " Default Allocator Time: " << non_pinned_time << "\n"
               << " Pinned Allocator Time:  " << non_pooled_time << "\n"
               << " Pooled Time:            " << pooled_time << "\n"
-              << " Thead Safe Pooled Time: " << mt_pooled_time;
+              << " Thead Safe Pooled Time: " << mt_pooled_time << std::endl;
 }
 
-BOOST_AUTO_TEST_CASE(test_cpu_stack_allocation)
+TEST(allocation, cpu_stack)
 {
     auto start = Time::now();
     cv::Mat zeroAlloc(2000, 2000, CV_32FC2);
@@ -144,10 +144,10 @@ BOOST_AUTO_TEST_CASE(test_cpu_stack_allocation)
               << " Pinned Allocator Time:    " << non_pooled_time << "\n"
               << " Pooled Time:              " << pooled_time << "\n"
               << " Thead Safe Pooled Time:   " << mt_pooled_time << "\n"
-              << " Zero Allocation Time:     " << zero_alloc_time;
+              << " Zero Allocation Time:     " << zero_alloc_time << "\n";
 }
 
-BOOST_AUTO_TEST_CASE(test_cpu_combined_allocation)
+TEST(allocation, cpu_combined)
 {
     CvAllocator<CombinedPolicy<PoolPolicy<CPU>, StackPolicy<CPU>>> allocator;
     cv::Mat::setDefaultAllocator(&allocator);
@@ -202,3 +202,48 @@ BOOST_AUTO_TEST_CASE(test_cpu_combined_allocation)
               << " Set Allocation Pattern:    " << mt_set_size << "\n";
 }
 #endif
+
+TEST(allocation, vector)
+{
+    auto allocator = mo::Allocator::getDefault();
+    ASSERT_NE(allocator, nullptr);
+    std::vector<size_t> sizes = {size_t(1e3), size_t(1e8)};
+    for (size_t sz : sizes)
+    {
+        StlAllocator<float> stl_allocator(allocator);
+        std::vector<float, StlAllocator<float>> vector(stl_allocator);
+        vector.reserve(sz);
+        ASSERT_EQ(vector.capacity(), sz);
+        for (size_t i = 0; i < vector.size(); ++i)
+        {
+            vector[i] = static_cast<float>(i);
+        }
+        {
+            std::vector<float, StlAllocator<float>> vector2(stl_allocator);
+            vector2.reserve(sz - sz / 2);
+            for (size_t i = 0; i < vector2.size(); ++i)
+            {
+                vector2[i] = static_cast<float>(i * 2);
+            }
+        }
+
+        for (size_t i = 0; i < vector.size(); ++i)
+        {
+            ASSERT_EQ(vector[i], i);
+        }
+
+        {
+            std::vector<float, StlAllocator<float>> vector2(stl_allocator);
+            vector2.reserve(sz + sz / 2);
+            for (size_t i = 0; i < vector2.size(); ++i)
+            {
+                vector2[i] = static_cast<float>(i * 2);
+            }
+        }
+
+        for (size_t i = 0; i < vector.size(); ++i)
+        {
+            ASSERT_EQ(vector[i], i);
+        }
+    }
+}

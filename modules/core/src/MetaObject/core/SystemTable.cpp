@@ -1,6 +1,7 @@
+
+
 #include "SystemTable.hpp"
 #include "MetaObject/logging/logging.hpp"
-#include "singletons.hpp"
 
 #include <MetaObject/thread/FiberScheduler.hpp>
 #include <MetaObject/thread/ThreadPool.hpp>
@@ -19,10 +20,6 @@
 using Allocator_t =
     mo::CombinedPolicy<mo::LockPolicy<mo::PoolPolicy<mo::CPU>>, mo::LockPolicy<mo::StackPolicy<mo::CPU>>>;
 
-mo::ISingletonContainer::~ISingletonContainer()
-{
-}
-
 std::shared_ptr<SystemTable> SystemTable::instanceImpl()
 {
     static std::weak_ptr<SystemTable> inst;
@@ -30,8 +27,9 @@ std::shared_ptr<SystemTable> SystemTable::instanceImpl()
     if (!output)
     {
         output.reset(new SystemTable());
+        MO_LOG(info, "Created new system table instance at {}", static_cast<void*>(output.get()));
         inst = output;
-        std::shared_ptr<mo::ThreadPool> pool = mo::sharedSingleton<mo::ThreadPool>(output.get());
+        std::shared_ptr<mo::ThreadPool> pool = output->getSingleton<mo::ThreadPool>();
         boost::fibers::use_scheduling_algorithm<mo::PriorityScheduler>(pool);
     }
     return output;
@@ -76,6 +74,11 @@ mo::AllocatorPtr_t SystemTable::getDefaultAllocator()
     return m_default_allocator;
 }
 
+void SystemTable::setDefaultAllocator(mo::AllocatorPtr_t alloc)
+{
+    m_default_allocator = std::move(alloc);
+}
+
 void SystemTable::setAllocatorConstructor(std::function<mo::AllocatorPtr_t()>&& ctr)
 {
     MO_ASSERT_FMT(ctr, "Can't set an empty function for allocator construction");
@@ -85,4 +88,42 @@ void SystemTable::setAllocatorConstructor(std::function<mo::AllocatorPtr_t()>&& 
 mo::AllocatorPtr_t SystemTable::createAllocator() const
 {
     return m_allocator_constructor();
+}
+
+mo::IObjectTable::IObjectContainer* SystemTable::getObjectContainer(const mo::TypeInfo type) const
+{
+    auto itr = m_singletons.find(type);
+    if (itr != m_singletons.end())
+    {
+        return itr->second.get();
+    }
+    return nullptr;
+}
+
+void SystemTable::setObjectContainer(mo::TypeInfo type, IObjectContainer::Ptr_t&& container)
+{
+    m_singletons[type] = std::move(container);
+    MO_LOG(trace,
+           "Creating new singleton instance of type {} in system table {}",
+           mo::TypeTable::instance(this)->typeToName(type),
+           static_cast<const void*>(this));
+}
+
+const std::shared_ptr<spdlog::logger>& SystemTable::getDefaultLogger()
+{
+    if (!m_logger)
+    {
+        auto logger = mo::getLoggerRegistry().get("default");
+        if (!logger)
+        {
+            logger = mo::getLoggerRegistry().create("default", spdlog::sinks::stdout_sink_mt::instance());
+        }
+        m_logger = logger;
+    }
+    return m_logger;
+}
+
+void SystemTable::setDefaultLogger(const std::shared_ptr<spdlog::logger>& logger)
+{
+    m_logger = logger;
 }

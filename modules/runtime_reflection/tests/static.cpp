@@ -1,7 +1,10 @@
 #include "common.hpp"
+#include <MetaObject/runtime_reflection/visitor_traits/array_adapter.hpp>
 
 #include <MetaObject/runtime_reflection.hpp>
 #include <MetaObject/runtime_reflection/HashVisitor.hpp>
+
+#include "gtest/gtest.h"
 
 namespace
 {
@@ -13,12 +16,12 @@ namespace
             mo::HashVisitor hasher;
 
             auto trait = mo::makeTraits<T>(static_cast<T*>(nullptr));
-
-            const auto hash = hasher.generateObjecthash(&trait);
+            using base = typename decltype(trait)::base;
+            const auto hash = hasher.generateObjecthash(static_cast<base*>(&trait));
 
             m_hashes[mo::TypeInfo(typeid(T)).name()] = hash;
 
-            BOOST_REQUIRE_EQUAL(std::count(m_hash_list.begin(),m_hash_list.end(), hash), 0);
+            ASSERT_EQ(std::count(m_hash_list.begin(),m_hash_list.end(), hash), 0);
             m_hash_list.push_back(hash);
         }
 
@@ -38,7 +41,7 @@ namespace
         template<class T>
         typename std::enable_if<std::is_base_of<mo::IStructTraits, mo::TTraits<T>>::value>::type testImpl(const T& data)
         {
-            auto trait = mo::makeTraits<T>(&data);
+            auto trait = mo::makeTraits(&data);
             if(trait.triviallySerializable())
             {
                 T tmp;
@@ -70,7 +73,7 @@ namespace
     };
 }
 
-BOOST_AUTO_TEST_CASE(Hash)
+TEST(static_reflection, hash)
 {
     Tester tester;
     testTypes(tester);
@@ -126,51 +129,51 @@ namespace ct
 
 }
 
-BOOST_AUTO_TEST_CASE(DetectSimilarity)
+TEST(static_reflection, DetectSimilarity)
 {
-
+    mo::TTraits<std::array<float, 4>, 4, void> test;
     {
         mo::HashVisitor hasher(true, false);
         const auto trait_a = mo::makeTraits(static_cast<VecA*>(nullptr));
-        const auto hash_a = hasher.generateObjecthash(&trait_a);
+        const auto hash_a = hasher.generateObjecthash(&trait_a, "");
 
         const auto trait_b = mo::makeTraits(static_cast<VecB*>(nullptr));
-        const auto hash_b = hasher.generateObjecthash(&trait_b);
+        const auto hash_b = hasher.generateObjecthash(&trait_b, "");
 
         const auto trait_c = mo::makeTraits(static_cast<VecC*>(nullptr));
-        const auto hash_c = hasher.generateObjecthash(&trait_c);
+        const auto hash_c = hasher.generateObjecthash(&trait_c, "");
 
         const auto trait_q = mo::makeTraits(static_cast<Quat*>(nullptr));
-        const auto hash_q = hasher.generateObjecthash(&trait_q);
+        const auto hash_q = hasher.generateObjecthash(&trait_q, "");
 
-        BOOST_REQUIRE_EQUAL(hash_a, hash_b);
-        BOOST_REQUIRE_NE(hash_a, hash_c);
-        BOOST_REQUIRE_NE(hash_a, hash_q);
-        BOOST_REQUIRE_NE(hash_c, hash_q);
+        ASSERT_EQ(hash_a, hash_b);
+        ASSERT_NE(hash_a, hash_c);
+        ASSERT_NE(hash_a, hash_q);
+        ASSERT_NE(hash_c, hash_q);
     }
 
     {
         mo::HashVisitor hasher(false, false);
         const auto trait_a = mo::makeTraits(static_cast<VecA*>(nullptr));
-        const auto hash_a = hasher.generateObjecthash(&trait_a);
+        const auto hash_a = hasher.generateObjecthash(&trait_a, "");
 
         const auto trait_b = mo::makeTraits(static_cast<VecB*>(nullptr));
-        const auto hash_b = hasher.generateObjecthash(&trait_b);
+        const auto hash_b = hasher.generateObjecthash(&trait_b, "");
 
         const auto trait_c = mo::makeTraits(static_cast<VecC*>(nullptr));
-        const auto hash_c = hasher.generateObjecthash(&trait_c);
+        const auto hash_c = hasher.generateObjecthash(&trait_c, "");
 
         const auto trait_q = mo::makeTraits(static_cast<Quat*>(nullptr));
-        const auto hash_q = hasher.generateObjecthash(&trait_q);
+        const auto hash_q = hasher.generateObjecthash(&trait_q, "");
 
-        BOOST_REQUIRE_EQUAL(hash_a, hash_b);
-        BOOST_REQUIRE_EQUAL(hash_a, hash_c);
-        BOOST_REQUIRE_NE(hash_a, hash_q);
-        BOOST_REQUIRE_NE(hash_c, hash_q);
+        ASSERT_EQ(hash_a, hash_b);
+        ASSERT_EQ(hash_a, hash_c);
+        ASSERT_NE(hash_a, hash_q);
+        ASSERT_NE(hash_c, hash_q);
     }
 }
 
-BOOST_AUTO_TEST_CASE(TrivialSerializability)
+TEST(static_reflection, TrivialSerializability)
 {
     TrivialSerializableTester tester;
     testTypes(tester);

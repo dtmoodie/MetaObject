@@ -1,9 +1,12 @@
 #include "Header.hpp"
+#include <ct/reflect_traits.hpp>
 
 namespace mo
 {
-    Header::Header()
-        : stream(nullptr)
+    Header::Header(mo::OptionalTime ts, FrameNumber fn)
+        : timestamp(std::move(ts))
+        , frame_number(fn)
+        , stream(nullptr)
     {
     }
 
@@ -18,7 +21,13 @@ namespace mo
     {
     }
 
-    Header::Header(const uint64_t fn)
+    Header::Header(FrameNumber fn)
+        : frame_number(fn)
+        , stream(nullptr)
+    {
+    }
+
+    Header::Header(uint64_t fn)
         : frame_number(fn)
         , stream(nullptr)
     {
@@ -30,10 +39,8 @@ namespace mo
         {
             return *timestamp == *other.timestamp;
         }
-        else
-        {
-            return frame_number == other.frame_number;
-        }
+
+        return frame_number == other.frame_number;
     }
 
     bool Header::operator!=(const Header& other) const
@@ -47,10 +54,7 @@ namespace mo
         {
             return *timestamp > *other.timestamp;
         }
-        else
-        {
-            return frame_number > other.frame_number;
-        }
+        return frame_number > other.frame_number;
     }
 
     bool Header::operator<(const Header& other) const
@@ -59,9 +63,8 @@ namespace mo
         {
             return *timestamp < *other.timestamp;
         }
-        else
-        {
-            return frame_number < other.frame_number;
-        }
+        return frame_number < other.frame_number;
     }
+
+    static_assert(ct::IsReflected<Header>::value, "");
 }

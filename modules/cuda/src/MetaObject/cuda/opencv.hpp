@@ -14,24 +14,25 @@ namespace mo
     {
         using GpuMat = cv::cuda::GpuMat;
 
-        template<class PADDING_POLICY = mo::ContinuousPolicy>
-        struct AllocatorProxy: public GpuMat::Allocator
+        template <class PADDING_POLICY = mo::ContinuousPolicy>
+        struct AllocatorProxy : public GpuMat::Allocator
         {
-            inline AllocatorProxy(mo::Allocator* allocator);
-            inline bool allocate(GpuMat* mat, int rows, int cols, size_t elemSize) override;
+            inline AllocatorProxy(mo::DeviceAllocator* allocator);
+            inline bool allocate(GpuMat* mat, int rows, int cols, size_t elem_size) override;
             inline void free(GpuMat* mat) override;
-        private:
-            mo::Allocator* m_allocator;
+
+          private:
+            mo::DeviceAllocator* m_allocator;
             PADDING_POLICY m_pad_policy;
         };
 
-        template<class PADDING_POLICY>
-        AllocatorProxy<PADDING_POLICY>::AllocatorProxy(mo::Allocator* allocator):
-            m_allocator(allocator)
+        template <class PADDING_POLICY>
+        AllocatorProxy<PADDING_POLICY>::AllocatorProxy(mo::DeviceAllocator* allocator)
+            : m_allocator(allocator)
         {
         }
 
-        template<class PADDING_POLICY>
+        template <class PADDING_POLICY>
         bool AllocatorProxy<PADDING_POLICY>::allocate(GpuMat* mat, int rows, int cols, size_t elem_size)
         {
             size_t size_needed, stride;
@@ -48,7 +49,7 @@ namespace mo
             return true;
         }
 
-        template<class PADDING_POLICY>
+        template <class PADDING_POLICY>
         void AllocatorProxy<PADDING_POLICY>::free(GpuMat* mat)
         {
             m_allocator->deallocate(mat->datastart, mat->dataend - mat->datastart);

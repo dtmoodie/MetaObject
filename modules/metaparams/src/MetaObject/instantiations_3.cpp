@@ -1,8 +1,10 @@
 #include "MetaObject/core/metaobject_config.hpp"
 #ifdef MO_HAVE_OPENCV
+#include "MetaObject/types/opencv.hpp"
+
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "MetaObject/params/MetaParam.hpp"
-#include "MetaObject/types/opencv.hpp"
+
 #include "ct/reflect/cerealize.hpp"
 #include <opencv2/core/types.hpp>
 

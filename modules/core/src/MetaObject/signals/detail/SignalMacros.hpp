@@ -92,7 +92,7 @@
 #define MO_SIGNAL_(N, RETURN, NAME, ...)                                                                               \
     mo::TSignal<RETURN(__VA_ARGS__)> COMBINE(_sig_##NAME##_, N);                                                       \
     SIGNAL_CALL(N, NAME, RETURN, ##__VA_ARGS__)                                                                        \
-    constexpr static auto getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_START>)                                 \
+    constexpr static auto getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_BEGIN>)                                 \
     {                                                                                                                  \
         return ct::makeMemberObjectPointer(#NAME, &DataType::COMBINE(_sig_##NAME##_, N));                              \
     }

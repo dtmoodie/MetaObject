@@ -7,7 +7,7 @@ namespace mo
 {
     namespace buffer
     {
-        Map::Map(const std::string& name, const PushPolicy push_policy, const SearchPolicy search_policy)
+        Map::Map(const std::string& name, PushPolicy push_policy, SearchPolicy search_policy)
             : IParam(name)
             , m_push_policy(push_policy)
             , m_search_policy(search_policy)
@@ -15,6 +15,7 @@ namespace mo
             m_update_slot = std::bind(
                 &Map::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
             IParam::setMtx(&m_mtx);
+            appendFlags(mo::ParamFlags::kBUFFER);
         }
 
         Map::~Map()
@@ -60,7 +61,7 @@ namespace mo
         bool Map::getTimestampRange(mo::OptionalTime& start, mo::OptionalTime& end)
         {
             Lock_t lock(m_mtx);
-            if (m_data_buffer.size())
+            if (!m_data_buffer.empty())
             {
                 Lock_t lock(IParam::mtx());
                 start = m_data_buffer.begin()->first.timestamp;
@@ -73,7 +74,7 @@ namespace mo
         bool Map::getFrameNumberRange(uint64_t& start, uint64_t& end)
         {
             Lock_t lock(m_mtx);
-            if (m_data_buffer.size())
+            if (!m_data_buffer.empty())
             {
                 Lock_t lock(IParam::mtx());
                 start = m_data_buffer.begin()->first.frame_number;
@@ -85,11 +86,32 @@ namespace mo
 
         BufferFlags Map::getBufferType() const
         {
-            return MAP_BUFFER;
+            return BufferFlags::MAP_BUFFER;
         }
 
-        void Map::onInputUpdate(const IDataContainerPtr_t& data, IParam*, UpdateFlags)
+        bool Map::setInput(const std::shared_ptr<IParam>& param)
         {
+            return IBuffer::setInput(param);
+        }
+
+        bool Map::setInput(IParam* param)
+        {
+            if (IBuffer::setInput(param))
+            {
+                auto data = IBuffer::getData();
+                if (data)
+                {
+                    pushData(data);
+                }
+                return true;
+            }
+            return false;
+        }
+
+        void Map::onInputUpdate(const IDataContainerPtr_t& data, IParam* param, UpdateFlags flags)
+        {
+            (void)param;
+            (void)flags;
             if (data)
             {
                 pushData(data);
@@ -100,8 +122,11 @@ namespace mo
         {
             if ((m_push_policy == GROW) || (m_push_policy == PRUNE))
             {
-                Lock_t lock(IParam::mtx());
-                m_data_buffer[data->getHeader()] = data;
+                {
+                    Lock_t lock(IParam::mtx());
+                    m_data_buffer[data->getHeader()] = data;
+                }
+                emitUpdate(data, UpdateFlags::kBUFFER_UPDATED);
             }
             else
             {
@@ -118,42 +143,39 @@ namespace mo
 
         void Map::pushOrDrop(const IDataContainerPtr_t& data)
         {
-            Lock_t lock(IParam::mtx());
-            if (m_frame_padding)
             {
-                if (m_data_buffer.size() > (*m_frame_padding + 1))
+                Lock_t lock(IParam::mtx());
+                if (m_frame_padding)
                 {
-                    return;
+                    if (m_data_buffer.size() > (*m_frame_padding + 1))
+                    {
+                        return;
+                    }
                 }
+                m_data_buffer[data->getHeader()] = data;
             }
-            m_data_buffer[data->getHeader()] = data;
+            emitUpdate(data, mo::UpdateFlags::kBUFFER_UPDATED);
         }
 
         void Map::pushAndWait(const IDataContainerPtr_t& data)
         {
-            Lock_t lock(IParam::mtx());
-            if (m_frame_padding)
             {
-                while (m_data_buffer.size() > (*m_frame_padding + 1))
+                Lock_t lock(IParam::mtx());
+                if (m_frame_padding)
                 {
-                    m_cv.wait_for(lock, 2 * ms);
-                    if (lock)
+                    while (m_data_buffer.size() > (*m_frame_padding + 1))
                     {
-                        lock.unlock();
+                        m_cv.wait_for(lock, 100 * ns);
                     }
-                    IParam::emitUpdate(data->getHeader(), mo::BufferUpdated_e);
                     if (!lock)
                     {
                         lock.lock();
                     }
                 }
-                if (!lock)
-                {
-                    lock.lock();
-                }
-            }
 
-            m_data_buffer[data->getHeader()] = data;
+                m_data_buffer[data->getHeader()] = data;
+            }
+            emitUpdate(data, mo::UpdateFlags::kBUFFER_UPDATED);
         }
 
         Map::IContainerPtr_t Map::getData(const Header& desired)
@@ -194,38 +216,26 @@ namespace mo
             {
                 return searchExact(hdr);
             }
-            else
-            {
-                return searchNearest(hdr);
-            }
+            return searchNearest(hdr);
         }
 
         IDataContainerPtr_t Map::searchExact(const Header& hdr) const
         {
-            if (m_data_buffer.size() == 0)
+            if (m_data_buffer.empty())
             {
                 return {};
             }
+
+            if (!hdr.timestamp && !hdr.frame_number.valid())
+            {
+                return (--this->m_data_buffer.end())->second;
+            }
             else
             {
-                if (!hdr.timestamp && !hdr.frame_number.valid())
+                auto itr = m_data_buffer.find(hdr);
+                if (itr != m_data_buffer.end())
                 {
-                    if (m_data_buffer.size())
-                    {
-                        return (--this->m_data_buffer.end())->second;
-                    }
-                    else
-                    {
-                        return {};
-                    }
-                }
-                else
-                {
-                    auto itr = m_data_buffer.find(hdr);
-                    if (itr != m_data_buffer.end())
-                    {
-                        return itr->second;
-                    }
+                    return itr->second;
                 }
             }
 
@@ -284,58 +294,72 @@ namespace mo
                 {
                     return (--m_data_buffer.end())->second;
                 }
-                else
-                {
-                    return {};
-                }
+                return {};
             }
-            else
-            {
-                const auto ts = *hdr.timestamp;
-                auto upper = m_data_buffer.upper_bound(hdr);
-                auto lower = m_data_buffer.lower_bound(hdr);
 
-                if (upper != m_data_buffer.end() && lower != m_data_buffer.end())
+            // const auto ts = *hdr.timestamp;
+            auto upper = m_data_buffer.upper_bound(hdr);
+            auto lower = m_data_buffer.lower_bound(hdr);
+
+            if (upper != m_data_buffer.end() && lower != m_data_buffer.end())
+            {
+                // first check if lower is exactly right
+                const auto ts_upper = upper->first.timestamp;
+                auto ts_lower = lower->first.timestamp;
+                const auto fn_upper = upper->first.frame_number;
+                auto fn_lower = lower->first.frame_number;
+                // Since std::Map::lower_bound can return the exact item if the timestamps match
+                // or the first item not less than the desired timestamp, we first check
+                // if the timestamps are exact, if they are not we look at the item before lower
+                // to be able to accurately check items on both sides of the desired timestamp
+                // https://stackoverflow.com/questions/529831/returning-the-greatest-key-strictly-less-than-the-given-key-in-a-c-map
+                if (ts_upper && ts_lower && hdr.timestamp)
                 {
-                    // first check if lower is exactly right
-                    const auto ts_upper = *upper->first.timestamp;
-                    auto ts_lower = *lower->first.timestamp;
-                    // Since std::Map::lower_bound can return the exact item if the timestamps match
-                    // or the first item not less than the desired timestamp, we first check
-                    // if the timestamps are exact, if they are not we look at the item before lower
-                    // to be able to accurately check items on both sides of the desired timestamp
-                    // https://stackoverflow.com/questions/529831/returning-the-greatest-key-strictly-less-than-the-given-key-in-a-c-map
                     if (ts_lower == hdr.timestamp)
                     {
                         return lower->second;
                     }
-                    else
+
+                    if (lower != m_data_buffer.begin())
                     {
-                        if (lower != m_data_buffer.begin())
-                        {
-                            --lower;
-                            ts_lower = *lower->first.timestamp;
-                        }
+                        --lower;
+                        ts_lower = *lower->first.timestamp;
                     }
-                    const auto upperdelta = std::chrono::abs(ts_upper - ts);
-                    const auto lowerdelta = std::chrono::abs(ts_lower - ts);
+                    const auto upperdelta = std::chrono::abs(*ts_upper - *hdr.timestamp);
+                    const auto lowerdelta = std::chrono::abs(*ts_lower - *hdr.timestamp);
                     if (upperdelta < lowerdelta)
                     {
                         return upper->second;
                     }
-                    else
-                    {
-                        return lower->second;
-                    }
+                    return lower->second;
                 }
-                else if (lower != m_data_buffer.end())
+                // frame number based search
+                if (fn_lower == hdr.frame_number)
                 {
                     return lower->second;
                 }
-                else if (upper != m_data_buffer.end())
+
+                if (lower != m_data_buffer.begin())
+                {
+                    --lower;
+                    fn_lower = lower->first.frame_number;
+                }
+                const auto upperdelta = fn_upper - hdr.frame_number;
+                const auto lowerdelta = fn_lower - hdr.frame_number;
+                if (upperdelta < lowerdelta)
                 {
                     return upper->second;
                 }
+                return lower->second;
+            }
+            if (lower != m_data_buffer.end())
+            {
+                return lower->second;
+            }
+
+            if (upper != m_data_buffer.end())
+            {
+                return upper->second;
             }
             if (!m_data_buffer.empty())
             {
@@ -344,7 +368,17 @@ namespace mo
             return {};
         }
 
-        template <Map::PushPolicy PUSH_POLICY, Map::SearchPolicy SEARCH_POLICY, BufferFlags TYPE>
+        OptionalTime Map::getTimestamp() const
+        {
+            return m_current_timestamp;
+        }
+
+        FrameNumber Map::getFrameNumber() const
+        {
+            return m_current_frame_number;
+        }
+
+        template <Map::PushPolicy PUSH_POLICY, Map::SearchPolicy SEARCH_POLICY, BufferFlags::EnumValueType TYPE>
         struct MapConstructor
         {
             MapConstructor()
@@ -354,23 +388,28 @@ namespace mo
             }
         };
 
-
         IBuffer* IBuffer::create(BufferFlags type)
         {
-            switch(type)
+            switch (type)
             {
-            case MAP_BUFFER: return new Map("", Map::GROW, Map::EXACT);
-            case STREAM_BUFFER: return new Map("", Map::PRUNE, Map::EXACT);
-            case BLOCKING_STREAM_BUFFER: return new Map("", Map::BLOCK, Map::EXACT);
-            case DROPPING_STREAM_BUFFER: return new Map("", Map::DROP, Map::EXACT);
-            case NEAREST_NEIGHBOR_BUFFER: return new Map("", Map::BLOCK, Map::NEAREST);
-            default: return nullptr;
+            case BufferFlags::MAP_BUFFER:
+                return new Map("", Map::GROW, Map::EXACT);
+            case BufferFlags::STREAM_BUFFER:
+                return new Map("", Map::PRUNE, Map::EXACT);
+            case BufferFlags::BLOCKING_STREAM_BUFFER:
+                return new Map("", Map::BLOCK, Map::EXACT);
+            case BufferFlags::DROPPING_STREAM_BUFFER:
+                return new Map("", Map::DROP, Map::EXACT);
+            case BufferFlags::NEAREST_NEIGHBOR_BUFFER:
+                return new Map("", Map::BLOCK, Map::NEAREST);
+            default:
+                return nullptr;
             }
         }
-        static MapConstructor<Map::GROW, Map::EXACT, MAP_BUFFER> g_map_ctr;
-        static MapConstructor<Map::PRUNE, Map::EXACT, STREAM_BUFFER> g_stream_ctr;
-        static MapConstructor<Map::BLOCK, Map::EXACT, BLOCKING_STREAM_BUFFER> g_blocking_ctr;
-        static MapConstructor<Map::DROP, Map::EXACT, DROPPING_STREAM_BUFFER> g_dropping_ctr;
-        static MapConstructor<Map::BLOCK, Map::NEAREST, NEAREST_NEIGHBOR_BUFFER> g_nn_ctr;
+        static MapConstructor<Map::GROW, Map::EXACT, BufferFlags::MAP_BUFFER> g_map_ctr;
+        static MapConstructor<Map::PRUNE, Map::EXACT, BufferFlags::STREAM_BUFFER> g_stream_ctr;
+        static MapConstructor<Map::BLOCK, Map::EXACT, BufferFlags::BLOCKING_STREAM_BUFFER> g_blocking_ctr;
+        static MapConstructor<Map::DROP, Map::EXACT, BufferFlags::DROPPING_STREAM_BUFFER> g_dropping_ctr;
+        static MapConstructor<Map::BLOCK, Map::NEAREST, BufferFlags::NEAREST_NEIGHBOR_BUFFER> g_nn_ctr;
     }
 }

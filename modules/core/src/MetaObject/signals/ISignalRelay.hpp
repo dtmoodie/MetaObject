@@ -16,8 +16,8 @@ namespace mo
     class MO_EXPORTS ISignalRelay
     {
       public:
-        using Ptr = std::shared_ptr<ISignalRelay>;
-        using ConstPtr = std::shared_ptr<const ISignalRelay>;
+        using Ptr_t = std::shared_ptr<ISignalRelay>;
+        using ConstPtr_t = std::shared_ptr<const ISignalRelay>;
 
         virtual ~ISignalRelay();
         virtual const TypeInfo& getSignature() const = 0;

@@ -1,5 +1,6 @@
 #pragma once
 #include <MetaObject/detail/Export.hpp>
+
 #include <boost/optional.hpp>
 #include <boost/optional/optional_io.hpp>
 
@@ -10,7 +11,7 @@ namespace mo
 {
     using Duration = std::chrono::high_resolution_clock::duration;
 
-    struct Time : public std::chrono::high_resolution_clock::time_point
+    struct MO_EXPORTS Time : public std::chrono::high_resolution_clock::time_point
     {
         using GetTime_f = mo::Time (*)();
 
@@ -20,31 +21,32 @@ namespace mo
         Time() = default;
         Time(const std::chrono::high_resolution_clock::time_point& t);
         Time(const Duration& d);
-        explicit Time(const double sec);
+        explicit Time(double sec);
 
         double seconds() const;
-        void fromSeconds(const double);
+        void fromSeconds(double);
 
         std::string print() const;
         void print(std::ostream& os,
-                   const bool print_days = false,
-                   const bool print_hours = false,
-                   const bool print_minutes = true,
-                   const bool print_seconds = true,
-                   const bool print_nanoseconds = false) const;
+                   bool print_days = false,
+                   bool print_hours = false,
+                   bool print_minutes = true,
+                   bool print_seconds = true,
+                   bool print_nanoseconds = false) const;
     };
 
-    struct FrameNumber
+    struct MO_EXPORTS FrameNumber
     {
         static uint64_t max();
 
-        FrameNumber(const uint64_t v = max());
+        FrameNumber(uint64_t v = max());
 
         bool valid() const;
         operator uint64_t&();
         operator uint64_t() const;
-        FrameNumber& operator=(const uint64_t v);
-        bool operator==(const FrameNumber&) const;
+        FrameNumber& operator=(uint64_t v);
+        // bool operator==(const FrameNumber&) const;
+        // bool operator==(uint64_t) const;
 
         uint64_t val = max();
     };
@@ -91,7 +93,7 @@ namespace mo
         static Duration convert(double val)
         {
             using MorePrecise = typename MorePreciseTime<T>::type;
-            const unsigned long integral = static_cast<unsigned long>(val);
+            const auto integral = static_cast<unsigned long>(val);
             T whole(integral);
             val -= integral;
             using Ratio = std::ratio_divide<typename MorePrecise::period, typename T::period>;
@@ -117,7 +119,7 @@ namespace mo
     }
 
     template <class T>
-    Duration operator*(const double rhs, const TimePrefix<T>& /*lhs*/)
+    Duration operator*(double rhs, const TimePrefix<T>& /*lhs*/)
     {
         return TimePrefix<T>::convert(rhs);
     }
@@ -129,7 +131,7 @@ namespace mo
     }
 
     template <class T>
-    Duration operator*(const int64_t rhs, const TimePrefix<T>& /*lhs*/)
+    Duration operator*(int64_t rhs, const TimePrefix<T>& /*lhs*/)
     {
         return TimePrefix<T>::convert(rhs);
     }
@@ -141,7 +143,7 @@ namespace mo
     }
 
     template <class T>
-    Duration operator*(const int32_t rhs, const TimePrefix<T>& /*lhs*/)
+    Duration operator*(int32_t rhs, const TimePrefix<T>& /*lhs*/)
     {
         return TimePrefix<T>::convert(static_cast<int64_t>(rhs));
     }
@@ -150,6 +152,7 @@ namespace mo
 namespace std
 {
     MO_EXPORTS std::ostream& operator<<(std::ostream& lhs, const mo::Time& rhs);
+#ifndef _MSC_VER
     namespace chrono
     {
         template <class Rep,
@@ -160,8 +163,9 @@ namespace std
         {
             return d >= d.zero() ? d : -d;
         }
-    }
-}
+    } // namespace chrono
+#endif
+} // namespace std
 
 namespace cereal
 {
@@ -176,7 +180,7 @@ namespace cereal
     {
         time = mo::Time(value * mo::second);
     }
-}
+} // namespace cereal
 
 namespace ct
 {
@@ -184,4 +188,4 @@ namespace ct
         PUBLIC_ACCESS(val)
         MEMBER_FUNCTION("valid", &mo::FrameNumber::valid)
     REFLECT_END;
-}
+} // namespace ct

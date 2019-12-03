@@ -61,30 +61,28 @@ namespace
 {
 #ifndef _MSC_VER
 #include <dlfcn.h>
-        void loadMetaParams(SystemTable* table)
+    void loadMetaParams(SystemTable* table)
+    {
+        void* handle = dlopen("libmetaobject_metaparams.so", RTLD_NOW | RTLD_GLOBAL);
+        if (nullptr == handle)
         {
-            void* handle = dlopen("libmetaobject_metaparams.so", RTLD_NOW | RTLD_GLOBAL);
-            if(nullptr == handle )
-            {
-                handle = dlopen("libmetaobject_metaparamsd.so", RTLD_NOW | RTLD_GLOBAL);
-            }
-            if(nullptr == handle)
-            {
-                MO_LOG(info, "Unable to load metaparams");
-                return;
-            }
-            auto* init = reinterpret_cast<void(*)(SystemTable*)>(dlsym(handle, "initModuleWithSystemTable"));
-            if(init)
-            {
-                init(table);
-            }
-
+            handle = dlopen("libmetaobject_metaparamsd.so", RTLD_NOW | RTLD_GLOBAL);
         }
+        if (nullptr == handle)
+        {
+            MO_LOG(info, "Unable to load metaparams");
+            return;
+        }
+        auto* init = reinterpret_cast<void (*)(SystemTable*)>(dlsym(handle, "initModuleWithSystemTable"));
+        if (init)
+        {
+            init(table);
+        }
+    }
 #else
-        void loadMetaParams()
-        {
-
-        }
+    void loadMetaParams()
+    {
+    }
 #endif
 }
 
@@ -124,10 +122,10 @@ namespace mo
         return output;
     }
 
-    std::vector<IObjectInfo*> listObjectInfos()
+    std::vector<const IObjectInfo*> listObjectInfos()
     {
         auto ctrs = mo::MetaObjectFactory::instance()->getConstructors();
-        std::vector<IObjectInfo*> output;
+        std::vector<const IObjectInfo*> output;
         for (auto ctr : ctrs)
         {
             auto info = ctr->GetObjectInfo();
@@ -170,7 +168,7 @@ namespace mo
 
             std::vector<std::function<void(void)>> setup_functions;
             std::string module_name;
-            std::map<uint32_t,std::pair<InterfaceSetup_t, ObjectSetup_t>> interface_setup_functions;
+            std::map<uint32_t, std::pair<InterfaceSetup_t, ObjectSetup_t>> interface_setup_functions;
 
             bool setup = false;
         };
@@ -187,7 +185,7 @@ namespace mo
 
         void registerSetupFunction(SystemTable* table, std::function<void(void)>&& func)
         {
-            PythonSetup* inst = singleton<PythonSetup>(table);
+            auto inst = table->getSingleton<PythonSetup>();
 
             if (!inst->setup)
             {
@@ -199,11 +197,12 @@ namespace mo
             }
         }
 
-        void registerInterfaceSetupFunction(SystemTable* table, uint32_t interface_id,
+        void registerInterfaceSetupFunction(SystemTable* table,
+                                            uint32_t interface_id,
                                             std::function<void(void)>&& interface_func,
                                             std::function<void(std::vector<IObjectConstructor*>&)>&& func)
         {
-            auto& data = singleton<PythonSetup>(table)->interface_setup_functions;
+            auto& data = table->getSingleton<PythonSetup>()->interface_setup_functions;
             if (data.find(interface_id) == data.end())
             {
                 data[interface_id] = {std::move(interface_func), std::move(func)};
@@ -383,7 +382,6 @@ namespace mo
             }
         }
 
-
         struct LibGuard
         {
             enum AllocatorMode
@@ -429,7 +427,6 @@ namespace mo
                 }
                 const auto num_cuda_devices = cv::cuda::getCudaEnabledDeviceCount();
                 MO_ASSERT(num_cuda_devices > 0);
-                cv::cuda::GpuMat mat(10, 10, CV_32F);
                 cv::Mat::setDefaultAllocator(&m_numpy_allocator);
                 cv::cuda::GpuMat::setDefaultAllocator(m_cv_gpu_allocator.get());
                 m_callback_registry = python::ParamCallbackContainer::registry();
@@ -448,7 +445,7 @@ namespace mo
             std::shared_ptr<mo::MetaObjectFactory> m_factory;
 
             std::shared_ptr<mo::Allocator> m_host_allocator;
-            std::shared_ptr<mo::Allocator> m_device_allocator;
+            std::shared_ptr<mo::DeviceAllocator> m_device_allocator;
 
             std::unique_ptr<mo::CvAllocatorProxy> m_cv_cpu_allocator;
             std::unique_ptr<mo::cuda::AllocatorProxy<>> m_cv_gpu_allocator;
@@ -456,14 +453,14 @@ namespace mo
             mo::NumpyAllocator m_numpy_allocator;
             cv::MatAllocator* m_default_opencv_allocator = nullptr;
             cv::cuda::GpuMat::Allocator* m_default_opencv_gpu_allocator = nullptr;
-            std::shared_ptr<python::ParamCallbackContainer::Registry> m_callback_registry;
+            std::shared_ptr<python::ParamCallbackContainer::Registry_t> m_callback_registry;
         };
 
         std::shared_ptr<SystemTable> pythonSetup(const char* module_name_)
         {
             std::string module_name(module_name_);
             auto table = SystemTable::instance();
-            PythonSetup* setup = singleton<PythonSetup>(table.get());
+            auto setup = table->getSingleton<PythonSetup>();
             setup->module_name = module_name;
             setupAllocator();
             boost::shared_ptr<LibGuard> lib_guard(new LibGuard());
@@ -493,7 +490,6 @@ namespace mo
                 "LibGuard", boost::python::no_init);
             libguardobj.def("setAllocator", &LibGuard::setAllocator);
             boost::python::scope().attr("__libguard") = lib_guard;
-
 
             return lib_guard->m_system_table;
         }

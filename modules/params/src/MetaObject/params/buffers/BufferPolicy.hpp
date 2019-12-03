@@ -6,7 +6,7 @@
 
 namespace mo
 {
-    namespace Buffer
+    namespace buffer
     {
         template <typename T>
         class Proxy;
@@ -16,9 +16,8 @@ namespace mo
         {
             BufferConstructor()
             {
-                BufferFactory::registerFunction(TypeInfo(typeid(typename T::ValueType)),
-                                                std::bind(&BufferConstructor<T>::create_buffer, std::placeholders::_1),
-                                                T::BufferType);
+                BufferFactory::registerConstructor(
+                    std::bind(&BufferConstructor<T>::create_buffer, std::placeholders::_1), T::BufferType);
             }
             static IParam* create_buffer(IParam* input)
             {

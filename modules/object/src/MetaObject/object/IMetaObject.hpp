@@ -15,49 +15,54 @@
 
 namespace mo
 {
-
     template <class T>
     struct TMetaObjectInterfaceHelper;
 
     class MO_EXPORTS IMetaObject : virtual public TInterface<IMetaObject, IObject>
     {
       public:
-        using ParentClass = ct::VariadicTypedef<IMetaObject>;
         using Interface = IMetaObject;
         using InterfaceInfo = IMetaObjectInfo;
+
         template <class T>
         using InterfaceHelper = TMetaObjectInterfaceHelper<T>;
 
-        using Ptr = rcc::shared_ptr<IMetaObject>;
-        using ConstPtr = rcc::shared_ptr<const IMetaObject>;
+        using Ptr_t = rcc::shared_ptr<IMetaObject>;
+        using ConstPtr_t = rcc::shared_ptr<const IMetaObject>;
 
-        static int connect(IMetaObject* sender,
+        static int connect(IMetaObject& sender,
                            const std::string& signal_name,
-                           IMetaObject* receiver,
+                           IMetaObject& receiver,
                            const std::string& slot_name);
 
-        static bool connect(IMetaObject* sender,
+        static bool connect(IMetaObject& sender,
                             const std::string& signal_name,
-                            IMetaObject* receiver,
+                            IMetaObject& receiver,
                             const std::string& slot_name,
                             const TypeInfo& signature);
 
         template <class T>
-        static bool connect(IMetaObject* sender,
+        static bool connect(IMetaObject& sender,
                             const std::string& signal_name,
-                            IMetaObject* receiver,
+                            IMetaObject& receiver,
                             const std::string& slot_name);
 
-        virtual ~IMetaObject();
+        IMetaObject();
+        IMetaObject(const IMetaObject&) = delete;
+        IMetaObject(IMetaObject&&) noexcept = delete;
+        ~IMetaObject() override;
+
+        IMetaObject& operator=(const IMetaObject&) = delete;
+        IMetaObject& operator=(IMetaObject&&) noexcept = delete;
 
         // Setup
         virtual void setStream(const IAsyncStreamPtr_t& ctx, bool overwrite = false) = 0;
-        virtual IAsyncStreamPtr_t getStream() = 0;
-        virtual int setupSignals(RelayManager* mgr) = 0;
-        virtual int setupParamServer(IParamServer* mgr) = 0;
+        virtual IAsyncStreamPtr_t getStream() const = 0;
+        virtual int setupSignals(const std::shared_ptr<RelayManager>& mgr) = 0;
+        virtual std::shared_ptr<RelayManager> getRelayManager() = 0;
+        virtual int setupParamServer(const std::shared_ptr<IParamServer>& mgr) = 0;
         virtual int removeParamServer(IParamServer* mgr) = 0;
 
-        virtual void Init(bool firstInit) = 0; // inherited from RCC, thus the PascalCase
         virtual void initCustom(bool firstInit) = 0;
         virtual void bindSlots(bool firstInit) = 0;
         virtual void initParams(bool firstInit) = 0;
@@ -65,7 +70,6 @@ namespace mo
 
         // These serializers are only used for runtime recompilation, they are not used for serialization to
         // from disk
-        virtual void Serialize(ISimpleSerializer* pSerializer) = 0; // Inherit from RCC's IObject
         virtual void serializeConnections(ISimpleSerializer* pSerializer) = 0;
         virtual void serializeParams(ISimpleSerializer* pSerializer) = 0;
 
@@ -109,19 +113,21 @@ namespace mo
         // This will call mgr->getSignal<>() for each declared signal
         virtual int connectAll(RelayManager* mgr) = 0;
 
-        virtual std::vector<std::pair<ISignal*, std::string>> getSignals() const = 0;
-        virtual std::vector<ISignal*> getSignals(const std::string& name) const = 0;
-        virtual std::vector<std::pair<ISignal*, std::string>> getSignals(const TypeInfo& type) const = 0;
-        virtual ISignal* getSignal(const std::string& name, const TypeInfo& type) const = 0;
+        virtual std::vector<std::pair<ISignal*, std::string>> getSignals() = 0;
+        virtual std::vector<ISignal*> getSignals(const std::string& name) = 0;
+        virtual std::vector<std::pair<ISignal*, std::string>> getSignals(const TypeInfo& type) = 0;
+        virtual ISignal* getSignal(const std::string& name, const TypeInfo& type) = 0;
+        template <class SIGNATURE>
+        TSignal<SIGNATURE> getSignal(const std::string& name);
 
-        virtual std::vector<std::pair<ISlot*, std::string>> getSlots() const = 0;
-        virtual std::vector<ISlot*> getSlots(const std::string& name) const = 0;
-        virtual std::vector<std::pair<ISlot*, std::string>> getSlots(const TypeInfo& signature) const = 0;
-        virtual ISlot* getSlot(const std::string& name, const TypeInfo& signature) const = 0;
+        virtual std::vector<std::pair<ISlot*, std::string>> getSlots() = 0;
+        virtual std::vector<ISlot*> getSlots(const std::string& name) = 0;
+        virtual std::vector<std::pair<ISlot*, std::string>> getSlots(const TypeInfo& signature) = 0;
+        virtual ISlot* getSlot(const std::string& name, const TypeInfo& signature) = 0;
         template <class T>
-        TSlot<T>* getSlot(const std::string& name) const;
+        TSlot<T>* getSlot(const std::string& name);
 
-        virtual UpdateSlot_t* getSlot_param_updated() const = 0;
+        virtual UpdateSlot_t* getSlot_param_updated() = 0;
 
         virtual int disconnectByName(const std::string& name) = 0;
         virtual bool disconnect(ISignal* sig) = 0;
@@ -146,24 +152,24 @@ namespace mo
         virtual IParam* getParamOptional(const std::string& name) const = 0;
         virtual ParamVec_t getParams(const std::string& filter = "") const = 0;
         virtual ParamVec_t getParams(const TypeInfo& filter) const = 0;
-        virtual std::vector<IParamPtr_t> getImplicTParams() const = 0;
+        virtual std::vector<IParamPtr_t> getImplictParams() const = 0;
 
         // Connects an input Param to an output Param
         virtual bool connectInput(const std::string& input_name,
                                   IMetaObject* output_object,
-                                  IParam* output_param,
-                                  BufferFlags type = DROPPING_STREAM_BUFFER) = 0;
+                                  const std::string& output_name,
+                                  BufferFlags type = BufferFlags::DROPPING_STREAM_BUFFER) = 0;
 
         virtual bool connectInput(InputParam* input,
                                   IMetaObject* output_object,
                                   IParam* output_param,
-                                  BufferFlags type = DROPPING_STREAM_BUFFER) = 0;
+                                  BufferFlags type = BufferFlags::DROPPING_STREAM_BUFFER) = 0;
 
         static bool connectInput(IMetaObject* output_object,
                                  IParam* output_Param,
                                  IMetaObject* input_object,
                                  InputParam* input_param,
-                                 BufferFlags type = DROPPING_STREAM_BUFFER);
+                                 BufferFlags type = BufferFlags::DROPPING_STREAM_BUFFER);
 
         virtual Mutex_t& getMutex() const = 0;
 
@@ -182,9 +188,10 @@ namespace mo
                                    const std::string& signal_name,
                                    const std::string& slot_name,
                                    const TypeInfo& signature,
-                                   IMetaObject* obj = nullptr) = 0;
+                                   rcc::shared_ptr<IMetaObject> obj = {}) = 0;
 
         virtual void onParamUpdate(IParam*, Header, UpdateFlags) = 0;
+        virtual bool isInitialized() const = 0;
     };
 
 } // namespace mo

@@ -1,9 +1,11 @@
+#include <MetaObject/runtime_reflection/visitor_traits/string.hpp>
+
+#include <MetaObject/runtime_reflection/visitor_traits/filesystem.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
+
 #include "MetaObject/core/metaobject_config.hpp"
 #include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include <MetaObject/params/MetaParam.hpp>
-#include <MetaObject/runtime_reflection/visitor_traits/filesystem.hpp>
-#include <MetaObject/runtime_reflection/visitor_traits/string.hpp>
-#include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
 
 #include "MetaObject/types/file_types.hpp"
 #include <MetaObject/params/AccessToken.hpp>
@@ -27,87 +29,96 @@
 
 using namespace mo;
 
-namespace mo
-{
 #ifdef MO_HAVE_PYTHON
 #include <boost/python.hpp>
-    namespace python
+namespace ct
+{
+
+    template <>
+    inline bool convertFromPython(const boost::python::object& obj, EnumParam& param)
     {
-        template <>
-        inline void convertFromPython(const boost::python::object& obj, EnumParam& param)
+        boost::python::extract<std::string> str_ext(obj);
+        if (str_ext.check())
         {
-            boost::python::extract<std::string> str_ext(obj);
-            if (str_ext.check())
+            auto string = str_ext();
+            auto itr = std::find(param.enumerations.begin(), param.enumerations.end(), string);
+            if (itr != param.enumerations.end())
             {
-                auto string = str_ext();
-                auto itr = std::find(param.enumerations.begin(), param.enumerations.end(), string);
-                if (itr != param.enumerations.end())
-                {
-                    param.current_selection = itr - param.enumerations.begin();
-                }
+                param.current_selection = itr - param.enumerations.begin();
+                return true;
             }
-            else
-            {
-                boost::python::extract<int> int_ext(obj);
-                MO_ASSERT(int_ext.check());
-                int val = int_ext();
-                param.current_selection = static_cast<size_t>(val);
-            }
+            return false;
         }
-        template <>
-        inline void convertFromPython(const boost::python::object& obj, ReadFile& result)
+        boost::python::extract<int> int_ext(obj);
+
+        if (int_ext.check())
         {
-            boost::python::extract<std::string> extractor(obj);
-            result = extractor();
+            int val = int_ext();
+            param.current_selection = static_cast<size_t>(val);
+            return true;
         }
 
-        template <>
-        inline void convertFromPython(const boost::python::object& obj, WriteFile& result)
-        {
-            boost::python::extract<std::string> extractor(obj);
-            result = extractor();
-        }
-
-        template <>
-        inline void convertFromPython(const boost::python::object& obj, WriteDirectory& result)
-        {
-            boost::python::extract<std::string> extractor(obj);
-            result = extractor();
-        }
-
-        template <>
-        inline void convertFromPython(const boost::python::object& obj, ReadDirectory& result)
-        {
-            boost::python::extract<std::string> extractor(obj);
-            result = extractor();
-        }
-
-        template <>
-        inline boost::python::object convertToPython(const ReadFile& file)
-        {
-            return boost::python::object(file.string());
-        }
-
-        template <>
-        inline boost::python::object convertToPython(const WriteFile& file)
-        {
-            return boost::python::object(file.string());
-        }
-
-        template <>
-        inline boost::python::object convertToPython(const ReadDirectory& file)
-        {
-            return boost::python::object(file.string());
-        }
-
-        template <>
-        inline boost::python::object convertToPython(const WriteDirectory& file)
-        {
-            return boost::python::object(file.string());
-        }
+        return false;
     }
-#endif
+
+    template <>
+    inline bool convertFromPython(const boost::python::object& obj, ReadFile& result)
+    {
+        boost::python::extract<std::string> extractor(obj);
+        result = extractor();
+        return true;
+    }
+
+    template <>
+    inline bool convertFromPython(const boost::python::object& obj, WriteFile& result)
+    {
+        boost::python::extract<std::string> extractor(obj);
+        result = extractor();
+        return true;
+    }
+
+    template <>
+    inline bool convertFromPython(const boost::python::object& obj, WriteDirectory& result)
+    {
+        boost::python::extract<std::string> extractor(obj);
+        result = extractor();
+        return true;
+    }
+
+    template <>
+    inline bool convertFromPython(const boost::python::object& obj, ReadDirectory& result)
+    {
+        boost::python::extract<std::string> extractor(obj);
+        result = extractor();
+        return true;
+    }
+
+    template <>
+    inline boost::python::object convertToPython(const ReadFile& file)
+    {
+        return boost::python::object(file.string());
+    }
+
+    template <>
+    inline boost::python::object convertToPython(const WriteFile& file)
+    {
+        return boost::python::object(file.string());
+    }
+
+    template <>
+    inline boost::python::object convertToPython(const ReadDirectory& file)
+    {
+        return boost::python::object(file.string());
+    }
+
+    template <>
+    inline boost::python::object convertToPython(const WriteDirectory& file)
+    {
+        return boost::python::object(file.string());
+    }
 }
+
+#endif
 
 namespace mo
 {

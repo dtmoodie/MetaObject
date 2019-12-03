@@ -1,6 +1,12 @@
 #ifndef MO_VISITATION_TRAIT_INTERFACE_HPP
 #define MO_VISITATION_TRAIT_INTERFACE_HPP
+#include "TraitRegistry.hpp"
+#include "type_traits.hpp"
+
 #include <MetaObject/detail/TypeInfo.hpp>
+
+#include <ct/static_asserts.hpp>
+#include <ct/type_traits.hpp>
 
 namespace mo
 {
@@ -10,94 +16,85 @@ namespace mo
     // visit an object without creating an object
     struct StaticVisitor;
 
-    struct ITraits
+    struct MO_EXPORTS ITraits
     {
         virtual ~ITraits();
         virtual TypeInfo type() const = 0;
-        virtual std::string getName() const;
-        virtual void visit(StaticVisitor* visitor) const = 0;
+        virtual std::string name() const;
+        virtual void visit(StaticVisitor& visitor, const std::string& name) const = 0;
+        virtual void
+        save(ISaveVisitor& visitor, const void* instance, const std::string& name, size_t count = 1) const = 0;
+        virtual void load(ILoadVisitor& visitor, void* instance, const std::string& name, size_t count = 1) const = 0;
     };
 
-    struct ISaveTraits
+    struct MO_EXPORTS IStructTraits : virtual ITraits
     {
-        virtual ~ISaveTraits();
-        virtual void save(ISaveVisitor* visitor) const = 0;
+        using base = IStructTraits;
 
-      protected:
-        virtual void setInstance(const void* ptr, const TypeInfo type) = 0;
-    };
-
-    struct ILoadTraits
-    {
-        virtual ~ILoadTraits();
-        virtual void load(ILoadVisitor* visitor) = 0;
-
-      protected:
-        virtual void setInstance(void* ptr, const TypeInfo type) = 0;
-    };
-
-    struct IStructTraits : virtual public ITraits
-    {
         // sizeof(T)
         virtual size_t size() const = 0;
+
         // can be serialized via a memcpy(ptr)
         virtual bool triviallySerializable() const = 0;
-        // if it can be serialized by one of the primitive supported types, such as
-        // struct{float x,y,z;} can be serialized as 3 floats in continuous memory
-        virtual bool isPrimitiveType() const = 0;
     };
 
-    struct ISaveStructTraits : virtual public IStructTraits, virtual public ISaveTraits
+    struct MO_EXPORTS IContainerTraits : virtual IStructTraits
     {
-        // const ptr to type
-        virtual const void* ptr() const = 0;
-        virtual size_t count() const = 0;
-        virtual void increment() = 0;
+        using base = IContainerTraits;
 
-        template <class T>
-        void setInstance(const T* ptr)
-        {
-            ISaveTraits::setInstance(static_cast<const void*>(ptr), TypeInfo(typeid(T)));
-        }
-    };
-
-    struct ILoadStructTraits : virtual public ISaveStructTraits, virtual public ILoadTraits
-    {
-        virtual const void* ptr() const = 0;
-        // non const ptr to type
-        virtual void* ptr() = 0;
-        template <class T>
-        void setInstance(T* ptr)
-        {
-            ILoadTraits::setInstance(static_cast<void*>(ptr), TypeInfo(typeid(T)));
-        }
-    };
-
-    struct IContainerTraits : virtual public ITraits
-    {
         virtual TypeInfo keyType() const = 0;
         virtual TypeInfo valueType() const = 0;
 
         virtual bool isContinuous() const = 0;
         virtual bool podValues() const = 0;
         virtual bool podKeys() const = 0;
+        virtual size_t getContainerSize(const void* inst) const = 0;
+        virtual void setContainerSize(size_t size, void* inst) const = 0;
+
+        virtual void* valuePointer(void* inst) const = 0;
+        virtual const void* valuePointer(const void* inst) const = 0;
+        virtual void* keyPointer(void* inst) const = 0;
+        virtual const void* keyPointer(const void* inst) const = 0;
     };
 
-    struct ISaveContainerTraits : virtual public IContainerTraits, virtual public ISaveTraits
+    template <class T, int P = 10, class E = void>
+    struct TTraits : TTraits<T, P - 1, E>
     {
-        virtual size_t getSize() const = 0;
-    };
-
-    struct ILoadContainerTraits : virtual public ISaveContainerTraits, virtual public ILoadTraits
-    {
-        virtual void setSize(const size_t num) = 0;
     };
 
     template <class T>
-    struct ArrayContainerTrait;
+    struct TTraits<T, 0, void>
+    {
+    };
 
-    template <class T, class E = void>
-    struct TTraits;
-}
+    template <class T>
+    struct TraitRegisterer
+    {
+        TraitRegisterer()
+        {
+            static const TTraits<T, 10, void> s_inst;
+            const auto inst = &s_inst;
+            const auto type = mo::TypeInfo::template create<T>();
+            TraitRegistry::registerTrait(type, inst);
+        }
+    };
+
+    template <class T>
+    struct TTraits<T, 10, ct::EnableIf<!IsPrimitive<T>::value>> : TTraits<T, 9, void>
+    {
+        static const TraitRegisterer<T> s_registerer;
+        TTraits()
+        {
+            (void)s_registerer;
+            // Traits should only ever be a pointer to a vftable, thus this check ensures you don't put stuff in them
+            // that doesn't belong.
+            //ct::StaticEquality<size_t, sizeof(TTraits<T>), sizeof(void*)>{};
+            // msvc puts stuff in there that doesn't belong -_-
+        }
+    };
+
+    template <class T>
+    const TraitRegisterer<T> TTraits<T, 10, ct::EnableIf<!IsPrimitive<T>::value>>::s_registerer;
+} // namespace mo
 
 #endif // MO_VISITATION_TRAIT_INTERFACE_HPP

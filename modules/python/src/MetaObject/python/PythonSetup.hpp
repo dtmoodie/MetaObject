@@ -35,7 +35,7 @@ namespace mo
         {
             RegisterInterface(void (*setup)(), void (*construct)(std::vector<IObjectConstructor*>&))
             {
-                SystemTable::staticDispatchToSystemTable([setup, construct](SystemTable* table)
+                SystemTable::dispatchToSystemTable([setup, construct](SystemTable* table)
                 {
                     registerInterfaceSetupFunction(table, T::getHash(), setup, construct);
                 });

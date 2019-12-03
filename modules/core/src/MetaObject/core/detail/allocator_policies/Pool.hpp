@@ -5,38 +5,36 @@
 #include <memory>
 namespace mo
 {
+    // Memory pool is not copyable due to the unique ptr to memory blocks
     template <class XPU>
-    class MemoryPool
+    class MemoryPool : public XPU::Allocator_t
     {
       public:
-        using Ptr = std::shared_ptr<MemoryPool<XPU>>;
+        using Allocator_t = typename XPU::Allocator_t;
+        using Ptr_t = std::shared_ptr<MemoryPool<XPU>>;
 
-        static Ptr create();
+        static Ptr_t create();
 
-        MemoryPool();
-        MemoryPool(const MemoryPool&) = delete;
-        MemoryPool& operator=(const MemoryPool&) = delete;
-
-        uint8_t* allocate(const size_t num_bytes, const size_t elem_size);
-
-        void deallocate(uint8_t* ptr, const size_t num_bytes);
-
+        uint8_t* allocate(size_t num_bytes, size_t elem_size);
+        void deallocate(uint8_t* ptr, size_t num_bytes);
         void release();
 
       private:
-        size_t m_initial_block_size;
+        size_t m_initial_block_size = 20 * 1024 * 1024;
         std::list<std::unique_ptr<MemoryBlock<XPU>>> m_blocks;
     };
 
+    // PoolPolicy is copyable since it holds a shared pointer to the pool
     template <class XPU>
-    class PoolPolicy : public Allocator
+    class PoolPolicy : public XPU::Allocator_t
     {
       public:
+        using Allocator_t = typename XPU::Allocator_t;
         PoolPolicy(const std::shared_ptr<MemoryPool<XPU>>& pool = MemoryPool<XPU>::create());
 
-        uint8_t* allocate(const size_t num_bytes, const size_t elem_size) override;
+        uint8_t* allocate(size_t num_bytes, size_t elem_size) override;
 
-        void deallocate(unsigned char* ptr, const size_t num_bytes) override;
+        void deallocate(uint8_t* ptr, size_t num_bytes) override;
 
         void release() override;
 
@@ -51,15 +49,9 @@ namespace mo
     ////////////////////////////////////////////////////////////////////////////////////////////////
 
     template <class XPU>
-    typename MemoryPool<XPU>::Ptr MemoryPool<XPU>::create()
+    typename MemoryPool<XPU>::Ptr_t MemoryPool<XPU>::create()
     {
         return std::make_shared<MemoryPool<XPU>>();
-    }
-
-    template <class XPU>
-    MemoryPool<XPU>::MemoryPool()
-        : m_initial_block_size(20 * 1024 * 1024)
-    {
     }
 
     template <class XPU>
@@ -75,8 +67,8 @@ namespace mo
             }
         }
         // If we get to this point, then no memory was found, need to allocate new memory
-        m_blocks.push_back(
-            std::unique_ptr<MemoryBlock<XPU>>(new MemoryBlock<XPU>(std::max(m_initial_block_size / 2, num_bytes))));
+        m_blocks.push_back(std::unique_ptr<MemoryBlock<XPU>>(
+            new MemoryBlock<XPU>(std::max(m_initial_block_size / 2, num_bytes + elem_size))));
         ptr = (*m_blocks.rbegin())->allocate(num_bytes, elem_size);
         if (ptr)
         {

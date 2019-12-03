@@ -18,15 +18,20 @@ namespace mo
         {
             cudaStream_t stream = nullptr;
             CUDA_ERROR_CHECK(cudaStreamCreateWithPriority(&stream, cudaStreamNonBlocking, priority));
-            return std::shared_ptr<CUstream_st>(stream,
-                                                [](cudaStream_t st) { CUDA_ERROR_CHECK(cudaStreamDestroy(st)); });
+            return std::shared_ptr<CUstream_st>(stream, [](cudaStream_t st) {
+                CUDA_ERROR_CHECK(cudaStreamSynchronize(st));
+                CUDA_ERROR_CHECK(cudaStreamDestroy(st));
+            });
         }
 
         Stream::Stream(cudaStream_t stream, bool owns_stream)
         {
             if (owns_stream)
             {
-                m_stream = Ptr_t(stream, [](cudaStream_t st) { CUDA_ERROR_CHECK(cudaStreamDestroy(st)); });
+                m_stream = Ptr_t(stream, [](cudaStream_t st) {
+                    CUDA_ERROR_CHECK(cudaStreamSynchronize(st));
+                    CUDA_ERROR_CHECK(cudaStreamDestroy(st));
+                });
             }
             else
             {
@@ -39,8 +44,8 @@ namespace mo
         {
         }
 
-        Stream::Stream(const std::shared_ptr<CUstream_st>& stream)
-            : m_stream(stream)
+        Stream::Stream(Ptr_t stream)
+            : m_stream(std::move(stream))
         {
         }
 
@@ -56,7 +61,7 @@ namespace mo
 
         void Stream::waitEvent(Event& event)
         {
-            if (event.queryCompletion() == false)
+            if (!event.queryCompletion())
             {
                 CUDA_ERROR_CHECK(cudaStreamWaitEvent(m_stream.get(), event, 0));
             }

@@ -2,34 +2,23 @@
 
 namespace mo
 {
-    ILoadVisitor& Visit<OptionalTime>::load(ILoadVisitor& visitor, mo::OptionalTime* time, const std::string&, const size_t)
+    void TTraits<Time, 4>::load(ILoadVisitor& visitor, void* inst, const std::string&, size_t) const
     {
-        bool set = false;
-        visitor(&set, "set");
-        if(set)
-        {
-            double sec;
-            visitor(&sec, "seconds");
-            (**time) = Time(sec);
-        }
-        return visitor;
+        auto& ref = this->ref(inst);
+        double sec;
+        visitor(&sec, "seconds");
+        ref = Time(sec);
     }
 
-    ISaveVisitor& Visit<OptionalTime>::save(ISaveVisitor& visitor, const mo::OptionalTime* time, const std::string&, const size_t)
+    void TTraits<Time, 4>::save(ISaveVisitor& visitor, const void* inst, const std::string&, size_t) const
     {
-        const bool set(*time);
-        visitor(&set, "set");
-        if (set)
-        {
-            auto sec = (*time)->seconds();
-            visitor(&sec, "seconds");
-        }
-        return visitor;
+        const auto& ref = this->ref(inst);
+        const auto sec = ref.seconds();
+        visitor(&sec, "seconds");
     }
 
-    void Visit<OptionalTime>::visit(StaticVisitor& visitor, const std::string& , const size_t )
+    void TTraits<Time, 4>::visit(StaticVisitor& visitor, const std::string&) const
     {
-        visitor.visit<bool>("set");
-        visitor.visit<double>("seconds");
+        visitor.template visit<double>("seconds");
     }
 }

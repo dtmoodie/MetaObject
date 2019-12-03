@@ -17,7 +17,7 @@ namespace mo
 
 namespace std
 {
-    ostream& operator<<(ostream&, const mo::PriorityLevels);
+    ostream& operator<<(ostream&, mo::PriorityLevels);
 }
 
 #endif // MO_THREAD_PRIORITY_LEVELS_HPP

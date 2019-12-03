@@ -1,33 +1,55 @@
 #pragma once
-#include "../DynamicVisitor.hpp"
 #include "../ContainerTraits.hpp"
+#include "../DynamicVisitor.hpp"
 
 #include <string>
 
 namespace mo
 {
-    template<>
-    struct IsContinuous<std::string>
+    template <class T>
+    struct TTraits<std::basic_string<T>, 9, void> : virtual ContainerBase<std::basic_string<T>, T, void>
     {
-        static constexpr const bool value = true;
+        using base = IContainerTraits;
+        void save(ISaveVisitor& visitor, const void* instance, const std::string& name, size_t) const override
+        {
+            auto ptr = this->ptr(instance);
+            visitor(&(*ptr)[0], name, ptr->size());
+        }
+
+        void load(ILoadVisitor& visitor, void* instance, const std::string& name, size_t) const override
+        {
+            auto ptr = this->ptr(instance);
+            visitor(&(*ptr)[0], name, ptr->size());
+        }
+
+        void visit(StaticVisitor& visitor, const std::string& name) const
+        {
+            visitor.template visit<T>(name);
+        }
+
+        size_t getContainerSize(const void* inst) const override
+        {
+            auto ptr = this->ptr(inst);
+            return ptr->size();
+        }
+
+        void setContainerSize(size_t size, void* inst) const override
+        {
+            auto ptr = this->ptr(inst);
+            ptr->resize(size);
+        }
+
+        void* valuePointer(void* inst) const override
+        {
+            auto ptr = this->ptr(inst);
+            return &(*ptr)[0];
+        }
+
+        const void* valuePointer(const void* inst) const override
+        {
+            auto ptr = this->ptr(inst);
+            return ptr->data();
+        }
     };
 
-    template<>
-    struct TTraits<std::string, void>: public ContainerBase<std::string>
-    {
-        TTraits(std::string* ptr);
-    };
-
-    template<>
-    struct TTraits<const std::string, void>: public ContainerBase<const std::string>
-    {
-        TTraits(const std::string* ptr);
-    };
-
-    template<>
-    struct Visit<std::string>
-    {
-        static ILoadVisitor& load(ILoadVisitor&, std::string* str, const std::string& name, const size_t cnt);
-        static ISaveVisitor& save(ISaveVisitor&, const std::string* str, const std::string& name, const size_t cnt);
-    };
 }

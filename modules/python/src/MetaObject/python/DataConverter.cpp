@@ -1,5 +1,4 @@
 #include "DataConverter.hpp"
-#include "MetaObject/core/detail/singleton.hpp"
 #include <MetaObject/core/SystemTable.hpp>
 
 namespace mo
@@ -8,12 +7,12 @@ namespace mo
     {
         DataConverterRegistry* DataConverterRegistry::instance()
         {
-            return singleton<DataConverterRegistry>();
+            return singleton<DataConverterRegistry>().get();
         }
 
         DataConverterRegistry* DataConverterRegistry::instance(SystemTable* table)
         {
-            return singleton<DataConverterRegistry>(table);
+            return table->getSingleton<DataConverterRegistry>().get();
         }
 
         void

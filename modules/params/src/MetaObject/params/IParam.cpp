@@ -39,31 +39,20 @@ namespace mo
 
     namespace kwargs
     {
-        TKeyword<tag::param> TKeyword<tag::param>::instance;
-
-        TaggedArgument<tag::param> TKeyword<tag::param>::operator=(const IParam& data)
-        {
-            return TaggedArgument<tag::param>(data);
-        }
-
-        template MO_EXPORTS struct TKeyword<tag::param>;
+        
     }
 
     IParam::IParam(const std::string& name_, ParamFlags flags_, IAsyncStream* stream)
         : m_name(name_)
         , m_flags(flags_)
-        , m_subscribers(0)
-        , m_modified(false)
-        , m_mtx(nullptr)
-        , m_stream(nullptr)
+        , m_stream(stream)
     {
-        m_header.stream = stream;
     }
 
     IParam::~IParam()
     {
         m_delete_signal(this);
-        if (checkFlags(ParamFlags::OwnsMutex_e))
+        if (checkFlags(ParamFlags::kOWNS_MUTEX))
         {
             delete m_mtx;
         }
@@ -81,21 +70,9 @@ namespace mo
         return this;
     }
 
-    IParam* IParam::setFrameNumber(const uint64_t fn)
-    {
-        m_header.frame_number = fn;
-        return this;
-    }
-
-    IParam* IParam::setTimestamp(const mo::Time& ts)
-    {
-        m_header.timestamp = ts;
-        return this;
-    }
-
     IParam* IParam::setCoordinateSystem(const std::shared_ptr<ICoordinateSystem>& system)
     {
-        m_header.coordinate_system = system;
+        m_cs = system;
         return this;
     }
 
@@ -117,24 +94,11 @@ namespace mo
 
     const std::string IParam::getTreeName() const
     {
-        if (m_tree_root.size())
+        if (!m_tree_root.empty())
         {
             return m_tree_root + ":" + m_name;
         }
-        else
-        {
-            return m_name;
-        }
-    }
-
-    OptionalTime IParam::getTimestamp() const
-    {
-        return m_header.timestamp;
-    }
-
-    uint64_t IParam::getFrameNumber() const
-    {
-        return m_header.frame_number;
+        return m_name;
     }
 
     IAsyncStream* IParam::getStream() const
@@ -144,12 +108,7 @@ namespace mo
 
     const std::shared_ptr<ICoordinateSystem>& IParam::getCoordinateSystem() const
     {
-        return m_header.coordinate_system;
-    }
-
-    Header IParam::getHeader() const
-    {
-        return m_header;
+        return m_cs;
     }
 
     ConnectionPtr_t IParam::registerUpdateNotifier(ISlot* f)
@@ -166,7 +125,7 @@ namespace mo
         return {};
     }
 
-    ConnectionPtr_t IParam::registerUpdateNotifier(const ISignalRelay::Ptr& relay)
+    ConnectionPtr_t IParam::registerUpdateNotifier(const ISignalRelay::Ptr_t& relay)
     {
         Lock_t lock(mtx());
         auto tmp = relay;
@@ -191,7 +150,7 @@ namespace mo
         return {};
     }
 
-    ConnectionPtr_t IParam::registerDeleteNotifier(const ISignalRelay::Ptr& relay)
+    ConnectionPtr_t IParam::registerDeleteNotifier(const ISignalRelay::Ptr_t& relay)
     {
         Lock_t lock(mtx());
         if (relay->getSignature() == m_delete_signal.getSignature())
@@ -204,41 +163,25 @@ namespace mo
 
     IParam* IParam::emitUpdate(const Header& header, UpdateFlags flags_)
     {
-        Lock_t lock(mtx());
-        uint64_t fn = header.frame_number;
-        if (fn == std::numeric_limits<uint64_t>::max())
-        {
-            fn = m_header.frame_number + 1;
-        }
-        m_header = header;
-        m_header.frame_number = fn;
         modified(true);
-        lock.unlock();
-        m_update_signal(this, m_header, flags_);
+        m_update_signal(this, header, flags_);
         return this;
     }
 
     IParam* IParam::emitUpdate(const IDataContainerPtr_t& data, UpdateFlags flags)
     {
-        Lock_t lock(mtx());
-        uint64_t fn = data->getHeader().frame_number;
-        if (fn == std::numeric_limits<uint64_t>::max())
-        {
-            fn = m_header.frame_number + 1;
-        }
-        m_header = data->getHeader();
-        m_header.frame_number = fn;
         modified(true);
-        lock.unlock();
         m_data_update(data, this, flags);
-        m_update_signal(this, m_header, flags);
+        m_update_signal(this, data->getHeader(), flags);
         return this;
     }
 
     IParam* IParam::emitUpdate(const IParam& other, UpdateFlags flags_)
     {
-        return emitUpdate(other.m_header, flags_);
-        return this;
+        auto ts = other.getTimestamp();
+        auto fn = other.getFrameNumber();
+
+        return emitUpdate(mo::Header(ts, fn), flags_);
     }
 
     Mutex_t& IParam::mtx() const
@@ -246,17 +189,17 @@ namespace mo
         if (m_mtx == nullptr)
         {
             m_mtx = new Mutex_t();
-            m_flags.set(ParamFlags::OwnsMutex_e);
+            m_flags.set(ParamFlags::kOWNS_MUTEX);
         }
         return *m_mtx;
     }
 
     void IParam::setMtx(Mutex_t* mtx_)
     {
-        if (m_mtx && checkFlags(ParamFlags::OwnsMutex_e))
+        if (m_mtx && checkFlags(ParamFlags::kOWNS_MUTEX))
         {
             delete m_mtx;
-            m_flags.reset(ParamFlags::OwnsMutex_e);
+            m_flags.reset(ParamFlags::kOWNS_MUTEX);
         }
         m_mtx = mtx_;
     }
@@ -279,21 +222,14 @@ namespace mo
         return m_subscribers != 0;
     }
 
-    EnumClassBitset<ParamFlags> IParam::setFlags(ParamFlags flags_)
-    {
-        auto prev = m_flags;
-        m_flags.set(flags_);
-        return prev;
-    }
-
-    EnumClassBitset<ParamFlags> IParam::setFlags(EnumClassBitset<ParamFlags> flags_)
+    ParamFlags IParam::setFlags(ParamFlags flags_)
     {
         auto prev = m_flags;
         m_flags = flags_;
         return prev;
     }
 
-    EnumClassBitset<ParamFlags> IParam::appendFlags(ParamFlags flags_)
+    ParamFlags IParam::appendFlags(ParamFlags flags_)
     {
         auto prev = m_flags;
         m_flags.set(flags_);
@@ -305,7 +241,7 @@ namespace mo
         return m_flags.test(flag);
     }
 
-    EnumClassBitset<ParamFlags> IParam::getFlags() const
+    ParamFlags IParam::getFlags() const
     {
         return m_flags;
     }
@@ -317,13 +253,14 @@ namespace mo
 
     void IParam::modified(bool value)
     {
+        Lock_t lock(mtx());
         m_modified = value;
     }
 
     std::ostream& IParam::print(std::ostream& os) const
     {
         os << getTreeName();
-        os << " [" << mo::TypeTable::instance().typeToName(getTypeInfo()) << "]";
+        os << " [" << mo::TypeTable::instance()->typeToName(getTypeInfo()) << "]";
         auto ts = getTimestamp();
         if (ts)
         {

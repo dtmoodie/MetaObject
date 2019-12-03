@@ -1,3 +1,5 @@
+#include "lambda.hpp"
+
 #include "MetaObject.hpp"
 #include "MetaObject/object/IMetaObjectInfo.hpp"
 #include "MetaObject/object/MetaObject.hpp"
@@ -6,7 +8,7 @@
 #include "MetaObject/python/DataConverter.hpp"
 
 #include "PythonSetup.hpp"
-#include "lambda.hpp"
+
 #include "rcc_ptr.hpp"
 #include <RuntimeObjectSystem/IObjectInfo.h>
 #include <RuntimeObjectSystem/RuntimeObjectSystem.h>
@@ -22,8 +24,14 @@ namespace mo
     {
         namespace detail
         {
-            std::string getName(IObjectConstructor* ctr) { return ctr->GetName(); }
-            std::string getCompiledPath(IObjectConstructor* ctr) { return ctr->GetCompiledPath(); }
+            std::string getName(IObjectConstructor* ctr)
+            {
+                return ctr->GetName();
+            }
+            std::string getCompiledPath(IObjectConstructor* ctr)
+            {
+                return ctr->GetCompiledPath();
+            }
             std::vector<std::string> getInludeFiles(const IObjectConstructor* ctr)
             {
                 std::vector<std::string> output;
@@ -54,7 +62,7 @@ namespace mo
                     }
                     return output;
             }*/
-        }
+        } // namespace detail
         void setupInterface()
         {
             static bool setup = false;
@@ -62,7 +70,7 @@ namespace mo
             {
                 return;
             }
-            MO_LOG(info,  "Registering IMetaObject to python");
+            MO_LOG(info, "Registering IMetaObject to python");
             boost::python::class_<IMetaObject, rcc::shared_ptr<IMetaObject>, boost::noncopyable> bpobj(
                 "IMetaObject", boost::python::no_init);
             bpobj.def("__repr__", &printObject<IMetaObject>);
@@ -103,7 +111,10 @@ namespace mo
             setup = true;
         }
 
-        IObjectConstructor* getCtr(IObjectConstructor* ctr) { return ctr; }
+        IObjectConstructor* getCtr(IObjectConstructor* ctr)
+        {
+            return ctr;
+        }
 
         void setupObjects(std::vector<IObjectConstructor*>& ctrs)
         {
@@ -116,11 +127,11 @@ namespace mo
 
             for (auto itr = ctrs.begin(); itr != ctrs.end();)
             {
-                IObjectInfo* info = (*itr)->GetObjectInfo();
+                const IObjectInfo* info = (*itr)->GetObjectInfo();
                 if (info->InheritsFrom(IMetaObject::getHash()))
                 {
                     const auto name = info->GetObjectName();
-                    MO_LOG(debug, "Registering {} to python", name );
+                    MO_LOG(debug, "Registering {} to python", name);
                     auto docstring = info->Print();
                     boost::python::class_<MetaObject,
                                           rcc::shared_ptr<MetaObject>,
@@ -136,7 +147,7 @@ namespace mo
                         bpobj.def("__init__", ctr);
                     }
 
-                    auto minfo = dynamic_cast<IMetaObjectInfo*>(info);
+                    auto minfo = dynamic_cast<const IMetaObjectInfo*>(info);
                     if (minfo)
                     {
                         addParamAccessors<MetaObject>(bpobj, minfo);
@@ -156,5 +167,5 @@ namespace mo
         }
 
         static RegisterInterface<IMetaObject> g_register(&setupInterface, &setupObjects);
-    }
-}
+    } // namespace python
+} // namespace mo

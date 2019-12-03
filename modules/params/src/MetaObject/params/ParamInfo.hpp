@@ -1,7 +1,7 @@
 #pragma once
+#include "MetaObject/detail/Export.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
 #include "MetaObject/params/IParam.hpp"
-#include "MetaObject/detail/Export.hpp"
 #include <string>
 
 namespace mo
@@ -12,14 +12,14 @@ namespace mo
                   const std::string& name_,
                   const std::string& tooltip_ = "",
                   const std::string description_ = "",
-                  ParamFlags type_flags_ = ParamFlags::Control_e,
+                  ParamFlags type_flags_ = ParamFlags::kCONTROL,
                   const std::string& init = "");
         std::string print() const;
         const std::string& getName() const;
         const std::string& getTooltip() const;
         const std::string& getDescription() const;
         const std::string& getInitialization() const;
-        const EnumClassBitset<ParamFlags> getBufferFlags() const;
+        const ParamFlags getParamFlags() const;
         mo::TypeInfo getDataType() const;
 
       private:
@@ -28,6 +28,6 @@ namespace mo
         std::string tooltip;
         std::string description;
         std::string initial_value;
-        EnumClassBitset<ParamFlags> type_flags;
+        ParamFlags type_flags;
     };
 }

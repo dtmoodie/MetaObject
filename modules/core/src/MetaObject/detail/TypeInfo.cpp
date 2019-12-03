@@ -105,7 +105,7 @@ namespace mo
 
     std::ostream& operator<<(std::ostream& os, const TypeInfo& type)
     {
-        os << TypeTable::instance().typeToName(type);
+        os << TypeTable::instance()->typeToName(type);
         return os;
     }
 

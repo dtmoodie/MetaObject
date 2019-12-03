@@ -15,7 +15,7 @@
 
 namespace fmt
 {
-    std::string to_string(const cudaError err);
+    std::string to_string(cudaError err);
 }
 
 namespace std

@@ -12,11 +12,21 @@ metaobject_declare_module(NAME core SRC src DEPENDS
     Boost::system
     cereal
     RuntimeObjectSystem
+    spdlog
+    ct
+)
+
+target_compile_definitions(metaobject_core
+    PUBLIC BOOST_NO_AUTO_PTR
 )
 
 target_include_directories(metaobject_core
     PUBLIC
         $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/include>
+)
+
+target_include_directories(metaobject_core
+    SYSTEM PUBLIC ${Boost_INCLUDE_DIR}
 )
 
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" AND ${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 5.0)
@@ -41,10 +51,12 @@ foreach(example ${examples})
 endforeach()
 
 if(BUILD_TESTS)
-    find_package(OpenCV QUIET)
+    if(WITH_OPENCV)
+        find_package(OpenCV QUIET)
+    endif()
     file(GLOB_RECURSE tests "tests/*.cpp")
     add_executable(test_mo_core ${tests})
-    target_link_libraries(test_mo_core metaobject_core)
+    target_link_libraries(test_mo_core metaobject_core gtest gtest_main)
 
     if(OpenCV_FOUND)
         target_compile_definitions(test_mo_core
@@ -52,4 +64,7 @@ if(BUILD_TESTS)
         )
         target_link_libraries(test_mo_core ${OpenCV_LIBRARIES})
     endif()
+    
+    set_target_properties(test_mo_core PROPERTIES FOLDER Tests/MetaObject/core)
+    setup_msvc_target(test_mo_core)
 endif()

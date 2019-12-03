@@ -1,5 +1,7 @@
 #ifndef MO_CUDA_STREAM_HPP
 #define MO_CUDA_STREAM_HPP
+#include <MetaObject/detail/Export.hpp>
+
 #include <memory>
 
 struct CUstream_st;
@@ -10,16 +12,16 @@ namespace mo
     namespace cuda
     {
         struct Event;
-        struct Stream
+        struct MO_EXPORTS Stream
         {
             using Ptr_t = std::shared_ptr<CUstream_st>;
 
-            static Ptr_t create(const int priority = 0);
+            static Ptr_t create(int priority = 0);
             static Stream& null();
 
             Stream(cudaStream_t stream, bool owns_stream = false);
-            Stream(const int priority = 0);
-            Stream(const Ptr_t& stream);
+            Stream(int priority = 0);
+            Stream(Ptr_t stream);
 
             operator cudaStream_t();
             operator CUstream_st const*() const;
@@ -31,7 +33,7 @@ namespace mo
           private:
             Ptr_t m_stream;
         };
-    }
-}
+    } // namespace cuda
+} // namespace mo
 
 #endif // MO_CUDA_STREAM_HPP

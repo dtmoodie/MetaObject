@@ -1,4 +1,5 @@
 #include "BinaryLoader.hpp"
+#include <ct/types/TArrayView.hpp>
 
 namespace mo
 {
@@ -71,6 +72,7 @@ namespace mo
         return loadBinary(ptr, cnt);
     }
 #ifdef ENVIRONMENT64
+#ifndef _MSC_VER
     ILoadVisitor& BinaryLoader::operator()(long long* ptr, const std::string&, const size_t cnt)
     {
         return loadBinary(ptr, cnt);
@@ -80,6 +82,7 @@ namespace mo
     {
         return loadBinary(ptr, cnt);
     }
+#endif
 #else
     ILoadVisitor& BinaryLoader::operator()(long int* ptr, const std::string&, const size_t cnt)
     {
@@ -106,33 +109,35 @@ namespace mo
         return loadBinary(static_cast<char*>(ptr), cnt);
     }
 
-    ILoadVisitor& BinaryLoader::operator()(ILoadStructTraits* val, const std::string& name)
+    ILoadVisitor& BinaryLoader::operator()(IStructTraits* val, void* inst, const std::string& name, size_t cnt)
     {
-        const auto cnt = val->count();
         if (val->triviallySerializable())
         {
-            auto ptr = val->ptr();
+            auto ptr = inst;
             const auto sz = val->size() * cnt;
             loadBinary(ptr, sz);
         }
         else
         {
+            auto ptr = ct::ptrCast<uint8_t>(inst);
             for (size_t i = 0; i < cnt; ++i)
             {
-                LoadCache::operator()(val, name);
-                val->increment();
+                LoadCache::operator()(val, ptr, name, 1);
+                ptr += val->size();
             }
         }
 
         return *this;
     }
 
-    ILoadVisitor& BinaryLoader::operator()(ILoadContainerTraits* val, const std::string&)
+    ILoadVisitor& BinaryLoader::operator()(IContainerTraits* val, void* inst, const std::string& name, size_t cnt)
     {
         uint64_t size = 0;
         loadBinary(&size);
-        val->setSize(size);
-        val->load(this);
+        val->setContainerSize(size, inst);
+        m_current_size = size;
+        val->load(*this, inst, name, cnt);
+        m_current_size = 0;
         return *this;
     }
 
@@ -147,5 +152,9 @@ namespace mo
     std::string BinaryLoader::getCurrentElementName() const
     {
         return "";
+    }
+    size_t BinaryLoader::getCurrentContainerSize() const
+    {
+        return m_current_size;
     }
 }

@@ -15,7 +15,7 @@ namespace mo
             ConstMap(const std::string& name = "",
                      const T& init = T(),
                      OptionalTime ts = OptionalTime(),
-                     BufferFlags& type = ParamFlags::Buffer_e,
+                     BufferFlags& type = ParamFlags::kBUFFER,
                      const std::string& tooltip = "")
                 : Map<T>(name, init, ts, type, tooltip)
             {

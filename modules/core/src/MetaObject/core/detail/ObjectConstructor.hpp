@@ -12,12 +12,12 @@ namespace mo
 
         SharedPtr_t createShared() const
         {
-            return SharedPtr_t(new T());
+            return SharedPtr_t(create());
         }
 
         UniquePtr_t createUnique() const
         {
-            return UniquePtr_t(new T());
+            return UniquePtr_t(create());
         }
 
         T* create() const

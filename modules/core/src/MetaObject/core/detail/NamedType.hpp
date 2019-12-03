@@ -8,9 +8,15 @@ namespace mo
     class NamedType
     {
       public:
-        explicit NamedType(T* value) : _value(value) {}
-        NamedType(NamedType&& other) : _value(other._value) {}
-        T* get() const { return _value; }
+        explicit NamedType(T* value)
+            : _value(value)
+        {
+        }
+        T* get() const
+        {
+            return _value;
+        }
+
       private:
         T* _value;
     };
@@ -24,9 +30,16 @@ namespace mo
       public:
         using FPtr = R (T::*)(Args...);
 
-        explicit NamedType(FPtr value) : _value(value) {}
-        NamedType(NamedType&& other) : _value(other._value) {}
-        FPtr get() const { return _value; }
+        explicit NamedType(FPtr value)
+            : _value(value)
+        {
+        }
+
+        FPtr get() const
+        {
+            return _value;
+        }
+
       private:
         FPtr _value;
     };
@@ -37,9 +50,16 @@ namespace mo
       public:
         using FPtr = R (*)(Args...);
 
-        explicit NamedType(FPtr value) : _value(value) {}
-        NamedType(NamedType&& other) : _value(other._value) {}
-        FPtr get() const { return _value; }
+        explicit NamedType(FPtr value)
+            : _value(value)
+        {
+        }
+
+        FPtr get() const
+        {
+            return _value;
+        }
+
       private:
         FPtr _value;
     };
@@ -48,9 +68,15 @@ namespace mo
     class NamedType<const TypeInfo>
     {
       public:
-        explicit NamedType(const TypeInfo value) : _value(value) {}
-        NamedType(NamedType&& other) : _value(other._value) {}
-        TypeInfo get() const { return _value; }
+        explicit NamedType(const TypeInfo value)
+            : _value(value)
+        {
+        }
+        TypeInfo get() const
+        {
+            return _value;
+        }
+
       private:
         TypeInfo _value;
     };

@@ -11,6 +11,6 @@ namespace mo
 {
     namespace params
     {
-        void init(SystemTable* table);
+        void MO_EXPORTS init(SystemTable* table);
     }
-}
+} // namespace mo

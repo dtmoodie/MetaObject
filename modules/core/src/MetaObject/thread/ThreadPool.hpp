@@ -5,7 +5,7 @@
 namespace mo
 {
     class Thread;
-    class PriorityScheduler;
+    struct PriorityScheduler;
     class MO_EXPORTS ThreadPool : public std::enable_shared_from_this<ThreadPool>
     {
       public:
@@ -23,6 +23,6 @@ namespace mo
 
         std::list<std::shared_ptr<Thread>> m_free_threads;
         std::list<std::shared_ptr<Thread>> m_running_threads;
-        std::vector<PriorityScheduler*> m_schedulers;
+        std::set<PriorityScheduler*> m_schedulers;
     };
 }

@@ -1,4 +1,5 @@
 #include "TMultiInput-inl.hpp"
+#include <MetaObject/signals/Connection.hpp>
 #include <MetaObject/thread/fiber_include.hpp>
 
 namespace mo
@@ -92,10 +93,8 @@ namespace mo
         {
             return m_current_input->getTypeInfo();
         }
-        else
-        {
-            return _void_type_info;
-        }
+
+        return _void_type_info;
     }
 
     const mo::TypeInfo IMultiInput::_void_type_info = mo::TypeInfo(typeid(void));
@@ -118,32 +117,60 @@ namespace mo
         return {};
     }
 
-    uint64_t IMultiInput::getInputFrameNumber()
+    FrameNumber IMultiInput::getInputFrameNumber()
     {
         if (m_current_input)
         {
             return m_current_input->getInputFrameNumber();
         }
-        return std::numeric_limits<uint64_t>::max();
+        return {};
     }
 
     OptionalTime IMultiInput::getTimestamp() const
     {
+        if (m_current_input)
+        {
+            return m_current_input->getTimestamp();
+        }
+        return {};
     }
-    uint64_t IMultiInput::getFrameNumber() const
+
+    FrameNumber IMultiInput::getFrameNumber() const
     {
+        if (m_current_input)
+        {
+            return m_current_input->getFrameNumber();
+        }
+        return -1;
     }
 
     bool IMultiInput::isInputSet() const
     {
+        return m_current_input != nullptr;
     }
 
     bool IMultiInput::acceptsInput(IParam* input) const
     {
+        for (auto in : m_inputs)
+        {
+            if (in->acceptsInput(input))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     bool IMultiInput::acceptsType(const TypeInfo& type) const
     {
+        for (auto in : m_inputs)
+        {
+            if (in->acceptsType(type))
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     ConnectionPtr_t IMultiInput::registerUpdateNotifier(ISlot* f)
@@ -160,8 +187,19 @@ namespace mo
         return out;
     }
 
-    ConnectionPtr_t IMultiInput::registerUpdateNotifier(const ISignalRelay::Ptr& relay)
+    ConnectionPtr_t IMultiInput::registerUpdateNotifier(const ISignalRelay::Ptr_t& relay)
     {
+        // TODO
+        std::vector<ConnectionPtr_t> connections;
+        for (auto in : m_inputs)
+        {
+            auto connection = in->registerUpdateNotifier(relay);
+            if (connection)
+            {
+                connections.push_back(connection);
+            }
+        }
+        return std::make_shared<ConnectionSet>(std::move(connections));
     }
 
     bool IMultiInput::modified() const

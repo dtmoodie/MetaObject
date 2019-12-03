@@ -19,16 +19,16 @@ namespace mo
 
     // Guarantees write safe access to underlying data
     template <typename T>
-    class MO_EXPORTS AccessToken
+    struct MO_EXPORTS AccessToken
     {
-      public:
+        using type = typename TParam<T>::type;
         AccessToken(AccessToken<T>&& other) = default;
         AccessToken(const AccessToken<T>& other) = delete;
 
         AccessToken& operator=(const AccessToken&) = delete;
         AccessToken& operator=(AccessToken&&) = default;
 
-        AccessToken(Lock_t&& lock, TParam<T>& param, T& data)
+        AccessToken(Lock_t&& lock, TParam<T>& param, type& data)
             : _lock(std::move(lock))
             , _param(param)
             , _data(data)
@@ -43,13 +43,13 @@ namespace mo
             }
         }
 
-        T& operator()()
+        type& operator()()
         {
             _modified = true;
             return _data;
         }
 
-        const T& operator()() const
+        const type& operator()() const
         {
             return _data;
         }
@@ -87,7 +87,7 @@ namespace mo
       private:
         AccessTokenLock _lock;
         TParam<T>& _param;
-        T& _data;
+        type& _data;
         Header _header;
         bool _modified = false;
     };
@@ -95,10 +95,11 @@ namespace mo
     template <class T>
     struct ConstAccessToken
     {
+        using type = typename TParam<T>::type;
         ConstAccessToken(ConstAccessToken&& other) = default;
         ConstAccessToken(const ConstAccessToken& other) = default;
 
-        ConstAccessToken(Lock_t&& lock, const TParam<T>& param, const T& data)
+        ConstAccessToken(Lock_t&& lock, const TParam<T>& param, const type& data)
             : _lock(std::move(lock))
             , _param(param)
             , _data(data)
@@ -108,13 +109,13 @@ namespace mo
         ConstAccessToken& operator=(const ConstAccessToken&) = default;
         ConstAccessToken& operator=(ConstAccessToken&&) = default;
 
-        const T& operator()() const
+        const type& operator()() const
         {
             return _data;
         }
 
         AccessTokenLock _lock;
         const TParam<T>& _param;
-        const T& _data;
+        const type& _data;
     };
 }

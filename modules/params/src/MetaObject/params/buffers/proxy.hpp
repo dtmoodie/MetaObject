@@ -15,7 +15,7 @@ namespace mo
             std::shared_ptr<Signals::Connection> _input_delete_Connection;
 
           public:
-            Proxy(TParam<T>* input, Params::Param::Ptr buffer)
+            Proxy(TParam<T>* input, Params::Param::Ptr_t buffer)
                 : _input_Param(input), _buffer(std::dynamic_pointer_cast<TParam>(buffer)),
                   TParam<T>("proxy for " + (input ? input->getName() : std::string("null")))
             {
@@ -86,7 +86,7 @@ namespace mo
             }
             virtual void updateData(T* data_, mo::Time ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr) {}
 
-            virtual Param::Ptr DeepCopy() const { return Param::Ptr(new Proxy(_input_Param, _buffer->DeepCopy())); }
+            virtual Param::Ptr_t DeepCopy() const { return Param::Ptr(new Proxy(_input_Param, _buffer->DeepCopy())); }
             virtual void SetSize(mo::Time size) { dynamic_cast<IBuffer*>(_buffer.get())->SetSize(size); }
             virtual mo::Time getSize() { return dynamic_cast<IBuffer*>(_buffer.get())->getSize(); }
             virtual void getTimestampRange(mo::Time& start, mo::Time& end)

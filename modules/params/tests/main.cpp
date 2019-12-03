@@ -1,36 +1,24 @@
-#include <MetaObject/core/SystemTable.hpp>
+#include <MetaObject/core.hpp>
+#include <MetaObject/core/detail/MemoryBlock.hpp>
+#include <MetaObject/core/detail/allocator_policies/Default.hpp>
+#include <MetaObject/params.hpp>
 
-#define BOOST_TEST_MAIN
-#include <boost/test/detail/throw_exception.hpp>
-#ifdef _MSC_VER
-#include <boost/test/unit_test.hpp>
-#else
-#define BOOST_TEST_MODULE "params"
-#include <boost/test/included/unit_test.hpp>
-#endif
+#include <gtest/gtest.h>
 
-struct GlobalFixture
+int main(int argc, char** argv)
 {
-    GlobalFixture()
-        : m_system_table(SystemTable::instance())
-    {
+    ::testing::InitGoogleTest(&argc, argv);
+    auto table = SystemTable::instance();
+    PerModuleInterface::GetInstance()->SetSystemTable(table.get());
+    mo::params::init(table.get());
+    auto allocator = std::make_shared<mo::DefaultAllocator<mo::CPU>>();
+    table->setDefaultAllocator(allocator);
+    auto result = RUN_ALL_TESTS();
+    return result;
+}
 
-    }
-
-    ~GlobalFixture()
-    {
-        m_system_table.reset();
-    }
-
-    SystemTable::Ptr_t m_system_table;
-};
-
-BOOST_GLOBAL_FIXTURE(GlobalFixture);
-
-BOOST_AUTO_TEST_CASE(TestInitialization)
+TEST(params, initialization)
 {
     auto table = SystemTable::instance();
-    BOOST_REQUIRE(table != nullptr);
-
-
+    ASSERT_NE(table, nullptr);
 }

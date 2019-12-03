@@ -7,6 +7,19 @@ void mo::initLogging()
 {
 }
 
+namespace mo
+{
+    template <>
+    struct ObjectConstructor<spdlog::details::registry>
+    {
+        std::shared_ptr<spdlog::details::registry> createShared()
+        {
+            return std::shared_ptr<spdlog::details::registry>(&spdlog::details::registry::instance(),
+                                                              [](spdlog::details::registry*) {});
+        }
+    };
+}
+
 spdlog::details::registry& mo::getLoggerRegistry()
 {
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
@@ -16,14 +29,25 @@ spdlog::details::registry& mo::getLoggerRegistry()
     }
 
     auto registry = table->getSingleton<spdlog::details::registry>();
-    if (!registry)
-    {
-        registry = table->setSingleton(&spdlog::details::registry::instance());
-    }
     return *registry;
 }
 
 spdlog::logger& mo::getDefaultLogger()
 {
-    return *(getLoggerRegistry().default_logger());
+    auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+    if (table == nullptr)
+    {
+        throw std::runtime_error("SystemTable == nullptr");
+    }
+    return *table->getDefaultLogger();
+}
+
+std::shared_ptr<spdlog::logger> mo::getLogger()
+{
+    auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+    if (table == nullptr)
+    {
+        return {};
+    }
+    return table->getDefaultLogger();
 }
