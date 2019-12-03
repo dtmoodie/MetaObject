@@ -1,18 +1,18 @@
 #ifndef MO_PARAMS_TPARAMOUTPUT_HPP
 #define MO_PARAMS_TPARAMOUTPUT_HPP
 
-#include <MetaObject/params/TParam.hpp>
 #include <MetaObject/params/OutputParam.hpp>
+#include <MetaObject/params/TParam.hpp>
 
 namespace mo
 {
 
-    template <typename T>
+    template <typename T, uint64_t FLAGS = ParamFlags::kOUTPUT>
     struct MO_EXPORTS TParamOutput : virtual public TParam<T>, virtual public OutputParam
     {
         TParamOutput()
-            : IParam(mo::tag::_param_flags = mo::ParamFlags::Output_e)
         {
+            setFlags(ParamFlags(FLAGS));
         }
 
         std::vector<TypeInfo> listOutputTypes() const override
@@ -40,6 +40,5 @@ namespace mo
             return this;
         }
     };
-
 }
 #endif // MO_PARAMS_TPARAMOUTPUT_HPP

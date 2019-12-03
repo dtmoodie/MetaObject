@@ -9,10 +9,8 @@ namespace mo
 {
     namespace cuda
     {
-
         uint8_t* CUDA::allocate(const uint64_t size, const int32_t)
         {
-
             void* ptr = nullptr;
             cudaError_t err = cudaMalloc(&ptr, size);
             MO_ASSERT_FMT(err == cudaSuccess, "Unable to allocate {} on device due to {}", size, err);
@@ -40,6 +38,6 @@ namespace mo
             MO_ASSERT_FMT(err == cudaSuccess, "Unable to free host pinned memory due to {}", err);
         }
     }
-    template class MemoryBlock<cuda::CUDA>;
-    template class MemoryBlock<cuda::HOST>;
+    template struct MemoryBlock<cuda::CUDA>;
+    template struct MemoryBlock<cuda::HOST>;
 }

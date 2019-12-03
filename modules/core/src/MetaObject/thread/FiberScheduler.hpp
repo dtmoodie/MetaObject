@@ -11,16 +11,12 @@
 namespace mo
 {
     class ThreadPool;
-    struct WorkerToken
-    {
-        explicit WorkerToken()
-        {
-        }
-    };
 
-    struct PriorityScheduler : public boost::fibers::algo::algorithm_with_properties<FiberProperty>
+    struct MO_EXPORTS PriorityScheduler : public boost::fibers::algo::algorithm_with_properties<FiberProperty>
     {
-        PriorityScheduler(std::weak_ptr<ThreadPool> pool, const uint64_t work_threshold = 100);
+        static PriorityScheduler* current();
+
+        PriorityScheduler(std::weak_ptr<ThreadPool> pool, uint64_t work_threshold = 100);
         PriorityScheduler(std::weak_ptr<ThreadPool> pool, std::condition_variable** wakeup_cv);
         ~PriorityScheduler() override;
 
@@ -40,6 +36,8 @@ namespace mo
 
         void releaseAssistant();
 
+        size_t size() const;
+
       private:
         using Queue = boost::fibers::scheduler::ready_queue_type;
 
@@ -53,6 +51,7 @@ namespace mo
         uint64_t m_work_threshold;
         std::shared_ptr<Thread> m_assistant;
         bool m_is_worker = false;
+        static void setCurrent(PriorityScheduler*);
     };
 }
 

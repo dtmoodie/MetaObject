@@ -44,14 +44,16 @@ namespace mo
     class MO_EXPORTS ParamBase
     {
       public:
-        using Ptr = std::shared_ptr<ParamBase>;
-        using ConstPtr = std::shared_ptr<const ParamBase>;
+        using Ptr_t = std::shared_ptr<ParamBase>;
+        using ConstPtr_t = std::shared_ptr<const ParamBase>;
         using IContainerPtr_t = std::shared_ptr<IDataContainer>;
         using IContainerConstPtr_t = std::shared_ptr<const IDataContainer>;
 
         ParamBase() = default;
         ParamBase(const ParamBase&) = delete;
         ParamBase& operator=(const ParamBase&) = delete;
+        ParamBase(ParamBase&&) = delete;
+        ParamBase& operator=(ParamBase&&) = delete;
 
         virtual ~ParamBase();
 
@@ -67,12 +69,10 @@ namespace mo
         // Get the timestamp of this param, may not exist for all params
         virtual OptionalTime getTimestamp() const = 0;
 
-        virtual Header getHeader() const = 0;
-
         // Get the frame number for this param. Initialized such that first
         // update will set to 0, and increment at every update unless
         // specified
-        virtual uint64_t getFrameNumber() const = 0;
+        virtual FrameNumber getFrameNumber() const = 0;
 
         // Get the compute stream of this param
         virtual IAsyncStream* getStream() const = 0;
@@ -85,18 +85,15 @@ namespace mo
         virtual std::ostream& print(std::ostream& os) const = 0;
 
         // Append a flag to the Param, return previous values
-        virtual EnumClassBitset<ParamFlags> appendFlags(ParamFlags flags_) = 0;
+        virtual ParamFlags appendFlags(ParamFlags flags_) = 0;
 
         // Check if a single flag is set
         virtual bool checkFlags(ParamFlags flag) const = 0;
 
         // Set flags of the param, return previous values
-        virtual EnumClassBitset<ParamFlags> setFlags(ParamFlags flags_) = 0;
+        virtual ParamFlags setFlags(ParamFlags flags_) = 0;
 
-        // Set flags of the param, return previous values
-        virtual EnumClassBitset<ParamFlags> setFlags(EnumClassBitset<ParamFlags> flags_) = 0;
-
-        virtual EnumClassBitset<ParamFlags> getFlags() const = 0;
+        virtual ParamFlags getFlags() const = 0;
 
         virtual void load(ILoadVisitor&) = 0;
         virtual void save(ISaveVisitor&) const = 0;
@@ -108,9 +105,9 @@ namespace mo
         virtual IContainerConstPtr_t getData(const Header& desired = Header()) const = 0;
 
         template <class T>
-        typename TDataContainer<T>::Ptr getTypedData(const Header& desired = Header());
+        std::shared_ptr<TDataContainer<T>> getTypedData(const Header& desired = Header());
         template <class T>
-        typename TDataContainer<T>::ConstPtr getTypedData(const Header& desired = Header()) const;
+        std::shared_ptr<const TDataContainer<T>> getTypedData(const Header& desired = Header()) const;
 
         template <class T>
         bool getTypedData(T*, const Header& desired = Header(), Header* retrieved = nullptr) const;
@@ -121,15 +118,17 @@ namespace mo
     class MO_EXPORTS IParam : public ParamBase
     {
       public:
-        typedef std::shared_ptr<IParam> Ptr;
-        typedef std::shared_ptr<const IParam> ConstPtr;
+        using Ptr_t = std::shared_ptr<IParam>;
+        using ConstPtr_t = std::shared_ptr<const IParam>;
 
-        template <class... Args>
-        IParam(const Args&... args);
+        IParam(const IParam&) = delete;
+        IParam(IParam&&) = delete;
+        IParam& operator=(const IParam&) = delete;
+        IParam& operator=(IParam&&) = delete;
 
-        IParam(const std::string& name_ = "", ParamFlags flags_ = ParamFlags::Control_e, IAsyncStream* ctx_ = nullptr);
+        IParam(const std::string& name_ = "", ParamFlags flags_ = ParamFlags::kCONTROL, IAsyncStream* ctx_ = nullptr);
 
-        virtual ~IParam() override;
+        ~IParam() override;
 
         // Get the name of this param
         IParam* setName(const std::string& name_);
@@ -139,12 +138,6 @@ namespace mo
 
         // Set the compute stream of this param
         virtual IParam* setStream(IAsyncStream* ctx);
-
-        // Set the frame number for this param
-        IParam* setFrameNumber(const uint64_t fn);
-
-        // Set the timestamp for this param
-        IParam* setTimestamp(const Time& ts);
 
         // Set the coordinate system for this param
         IParam* setCoordinateSystem(const std::shared_ptr<ICoordinateSystem>& cs_);
@@ -158,20 +151,11 @@ namespace mo
         // Get the tree root of this param, ie the name of the owning parent object
         const std::string& getTreeRoot() const override;
 
-        // Get the timestamp of this param, may not exist for all Params
-        OptionalTime getTimestamp() const override;
-
-        // Get the frame number for this param. Initialized such that first update will
-        // set to 0, and increment at every update unless specified
-        uint64_t getFrameNumber() const override;
-
         // Get the compute stream of this param
         IAsyncStream* getStream() const override;
 
         // Get the coordinate system of this Param
         const ICoordinateSystemPtr_t& getCoordinateSystem() const override;
-
-        virtual Header getHeader() const override;
 
         // Subscribe to this param as an output
         void subscribe();
@@ -182,18 +166,18 @@ namespace mo
 
         // Virtual to allow typed overload for interface slot input
         virtual ConnectionPtr_t registerUpdateNotifier(ISlot* f);
-        virtual ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr& relay);
+        virtual ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr_t& relay);
 
         // Register slots to be called on delete of this param
         virtual ConnectionPtr_t registerDeleteNotifier(ISlot* f);
-        virtual ConnectionPtr_t registerDeleteNotifier(const ISignalRelay::Ptr& relay);
+        virtual ConnectionPtr_t registerDeleteNotifier(const ISignalRelay::Ptr_t& relay);
 
         // commit changes to a param, updates underlying meta info and emits signals accordingly
-        virtual IParam* emitUpdate(const Header& header = Header(), UpdateFlags flags_ = ValueUpdated_e);
-        virtual IParam* emitUpdate(const IDataContainerPtr_t& data, UpdateFlags flags = ValueUpdated_e);
+        virtual IParam* emitUpdate(const Header& header = Header(), UpdateFlags flags_ = UpdateFlags::kVALUE_UPDATED);
+        virtual IParam* emitUpdate(const IDataContainerPtr_t& data, UpdateFlags flags = UpdateFlags::kVALUE_UPDATED);
 
         // commit a param's value copying metadata info from another parmaeter
-        virtual IParam* emitUpdate(const IParam& other, UpdateFlags flags_ = ValueUpdated_e);
+        virtual IParam* emitUpdate(const IParam& other, UpdateFlags flags_ = UpdateFlags::kVALUE_UPDATED);
 
         // Get reference to param mutex.  If setMtx was called, this will reference the mutex that
         // was set, otherwise one will be created
@@ -203,18 +187,15 @@ namespace mo
         virtual void setMtx(Mutex_t* mtx);
 
         // Append a flag to the Param, return previous values
-        EnumClassBitset<ParamFlags> appendFlags(ParamFlags flags_) override;
+        ParamFlags appendFlags(ParamFlags flags_) override;
 
         // Check if a single flag is set
         bool checkFlags(ParamFlags flag) const override;
 
         // Set flags of the param, return previous values
-        EnumClassBitset<ParamFlags> setFlags(ParamFlags flags_) override;
+        ParamFlags setFlags(ParamFlags flags_) override;
 
-        // Set flags of the param, return previous values
-        EnumClassBitset<ParamFlags> setFlags(EnumClassBitset<ParamFlags> flags_) override;
-
-        EnumClassBitset<ParamFlags> getFlags() const override;
+        ParamFlags getFlags() const override;
 
         // Check if has been modified
         virtual bool modified() const;
@@ -225,11 +206,9 @@ namespace mo
         std::ostream& print(std::ostream& os) const override;
 
       protected:
-        Header m_header;
-
         std::string m_name;
         std::string m_tree_root;
-        mutable EnumClassBitset<ParamFlags> m_flags;
+        mutable ParamFlags m_flags;
 
       private:
         UpdateSignal_t m_update_signal;
@@ -241,26 +220,11 @@ namespace mo
         mutable Mutex_t* m_mtx = nullptr;
 
         IAsyncStream* m_stream;
+        std::shared_ptr<ICoordinateSystem> m_cs;
     };
 
-    template <class... Args>
-    IParam::IParam(const Args&... args)
-    {
-        m_name = GetKeywordInputDefault<tag::param_name>("unnamed", args...);
-        if (const Time* ts = GetKeywordInputOptional<tag::timestamp>(args...))
-        {
-            m_header.timestamp.emplace(*ts);
-        }
-        m_mtx = nullptr;
-        m_header.frame_number = GetKeywordInputDefault<tag::frame_number>(-1, args...);
-        m_header.stream = GetKeywordInputDefault<tag::stream>(nullptr, args...);
-        // specialization for std::shared_ptrs
-        m_flags = GetKeywordInputDefault<tag::param_flags>(EnumClassBitset<ParamFlags>(ParamFlags::Control_e), args...);
-        m_tree_root = GetKeywordInputDefault<tag::tree_root>("", args...);
-    }
-
     template <class T>
-    typename TDataContainer<T>::Ptr ParamBase::getTypedData(const Header& desired)
+    std::shared_ptr<TDataContainer<T>> ParamBase::getTypedData(const Header& desired)
     {
         auto data = getData(desired);
         if (data)
@@ -271,7 +235,7 @@ namespace mo
     }
 
     template <class T>
-    typename TDataContainer<T>::ConstPtr ParamBase::getTypedData(const Header& desired) const
+    std::shared_ptr<const TDataContainer<T>> ParamBase::getTypedData(const Header& desired) const
     {
         auto data = getData(desired);
         if (data)

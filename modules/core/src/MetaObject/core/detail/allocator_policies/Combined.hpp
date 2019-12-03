@@ -5,25 +5,28 @@
 
 namespace mo
 {
+    // Combines multiple allocators into one
+    // Allocate from SmallAllocator unless the requested allocation is larger than threshold
+    // in which case allocate out of LargeAllocator
     template <class SmallAllocator, class LargeAllocator>
-    class CombinedPolicy : public Allocator
+    class CombinedPolicy : public SmallAllocator::Allocator_t
     {
       public:
-        using Ptr = std::shared_ptr<CombinedPolicy>;
-        static Ptr create();
+        using Ptr_t = std::shared_ptr<CombinedPolicy>;
+        static Ptr_t create();
 
-        CombinedPolicy(const size_t threshold = 1 * 1024 * 512);
+        CombinedPolicy(size_t threshold = 1 * 1024 * 512);
 
-        uint8_t* allocate(const size_t num_bytes, const size_t elem_size) override;
+        uint8_t* allocate(size_t num_bytes, size_t elem_size) override;
 
-        void deallocate(uint8_t* ptr, const size_t num_bytes) override;
+        void deallocate(uint8_t* ptr, size_t num_bytes) override;
         void release() override;
 
-        void setThreshold(const size_t thresh);
+        void setThreshold(size_t thresh);
         size_t getThreshold() const;
 
       private:
-        const size_t m_threshold;
+        size_t m_threshold;
         SmallAllocator m_small_allocator;
         LargeAllocator m_large_allocator;
     };
@@ -31,7 +34,7 @@ namespace mo
     // implementation
 
     template <class SmallAllocator, class LargeAllocator>
-    typename CombinedPolicy<SmallAllocator, LargeAllocator>::Ptr
+    typename CombinedPolicy<SmallAllocator, LargeAllocator>::Ptr_t
     CombinedPolicy<SmallAllocator, LargeAllocator>::create()
     {
         return std::make_shared<CombinedPolicy<SmallAllocator, LargeAllocator>>();
@@ -44,30 +47,24 @@ namespace mo
     }
 
     template <class SmallAllocator, class LargeAllocator>
-    uint8_t* CombinedPolicy<SmallAllocator, LargeAllocator>::allocate(const size_t num_bytes,
-                                                                      const size_t elem_size)
+    uint8_t* CombinedPolicy<SmallAllocator, LargeAllocator>::allocate(const size_t num_bytes, const size_t elem_size)
     {
-        if (num_bytes > m_threshold)
+        if (num_bytes < m_threshold)
         {
             return m_small_allocator.allocate(num_bytes, elem_size);
         }
-        else
-        {
-            return m_large_allocator.allocate(num_bytes, elem_size);
-        }
+
+        return m_large_allocator.allocate(num_bytes, elem_size);
     }
 
     template <class SmallAllocator, class LargeAllocator>
     void CombinedPolicy<SmallAllocator, LargeAllocator>::deallocate(uint8_t* ptr, const size_t num_bytes)
     {
-        if (num_bytes > m_threshold)
+        if (num_bytes < m_threshold)
         {
             return m_small_allocator.deallocate(ptr, num_bytes);
         }
-        else
-        {
-            m_large_allocator.deallocate(ptr, num_bytes);
-        }
+        m_large_allocator.deallocate(ptr, num_bytes);
     }
 
     template <class SmallAllocator, class LargeAllocator>

@@ -9,22 +9,24 @@ namespace mo
     {
         struct MO_EXPORTS CUDA
         {
-            static uint8_t* allocate(const uint64_t size, const int32_t elem_size = 1);
-            static void deallocate(void* data, const uint64_t size = 0);
+            using Allocator_t = mo::DeviceAllocator;
+            static uint8_t* allocate(uint64_t size, int32_t elem_size = 1);
+            static void deallocate(void* data, uint64_t size = 0);
         };
 
         struct MO_EXPORTS HOST
         {
-            static uint8_t* allocate(const uint64_t size, const int32_t elem_size = 1);
-            static void deallocate(void* data, const uint64_t size = 0);
+            using Allocator_t = mo::Allocator;
+            static uint8_t* allocate(uint64_t size, int32_t elem_size = 1);
+            static void deallocate(void* data, uint64_t size = 0);
         };
 
         using HOSTMemoryBlock = MemoryBlock<HOST>;
         using CUDAMemoryBlock = MemoryBlock<CUDA>;
     }
 
-    extern template class MemoryBlock<cuda::CUDA>;
-    extern template class MemoryBlock<cuda::HOST>;
+    extern template struct MemoryBlock<cuda::CUDA>;
+    extern template struct MemoryBlock<cuda::HOST>;
 }
 
 #endif // MO_CUDA_MEMORY_BLOCK_HPP

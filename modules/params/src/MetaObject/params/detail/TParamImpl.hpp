@@ -72,7 +72,7 @@ namespace mo
         _data = data;
         this->_fn = fn;
         this->_ts = ts;
-        TParamImpl<T>::emitTypedUpdate(_data, this, ctx, ts, this->_fn, cs, ValueUpdated_e);
+        TParamImpl<T>::emitTypedUpdate(_data, this, ctx, ts, this->_fn, cs, UpdateFlags::kVALUE_UPDATED);
         return true;
     }
 
@@ -86,7 +86,7 @@ namespace mo
         _data = std::move(data);
         this->_fn = fn;
         this->_ts = ts;
-        TParamImpl<T>::emitTypedUpdate(_data, this, ctx, ts, this->_fn, cs, ValueUpdated_e);
+        TParamImpl<T>::emitTypedUpdate(_data, this, ctx, ts, this->_fn, cs, UpdateFlags::kVALUE_UPDATED);
         return true;
     }
 }

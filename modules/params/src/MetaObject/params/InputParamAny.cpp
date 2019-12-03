@@ -8,7 +8,7 @@ using namespace mo;
 InputParamAny::InputParamAny(const std::string& name)
 {
     this->setName(name);
-    this->appendFlags(mo::ParamFlags::Input_e);
+    this->appendFlags(mo::ParamFlags::kINPUT);
 }
 
 bool InputParamAny::acceptsInput(mo::IParam*) const

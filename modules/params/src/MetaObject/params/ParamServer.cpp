@@ -51,7 +51,7 @@ std::vector<IParam*> ParamServer::getOutputParams(TypeInfo type)
     std::vector<IParam*> valid_outputs;
     for (auto itr = _params.begin(); itr != _params.end(); ++itr)
     {
-        if (itr->second->getTypeInfo() == type && itr->second->checkFlags(ParamFlags::Output_e))
+        if (itr->second->getTypeInfo() == type && itr->second->checkFlags(ParamFlags::kOUTPUT))
         {
             valid_outputs.push_back(itr->second);
         }
@@ -74,7 +74,7 @@ std::vector<IParam*> ParamServer::getAllOutputParams()
     std::vector<IParam*> output;
     for (auto& itr : _params)
     {
-        if (itr.second->checkFlags(ParamFlags::Output_e))
+        if (itr.second->checkFlags(ParamFlags::kOUTPUT))
         {
             output.push_back(itr.second);
         }

@@ -1,20 +1,9 @@
 #include "MetaObject/object/MetaObjectInfoDatabase.hpp"
 #include "MetaObject/object/MetaObjectInfo.hpp"
-#include <map>
 using namespace mo;
-
-struct MetaObjectInfoDatabase::impl
-{
-    std::map<std::string, IMetaObjectInfo*> info;
-};
 
 MetaObjectInfoDatabase::MetaObjectInfoDatabase()
 {
-    _pimpl = new impl();
-}
-MetaObjectInfoDatabase::~MetaObjectInfoDatabase()
-{
-    delete _pimpl;
 }
 
 MetaObjectInfoDatabase* MetaObjectInfoDatabase::instance()
@@ -27,15 +16,15 @@ MetaObjectInfoDatabase* MetaObjectInfoDatabase::instance()
     return g_inst;
 }
 
-void MetaObjectInfoDatabase::registerInfo(IMetaObjectInfo* info)
+void MetaObjectInfoDatabase::registerInfo(IMetaObjectInfo* info_)
 {
-    _pimpl->info[info->GetObjectName()] = info;
+    info[info_->GetObjectName()] = info_;
 }
 
 std::vector<IMetaObjectInfo*> MetaObjectInfoDatabase::getMetaObjectInfo()
 {
     std::vector<IMetaObjectInfo*> output;
-    for (auto& itr : _pimpl->info)
+    for (auto& itr : info)
     {
         output.push_back(itr.second);
     }
@@ -44,8 +33,8 @@ std::vector<IMetaObjectInfo*> MetaObjectInfoDatabase::getMetaObjectInfo()
 
 IMetaObjectInfo* MetaObjectInfoDatabase::getMetaObjectInfo(std::string name)
 {
-    auto itr = _pimpl->info.find(name);
-    if (itr != _pimpl->info.end())
+    auto itr = info.find(name);
+    if (itr != info.end())
     {
         return itr->second;
     }

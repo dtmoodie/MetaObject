@@ -1,6 +1,6 @@
 function(metaobject_declare_module)
     set(oneValueArgs NAME)
-    set(multiValueArgs SRC DEPENDS FLAGS CUDA_SRC)
+    set(multiValueArgs SRC DEPENDS FLAGS CUDA_SRC INCLUDES)
     cmake_parse_arguments(metaobject_declare_module "${options}" "${oneValueArgs}" "${multiValueArgs}" ${ARGN} )
     GroupSources("${CMAKE_CURRENT_LIST_DIR}/src/MetaObject/" "/" " ")
     if(${metaobject_declare_module_CUDA_SRC})
@@ -14,7 +14,25 @@ function(metaobject_declare_module)
         endif()
     endif()
     
-    set_target_properties(metaobject_${metaobject_declare_module_NAME} PROPERTIES LINKER_LANGUAGE CXX)
+    set_target_properties(metaobject_${metaobject_declare_module_NAME}
+        PROPERTIES
+        LINKER_LANGUAGE CXX
+    )
+    if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU" )
+        # This is a workaround for cotire not correctly pulling the cxx standard that is inherited from ct
+        # https://github.com/sakra/cotire/issues/138
+        if(CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 4.9)
+            set_target_properties(metaobject_${metaobject_declare_module_NAME}
+                PROPERTIES
+                CXX_STANDARD 14
+            )
+        else()
+            set_target_properties(metaobject_${metaobject_declare_module_NAME}
+                PROPERTIES
+                CXX_STANDARD 11
+            )
+        endif()
+    endif()
     
     set(metaobject_modules "${metaobject_modules};metaobject_${metaobject_declare_module_NAME}" CACHE INTERNAL "" FORCE)
 
@@ -23,8 +41,12 @@ function(metaobject_declare_module)
     if(metaobject_declare_module_DEPENDS)
         rcc_link_lib(metaobject_${metaobject_declare_module_NAME} ${metaobject_declare_module_DEPENDS})
     endif()
-
-
+    if(metaobject_declare_module_INCLUDES)
+        target_include_directories(metaobject_python
+            PUBLIC
+                ${metaobject_declare_module_INCLUDES}
+        )
+    endif()
 
     if(UNIX)
         target_compile_options(metaobject_${metaobject_declare_module_NAME} PUBLIC "-fPIC;-Wl,--no-undefined")
@@ -40,6 +62,13 @@ function(metaobject_declare_module)
     set_target_properties(metaobject_${metaobject_declare_module_NAME} PROPERTIES FOLDER Modules)
     if(metaobject_declare_module_FLAGS)
         target_compile_options(metaobject_${metaobject_declare_module_NAME} PUBLIC ${metaobject_declare_module_FLAGS})
+    endif()
+
+    #cotire(metaobject_${metaobject_declare_module_NAME})
+
+    if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/pch.hpp")
+        configure_file(${CMAKE_CURRENT_LIST_DIR}/pch.hpp
+            ${CMAKE_BINARY_DIR}/include/MetaObject/${metaobject_declare_module_NAME}/${metaobject_declare_module_NAME}_pch.hpp @ONLY)
     endif()
 
     export(TARGETS metaobject_${metaobject_declare_module_NAME}
@@ -68,8 +97,11 @@ function(metaobject_declare_module)
     if(RCC_VERBOSE_CONFIG)
         set(test_lib "")
         set(test_inc "")
-        set(test_lib "")
-        _target_helper(test_lib test_inc test_lib metaobject_${metaobject_declare_module_NAME} " ")
+        set(test_lib_debug "")
+        set(test_lib_release "")
+        set(test_deps "")
+        set(test_flags "")
+        _target_helper(test_lib test_inc test_lib_debug test_lib_release test_deps test_flags metaobject_${metaobject_declare_module_NAME} " ")
         message("---------------")
         list(REMOVE_DUPLICATES test_lib)
         foreach(lib ${test_lib})

@@ -8,8 +8,8 @@ namespace mo
         template <class T>
         CircularBuffer<T>::CircularBuffer(T&& init, const std::string& name, OptionalTime ts, ParamFlags type)
             : ITInputParam<T>(name)
-            , TParam<T>(name, mo::ParamFlags::Buffer_e)
-            , IParam(name, mo::ParamFlags::Buffer_e)
+            , TParam<T>(name, mo::ParamFlags::kBUFFER)
+            , IParam(name, mo::ParamFlags::kBUFFER)
         {
             (void)&_circular_buffer_constructor;
             (void)&_circular_buffer_param_constructor;
@@ -20,8 +20,8 @@ namespace mo
         template <class T>
         CircularBuffer<T>::CircularBuffer(const std::string& name, OptionalTime ts, ParamFlags type)
             : ITInputParam<T>(name)
-            , TParam<T>(name, mo::ParamFlags::Buffer_e)
-            , IParam(name, mo::ParamFlags::Buffer_e)
+            , TParam<T>(name, mo::ParamFlags::kBUFFER)
+            , IParam(name, mo::ParamFlags::kBUFFER)
         {
             _data_buffer.set_capacity(10);
         }
@@ -103,7 +103,7 @@ namespace mo
                 }
                 this->modified(true);
             }
-            this->emitTypedUpdate(data_, this, ctx, ts, fn, cs, mo::InputUpdated_e);
+            this->emitTypedUpdate(data_, this, ctx, ts, fn, cs, mo::UpdateFlags::kINPUT_UPDATED);
             return true;
         }
 
@@ -126,7 +126,7 @@ namespace mo
                 }
                 this->modified(true);
             }
-            this->emitTypedUpdate(_data_buffer.back().data, this, ctx, ts, fn, cs, mo::InputUpdated_e);
+            this->emitTypedUpdate(_data_buffer.back().data, this, ctx, ts, fn, cs, mo::UpdateFlags::kINPUT_UPDATED);
             return true;
         }
 
@@ -219,8 +219,8 @@ namespace mo
             }
             this->modified(true);
             lock.unlock();
-            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            IParam::_update_signal(this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
+            TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
         }
         template <typename T>
         ParamConstructor<CircularBuffer<T>> CircularBuffer<T>::_circular_buffer_param_constructor;

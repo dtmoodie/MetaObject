@@ -1,4 +1,6 @@
-#pragma once
+#ifndef MO_PYTHON_CONVERTERS_HPP
+#define MO_PYTHON_CONVERTERS_HPP
+
 #include "MetaObject/core/TypeTable.hpp"
 #include "MetaObject/logging/logging.hpp"
 #include "MetaObject/python/FunctionSignatureBuilder.hpp"
@@ -6,9 +8,9 @@
 #include "MetaObject/types/small_vec.hpp"
 
 #include "ct/VariadicTypedef.hpp"
-#include "ct/reflect.hpp"
-#include "ct/reflect/print.hpp"
-#include <ct/TypeTraits.hpp>
+
+#include <ct/type_traits.hpp>
+#include <ct/types/TArrayView.hpp>
 
 #include "PythonSetup.hpp"
 
@@ -17,96 +19,100 @@
 #include <boost/python/suite/indexing/map_indexing_suite.hpp>
 #include <boost/python/suite/indexing/vector_indexing_suite.hpp>
 
-#include <type_traits>
+#include "reflected_converters.hpp"
 
+#include <type_traits>
+struct SystemTable;
+/*
 namespace mo
 {
     namespace python
     {
-        namespace detail
-        {
-            template <class T>
-            void pythonizeData(const char* name);
-        }
-        template <class T, class Enable = void>
-        struct PythonConverter;
-
-        template <class T, class Enable = void>
-        struct ToPythonDataConverter
-        {
-        };
 
         template <class T>
-        struct ToPythonDataConverter<T, ct::EnableIfReflected<T>>
+        void pythonizeData(const char* name);
+
+        template <class T, ct::index_t PRIORITY = 10, class ENABLE = void>
+        struct PythonConverter : public PythonConverter<T, PRIORITY - 1, void>
         {
-            ToPythonDataConverter(SystemTable* table, const char* name)
+            PythonConverter(SystemTable* table, const char* name)
+                : PythonConverter<T, PRIORITY - 1, void>(table, name)
             {
-                python::registerSetupFunction(table, std::bind(&python::detail::pythonizeData<T>, name));
             }
         };
 
         template <class T>
-        struct ToPythonDataConverter<
-            T,
-            typename std::enable_if<!ct::Reflect<T>::SPECIALIZED && !ct::is_container<T>::value>::type>
+        struct PythonConverter<T, 0, ct::EnableIf<!std::is_arithmetic<T>::value>>
         {
-            ToPythonDataConverter(SystemTable* table, const char* name)
+            PythonConverter(SystemTable* table, const char* name)
             {
-                python::registerSetupFunction(table, std::bind(&python::detail::pythonizeData<T>, name));
+                python::registerSetupFunction(table, std::bind(&python::pythonizeData<T>, name));
             }
-        };
 
-        template <class K, class V>
-        struct ToPythonDataConverter<std::map<K, V>, void>
-        {
-            ToPythonDataConverter(SystemTable* table, const char* name)
+            static bool convertFromPython(const boost::python::object& obj, T& result)
             {
-                python::registerSetupFunction(table, std::bind(&python::detail::pythonizeData<std::map<K, V>>, name));
+                boost::python::extract<T> extractor(obj);
+                if (extractor.check())
+                {
+                    result = extractor();
+                    return true;
+                }
+                return false;
             }
-        };
 
-        template <class T>
-        struct ToPythonDataConverter<std::vector<T>, ct::EnableIfReflected<T>>
-        {
-            ToPythonDataConverter(SystemTable* table, const char* name)
+            static boost::python::object convertToPython(const T& result)
             {
-                python::registerSetupFunction(table, std::bind(&python::detail::pythonizeData<std::vector<T>>, name));
+                return boost::python::object(result);
             }
-        };
 
-        template <>
-        struct ToPythonDataConverter<std::string, void>
-        {
-            ToPythonDataConverter(SystemTable* table, const char* name)
+            static void registerToPython(const char* name = nullptr)
             {
-                python::registerSetupFunction(table, std::bind(&python::detail::pythonizeData<std::string>, name));
-            }
-        };
-
-        template <class T>
-        struct ToPythonDataConverter<std::vector<T>, ct::DisableIfReflected<T>>
-        {
-            ToPythonDataConverter(SystemTable* table, const char* name)
-            {
-                python::registerSetupFunction(table, std::bind(&python::detail::pythonizeData<std::vector<T>>, name));
+                if (name)
+                {
+                    MO_LOG(debug, "Unable to register {} to python", name);
+                }
+                else
+                {
+                    auto name_ = mo::TypeTable::instance()->typeToName(mo::TypeInfo::create<T>());
+                    MO_LOG(debug, "Unable to register {} to python", name_);
+                }
+                // what do...
+                boost::python::class_<T> bpobj(name);
             }
         };
 
         template <class T>
-        inline auto convertToPython(const T& obj) -> boost::python::object
+        struct PythonConverter<T, 0, ct::EnableIf<std::is_arithmetic<T>::value>>
         {
-            return boost::python::object(obj);
-        }
-
-        template <class T, int N>
-        inline auto convertToPython(const mo::SmallVec<T, N>& vec) -> boost::python::object
-        {
-            boost::python::list list;
-            for (const auto& item : vec)
+            PythonConverter(SystemTable*, const char*)
             {
-                list.append(convertToPython(item));
             }
-            return list;
+
+            static bool convertFromPython(const boost::python::object& obj, T& result)
+            {
+                boost::python::extract<T> extractor(obj);
+                if (extractor.check())
+                {
+                    result = extractor();
+                    return true;
+                }
+                return false;
+            }
+
+            static boost::python::object convertToPython(const T& result)
+            {
+                return boost::python::object(result);
+            }
+
+            static void registerToPython(const char* = nullptr)
+            {
+            }
+        };
+
+        template <class T>
+        boost::python::object convertToPython(const T& data)
+        {
+            return PythonConverter<T>::convertToPython(data);
         }
 
         template <class T>
@@ -116,373 +122,325 @@ namespace mo
             {
                 return convertToPython(*ptr);
             }
-            else
-            {
-                return {};
-            }
+            return {};
         }
 
         template <class T>
-        inline auto convertToPython(const std::vector<T>& vec) -> boost::python::object
+        bool convertFromPython(const boost::python::object& obj, T& data)
         {
-            boost::python::list list;
-            for (const auto& item : vec)
-            {
-                list.append(convertToPython(item));
-            }
-            return list;
+            return PythonConverter<T>::convertFromPython(obj, data);
         }
 
-        inline void convertFromPython(const boost::python::object& obj, std::string& result);
-
-        template <class K, class T>
-        inline void convertFromPython(const boost::python::object& obj, std::map<K, T>& result);
-
         template <class T>
-        inline auto convertFromPython(const boost::python::object& obj, T& result) -> ct::DisableIfReflected<T>;
-
-        template <class T>
-        inline auto convertFromPython(const boost::python::object& obj, T& result) -> ct::EnableIfReflected<T>;
-
-        template <class T>
-        inline void convertFromPython(const boost::python::object& obj, std::vector<T>& result);
-
-        namespace detail
+        struct PythonConverter<std::vector<T>, 2, void>
         {
-            template <class T, class V>
-            V inferSetterType(void (*)(T&, V))
+            PythonConverter(SystemTable* table, const char* name = nullptr)
             {
+                python::registerSetupFunction(table, std::bind(&python::pythonizeData<std::vector<T>>, name));
             }
 
-            template <class T, class V>
-            V inferGetterType(V (*)(T&))
-            {
-            }
-
-            template <int I, class T>
-            using SetValue_t = typename ct::FieldSetType<T, I>::type;
-
-            template <int I, class T>
-            using GetValue_t = typename ct::FieldSetType<T, I>::type;
-
-            template <class T, int I>
-            boost::python::object pythonGet(const T& obj)
-            {
-                auto accessor = ct::Reflect<T>::getPtr(ct::Indexer<I>{});
-                return convertToPython(ct::get(accessor, obj));
-            }
-
-            template <class T, int I>
-            void pythonSet(T& obj, const SetValue_t<I, T>& val)
-            {
-                auto accessor = ct::Reflect<T>::getPtr(ct::Indexer<I>{});
-                ct::set(accessor, obj, val);
-            }
-
-            template <class T, int I, class BP>
-            auto addPropertyImpl(BP& bpobj) -> typename std::enable_if<!std::is_pointer<GetValue_t<I, T>>::value>::type
-            {
-                bpobj.add_property(ct::getName<I, T>(), &pythonGet<T, I>, &pythonSet<T, I>);
-            }
-
-            template <class T, int I, class BP>
-            auto addPropertyImpl(BP& bpobj) -> typename std::enable_if<std::is_pointer<GetValue_t<I, T>>::value>::type
-            {
-                bpobj.add_property(ct::Reflect<T>::getName(ct::Indexer<I>{}), &pythonGet<T, I>, &pythonSet<T, I>);
-            }
-
-            template <class T, class BP>
-            void addPropertyHelper(BP& bpobj, const ct::Indexer<0>)
-            {
-                addPropertyImpl<T, 0>(bpobj);
-            }
-
-            template <class T, ct::index_t I, class BP>
-            void addPropertyHelper(BP& bpobj, const ct::Indexer<I> idx)
-            {
-                addPropertyImpl<T, I>(bpobj);
-                addPropertyHelper<T>(bpobj, --idx);
-            }
-
-            template <class T>
-            void initDataMembers(T& data, boost::python::object& value)
-            {
-                typedef typename std::decay<SetValue_t<ct::Reflect<T>::NUM_FIELDS - 1, T>>::type Type;
-                boost::python::extract<Type> ext(value);
-                if (ext.check())
-                {
-                    Type value = ext();
-                    auto accessor = ct::Reflect<T>::getPtr(ct::Indexer<ct::Reflect<T>::NUM_FIELDS - 1>{});
-                    ct::set(accessor, data, std::move(value));
-                }
-            }
-
-            template <class T, class... Args>
-            void initDataMembers(T& data, boost::python::object& value, Args... args)
-            {
-                typedef typename std::decay<SetValue_t<ct::Reflect<T>::NUM_FIELDS - sizeof...(args), T>>::type Type;
-                boost::python::extract<Type> ext(value);
-                if (ext.check())
-                {
-                    Type value = ext();
-                    auto accessor = ct::Reflect<T>::getPtr(ct::Indexer<ct::Reflect<T>::NUM_FIELDS - sizeof...(args)>{});
-                    ct::set(accessor, data, std::move(value));
-                }
-                initDataMembers(data, args...);
-            }
-
-            template <class... Args>
-            struct CreateDataObject
-            {
-            };
-
-            template <class T>
-            void populateKwargs(std::array<boost::python::detail::keyword, ct::Reflect<T>::NUM_FIELDS>& kwargs,
-                                const ct::Indexer<0>)
-            {
-                kwargs[0] = (boost::python::arg(ct::getName<0, T>()) = boost::python::object());
-            }
-
-            template <class T, ct::index_t I>
-            void populateKwargs(std::array<boost::python::detail::keyword, ct::Reflect<T>::NUM_FIELDS>& kwargs,
-                                const ct::Indexer<I> cnt,
-                                typename std::enable_if<I != 0>::type* = 0)
-            {
-                kwargs[I] = (boost::python::arg(ct::getName<I, T>()) = boost::python::object());
-                populateKwargs<T>(kwargs, --cnt);
-            }
-
-            template <class T>
-            std::array<boost::python::detail::keyword, ct::Reflect<T>::NUM_FIELDS> makeKeywordArgs()
-            {
-                std::array<boost::python::detail::keyword, ct::Reflect<T>::NUM_FIELDS> kwargs;
-                populateKwargs<T>(kwargs, ct::Reflect<T>::end());
-                return kwargs;
-            }
-
-            template <class T, class... Args>
-            struct CreateDataObject<T, ct::VariadicTypedef<Args...>>
-            {
-                static const int size = ct::Reflect<T>::NUM_FIELDS;
-                static T* create(Args... args)
-                {
-                    T* obj = new T();
-                    initDataMembers(*obj, args...);
-                    return obj;
-                }
-
-                static boost::python::detail::keyword_range range()
-                {
-                    static std::array<boost::python::detail::keyword, ct::Reflect<T>::NUM_FIELDS> s_keywords =
-                        makeKeywordArgs<T>();
-                    return std::make_pair<boost::python::detail::keyword const*, boost::python::detail::keyword const*>(
-                        &s_keywords[0], &s_keywords[0] + ct::Reflect<T>::NUM_FIELDS);
-                }
-            };
-
-            template <class T, class BP>
-            typename std::enable_if<ct::is_default_constructible<T>::value>::type addInit(BP& bpobj)
-            {
-                typedef CreateDataObject<
-                    T,
-                    typename FunctionSignatureBuilder<boost::python::object, ct::Reflect<T>::NUM_FIELDS>::VariadicTypedef_t>
-                    Creator_t;
-                bpobj.def("__init__",
-                          boost::python::make_constructor(
-                              Creator_t::create, boost::python::default_call_policies(), Creator_t()));
-            }
-
-            template <class T, class BP>
-            typename std::enable_if<!ct::is_default_constructible<T>::value>::type addInit(BP&)
-            {
-            }
-
-            template <class T>
-            void extract(T& obj, const boost::python::object& bpobj, ct::Indexer<0>)
-            {
-                auto ptr = bpobj.ptr();
-                boost::python::object python_member;
-                if (PyObject_HasAttrString(ptr, ct::getName<0, T>()))
-                {
-                    python_member = bpobj.attr(ct::getName<0, T>());
-                }
-                else
-                {
-                    if (0 < boost::python::len(bpobj))
-                    {
-                        python_member = bpobj[0];
-                    }
-                }
-                if (python_member)
-                {
-                    convertFromPython(python_member, ct::set<0>(obj));
-                }
-            }
-
-            template <class T, ct::index_t I>
-            void extract(T& obj, const boost::python::object& bpobj, ct::Indexer<I> idx)
-            {
-
-                auto ptr = bpobj.ptr();
-                boost::python::object python_member;
-                if (PyObject_HasAttrString(ptr, ct::getName<I, T>()))
-                {
-                    python_member = bpobj.attr(ct::getName<I, T>());
-                }
-                else
-                {
-                    if (I < boost::python::len(bpobj))
-                    {
-                        python_member = bpobj[I];
-                    }
-                }
-                if (python_member)
-                {
-                    convertFromPython(python_member, ct::set<I>(obj));
-                }
-                extract(obj, bpobj, --idx);
-            }
-
-            template <class T>
-            ct::DisableIfReflected<T> pythonizeDataHelper(const char* /*name*/ = nullptr, const T* = nullptr)
-            {
-            }
-
-            template <class T>
-            ct::EnableIfReflected<T, std::string> repr(const T& data)
-            {
-                std::stringstream ss;
-                ct::printStruct(ss, data);
-                return ss.str();
-            }
-
-            template <class T>
-            ct::EnableIfReflected<T, std::string> reprVec(const std::vector<T>& data)
+            static std::string reprVec(const std::vector<T>& data)
             {
                 std::stringstream ss;
                 ss << '[';
                 for (size_t i = 0; i < data.size(); ++i)
                 {
                     if (i != 0)
+                    {
                         ss << ", ";
-                    ct::printStruct(ss, data[i]);
+                    }
+                    ss << data[i];
                 }
                 ss << ']';
                 return ss.str();
             }
 
-            template <class T>
-            ct::EnableIfReflected<T> pythonizeDataHelper(const char* name = nullptr, const T* = nullptr)
+            static void registerToPython(const char* name_ = nullptr)
             {
-                static bool registered = false;
-                if (registered)
-                    return;
-                boost::python::class_<T> bpobj(name ? name : mo::TypeTable::instance().typeToName(mo::TypeInfo(typeid(T))).c_str(),
-                                               boost::python::no_init);
-                addPropertyHelper<T>(bpobj, ct::Reflect<T>::end());
-                addInit<T>(bpobj);
-                bpobj.def("__repr__", &repr<T>);
-                registered = true;
-            }
-
-            template <class T>
-            ct::EnableIfReflected<T> pythonizeDataHelper(const char* name_ = nullptr, const std::vector<T>* = nullptr)
-            {
-                static bool registered = false;
-                if (registered)
-                    return;
-                pythonizeDataHelper<T>(name_, static_cast<const T*>(nullptr));
+                pythonizeData<T>(nullptr);
                 std::string name;
                 if (name_)
+                {
                     name = name_;
+                }
                 else
-                    name = mo::TypeTable::instance().typeToName(mo::TypeInfo(typeid(T)));
-                name += "List";
+                {
+                    name = mo::TypeTable::instance()->typeToName(mo::TypeInfo(typeid(T)));
+                    name += "List";
+                }
+
                 boost::python::class_<std::vector<T>> bpobj(name.c_str());
                 bpobj.def(boost::python::vector_indexing_suite<std::vector<T>>());
-                bpobj.def("__repr__", &reprVec<T>);
-                registered = true;
+                bpobj.def("__repr__", &reprVec);
             }
 
-            template <class K, class T>
-            ct::EnableIfReflected<T> pythonizeDataHelper(const char* name = nullptr, const std::map<K, T>* = nullptr)
+            static boost::python::list convertToPython(const std::vector<T>& data)
             {
-                pythonizeDataHelper<T>(name, static_cast<const T*>(nullptr));
-                boost::python::class_<std::vector<T>> bpobj((std::string(name) + "Map").c_str());
-                bpobj.def(boost::python::map_indexing_suite<std::map<K, T>>());
+                boost::python::list list;
+                for (const auto& item : data)
+                {
+                    list.append(mo::python::convertToPython(item));
+                }
+                return list;
             }
 
-            template <class T>
-            void pythonizeData(const char* name)
+            static bool convertFromPython(const boost::python::object& obj, std::vector<T>& result)
             {
-                auto module_name = getModuleName();
-                boost::python::object datatype_module(boost::python::handle<>(
-                    boost::python::borrowed(PyImport_AddModule((module_name + ".datatypes").c_str()))));
-                // boost::python::scope().attr("datatypes") = datatype_module;
-                // set the current scope to the new sub-module
-                boost::python::scope plugins_scope = datatype_module;
-
-                pythonizeDataHelper(name, static_cast<const T*>(nullptr));
+                const ssize_t len = boost::python::len(obj);
+                result.resize(len);
+                for (ssize_t i = 0; i < len; ++i)
+                {
+                    mo::python::convertFromPython(boost::python::object(obj[i]), result[i]);
+                }
+                return true;
             }
-        } // namespace mo::python::detail
 
-        template <class K, class T>
-        inline void convertFromPython(const boost::python::object& obj, std::map<K, T>& result)
-        {
-            boost::python::extract<std::map<K, T>> extractor(obj);
-            result = extractor();
-        }
+        }; // PythonConvert<std::vector<T>, 2, void>
 
         template <class T>
-        inline auto convertFromPython(const boost::python::object& obj, T& result) -> ct::DisableIfReflected<T>
+        struct PythonConverter<T, 2, ct::EnableIfReflected<T>>
         {
-            boost::python::extract<T> extractor(obj);
-            result = extractor();
-        }
-
-        template <class T>
-        inline auto convertFromPython(const boost::python::object& obj, T& result) -> ct::EnableIfReflected<T>
-        {
-            detail::extract(result, obj, ct::Reflect<T>::end());
-        }
-
-        inline void convertFromPython(const boost::python::object& obj, std::string& result)
-        {
-            result = boost::python::extract<std::string>(obj)();
-        }
-
-        template <class T>
-        inline void convertFromPython(const boost::python::object& obj, ct::EnableIfReflected<T>& result)
-        {
-            detail::extract(result, obj, ct::Reflect<T>::end());
-        }
-
-        template <class T>
-        inline void convertFromPython(const boost::python::object& obj, std::vector<T>& result)
-        {
-            const ssize_t len = boost::python::len(obj);
-            result.resize(len);
-            for (ssize_t i = 0; i < len; ++i)
+            PythonConverter(SystemTable* table, const char* name)
             {
-                convertFromPython(boost::python::object(obj[i]), result[i]);
+                python::registerSetupFunction(table, std::bind(&python::pythonizeData<T>, name));
             }
+
+            static std::string repr(const T& obj)
+            {
+                std::stringstream ss;
+                ct::printStruct(ss, obj);
+                return std::move(ss).str();
+            }
+
+            static void registerToPython(const char* name)
+            {
+                boost::python::class_<T> bpobj(
+                    name ? name : mo::TypeTable::instance()->typeToName(mo::TypeInfo(typeid(T))).c_str());
+                reflected::addPropertyHelper<T>(bpobj, ct::Reflect<T>::end());
+                reflected::addInit<T>(bpobj);
+                bpobj.def("__repr__", &repr);
+            }
+
+            static bool convertFromPython(const boost::python::object&, T&)
+            {
+                // TODO
+                return false;
+            }
+
+            static boost::python::object convertToPython(const T& result)
+            {
+                return boost::python::object(result);
+            }
+
+        }; // PythonConverter<T, 2, ct::EnableIfReflected<T>>
+
+        template <class K, class V>
+        struct PythonConverter<std::map<K, V>, 2, void>
+        {
+
+            PythonConverter(SystemTable* table, const char* name)
+            {
+                python::registerSetupFunction(table, std::bind(&python::pythonizeData<std::map<K, V>>, name));
+            }
+
+            static void registerToPython(const char* name_ = nullptr)
+            {
+                pythonizeData<K>(nullptr);
+                pythonizeData<V>(nullptr);
+                std::string name;
+                if (name_)
+                {
+                    name = name_;
+                }
+                else
+                {
+                    name = mo::TypeTable::instance()->typeToName(mo::TypeInfo(typeid(std::map<K, V>)));
+                }
+                boost::python::class_<std::map<K, V>> bpobj(name.c_str());
+                bpobj.def(boost::python::map_indexing_suite<std::map<K, V>>());
+            }
+
+            static bool convertFromPython(const boost::python::object& obj, std::map<K, V>& result)
+            {
+                boost::python::extract<std::map<K, V>> extractor(obj);
+                result = extractor();
+                return true;
+            }
+
+            static boost::python::object convertToPython(const std::map<K, V>&)
+            {
+                boost::python::dict dict;
+                // TODO
+
+                return dict;
+            }
+        };
+
+        template <class T, int N>
+        struct PythonConverter<mo::SmallVec<T, N>, 2, void>
+        {
+            PythonConverter(SystemTable* table, const char* name = nullptr)
+            {
+                python::registerSetupFunction(table, std::bind(&python::pythonizeData<mo::SmallVec<T, N>>, name));
+            }
+
+            static boost::python::object convertToPython(const mo::SmallVec<T, N>& vec)
+            {
+                boost::python::list list;
+                for (const auto& item : vec)
+                {
+                    list.append(convertToPython(item));
+                }
+                return list;
+            }
+        };
+
+        template <class T>
+        struct PythonConverter<ct::TArrayView<T>, 2, void>
+        {
+            PythonConverter(SystemTable* table, const char* name = nullptr)
+            {
+                python::registerSetupFunction(table, std::bind(&python::pythonizeData<ct::TArrayView<T>>, name));
+            }
+
+            static bool convertFromPython(const boost::python::object& obj, ct::TArrayView<T>& result)
+            {
+                const ssize_t len = boost::python::len(obj);
+                if (len != result.size())
+                {
+                    return false;
+                }
+                for (ssize_t i = 0; i < len; ++i)
+                {
+                    if (!python::convertFromPython(obj[i], result[i]))
+                    {
+                        return false;
+                    }
+                }
+                return true;
+            }
+            static boost::python::object convertToPython(const ct::TArrayView<T>& data)
+            {
+                boost::python::list list;
+                for (const auto& item : data)
+                {
+                    list.append(python::convertToPython(item));
+                }
+                return list;
+            }
+        };
+
+        template <>
+        struct PythonConverter<ct::TArrayView<void>, 2, void>
+        {
+            PythonConverter(SystemTable*, const char* = nullptr)
+            {
+                // python::registerSetupFunction(table, std::bind(&python::pythonizeData<ct::TArrayView<void>>, name));
+            }
+
+            static bool convertFromPython(const boost::python::object& obj, ct::TArrayView<void>& result)
+            {
+                PyObject* py_buffer = obj.ptr();
+                if (!PyBuffer_Check(py_buffer))
+                {
+                    return false;
+                }
+
+                void* cxx_buf = py_buffer->buf;
+                const auto size = py_buffer->len;
+                result = ct::TArrayView<void>(cxx_buf, size);
+                return true;
+            }
+            static boost::python::object convertToPython(const ct::TArrayView<void>& data)
+            {
+                PyObject* py_buf = PyBuffer_FromMemory(const_cast<void*>(data.data()), data.size());
+                return boost::python::object(boost::python::handle<>(py_buf));
+            }
+            static void registerToPython(const char* name)
+            {
+            }
+        };
+
+        template <>
+        struct PythonConverter<ct::TArrayView<const void>, 2, void>
+        {
+            PythonConverter(SystemTable* table, const char* name = nullptr)
+            {
+                // python::registerSetupFunction(table, std::bind(&python::pythonizeData<ct::TArrayView<void>>, name));
+            }
+
+            static bool convertFromPython(const boost::python::object& obj, ct::TArrayView<const void>& result)
+            {
+                PyObject* py_buffer = obj.ptr();
+                if (!PyBuffer_Check(py_buffer))
+                {
+                    return false;
+                }
+
+                void* cxx_buf = py_buffer->buf;
+                const auto size = py_buffer->len;
+                result = ct::TArrayView<void>(cxx_buf, size);
+                return true;
+            }
+            static boost::python::object convertToPython(const ct::TArrayView<const void>& data)
+            {
+                PyObject* py_buf = PyBuffer_FromMemory(const_cast<void*>(data.data()), data.size());
+                return boost::python::object(boost::python::handle<>(py_buf));
+            }
+
+            static void registerToPython(const char* name)
+            {
+            }
+        };
+
+        template <>
+        struct PythonConverter<std::string, 3, void>
+        {
+            inline PythonConverter(SystemTable* table, const char* name)
+            {
+                python::registerSetupFunction(table, std::bind(&python::pythonizeData<std::string>, name));
+            }
+
+            static inline bool convertFromPython(const boost::python::object& obj, std::string& result)
+            {
+                boost::python::extract<std::string> extractor(obj);
+                if (extractor.check())
+                {
+                    result = extractor();
+                    return true;
+                }
+                return false;
+            }
+
+            static inline boost::python::object convertToPython(const std::string& result)
+            {
+                return boost::python::object(result);
+            }
+
+            static inline void registerToPython(const char*)
+            {
+                // Not sure if needed for an std::string
+            }
+        };
+
+        template <class T>
+        void pythonizeData(const char* name)
+        {
+            static bool registered = false;
+            if (registered)
+            {
+                return;
+            }
+            auto module_name = getModuleName();
+            boost::python::object datatype_module(boost::python::handle<>(
+                boost::python::borrowed(PyImport_AddModule((module_name + ".datatypes").c_str()))));
+
+            // set the current scope to the new sub-module
+            boost::python::scope plugins_scope = datatype_module;
+
+            PythonConverter<T>::registerToPython(name);
+            registered = true;
         }
     }
-}
-
-namespace boost
-{
-    namespace python
-    {
-        namespace detail
-        {
-            template <class... T>
-            struct is_keywords<mo::python::detail::CreateDataObject<T...>>
-            {
-                static const bool value = true;
-            };
-        }
-    }
-}
-
-#include "detail/converters.hpp"
+}*/
+#endif // MO_PYTHON_CONVERTERS_HPP

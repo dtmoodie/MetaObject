@@ -21,7 +21,7 @@ namespace mo
 
               protected:
                 void SetTooltip(const std::string& tip);
-                void onParamUpdate(mo::Context* ctx, mo::IParam* param);
+                void onParamUpdate(mo::IAsyncStream* ctx, mo::IParam* param);
                 void onUiChanged();
 
                 ITAccessibleParam<EnumParam>* _param;

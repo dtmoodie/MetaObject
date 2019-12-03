@@ -6,6 +6,7 @@
 
 #include <MetaObject/runtime_reflection.hpp>
 
+#include <MetaObject/core/TypeTable.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/array_adapter.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/map.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/memory.hpp>
@@ -23,9 +24,7 @@
 #include <iostream>
 #include <memory>
 
-#include <boost/test/auto_unit_test.hpp>
-#include <boost/test/test_tools.hpp>
-#include <boost/test/unit_test_suite.hpp>
+#include <gtest/gtest.h>
 
 namespace mo
 {
@@ -35,32 +34,34 @@ namespace mo
 
         void visit(const mo::ITraits* trait, const std::string& name, const size_t cnt = 1) override
         {
+            // TODO account for cnt > 1
             for (int i = 0; i < indent; ++i)
             {
                 std::cout << ' ';
             }
             indent += 2;
-            std::cout << name << ": " << trait->getName() << std::endl;
-            m_path.push_back(trait->getName());
-            trait->visit(this);
+            std::cout << name << ": " << trait->name() << std::endl;
+            m_path.push_back(trait->name());
+            trait->visit(*this, name);
             indent -= 2;
             m_path.pop_back();
         }
 
         void implDyn(const mo::TypeInfo type, const std::string& name, const size_t cnt) override
         {
+            // TODO account for cnt > 1
             for (int i = 0; i < indent; ++i)
             {
                 std::cout << ' ';
             }
-            std::cout << name << ": " << mo::TypeTable::instance().typeToName(type) << std::endl;
+            std::cout << name << ": " << mo::TypeTable::instance()->typeToName(type) << std::endl;
             m_items.push_back(getName() + "." + name);
         }
 
         std::string getName()
         {
             std::stringstream ss;
-            for(const std::string& path : m_path)
+            for (const std::string& path : m_path)
             {
                 ss << path;
                 ss << '.';
@@ -70,6 +71,7 @@ namespace mo
         std::vector<std::string> m_path;
         std::vector<std::string> m_items;
     };
+
     template <class T, size_t ROWS, size_t COLS>
     bool operator==(const mo::MatrixAdapter<T, ROWS, COLS>& lhs, const mo::MatrixAdapter<T, ROWS, COLS>& rhs)
     {
@@ -103,10 +105,14 @@ namespace mo
         return true;
     }
 
-    template <class T, size_t N>
-    bool operator==(const mo::ArrayAdapter<T, N>& lhs, const mo::ArrayAdapter<T, N>& rhs)
+    template <class T, ssize_t N>
+    bool operator==(const ct::TArrayView<T, N>& lhs, const ct::TArrayView<T, N>& rhs)
     {
-        for (size_t i = 0; i < N; ++i)
+        if (rhs.size() != lhs.size())
+        {
+            return false;
+        }
+        for (size_t i = 0; i < lhs.size(); ++i)
         {
             if (lhs[i] != rhs[i])
             {
@@ -128,35 +134,35 @@ namespace mo
         os << rhs.key << ":" << rhs.value;
         return os;
     }
-}
+} // namespace mo
 
 struct DebugEqual
 {
     template <class T>
-    bool test(const char* name, const T& lhs, const T& rhs) const
+    bool test(const char*, const T& lhs, const T& rhs) const
     {
-        BOOST_REQUIRE_EQUAL(lhs, rhs);
+        EXPECT_EQ(lhs, rhs);
         return true;
     }
 
     template <class T>
-    bool test(const char* name, const std::shared_ptr<T>& lhs, const std::shared_ptr<T>& rhs) const
+    bool test(const char*, const std::shared_ptr<T>& lhs, const std::shared_ptr<T>& rhs) const
     {
-        BOOST_REQUIRE_EQUAL(lhs, rhs);
+        EXPECT_EQ(lhs, rhs);
         return true;
     }
 
     template <class T>
     bool test(const T& lhs, const T& rhs) const
     {
-        BOOST_REQUIRE_EQUAL(lhs, rhs);
+        EXPECT_EQ(lhs, rhs);
         return true;
     }
 
     template <class T>
     bool test(const std::shared_ptr<T>& lhs, const std::shared_ptr<T>& rhs) const
     {
-        BOOST_REQUIRE_EQUAL(lhs, rhs);
+        EXPECT_EQ(lhs, rhs);
         return true;
     }
 };
@@ -185,7 +191,7 @@ namespace std
         ct::printStruct(os, m);
         return os;
     }
-}
+} // namespace std
 
 namespace ct
 {
@@ -205,7 +211,202 @@ namespace ct
     REFLECT_BEGIN(VecOwner)
         PUBLIC_ACCESS(my_vecs)
     REFLECT_END;
-}
+} // namespace ct
+
+struct EqualHelper
+{
+    template <typename T1, typename T2>
+    static testing::AssertionResult
+    Compare(const char* lhs_expression, const char* rhs_expression, const T1& lhs, const T2& rhs)
+    {
+        return testing::internal::EqHelper::Compare(lhs_expression, rhs_expression, lhs, rhs);
+    }
+};
+
+template <class T>
+struct TestData;
+
+#define TEST_DATA(TYPE, ...)                                                                                           \
+    template <>                                                                                                        \
+    struct TestData<TYPE> : EqualHelper                                                                                \
+    {                                                                                                                  \
+        static TYPE init()                                                                                             \
+        {                                                                                                              \
+            return __VA_ARGS__;                                                                                        \
+        }                                                                                                              \
+    }
+
+TEST_DATA(int, 10);
+TEST_DATA(float, 13.2F);
+TEST_DATA(double, 3.14159);
+TEST_DATA(TestPodStruct, {0, 1, 2, 10});
+TEST_DATA(std::vector<Vec>, {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}});
+TEST_DATA(VecOwner, {{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}});
+// TEST_DATA(std::shared_ptr<Vec>, std::make_shared<Vec>(1.0, 2.0, 3.0));
+template <>
+struct TestData<std::shared_ptr<Vec>> : EqualHelper
+{
+    static std::shared_ptr<Vec> init()
+    {
+        auto ret = std::make_shared<Vec>();
+        ret->x = 1.0;
+        ret->y = 2.0;
+        ret->z = 3.0;
+        return ret;
+    }
+};
+template <>
+struct TestData<std::map<std::string, Vec>> : EqualHelper
+{
+    static std::map<std::string, Vec> init()
+    {
+        std::map<std::string, Vec> vec_map;
+        vec_map["asdf"] = Vec{0.1f, 0.2f, 0.3f};
+        vec_map["gfds"] = Vec{0.2f, 0.4f, 0.6f};
+        vec_map["fdsa"] = Vec{0.3f, 0.5f, 0.7f};
+        return vec_map;
+    }
+};
+
+template <>
+struct TestData<std::map<uint32_t, Vec>> : EqualHelper
+{
+    static std::map<uint32_t, Vec> init()
+    {
+        std::map<uint32_t, Vec> vec_map;
+        vec_map[0] = Vec{0.1f, 0.2f, 0.3f};
+        vec_map[1] = Vec{0.2f, 0.4f, 0.6f};
+        vec_map[5] = Vec{0.3f, 0.5f, 0.7f};
+        return vec_map;
+    }
+};
+
+template <>
+struct TestData<mo::KVP<std::string, Vec>> : EqualHelper
+{
+    static mo::KVP<std::string, Vec> init()
+    {
+        mo::KVP<std::string, Vec> kvp;
+        kvp.key = "asdf";
+        kvp.value = Vec{0.f, 1.f, 2.f};
+        return kvp;
+    }
+};
+
+template <>
+struct TestData<mo::KVP<uint32_t, Vec>> : EqualHelper
+{
+    static mo::KVP<uint32_t, Vec> init()
+    {
+        mo::KVP<uint32_t, Vec> kvp;
+        kvp.key = 10;
+        kvp.value = Vec{0.f, 1.f, 2.f};
+        return kvp;
+    }
+};
+
+template <>
+struct TestData<std::vector<std::shared_ptr<Vec>>>
+{
+    static std::vector<std::shared_ptr<Vec>> init()
+    {
+        std::vector<std::shared_ptr<Vec>> out;
+        out.push_back(std::make_shared<Vec>(Vec{0, 1, 2}));
+        out.push_back(std::make_shared<Vec>(Vec{2, 3, 4}));
+        out.push_back(std::make_shared<Vec>(Vec{5, 6, 7}));
+        out.push_back(out[0]);
+        return out;
+    }
+
+    static testing::AssertionResult Compare(const char* lhs_expression,
+                                            const char* rhs_expression,
+                                            const std::vector<std::shared_ptr<Vec>>& lhs,
+                                            const std::vector<std::shared_ptr<Vec>>& rhs)
+    {
+        if (lhs.size() != rhs.size())
+        {
+            return testing::internal::EqFailure(
+                "lhs.size()",
+                "rhs.size()",
+                testing::internal::FormatForComparisonFailureMessage(lhs.size(), rhs.size()),
+                testing::internal::FormatForComparisonFailureMessage(rhs.size(), lhs.size()),
+                false);
+        }
+        if (lhs.size() != 4)
+        {
+            return testing::internal::EqFailure("lhs.size()",
+                                                "4",
+                                                testing::internal::FormatForComparisonFailureMessage(lhs.size(), 4),
+                                                testing::internal::FormatForComparisonFailureMessage(4, lhs.size()),
+                                                false);
+        }
+        for (size_t i = 0; i < 3; ++i)
+        {
+            if (lhs[i] != nullptr && rhs[i] == nullptr)
+            {
+                return testing::internal::EqFailure(
+                    "lhs[i]",
+                    "rhs[i]",
+                    testing::internal::FormatForComparisonFailureMessage(lhs[i], rhs[i]),
+                    testing::internal::FormatForComparisonFailureMessage(rhs[i], lhs[i]),
+                    false);
+            }
+
+            if (*lhs[i] != *rhs[i])
+            {
+                return testing::internal::EqFailure(
+                    "*lhs[i]",
+                    "*rhs[i]",
+                    testing::internal::FormatForComparisonFailureMessage(*lhs[i], *rhs[i]),
+                    testing::internal::FormatForComparisonFailureMessage(*rhs[i], *lhs[i]),
+                    false);
+            }
+        }
+        if (rhs[0] != rhs[3])
+        {
+            return testing::internal::EqFailure("rhs[0]",
+                                                "rhs[3]",
+                                                testing::internal::FormatForComparisonFailureMessage(rhs[0], rhs[3]),
+                                                testing::internal::FormatForComparisonFailureMessage(rhs[3], rhs[0]),
+                                                false);
+        }
+        return testing::AssertionSuccess();
+    }
+};
+#ifdef HAVE_OPENCV
+TEST_DATA(cv::Rect2f, {0.1f, 0.2f, 0.3f, 0.4f});
+TEST_DATA(cv::Rect, {0, 2, 4, 5});
+TEST_DATA(cv::Point2f, {0, 1});
+TEST_DATA(cv::Matx33f, {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f})
+TEST_DATA(cv::Matx22f, {0.0f, 1.0f, 2.0f, 3.0f});
+TEST_DATA(cv::Matx44f,
+          {0.0F, 1.0F, 2.0F, 3.0F, 4.0F, 5.0F, 6.0F, 7.0F, 8.0F, 9.0F, 10.0F, 11.0F, 12.0F, 13.0F, 14.0F, 15.0F});
+TEST_DATA(cv::Vec2b, {0, 1});
+TEST_DATA(cv::Vec2i, {0, 3});
+#endif
+
+using RuntimeReflectionTypeTest = ::testing::Types<int,
+                                                   float,
+                                                   double,
+#ifdef HAVE_OPENCV
+                                                   cv::Rect2f,
+                                                   cv::Rect,
+                                                   cv::Point2f,
+                                                   cv::Matx33f,
+                                                   cv::Matx22f,
+                                                   cv::Matx44f,
+                                                   cv::Vec2b,
+                                                   cv::Vec2i,
+#endif
+                                                   TestPodStruct,
+                                                   std::vector<Vec>,
+                                                   VecOwner,
+                                                   std::shared_ptr<Vec>,
+                                                   std::map<std::string, Vec>,
+                                                   mo::KVP<std::string, Vec>,
+                                                   mo::KVP<uint32_t, Vec>,
+                                                   std::map<uint32_t, Vec>,
+                                                   std::vector<std::shared_ptr<Vec>>>;
 
 template <class Tester>
 void testTypes(Tester& tester)

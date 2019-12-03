@@ -5,11 +5,23 @@
 #include <boost/context/detail/prefetch.hpp>
 namespace mo
 {
+    static thread_local PriorityScheduler* g_current = nullptr;
+
+    PriorityScheduler* PriorityScheduler::current()
+    {
+        return g_current;
+    }
+
+    void PriorityScheduler::setCurrent(PriorityScheduler* sched)
+    {
+        g_current = sched;
+    }
 
     PriorityScheduler::PriorityScheduler(std::weak_ptr<ThreadPool> pool, const uint64_t wt)
         : m_pool(pool)
         , m_work_threshold(wt)
     {
+        setCurrent(this);
         auto locked = pool.lock();
         if (locked)
         {
@@ -20,10 +32,11 @@ namespace mo
     }
 
     PriorityScheduler::PriorityScheduler(std::weak_ptr<ThreadPool> pool, std::condition_variable** wakeup_cv)
-        : m_pool(pool)
+        : m_pool(std::move(pool))
         , m_work_threshold(std::numeric_limits<uint64_t>::max())
         , m_is_worker(true)
     {
+        setCurrent(this);
         *wakeup_cv = &m_cv;
         auto locked = m_pool.lock();
         if (locked)
@@ -39,7 +52,7 @@ namespace mo
         auto locked = m_pool.lock();
         if (locked)
         {
-            locked->addScheduler(this);
+            locked->removeScheduler(this);
         }
     }
 
@@ -79,7 +92,7 @@ namespace mo
                     ++itr;
                     BOOST_ASSERT(properties(&*itr).getId() == id);
                     BOOST_ASSERT(&*itr != ctx);
-                    m_work_queue.erase(itr);
+                    properties(&*itr).disable();
                 }
             }
             else
@@ -235,5 +248,10 @@ namespace mo
     void PriorityScheduler::releaseAssistant()
     {
         m_assistant.reset();
+    }
+
+    size_t PriorityScheduler::size() const
+    {
+        return m_work_queue.size();
     }
 }

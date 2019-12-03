@@ -30,10 +30,10 @@ namespace mo
     {
       public:
         using Qualifier_f = std::function<bool(IParam*)>;
-        typedef std::shared_ptr<InputParam> Ptr;
+        using Ptr_t = std::shared_ptr<InputParam>;
 
         InputParam();
-        virtual ~InputParam() override;
+        ~InputParam() override;
 
         // This gets a pointer to the variable that feeds into this input
         virtual IParam* getInputParam() const;
@@ -45,7 +45,10 @@ namespace mo
         // since these values represent the next value that can be read, whereas getTimestamp and
         // getFramenumber represent that data currently loaded
         virtual OptionalTime getInputTimestamp();
-        virtual uint64_t getInputFrameNumber();
+        virtual FrameNumber getInputFrameNumber();
+        OptionalTime getTimestamp() const override;
+        FrameNumber getFrameNumber() const override;
+
         virtual bool isInputSet() const;
 
         virtual bool acceptsInput(IParam* param) const;
@@ -66,13 +69,13 @@ namespace mo
         IContainerPtr_t getData(const Header& desired = Header()) override;
         IContainerConstPtr_t getData(const Header& desired = Header()) const override;
 
-      protected:
-        virtual void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) = 0;
-        virtual void onInputDelete(const IParam* param);
-
         InputParam(const InputParam&) = delete;
         InputParam& operator=(const InputParam&) = delete;
         InputParam& operator=(InputParam&&) = delete;
+
+      protected:
+        virtual void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) = 0;
+        virtual void onInputDelete(const IParam* param);
 
         TSlot<DataUpdate_s> m_update_slot;
         TSlot<void(const IParam*)> m_delete_slot;
@@ -81,4 +84,4 @@ namespace mo
         std::shared_ptr<IParam> m_shared_input;
         mutable IDataContainerPtr_t m_current_data;
     };
-}
+} // namespace mo

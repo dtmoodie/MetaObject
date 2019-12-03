@@ -1,5 +1,4 @@
 #pragma once
-#include "MetaObject/params/ITParam.hpp"
 #include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
 #include <MetaObject/params/detail/ParamMacrosImpl.hpp>

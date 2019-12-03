@@ -1,6 +1,8 @@
 #pragma once
 #include <MetaObject/core/detail/Time.hpp>
 #include <ct/reflect.hpp>
+#include <ct/reflect_macros.hpp>
+
 #include <memory>
 
 namespace mo
@@ -12,14 +14,16 @@ namespace mo
 
     struct MO_EXPORTS Header
     {
-        Header();
+        Header(mo::OptionalTime ts = mo::OptionalTime(), FrameNumber fn = FrameNumber());
         Header(const Time& ts);
         Header(const Duration& d);
-        Header(const uint64_t fn);
+        Header(FrameNumber fn);
+        Header(uint64_t fn);
         Header(Header&&) = default;
         Header(const Header&) = default;
         Header& operator=(const Header&) = default;
         Header& operator=(Header&&) = default;
+        ~Header() = default;
 
         mo::OptionalTime timestamp;
         FrameNumber frame_number;
@@ -39,6 +43,5 @@ namespace ct
     REFLECT_BEGIN(mo::Header)
         PUBLIC_ACCESS(timestamp)
         PUBLIC_ACCESS(frame_number)
-    // PUBLIC_ACCESS(coordinate_system)
     REFLECT_END;
 }

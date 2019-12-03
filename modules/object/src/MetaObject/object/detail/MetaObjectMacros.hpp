@@ -1,5 +1,8 @@
-#pragma once
+#ifndef MO_META_OBJECT_MACROS_HPP
+#define MO_META_OBJECT_MACROS_HPP
 #include "MetaObject/core/detail/NamedType.hpp"
+#include <ct/reflect.hpp>
+#include <ct/reflect_macros.hpp>
 #include <vector>
 
 namespace mo
@@ -102,24 +105,26 @@ namespace mo
     using Description = NamedType<const char>;
 
     using Tooltip = NamedType<const char>;
-}
+} // namespace mo
 
 /*
    These two macros (MO_BEGIN kept for backwards compatibility) are used to define an
    interface base class.
 */
-#define MO_BEGIN                                                                                                       \
-    REFLECT_INTERNAL_START                                                                                             \
-        static rcc::shared_ptr<DataType::InterfaceHelper<DataType>> create();
+#define MO_BEGIN(TYPE)                                                                                                 \
+    REFLECT_INTERNAL_BEGIN(TYPE)                                                                                       \
+        static rcc::shared_ptr<DataType> create();
 
-#define MO_BASE(CLASS_NAME) REFLECT_INTERNAL_START(CLASS_NAME)
+#define MO_BASE(TYPE) REFLECT_INTERNAL_BEGIN(TYPE)
 
 /*
     These two macros are used for defining a concrete class that has a valid implementation
 */
-#define MO_DERIVE(...)                                                                                                 \
-    REFLECT_INTERNAL_DERIVED(__VA_ARGS__)                                                                              \
-    static rcc::shared_ptr<DataType::InterfaceHelper<DataType>> create();
+#define MO_DERIVE(TYPE, ...)                                                                                            \
+    static constexpr const ct::index_t REFLECT_COUNT_BEGIN = __COUNTER__ + 1;                                            \
+    using DataType = TYPE;                                                                                              \
+    using BaseTypes = ct::VariadicTypedef<__VA_ARGS__>;                                                                 \
+    static rcc::shared_ptr<DataType> create();
 
 #define MO_CONCRETE(...) MO_DERIVE(__VA_ARGS__)
 
@@ -135,3 +140,4 @@ namespace mo
 #define MO_END REFLECT_INTERNAL_END
 
 #include "MetaObjectMacrosImpl.hpp"
+#endif // MO_META_OBJECT_MACROS_HPP

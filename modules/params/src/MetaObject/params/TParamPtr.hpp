@@ -23,10 +23,11 @@ namespace mo
     struct MO_EXPORTS TParamPtr : public TParam<T>
     {
         using TContainerPtr_t = typename TParam<T>::TContainerPtr_t;
+        using type = typename TParam<T>::type;
 
         TParamPtr(const std::string& name = "",
-                  T* ptr = nullptr,
-                  ParamFlags type = ParamFlags::Control_e,
+                  type* ptr = nullptr,
+                  ParamFlags type = ParamFlags::kCONTROL,
                   bool owns_data = false)
             : TParam<T>(name, type)
             , m_ptr(ptr)
@@ -39,7 +40,7 @@ namespace mo
 
         ~TParamPtr() = default;
 
-        void updatePtr(T* ptr, bool owns_data = false)
+        void updatePtr(type* ptr, bool owns_data = false)
         {
             Lock_t lock(this->mtx());
             m_owner.reset();
@@ -50,7 +51,7 @@ namespace mo
             m_ptr = ptr;
         }
 
-        IParam* emitUpdate(const Header& header, UpdateFlags = ValueUpdated_e) override
+        IParam* emitUpdate(const Header& header, UpdateFlags = UpdateFlags::kVALUE_UPDATED) override
         {
             Lock_t lock(this->mtx());
             if (m_ptr)
@@ -61,12 +62,12 @@ namespace mo
         }
 
         // commit a Param's value copying metadata info from another parmaeter
-        IParam* emitUpdate(const IParam& other, UpdateFlags = ValueUpdated_e) override
+        IParam* emitUpdate(const IParam& other, UpdateFlags = UpdateFlags::kVALUE_UPDATED) override
         {
             Lock_t lock(this->mtx());
             if (m_ptr)
             {
-                TParam<T>::updateData(*m_ptr, mo::tag::_param = other);
+                TParam<T>::updateData(*m_ptr, mo::param = &other);
             }
             return this;
         }
@@ -112,6 +113,33 @@ namespace mo
             return {std::move(lock), *this, *m_ptr};
         }
 
+        typename TParam<T>::IContainerPtr_t getData(const Header& desired = Header()) override
+        {
+            auto data = TParam<T>::getData(desired);
+            if(!data && m_ptr)
+            {
+                if(!desired.timestamp && !desired.frame_number.valid())
+                {
+                    TParam<T>::updateData(*m_ptr);
+                    data = TParam<T>::getData(desired);
+                }
+            }
+            return data;
+        }
+
+        typename TParam<T>::IContainerConstPtr_t getData(const Header& desired = Header()) const override
+        {
+            auto data = TParam<T>::getData(desired);
+            if(!data && m_ptr)
+            {
+                if(!desired.timestamp && !desired.frame_number.valid())
+                {
+                    data = TParam<T>::create(*m_ptr);
+                }
+            }
+            return data;
+        }
+
       protected:
         void updateDataImpl(const TContainerPtr_t& data, mo::UpdateFlags fg) override
         {
@@ -119,12 +147,12 @@ namespace mo
             updateUserData(data->data);
         }
 
-        T* ptr()
+        type* ptr()
         {
             return m_ptr;
         }
 
-        void updateUserData(const T& data)
+        void updateUserData(const type& data)
         {
             if (&data != m_ptr)
             {
@@ -136,8 +164,8 @@ namespace mo
         }
 
       private:
-        T* m_ptr;
-        std::unique_ptr<T> m_owner;
+        type* m_ptr;
+        std::unique_ptr<type> m_owner;
     };
 
     template <typename T>
@@ -147,7 +175,7 @@ namespace mo
 
         TParamPtr(const std::string& name = "",
                   std::shared_ptr<T>* ptr = nullptr,
-                  ParamFlags type = ParamFlags::Control_e,
+                  ParamFlags type = ParamFlags::kCONTROL,
                   bool owns_data = false)
             : TParam<T>(name, type)
             , m_ptr(ptr)
@@ -189,7 +217,6 @@ namespace mo
         }
 
       protected:
-
         void updateDataImpl(const TContainerPtr_t& data, mo::UpdateFlags fg) override
         {
             TParam<T>::updateDataImpl(data, fg);

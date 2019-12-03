@@ -31,6 +31,7 @@ namespace mo
         virtual bool disconnect() = 0;
         virtual bool disconnect(ISlot* slot) = 0;
         virtual bool disconnect(std::weak_ptr<ISignalRelay> relay) = 0;
+        virtual bool isConnected() const = 0;
 
         IAsyncStream* getStream() const;
         void setStream(IAsyncStream* ctx);

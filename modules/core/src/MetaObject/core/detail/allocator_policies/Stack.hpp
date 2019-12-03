@@ -8,13 +8,14 @@
 namespace mo
 {
     template <class XPU>
-    class StackPolicy : public Allocator
+    class StackPolicy : public XPU::Allocator_t
     {
       public:
-        uint8_t* allocate(const size_t num_bytes, const size_t elem_size);
+        using Allocator_t = typename XPU::Allocator_t;
+        uint8_t* allocate(size_t num_bytes, size_t elem_size) override;
 
-        void deallocate(uint8_t* ptr, const size_t num_bytes);
-        void release();
+        void deallocate(uint8_t* ptr, size_t num_bytes) override;
+        void release() override;
 
       private:
         void clear();
@@ -35,24 +36,24 @@ namespace mo
     ///////////////////////////////////////////////////////////////////////////
 
     template <class XPU>
-    unsigned char* StackPolicy<XPU>::allocate(const size_t num_bytes, const size_t)
+    uint8_t* StackPolicy<XPU>::allocate(const size_t num_bytes, const size_t elem_size)
     {
         unsigned char* ptr = nullptr;
         for (auto itr = m_deallocate_list.begin(); itr != m_deallocate_list.end(); ++itr)
         {
-            if (itr->size == num_bytes)
+            if (itr->size == num_bytes && (alignmentOffset(itr->ptr, elem_size) == 0))
             {
                 ptr = itr->ptr;
                 m_deallocate_list.erase(itr);
                 return ptr;
             }
         }
-        ptr = XPU::allocate(num_bytes);
+        ptr = XPU::allocate(num_bytes, elem_size);
         return ptr;
     }
 
     template <class XPU>
-    void StackPolicy<XPU>::deallocate(unsigned char* ptr, const size_t num_bytes)
+    void StackPolicy<XPU>::deallocate(uint8_t* ptr, const size_t num_bytes)
     {
         m_deallocate_list.push_back({ptr, clock(), num_bytes});
         clear();
@@ -73,11 +74,10 @@ namespace mo
         {
             if ((time - itr->free_time) > m_deallocate_delay)
             {
-                getDefaultLogger().trace(
-                    "[GPU] Deallocating block of size {} which was stale for {} milliseconds at {}",
-                    itr->size / (1024 * 1024),
-                    (time - itr->free_time) * 1000 / CLOCKS_PER_SEC,
-                    static_cast<void*>(itr->ptr));
+                getDefaultLogger().trace("Deallocating block of size {} which was stale for {} milliseconds at {}",
+                                         itr->size / (1024 * 1024),
+                                         (time - itr->free_time) * 1000 / CLOCKS_PER_SEC,
+                                         static_cast<void*>(itr->ptr));
 
                 XPU::deallocate(itr->ptr);
                 itr = m_deallocate_list.erase(itr);

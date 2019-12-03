@@ -4,7 +4,7 @@ namespace mo
 {
     IMultiOutput::IMultiOutput()
     {
-        this->setFlags(mo::ParamFlags::Output_e);
+        this->setFlags(mo::ParamFlags::kOUTPUT);
     }
 
     std::vector<TypeInfo> IMultiOutput::listOutputTypes() const
@@ -129,6 +129,26 @@ namespace mo
         {
             out->visit(ar);
         }
+    }
+
+    OptionalTime IMultiOutput::getTimestamp() const
+    {
+        auto out = getOutputParam();
+        if (out)
+        {
+            return out->getTimestamp();
+        }
+        return {};
+    }
+
+    FrameNumber IMultiOutput::getFrameNumber() const
+    {
+        auto out = getOutputParam();
+        if (out)
+        {
+            return out->getFrameNumber();
+        }
+        return {};
     }
 
     IMultiOutput::IContainerPtr_t IMultiOutput::getData(const Header& header)

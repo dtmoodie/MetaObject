@@ -1,23 +1,30 @@
 if(MO_HAVE_PYTHON AND MO_HAVE_OPENCV)
     LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
-    metaobject_declare_module(NAME python DEPENDS
-        metaobject_core
-        metaobject_object
-        metaobject_cuda
-        ${OpenCV_LIBRARIES}
-    )
-    target_include_directories(metaobject_python
-        PUBLIC
+    metaobject_declare_module(NAME python
+        DEPENDS
+            metaobject_core
+            metaobject_object
+            metaobject_cuda
+            ${OpenCV_LIBRARIES}
+            ${PYTHON_LIBRARY}
+            ct
+        INCLUDES
             $<BUILD_INTERFACE:${PYTHON_INCLUDE_DIR}>
             $<BUILD_INTERFACE:${NUMPY_INCLUDE_DIR}>
-            $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
-        )
-    target_link_libraries(metaobject_python
-        optimized;${Boost_PYTHON_LIBRARY_RELEASE}
-        debug;${Boost_PYTHON_LIBRARY_DEBUG}
-        ${PYTHON_LIBRARY}
-        ct
     )
+    if(TARGET Boost::python)
+        target_link_libraries(metaobject_python PUBLIC Boost::python)
+    endif()
+    if(TARGET Boost::python27)
+        target_link_libraries(metaobject_python PUBLIC Boost::python27)
+    endif()
+    if(Boost_PYTHON_LIBRARY_RELEASE)
+        target_link_libraries(metaobject_python PUBLIC ${Boost_PYTHON_LIBRARY_RELEASE})
+    endif()
+    
+    if(Boost_PYTHON_LIBRARY_DEBUG)
+        target_link_libraries(metaobject_python PUBLIC ${Boost_PYTHON_LIBRARY_DEBUG})
+    endif()
 
     if(UNIX)
         set(POSTFIX "")
@@ -43,7 +50,12 @@ if(MO_HAVE_PYTHON AND MO_HAVE_OPENCV)
     if(BUILD_TESTS)
         add_executable(test_mo_python_init tests/python_init_param_setter.cpp)
         set_target_properties(test_mo_python_init PROPERTIES FOLDER Tests/MetaObject/python)
-        target_link_libraries(test_mo_python_init ct metaobject_python)
+        target_link_libraries(test_mo_python_init 
+            ct 
+            metaobject_python 
+            metaobject_object
+            ${PYTHON_LIBRARY}
+        )
 
         add_test(NAME test_mo_python COMMAND python2 test_mo_python.py)
     endif()

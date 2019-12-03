@@ -93,10 +93,10 @@ namespace mo
     TMultiInput<Types...>::TMultiInput()
         : m_inputs()
         , IMultiInput()
-        , IParam("", mo::ParamFlags::Input_e)
+        , IParam("", mo::ParamFlags::kINPUT)
     {
         IMultiInput::setInputs(globParamPtrs<InputParam>(m_inputs));
-        this->setFlags(mo::ParamFlags::Input_e);
+        this->setFlags(mo::ParamFlags::kINPUT);
     }
 
     template <class... Types>

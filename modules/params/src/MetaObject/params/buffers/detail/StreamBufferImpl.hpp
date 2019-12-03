@@ -7,7 +7,7 @@ namespace mo
     {
         template <class T>
         StreamBuffer<T>::StreamBuffer(const std::string& name)
-            : TParam<T>(name, ParamFlags::Buffer_e)
+            : TParam<T>(name, ParamFlags::kBUFFER)
             , _time_padding(mo::ms * 500)
             , _frame_padding(100)
         {
@@ -135,7 +135,7 @@ namespace mo
         template <class T>
         BlockingStreamBuffer<T>::BlockingStreamBuffer(const std::string& name)
             : StreamBuffer<T>(name)
-            , TParam<T>(name, mo::ParamFlags::Buffer_e)
+            , TParam<T>(name, mo::ParamFlags::kBUFFER)
             , _size(100)
         {
         }
@@ -159,7 +159,7 @@ namespace mo
                 {
                     lock.unlock();
                 }
-                IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+                IParam::_update_signal(this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
                 if (!lock)
                 {
                     lock.lock();
@@ -172,8 +172,8 @@ namespace mo
             Map<T>::_data_buffer[{ts, fn, cs, ctx}] = data_;
             this->modified(true);
             lock.unlock();
-            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            this->emitTypedUpdate(data_, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            IParam::_update_signal(this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
+            this->emitTypedUpdate(data_, this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
             return true;
         }
 
@@ -196,7 +196,7 @@ namespace mo
                 {
                     lock.unlock();
                 }
-                IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+                IParam::_update_signal(this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
                 if (!lock)
                 {
                     lock.lock();
@@ -209,8 +209,8 @@ namespace mo
             auto itr = Map<T>::_data_buffer.emplace(SequenceKey(ts, fn, cs, ctx), std::move(data_));
             this->modified(true);
             lock.unlock();
-            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            this->emitTypedUpdate(itr.first->second, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            IParam::_update_signal(this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
+            this->emitTypedUpdate(itr.first->second, this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
             return true;
         }
 
@@ -273,8 +273,8 @@ namespace mo
                 else
                 {
                 }
-                IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-                TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+                IParam::_update_signal(this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
+                TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
                 if (!lock)
                 {
                     lock.lock();
@@ -293,8 +293,8 @@ namespace mo
             this->_data_buffer[{ts, fn, cs, ctx}] = data;
             this->modified(true);
             lock.unlock();
-            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            IParam::_update_signal(this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
+            TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
         }
 
         template <class T>
@@ -325,8 +325,8 @@ namespace mo
             Map<T>::_data_buffer[{ts, fn, cs, ctx}] = data_;
             this->modified(true);
             lock.unlock();
-            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            this->emitTypedUpdate(data_, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            IParam::_update_signal(this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
+            this->emitTypedUpdate(data_, this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
             return true;
         }
 
@@ -352,8 +352,8 @@ namespace mo
             auto itr = Map<T>::_data_buffer.emplace(SequenceKey(ts, fn, cs, ctx), std::move(data_));
             this->modified(true);
             lock.unlock();
-            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            this->emitTypedUpdate(itr.first->second, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            IParam::_update_signal(this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
+            this->emitTypedUpdate(itr.first->second, this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
             return true;
         }
 
@@ -379,8 +379,8 @@ namespace mo
             this->_data_buffer[{ts, fn, cs, ctx}] = data;
             this->modified(true);
             lock.unlock();
-            IParam::emitUpdate(ts, ctx, fn, cs, mo::BufferUpdated_e);
-            TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            IParam::emitUpdate(ts, ctx, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
+            TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
         }
     }
 }

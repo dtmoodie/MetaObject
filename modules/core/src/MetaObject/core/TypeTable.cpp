@@ -1,3 +1,5 @@
+
+
 #include "TypeTable.hpp"
 
 #include "MetaObject/core/SystemTable.hpp"
@@ -8,42 +10,44 @@
 
 namespace mo
 {
-    TypeTable& TypeTable::instance()
+    TypeTable::~TypeTable() = default;
+
+    class TypeTableImpl : public TypeTable
     {
-        auto module = PerModuleInterface::GetInstance();
-        auto table = module->GetSystemTable();
-        return instance(table);
+        std::string typeToName(const TypeInfo& type) const override;
+        const TypeInfo nameToType(const std::string& name) const override;
+
+        void registerType(const TypeInfo& info, const char* name) override;
+
+        std::vector<TypeInfo> listKnownTypes() const override;
+
+      private:
+        std::unordered_map<TypeInfo, std::string> m_types;
+    };
+
+    std::shared_ptr<TypeTable> TypeTable::instance()
+    {
+        return mo::singleton<TypeTable>();
     }
 
-    TypeTable& TypeTable::instance(SystemTable* table)
+    std::shared_ptr<TypeTable> TypeTable::instance(SystemTable* table)
     {
-        if (table == nullptr)
-        {
-            table = PerModuleInterface::GetInstance()->GetSystemTable();
-        }
         MO_ASSERT(table);
-        auto inst = table->getSingleton<TypeTable>();
-        if (!inst)
-        {
-            inst = table->setSingleton(std::unique_ptr<TypeTable>(new TypeTable));
-        }
-        return *inst;
+        auto inst = table->getSingleton<TypeTable, TypeTableImpl>();
+        return inst;
     }
 
-    std::string TypeTable::typeToName(const TypeInfo& type)
+    std::string TypeTableImpl::typeToName(const TypeInfo& type) const
     {
         auto itr = m_types.find(type);
         if (itr == m_types.end())
         {
             return type.name();
         }
-        else
-        {
-            return itr->second;
-        }
+        return itr->second;
     }
 
-    const TypeInfo TypeTable::nameToType(const std::string& name)
+    const TypeInfo TypeTableImpl::nameToType(const std::string& name) const
     {
         for (const auto& pair : m_types)
         {
@@ -56,12 +60,12 @@ namespace mo
         return {};
     }
 
-    void TypeTable::registerType(const TypeInfo& info, const char* name)
+    void TypeTableImpl::registerType(const TypeInfo& info, const char* name)
     {
         m_types[info] = name;
     }
 
-    std::vector<TypeInfo> TypeTable::listKnownTypes()
+    std::vector<TypeInfo> TypeTableImpl::listKnownTypes() const
     {
         std::vector<TypeInfo> types;
         for (const auto& itr : m_types)

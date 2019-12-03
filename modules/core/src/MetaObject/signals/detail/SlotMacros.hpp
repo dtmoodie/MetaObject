@@ -8,24 +8,29 @@
 #include "MetaObject/core/detail/forward.hpp"
 #include "MetaObject/signals/SlotInfo.hpp"
 #include "MetaObject/signals/TSlot.hpp"
+#include <MetaObject/core/detail/Enums.hpp>
 
 // -------------------------------------------------------------------------------------------
 
 #define SLOT_N(NAME, RETURN, ...)                                                                                      \
     virtual RETURN NAME(__VA_ARGS__);                                                                                  \
-    MEMBER_FUNCTION_WITH_FLAG(mo::kSLOT, NAME, static_cast<RETURN (DataType::*)(__VA_ARGS__)>(&DataType::NAME))
+    MEMBER_FUNCTION_WITH_FLAG(mo::ParamReflectionFlags::kSLOT,                                                         \
+                              NAME,                                                                                    \
+                              ct::selectMemberFunctionPointer<DataType, RETURN, __VA_ARGS__>(&DataType::NAME))
 
 #define SLOT_1(RETURN, NAME)                                                                                           \
     virtual RETURN NAME();                                                                                             \
-    MEMBER_FUNCTION_WITH_FLAG(mo::kSLOT, NAME, static_cast<RETURN (DataType::*)()>(&DataType::NAME))
+    MEMBER_FUNCTION_WITH_FLAG(                                                                                         \
+        mo::ParamReflectionFlags::kSLOT, NAME, ct::selectMemberFunctionPointer<DataType, RETURN>(&DataType::NAME))
 
 #define STATIC_SLOT_N(NAME, RETURN, ...)                                                                               \
     static RETURN NAME(__VA_ARGS__);                                                                                   \
-    MEMBER_FUNCTION_WITH_FLAG(mo::kSLOT, NAME, static_cast<RETURN (*)(__VA_ARGS__)>(&DataType::NAME))
+    MEMBER_FUNCTION_WITH_FLAG(                                                                                         \
+        mo::ParamReflectionFlags::kSLOT, NAME, ct::selectFunctionPointer<RETURN, __VA_ARGS__>(&DataType::NAME))
 
 #define STATIC_SLOT_1(RETURN, NAME)                                                                                    \
     static RETURN NAME();                                                                                              \
-    MEMBER_FUNCTION_WITH_FLAG(mo::kSLOT, NAME, static_cast<RETURN (*)()>(&DataType::NAME))
+    MEMBER_FUNCTION_WITH_FLAG(mo::ParamReflectionFlags::kSLOT, NAME, ct::selectFunctionPointer<RETURN>(&DataType::NAME))
 
 #define STATIC_SLOT_2(RETURN, NAME, ...) STATIC_SLOT_N(NAME, RETURN, __VA_ARGS__)
 #define STATIC_SLOT_3(RETURN, NAME, ...) STATIC_SLOT_N(NAME, RETURN, __VA_ARGS__)

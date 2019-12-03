@@ -1,4 +1,9 @@
 #include "mainwindow.h"
+#ifdef HAVE_OPENCV
+#include "MetaObject/types/opencv.hpp"
+#include <MetaObject/runtime_reflection/visitor_traits/array_adapter.hpp>
+#endif
+
 #include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/detail/TParamPtrImpl.hpp"
 #include "MetaObject/params/ui/Qt/IParamProxy.hpp"
@@ -6,21 +11,15 @@
 #include "MetaObject/params/ui/WidgetFactory.hpp"
 #include "ui_mainwindow.h"
 
-#include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
-#include <MetaObject/runtime_reflection/visitor_traits/string.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/pair.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/string.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
 
 #include <MetaObject/thread/fiber_include.hpp>
 // The following lines are commented out to demonstrate user interface instantiation in a different translation unit
 // Since the instantiation library is included, instantiations of several types are registered with the full user
 // interface code for those types.  Thus the following are not needed for those types.  However, not all types are
 // included, so a few of the Params will use the default met Param
-//#include "MetaObject/params/ui/Qt/POD.hpp"
-#ifdef HAVE_OPENCV
-#include "MetaObject/types/opencv.hpp"
-//#include "MetaObject/params/ui/Qt/OpenCV.hpp"
-#endif
-//#include "MetaObject/params/ui/Qt/Containers.hpp"
 
 #include "MetaObject/params/ITParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
@@ -28,7 +27,6 @@
 #include <MetaObject/MetaParameters.hpp>
 
 #include <cereal/types/string.hpp>
-#include <cereal/types/utility.hpp>
 #include <cereal/types/vector.hpp>
 
 using namespace mo;

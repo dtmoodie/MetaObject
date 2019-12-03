@@ -14,7 +14,6 @@ namespace std
 // Forward declarations and typedefs
 namespace boost
 {
-    class recursive_timed_mutex;
     template <typename T>
     class unique_lock;
 
@@ -27,7 +26,8 @@ namespace boost
 
 namespace mo
 {
-    class Allocator;
+    struct Allocator;
+    struct DeviceAllocator;
     class ISignal;
     class ICallback;
     class ISlot;
@@ -35,8 +35,8 @@ namespace mo
     class IMetaObject;
     class ISignalRelay;
 
-    class IAsyncStream;
-    class AsyncStream;
+    struct IAsyncStream;
+    struct AsyncStream;
     namespace cuda
     {
         struct AsyncStream;
@@ -46,7 +46,7 @@ namespace mo
     class Thread;
 
     class IParam;
-    class ICoordinateSystem;
+    struct ICoordinateSystem;
     struct IDataContainer;
 
     template <class T>

@@ -1,6 +1,5 @@
 #ifndef TMULTIOUTPUT_HPP
 #define TMULTIOUTPUT_HPP
-#include "ITParam.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include "OutputParam.hpp"
 #include "TMultiInput-inl.hpp"
@@ -8,7 +7,7 @@
 
 namespace mo
 {
-    struct IMultiOutput : public OutputParam
+    struct MO_EXPORTS IMultiOutput : public OutputParam
     {
         IMultiOutput();
         virtual std::vector<TypeInfo> listOutputTypes() const override;
@@ -32,6 +31,9 @@ namespace mo
         void load(BinaryInputVisitor& ar) override;
         void save(BinaryOutputVisitor& ar) const override;
         void visit(StaticVisitor&) const override;
+
+        OptionalTime getTimestamp() const;
+        FrameNumber getFrameNumber() const;
 
         IContainerPtr_t getData(const Header& header) override;
         IContainerConstPtr_t getData(const Header& header) const override;
@@ -65,5 +67,5 @@ namespace mo
         std::tuple<Types...> m_data;
         std::tuple<TParam<Types>...> m_params;
     };
-}
+} // namespace mo
 #endif // TMULTIOUTPUT_HPP

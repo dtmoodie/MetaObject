@@ -5,7 +5,7 @@
 namespace mo
 {
     class ISignal;
-    class IAsyncStream;
+    struct IAsyncStream;
     class Connection;
     class IMetaObject;
     class MetaObject;

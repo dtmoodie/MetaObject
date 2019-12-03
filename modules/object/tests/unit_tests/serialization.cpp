@@ -1,4 +1,4 @@
-#include "Objects.hpp"
+#include "TestObjects.hpp"
 #include <RuntimeObjectSystem/SimpleSerializer/SimpleSerializer.h>
 
 #include <MetaObject/serialization/BinaryLoader.hpp>
@@ -11,8 +11,7 @@
 #include <fstream>
 #include <istream>
 
-#include <boost/test/auto_unit_test.hpp>
-#include <boost/test/test_tools.hpp>
+#include <gtest/gtest.h>
 
 #include <boost/thread.hpp>
 #include <iostream>
@@ -20,7 +19,7 @@
 using namespace mo;
 using namespace test;
 
-BOOST_AUTO_TEST_CASE(serialization_of_params)
+TEST(serialization, params)
 {
     auto inst1 = SerializableObject::create();
 
@@ -36,11 +35,11 @@ BOOST_AUTO_TEST_CASE(serialization_of_params)
     inst1->test2 = 40;
     serializer.SetIsLoading(true);
     serializer.Serialize(inst1.get());
-    BOOST_REQUIRE_EQUAL(inst1->test, 10);
-    BOOST_REQUIRE_EQUAL(inst1->test2, 20);
+    ASSERT_EQ(inst1->test, 10);
+    ASSERT_EQ(inst1->test2, 20);
 }
 
-BOOST_AUTO_TEST_CASE(statically_typed_serialization_json)
+TEST(serialization, static_json)
 {
     auto inst = SerializableObject::create();
     inst->test = 100;
@@ -60,11 +59,11 @@ BOOST_AUTO_TEST_CASE(statically_typed_serialization_json)
         inst->load(loader);
     }
 
-    BOOST_REQUIRE_EQUAL(inst->test, 100);
-    BOOST_REQUIRE_EQUAL(inst->test2, 200);
+    ASSERT_EQ(inst->test, 100);
+    ASSERT_EQ(inst->test2, 200);
 }
 
-BOOST_AUTO_TEST_CASE(statically_typed_serialization_binary)
+TEST(serialization, static_binary)
 {
     auto inst = SerializableObject::create();
     std::stringstream ss;
@@ -80,6 +79,6 @@ BOOST_AUTO_TEST_CASE(statically_typed_serialization_binary)
         mo::BinaryLoader loader(ss);
         inst->load(loader);
     }
-    BOOST_REQUIRE_EQUAL(inst->test, 5);
-    BOOST_REQUIRE_EQUAL(inst->test2, 6);
+    ASSERT_EQ(inst->test, 5);
+    ASSERT_EQ(inst->test2, 6);
 }

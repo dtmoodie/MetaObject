@@ -1,41 +1,51 @@
 #pragma once
-#include "../DynamicVisitor.hpp"
 #include "../ContainerTraits.hpp"
+#include "../DynamicVisitor.hpp"
 
 namespace mo
 {
-    template<class T, class A>
-    struct IsContinuous<std::vector<T, A>>
+    template <class T, class A>
+    struct TTraits<std::vector<T, A>, 4, void>: virtual ContainerBase<std::vector<T, A>, T>
     {
-        static constexpr const bool value = true;
-    };
-
-    template<class T, class A>
-    struct Visit<std::vector<T, A>>
-    {
-        static ILoadVisitor& load(ILoadVisitor& visitor, std::vector<T, A>* val, const std::string& name, const size_t)
+        void load(ILoadVisitor& visitor, void* inst, const std::string& name, const size_t) const override
         {
+            auto val = this->ptr(inst);
             visitor(val->data(), name, val->size());
-            return visitor;
         }
 
-        static ISaveVisitor& save(ISaveVisitor& visitor, const std::vector<T, A>* val, const std::string& name, const size_t)
+        void save(ISaveVisitor& visitor, const void* inst, const std::string& name, const size_t) const override
         {
+            auto val = this->ptr(inst);
             visitor(val->data(), name, val->size());
-            return visitor;
         }
-    };
 
-    template<class T, class A>
-    struct TTraits<std::vector<T, A>, void>: public ContainerBase<std::vector<T, A>>
-    {
-        TTraits(std::vector<T, A>* ptr):ContainerBase<std::vector<T, A>>(ptr){}
-    };
+        void visit(StaticVisitor& visitor, const std::string&) const override
+        {
+            visitor.template visit<T>("data");
+        }
 
-    template<class T, class A>
-    struct TTraits<const std::vector<T, A>, void>: public ContainerBase<const std::vector<T, A>>
-    {
-        TTraits(const std::vector<T, A>* ptr):ContainerBase<const std::vector<T, A>>(ptr){}
+        size_t getContainerSize(const void* inst) const override
+        {
+            auto ptr = this->ptr(inst);
+            return ptr->size();
+        }
 
+        void setContainerSize(size_t size, void* inst) const override
+        {
+            auto ptr = this->ptr(inst);
+            ptr->resize(size);
+        }
+
+        void* valuePointer(void* inst) const
+        {
+            auto val = this->ptr(inst);
+            return val->data();
+        }
+
+        const void* valuePointer(const void* inst) const
+        {
+            auto val = this->ptr(inst);
+            return val->data();
+        }
     };
 }

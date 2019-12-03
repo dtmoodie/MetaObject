@@ -3,6 +3,8 @@
 #include "ThreadPool.hpp"
 
 #include "MetaObject/core/AsyncStream.hpp"
+#include "MetaObject/core/AsyncStreamFactory.hpp"
+
 #include "MetaObject/core/detail/Allocator.hpp"
 #include "MetaObject/core/detail/Time.hpp"
 #include "MetaObject/logging/profiling.hpp"
@@ -54,16 +56,16 @@ Thread::~Thread()
 {
     PROFILE_FUNCTION
 
-    MO_LOG(info, "Waiting for {} to join", m_name);
+    // MO_LOG(info, "Waiting for {} to join", m_name);
     m_cv.notify_all();
     m_scheduler_wakeup_cv->notify_all();
 
     if (!m_thread.timed_join(boost::posix_time::time_duration(0, 0, 10)))
     {
-        MO_LOG(warn, "{} did not join after waiting 10 seconds");
+        // MO_LOG(warn, "{} did not join after waiting 10 seconds");
     }
 
-    MO_LOG(info, "{} shutdown complete", m_name);
+    // MO_LOG(info, "{} shutdown complete", m_name);
 }
 
 struct ThreadExit

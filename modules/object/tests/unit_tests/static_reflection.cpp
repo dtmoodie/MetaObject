@@ -1,4 +1,4 @@
-#include "Objects.hpp"
+#include "TestObjects.hpp"
 
 #include "MetaObject/object/MetaObject.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
@@ -12,16 +12,14 @@
 
 #include <MetaObject/thread/fiber_include.hpp>
 
-#include <boost/test/auto_unit_test.hpp>
-#include <boost/test/test_tools.hpp>
-#include <boost/test/unit_test_suite.hpp>
+#include <gtest/gtest.h>
 
 #include <iostream>
 
 using namespace mo;
 using namespace test;
 
-BOOST_AUTO_TEST_CASE(compile_time_print)
+TEST(object_reflection, compile_time_print)
 {
     ct::printStructInfo<test::Base>(std::cout);
     std::cout << std::endl;
@@ -29,14 +27,14 @@ BOOST_AUTO_TEST_CASE(compile_time_print)
     ct::printStructInfo<test::DerivedParams>(std::cout);
 }
 
-BOOST_AUTO_TEST_CASE(object_print)
+TEST(object_reflection, print)
 {
     auto info = mo::MetaObjectFactory::instance()->getObjectInfo("DerivedSignals");
-    BOOST_REQUIRE(info);
+    ASSERT_NE(info, nullptr);
     info->Print();
 }
 
-BOOST_AUTO_TEST_CASE(param_static)
+TEST(object_reflection, param_static)
 {
     auto param_info = TMetaObjectInterfaceHelper<DerivedParams>::getParamInfoStatic();
     if (param_info.size() == 1)
@@ -50,51 +48,52 @@ BOOST_AUTO_TEST_CASE(param_static)
             std::cout << "missing derived param \"derived_param\"\n";
         }
     }
-    BOOST_REQUIRE_EQUAL(param_info.size(), 2);
+    ASSERT_EQ(param_info.size(), 2);
 }
 
-BOOST_AUTO_TEST_CASE(signals_static)
+TEST(object_reflection, signals_static)
 {
     auto signal_info = TMetaObjectInterfaceHelper<DerivedSignals>::getSignalInfoStatic();
-    BOOST_REQUIRE_EQUAL(signal_info.size(), 2);
+    ASSERT_EQ(signal_info.size(), 2);
     auto itr = std::find_if(
         signal_info.begin(), signal_info.end(), [](SignalInfo* info) { return info->name == "base_signal"; });
-    BOOST_REQUIRE(itr != signal_info.end());
-    BOOST_REQUIRE((*itr)->signature == TypeInfo(typeid(void(int))));
+    ASSERT_NE(itr, signal_info.end());
+    ASSERT_EQ((*itr)->signature, TypeInfo(typeid(void(int))));
 
     itr = std::find_if(
         signal_info.begin(), signal_info.end(), [](SignalInfo* info) { return info->name == "base_signal"; });
 
-    BOOST_REQUIRE(itr != signal_info.end());
-    BOOST_REQUIRE((*itr)->signature == TypeInfo(typeid(void(int))));
+    ASSERT_NE(itr, signal_info.end());
+    ASSERT_EQ((*itr)->signature, TypeInfo(typeid(void(int))));
 }
 
-BOOST_AUTO_TEST_CASE(slots_static)
+TEST(object_reflection, slots_static)
 {
     auto slot_info = TMetaObjectInterfaceHelper<DerivedSignals>::getSlotInfoStatic();
-    BOOST_REQUIRE_EQUAL(slot_info.size(), 4);
+    ASSERT_EQ(slot_info.size(), 4);
 
     auto itr =
         std::find_if(slot_info.begin(), slot_info.end(), [](SlotInfo* info) { return info->name == "override_slot"; });
-    BOOST_REQUIRE(itr != slot_info.end());
-    BOOST_REQUIRE((*itr)->signature == TypeInfo(typeid(void(int))));
+    ASSERT_NE(itr, slot_info.end());
+    ASSERT_EQ((*itr)->signature, TypeInfo(typeid(void(int))));
 
     itr = std::find_if(slot_info.begin(), slot_info.end(), [](SlotInfo* info) { return info->name == "base_slot"; });
-    BOOST_REQUIRE(itr != slot_info.end());
-    BOOST_REQUIRE((*itr)->signature == TypeInfo(typeid(void(int))));
+    ASSERT_NE(itr, slot_info.end());
+    ASSERT_EQ((*itr)->signature, TypeInfo(typeid(void(int))));
 
     itr = std::find_if(slot_info.begin(), slot_info.end(), [](SlotInfo* info) { return info->name == "derived_slot"; });
-    BOOST_REQUIRE(itr != slot_info.end());
-    BOOST_REQUIRE((*itr)->signature == TypeInfo(typeid(void(int))));
+    ASSERT_NE(itr, slot_info.end());
+    ASSERT_EQ((*itr)->signature, TypeInfo(typeid(void(int))));
 }
 
-BOOST_AUTO_TEST_CASE(diamond)
+TEST(object, diamond_inheritance)
 {
     // auto obj = rcc::shared_ptr<multi_derive>::create();
     auto constructor = mo::MetaObjectFactory::instance()->getConstructor("MultipleInheritance");
-    BOOST_REQUIRE(constructor);
+    ASSERT_NE(constructor, nullptr);
     auto info = constructor->GetObjectInfo();
+    ASSERT_NE(info, nullptr);
     std::cout << info->Print();
     // auto meta_info = dynamic_cast<MetaObjectInfo*>(info);
-    // BOOST_REQUIRE(meta_info);
+    // ASSERT_TRUE(meta_info);
 }

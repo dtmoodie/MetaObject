@@ -13,31 +13,32 @@
 #include <MetaObject/core/detail/allocator_policies/Stack.hpp>
 #include <MetaObject/core/detail/allocator_policies/opencv.hpp>
 
-#include <MetaObject/cuda/opencv.hpp>
 #include <MetaObject/cuda/MemoryBlock.hpp>
+#include <MetaObject/cuda/opencv.hpp>
 
 #include <opencv2/cudaarithm.hpp>
 
-#include <boost/test/auto_unit_test.hpp>
-#include <boost/test/test_tools.hpp>
+#include <gtest/gtest.h>
 
 using namespace mo;
-
-struct RestoreAllocator
+namespace
 {
-    RestoreAllocator()
+    struct RestoreAllocator
     {
-        alloc = cv::cuda::GpuMat::defaultAllocator();
-    }
+        RestoreAllocator()
+        {
+            alloc = cv::cuda::GpuMat::defaultAllocator();
+        }
 
-    ~RestoreAllocator()
-    {
-        cv::cuda::GpuMat::setDefaultAllocator(alloc);
-    }
-    cv::cuda::GpuMat::Allocator* alloc;
-};
+        ~RestoreAllocator()
+        {
+            cv::cuda::GpuMat::setDefaultAllocator(alloc);
+        }
+        cv::cuda::GpuMat::Allocator* alloc;
+    };
+}
 
-BOOST_AUTO_TEST_CASE(test_gpu_random_allocation_pattern)
+TEST(gpu_allocator, random_pattern)
 {
     RestoreAllocator restore;
     cv::cuda::Stream stream;
@@ -90,7 +91,7 @@ BOOST_AUTO_TEST_CASE(test_gpu_random_allocation_pattern)
               << " Pool Allocator:    " << pool_allocator << "\n";
 }
 
-BOOST_AUTO_TEST_CASE(test_gpu_static_allocation_pattern)
+TEST(gpu_allocator, static_allocation_pattern)
 {
     cv::cuda::Stream stream;
     RestoreAllocator restore;
@@ -210,7 +211,7 @@ BOOST_AUTO_TEST_CASE(test_gpu_static_allocation_pattern)
               << "Pooled Allocation:  " << pooled_allocation << "\n";
 }*/
 
-BOOST_AUTO_TEST_CASE(async_transfer_rate_random)
+TEST(gpu_allocator, async_transfer_rate_random)
 {
     RestoreAllocator restore;
     mo::Time start, end;

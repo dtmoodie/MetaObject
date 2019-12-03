@@ -1,263 +1,118 @@
 #ifndef MO_VISITATION_CONTAINER_TRAITS_HPP
 #define MO_VISITATION_CONTAINER_TRAITS_HPP
 #include "IDynamicVisitor.hpp"
+#include "StructTraits.hpp"
+
 #include <MetaObject/logging/logging.hpp>
-#include <ct/TypeTraits.hpp>
+
+#include <ct/type_traits.hpp>
+
 namespace mo
 {
     template <class T>
-    struct KeyType
+    void resize(T* ptr, size_t size)
     {
-        using type = void;
-    };
+        ptr->resize(size);
+    }
+
     template <class T>
-    struct ValueType
+    void* values(T* ptr)
     {
-        using type = typename T::value_type;
-    };
-    template <class T>
-    struct IsContinuous;
+        return ptr->data();
+    }
 
     template <class T>
-    size_t getSize(const T& container);
-    template <class T>
-    void resize(T& container, const size_t size);
-
-    template <class T>
-    struct ContainerBase : virtual public ILoadContainerTraits
+    const void* values(const T* ptr)
     {
-        using base = ILoadContainerTraits;
+        return ptr->data();
+    }
 
-        ContainerBase(T* ptr);
+    struct MO_EXPORTS ContainerDefault : virtual IContainerTraits
+    {
+        bool triviallySerializable() const override;
 
-        // ITraits
-        void load(ILoadVisitor* visitor) override;
-        void save(ISaveVisitor* visitor) const override;
-        void visit(StaticVisitor* visitor) const override;
-        TypeInfo type() const override;
-
-        // IContainerTraits
         TypeInfo keyType() const override;
-        TypeInfo valueType() const override;
-        bool isContinuous() const override;
-        bool podValues() const override;
         bool podKeys() const override;
-        size_t getSize() const override;
-        void setSize(const size_t num) override;
-        void setInstance(void* ptr, const TypeInfo type_);
-        void setInstance(const void* ptr, const TypeInfo type_);
 
-      private:
-        T* m_ptr;
+        bool isContinuous() const override;
+
+        size_t getContainerSize(const void* inst) const override;
+        void setContainerSize(size_t size, void* inst) const override;
+
+        void* valuePointer(void* inst) const override;
+        const void* valuePointer(const void* inst) const override;
+
+        void* keyPointer(void*) const override;
+        const void* keyPointer(const void*) const override;
     };
 
-    // const specialization
-    template <class T>
-    struct ContainerBase<const T> : virtual public ISaveContainerTraits
+    template <class T, class V, class K = void>
+    struct ContainerBase : virtual ContainerDefault
     {
-        using base = ISaveContainerTraits;
+        ContainerBase()
+        {
+        }
 
-        ContainerBase(const T* ptr);
+        size_t size() const override
+        {
+            return sizeof(T);
+        }
 
-        // ITraits
-        void save(ISaveVisitor* visitor) const override;
-        void visit(StaticVisitor* visitor) const override;
-        TypeInfo type() const override;
+        bool triviallySerializable() const override
+        {
+            return std::is_trivially_copyable<T>::value;
+        }
 
-        // IContainerTraits
-        TypeInfo keyType() const override;
-        TypeInfo valueType() const override;
-        bool isContinuous() const override;
-        bool podValues() const override;
-        bool podKeys() const override;
-        size_t getSize() const override;
-        void setInstance(const void* ptr, const TypeInfo type_);
+        TypeInfo type() const override
+        {
+            return TypeInfo(typeid(T));
+        }
 
-      private:
-        const T* m_ptr;
+        T* ptr(void* inst) const
+        {
+            return static_cast<T*>(inst);
+        }
+
+        const T* ptr(const void* inst) const
+        {
+            return static_cast<const T*>(inst);
+        }
+
+        T& ref(void* inst) const
+        {
+            return *ptr(inst);
+        }
+
+        const T& ref(const void* inst) const
+        {
+            return *ptr(inst);
+        }
+
+        TypeInfo keyType() const override
+        {
+            return TypeInfo(typeid(K));
+        }
+
+        TypeInfo valueType() const override
+        {
+            return TypeInfo(typeid(V));
+        }
+
+        bool isContinuous() const override
+        {
+            return true;
+        }
+
+        bool podKeys() const override
+        {
+            return std::is_trivially_copyable<K>::value;
+        }
+
+        bool podValues() const override
+        {
+            return std::is_trivially_copyable<V>::value;
+        }
     };
-
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-    ///             IMPLEMENTATION
-    //////////////////////////////////////////////////////////////////////////////////////////////////
-    template <class T>
-    size_t getSize(const T& container)
-    {
-        return container.size();
-    }
-    template <class T>
-    void resize(T& container, const size_t size)
-    {
-        container.resize(size);
-    }
-
-    template <class T>
-    ContainerBase<T>::ContainerBase(T* ptr)
-        : m_ptr(ptr)
-    {
-    }
-
-    // ITraits
-    template <class T>
-    void ContainerBase<T>::load(ILoadVisitor* visitor)
-    {
-        Visit<T>::load(*visitor, m_ptr, "", 1);
-    }
-
-    template <class T>
-    void ContainerBase<T>::save(ISaveVisitor* visitor) const
-    {
-        Visit<T>::save(*visitor, m_ptr, "", 1);
-    }
-
-    template <class T>
-    void ContainerBase<T>::visit(StaticVisitor* visitor) const
-    {
-        if (!std::is_same<typename KeyType<T>::type, void>::value)
-        {
-            visitor->template visit<typename KeyType<T>::type>("key", 1);
-        }
-        visitor->template visit<T>("value", 1);
-    }
-
-    template <class T>
-    TypeInfo ContainerBase<T>::keyType() const
-    {
-        return TypeInfo(typeid(typename KeyType<T>::type));
-    }
-
-    template <class T>
-    TypeInfo ContainerBase<T>::valueType() const
-    {
-        return TypeInfo(typeid(typename ValueType<T>::type));
-    }
-
-    template <class T>
-    bool ContainerBase<T>::isContinuous() const
-    {
-        return IsContinuous<T>::value;
-    }
-
-    template <class T>
-    bool ContainerBase<T>::podValues() const
-    {
-        return std::is_pod<typename ValueType<T>::type>::value;
-    }
-
-    template <class T>
-    bool ContainerBase<T>::podKeys() const
-    {
-        return std::is_pod<typename KeyType<T>::type>::value;
-    }
-
-    template <class T>
-    size_t ContainerBase<T>::getSize() const
-    {
-        return mo::getSize(*m_ptr);
-    }
-
-    template <class T>
-    void ContainerBase<T>::setSize(const size_t num)
-    {
-        if (m_ptr)
-        {
-            resize(*m_ptr, num);
-        }
-    }
-
-    template <class T>
-    TypeInfo ContainerBase<T>::type() const
-    {
-        return TypeInfo(typeid(T));
-    }
-
-    template <class T>
-    void ContainerBase<T>::setInstance(void* ptr, const TypeInfo type_)
-    {
-        MO_ASSERT(type_ == type());
-        m_ptr = static_cast<T*>(ptr);
-    }
-
-    template <class T>
-    void ContainerBase<T>::setInstance(const void*, const TypeInfo)
-    {
-        THROW(warn, "Can't accept a const void*");
-    }
-
-    // const specialization
-    template <class T>
-    ContainerBase<const T>::ContainerBase(const T* ptr)
-        : m_ptr(ptr)
-    {
-    }
-
-    template <class T>
-    void ContainerBase<const T>::save(ISaveVisitor* visitor) const
-    {
-        Visit<T>::save(*visitor, m_ptr, "", 1);
-    }
-
-    template <class T>
-    void ContainerBase<const T>::visit(StaticVisitor* visitor) const
-    {
-        if (!std::is_same<typename KeyType<T>::type, void>::value)
-        {
-            visitor->template visit<typename KeyType<T>::type>("key", 1);
-        }
-        visitor->template visit<typename ValueType<T>::type>("value", 1);
-    }
-
-    template <class T>
-    TypeInfo ContainerBase<const T>::keyType() const
-    {
-        return TypeInfo(typeid(typename KeyType<T>::type));
-    }
-
-    template <class T>
-    TypeInfo ContainerBase<const T>::valueType() const
-    {
-        return TypeInfo(typeid(typename ValueType<T>::type));
-    }
-
-    template <class T>
-    bool ContainerBase<const T>::isContinuous() const
-    {
-        return IsContinuous<T>::value;
-    }
-
-    template <class T>
-    bool ContainerBase<const T>::podValues() const
-    {
-        return std::is_pod<typename ValueType<T>::type>::value;
-    }
-
-    template <class T>
-    bool ContainerBase<const T>::podKeys() const
-    {
-        return std::is_pod<typename KeyType<T>::type>::value;
-    }
-
-    template <class T>
-    size_t ContainerBase<const T>::getSize() const
-    {
-        if (m_ptr)
-        {
-            return mo::getSize(*m_ptr);
-        }
-        return 0;
-    }
-
-    template <class T>
-    void ContainerBase<const T>::setInstance(const void*, const TypeInfo)
-    {
-        THROW(warn, "Can't accept a const void*");
-    }
-
-    template <class T>
-    TypeInfo ContainerBase<const T>::type() const
-    {
-        return TypeInfo(typeid(T));
-    }
-}
+} // namespace mo
 
 #endif // MO_VISITATION_CONTAINER_TRAITS_HPP

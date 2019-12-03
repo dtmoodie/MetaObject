@@ -1,16 +1,18 @@
 #pragma once
-#include "MetaObject/core/TypeTable.hpp"
-#include "MetaObject/detail/Export.hpp"
-#include "MetaObject/params/AccessToken.hpp"
-#include "MetaObject/params/IParam.hpp"
-#include "MetaObject/params/ITAccessibleParam.hpp"
-#include "MetaObject/params/OutputParam.hpp"
-#include "MetaObject/python/PythonSetup.hpp"
-
 #include "converters.hpp"
+
+#include <MetaObject/core/TypeTable.hpp>
+#include <MetaObject/detail/Export.hpp>
+#include <MetaObject/params/AccessToken.hpp>
+#include <MetaObject/params/IParam.hpp>
+#include <MetaObject/params/ITAccessibleParam.hpp>
+#include <MetaObject/params/OutputParam.hpp>
+#include <MetaObject/python/PythonSetup.hpp>
 
 #include <boost/python.hpp>
 #include <boost/python/extract.hpp>
+
+#include <ct/interop/boost_python/PythonConverter.hpp>
 
 #include <map>
 
@@ -52,8 +54,7 @@ namespace mo
                     if (auto typed = dynamic_cast<TParam<T>*>(param))
                     {
                         auto token = typed->access();
-                        mo::python::convertFromPython(obj, token());
-                        return true;
+                        return ct::convertFromPython(obj, token());
                     }
                 }
                 return false;
@@ -63,7 +64,7 @@ namespace mo
             {
                 if (param->getTypeInfo() == mo::TypeInfo(typeid(T)))
                 {
-                    if (param->checkFlags(ParamFlags::Output_e))
+                    if (param->checkFlags(ParamFlags::kOUTPUT))
                     {
                         if (auto output_param = dynamic_cast<const OutputParam*>(param))
                         {
@@ -75,18 +76,24 @@ namespace mo
                         if (typed->isValid())
                         {
                             auto token = typed->read();
-                            return convertToPython(token());
+                            return ct::convertToPython(token());
                         }
                     }
                     else
                     {
 
-                        MO_LOG(debug, "Failed to cast parameter ({}) to the correct type for {}", mo::TypeTable::instance().typeToName(param->getTypeInfo()),  mo::TypeTable::instance().typeToName(TypeInfo(typeid(T))));
+                        MO_LOG(debug,
+                               "Failed to cast parameter ({}) to the correct type for {}",
+                               mo::TypeTable::instance()->typeToName(param->getTypeInfo()),
+                               mo::TypeTable::instance()->typeToName(TypeInfo(typeid(T))));
                     }
                 }
                 else
                 {
-                    MO_LOG(trace, "Incorrect datatype input {} expcted {}",mo::TypeTable::instance().typeToName(param->getTypeInfo()), mo::TypeTable::instance().typeToName(mo::TypeInfo(typeid(T))));
+                    MO_LOG(trace,
+                           "Incorrect datatype input {} expcted {}",
+                           mo::TypeTable::instance()->typeToName(param->getTypeInfo()),
+                           mo::TypeTable::instance()->typeToName(mo::TypeInfo(typeid(T))));
                 }
                 return {};
             }

@@ -1,9 +1,6 @@
 #include "Time.hpp"
-#include <chrono>
 #include <iomanip>
-#include <ostream>
 #include <sstream>
-
 namespace mo
 {
     static Time::GetTime_f time_source = nullptr;
@@ -154,17 +151,22 @@ namespace mo
         return *this;
     }
 
-    bool FrameNumber::operator==(const FrameNumber& v) const
+    /*bool FrameNumber::operator==(const FrameNumber& v) const
     {
         return val == v.val;
-    }
+    }*/
+
+    /*bool FrameNumber::operator==(const uint64_t v) const
+    {
+        return val == v;
+    }*/
 }
 
 namespace std
 {
     std::ostream& operator<<(std::ostream& lhs, const mo::Time& rhs)
     {
-        rhs.print(lhs);
+        rhs.print(lhs, false, false, true, true, true);
         return lhs;
     }
 }

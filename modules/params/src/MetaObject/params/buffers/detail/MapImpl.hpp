@@ -8,7 +8,7 @@ namespace mo
         Map<T>::Map(const std::string& name)
             : ITInputParam<T>(name)
         {
-            this->appendFlags(ParamFlags::Buffer_e);
+            this->appendFlags(ParamFlags::kBUFFER);
         }
 
         template <class T>
@@ -77,8 +77,8 @@ namespace mo
             _data_buffer[{ts, fn, cs, ctx}] = data;
             this->modified(true);
             lock.unlock();
-            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            IParam::_update_signal(this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
+            TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
             return true;
         }
 
@@ -93,8 +93,8 @@ namespace mo
             auto itr = _data_buffer.emplace(SequenceKey(ts, fn, cs, ctx), std::move(data));
             this->modified(true);
             lock.unlock();
-            IParam::_update_signal(this, ctx, ts, fn, cs, mo::BufferUpdated_e);
-            TParamImpl<T>::emitTypedUpdate(itr.first->second, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            IParam::_update_signal(this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
+            TParamImpl<T>::emitTypedUpdate(itr.first->second, this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
             return true;
         }
 
@@ -219,8 +219,8 @@ namespace mo
             _data_buffer[{ts, fn, cs, ctx}] = data;
             this->modified(true);
             lock.unlock();
-            IParam::emitUpdate(ts, ctx, fn, cs, mo::BufferUpdated_e);
-            TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::BufferUpdated_e);
+            IParam::emitUpdate(ts, ctx, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
+            TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
         }
     }
 }

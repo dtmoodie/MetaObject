@@ -4,7 +4,7 @@
 #include <tuple>
 namespace mo
 {
-    class IMultiInput : public InputParam
+    class MO_EXPORTS IMultiInput : public InputParam
     {
       public:
         IMultiInput();
@@ -21,10 +21,10 @@ namespace mo
         mo::IParam* getInputParam() const override;
 
         OptionalTime getInputTimestamp() override;
-        virtual uint64_t getInputFrameNumber() override;
+        FrameNumber getInputFrameNumber() override;
 
-        virtual OptionalTime getTimestamp() const override;
-        virtual uint64_t getFrameNumber() const override;
+        OptionalTime getTimestamp() const override;
+        FrameNumber getFrameNumber() const override;
 
         bool isInputSet() const override;
 
@@ -34,7 +34,7 @@ namespace mo
 
         // Virtual to allow typed overload for interface slot input
         virtual ConnectionPtr_t registerUpdateNotifier(ISlot* f) override;
-        virtual ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr& relay) override;
+        virtual ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr_t& relay) override;
 
         virtual bool modified() const override;
         virtual void modified(bool value) override;
@@ -68,7 +68,7 @@ namespace mo
         void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags);
         std::tuple<TInputParamPtr<Types>...> m_inputs;
     };
-}
+} // namespace mo
 
 #define MULTI_INPUT(name, ...)                                                                                         \
     mo::TMultiInput<__VA_ARGS__> name##_param;                                                                         \

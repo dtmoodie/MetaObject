@@ -28,20 +28,22 @@ namespace mo
       public:
         TSignal();
         void operator()(T... args);
-        void operator()(IAsyncStream* ctx, T... args);
-        virtual const TypeInfo& getSignature() const;
+        void operator()(IAsyncStream* stream, T... args);
 
-        std::shared_ptr<Connection> connect(ISlot* slot);
-        std::shared_ptr<Connection> connect(std::shared_ptr<ISignalRelay>& relay);
+        const TypeInfo& getSignature() const override;
+
+        std::shared_ptr<Connection> connect(ISlot* slot) override;
+        std::shared_ptr<Connection> connect(std::shared_ptr<ISignalRelay>& relay) override;
         std::shared_ptr<Connection> connect(std::shared_ptr<TSignalRelay<void(T...)>>& relay);
 
-        bool disconnect();
-        bool disconnect(ISlot* slot);
-        bool disconnect(std::weak_ptr<ISignalRelay> relay);
+        bool disconnect() override;
+        bool disconnect(ISlot* slot_) override;
+        bool disconnect(std::weak_ptr<ISignalRelay> relay_) override;
+        bool isConnected() const override;
 
       protected:
-        std::recursive_mutex mtx;
-        std::vector<typename TSignalRelay<void(T...)>::Ptr> _typed_relays;
+        mutable std::recursive_mutex mtx;
+        std::vector<typename TSignalRelay<void(T...)>::Ptr_t> _typed_relays;
     };
 
     template <class R, class... T>
@@ -51,19 +53,21 @@ namespace mo
         TSignal();
         R operator()(T... args);
         R operator()(IAsyncStream* ctx, T... args);
-        virtual const TypeInfo& getSignature() const;
 
-        ConnectionPtr_t connect(ISlot* slot);
-        ConnectionPtr_t connect(ISignalRelay::Ptr& relay);
+        const TypeInfo& getSignature() const override;
+
+        ConnectionPtr_t connect(ISlot* slot) override;
+        ConnectionPtr_t connect(ISignalRelay::Ptr_t& relay) override;
         ConnectionPtr_t connect(std::shared_ptr<TSignalRelay<R(T...)>>& relay);
 
-        bool disconnect();
-        bool disconnect(ISlot* slot);
-        bool disconnect(std::weak_ptr<ISignalRelay> relay);
+        bool disconnect() override;
+        bool disconnect(ISlot* slot) override;
+        bool disconnect(std::weak_ptr<ISignalRelay> relay) override;
+        bool isConnected() const override;
 
       protected:
-        std::recursive_mutex mtx;
-        typename TSignalRelay<R(T...)>::Ptr _typed_relay;
+        mutable std::recursive_mutex mtx;
+        typename TSignalRelay<R(T...)>::Ptr_t _typed_relay;
     };
 
     /////////////////////////////////////////////////////////////////////////
@@ -180,6 +184,13 @@ namespace mo
             return true;
         }
         return false;
+    }
+
+    template <class R, class... T>
+    bool TSignal<R(T...)>::isConnected() const
+    {
+        std::lock_guard<std::recursive_mutex> lock(mtx);
+        return _typed_relay != nullptr;
     }
 
     // ---------------------------------------------------------------------
@@ -301,5 +312,12 @@ namespace mo
             return true;
         }
         return false;
+    }
+
+    template <class... T>
+    bool TSignal<void(T...)>::isConnected() const
+    {
+        std::lock_guard<std::recursive_mutex> lock(mtx);
+        return !_typed_relays.empty();
     }
 }

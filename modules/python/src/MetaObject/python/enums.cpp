@@ -14,7 +14,8 @@ namespace mo
             .value("INFO", IObjectInfo::INFO)
             .value("DEBUG", IObjectInfo::DEBUG)
             .value("RCC", IObjectInfo::RCC);
-        boost::python::enum_<mo::BufferFlags>("BufferFlags")
+        // TODO boost python enum from ct
+        /*boost::python::enum_<mo::BufferFlags>("BufferFlags")
             .value("Default", mo::BufferFlags::DEFAULT)
             .value("CircularBuffer", mo::BufferFlags::CIRCULAR_BUFFER)
             .value("Map", mo::BufferFlags::MAP_BUFFER)
@@ -28,10 +29,10 @@ namespace mo
             .value("ForceDirectConnection", mo::BufferFlags::FORCE_DIRECT);
 
         boost::python::enum_<mo::UpdateFlags>("ParamUpdateFlags")
-            .value("ValueUpdated", mo::ValueUpdated_e)
-            .value("InputSet", mo::InputSet_e)
-            .value("InputCleared", mo::InputCleared_e)
-            .value("InputUpdated", mo::InputUpdated_e)
-            .value("BufferUpdated", mo::BufferUpdated_e);
+            .value("ValueUpdated", mo::UpdateFlags::kVALUE_UPDATED)
+            .value("InputSet", mo::UpdateFlags::kINPUT_SET)
+            .value("InputCleared", mo::UpdateFlags::kINPUT_CLEARED)
+            .value("InputUpdated", mo::UpdateFlags::kINPUT_UPDATED)
+            .value("BufferUpdated", mo::UpdateFlags::kBUFFER_UPDATED);*/
     }
 }

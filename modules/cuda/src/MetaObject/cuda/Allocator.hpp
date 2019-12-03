@@ -1,5 +1,6 @@
 #ifndef MO_CUDA_ALLOCATOR_HPP
 #define MO_CUDA_ALLOCATOR_HPP
+#include <MetaObject/core/detail/Allocator.hpp>
 #include <cstdint>
 namespace mo
 {

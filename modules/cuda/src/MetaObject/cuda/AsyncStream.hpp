@@ -12,36 +12,65 @@ namespace mo
     namespace cuda
     {
 
-        struct IAsyncStream : virtual public mo::IAsyncStream
+        struct MO_EXPORTS IAsyncStream : virtual public mo::IDeviceStream
         {
             virtual Stream getStream() const = 0;
+            virtual operator cudaStream_t() = 0;
             virtual void setStream(const Stream& stream) = 0;
-            virtual void setDevicePriority(const PriorityLevels lvl) = 0;
+            virtual void setDevicePriority(PriorityLevels lvl) = 0;
+            virtual void enqueueCallback(std::function<void(void)> cb) = 0;
 
         }; // struct mo::cuda::Context
 
-        struct AsyncStream : virtual public cuda::IAsyncStream, public mo::AsyncStream
+        struct MO_EXPORTS AsyncStream : virtual public cuda::IAsyncStream, virtual public mo::AsyncStream
         {
-            AsyncStream();
-            AsyncStream(const Stream& stream);
+            AsyncStream(Stream stream = Stream::create(),
+                        DeviceAllocator::Ptr_t allocator = DeviceAllocator::getDefault(),
+                        Allocator::Ptr_t host_alloc = Allocator::getDefault());
+
+            AsyncStream(const AsyncStream&) = delete;
+            AsyncStream(AsyncStream&&) = delete;
+            AsyncStream& operator=(const AsyncStream&) = delete;
+            AsyncStream& operator=(AsyncStream&&) = delete;
+
             ~AsyncStream() override;
 
+            void setStream(const Stream& stream) override;
             Stream getStream() const override;
+            operator cudaStream_t() override;
+
+            void pushWork(std::function<void(void)>&& work, PriorityLevels priority = NONE) override;
+            void pushEvent(std::function<void(void)>&& event,
+                           uint64_t event_id = 0,
+                           PriorityLevels priority = NONE) override;
+
             Event createEvent();
+            void enqueueCallback(std::function<void(void)> cb) override;
+
+            // This differs from Stream::synchronize in that it uses an event and boost::fibers to allow other fibers to
+            // execute while the stream is waiting for completion.  Thus this should be more efficient than just
+            // getStream().synchronize();
+            void synchronize() override;
+            void synchronize(IDeviceStream* other) override;
 
             void setName(const std::string& name) override;
 
-            void setDevicePriority(const PriorityLevels lvl) override;
+            void setDevicePriority(PriorityLevels lvl) override;
 
-          protected:
-            AsyncStream(TypeInfo type);
+            void hostToDevice(ct::TArrayView<void> dst, ct::TArrayView<const void> src) override;
+            void deviceToHost(ct::TArrayView<void> dst, ct::TArrayView<const void> src) override;
+            void deviceToDevice(ct::TArrayView<void> dst, ct::TArrayView<const void> src) override;
+            void hostToHost(ct::TArrayView<void> dst, ct::TArrayView<const void> src) override;
+
+            std::shared_ptr<DeviceAllocator> deviceAllocator() const override;
 
           private:
             void init();
             Stream m_stream;
             ObjectPool<CUevent_st> m_event_pool;
             int m_device_id = -1;
+            std::shared_ptr<DeviceAllocator> m_allocator;
         }; // struct mo::cuda::Context
 
-    } // namespace mo::cuda
+    } // namespace cuda
 } // namespace mo

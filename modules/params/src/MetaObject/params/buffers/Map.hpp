@@ -48,31 +48,36 @@ namespace mo
                 NEAREST
             };
 
-            static const BufferFlags Type = MAP_BUFFER;
+            constexpr static const BufferFlags Type = BufferFlags::MAP_BUFFER;
 
-            Map(const std::string& name = "",
-                const PushPolicy push_policy = GROW,
-                const SearchPolicy search_policy = EXACT);
+            Map(const std::string& name = "", PushPolicy push_policy = GROW, SearchPolicy search_policy = EXACT);
             ~Map() override;
 
             // IBuffer
-            virtual void setFrameBufferCapacity(const uint64_t size) override;
-            virtual void setTimePaddingCapacity(const Duration& time) override;
+            void setFrameBufferCapacity(const uint64_t size) override;
+            void setTimePaddingCapacity(const Duration& time) override;
 
-            virtual boost::optional<uint64_t> getFrameBufferCapacity() const override;
-            virtual boost::optional<Duration> getTimePaddingCapacity() const override;
+            boost::optional<uint64_t> getFrameBufferCapacity() const override;
+            boost::optional<Duration> getTimePaddingCapacity() const override;
 
-            virtual uint64_t getSize() const override;
-            virtual uint64_t clear() override;
-            virtual bool getTimestampRange(mo::OptionalTime& start, mo::OptionalTime& end) override;
-            virtual bool getFrameNumberRange(uint64_t& start, uint64_t& end) override;
-            virtual BufferFlags getBufferType() const override;
+            uint64_t getSize() const override;
+            uint64_t clear() override;
+            bool getTimestampRange(mo::OptionalTime& start, mo::OptionalTime& end) override;
+            bool getFrameNumberRange(uint64_t& start, uint64_t& end) override;
+            BufferFlags getBufferType() const override;
+
+            // InputParam
+            bool setInput(const std::shared_ptr<IParam>& param) override;
+            bool setInput(IParam* param = nullptr) override;
 
             // IParam
 
-            virtual IContainerPtr_t getData(const Header& desired = Header()) override;
-            virtual IContainerConstPtr_t getData(const Header& desired = Header()) const override;
-            virtual void setMtx(Mutex_t* mtx) override;
+            OptionalTime getTimestamp() const override;
+            FrameNumber getFrameNumber() const override;
+
+            IContainerPtr_t getData(const Header& desired = Header()) override;
+            IContainerConstPtr_t getData(const Header& desired = Header()) const override;
+            void setMtx(Mutex_t* mtx) override;
 
           protected:
             void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) override;
@@ -93,7 +98,7 @@ namespace mo
             Buffer_t m_data_buffer;
 
             OptionalTime m_current_timestamp;
-            uint64_t m_current_frame_number;
+            FrameNumber m_current_frame_number;
 
             boost::optional<Duration> m_time_padding;
             boost::optional<uint64_t> m_frame_padding;

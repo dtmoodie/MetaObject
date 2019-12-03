@@ -1,18 +1,15 @@
 #include "TraitInterface.hpp"
-
+#include "TraitRegistry.hpp"
 namespace mo
 {
-ITraits::~ITraits()
+
+std::string ITraits::name() const
 {
+    const auto t = type();
+    return t.name();
 }
 
-ISaveTraits::~ISaveTraits()
-{
+ITraits::~ITraits() = default;
 
-}
 
-ILoadTraits::~ILoadTraits()
-{
-
-}
 }

@@ -1,11 +1,9 @@
 #pragma once
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
-
-#include <map>
+#include <memory>
 #include <string>
 #include <vector>
-
 struct SystemTable;
 
 namespace mo
@@ -13,21 +11,17 @@ namespace mo
     class MO_EXPORTS TypeTable
     {
       public:
-        static TypeTable& instance();
-        static TypeTable& instance(SystemTable* table);
+        static std::shared_ptr<TypeTable> instance();
+        static std::shared_ptr<TypeTable> instance(SystemTable* table);
 
-        std::string typeToName(const TypeInfo& type);
-        const TypeInfo nameToType(const std::string& name);
+        virtual ~TypeTable();
+        virtual std::string typeToName(const TypeInfo& type) const = 0;
+        virtual const TypeInfo nameToType(const std::string& name) const = 0;
+        virtual void registerType(const TypeInfo& info, const char* name) = 0;
+        virtual std::vector<TypeInfo> listKnownTypes() const = 0;
 
         template <class T>
         void registerType(const char* name);
-
-        void registerType(const TypeInfo& info, const char* name);
-
-        std::vector<TypeInfo> listKnownTypes();
-
-      private:
-        std::map<TypeInfo, std::string> m_types;
 
     }; // class TypeTable
 

@@ -70,4 +70,34 @@ namespace mo
             notify();
         }
     }
+
+    void FiberProperty::disable()
+    {
+        m_enabled = false;
+    }
+
+    bool FiberProperty::enabled() const
+    {
+        return m_enabled;
+    }
+
+    std::shared_ptr<IAsyncStream> FiberProperty::stream() const
+    {
+        return m_stream;
+    }
+
+    std::shared_ptr<IDeviceStream> FiberProperty::deviceStream() const
+    {
+        return m_device_stream;
+    }
+
+    void FiberProperty::setStream(std::shared_ptr<IAsyncStream> stream)
+    {
+        m_stream = std::move(stream);
+    }
+
+    void FiberProperty::setDeviceStream(std::shared_ptr<IDeviceStream> stream)
+    {
+        m_device_stream = std::move(stream);
+    }
 }

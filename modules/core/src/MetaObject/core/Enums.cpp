@@ -1,122 +1,48 @@
-#include "MetaObject/core/detail/Enums.hpp"
-#include "MetaObject/logging/logging.hpp"
-#include <map>
-#include <vector>
+#include <MetaObject/core/detail/Enums.hpp>
+#include <MetaObject/logging/logging.hpp>
+#include <ct/enum.hpp>
+#include <ct/reflect.hpp>
 
-#define TYPE_NAME_HELPER(name)                                                                                         \
-    {                                                                                                                  \
-        ParamFlags::name##_e, #name                                                                                    \
-    }
+#include <map>
 
 namespace mo
 {
-
     namespace
     {
-        static const std::vector<std::pair<ParamFlags, std::string>> type_flag_map = {TYPE_NAME_HELPER(None),
-                                                                                      TYPE_NAME_HELPER(Input),
-                                                                                      TYPE_NAME_HELPER(Output),
-                                                                                      TYPE_NAME_HELPER(State),
-                                                                                      TYPE_NAME_HELPER(Control),
-                                                                                      TYPE_NAME_HELPER(Buffer),
-                                                                                      TYPE_NAME_HELPER(Optional),
-                                                                                      TYPE_NAME_HELPER(Unstamped),
-                                                                                      TYPE_NAME_HELPER(Source),
-                                                                                      TYPE_NAME_HELPER(Sync),
-                                                                                      TYPE_NAME_HELPER(RequestBuffered),
-                                                                                      TYPE_NAME_HELPER(Dynamic),
-                                                                                      TYPE_NAME_HELPER(Source)};
-
         static std::map<const IAsyncStream*, std::map<const IAsyncStream*, BufferFlags>> connection_map;
-        static BufferFlags default_connection_type = BLOCKING_STREAM_BUFFER;
+        static BufferFlags default_connection_type = BufferFlags::BLOCKING_STREAM_BUFFER;
     }
 
-    std::string paramFlagsToString(EnumClassBitset<ParamFlags> type)
+    static_assert(ct::Flags::CT_RESERVED_FLAG_BITS + 1 < 10, "");
+    static_assert(ct::Flags::CT_RESERVED_FLAG_BITS + 1 < 10, "");
+
+    std::string paramFlagsToString(ParamFlags type)
     {
-        std::string output;
-        for (const auto& itr : type_flag_map)
-        {
-            if (type.test(itr.first))
-            {
-                if (output.empty())
-                {
-                    output = itr.second;
-                }
-                else
-                {
-                    output += "|" + itr.second;
-                }
-            }
-        }
-        return output;
+        std::stringstream out;
+        out << type;
+        return std::move(out).str();
     }
 
-    EnumClassBitset<ParamFlags> stringToParamFlags(const std::string& str)
+    ParamFlags stringToParamFlags(const std::string& str)
     {
-        std::string rest = str;
-        EnumClassBitset<ParamFlags> output;
-        auto pos = rest.find('|');
-        while (pos != std::string::npos)
-        {
-            std::string substr = rest.substr(0, pos);
-            rest = rest.substr(pos + 1);
-            for (const auto& itr : type_flag_map)
-            {
-                if (substr == itr.second)
-                    // output = ParamFlags(itr.first | output);
-                    output.flip(itr.first);
-            }
-            pos = rest.find('|');
-        }
-        for (const auto& itr : type_flag_map)
-        {
-            if (rest == itr.second)
-                // output = ParamFlags(itr.first | output);
-                output.flip(itr.first);
-        }
-        return output;
+        return ct::bitsetFromString<ParamFlags>(str);
     }
 
     std::string bufferFlagsToString(BufferFlags flags)
     {
-        switch (flags)
-        {
-        case CIRCULAR_BUFFER:
-            return "CircularBuffer";
-        case MAP_BUFFER:
-            return "Map";
-        case STREAM_BUFFER:
-            return "StreamBuffer";
-        case BLOCKING_STREAM_BUFFER:
-            return "BlockingStreamBuffer";
-        case DROPPING_STREAM_BUFFER:
-            return "DroppingStreamBuffer";
-        case NEAREST_NEIGHBOR_BUFFER:
-            return "NNStreamBuffer";
-        case QUEUE_BUFFER:
-            return "Queue";
-        case BLOCKING_QUEUE_BUFFER:
-            return "BlockingQueue";
-        case DROPPING_QUEUE_BUFFER:
-            return "DroppingQueue";
-        }
-        return "";
+        std::stringstream ss;
+        ss << flags;
+        return std::move(ss).str();
     }
 
     BufferFlags stringToBufferFlags(const std::string& str)
     {
-        if (str == "CircularBuffer")
-            return CIRCULAR_BUFFER;
-        else if (str == "Map")
-            return MAP_BUFFER;
-        else if (str == "StreamBuffer")
-            return STREAM_BUFFER;
-        else if (str == "BlockingStreamBuffer")
-            return BLOCKING_STREAM_BUFFER;
-        else if (str == "NNStreamBuffer")
-            return NEAREST_NEIGHBOR_BUFFER;
-        THROW(debug, "Invalid string {}", str);
-        return DEFAULT;
+        auto flag = ct::fromString<BufferFlags>(str);
+        if (!flag.success())
+        {
+            THROW(debug, "Invalid string {}", str);
+        }
+        return flag.value();
     }
 
     BufferFlags getDefaultBufferType(const IAsyncStream* source, const IAsyncStream* dest)

@@ -42,13 +42,13 @@ void initNvtx()
     HMODULE nvtx_handle = LoadLibrary("nvToolsExt64_1.dll");
     if (nvtx_handle)
     {
-        MO_LOG(info) << "Loaded nvtx module";
+        MO_LOG(info, "Loaded nvtx module");
         nvtx_push = (push_f)GetProcAddress(nvtx_handle, "nvtxRangePushA");
         nvtx_pop = (pop_f)GetProcAddress(nvtx_handle, "nvtxRangePop");
     }
     else
     {
-        MO_LOG(info) << "No nvtx library loaded";
+        MO_LOG(info, "No nvtx library loaded");
     }
 #else
     void* nvtx_handle = dlopen("libnvToolsExt.so", RTLD_NOW);

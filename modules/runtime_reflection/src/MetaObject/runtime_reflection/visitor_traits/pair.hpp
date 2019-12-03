@@ -1,163 +1,47 @@
 #ifndef MO_VISITATION_PAIR_HPP
 #define MO_VISITATION_PAIR_HPP
+#include "../IDynamicVisitor.hpp"
+#include "../StructTraits.hpp"
+#include "../type_traits.hpp"
+
 #include <MetaObject/runtime_reflection/VisitorTraits.hpp>
+
 #include <type_traits>
 
 namespace mo
 {
-    template <class T1, class T2>
-    struct TTraits<std::pair<T1, T2>, void> : public ILoadStructTraits
+    /*template <class T1, class T2>
+    struct TTraits<std::pair<T1, T2>, 9, void> : StructBase<std::pair<T1, T2>>
     {
-        using base = ILoadStructTraits;
-
-        TTraits(std::pair<T1, T2>* ptr, const size_t count)
-            : m_ptr(ptr)
-            , m_count(count)
+        void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t) const override
         {
+            auto ptr = this->ptr(inst);
+            visitor(&ptr->first, "first");
+            visitor(&ptr->second, "second");
+
         }
 
-        void load(ILoadVisitor* visitor) override
+        void save(ISaveVisitor& visitor, const void* inst, const std::string&, size_t) const override
         {
-            (*visitor)(&m_ptr->first, "first");
-            (*visitor)(&m_ptr->second, "second");
+            auto ptr = this->ptr(inst);
+            visitor(&ptr->first, "first");
+            visitor(&ptr->second, "second");
         }
 
-        void save(ISaveVisitor* visitor) const override
+        void visit(StaticVisitor& visitor, const std::string&) const override
         {
-            (*visitor)(&m_ptr->first, "first");
-            (*visitor)(&m_ptr->second, "second");
+            visitor.template visit<T1>("first");
+            visitor.template visit<T2>("second");
         }
-
-        void visit(StaticVisitor* visitor) const override
-        {
-            visitor->template visit<T1>("first");
-            visitor->template visit<T2>("second");
-        }
-
-        size_t size() const override
-        {
-            return sizeof(std::pair<T1, T2>);
-        }
-
-        bool triviallySerializable() const override
-        {
-            return std::is_pod<T1>::value && std::is_pod<T2>::value;
-        }
-
-        bool isPrimitiveType() const override
-        {
-            return false;
-        }
-
-        const void* ptr() const override
-        {
-            return m_ptr;
-        }
-
-        void* ptr() override
-        {
-            return m_ptr;
-        }
-
-        TypeInfo type() const override
-        {
-            return TypeInfo(typeid(std::pair<T1, T2>));
-        }
-
-        size_t count() const override
-        {
-            return m_count;
-        }
-
-        void increment() override
-        {
-            ++m_ptr;
-        }
-
-        void setInstance(void* ptr, const TypeInfo type_) override
-        {
-            MO_ASSERT(type_ == type());
-            m_ptr = static_cast<std::pair<T1, T2>*>(ptr);
-        }
-
-        void setInstance(const void*, const TypeInfo) override
-        {
-            THROW(warn, "Attempting to set const ptr");
-        }
-
-      private:
-        std::pair<T1, T2>* m_ptr;
-        size_t m_count;
-    };
-
-    template <class T1, class T2>
-    struct TTraits<const std::pair<T1, T2>, void> : public ISaveStructTraits
-    {
-        using base = ISaveStructTraits;
-
-        TTraits(const std::pair<T1, T2>* ptr, const size_t count)
-            : m_ptr(ptr)
-            , m_count(count)
-        {
-        }
-
-        void save(ISaveVisitor* visitor) const override
-        {
-            (*visitor)(&m_ptr->first, "first");
-            (*visitor)(&m_ptr->second, "second");
-        }
-
-        void visit(StaticVisitor* visitor) const override
-        {
-            visitor->template visit<T1>("first");
-            visitor->template visit<T2>("second");
-        }
-
-        size_t size() const override
-        {
-            return sizeof(std::pair<T1, T2>);
-        }
-
-        bool triviallySerializable() const override
-        {
-            return std::is_pod<T1>::value && std::is_pod<T2>::value;
-        }
-
-        bool isPrimitiveType() const override
-        {
-            return false;
-        }
-
-        const void* ptr() const override
-        {
-            return m_ptr;
-        }
-
-        TypeInfo type() const override
-        {
-            return TypeInfo(typeid(std::pair<T1, T2>));
-        }
-
-        size_t count() const override
-        {
-            return m_count;
-        }
-
-        void increment() override
-        {
-            ++m_ptr;
-        }
-
-        void setInstance(const void* ptr, const TypeInfo type_) override
-        {
-            MO_ASSERT(type_ == type());
-            m_ptr = static_cast<const std::pair<T1, T2>*>(ptr);
-        }
-
-      private:
-        const std::pair<T1, T2>* m_ptr;
-        size_t m_count;
-    };
+    };*/
 }
+
+namespace ct
+{
+    REFLECT_TEMPLATED_BEGIN(std::pair)
+        PUBLIC_ACCESS(first)
+        PUBLIC_ACCESS(second)
+    REFLECT_END;
+} // namespace ct
 
 #endif // MO_VISITATION_PAIR_HPP

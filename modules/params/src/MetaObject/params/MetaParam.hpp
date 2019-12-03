@@ -8,7 +8,10 @@ namespace mo
     template <class T, int N, typename Enable = void>
     struct MetaParam : public MetaParam<T, N - 1, void>
     {
-        MetaParam(SystemTable* table, const char* name = nullptr) : MetaParam<T, N - 1>(table, name) {}
+        MetaParam(SystemTable* table, const char* name = nullptr)
+            : MetaParam<T, N - 1>(table, name)
+        {
+        }
     };
 
     template <class T>
@@ -18,7 +21,7 @@ namespace mo
         {
             if (name)
             {
-                mo::TypeTable::instance(table).registerType(mo::TypeInfo(typeid(T)), name);
+                mo::TypeTable::instance(table)->registerType(mo::TypeInfo(typeid(T)), name);
             }
         }
     };

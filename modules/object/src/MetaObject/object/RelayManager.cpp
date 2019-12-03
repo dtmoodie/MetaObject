@@ -1,10 +1,10 @@
 #include "MetaObject/object/RelayManager.hpp"
-#include "MetaObject/core/singletons.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/signals/ISignal.hpp"
 #include "MetaObject/signals/ISignalRelay.hpp"
 #include "MetaObject/signals/ISlot.hpp"
 #include "MetaObject/signals/RelayFactory.hpp"
+
 #include <map>
 #include <memory>
 using namespace mo;
@@ -14,15 +14,17 @@ struct RelayManager::impl
     std::map<TypeInfo, std::map<std::string, std::shared_ptr<ISignalRelay>>> relays;
 };
 
-RelayManager::RelayManager()
+std::shared_ptr<RelayManager> RelayManager::instance(SystemTable* table)
 {
-    _pimpl = new impl();
+    return table->getSingleton<RelayManager>();
 }
 
-RelayManager::~RelayManager()
+RelayManager::RelayManager()
 {
-    delete _pimpl;
+    _pimpl.reset(new impl());
 }
+
+RelayManager::~RelayManager() = default;
 
 std::shared_ptr<Connection> RelayManager::connect(ISlot* slot, const std::string& name, IMetaObject* obj)
 {
@@ -44,7 +46,7 @@ void RelayManager::connectSignal(IMetaObject* obj, const std::string& signal_nam
         auto connection = connect(signal, signal_name, obj);
         if (connection)
         {
-            obj->addConnection(std::move(connection), signal_name, signal_name, signal->getSignature(), nullptr);
+            obj->addConnection(std::move(connection), signal_name, signal_name, signal->getSignature());
         }
     }
 }
@@ -57,7 +59,7 @@ void RelayManager::connectSlot(IMetaObject* obj, const std::string& slot_name)
         auto connection = connect(slot, slot_name, obj);
         if (connection)
         {
-            obj->addConnection(std::move(connection), slot_name, slot_name, slot->getSignature(), nullptr);
+            obj->addConnection(std::move(connection), slot_name, slot_name, slot->getSignature());
         }
     }
 }
@@ -84,7 +86,7 @@ bool RelayManager::connectSlot(IMetaObject* obj, const std::string& name, const 
         auto connection = connect(slot, name, obj);
         if (connection)
         {
-            obj->addConnection(std::move(connection), "", name, type, nullptr);
+            obj->addConnection(std::move(connection), "", name, type);
         }
     }
     return false;

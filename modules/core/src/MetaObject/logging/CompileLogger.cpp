@@ -1,3 +1,5 @@
+
+
 #include "MetaObject/logging/CompileLogger.hpp"
 #include <MetaObject/logging/logging.hpp>
 #include <spdlog/details/registry.h>

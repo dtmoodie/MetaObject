@@ -5,7 +5,7 @@
 
 namespace mo
 {
-    class BinarySaver : public SaveCache
+    class MO_EXPORTS BinarySaver : public SaveCache
     {
       public:
         BinarySaver(std::ostream& in);
@@ -21,17 +21,23 @@ namespace mo
         ISaveVisitor& operator()(const int64_t* ptr, const std::string& name, const size_t cnt) override;
         ISaveVisitor& operator()(const uint64_t* ptr, const std::string& name, const size_t cnt) override;
 #ifdef ENVIRONMENT64
+#ifndef _MSC_VER
         ISaveVisitor& operator()(const long long* val, const std::string& name = "", const size_t cnt = 1) override;
-        ISaveVisitor& operator()(const unsigned long long* val, const std::string& name = "", const size_t cnt = 1) override;
+        ISaveVisitor&
+        operator()(const unsigned long long* val, const std::string& name = "", const size_t cnt = 1) override;
+#endif
 #else
         ISaveVisitor& operator()(const long int* val, const std::string& name = "", const size_t cnt = 1) override;
-        ISaveVisitor& operator()(const unsigned long int* val, const std::string& name = "", const size_t cnt = 1) override;
+        ISaveVisitor&
+        operator()(const unsigned long int* val, const std::string& name = "", const size_t cnt = 1) override;
 #endif
         ISaveVisitor& operator()(const float* val, const std::string& name, const size_t cnt) override;
         ISaveVisitor& operator()(const double*, const std::string&, const size_t) override;
         ISaveVisitor& operator()(const void*, const std::string&, const size_t) override;
-        ISaveVisitor& operator()(ISaveStructTraits* val, const std::string& name = "") override;
-        ISaveVisitor& operator()(ISaveContainerTraits* val, const std::string& name = "") override;
+        ISaveVisitor&
+        operator()(IStructTraits* val, const void* inst, const std::string& name = "", size_t cnt = 1) override;
+        ISaveVisitor&
+        operator()(IContainerTraits* val, const void* inst, const std::string& name = "", size_t cnt = 1) override;
 
         VisitorTraits traits() const override;
 
@@ -40,4 +46,4 @@ namespace mo
         ISaveVisitor& saveBinary(const T* ptr, const std::string& name = "", const size_t cnt = 1);
         std::ostream& m_os;
     };
-}
+} // namespace mo

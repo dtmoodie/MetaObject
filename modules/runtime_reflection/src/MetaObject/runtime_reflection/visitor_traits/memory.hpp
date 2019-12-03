@@ -1,251 +1,162 @@
 #pragma once
 #include "../DynamicVisitor.hpp"
+#include "../StructTraits.hpp"
+
+#include <MetaObject/logging/logging.hpp>
+
+//#include <ce/shared_ptr.hpp>
 #include <memory>
 
 namespace mo
 {
     template <class T>
-    struct MemoryBase : public ILoadStructTraits
+    struct PointerWrapper
     {
-        using base = ILoadStructTraits;
-
-        MemoryBase(const size_t count)
-            : m_count(count)
-        {
-        }
-
-        size_t size() const override
-        {
-            return sizeof(T);
-        }
-
-        bool triviallySerializable() const override
-        {
-            return false;
-        }
-
-        bool isPrimitiveType() const override
-        {
-            return false;
-        }
-
-        TypeInfo type() const override
-        {
-            return TypeInfo(typeid(T));
-        }
-
-        std::string getName() const override
-        {
-            return TypeInfo(typeid(T)).name();
-        }
-
-        size_t count() const override
-        {
-            return m_count;
-        }
-
-      private:
-        size_t m_count;
+        std::shared_ptr<T> ptr;
     };
 
     template <class T>
-    struct MemoryBase<const T> : public ISaveStructTraits
+    struct TTraits<PointerWrapper<T>, 4> : virtual StructBase<PointerWrapper<T>>
     {
-        using base = ISaveStructTraits;
-
-        MemoryBase(const size_t count)
-            : m_count(count)
+        void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t) const override
         {
-        }
-
-        size_t size() const override
-        {
-            return sizeof(T);
-        }
-
-        bool triviallySerializable() const override
-        {
-            return false;
-        }
-
-        bool isPrimitiveType() const override
-        {
-            return false;
-        }
-
-        TypeInfo type() const override
-        {
-            return TypeInfo(typeid(T));
-        }
-
-        std::string getName() const override
-        {
-            return TypeInfo(typeid(T)).name();
-        }
-
-        size_t count() const override
-        {
-            return m_count;
-        }
-
-      private:
-        size_t m_count;
-    };
-
-    template <class T>
-    struct TTraits<std::shared_ptr<T>, void> : public MemoryBase<T>
-    {
-        TTraits(std::shared_ptr<T>* ptr, const size_t count)
-            : m_ptr(ptr)
-            , MemoryBase<T>(count)
-        {
-        }
-
-        void load(ILoadVisitor* visitor) override
-        {
-            size_t id = 0;
-
-            (*visitor)(&id, "id");
+            uint32_t id = 0;
+            auto val = this->ptr(inst);
+            visitor(&id, "id");
+            id = id & (~0x80000000);
             if (id != 0)
             {
-                auto ptr = visitor->getPointer<T>(id);
+                auto ptr = visitor.getPointer<T>(id);
                 if (!ptr)
                 {
-                    *m_ptr = std::make_shared<T>();
-                    (*visitor)(m_ptr->get(), "data");
-                    visitor->setSerializedPointer(m_ptr->get(), id);
-                    auto cache_ptr = *m_ptr;
-                    visitor->pushCach(std::move(cache_ptr), std::string("shared_ptr ") + typeid(T).name(), id);
+                    val->ptr = std::make_shared<T>();
+                    visitor(val->ptr.get(), "data");
+                    visitor.setSerializedPointer(val->ptr.get(), id);
+                    std::shared_ptr<T> cache_ptr = val->ptr;
+                    visitor.pushCach(std::move(cache_ptr), std::string("shared_ptr ") + typeid(T).name(), id);
                 }
                 else
                 {
                     auto cache_ptr =
-                        visitor->popCache<std::shared_ptr<T>>(std::string("shared_ptr ") + typeid(T).name(), id);
+                        visitor.popCache<std::shared_ptr<T>>(std::string("shared_ptr ") + typeid(T).name(), id);
                     if (cache_ptr)
                     {
-                        *m_ptr = cache_ptr;
+                        val->ptr = cache_ptr;
                     }
                 }
             }
         }
 
-        void save(ISaveVisitor* visitor) const override
+        void save(ISaveVisitor& visitor, const void* inst, const std::string&, size_t cnt) const override
         {
-            size_t id = 0;
-            id = size_t(m_ptr->get());
-            auto ptr = visitor->getPointer<T>(id);
-            (*visitor)(&id, "id");
-            if (*m_ptr && ptr == nullptr)
+            MO_ASSERT_EQ(cnt, 1);
+            auto val = this->ptr(inst);
+            uint32_t id = visitor.getPointerId(TypeInfo::create<std::shared_ptr<T>>(), inst);
+            auto ptr = visitor.getPointer<T>(id);
+            visitor(&id, "id");
+            if (val->ptr && ptr == nullptr)
             {
-                (*visitor)(m_ptr->get(), "data");
+                visitor(val->ptr.get(), "data");
             }
         }
 
-        void visit(StaticVisitor* visitor) const override
+        void visit(StaticVisitor& visitor, const std::string&) const override
         {
-            visitor->template visit<T>("ptr");
+            visitor.template visit<size_t>("id");
+            visitor.template visit<T>("ptr");
         }
-
-        void* ptr() override
-        {
-            return nullptr;
-        }
-
-        const void* ptr() const override
-        {
-            return nullptr;
-        }
-
-        void setInstance(void* ptr, const TypeInfo type_) override
-        {
-            MO_ASSERT_EQ(type_, TypeInfo(typeid(std::shared_ptr<T>)));
-            m_ptr = static_cast<std::shared_ptr<T>*>(ptr);
-        }
-
-        void setInstance(const void*, const TypeInfo) override
-        {
-            THROW(warn, "Trying to set const ptr");
-        }
-
-        void increment() override
-        {
-            ++m_ptr;
-        }
-
-      private:
-        std::shared_ptr<T>* m_ptr;
     };
 
     template <class T>
-    struct TTraits<const std::shared_ptr<T>, void> : public MemoryBase<const T>, virtual public ISaveTraits
+    struct TTraits<std::shared_ptr<T>, 4> : virtual StructBase<std::shared_ptr<T>>
     {
-        TTraits(const std::shared_ptr<T>* ptr, const size_t count)
-            : m_ptr(ptr)
-            , MemoryBase<const T>(count)
+        void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t) const override
         {
-        }
-
-        void save(ISaveVisitor* visitor) const override
-        {
-            size_t id = 0;
-            id = size_t(m_ptr->get());
-            auto ptr = visitor->getPointer<T>(id);
-            (*visitor)(&id, "id");
-            if (*m_ptr && ptr == nullptr)
+            const auto traits = visitor.traits();
+            // This is effectively just checking if we are serializing to a cereal json archive or a binary archive
+            if (traits.supports_named_access)
             {
-                (*visitor)(m_ptr->get(), "data");
+                PointerWrapper<T> pointer_wrapper;
+                visitor(&pointer_wrapper, "ptr_wrapper");
+                *this->ptr(inst) = std::move(pointer_wrapper.ptr);
+            }
+            else
+            {
+                uint32_t id = 0;
+                auto val = this->ptr(inst);
+                visitor(&id, "id");
+                id = id & (~0x80000000);
+                if (id != 0)
+                {
+                    auto ptr = visitor.getPointer<T>(id);
+                    if (!ptr)
+                    {
+                        *val = std::make_shared<T>();
+                        visitor(val->get(), "data");
+                        visitor.setSerializedPointer(val->get(), id);
+                        auto cache_ptr = *val;
+                        visitor.pushCach(std::move(cache_ptr), std::string("shared_ptr ") + typeid(T).name(), id);
+                    }
+                    else
+                    {
+                        auto cache_ptr =
+                            visitor.popCache<std::shared_ptr<T>>(std::string("shared_ptr ") + typeid(T).name(), id);
+                        if (cache_ptr)
+                        {
+                            *val = cache_ptr;
+                        }
+                    }
+                }
             }
         }
 
-        void visit(StaticVisitor* visitor) const override
+        void save(ISaveVisitor& visitor, const void* inst, const std::string&, size_t cnt) const override
         {
-            visitor->template visit<T>("ptr");
+            const auto traits = visitor.traits();
+            if (traits.supports_named_access)
+            {
+                PointerWrapper<T> wrapper{*this->ptr(inst)};
+                visitor(&wrapper, "ptr_wrapper");
+            }
+            else
+            {
+                MO_ASSERT_EQ(cnt, 1);
+                auto val = this->ptr(inst);
+                uint32_t id = visitor.getPointerId(TypeInfo::create<T>(), val->get());
+
+                auto ptr = visitor.getPointer<T>(id);
+                visitor(&id, "id");
+                if (*val && ptr == nullptr)
+                {
+                    visitor(val->get(), "data");
+                    visitor.setSerializedPointer(val->get(), id);
+                }
+            }
         }
 
-        const void* ptr() const override
+        void visit(StaticVisitor& visitor, const std::string&) const override
         {
-            return nullptr;
+            visitor.template visit<T>("ptr");
         }
-
-        void setInstance(const void* ptr, const TypeInfo type_) override
-        {
-            MO_ASSERT_EQ(type_, TypeInfo(typeid(const std::shared_ptr<T>)));
-            m_ptr = static_cast<const std::shared_ptr<T>*>(ptr);
-        }
-
-        void increment() override
-        {
-            ++m_ptr;
-        }
-
-      private:
-        const std::shared_ptr<T>* m_ptr;
     };
 
     template <class T>
-    struct TTraits<T*, void> : public MemoryBase<T>
+    struct TTraits<T*, 3> : virtual StructBase<T*>
     {
-
-        TTraits(T** ptr, const size_t count)
-            : m_ptr(ptr)
-            , MemoryBase<T>(count)
+        void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t cnt) const override
         {
-        }
-
-        void load(ILoadVisitor* visitor) override
-        {
+            MO_ASSERT_EQ(cnt, 1);
             size_t id = 0;
-            // auto visitor_trait = visitor->traits();
-
-            (*visitor)(&id, "id");
+            auto m_ptr = this->ptr(inst);
+            visitor(&id, "id");
             if (id != 0)
             {
-                auto ptr = visitor->getPointer<T>(id);
+                auto ptr = visitor.getPointer<T>(id);
                 if (!ptr)
                 {
                     *m_ptr = new T();
-                    (*visitor)(*m_ptr, "data");
-                    visitor->setSerializedPointer(*m_ptr, id);
+                    visitor(*m_ptr, "data");
+                    visitor.setSerializedPointer(*m_ptr, id);
                 }
                 else
                 {
@@ -254,106 +165,24 @@ namespace mo
             }
         }
 
-        void save(ISaveVisitor* visitor) const override
+        void save(ISaveVisitor& visitor, const void* inst, const std::string&, size_t cnt) const override
         {
+            MO_ASSERT_EQ(cnt, 1);
             size_t id = 0;
             // auto visitor_trait = visitor->traits();
-
+            auto m_ptr = this->ptr(inst);
             id = size_t(*m_ptr);
-            auto ptr = visitor->getPointer<T>(id);
-            (*visitor)(&id, "id");
+            auto ptr = visitor.getPointer<T>(id);
+            visitor(&id, "id");
             if (*m_ptr && ptr == nullptr)
             {
-                (*visitor)(*m_ptr, "data");
+                visitor(*m_ptr, "data");
             }
         }
 
-        void visit(StaticVisitor* visitor) const override
+        void visit(StaticVisitor& visitor, const std::string&) const override
         {
-            visitor->template visit<T>("ptr");
+            visitor.template visit<T>("ptr");
         }
-
-        void* ptr() override
-        {
-            return nullptr;
-        }
-        void* ptr() const override
-        {
-            return nullptr;
-        }
-        void increment() const override
-        {
-            ++m_ptr;
-        }
-        void setInstance(void* ptr, const TypeInfo type_) override
-        {
-            MO_ASSERT_EQ(type_, TypeInfo(typeid(T*)));
-            m_ptr = ptr;
-        }
-        void setInstance(const void*, const TypeInfo) override
-        {
-            THROW(warn, "Trying to set const ptr");
-        }
-
-      private:
-        T** m_ptr;
     };
-
-    template <class T>
-    struct TTraits<const T*, void> : public MemoryBase<const T>
-    {
-
-        TTraits(const T** ptr, const size_t count)
-            : m_ptr(ptr)
-            , MemoryBase<const T>(count)
-        {
-        }
-
-        void visit(ILoadVisitor* visitor) const override
-        {
-            size_t id = 0;
-            // auto visitor_trait = visitor->traits();
-
-            id = size_t(*m_ptr);
-            auto ptr = visitor->getPointer<T>(id);
-            (*visitor)(&id, "id");
-            if (*m_ptr && ptr == nullptr)
-            {
-                (*visitor)(*m_ptr, "data");
-            }
-        }
-
-        void visit(StaticVisitor* visitor) const override
-        {
-            visitor->template visit<T>("ptr");
-        }
-
-        void* ptr() override
-        {
-            return nullptr;
-        }
-
-        void* ptr() const override
-        {
-            return nullptr;
-        }
-
-        void increment() const override
-        {
-            ++m_ptr;
-        }
-
-        void setInstance(void* ptr, const TypeInfo type_) override
-        {
-            MO_ASSERT_EQ(type_, TypeInfo(typeid(const T*)));
-            m_ptr = ptr;
-        }
-        void setInstance(const void*, const TypeInfo) override
-        {
-            THROW(warn, "Trying to set const ptr");
-        }
-
-      private:
-        const T** m_ptr;
-    };
-}
+} // namespace mo

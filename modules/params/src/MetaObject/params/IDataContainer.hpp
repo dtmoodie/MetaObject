@@ -6,7 +6,7 @@ namespace cereal
 {
     class BinaryInputArchive;
     class BinaryOutputArchive;
-}
+} // namespace cereal
 
 namespace mo
 {
@@ -18,12 +18,18 @@ namespace mo
     struct StaticVisitor;
     struct Header;
 
-    struct IDataContainer : public std::enable_shared_from_this<IDataContainer>
+    struct MO_EXPORTS IDataContainer : public std::enable_shared_from_this<IDataContainer>
     {
-        using Ptr = std::shared_ptr<IDataContainer>;
-        using ConstPtr = std::shared_ptr<const IDataContainer>;
+        using Ptr_t = std::shared_ptr<IDataContainer>;
+        using ConstPtr_t = std::shared_ptr<const IDataContainer>;
 
+        IDataContainer() = default;
+        IDataContainer(const IDataContainer&) = default;
+        IDataContainer(IDataContainer&&) noexcept = default;
+        IDataContainer& operator=(const IDataContainer&) = default;
+        IDataContainer& operator=(IDataContainer&&) noexcept = default;
         virtual ~IDataContainer();
+
         virtual TypeInfo getType() const = 0;
 
         virtual void load(ILoadVisitor&) = 0;
@@ -34,4 +40,4 @@ namespace mo
 
         virtual const Header& getHeader() const = 0;
     };
-}
+} // namespace mo

@@ -1,6 +1,9 @@
-#pragma once
-#include "MetaObject/detail/Export.hpp"
+#ifndef MO_THREAD_REGISTRY_HPP
+#define MO_THREAD_REGISTRY_HPP
+
+#include <MetaObject/core.hpp>
 #include <cstddef>
+
 namespace mo
 {
     size_t MO_EXPORTS getThisThread();
@@ -24,3 +27,4 @@ namespace mo
         impl* _pimpl;
     };
 }
+#endif // MO_THREAD_REGISTRY_HPP
