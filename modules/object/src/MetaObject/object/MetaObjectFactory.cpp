@@ -583,7 +583,7 @@ bool MetaObjectFactoryImpl::loadPlugin(const std::string& full_plugin_path)
 #ifdef _DEBUG
 // obj_system.SetOptimizationLevel(RCCPPOPTIMIZATIONLEVEL_DEBUG, id);
 #else
-                                            // obj_system.SetOptimizationLevel(RCCPPOPTIMIZATIONLEVEL_PERF, id);
+        obj_system.SetOptimizationLevel(RCCPPOPTIMIZATIONLEVEL_PERF, id);
 #endif
         interface->SetProjectIdForAllConstructors(static_cast<unsigned short>(id));
     }
@@ -593,7 +593,6 @@ bool MetaObjectFactoryImpl::loadPlugin(const std::string& full_plugin_path)
     mo::setThisThreadName(old_name);
     return true;
 }
-
 #endif
 
 bool MetaObjectFactoryImpl::abortCompilation()
