@@ -29,6 +29,17 @@ namespace mo
     {
     }
 
+    ParamAllocator::~ParamAllocator()
+    {
+        if (m_allocator)
+        {
+            for (auto itr = m_allocations.begin(); itr != m_allocations.end(); ++itr)
+            {
+                m_allocator->deallocate(ptrCast<>(itr->begin), itr->end - itr->begin);
+            }
+        }
+    }
+
     void ParamAllocator::setPadding(size_t header, size_t footer)
     {
         m_header_pad = header;
@@ -64,6 +75,11 @@ namespace mo
 
     void ParamAllocator::deallocateImpl(void* ptr)
     {
+        if (!m_allocator)
+        {
+            MO_LOG(error, "Root allocator has been cleaned up, cannot release memory to it");
+            return;
+        }
         for (auto itr = m_allocations.begin(); itr != m_allocations.end(); ++itr)
         {
             if (ptrCast<>(ptr) >= itr->begin && ptrCast<>(ptr) < itr->end)

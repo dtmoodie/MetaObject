@@ -45,6 +45,7 @@ namespace mo
         static Ptr_t create(Allocator::Ptr_t allocator = Allocator::getDefault());
 
         ParamAllocator(Allocator::Ptr_t allocator = Allocator::getDefault());
+        ~ParamAllocator();
 
         void setPadding(size_t header, size_t footer = 0);
 
@@ -90,6 +91,7 @@ namespace mo
 
         // This is the allocator used for actual allocations
         // IE pinned memory or shared
+        // TODO weak_ptr?
         Allocator::Ptr_t m_allocator;
         size_t m_header_pad = 0;
         size_t m_footer_pad = 0;
