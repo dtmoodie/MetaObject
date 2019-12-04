@@ -23,6 +23,6 @@ script:
   - make all
   - ./test_mo_params
   - ./test_mo_serialization
-  - ./test_mo_object 
+  - ./test_mo_object --gtest_filter=object.*:object_factory.*:object_reflection.*:object_initialization.*:serialization.*:signal.*:slot.*
   - ./test_mo_runtime_reflection
   - ./test_mo_core
