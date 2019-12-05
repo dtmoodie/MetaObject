@@ -5,6 +5,7 @@
 #include <MetaObject/runtime_reflection.hpp>
 #include <MetaObject/runtime_reflection/type_traits.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/time.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
 
 #include <ct/reflect/cerealize.hpp>
 
@@ -52,12 +53,13 @@ namespace mo
         template <class T>
         T* allocate(size_t num)
         {
+            std::lock_guard<boost::fibers::mutex> lock(m_mtx);
             auto allocation = allocateImpl(num, sizeof(T));
             return ptrCast<T>(allocation.requested);
         }
 
         template <class T>
-        SerializationBuffer allocateSerialization(size_t header_sz, size_t footer_sz, const T* ptr)
+        std::shared_ptr<SerializationBuffer> allocateSerialization(size_t header_sz, size_t footer_sz, const T* ptr)
         {
             return allocateSerializationImpl(header_sz, footer_sz, static_cast<const void*>(ptr), sizeof(T));
         }
@@ -75,7 +77,7 @@ namespace mo
       private:
         void deallocateImpl(void* ptr);
 
-        SerializationBuffer
+        std::shared_ptr<SerializationBuffer>
         allocateSerializationImpl(size_t header_sz, size_t footer_sz, const void* ptr, size_t elem_size);
 
         struct CurrentAllocations
@@ -95,49 +97,106 @@ namespace mo
         Allocator::Ptr_t m_allocator;
         size_t m_header_pad = 0;
         size_t m_footer_pad = 0;
+        mutable boost::fibers::mutex m_mtx;
         std::list<CurrentAllocations> m_allocations;
     };
 
     template <class T>
-    struct TDataContainerBase : public IDataContainer
+    struct TDataContainerConstBase : public IDataContainer
     {
         using type = T;
 
-        TDataContainerBase(const T& data_);
-        TDataContainerBase(T&& data_ = T());
+        TDataContainerConstBase(const T& data_);
+        TDataContainerConstBase(T&& data_ = T());
 
-        TDataContainerBase(const TDataContainerBase&) = delete;
-        TDataContainerBase(TDataContainerBase&&) = delete;
-        TDataContainerBase& operator=(const TDataContainerBase&) = delete;
-        TDataContainerBase& operator=(TDataContainerBase&&) = delete;
-
-        ~TDataContainerBase() override = default;
+        TDataContainerConstBase(const TDataContainerConstBase&) = delete;
+        TDataContainerConstBase(TDataContainerConstBase&&) = delete;
+        TDataContaineConstrBase& operator=(const TDataContainerConstBase&) = delete;
+        TDataContainerConstBase& operator=(TDataContainerConstBase&&) = delete;
+        ~TDataContainerConstBase() override = default;
 
         TypeInfo getType() const override;
-
-        void load(ILoadVisitor&) override;
         void save(ISaveVisitor&) const override;
-        void load(BinaryInputVisitor& ar) override;
         void save(BinaryOutputVisitor& ar) const override;
         static void visitStatic(StaticVisitor&);
         void visit(StaticVisitor&) const override;
 
         const Header& getHeader() const override;
 
-        operator std::shared_ptr<T>();
         operator std::shared_ptr<const T>() const;
-
-        operator T*();
         operator const T*() const;
-
-        T* ptr();
         const T* ptr() const;
-        std::shared_ptr<T> sharedPtr();
         std::shared_ptr<const T> sharedPtr() const;
 
         T data;
         Header header;
         std::shared_ptr<void> owning;
+    };
+
+    template <class T>
+    struct TDataContainerNonConstBase : public TDataContainerConstBase<T>
+    {
+        using type = typename TDataContainerConstBase::type;
+        using Super_t = TDataContainerConstBase<T>;
+
+        TDataContainerConstBase(const T& data_)
+            : Super_t(data_)
+        {
+        }
+        TDataContainerConstBase(T&& data_ = T())
+            : Super_t(std::move(data_))
+        {
+        }
+
+        ~TDataContainerConstBase() override = default;
+
+        void load(ILoadVisitor&) override;
+        void load(BinaryInputVisitor& ar) override;
+        operator std::shared_ptr<T>();
+        operator T*();
+        T* ptr();
+        std::shared_ptr<T> sharedPtr();
+    };
+
+    template <class T, bool Const = false>
+    struct TDataContainerBase : TDataContainerNonConstBase<T>
+    {
+        using Super_t = TDataContainerNonConstBase<T>;
+        using type = typename Super_t::type;
+
+        TDataContainerBase(const T& data_)
+            : Super_t(data_)
+        {
+        }
+
+        TDataContainerBase(T&& data_ = T())
+            : Super_t(std::move(data_))
+        {
+        }
+    };
+
+    template <class T>
+    struct TDataContainerBase<T, true> : TDataContainerConstBase<T>
+    {
+        using Super_t = TDataContainerNonConstBase<T>;
+        using type = typename Super_t::type;
+
+        TDataContainerBase(const T& data_)
+            : Super_t(data_)
+        {
+        }
+
+        TDataContainerBase(T&& data_ = T())
+            : Super_t(std::move(data_))
+        {
+        }
+
+        void load(ILoadVisitor&) override
+        {
+        }
+        void load(BinaryInputVisitor& ar) override
+        {
+        }
     };
 
     template <class T, class ENABLE = void>
@@ -281,6 +340,18 @@ namespace mo
 
       private:
         ParamAllocator::Ptr_t m_allocator;
+    };
+
+    template <class T>
+    struct TDataConainer<ct::TArrayView<const T>, void> : public TDataContainerBase<ct::TArrayView<const T>>
+    {
+        using Super_t = TDataContainerBase<ct::TArrayView<const T>>;
+
+        template <class... ARGS>
+        TDataContainer(typename ParamAllocator::Ptr_t, ARGS&&... args)
+            : Super_t(T(std::forward<ARGS>(args)...))
+        {
+        }
     };
 
     ////////////////////////////////////////////////////////////////////////

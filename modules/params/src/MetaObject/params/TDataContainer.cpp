@@ -1,4 +1,5 @@
 #include "TDataContainer.hpp"
+#include <mutex>
 
 namespace mo
 {
@@ -33,6 +34,11 @@ namespace mo
     {
         if (m_allocator)
         {
+            if (m_allocations.size())
+            {
+                MO_LOG(warn, "Cleaning up an allocation with a dangling reference!");
+            }
+
             for (auto itr = m_allocations.begin(); itr != m_allocations.end(); ++itr)
             {
                 m_allocator->deallocate(ptrCast<>(itr->begin), itr->end - itr->begin);
@@ -46,40 +52,59 @@ namespace mo
         m_footer_pad = footer;
     }
 
-    ParamAllocator::SerializationBuffer
+    std::shared_ptr<ParamAllocator::SerializationBuffer>
     ParamAllocator::allocateSerializationImpl(size_t header_sz, size_t footer_sz, const void* ptr, size_t elem_size)
     {
         // TODO add additional header padding such that alignment is maintained for the data segment
-        size_t num = 0;
-        for (auto& itr : m_allocations)
+
+        auto mod = header_sz % elem_size;
+        size_t pad = 0;
+        if (mod != 0)
         {
-            if (itr.requested == ptrCast<uint8_t>(ptr))
+            pad = (elem_size - mod);
+            header_sz += pad;
+        }
+
+        size_t num = 0;
+        {
+            std::lock_guard<boost::fibers::mutex> lock(m_mtx);
+            for (auto& itr : m_allocations)
             {
-                num = itr.requested_size;
-                if (header_sz <= static_cast<size_t>(itr.requested - itr.begin) &&
-                    footer_sz <= static_cast<size_t>(itr.end - (itr.requested + itr.requested_size * elem_size)))
+                if (itr.requested == ptrCast<uint8_t>(ptr))
                 {
-                    itr.ref_count++;
-                    return SerializationBuffer(
-                        *this, ptrCast<uint8_t>(itr.requested - header_sz), ptrCast<uint8_t>(itr.end));
+                    num = itr.requested_size;
+                    if (header_sz <= static_cast<size_t>(itr.requested - itr.begin) &&
+                        footer_sz <= static_cast<size_t>(itr.end - (itr.requested + itr.requested_size * elem_size)))
+                    {
+                        itr.ref_count++;
+                        auto begin = ptrCast<uint8_t>(itr.requested - header_sz) + pad;
+                        return std::make_shared<SerializationBuffer>(*this, begin, ptrCast<uint8_t>(itr.end));
+                    }
                 }
             }
         }
-        setPadding(header_sz, footer_sz);
 
-        auto allocation = allocateImpl(num, elem_size);
+        CurrentAllocations allocation;
+        {
+            std::lock_guard<boost::fibers::mutex> lock(m_mtx);
+            setPadding(header_sz, footer_sz);
+            allocation = allocateImpl(num, elem_size);
+        }
+
         const size_t allocated = allocation.end - allocation.begin;
-        auto result = ptrCast<uint8_t>(allocation.begin);
-        return SerializationBuffer(*this, result, allocated);
+        auto begin = ptrCast<uint8_t>(allocation.begin) + pad;
+        return std::make_shared<SerializationBuffer>(*this, begin, allocated);
     }
 
     void ParamAllocator::deallocateImpl(void* ptr)
     {
+        std::lock_guard<boost::fibers::mutex> lock(m_mtx);
         if (!m_allocator)
         {
             MO_LOG(error, "Root allocator has been cleaned up, cannot release memory to it");
             return;
         }
+
         for (auto itr = m_allocations.begin(); itr != m_allocations.end(); ++itr)
         {
             if (ptrCast<>(ptr) >= itr->begin && ptrCast<>(ptr) < itr->end)
@@ -97,23 +122,28 @@ namespace mo
 
     Allocator::Ptr_t ParamAllocator::getAllocator() const
     {
+        std::lock_guard<boost::fibers::mutex> lock(m_mtx);
         return m_allocator;
     }
 
     void ParamAllocator::setAllocator(Allocator::Ptr_t allocator)
     {
+        std::lock_guard<boost::fibers::mutex> lock(m_mtx);
         m_allocator = std::move(allocator);
     }
 
     ParamAllocator::CurrentAllocations ParamAllocator::allocateImpl(size_t num, size_t elem_size)
     {
+        std::lock_guard<boost::fibers::mutex> lock(m_mtx);
         const size_t bytes = num * elem_size + m_header_pad + m_footer_pad;
         auto allocated = m_allocator->allocate(bytes, elem_size);
+
         CurrentAllocations allocation;
         allocation.begin = allocated;
         allocation.end = allocated + bytes;
         allocation.requested = allocated + m_header_pad;
         allocation.requested_size = num;
+
         m_allocations.push_back(allocation);
         return allocation;
     }
