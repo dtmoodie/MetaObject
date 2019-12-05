@@ -62,8 +62,8 @@ namespace
                     std::find_if(data.begin(), data.end(), [name](std::pair<std::string, mo::TypeInfo> data) -> bool {
                         return name == data.first;
                     });
-                ASSERT_NE(itr, data.end()) << "Unable to find trait by name " << name << " for type "
-                                           << ct::Reflect<T>::getName();
+                ASSERT_NE(itr, data.end())
+                    << "Unable to find trait by name " << name << " for type " << ct::Reflect<T>::getName();
                 EXPECT_EQ(itr->second, mo::TypeInfo::template create<type>());
             }
         }
@@ -103,13 +103,13 @@ namespace
         {
         }
     };
-}
+} // namespace
 
 TEST(runtime_reflection, TraitRegistry)
 {
     using namespace mo;
     const auto& known_traits = mo::TraitRegistry::instance().getTraits();
-    PrintVisitor visitor;
+    PrintVisitor visitor(std::cout);
     EXPECT_GE(known_traits.size(), 5);
     for (const auto& trait : known_traits)
     {

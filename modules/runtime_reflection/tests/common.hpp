@@ -30,31 +30,29 @@ namespace mo
 {
     struct PrintVisitor : public mo::StaticVisitor
     {
-        int indent = 2;
+        int m_indent = 2;
+
+        PrintVisitor(std::ostream& os)
+            : m_os(os)
+        {
+        }
 
         void visit(const mo::ITraits* trait, const std::string& name, const size_t cnt = 1) override
         {
             // TODO account for cnt > 1
-            for (int i = 0; i < indent; ++i)
-            {
-                std::cout << ' ';
-            }
-            indent += 2;
-            std::cout << name << ": " << trait->name() << std::endl;
+            m_indent += 2;
+            m_os << name << ": " << trait->name() << std::endl;
             m_path.push_back(trait->name());
             trait->visit(*this, name);
-            indent -= 2;
+            m_indent -= 2;
             m_path.pop_back();
         }
 
         void implDyn(const mo::TypeInfo type, const std::string& name, const size_t cnt) override
         {
             // TODO account for cnt > 1
-            for (int i = 0; i < indent; ++i)
-            {
-                std::cout << ' ';
-            }
-            std::cout << name << ": " << mo::TypeTable::instance()->typeToName(type) << std::endl;
+            indent();
+            m_os << name << ": " << mo::TypeTable::instance()->typeToName(type) << std::endl;
             m_items.push_back(getName() + "." + name);
         }
 
@@ -68,8 +66,19 @@ namespace mo
             }
             return std::move(ss).str();
         }
+
+        void indent()
+        {
+            for (int i = 0; i < m_indent; ++i)
+            {
+                m_os << ' ';
+            }
+        }
+
         std::vector<std::string> m_path;
         std::vector<std::string> m_items;
+
+        std::ostream& m_os;
     };
 
     template <class T, size_t ROWS, size_t COLS>
