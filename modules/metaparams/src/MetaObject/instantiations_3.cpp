@@ -2,7 +2,6 @@
 #ifdef MO_HAVE_OPENCV
 #include "MetaObject/types/opencv.hpp"
 
-#include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "MetaObject/params/MetaParam.hpp"
 
 #include "ct/reflect/cerealize.hpp"
@@ -35,7 +34,7 @@ namespace mo
             INSTANTIATE_META_PARAM(Point3f, table);
             INSTANTIATE_META_PARAM(Point, table);
         }
-    }
-}
+    } // namespace MetaParams
+} // namespace mo
 
 #endif

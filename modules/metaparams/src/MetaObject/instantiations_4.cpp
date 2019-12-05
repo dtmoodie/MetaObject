@@ -42,8 +42,6 @@ namespace ct
     inline bool convertFromPython(const boost::python::object& obj, ct::TArrayView<T, N> result);
 }
 
-#include "MetaObject/metaparams/MetaParamsInclude.hpp"
-
 #include "opencv2/core/types.hpp"
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS

@@ -3,7 +3,6 @@
 #if MO_HAVE_OPENCV
 #include "MetaObject/types/opencv.hpp"
 
-#include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include "MetaObject/params/MetaParam.hpp"
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 

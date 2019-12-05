@@ -13,20 +13,18 @@ namespace std
         }
         return os;
     }
-}
+} // namespace std
 
-#include <MetaObject/metaparams/MetaParamsInclude.hpp>
 #include <MetaObject/params/MetaParam.hpp>
-#include <MetaObject/runtime_reflection/visitor_traits/string.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/map.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/string.hpp>
 
 #include <stdint.h>
 
-#include <cereal/cereal.hpp>
-#include <cereal/types/string.hpp>
-#include <cereal/types/map.hpp>
 #include <MetaObject/types/cereal_map.hpp>
-
+#include <cereal/cereal.hpp>
+#include <cereal/types/map.hpp>
+#include <cereal/types/string.hpp>
 
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
@@ -64,5 +62,5 @@ namespace mo
             typedef std::map<std::string, std::string> StringMap;
             INSTANTIATE_META_PARAM(StringMap, table);
         }
-    }
-}
+    } // namespace MetaParams
+} // namespace mo

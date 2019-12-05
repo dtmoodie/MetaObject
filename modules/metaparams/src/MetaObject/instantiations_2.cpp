@@ -1,9 +1,8 @@
 #include "MetaObject/params/MetaParam.hpp"
 #include "ct/reflect/cerealize.hpp"
 
-#include "MetaObject/metaparams/MetaParamsInclude.hpp"
-#include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/string.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
 
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
@@ -34,5 +33,5 @@ namespace mo
             INSTANTIATE_META_PARAM(std::vector<double>, table);
             INSTANTIATE_META_PARAM(std::vector<std::string>, table);
         }
-    }
-}
+    } // namespace MetaParams
+} // namespace mo

@@ -4,7 +4,6 @@
 #include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
 
 #include "MetaObject/core/metaobject_config.hpp"
-#include "MetaObject/metaparams/MetaParamsInclude.hpp"
 #include <MetaObject/params/MetaParam.hpp>
 
 #include "MetaObject/types/file_types.hpp"
@@ -116,7 +115,7 @@ namespace ct
     {
         return boost::python::object(file.string());
     }
-}
+} // namespace ct
 
 #endif
 
@@ -132,5 +131,5 @@ namespace mo
             INSTANTIATE_META_PARAM(WriteDirectory, table);
             INSTANTIATE_META_PARAM(EnumParam, table);
         }
-    }
-}
+    } // namespace MetaParams
+} // namespace mo

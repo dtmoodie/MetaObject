@@ -54,6 +54,7 @@ if(WIN32)
 else(WIN32)
   list(APPEND link_libs pthread)
   add_definitions(-D_MWAITXINTRIN_H_INCLUDED)
+  set(CMAKE_CXX_FLAGS "${CMAKE_CXX_FLAGS} -g -fno-omit-frame-pointer")
   set(CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS_DEBUG} -D_DEBUG")
 endif(WIN32)
 
@@ -171,17 +172,6 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/modules/python)
 add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/modules/gui)
 
 get_target_property(metaparam_build_dir metaobject_metaparams BINARY_DIR)
-file(MAKE_DIRECTORY ${metaparam_build_dir}/MetaObject/metaparams)
-if(EXISTS ${metaparam_build_dir}/MetaObject/metaparams/MetaParamsInclude.hpp)
-    FILE(READ ${metaparam_build_dir}/MetaObject/metaparams/MetaParamsInclude.hpp read_file)
-    if(NOT ${read_file} STREQUAL ${metaobject_param_include})
-        file(WRITE ${metaparam_build_dir}/MetaObject/metaparams/MetaParamsInclude.hpp "${metaobject_param_include}")
-    endif(NOT ${read_file} STREQUAL ${metaobject_param_include})
-else(EXISTS ${metaparam_build_dir}/MetaObject/metaparams/MetaParamsInclude.hpp)
-    file(WRITE ${metaparam_build_dir}/MetaObject/metaparams/MetaParamsInclude.hpp "${metaobject_param_include}")
-endif(EXISTS ${metaparam_build_dir}/MetaObject/metaparams/MetaParamsInclude.hpp)
-
-target_include_directories(metaobject_metaparams PUBLIC $<BUILD_INTERFACE:${metaparam_build_dir}>)
 
 set(MetaObject_LIBRARIES "${metaobject_modules}" CACHE STRING "" FORCE)
 set(MetaObject_INCLUDE_DIRS "${metaobject_module_includes};${CMAKE_BINARY_DIR}/include" CACHE PATH "" FORCE)
@@ -195,8 +185,6 @@ message(STATUS
     "  OpenCV         ${OpenCV_VERSION} - ${OpenCV_DIR}\n"
     "  Qt5            ${Qt5_VERSION}\n"
     "  Python         ${MO_PYTHON_STATUS}\n"
-    "  Wt             ${Wt_FOUND}\n"
-    "  Tests          ${Boost_UNIT_TEST_FRAMEWORK_FOUND}\n"
     "  CUDA           ${CUDA_FOUND}\n"
 )
 
@@ -243,8 +231,3 @@ if(WIN32)
 endif(WIN32)
 
 install(DIRECTORY cmake DESTINATION share/MetaObject FILES_MATCHING PATTERN "*.cmake")
-
-#install(FILES
-#    "${PROJECT_BINARY_DIR}/MetaObjectConfig.cmake"
-#    DESTINATION "${CMAKE_INSTALL_PREFIX}/share/MetaObject" COMPONENT dev
-#)
