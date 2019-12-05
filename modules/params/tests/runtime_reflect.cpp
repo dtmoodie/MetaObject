@@ -1,5 +1,5 @@
-#include <MetaObject/runtime_reflection.hpp>
 #include <MetaObject/params.hpp>
+#include <MetaObject/runtime_reflection.hpp>
 
 #include <gtest/gtest.h>
 
@@ -7,53 +7,51 @@
 
 using namespace mo;
 
-template<class T>
+template <class T>
 void reflectImpl(StaticVisitor& visitor)
 {
     TParam<T> param;
     param.visit(visitor);
 }
 
-template<class T>
+template <class T>
 void reflect()
 {
-    PrintVisitor printer;
+    std::stringstream ss;
+    PrintVisitor printer(ss);
     reflectImpl<T>(printer);
+    std::string str = ss.str();
+    // TODO expected string output validation
 }
 
 namespace
 {
     struct ReflectTester
     {
-        template<class T>
+        template <class T>
         void test(const T&)
         {
-            std::cout << "-------------------------------" << std::endl;
             reflect<T>();
         }
     };
 
     struct SerializeTester
     {
-        template<class T>
+        template <class T>
         void test(const T& data)
         {
             TParam<T> param;
             param.updateData(data);
-
         }
     };
-}
-
+} // namespace
 
 void acceptsPtr(const uint32_t* ptr)
 {
-
 }
 
 void acceptsPtr(const int64_t* ptr)
 {
-
 }
 
 TEST(runtime_reflection, reflect)
@@ -64,5 +62,4 @@ TEST(runtime_reflection, reflect)
 
 TEST(runtime_reflection, serialize)
 {
-
 }
