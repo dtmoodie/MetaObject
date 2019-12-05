@@ -88,6 +88,14 @@ struct LoadStream
         return false;
     }
 
+    const void* next(const size_t bytes)
+    {
+        MO_ASSERT(bytes >= m_serialization_buffer.size());
+        const void* ret = m_serialization_buffer.data();
+        m_serialization_buffer = m_serialization_buffer.slice(bytes);
+        return ret;
+    }
+
   private:
     ct::TArrayView<const uint8_t> m_serialization_buffer;
 };
@@ -196,38 +204,51 @@ void load(LoadStream& stream, boost::optional<T>& data)
 }
 
 template <class T, class A>
-typename ParamAllocator::SerializationBuffer save(const TDataContainer<std::vector<T, A>>& container,
-                                                  bool* in_place = nullptr)
+std::shared_ptr<ParamAllocator::SerializationBuffer> save(const TDataContainer<std::vector<T, A>>& container,
+                                                          bool* in_place = nullptr)
 {
     const auto header_size = serializedSize(container.header) + sizeof(uint32_t);
     auto allocator = container.getAllocator();
     auto data = container.data.data();
     auto binary_serialization_buffer = allocator->allocateSerialization(header_size, 0, data);
-    SaveStream stream(binary_serialization_buffer.slice(0));
+    SaveStream stream(binary_serialization_buffer->slice(0));
 
     stream.write(&container.header);
     const uint32_t sz = container.data.size();
     stream.write(&sz);
     if (in_place)
     {
-        *in_place = stream.write(container.data.data(), container.data.size());
+        *in_place = stream.write(data, container.data.size());
     }
     else
     {
-        stream.write(container.data.data(), container.data.size());
+        stream.write(data, container.data.size());
     }
     return binary_serialization_buffer;
 }
 
 template <class T, class A>
-void load(TDataContainer<std::vector<T, A>>& container, const typename ParamAllocator::SerializationBuffer& buf)
+void load(TDataContainer<std::vector<T, A>>& container, const std::shared_ptr<ParamAllocator::SerializationBuffer>& buf)
 {
-    LoadStream stream(buf.slice(0));
+    LoadStream stream(buf->slice(0));
     stream.read(&container.header);
     uint32_t sz = 0;
     stream.read(&sz);
     container.data.resize(sz);
     stream.read(container.data.data(), sz);
+}
+
+template <class T>
+void load(TDataContainer<ct::TArrayView<const T>>& container,
+          const std::shared_ptr<ParamAllocator::SerializationBuffer>& buf)
+{
+    LoadStream stream(buf->slice(0));
+    stream.read(&container.header);
+    uint32_t sz = 0;
+    stream.read(&sz);
+    auto ptr = stream.next(sz * sizeof(T));
+    container.data = ct::TArrayView<const T>(ct::ptrCast<T>(ptr), sz);
+    container.owning = buf;
 }
 
 bool serializeWithHeader(const void* header,
@@ -237,8 +258,8 @@ bool serializeWithHeader(const void* header,
     auto allocator = data.get_allocator().getAllocator();
     auto serialization_buffer = allocator->allocateSerialization(header_size, 0, data.data());
 
-    EXPECT_NE(serialization_buffer.data(), nullptr);
-    SaveStream stream(serialization_buffer);
+    EXPECT_NE(serialization_buffer->data(), nullptr);
+    SaveStream stream(*serialization_buffer);
     stream.write(ptrCast<uint8_t>(header), header_size);
     auto src = data.data();
     if (ptrCast<>(src) != stream.buffer().data())
@@ -263,8 +284,8 @@ TEST(serialization_aware_allocator, no_header)
     auto allocator = container.data.get_allocator().getAllocator();
     auto serialization_buffer = allocator->allocateSerialization(0, 0, container.data.data());
 
-    ASSERT_NE(serialization_buffer.data(), nullptr);
-    SaveStream stream(serialization_buffer);
+    ASSERT_NE(serialization_buffer->data(), nullptr);
+    SaveStream stream(*serialization_buffer);
     auto src = container.data.data();
     ASSERT_EQ(ptrCast<>(src), stream.buffer().data());
 }
@@ -284,8 +305,8 @@ TEST(serialization_aware_allocator, predefined_pad)
     auto allocator = container.data.get_allocator().getAllocator();
     auto serialization_buffer = allocator->allocateSerialization(sizeof(uint32_t), 0, container.data.data());
 
-    ASSERT_NE(serialization_buffer.data(), nullptr);
-    SaveStream stream(serialization_buffer);
+    ASSERT_NE(serialization_buffer->data(), nullptr);
+    SaveStream stream(*serialization_buffer);
     auto src = container.data.data();
     uint32_t sz = static_cast<uint32_t>(container.data.size());
     stream.write(&sz);
@@ -458,6 +479,66 @@ TEST(serialization_aware_allocator, container_from_param_stack_allocator)
     serializeAndDeserializeFromParam(alloc);
 }
 
+TEST(serialization_aware_allocator, load_wrap)
+{
+    auto allocator = mo::Allocator::getDefault();
+    TParam<std::vector<float>> param;
+    param.setAllocator(allocator);
+
+    for (size_t sz = 100; sz <= 10000; sz += 100)
+    {
+        auto data = param.create();
+        data->header.timestamp = mo::Time(10 * mo::ms);
+        data->header.frame_number = 15;
+        data->data.reserve(sz);
+        ASSERT_EQ(data->data.capacity(), sz);
+        for (int i = 0; i < sz; ++i)
+        {
+            data->data.push_back(static_cast<float>(i));
+        }
+        bool in_place = false;
+        auto buf = save(*data, &in_place);
+        if (sz == 100)
+        {
+            ASSERT_FALSE(in_place);
+        }
+        else
+        {
+            ASSERT_TRUE(in_place);
+        }
+
+        for (int i = 0; i < data->data.size(); ++i)
+        {
+            ASSERT_EQ(data->data[i], i);
+        }
+
+        auto alloc = ParamAllocator::create(allocator);
+        TDataContainer<ct::TArrayView<const float>> load_container(alloc);
+        load(load_container, buf);
+        ASSERT_TRUE(load_container.header.timestamp);
+        ASSERT_EQ(load_container.header.frame_number, 15);
+        ASSERT_EQ(*load_container.header.timestamp, mo::Time(mo::ms * 10));
+        ASSERT_EQ(load_container.data.size(), data->data.size());
+
+        // Verify that data is unchanged
+        for (int i = 0; i < data->data.size(); ++i)
+        {
+            ASSERT_EQ(data->data[i], i);
+        }
+
+        for (int i = 0; i < load_container.data.size(); ++i)
+        {
+            ASSERT_EQ(load_container.data[i], i);
+        }
+
+        ASSERT_TRUE(ct::ptrCast<>(load_container.data.begin()) > buf->data() &&
+                    ct::ptrCast<>(load_container.data.end()) < (buf->data() + buf->size()))
+            << "Checking to ensure that our new container view is a view into the serialization buffer";
+        ASSERT_TRUE(reinterpret_cast<size_t>(load_container.data.data()) % sizeof(float) == 0)
+            << "Ensuring alignment of elements in view is correct";
+    }
+}
+
 TEST(serialization_aware_allocator, vector_of_reflected)
 {
     TParam<std::vector<TestPodStruct>> param;
@@ -504,6 +585,56 @@ TEST(serialization_aware_allocator, vector_of_reflected)
             ASSERT_EQ(load_container.data[i].y, 2.0 * i);
             ASSERT_EQ(load_container.data[i].z, 3.0 * i);
             ASSERT_EQ(load_container.data[i].id, i);
+        }
+    }
+}
+
+namespace
+{
+    struct alignas(4 * sizeof(float)) AlignedVector
+    {
+        REFLECT_INTERNAL_BEGIN(AlignedVector)
+            REFLECT_INTERNAL_MEMBER(float, x)
+            REFLECT_INTERNAL_MEMBER(float, y)
+            REFLECT_INTERNAL_MEMBER(float, z)
+        REFLECT_INTERNAL_END;
+    };
+
+} // namespace
+
+TEST(serialization_aware_allocator, vector_alignment)
+{
+    TParam<std::vector<AlignedVector>> param;
+    {
+        {
+            auto container = param.create(100);
+            for (size_t i = 0; i < container->data.size(); ++i)
+            {
+                container->data[i].x = static_cast<float>(1.0 * i);
+                container->data[i].y = static_cast<float>(2.0 * i);
+                container->data[i].z = static_cast<float>(3.0 * i);
+            }
+
+            bool in_place = false;
+            auto buf = save(*container, &in_place);
+            ASSERT_FALSE(in_place);
+            auto data = container->data.data();
+            ASSERT_EQ(reinterpret_cast<size_t>(data) % (4 * sizeof(float)), 0);
+        }
+        {
+            auto container = param.create(100);
+            for (size_t i = 0; i < container->data.size(); ++i)
+            {
+                container->data[i].x = static_cast<float>(1.0 * i);
+                container->data[i].y = static_cast<float>(2.0 * i);
+                container->data[i].z = static_cast<float>(3.0 * i);
+            }
+
+            bool in_place = false;
+            auto buf = save(*container, &in_place);
+            ASSERT_TRUE(in_place);
+            auto data = container->data.data();
+            ASSERT_EQ(reinterpret_cast<size_t>(data) % (4 * sizeof(float)), 0);
         }
     }
 }
