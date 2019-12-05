@@ -5,9 +5,8 @@ clone_depth: 50
 image:
 - Previous Visual Studio 2017
 - Visual Studio 2017
-- Ubuntu
-- Previous Ubuntu
-- ubuntu1804
+- Previous Ubuntu1604
+- Previous Ubuntu1804
 
 before_build:
 - git submodule update --init --recursive
