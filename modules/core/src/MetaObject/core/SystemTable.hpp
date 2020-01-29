@@ -1,126 +1,204 @@
 #pragma once
+#include "IObjectTable.hpp"
+
+#include <MetaObject/core/TypeTable.hpp>
 #include <MetaObject/core/detail/Allocator.hpp>
+#include <MetaObject/core/detail/HelperMacros.hpp>
+
+#include <MetaObject/core/detail/forward.hpp>
 #include <MetaObject/detail/Export.hpp>
-#include <MetaObject/detail/TypeInfo.hpp>
+
+#include <MetaObject/detail/defines.hpp>
+#include <MetaObject/logging/logging.hpp>
+
+#include <RuntimeObjectSystem/ObjectInterfacePerModule.h>
 #include <RuntimeObjectSystem/shared_ptr.hpp>
 
-#include <map>
 #include <memory>
+#include <unordered_map>
 
-struct MO_EXPORTS ISingletonContainer
-{
-    virtual ~ISingletonContainer() {}
-};
-
-template <typename T>
-struct TSingletonContainer : public ISingletonContainer
-{
-    TSingletonContainer(const std::shared_ptr<T>& ptr_) : ptr(ptr_) {}
-
-    std::shared_ptr<T> ptr;
-};
-
-template <typename T>
-struct TIObjectSingletonContainer : public ISingletonContainer
-{
-    TIObjectSingletonContainer(T* ptr_) : ptr(ptr_) {}
-    TIObjectSingletonContainer(const rcc::shared_ptr<T>& ptr_) : ptr(ptr_) {}
-
-    rcc::shared_ptr<T> ptr;
-};
-
-template <class Derived>
-struct TDerivedSystemTable;
+#ifdef GetModuleFileName
+#undef GetModuleFileName
+#endif
 
 struct SystemInfo
 {
     bool have_cuda = false;
 };
 
-struct MO_EXPORTS SystemTable : std::enable_shared_from_this<SystemTable>
+namespace mo
+{
+    class MetaObjectFactory;
+}
+
+struct MO_EXPORTS SystemTable : virtual private mo::IObjectTable
 {
   public:
-    static std::shared_ptr<SystemTable> instance();
-    static void setInstance(const std::shared_ptr<SystemTable>& table);
-    static bool checkInstance();
+    using Ptr_t = std::shared_ptr<SystemTable>;
 
-    SystemTable();
+    SystemTable(const SystemTable& other) = delete;
+    SystemTable(SystemTable&& other) = delete;
+    SystemTable& operator=(const SystemTable& other) = delete;
+    SystemTable& operator=(SystemTable&& other) = delete;
+
+    MO_INLINE static std::shared_ptr<SystemTable> instance();
+
     virtual ~SystemTable();
 
-    std::shared_ptr<mo::Allocator> allocator;
-    SystemInfo system_info;
+    template <class T, class U = T>
+    mo::SharedPtrType<T> getSingleton();
 
-    template <typename T>
-    typename std::enable_if<!std::is_base_of<IObject, T>::value, std::shared_ptr<T>>::type getSingleton()
-    {
-        auto g_itr = g_singletons.find(mo::TypeInfo(typeid(T)));
-        if (g_itr != g_singletons.end())
-        {
-            return static_cast<TSingletonContainer<T>*>(g_itr->second.get())->ptr;
-        }
-        return nullptr;
-    }
+    template <class T>
+    mo::SharedPtrType<T> getSingletonOptional();
 
-    template <typename T>
-    typename std::enable_if<std::is_base_of<IObject, T>::value, rcc::shared_ptr<T>>::type getSingleton()
-    {
-        auto g_itr = g_singletons.find(mo::TypeInfo(typeid(T)));
-        if (g_itr != g_singletons.end())
-        {
-            return static_cast<TIObjectSingletonContainer<T>*>(g_itr->second.get())->ptr;
-        }
-        return {};
-    }
-
-    template <typename T>
-    typename std::enable_if<!std::is_base_of<IObject, T>::value, T>::type*
-    setSingleton(const std::shared_ptr<T>& singleton)
-    {
-        g_singletons[mo::TypeInfo(typeid(T))] = std::make_shared<TSingletonContainer<T>>(singleton);
-        return singleton.get();
-    }
-
-    template <typename T>
-    typename std::enable_if<std::is_base_of<IObject, T>::value, T>::type*
-    setSingleton(const rcc::shared_ptr<T>& singleton)
-    {
-        g_singletons[mo::TypeInfo(typeid(T))] = std::shared_ptr<TIObjectSingletonContainer<T>>(singleton);
-        return singleton.get();
-    }
+    // Shared
+    template <typename PTR>
+    void setSingleton(PTR&& singleton);
 
     void deleteSingleton(mo::TypeInfo type);
 
     template <typename T>
-    void deleteSingleton()
-    {
-        deleteSingleton(mo::TypeInfo(typeid(T)));
-    }
+    void deleteSingleton();
+
+    // Members
+    void setAllocatorConstructor(std::function<mo::AllocatorPtr_t()>&& ctr);
+    mo::AllocatorPtr_t createAllocator() const;
+
+    mo::AllocatorPtr_t getDefaultAllocator();
+    void setDefaultAllocator(mo::AllocatorPtr_t);
+
+    static MO_INLINE void dispatchToSystemTable(std::function<void(SystemTable*)>&& func);
+
+    const std::shared_ptr<spdlog::logger>& getDefaultLogger();
+    void setDefaultLogger(const std::shared_ptr<spdlog::logger>& logger);
+
+    MO_INLINE void registerModule();
 
   protected:
-
-    template <class Derived>
-    friend struct TDerivedSystemTable;
-
   private:
-    std::map<mo::TypeInfo, std::shared_ptr<ISingletonContainer>> g_singletons;
-};
+    static std::shared_ptr<SystemTable> instanceImpl();
+    SystemTable();
+    mo::AllocatorPtr_t m_default_allocator;
+    SystemInfo m_system_info;
+    std::unordered_map<mo::TypeInfo, IObjectContainer::Ptr_t> m_singletons;
+    std::function<mo::AllocatorPtr_t()> m_allocator_constructor;
 
-template <class Derived>
-struct TDerivedSystemTable : public SystemTable
+    IObjectContainer* getObjectContainer(mo::TypeInfo) const override;
+    void setObjectContainer(mo::TypeInfo, IObjectContainer::Ptr_t&&) override;
+    std::shared_ptr<spdlog::logger> m_logger;
+}; // struct SystemTable
+
+//////////////////////////////////////////////////////////////////////////////
+///                              Implementation
+//////////////////////////////////////////////////////////////////////////////
+
+std::shared_ptr<SystemTable> SystemTable::instance()
 {
-    static std::shared_ptr<Derived> instance()
+    auto inst = instanceImpl();
+    auto module = PerModuleInterface::GetInstance();
+    module->SetSystemTable(inst.get());
+    return inst;
+}
+
+void SystemTable::dispatchToSystemTable(std::function<void(SystemTable*)>&& func)
+{
+    auto instance = PerModuleInterface::GetInstance();
+    if (instance)
     {
-        auto current = SystemTable::instance();
-        std::shared_ptr<Derived> output = std::dynamic_pointer_cast<Derived>(current);
-        if (!output)
+        auto table = instance->GetSystemTable();
+
+        if (table)
         {
-            output = std::make_shared<Derived>();
-            SystemTable::setInstance(output);
+            func(table);
         }
-        return output;
+        else
+        {
+            instance->AddDelayInitFunction(func);
+        }
+    }
+}
+
+namespace mo
+{
+    DEFINE_HAS_STATIC_FUNCTION(HasSystemTableInstance, instance, SharedPtrType<U>, SystemTable*);
+
+    template <class T>
+    typename std::enable_if<HasSystemTableInstance<T>::value, SharedPtrType<T>>::type invokeInstance(SystemTable* table)
+    {
+        return T::instance(table);
     }
 
-  protected:
-    TDerivedSystemTable() {}
-    ~TDerivedSystemTable() {}
-};
+    template <class T>
+    typename std::enable_if<!HasSystemTableInstance<T>::value, SharedPtrType<T>>::type
+    invokeInstance(SystemTable* table)
+    {
+        return table->getSingleton<T>();
+    }
+
+    template <class T>
+    SharedPtrType<T> singleton()
+    {
+        SharedPtrType<T> ptr;
+        auto module = PerModuleInterface::GetInstance();
+        MO_ASSERT(module);
+        auto table = module->GetSystemTable();
+        if (table == nullptr)
+        {
+            auto inst = SystemTable::instance();
+            if (inst)
+            {
+                const std::string name = module->GetModuleFileName();
+                table = inst.get();
+                MO_LOG(
+                    warn,
+                    "System table not setup for this module '{}', using less prefered SystemTable::instance to get the "
+                    "system table, got instance at {}",
+                    name,
+                    static_cast<void*>(table));
+                module->SetSystemTable(table);
+            }
+        }
+        MO_ASSERT(table != nullptr);
+        return invokeInstance<T>(table);
+    }
+} // namespace mo
+
+template <class T, class U>
+mo::SharedPtrType<T> SystemTable::getSingleton()
+{
+    registerModule();
+    return mo::IObjectTable::getObject<T, U>();
+}
+
+template <class T>
+mo::SharedPtrType<T> SystemTable::getSingletonOptional()
+{
+    registerModule();
+    return mo::IObjectTable::getObjectOptional<T>();
+}
+
+void SystemTable::registerModule()
+{
+    auto module = PerModuleInterface::GetInstance();
+    auto table_ = module->GetSystemTable();
+    if (table_)
+    {
+        MO_ASSERT(this == table_);
+    }
+    else
+    {
+        module->SetSystemTable(this);
+    }
+}
+
+template <typename PTR>
+void SystemTable::setSingleton(PTR&& singleton)
+{
+    mo::IObjectTable::setObject(std::move(singleton));
+}
+
+template <typename T>
+void SystemTable::deleteSingleton()
+{
+    deleteSingleton(typeid(T));
+}

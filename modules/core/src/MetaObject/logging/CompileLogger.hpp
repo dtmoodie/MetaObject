@@ -8,10 +8,10 @@ namespace mo
     class MO_EXPORTS CompileLogger : public ICompilerLogger
     {
       public:
-        virtual void LogError(const char* format, ...);
-        virtual void LogWarning(const char* format, ...);
-        virtual void LogInfo(const char* format, ...);
-        virtual void LogDebug(const char* format, ...);
+        void LogError(const char* format, ...) override;
+        void LogWarning(const char* format, ...) override;
+        void LogInfo(const char* format, ...) override;
+        void LogDebug(const char* format, ...) override;
 
       protected:
         void LogInternal(int severity, const char* format, va_list args);
@@ -21,7 +21,7 @@ namespace mo
 
     class MO_EXPORTS BuildCallback : public ITestBuildNotifier
     {
-        virtual bool TestBuildCallback(const char* file, TestBuildResult type);
-        virtual bool TestBuildWaitAndUpdate();
+        bool TestBuildCallback(const char* file, TestBuildResult type) override;
+        bool TestBuildWaitAndUpdate() override;
     };
 }

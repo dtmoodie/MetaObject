@@ -1,6 +1,4 @@
 #pragma once
-#ifdef HAVE_QT5
-
 #if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__)
 #ifdef metaobject_qtgui_EXPORTS
 #define MO_QTGUI_EXPORTS __declspec(dllexport)
@@ -46,4 +44,3 @@ namespace mo
         }
     }
 }
-#endif

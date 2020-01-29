@@ -10,32 +10,32 @@ namespace mo
         }
 
         template <class T>
-        T* Queue<T>::GetDataPtr(mo::Time_t ts, Context* ctx)
+        T* Queue<T>::GetDataPtr(mo::Time ts, Context* ctx)
         {
         }
 
         template <class T>
-        bool Queue<T>::GetData(T& value, mo::Time_t ts, Context* ctx)
+        bool Queue<T>::GetData(T& value, mo::Time ts, Context* ctx)
         {
         }
 
         template <class T>
-        T Queue<T>::GetData(mo::Time_t ts, Context* ctx)
+        T Queue<T>::GetData(mo::Time ts, Context* ctx)
         {
         }
 
         template <class T>
-        ITParam<T>* Queue<T>::updateData(T& data_, mo::Time_t ts, Context* ctx)
+        TParam<T>* Queue<T>::updateData(T& data_, mo::Time ts, Context* ctx)
         {
         }
 
         template <class T>
-        ITParam<T>* updateData(const T& data_, mo::Time_t ts, Context* ctx)
+        TParam<T>* updateData(const T& data_, mo::Time ts, Context* ctx)
         {
         }
 
         template <class T>
-        ITParam<T>* updateData(T* data_, mo::Time_t ts, Context* ctx)
+        TParam<T>* updateData(T* data_, mo::Time ts, Context* ctx)
         {
         }
 
@@ -59,7 +59,7 @@ namespace mo
         }
 
         template <class T>
-        void getTimestampRange(mo::Time_t& start, mo::Time_t& end)
+        void getTimestampRange(mo::Time& start, mo::Time& end)
         {
         }
 

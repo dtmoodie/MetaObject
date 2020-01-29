@@ -1,46 +1,92 @@
 #pragma once
-#include "HelperMacros.hpp"
-#include "MemoryBlock.hpp"
-#include "MetaObject/detail/Export.hpp"
-#include <boost/thread/mutex.hpp>
-#include <cuda.h>
-#include <list>
-#include <opencv2/core/cuda.hpp>
-#include <opencv2/core/cuda/common.hpp>
+#include <MetaObject/detail/Export.hpp>
+
+#include <ct/types/TArrayView.hpp>
+
+#include <memory>
+#include <string>
 
 namespace mo
 {
-    MO_EXPORTS inline const unsigned char* alignMemory(const unsigned char* ptr, int elemSize);
-    MO_EXPORTS inline unsigned char* alignMemory(unsigned char* ptr, int elemSize);
-    MO_EXPORTS inline size_t alignmentOffset(const unsigned char* ptr, size_t elemSize);
-    MO_EXPORTS void setScopeName(const std::string& name);
-    MO_EXPORTS const std::string& getScopeName();
-
-    class Allocator;
-
-    class MO_EXPORTS Allocator : virtual public cv::cuda::GpuMat::Allocator, virtual public cv::MatAllocator
+    struct MO_EXPORTS Allocator
     {
-      public:
-        typedef std::shared_ptr<Allocator> Ptr;
-        typedef std::shared_ptr<const Allocator> ConstPtr;
-        static std::shared_ptr<Allocator> createAllocator();
-        static void setDefaultAllocator(const std::shared_ptr<Allocator>& allocator);
-        static std::shared_ptr<Allocator> getDefaultAllocator();
+        using Ptr_t = std::shared_ptr<Allocator>;
+        using ConstPtr_t = std::shared_ptr<const Allocator>;
 
-        // Used for stl allocators
-        virtual unsigned char* allocateGpu(size_t num_bytes) = 0;
-        virtual void deallocateGpu(uchar* ptr, size_t numBytes) = 0;
+        static std::shared_ptr<Allocator> getDefault();
+        static void setDefault(std::shared_ptr<Allocator>);
 
-        virtual unsigned char* allocateCpu(size_t num_bytes) = 0;
-        virtual void deallocateCpu(uchar* ptr, size_t numBytes) = 0;
+        Allocator() = default;
+        Allocator(const Allocator&) = delete;
+        Allocator(Allocator&&) = delete;
+        Allocator& operator=(const Allocator&) = delete;
+        Allocator& operator=(Allocator&&) = delete;
 
-        virtual void release() {}
+        virtual ~Allocator();
 
-        void setName(const std::string& name) { this->m_name = name; }
-        const std::string& getName() { return m_name; }
+        virtual uint8_t* allocate(size_t num_bytes, size_t element_size = 1) = 0;
+        virtual void deallocate(uint8_t* ptr, size_t num_bytes) = 0;
+
+        virtual void release();
+
+        void setName(const std::string& name);
+        const std::string& name() const;
+
+        template <class T>
+        T* allocate(size_t num_elems)
+        {
+            return ct::ptrCast<T>(allocate(num_elems * sizeof(T), sizeof(T)));
+        }
+
+        void deallocate(void* ptr, size_t size);
+        template <class T>
+        void deallocate(T* ptr, size_t num_elems)
+        {
+            deallocate(ct::ptrCast(ptr), num_elems * sizeof(T));
+        }
+
       private:
         std::string m_name;
-        static std::weak_ptr<Allocator> default_allocator;
+    };
+
+    struct MO_EXPORTS DeviceAllocator
+    {
+        using Ptr_t = std::shared_ptr<DeviceAllocator>;
+        using ConstPtr_t = std::shared_ptr<const DeviceAllocator>;
+
+        static std::shared_ptr<DeviceAllocator> getDefault();
+
+        DeviceAllocator() = default;
+        DeviceAllocator(const DeviceAllocator&) = delete;
+        DeviceAllocator(DeviceAllocator&&) = delete;
+        DeviceAllocator& operator=(const DeviceAllocator&) = delete;
+        DeviceAllocator& operator=(DeviceAllocator&&) = delete;
+
+        virtual ~DeviceAllocator();
+
+        virtual uint8_t* allocate(size_t num_bytes, size_t element_size = 1) = 0;
+        virtual void deallocate(uint8_t* ptr, size_t num_bytes) = 0;
+        void deallocate(void* ptr, size_t num_elems);
+
+        virtual void release();
+
+        void setName(const std::string& name);
+        const std::string& name() const;
+
+        template <class T>
+        T* allocate(size_t num_elems)
+        {
+            return ct::ptrCast<T>(allocate(num_elems * sizeof(T), sizeof(T)));
+        }
+
+        template <class T>
+        void deallocate(T* ptr, size_t num_elems)
+        {
+            deallocate(ct::ptrCast(ptr), num_elems * sizeof(T));
+        }
+
+      private:
+        std::string m_name;
     };
 
 } // namespace mo

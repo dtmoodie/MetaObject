@@ -1,14 +1,16 @@
-#ifdef HAVE_QT5
-#include "MetaObject/types/file_types.hpp"
 #include "MetaObject/params/ui/Qt/POD.hpp"
+#include "MetaObject/types/file_types.hpp"
 #include "qfiledialog.h"
 #include "qpushbutton.h"
-#include <boost/thread/recursive_mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
+
 using namespace mo;
 using namespace mo::UI;
 using namespace mo::UI::qt;
 
-THandler<WriteDirectory, void>::THandler(IParamProxy& parent) : UiUpdateHandler(parent), btn(nullptr)
+THandler<WriteDirectory, void>::THandler(IParamProxy& parent)
+    : UiUpdateHandler(parent)
+    , btn(nullptr)
 {
 }
 
@@ -42,7 +44,9 @@ std::vector<QWidget*> THandler<WriteDirectory, void>::getUiWidgets(QWidget* pare
     return output;
 }
 
-THandler<ReadDirectory, void>::THandler(IParamProxy& parent) : UiUpdateHandler(parent), btn(nullptr)
+THandler<ReadDirectory, void>::THandler(IParamProxy& parent)
+    : UiUpdateHandler(parent)
+    , btn(nullptr)
 {
 }
 
@@ -72,7 +76,9 @@ std::vector<QWidget*> THandler<ReadDirectory, void>::getUiWidgets(QWidget* paren
     return output;
 }
 
-THandler<ReadFile, void>::THandler(IParamProxy& parent) : UiUpdateHandler(parent), btn(nullptr)
+THandler<ReadFile, void>::THandler(IParamProxy& parent)
+    : UiUpdateHandler(parent)
+    , btn(nullptr)
 {
 }
 
@@ -101,7 +107,9 @@ std::vector<QWidget*> THandler<ReadFile, void>::getUiWidgets(QWidget* parent_)
     return output;
 }
 
-THandler<WriteFile, void>::THandler(IParamProxy& parent) : UiUpdateHandler(parent), btn(nullptr)
+THandler<WriteFile, void>::THandler(IParamProxy& parent)
+    : UiUpdateHandler(parent)
+    , btn(nullptr)
 {
 }
 
@@ -127,5 +135,3 @@ std::vector<QWidget*> THandler<WriteFile, void>::getUiWidgets(QWidget* parent_)
     output.push_back(btn);
     return output;
 }
-
-#endif

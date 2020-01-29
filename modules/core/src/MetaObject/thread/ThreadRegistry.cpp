@@ -57,16 +57,14 @@ size_t ThreadRegistry::getThread(int type)
     auto itr = _pimpl->_thread_map.find(type);
     if (itr != _pimpl->_thread_map.end())
     {
-        if (itr->second.size())
+        if (!itr->second.empty())
         {
             if (std::count(itr->second.begin(), itr->second.end(), current_thread) == 0)
             {
                 return itr->second.back();
             }
-            else
-            {
-                return current_thread;
-            }
+
+            return current_thread;
         }
     }
     return 0;

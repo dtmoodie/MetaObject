@@ -1,4 +1,3 @@
-#ifdef HAVE_QT5
 #include "MetaObject/params/ui/Qt/IHandler.hpp"
 #include "MetaObject/params/ui/Qt/SignalProxy.hpp"
 
@@ -40,5 +39,3 @@ std::vector<QWidget*> IHandler::getUiWidgets(QWidget* parent)
 {
     return std::vector<QWidget*>();
 }
-
-#endif

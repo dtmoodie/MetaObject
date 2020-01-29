@@ -1,16 +1,28 @@
 #pragma once
-#ifndef __CUDACC__
-#include "MetaObject/core/detail/HelperMacros.hpp"
-#include "MetaObject/params/IParam.hpp"
-#include "MetaObject/params/TInputParam.hpp"
-#include "MetaObject/params/TParamPtr.hpp"
-#include "MetaObject/params/detail/ParamMacrosImpl.hpp"
-#include "MetaObject/types/file_types.hpp"
 
-#define PARAM(type_, name, ...)                                                                                        \
-    mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param;                                                  \
-    mo::argument_type<void(type_)>::type name = __VA_ARGS__;                                                           \
-    PARAM_(type_, name, __COUNTER__, __VA_ARGS__)
+#include <MetaObject/core/detail/Enums.hpp>
+#include <MetaObject/core/detail/HelperMacros.hpp>
+#include <MetaObject/params/IParam.hpp>
+#include <MetaObject/params/TInputParam.hpp>
+#include <MetaObject/params/TParamOutput.hpp>
+#include <MetaObject/params/TParamPtr.hpp>
+#include <MetaObject/params/detail/ParamMacrosImpl.hpp>
+
+#define REFLECT_INTERNAL_WITH_FLAG(FLAGS, TYPE, NAME, INIT)                                                            \
+    TYPE NAME = INIT;                                                                                                  \
+    static inline TYPE initializer_##NAME()                                                                            \
+    {                                                                                                                  \
+        return INIT;                                                                                                   \
+    }                                                                                                                  \
+    constexpr static auto getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_BEGIN>)                                 \
+    {                                                                                                                  \
+        return ct::makeMemberObjectPointer<FLAGS>(                                                                     \
+            #NAME, &DataType::NAME, ct::makeInitializer(&DataType::initializer_##NAME, #INIT));                        \
+    }
+
+#define PARAM(TYPE, NAME, ...)                                                                                         \
+    REFLECT_INTERNAL_MEMBER(mo::TParamPtr<TYPE>, NAME##_param)                                                         \
+    REFLECT_INTERNAL_WITH_FLAG(mo::ParamReflectionFlags::kCONTROL, TYPE, NAME, __VA_ARGS__)
 
 #define ENUM_PARAM(name, ...)                                                                                          \
     mo::TParamPtr<mo::EnumParam> name##_param;                                                                         \
@@ -19,83 +31,71 @@
 
 #define RANGED_PARAM(type, name, init, min, max)
 
-#define INPUT(type_, name, init)                                                                                       \
-    mo::TInputParamPtr<mo::argument_type<void(type_)>::type>::Input_t name = init;                                     \
-    mo::TInputParamPtr<mo::argument_type<void(type_)>::type> name##_param;                                             \
-    void _init_params(bool firstInit, mo::_counter_<__COUNTER__> dummy)                                                \
+#define INPUT(TYPE, NAME)                                                                                              \
+    REFLECT_INTERNAL_WITH_FLAG(mo::ParamReflectionFlags::kOUTPUT, mo::TInputParamPtr<TYPE>::Input_t, NAME, nullptr)    \
+    REFLECT_INTERNAL_MEMBER(mo::TInputParamPtr<TYPE>, NAME##_param)
+
+#define OPTIONAL_INPUT(type, name)                                                                                     \
+    REFLECT_INTERNAL_WITH_FLAGS(mo::ParamReflectionFlags::kOUTPUT | mo::ParamReflectionFlags::kOPTIONAL,               \
+                                mo::TInputParamPtr<type_>::Input_t,                                                    \
+                                nullptr)                                                                               \
+    REFLECT_INTERNAL(mo::TInputParamPtr<TYPE>, name##_param)
+
+#define STATE(TYPE, NAME, ...)                                                                                         \
+    REFLECT_INTERNAL_MEMBER(mo::TParamPtr<TYPE>, NAME##_param)                                                         \
+    REFLECT_INTERNAL_WITH_FLAG(mo::ParamReflectionFlags::kSTATE, TYPE, NAME, __VA_ARGS__)
+
+#define STATUS(TYPE, NAME, ...)                                                                                        \
+    REFLECT_INTERNAL_MEMBER(mo::TParamPtr<TYPE>, NAME##_param)                                                         \
+    REFLECT_INTERNAL_WITH_FLAG(mo::ParamReflectionFlags::kSTATUS, TYPE, NAME, __VA_ARGS__)
+
+// These don't use CT's REFLECT_INTERNAL... macros because we want init##NAME to return TYPE whereas
+#define OUTPUT_1(TYPE, NAME)                                                                                           \
+    mo::TParamOutput<TYPE> NAME;                                                                                       \
+    constexpr static auto getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_BEGIN>)                                 \
     {                                                                                                                  \
-        name##_param.setMtx(&getMutex());                                                                              \
-        name##_param.setUserDataPtr(&name);                                                                            \
-        name##_param.setName(#name);                                                                                   \
-        addParam(&name##_param);                                                                                       \
-        _init_params(firstInit, --dummy);                                                                              \
-    }                                                                                                                  \
-    static void _list_param_info(std::vector<mo::ParamInfo*>& info, mo::_counter_<__COUNTER__> dummy)                  \
-    {                                                                                                                  \
-        static mo::ParamInfo s_info(mo::TypeInfo(typeid(mo::argument_type<void(type_)>::type)),                        \
-                                    #name,                                                                             \
-                                    "",                                                                                \
-                                    "",                                                                                \
-                                    mo::ParamFlags::Input_e,                                                           \
-                                    #init);                                                                            \
-        info.push_back(&s_info);                                                                                       \
-        _list_param_info(info, --dummy);                                                                               \
+        return ct::makeMemberObjectPointer(#NAME, &DataType::NAME);                                                    \
     }
 
-#define OPTIONAL_INPUT(type, name, init)                                                                               \
-    INPUT(type, name, init)                                                                                            \
-    APPEND_FLAGS(name, mo::ParamFlags::Optional_e)
-
-#define APPEND_FLAGS(name, flags)                                                                                      \
-    void _init_params(bool firstInit, mo::_counter_<__COUNTER__> dummy)                                                \
+#define OUTPUT_2(TYPE, NAME, INIT)                                                                                     \
+    mo::TParamOutput<TYPE> NAME;                                                                                       \
+    inline static TYPE init##NAME()                                                                                    \
     {                                                                                                                  \
-        _init_params(firstInit, --dummy);                                                                              \
-        name##_param.appendFlags(flags);                                                                               \
+        return INIT;                                                                                                   \
+    }                                                                                                                  \
+    constexpr static auto getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_BEGIN>)                                 \
+    {                                                                                                                  \
+        return ct::makeMemberObjectPointer(                                                                            \
+            #NAME, &DataType::NAME, ct::Initializer<TYPE>(&DataType::init##NAME, #INIT));                              \
     }
 
-#define PROPERTY(type_, name, init)                                                                                    \
-    mo::argument_type<void(type_)>::type name;                                                                         \
-    void _init_params(bool firstInit, mo::_counter_<__COUNTER__> dummy)                                                \
-    {                                                                                                                  \
-        if (firstInit)                                                                                                 \
-            name = init;                                                                                               \
-        _init_params(firstInit, --dummy);                                                                              \
-    }                                                                                                                  \
-    mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param;                                                  \
-    SERIALIZE_(name, __COUNTER__)
-
-#define PERSISTENT_(type_, name, N)                                                                                    \
-    mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param;                                                  \
-    INIT_(name, N)                                                                                                     \
-    LOAD_SAVE_(name, N)
-
-#define PERSISTENT(type_, name)                                                                                        \
-    mo::argument_type<void(type_)>::type name;                                                                         \
-    PERSISTENT_(type, name, __COUNTER__)
-
-#define INIT(name, init) INIT_(name, init, __COUNTER__)
-
-#define STATUS(type_, name, init)                                                                                      \
-    mo::TParamPtr<mo::argument_type<void(type_)>::type> name##_param;                                                  \
-    mo::argument_type<void(type_)>::type name = init;                                                                  \
-    STATUS_(type_, name, init, __COUNTER__)
-
-#define TOOLTIP(name, TOOLTIP) TOOLTIP_(name, TOOLTIP, __COUNTER__)
-
-#define DESCRIPTION(name, DESCRIPTION)
-
-#define OUTPUT(type_, name, init)                                                                                      \
-    mo::TParamOutput<typename mo::argument_type<void(type_)>::type> name##_param;                                      \
-    OUTPUT_(type_, name, init, __COUNTER__)                                                                            \
-    mo::argument_type<void(type_)>::type name = init;
-
-#define SOURCE(type, name, init)                                                                                       \
-    OUTPUT(type, name, init)                                                                                           \
-    APPEND_FLAGS(name, mo::ParamFlags::Source_e)
-
+#ifdef _MSC_VER
+#define OUTPUT(TYPE, ...) CT_PP_CAT(CT_PP_OVERLOAD(OUTPUT_, __VA_ARGS__)(TYPE, __VA_ARGS__), CT_PP_EMPTY())
 #else
-#define PARAM(type, name, init)
-#define PROPERTY(type, name, init)
-#define INPUT(type, name, init)
-#define OUTPUT(type, name, init)
+#define OUTPUT(TYPE, ...) CT_PP_OVERLOAD(OUTPUT_, __VA_ARGS__)(TYPE, __VA_ARGS__)
+#endif
+
+#define SOURCE_1(TYPE, NAME)                                                                                           \
+    mo::TParamOutput<TYPE, mo::ParamFlags::kOUTPUT | mo::ParamFlags::kSOURCE> NAME;                                    \
+    constexpr static auto getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_BEGIN>)                                 \
+    {                                                                                                                  \
+        return ct::makeMemberObjectPointer<mo::ParamReflectionFlags::kSOURCE>(#NAME, &DataType::NAME);                 \
+    }
+
+#define SOURCE_2(TYPE, NAME, INIT)                                                                                     \
+    mo::TParamOutput<TYPE, mo::ParamFlags::kOUTPUT | mo::ParamFlags::kSOURCE> NAME;                                    \
+    inline static TYPE init##NAME()                                                                                    \
+    {                                                                                                                  \
+        return INIT;                                                                                                   \
+    }                                                                                                                  \
+    constexpr static auto getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_BEGIN>)                                 \
+    {                                                                                                                  \
+        return ct::makeMemberObjectPointer<mo::ParamReflectionFlags::kSOURCE>(                                         \
+            #NAME, &DataType::NAME, ct::Initializer<TYPE>(&DataType::init##NAME, #INIT));                              \
+    }
+
+#ifdef _MSC_VER
+#define SOURCE(TYPE, ...) CT_PP_CAT(CT_PP_OVERLOAD(SOURCE_, __VA_ARGS__)(TYPE, __VA_ARGS__), CT_PP_EMPTY())
+#else
+#define SOURCE(TYPE, ...) CT_PP_OVERLOAD(SOURCE_, __VA_ARGS__)(TYPE, __VA_ARGS__)
 #endif

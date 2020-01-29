@@ -42,6 +42,17 @@
         #endif
     #endif // MetaObject_EXPORTS
 
+
+    #ifdef __GNUC__
+        #if __GNUC__ >= 5
+            #define MO_DEPRECATED [[deprecated]]
+        #else
+            #define MO_DEPRECATED
+        #endif
+    #else
+        #define MO_DEPRECATED [[deprecated]]
+    #endif
+
 #endif // META_OBJECT_EXPORT
 
 #ifdef METAOBJECT_MODULE

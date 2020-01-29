@@ -1,6 +1,5 @@
 #pragma once
-#ifdef HAVE_QT5
-#include "MetaObject/core/detail/Forward.hpp"
+#include "MetaObject/core/detail/forward.hpp"
 #include "MetaObject/detail/Export.hpp"
 #include <functional>
 #include <qstring.h>
@@ -47,4 +46,3 @@ namespace mo
         }
     }
 }
-#endif

@@ -69,12 +69,10 @@ std::shared_ptr<IParamProxy> WidgetFactory::CreateProxy(IParam* param)
     auto itr = _pimpl->registry.find(param->getTypeInfo());
     if (itr == _pimpl->registry.end())
     {
-        MO_LOG(debug) << "No Widget Factory registered for type " << typeName
-                      << " unable to make widget for Param: " << treeName
-                      << ".  Known types: " << print_types(_pimpl->registry);
+        MO_LOG(debug, "No Widget Factory registered for type {}  unable to make widget for param: {} Known types: {}", typeName, treeName, print_types(_pimpl->registry));
 
         return std::shared_ptr<IParamProxy>(new DefaultProxy(param));
     }
-    MO_LOG(trace) << "Creating handler for " << typeName << " " << treeName;
+    MO_LOG(trace, "Creating handler for {} {}", typeName, treeName);
     return itr->second(param);
 }

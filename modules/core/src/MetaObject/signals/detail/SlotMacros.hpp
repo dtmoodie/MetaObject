@@ -5,84 +5,69 @@
 #include <boost/preprocessor/cat.hpp>
 #include <boost/preprocessor/facilities/empty.hpp>
 #endif
-#include "MetaObject/core/detail/Counter.hpp"
-#include "MetaObject/core/detail/Forward.hpp"
+#include "MetaObject/core/detail/forward.hpp"
 #include "MetaObject/signals/SlotInfo.hpp"
 #include "MetaObject/signals/TSlot.hpp"
+#include <MetaObject/core/detail/Enums.hpp>
 
 // -------------------------------------------------------------------------------------------
-#define SLOT_N(NAME, N, RETURN, ...)                                                                                   \
+
+#define SLOT_N(NAME, RETURN, ...)                                                                                      \
     virtual RETURN NAME(__VA_ARGS__);                                                                                  \
-    mo::TSlot<RETURN(__VA_ARGS__)> COMBINE(_slot_##NAME##_, N);                                                        \
-    void _bind_slots(bool firstInit, mo::_counter_<N> dummy)                                                           \
-    {                                                                                                                  \
-        COMBINE(_slot_##NAME##_, N) = my_bind(static_cast<RETURN (THIS_CLASS::*)(__VA_ARGS__)>(&THIS_CLASS::NAME),     \
-                                              this,                                                                    \
-                                              make_int_sequence<BOOST_PP_VARIADIC_SIZE(__VA_ARGS__)>{});               \
-        addSlot(&COMBINE(_slot_##NAME##_, N), #NAME);                                                                  \
-        _bind_slots(firstInit, --dummy);                                                                               \
-    }                                                                                                                  \
-    static void _list_slots(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy)                                  \
-    {                                                                                                                  \
-        (void)dummy;                                                                                                   \
-        _list_slots(info, mo::_counter_<N - 1>());                                                                     \
-        static mo::SlotInfo s_info{mo::TypeInfo(typeid(RETURN(__VA_ARGS__))), #NAME, "", ""};                          \
-        info.push_back(&s_info);                                                                                       \
-    }                                                                                                                  \
-    template <class Sig>                                                                                               \
-    mo::TSlot<RETURN(__VA_ARGS__)>* getSlot_##NAME(                                                                    \
-        typename std::enable_if<std::is_same<Sig, RETURN(__VA_ARGS__)>::value>::type* = 0)                             \
-    {                                                                                                                  \
-        return &COMBINE(_slot_##NAME##_, N);                                                                           \
-    }
+    MEMBER_FUNCTION_WITH_FLAG(mo::ParamReflectionFlags::kSLOT,                                                         \
+                              NAME,                                                                                    \
+                              ct::selectMemberFunctionPointer<DataType, RETURN, __VA_ARGS__>(&DataType::NAME))
 
-#define SLOT_1(RETURN, N, NAME)                                                                                        \
+#define SLOT_1(RETURN, NAME)                                                                                           \
     virtual RETURN NAME();                                                                                             \
-    mo::TSlot<RETURN(void)> COMBINE(_slot_##NAME##_, N);                                                               \
-    void _bind_slots(bool firstInit, mo::_counter_<N> dummy)                                                           \
-    {                                                                                                                  \
-        COMBINE(_slot_##NAME##_, N) = std::bind(static_cast<RETURN (THIS_CLASS::*)()>(&THIS_CLASS::NAME), this);       \
-        addSlot(&COMBINE(_slot_##NAME##_, N), #NAME);                                                                  \
-        _bind_slots(firstInit, --dummy);                                                                               \
-    }                                                                                                                  \
-    static void _list_slots(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy)                                  \
-    {                                                                                                                  \
-        (void)dummy;                                                                                                   \
-        _list_slots(info, mo::_counter_<N - 1>());                                                                     \
-        static mo::TypeInfo type(typeid(RETURN(void)));                                                                \
-        static mo::SlotInfo s_info{type, #NAME, "", ""};                                                               \
-        info.push_back(&s_info);                                                                                       \
-    }                                                                                                                  \
-    template <class Sig>                                                                                               \
-    mo::TSlot<RETURN()>* getSlot_##NAME(typename std::enable_if<std::is_same<Sig, RETURN()>::value>::type* = 0)        \
-    {                                                                                                                  \
-        return &COMBINE(_slot_##NAME##_, N);                                                                           \
-    }
+    MEMBER_FUNCTION_WITH_FLAG(                                                                                         \
+        mo::ParamReflectionFlags::kSLOT, NAME, ct::selectMemberFunctionPointer<DataType, RETURN>(&DataType::NAME))
 
-#define SLOT_2(RETURN, N, NAME, ...) SLOT_N(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_3(RETURN, N, NAME, ...) SLOT_N(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_4(RETURN, N, NAME, ...) SLOT_N(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_5(RETURN, N, NAME, ...) SLOT_N(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_6(RETURN, N, NAME, ...) SLOT_N(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_7(RETURN, N, NAME, ...) SLOT_N(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_8(RETURN, N, NAME, ...) SLOT_N(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_9(RETURN, N, NAME, ...) SLOT_N(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_10(RETURN, N, NAME, ...) SLOT_N(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_11(RETURN, N, NAME, ...) SLOT_N(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_12(RETURN, N, NAME, ...) SLOT_N(NAME, N, RETURN, __VA_ARGS__)
-#define SLOT_13(RETURN, N, NAME, ...) SLOT_N(NAME, N, RETURN, __VA_ARGS__)
+#define STATIC_SLOT_N(NAME, RETURN, ...)                                                                               \
+    static RETURN NAME(__VA_ARGS__);                                                                                   \
+    MEMBER_FUNCTION_WITH_FLAG(                                                                                         \
+        mo::ParamReflectionFlags::kSLOT, NAME, ct::selectFunctionPointer<RETURN, __VA_ARGS__>(&DataType::NAME))
+
+#define STATIC_SLOT_1(RETURN, NAME)                                                                                    \
+    static RETURN NAME();                                                                                              \
+    MEMBER_FUNCTION_WITH_FLAG(mo::ParamReflectionFlags::kSLOT, NAME, ct::selectFunctionPointer<RETURN>(&DataType::NAME))
+
+#define STATIC_SLOT_2(RETURN, NAME, ...) STATIC_SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define STATIC_SLOT_3(RETURN, NAME, ...) STATIC_SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define STATIC_SLOT_4(RETURN, NAME, ...) STATIC_SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define STATIC_SLOT_5(RETURN, NAME, ...) STATIC_SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define STATIC_SLOT_6(RETURN, NAME, ...) STATIC_SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define STATIC_SLOT_7(RETURN, NAME, ...) STATIC_SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define STATIC_SLOT_8(RETURN, NAME, ...) STATIC_SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define STATIC_SLOT_9(RETURN, NAME, ...) STATIC_SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define STATIC_SLOT_10(RETURN, NAME, ...) STATIC_SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define STATIC_SLOT_11(RETURN, NAME, ...) STATIC_SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define STATIC_SLOT_12(RETURN, NAME, ...) STATIC_SLOT_N(NAME, RETURN, __VA_ARGS__)
+
+#define SLOT_2(RETURN, NAME, ...) SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define SLOT_3(RETURN, NAME, ...) SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define SLOT_4(RETURN, NAME, ...) SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define SLOT_5(RETURN, NAME, ...) SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define SLOT_6(RETURN, NAME, ...) SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define SLOT_7(RETURN, NAME, ...) SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define SLOT_8(RETURN, NAME, ...) SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define SLOT_9(RETURN, NAME, ...) SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define SLOT_10(RETURN, NAME, ...) SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define SLOT_11(RETURN, NAME, ...) SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define SLOT_12(RETURN, NAME, ...) SLOT_N(NAME, RETURN, __VA_ARGS__)
+#define SLOT_13(RETURN, NAME, ...) SLOT_N(NAME, RETURN, __VA_ARGS__)
 
 #define DESCRIBE_SLOT_(NAME, DESCRIPTION, N)                                                                           \
-    std::string _slot_description_by_name(const std::string& name, mo::_counter_<N> dummy)                             \
+    std::string _slot_description_by_name(const std::string& name, const ct::Indexer<N> dummy)                         \
     {                                                                                                                  \
         (void)dummy;                                                                                                   \
         if (name == #NAME)                                                                                             \
             return DESCRIPTION;                                                                                        \
     }                                                                                                                  \
-    std::vector<slot_info> _list_slots(mo::_counter_<N> dummy)                                                         \
+    std::vector<slot_info> _list_slots(const ct::Indexer<N> idx)                                                       \
     {                                                                                                                  \
         (void)dummy;                                                                                                   \
-        auto slot_info = _list_slots(mo::_counter_<N - 1>());                                                          \
+        auto slot_info = _list_slots(--idx);                                                                           \
         for (auto& info : slot_info)                                                                                   \
         {                                                                                                              \
             if (info.name == #NAME)                                                                                    \
@@ -94,9 +79,9 @@
     }
 
 #define SLOT_TOOLTIP_(name, tooltip, N)                                                                                \
-    static void _list_slots(std::vector<mo::SlotInfo*>& info, mo::_counter_<N> dummy)                                  \
+    static void _list_slots(std::vector<mo::SlotInfo*>& info, const ct::Indexer<N> idx)                                \
     {                                                                                                                  \
-        _list_slots(info, --dummy);                                                                                    \
+        _list_slots(info, --idx);                                                                                      \
         for (auto it : info)                                                                                           \
         {                                                                                                              \
             if (it->name == #name)                                                                                     \
@@ -110,26 +95,35 @@
     }
 
 #ifndef __CUDACC__
+
 #ifdef _MSC_VER
-#define MO_SLOT(RET, ...)                                                                                              \
-    BOOST_PP_CAT(BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__)(RET, __COUNTER__, __VA_ARGS__), BOOST_PP_EMPTY())
-#else
+
+#define MO_SLOT(RET, ...) BOOST_PP_CAT(BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__)(RET, __VA_ARGS__), BOOST_PP_EMPTY())
+
+#define MO_STATIC_SLOT(RET, ...)                                                                                       \
+    BOOST_PP_CAT(BOOST_PP_OVERLOAD(STATIC_SLOT_, __VA_ARGS__)(RET, __VA_ARGS__), BOOST_PP_EMPTY())
+
+#else // _MSC_VER
+
 #define MO_SLOT(NAME, ...)                                                                                             \
-    BOOST_PP_OVERLOAD(SLOT_, __VA_ARGS__)                                                                              \
-    (NAME, __COUNTER__, __VA_ARGS__)
-#endif
+    CT_PP_OVERLOAD(SLOT_, __VA_ARGS__)                                                                                 \
+    (NAME, __VA_ARGS__)
+
+#define MO_STATIC_SLOT(NAME, ...)                                                                                      \
+    CT_PP_OVERLOAD(STATIC_SLOT_, __VA_ARGS__)                                                                          \
+    (NAME, __VA_ARGS__)
+
+#endif // _MSC_VER
+
 #define DESCRIBE_SLOT(NAME, DESCRIPTION) DESCRIBE_SLOT_(NAME, DESCRIPTION, __COUNTER__)
-#else
+
+#else // __CUDAACC__
+
 #define MO_SLOT(RET, ...)
+
+#define MO_STATIC_SLOT(RET, ...)
 #define DESCRIBE_SLOT(NAME, DESCRIPTION)
 #endif
-#define PARAM_UPDATE_SLOT(NAME)                                                                                        \
-    MO_SLOT(void,                                                                                                      \
-            on_##NAME##_modified,                                                                                      \
-            mo::IParam*,                                                                                               \
-            mo::Context*,                                                                                              \
-            mo::OptionalTime_t,                                                                                        \
-            size_t,                                                                                                    \
-            const std::shared_ptr<mo::ICoordinateSystem>&,                                                             \
-            mo::UpdateFlags)
+#define PARAM_UPDATE_SLOT(NAME) MO_SLOT(void, on_##NAME##_modified, mo::IParam*, mo::Header, mo::UpdateFlags)
+
 #define SLOT_TOOLTIP(name, tooltip) SLOT_TOOLTIP_(name, tooltip, __COUNTER__)

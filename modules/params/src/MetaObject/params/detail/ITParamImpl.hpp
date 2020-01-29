@@ -1,27 +1,39 @@
 #pragma once
 #ifndef __CUDACC__
 #include "../ITParam.hpp"
-#include <boost/thread/recursive_mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
 
 namespace mo
 {
     // *************************************************
-    // ITParamImpl
+    // TParamImpl
 
     template <typename T>
-    const TypeInfo& ITParamImpl<T>::getTypeInfo() const
+    TypeInfo TParamImpl<T>::getTypeInfo() const
     {
         return _type_info;
     }
 
     template <class T>
-    std::shared_ptr<Connection> ITParamImpl<T>::registerUpdateNotifier(TUpdateSlot_t* f)
+    std::shared_ptr<Connection> TParamImpl<T>::registerUpdateNotifier(UpdateSlot_t* f)
+    {
+        return IParam::registerUpdateNotifier(f);
+    }
+
+    template <class T>
+    std::shared_ptr<Connection> TParamImpl<T>::registerUpdateNotifier(std::shared_ptr<TSignalRelay<UpdateSig_t>>& relay)
+    {
+        return IParam::registerUpdateNotifier(relay);
+    }
+
+    template <class T>
+    std::shared_ptr<Connection> TParamImpl<T>::registerUpdateNotifier(TUpdateSlot_t* f)
     {
         return f->connect(&_typed_update_signal);
     }
 
     template <class T>
-    std::shared_ptr<Connection> ITParamImpl<T>::registerUpdateNotifier(ISlot* f)
+    std::shared_ptr<Connection> TParamImpl<T>::registerUpdateNotifier(ISlot* f)
     {
         if (f->getSignature() == TypeInfo(typeid(TUpdateSig_t)))
         {
@@ -29,6 +41,9 @@ namespace mo
             if (typed)
             {
                 return registerUpdateNotifier(typed);
+            }
+            else
+            {
             }
         }
         else
@@ -40,13 +55,13 @@ namespace mo
 
     template <class T>
     std::shared_ptr<Connection>
-    ITParamImpl<T>::registerUpdateNotifier(std::shared_ptr<TSignalRelay<TUpdateSig_t>>& relay)
+    TParamImpl<T>::registerUpdateNotifier(std::shared_ptr<TSignalRelay<TUpdateSig_t>>& relay)
     {
         return _typed_update_signal.connect(relay);
     }
 
     template <class T>
-    std::shared_ptr<Connection> ITParamImpl<T>::registerUpdateNotifier(std::shared_ptr<ISignalRelay> relay)
+    std::shared_ptr<Connection> TParamImpl<T>::registerUpdateNotifier(std::shared_ptr<ISignalRelay> relay)
     {
         auto typed = std::dynamic_pointer_cast<TSignalRelay<TUpdateSig_t>>(relay);
         if (typed)
@@ -60,6 +75,6 @@ namespace mo
     }
 
     template <typename T>
-    const TypeInfo ITParamImpl<T>::_type_info(typeid(T));
+    const TypeInfo TParamImpl<T>::_type_info(typeid(T));
 }
 #endif

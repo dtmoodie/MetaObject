@@ -6,7 +6,7 @@
 
 namespace mo
 {
-    namespace Buffer
+    namespace buffer
     {
         template <typename T>
         class Proxy;
@@ -16,13 +16,12 @@ namespace mo
         {
             BufferConstructor()
             {
-                BufferFactory::registerFunction(TypeInfo(typeid(typename T::ValueType)),
-                                                std::bind(&BufferConstructor<T>::create_buffer, std::placeholders::_1),
-                                                T::BufferType);
+                BufferFactory::registerConstructor(
+                    std::bind(&BufferConstructor<T>::create_buffer, std::placeholders::_1), T::BufferType);
             }
             static IParam* create_buffer(IParam* input)
             {
-                if (auto T_param = dynamic_cast<ITParam<T>*>(input))
+                if (auto T_param = dynamic_cast<TParam<T>*>(input))
                 {
                     return new Proxy<T>(T_param, new T("map for " + input->getTreeName()));
                 }

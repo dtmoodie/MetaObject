@@ -1,11 +1,14 @@
 #pragma once
+
 #include <MetaObject/core/detail/ConcurrentQueue.hpp>
-#include <MetaObject/core/detail/Forward.hpp>
+#include <MetaObject/core/detail/forward.hpp>
 #include <MetaObject/detail/Export.hpp>
 #include <MetaObject/signals/TSignalRelay.hpp>
+
+#include <MetaObject/thread/fiber_include.hpp>
+
 #include <boost/thread.hpp>
-#include <boost/thread/condition_variable.hpp>
-#include <boost/thread/mutex.hpp>
+
 #include <functional>
 #include <queue>
 
@@ -15,60 +18,40 @@ namespace mo
     class Context;
     class ThreadHandle;
     class ISlot;
+
     class MO_EXPORTS Thread
     {
       public:
-        // Events have to be handled by this thread
-        void pushEventQueue(const std::function<void(void)>& f);
-        // Work can be stolen and can exist on any thread
-        void pushWork(const std::function<void(void)>& f);
-        void start();
-        void stop();
-        size_t getId() const;
-        bool isOnThread() const;
-        const std::string& getThreadName() const;
-
-        void setExitCallback(const std::function<void(void)>& f);
-        void setStartCallback(const std::function<void(void)>& f);
-        void setName(const std::string& name);
-        std::shared_ptr<Connection> setInnerLoop(TSlot<int(void)>* slot);
-        ThreadPool* getPool() const;
-        ContextPtr_t getContext();
-
-      protected:
-        struct ThreadSanitizer;
-        friend class ThreadPool;
-        friend class ThreadHandle;
-        friend struct ThreadSanitizer;
-
-        Thread();
         Thread(ThreadPool* pool);
+        Thread(const Thread&) = delete;
+        Thread& operator=(const Thread&) = delete;
         ~Thread();
+
+        size_t threadId() const;
+        bool isOnThread() const;
+        const std::string& threadName() const;
+
+        void setExitCallback(std::function<void(void)>&& f);
+
+        void setName(const std::string& name);
+
+        ThreadPool* pool() const;
+        IAsyncStreamPtr_t asyncStream(Duration timeout = 5 * second) const;
+
+      private:
         void main();
 
-        Thread& operator=(const Thread&) = delete;
-        Thread(const Thread&) = delete;
+        boost::thread m_thread;
 
-        boost::thread _thread;
-        std::shared_ptr<mo::TSignalRelay<int(void)>> _inner_loop;
+        mutable Mutex_t m_mtx;
+        mutable boost::fibers::condition_variable_any m_cv;
 
-        std::function<void(void)> _on_start;
-        std::function<void(void)> _on_exit;
-        ContextPtr_t _ctx;
-        ThreadPool* _pool;
-        boost::condition_variable_any _cv;
-        boost::recursive_timed_mutex _mtx;
-        // if _run == true, execute the main inner loop
-        volatile bool _run;
-        // if _quit == true, cleanup and exit the thread
-        volatile bool _quit;
-        // Set by work thread, if true then it is not executing the inner loop
-        volatile bool _paused;
-        // Set by the thread handle, set this flag to skip executing the event loop because inner loop needs to run
-        // again asap
-        volatile bool _run_inner_loop;
-        moodycamel::ConcurrentQueue<std::function<void(void)>> _work_queue;
-        moodycamel::ConcurrentQueue<std::function<void(void)>> _event_queue;
-        std::string _name;
+        std::function<void(void)> m_on_exit;
+
+        IAsyncStreamPtr_t m_stream;
+        ThreadPool* m_pool = nullptr;
+
+        std::string m_name;
+        std::condition_variable* m_scheduler_wakeup_cv = nullptr;
     };
 }

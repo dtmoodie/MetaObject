@@ -1,13 +1,15 @@
-#ifdef HAVE_QT5
-#include "MetaObject/types/file_types.hpp"
 #include "MetaObject/params/ui/Qt/POD.hpp"
+#include "MetaObject/types/file_types.hpp"
 #include "qpushbutton.h"
-#include <boost/thread/recursive_mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
+
 using namespace mo;
 using namespace mo::UI;
 using namespace mo::UI::qt;
 
-THandler<std::function<void(void)>, void>::THandler(IParamProxy& parent) : UiUpdateHandler(parent), btn(nullptr)
+THandler<std::function<void(void)>, void>::THandler(IParamProxy& parent)
+    : UiUpdateHandler(parent)
+    , btn(nullptr)
 {
 }
 
@@ -32,5 +34,3 @@ std::vector<QWidget*> THandler<std::function<void(void)>, void>::getUiWidgets(QW
     output.push_back(btn);
     return output;
 }
-
-#endif

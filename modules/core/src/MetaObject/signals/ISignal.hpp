@@ -1,8 +1,9 @@
 #pragma once
-#include "MetaObject/core/detail/Forward.hpp"
 #include "MetaObject/detail/Export.hpp"
+
+#include "MetaObject/core/detail/forward.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
-#include "MetaObject/thread/ThreadRegistry.hpp"
+
 #include <memory>
 
 namespace mo
@@ -30,16 +31,12 @@ namespace mo
         virtual bool disconnect() = 0;
         virtual bool disconnect(ISlot* slot) = 0;
         virtual bool disconnect(std::weak_ptr<ISignalRelay> relay) = 0;
+        virtual bool isConnected() const = 0;
 
-        IMetaObject* getParent() const;
-        Context* getContext() const;
-        void setContext(Context* ctx);
+        IAsyncStream* getStream() const;
+        void setStream(IAsyncStream* ctx);
 
       protected:
-        friend class IMetaObject;
-        friend class MetaObject;
-        void setParent(IMetaObject* parent);
-        IMetaObject* _parent = nullptr;
-        Context* _ctx = nullptr;
+        IAsyncStream* m_stream = nullptr;
     };
 }

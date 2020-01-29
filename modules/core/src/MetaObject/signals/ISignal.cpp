@@ -1,30 +1,19 @@
 #include "MetaObject/signals/ISignal.hpp"
-//#include "MetaObject/object/IMetaObject.hpp"
-using namespace mo;
-ISignal::~ISignal()
-{
-}
 
-Context* ISignal::getContext() const
+namespace mo
 {
-    return _ctx;
-    if (_parent)
+
+    ISignal::~ISignal()
     {
-        // return _parent->getContext();
     }
-    return nullptr;
-}
-void ISignal::setContext(Context* ctx)
-{
-    _ctx = ctx;
-}
 
-IMetaObject* ISignal::getParent() const
-{
-    return _parent;
-}
+    IAsyncStream* ISignal::getStream() const
+    {
+        return m_stream;
+    }
 
-void ISignal::setParent(IMetaObject* parent)
-{
-    _parent = parent;
+    void ISignal::setStream(IAsyncStream* stream)
+    {
+        m_stream = stream;
+    }
 }

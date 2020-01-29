@@ -4,3 +4,7 @@ build_x86
 build_vc140
 build_vc120
 CMakeLists.txt.*
+build*
+modules/object/tests/plugin/Objects.hpp.gch
+dependencies/build*
+.vscode/

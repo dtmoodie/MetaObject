@@ -1,28 +1,50 @@
-#ifdef HAVE_OPENCV
-#include "MetaObject/metaparams/reflect/cv_types.hpp"
-#include "MetaObject/params/MetaParam.hpp"
-#include "ct/reflect/cereal.hpp"
+#include "common.hpp"
+
+#ifdef MO_HAVE_OPENCV
+
+#include <MetaObject/params/MetaParam.hpp>
+#include <MetaObject/types/opencv.hpp>
+#include <ct/reflect/cerealize.hpp>
+
+#include <MetaObject/core/metaobject_config.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/array_adapter.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/map.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
+#include <MetaObject/types/cereal_map.hpp>
+
+#include <cereal/types/map.hpp>
+#include <cereal/types/string.hpp>
+
+#ifdef MO_HAVE_PYTHON
 #include <boost/python/object.hpp>
+#endif
 
 namespace ct
 {
-    namespace reflect
-    {
-        template <class T, size_t N>
-        struct ArrayAdapter;
-    }
+    template <class T, size_t N>
+    struct ArrayAdapter;
 }
 
-namespace mo
+namespace boost
 {
     namespace python
     {
-        template <class T, size_t N>
-        inline void convertFromPython(const boost::python::object& obj, ct::reflect::ArrayAdapter<T, N> result);
-    }
-}
+        namespace api
+        {
+            class object;
+        }
 
-#include "MetaObject/metaparams/MetaParamsInclude.hpp"
+        using api::object;
+    } // namespace python
+} // namespace boost
+
+namespace ct
+{
+    template <class T, ssize_t N>
+    inline bool convertFromPython(const boost::python::object& obj, ct::TArrayView<T, N> result);
+}
+#include <ct/types/opencv.hpp>
+
 #include "opencv2/core/types.hpp"
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
@@ -34,42 +56,53 @@ namespace mo
 #else
 #define MO_EXPORTS
 #endif
-#include "MetaObject/params/detail/MetaParamImpl.hpp"
+
 #include <boost/lexical_cast.hpp>
 #include <cereal/types/vector.hpp>
 
-namespace mo
+#ifdef MO_HAVE_PYTHON
+namespace ct
 {
-    namespace python
+    template <class T, ssize_t N>
+    inline bool convertFromPython(const boost::python::object& obj, ct::TArrayView<T, N> result)
     {
-        template <class T, size_t N>
-        inline void convertFromPython(const boost::python::object& obj, ct::reflect::ArrayAdapter<T, N> result)
+        if (result.ptr)
         {
-            if (result.ptr)
+            for (size_t i = 0; i < result.size(); ++i)
             {
-                for (size_t i = 0; i < N; ++i)
-                {
-                    boost::python::extract<T> extractor(obj[i]);
-                    result.ptr[i] = extractor();
-                }
+                boost::python::extract<T> extractor(obj[i]);
+                result.ptr[i] = extractor();
             }
+            return true;
         }
+        return false;
     }
-}
+} // namespace ct
+#endif
 
-static_assert(ct::reflect::ReflectData<cv::Scalar>::IS_SPECIALIZED, "Specialization not working for cv::Scalar");
-static_assert(ct::reflect::ReflectData<cv::Vec2f>::IS_SPECIALIZED, "Specialization not working for cv::Vec2f");
-static_assert(ct::reflect::ReflectData<cv::Vec2b>::IS_SPECIALIZED, "Specialization not working for cv::Vec2b");
-static_assert(ct::reflect::ReflectData<cv::Vec3f>::IS_SPECIALIZED, "Specialization not working for cv::Vec3f");
-static_assert(ct::reflect::ReflectData<cv::Vec3b>::IS_SPECIALIZED, "Specialization not working for cv::Vec3b");
+static_assert(ct::IsReflected<cv::Scalar>::value, "Specialization not working for cv::Scalar");
+static_assert(ct::IsReflected<cv::Vec2f>::value, "Specialization not working for cv::Vec2f");
+static_assert(ct::IsReflected<cv::Vec2b>::value, "Specialization not working for cv::Vec2b");
+static_assert(ct::IsReflected<cv::Vec3f>::value, "Specialization not working for cv::Vec3f");
+static_assert(ct::IsReflected<cv::Vec3b>::value, "Specialization not working for cv::Vec3b");
 
 using namespace cv;
-INSTANTIATE_META_PARAM(Scalar);
-INSTANTIATE_META_PARAM(Vec2f);
-INSTANTIATE_META_PARAM(Vec3f);
-INSTANTIATE_META_PARAM(Vec2b);
-INSTANTIATE_META_PARAM(Vec3b);
-INSTANTIATE_META_PARAM(std::vector<Vec3b>);
-typedef std::map<std::string, Vec3b> ClassColormap_t;
-INSTANTIATE_META_PARAM(ClassColormap_t);
-#endif
+namespace mo
+{
+    namespace metaparams
+    {
+        void instCVVec(SystemTable* table)
+        {
+            registerTrait<Scalar>();
+            registerTrait<Vec2f>();
+            registerTrait<Vec3f>();
+            registerTrait<Vec2b>();
+            registerTrait<Vec3b>();
+            registerTrait<std::vector<Vec3b>>();
+            typedef std::map<std::string, Vec3b> ClassColormap_t;
+            registerTrait<ClassColormap_t>();
+        }
+    } // namespace metaparams
+} // namespace mo
+
+#endif // MO_HAVE_OPENCV

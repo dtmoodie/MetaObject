@@ -14,18 +14,25 @@ namespace mo
             .value("INFO", IObjectInfo::INFO)
             .value("DEBUG", IObjectInfo::DEBUG)
             .value("RCC", IObjectInfo::RCC);
-        boost::python::enum_<mo::ParamType>("ParamType")
-            .value("TParam", mo::ParamType::TParam_e)
-            .value("CircularBuffer", mo::ParamType::CircularBuffer_e)
-            .value("ConstMap", mo::ParamType::ConstMap_e)
-            .value("Map", mo::ParamType::Map_e)
-            .value("StreamBuffer", mo::ParamType::StreamBuffer_e)
-            .value("BlockingStreamBuffer", mo::ParamType::BlockingStreamBuffer_e)
-            .value("NNStreamBuffer", mo::ParamType::NNStreamBuffer_e)
-            .value("Queue", mo::ParamType::Queue_e)
-            .value("BlockingQueue", mo::ParamType::BlockingQueue_e)
-            .value("DroppingQueue", mo::ParamType::DroppingQueue_e)
-            .value("ForceBufferedConnection", mo::ParamType::ForceBufferedConnection_e)
-            .value("ForceDirectConnection", mo::ParamType::ForceDirectConnection_e);
+        // TODO boost python enum from ct
+        /*boost::python::enum_<mo::BufferFlags>("BufferFlags")
+            .value("Default", mo::BufferFlags::DEFAULT)
+            .value("CircularBuffer", mo::BufferFlags::CIRCULAR_BUFFER)
+            .value("Map", mo::BufferFlags::MAP_BUFFER)
+            .value("StreamBuffer", mo::BufferFlags::STREAM_BUFFER)
+            .value("BlockingStreamBuffer", mo::BufferFlags::BLOCKING_STREAM_BUFFER)
+            .value("NNStreamBuffer", mo::BufferFlags::NEAREST_NEIGHBOR_BUFFER)
+            .value("Queue", mo::BufferFlags::QUEUE_BUFFER)
+            .value("BlockingQueue", mo::BufferFlags::BLOCKING_QUEUE_BUFFER)
+            .value("DroppingQueue", mo::BufferFlags::DROPPING_QUEUE_BUFFER)
+            .value("ForceBufferedConnection", mo::BufferFlags::FORCE_BUFFERED)
+            .value("ForceDirectConnection", mo::BufferFlags::FORCE_DIRECT);
+
+        boost::python::enum_<mo::UpdateFlags>("ParamUpdateFlags")
+            .value("ValueUpdated", mo::UpdateFlags::kVALUE_UPDATED)
+            .value("InputSet", mo::UpdateFlags::kINPUT_SET)
+            .value("InputCleared", mo::UpdateFlags::kINPUT_CLEARED)
+            .value("InputUpdated", mo::UpdateFlags::kINPUT_UPDATED)
+            .value("BufferUpdated", mo::UpdateFlags::kBUFFER_UPDATED);*/
     }
 }

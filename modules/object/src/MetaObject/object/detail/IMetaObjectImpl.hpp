@@ -1,28 +1,28 @@
 #pragma once
-#include "MetaObject/detail/TypeInfo.hpp"
-#include "MetaObject/logging/logging.hpp"
-#include "MetaObject/params/ITParam.hpp"
-#include "MetaObject/params/TParam.hpp"
-#include "MetaObject/object/MetaObject.hpp"
+#include <MetaObject/core/detail/forward.hpp>
+#include <MetaObject/detail/TypeInfo.hpp>
+#include <MetaObject/logging/logging.hpp>
+#include <MetaObject/object/MetaObject.hpp>
+
 namespace mo
 {
     class IMetaObject;
 
     template <class T>
-    ITParam<T>* MetaObject::getParam(const std::string& name) const
+    TParam<T>* MetaObject::getParam(const std::string& name) const
     {
         IParam* param = getParam(name);
-        ITParam<T>* typed = dynamic_cast<ITParam<T>*>(param);
+        TParam<T>* typed = dynamic_cast<TParam<T>*>(param);
         if (typed)
         {
             return typed;
         }
-        THROW(debug) << "Param \"" << name << "\" not convertable to type " << TypeInfo(typeid(T)).name();
+        THROW(debug, "Param {} not convertable to {}", name, TypeInfo(typeid(T)).name());
         return nullptr;
     }
 
     template <class T>
-    T MetaObject::getParamValue(const std::string& name, const OptionalTime_t& ts, Context* ctx) const
+    T MetaObject::getParamValue(const std::string& name, const OptionalTime& ts, IAsyncStream* ctx) const
     {
         T data;
         MO_ASSERT(getParam<T>(name)->getData(data, ts, ctx));
@@ -30,59 +30,58 @@ namespace mo
     }
 
     template <class T>
-    ITParam<T>* MetaObject::getParamOptional(const std::string& name) const
+    TParam<T>* MetaObject::getParamOptional(const std::string& name) const
     {
         auto param = getParamOptional(name);
-        ITParam<T>* typed = dynamic_cast<ITParam<T>*>(param);
+        TParam<T>* typed = dynamic_cast<TParam<T>*>(param);
         return typed;
     }
 
     template <class T>
-    ITParam<T>* MetaObject::updateParam(const std::string& name, T& value, const OptionalTime_t& ts, Context* ctx)
+    TParam<T>* MetaObject::updateParam(const std::string& name, T& value, const OptionalTime& ts)
     {
-        if (ctx == nullptr)
-            ctx = getContext().get();
         auto param = getParamOptional<T>(name);
         if (param)
         {
-            param->updateData(value, ts, ctx);
+            param->updateData(value, ts);
             return param;
         }
-        else
-        {
-            std::shared_ptr<TParam<T>> new_param(new TParam<T>(name, value));
-            addParam(new_param);
-            return new_param.get();
-        }
+
+        std::shared_ptr<TParam<T>> new_param(new TParam<T>(name));
+        new_param->updateData(value);
+        addParam(new_param);
+        return new_param.get();
     }
 
     template <class T>
-    ITParam<T>* MetaObject::updateParam(const std::string& name, const T& value, const OptionalTime_t& ts, Context* ctx)
+    TParam<T>* MetaObject::updateParam(const std::string& name, const T& value, const OptionalTime& ts)
     {
-        if (ctx == nullptr)
-            ctx = getContext().get();
         auto param = getParamOptional<T>(name);
         if (param)
         {
-            param->updateData(value, ts, ctx);
+            param->updateData(value, ts);
             return param;
         }
-        else
-        {
-            std::shared_ptr<ITParam<T>> new_param(new TParam<T>(name, value));
-            addParam(new_param);
-            return new_param.get();
-        }
+
+        std::shared_ptr<TParam<T>> new_param(new TParam<T>(name, value));
+        addParam(new_param);
+        return new_param.get();
     }
 
     template <class T>
-    ITParam<T>* MetaObject::updateParamPtr(const std::string& name, T& ptr)
+    TParam<T>* MetaObject::updateParamPtr(const std::string& name, T& ptr)
     {
         return nullptr;
     }
 
+    template <class SIGNATURE>
+    TSignal<SIGNATURE> IMetaObject::getSignal(const std::string& name)
+    {
+        return dynamic_cast<TSignal<SIGNATURE>*>(this->getSignal(name, TypeInfo(typeid(SIGNATURE))));
+    }
+
     template <class T>
-    TSlot<T>* MetaObject::getSlot(const std::string& name) const
+    TSlot<T>* IMetaObject::getSlot(const std::string& name)
     {
         return dynamic_cast<TSlot<T>*>(this->getSlot(name, TypeInfo(typeid(T))));
     }
@@ -105,25 +104,25 @@ namespace mo
     }
 
     template <class T>
-    ITParam<T>* MetaObject::getOutput(const std::string& name) const
+    TParam<T>* MetaObject::getOutput(const std::string& name) const
     {
         auto ptr = getOutput(name);
         if (ptr)
         {
             if (ptr->getTypeInfo() == TypeInfo(typeid(T)))
             {
-                return dynamic_cast<ITParam<T>*>(ptr);
+                return dynamic_cast<TParam<T>*>(ptr);
             }
         }
         return nullptr;
     }
 
     template <class T>
-    bool IMetaObject::connect(IMetaObject* sender,
+    bool IMetaObject::connect(IMetaObject& sender,
                               const std::string& signal_name,
-                              IMetaObject* receiver,
+                              IMetaObject& receiver,
                               const std::string& slot_name)
     {
         return connect(sender, signal_name, receiver, slot_name, TypeInfo(typeid(T)));
     }
-}
+} // namespace mo

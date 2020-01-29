@@ -1,12 +1,14 @@
-#ifdef HAVE_QT5
-#include "MetaObject/types/file_types.hpp"
 #include "MetaObject/params/ui/Qt/POD.hpp"
-#include <boost/thread/recursive_mutex.hpp>
+#include "MetaObject/types/file_types.hpp"
+#include <MetaObject/thread/fiber_include.hpp>
+
 using namespace mo;
 using namespace mo::UI;
 using namespace mo::UI::qt;
 
-THandler<EnumParam, void>::THandler(IParamProxy& parent) : UiUpdateHandler(parent), enumCombo(nullptr)
+THandler<EnumParam, void>::THandler(IParamProxy& parent)
+    : UiUpdateHandler(parent)
+    , enumCombo(nullptr)
 {
 }
 
@@ -41,4 +43,3 @@ std::vector<QWidget*> THandler<EnumParam, void>::getUiWidgets(QWidget* parent)
     output.push_back(enumCombo);
     return output;
 }
-#endif

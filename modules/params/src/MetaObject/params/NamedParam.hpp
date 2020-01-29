@@ -1,238 +1,256 @@
 #pragma once
 #include <boost/optional.hpp>
 
-#define MO_KEYWORD_INPUT(name, type)                                                                                   \
-    namespace tag                                                                                                      \
-    {                                                                                                                  \
-        struct name                                                                                                    \
-        {                                                                                                              \
-            typedef type Type;                                                                                         \
-            typedef const Type& ConstRef;                                                                              \
-            typedef Type& Ref;                                                                                         \
-            typedef ConstRef StorageType;                                                                              \
-            typedef const void* VoidType;                                                                              \
-            template <typename T>                                                                                      \
-            static constexpr bool AllowedType()                                                                        \
-            {                                                                                                          \
-                return std::is_same<boost::optional<type>, T>::value || std::is_same<Type, T>::value;                  \
-            }                                                                                                          \
-            static VoidType GetPtr(const boost::optional<Type>& arg)                                                   \
-            {                                                                                                          \
-                if (arg)                                                                                               \
-                    return arg.get_ptr();                                                                              \
-                return nullptr;                                                                                        \
-            }                                                                                                          \
-            static VoidType GetPtr(const Type& arg) { return &arg; }                                                   \
-            template <class T>                                                                                         \
-            static VoidType GetPtr(const T& arg)                                                                       \
-            {                                                                                                          \
-                (void)arg;                                                                                             \
-                return nullptr;                                                                                        \
-            }                                                                                                          \
-        };                                                                                                             \
-        static mo::kwargs::TKeyword<name>& _##name = mo::kwargs::TKeyword<name>::instance;                             \
-    }
-
-#define MO_KEYWORD_OUTPUT(name, type)                                                                                  \
-    namespace tag                                                                                                      \
-    {                                                                                                                  \
-        struct name                                                                                                    \
-        {                                                                                                              \
-            typedef type Type;                                                                                         \
-            typedef const Type& ConstRef;                                                                              \
-            typedef Type& Ref;                                                                                         \
-            typedef Ref StorageType;                                                                                   \
-            typedef void* VoidType;                                                                                    \
-            template <typename T>                                                                                      \
-            static constexpr bool AllowedType()                                                                        \
-            {                                                                                                          \
-                return std::is_same<boost::optional<Type>, T>::value || std::is_same<Type, T>::value;                  \
-            }                                                                                                          \
-            static VoidType GetPtr(boost::optional<Type>& arg)                                                         \
-            {                                                                                                          \
-                if (arg)                                                                                               \
-                    return arg.get_ptr();                                                                              \
-                return nullptr;                                                                                        \
-            }                                                                                                          \
-            static VoidType GetPtr(Type& arg) { return &arg; }                                                         \
-            template <class T>                                                                                         \
-            static VoidType GetPtr(const T& arg)                                                                       \
-            {                                                                                                          \
-                (void)arg;                                                                                             \
-                return nullptr;                                                                                        \
-            }                                                                                                          \
-        };                                                                                                             \
-        static mo::kwargs::TKeyword<name>& _##name = mo::kwargs::TKeyword<name>::instance;                             \
-    }
-template <int V1, int V2>
-struct AssertEquality
-{
-    static const char not_equal_warning = V1 + V2 + 256;
-};
-
-template <int V>
-struct AssertEquality<V, V>
-{
-    static const bool not_equal_warning = 0;
-};
-
-#define ASSERT_EQUALITY(V1, V2)                                                                                        \
-    static_assert(AssertEquality<static_cast<int>(V1), static_cast<int>(V2)>::not_equal_warning == 0, #V1 " != " #V2);
+#include <ct/VariadicTypedef.hpp>
+#include <ct/type_traits.hpp>
 
 namespace mo
 {
-    namespace kwargs
+    // https://www.fluentcpp.com/2016/12/08/strong-types-for-strong-interfaces/
+    struct NamedParamBase
     {
-        struct TaggedBase
-        {
-        };
+    };
 
-        template <class Tag>
-        struct TaggedArgument : public TaggedBase
+    template <class Tag, class T, class U = const T&>
+    struct TNamedParam : public NamedParamBase
+    {
+        using type = T;
+        using tag = Tag;
+        using storage_type = U;
+        using pointer_type = const T*;
+
+        explicit TNamedParam(storage_type value)
+            : m_value(value)
         {
-            typedef Tag TagType;
-            explicit TaggedArgument(typename Tag::StorageType val) : arg(&val) {}
-            explicit TaggedArgument(const boost::optional<typename Tag::Type>& val)
+        }
+
+        TNamedParam(const TNamedParam<Tag, T, T>& other)
+            : m_value(other.get())
+        {
+        }
+
+        operator storage_type() const
+        {
+            return m_value;
+        }
+
+        const storage_type& get() const
+        {
+            return m_value;
+        }
+
+        const T* ptr() const
+        {
+            return &m_value;
+        }
+
+      private:
+        storage_type m_value;
+    };
+
+    template <class Tag, class T>
+    struct TNamedParam<Tag, T, T> : public NamedParamBase
+    {
+        using type = T;
+        using tag = Tag;
+        using storage_type = T;
+        using pointer_type = const T*;
+
+        explicit TNamedParam(storage_type value)
+            : m_value(std::move(value))
+        {
+        }
+
+        operator storage_type() const
+        {
+            return m_value;
+        }
+
+        const storage_type& get() const
+        {
+            return m_value;
+        }
+
+        const T* ptr() const
+        {
+            return &m_value;
+        }
+
+      private:
+        storage_type m_value;
+    };
+
+    template <class Tag, class T>
+    struct TNamedParam<Tag, const T*, const T*> : public NamedParamBase
+    {
+        using type = T;
+        using tag = Tag;
+        using storage_type = const T*;
+        using pointer_type = const T*;
+
+        explicit TNamedParam(storage_type value)
+            : m_value(value)
+        {
+        }
+
+        explicit TNamedParam(const boost::optional<const T>& value)
+        {
+            if (value)
             {
-                if (val)
-                {
-                    arg = &(*val);
-                }
-                else
-                {
-                    arg = nullptr;
-                }
+                m_value = &(*value);
             }
+        }
 
-            typename Tag::VoidType get() const { return arg; }
-
-          protected:
-            typename Tag::VoidType arg;
-        };
-
-        template <class Tag>
-        struct TKeyword
+        explicit TNamedParam(const boost::optional<T>& value)
         {
-            static TKeyword instance;
-            TaggedArgument<Tag> operator=(typename Tag::StorageType data) { return TaggedArgument<Tag>(data); }
-            TaggedArgument<Tag> operator=(const boost::optional<typename Tag::Type>& data)
+            if (value)
             {
-                return TaggedArgument<Tag>(data);
+                m_value = &(*value);
             }
-        };
-        template <class T>
-        TKeyword<T> TKeyword<T>::instance;
+        }
+
+        operator storage_type() const
+        {
+            return m_value;
+        }
+
+        storage_type get() const
+        {
+            return m_value;
+        }
+
+        storage_type ptr() const
+        {
+            return m_value;
+        }
+
+      private:
+        storage_type m_value = nullptr;
+    };
+
+    // Example
+    // struct TimestampParameter;
+    // using Timestamp = TNamedParam<TimestampParameter, mo::Time>
+
+    template <class T>
+    struct IsNamedParam
+    {
+        static constexpr bool value = ct::IsBase<ct::Base<NamedParamBase>, ct::Derived<T>>::value;
+    };
+
+    constexpr bool hasNamedParam(ct::VariadicTypedef<> = {})
+    {
+        return false;
     }
 
-    template <int N, typename... T>
-    struct ArgType;
-
-    template <typename T0, typename... T>
-    struct ArgType<0, T0, T...>
+    template <class T, class... Ts>
+    constexpr bool hasNamedParam(ct::VariadicTypedef<T, Ts...> = {})
     {
-        typedef T0 type;
+        return IsNamedParam<ct::decay_t<T>>::value || hasNamedParam(ct::VariadicTypedef<Ts...>{});
+    }
+
+    template <class Tag, class Type, class Storage, class Enable = void>
+    struct TKeywordBase
+    {
+        using type = typename Tag::type;
+        using tag = typename Tag::tag;
+
+        Tag operator=(Storage data) const
+        {
+            return Tag(data);
+        }
     };
 
-    template <int N, typename T0, typename... T>
-    struct ArgType<N, T0, T...>
+    template <class Tag, class Type, class Storage>
+    struct TKeywordBase<Tag, Type, Storage, ct::EnableIf<!std::is_pointer<typename std::decay<Type>::type>::value>>
     {
-        typedef typename ArgType<N - 1, T...>::type type;
+        using type = typename Tag::type;
+        using tag = typename Tag::tag;
+
+        // This returns a TNamedParam with the same tag but it stores a copy of the data instead of a const ref.
+        // This is needed since the operator = could be passed a temporary which we can't take a const ref of
+        TNamedParam<tag, type, type> operator=(type&& data) const
+        {
+            return TNamedParam<tag, type, type>(std::forward<type>(data));
+        }
+
+        Tag operator=(Storage data) const
+        {
+            return Tag(data);
+        }
     };
 
+    // Example
+    // TKeyword<Timestamp>
+    // static const constexpr TKeyword<Timestamp> timestamp;
     template <class Tag>
-    typename Tag::VoidType GetKeyImpl()
+    struct TKeyword : TKeywordBase<Tag, typename Tag::type, typename Tag::storage_type>
     {
-        return 0;
-    }
+        using TKeywordBase<Tag, typename Tag::type, typename Tag::storage_type>::operator=;
+        constexpr TKeyword()
+        {
+        }
+    };
 
-    template <class T, class U>
-    constexpr int CountTypeImpl(const U& value)
+    // This simplifies the number of overloads needed below for some compilers
+    struct NullArgType
     {
-        return std::is_same<T, U>::value ? 1 : 0;
-    }
+    };
 
-    template <class T, class U, class... Args>
-    constexpr int CountTypeImpl(const U& value, const Args&... args)
+    template <class Tag, class T>
+    struct SameTag
     {
-        return CountTypeImpl<T, Args...>(args...) + (std::is_same<T, U>::value ? 1 : 0);
-    }
+        static constexpr const bool value = false;
+    };
+    template <class Tag, class U, class V>
+    struct SameTag<Tag, TNamedParam<typename Tag::tag, U, V>>
+    {
+        static constexpr const bool value = true;
+    };
 
-    template <class T, class... Args>
-    constexpr int CountType(const Args&... args)
+    template <class Tag, class T>
+    constexpr typename Tag::pointer_type getKeywordInputOptionalImpl(T&&)
     {
-        return CountTypeImpl<T, Args...>(args...);
-    }
-
-    template <size_t N, typename... Args>
-    auto GetPositionalInput(Args&&... as) noexcept
-        -> decltype(std::get<N>(std::forward_as_tuple(std::forward<Args>(as)...)))
-    {
-        return std::get<N>(std::forward_as_tuple(std::forward<Args>(as)...));
-    }
-
-    template <class Tag, class T, class... Args>
-    typename std::enable_if<std::is_base_of<kwargs::TaggedBase, T>::value, typename Tag::VoidType>::type
-    GetKeyImpl(const T& arg, const Args&... args)
-    {
-        return std::is_same<typename T::TagType, Tag>::value ? const_cast<void*>(arg.get())
-                                                             : const_cast<void*>(GetKeyImpl<Tag, Args...>(args...));
-    }
-
-    template <class Tag, class T, class... Args>
-    typename std::enable_if<!std::is_base_of<kwargs::TaggedBase, T>::value, typename Tag::VoidType>::type
-    GetKeyImpl(const T& arg, const Args&... args)
-    {
-#ifdef __GNUC__
-// static_assert(CountType<typename Tag::Type>(arg, args...) <= 1, "Cannot infer type when there are multiple variadic
-// Params with desired type");
-#endif
-        return Tag::template AllowedType<T>() ? // This infers the type
-                   Tag::GetPtr(arg)
-                                              : const_cast<void*>(GetKeyImpl<Tag, Args...>(args...));
-    }
-
-    template <class Tag, class... Args>
-    typename Tag::ConstRef GetKeywordInput(const Args&... args)
-    {
-        const void* ptr = GetKeyImpl<Tag>(args...);
-        assert(ptr);
-        return *(static_cast<const typename Tag::Type*>(ptr));
-    }
-
-    template <class Tag, class... Args>
-    typename Tag::ConstRef GetKeywordInputDefault(typename Tag::ConstRef def, const Args&... args)
-    {
-        const void* ptr = GetKeyImpl<Tag>(args...);
-        if (ptr)
-            return *static_cast<const typename Tag::Type*>(ptr);
-        return def;
-    }
-
-    template <class Tag, class... Args>
-    const typename Tag::Type* GetKeywordInputOptional(const Args&... args)
-    {
-        const void* ptr = GetKeyImpl<Tag>(args...);
-        if (ptr)
-            return static_cast<const typename Tag::Type*>(ptr);
         return nullptr;
     }
 
-    template <class Tag, class... Args>
-    typename Tag::Ref GetKeywordOutput(const Args&... args)
+    template <class Tag, class T, class... Ts>
+    constexpr auto getKeywordInputOptionalImpl(T&&, Ts&&... args)
+        -> ct::DisableIf<SameTag<Tag, ct::decay_t<T>>::value, typename Tag::pointer_type>
     {
-        static_assert(!std::is_const<typename Tag::VoidType>::value, "Tag type is not an output tag");
-        void* ptr = GetKeyImpl<Tag>(args...);
-        assert(ptr);
-        return *(static_cast<typename Tag::Type*>(ptr));
+        return getKeywordInputOptionalImpl<Tag>(std::forward<Ts>(args)...);
     }
 
-    template <class Tag, class... Args>
-    typename Tag::Type* GetKeywordOutputOptional(const Args&... args)
+    template <class Tag, class U, class V, class... Ts>
+    constexpr typename Tag::pointer_type getKeywordInputOptionalImpl(const TNamedParam<typename Tag::tag, U, V>& arg,
+                                                                     Ts&&...)
     {
-        static_assert(!std::is_const<typename Tag::VoidType>::value, "Tag type is not an output tag");
-        void* ptr = GetKeyImpl<Tag>(args...);
-        if (ptr)
-            return (static_cast<typename Tag::Type*>(ptr));
-        return nullptr;
+        return arg.ptr();
     }
-}
+
+    template <class Tag, class... Ts>
+    constexpr typename Tag::pointer_type getKeywordInputOptional(Ts&&... args)
+    {
+        return getKeywordInputOptionalImpl<Tag>(std::forward<Ts>(args)..., NullArgType{});
+    }
+
+    //////////////////////////////////////////////////////////////////
+    // getKeywordInputDefault
+    template <class Tag>
+    constexpr typename Tag::storage_type getKeywordInputDefault(typename Tag::storage_type dv)
+    {
+        return dv;
+    }
+
+    template <class Tag, class T, class... Ts>
+    constexpr typename Tag::storage_type getKeywordInputDefault(typename Tag::storage_type dv, T&&, Ts&&... args)
+    {
+        return getKeywordInputDefault<Tag>(dv, std::forward<Ts>(args)...);
+    }
+
+    template <class Tag, class... Ts>
+    constexpr typename Tag::storage_type getKeywordInputDefault(typename Tag::storage_type, Tag arg, Ts&&...)
+    {
+        return arg.get();
+    }
+} // namespace mo

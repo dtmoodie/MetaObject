@@ -1,7 +1,9 @@
-#pragma once
-#include "MetaObject/detail/Export.hpp"
-#include "MetaObject/detail/TypeInfo.hpp"
-#include "RuntimeObjectSystem/IObjectInfo.h"
+#ifndef MO_OBJECT_IMETA_OBJECT_INFO_HPP
+#define MO_OBJECT_IMETA_OBJECT_INFO_HPP
+
+#include <MetaObject/detail/Export.hpp>
+#include <MetaObject/detail/TypeInfo.hpp>
+#include <RuntimeObjectSystem/IObjectInfo.h>
 
 #include <vector>
 namespace mo
@@ -9,6 +11,7 @@ namespace mo
     struct ParamInfo;
     struct SignalInfo;
     struct SlotInfo;
+    class ISlot;
     class MO_EXPORTS IMetaObjectInfo : public IObjectInfo
     {
       public:
@@ -20,5 +23,8 @@ namespace mo
         virtual std::string getObjectTooltip() const;
         virtual std::string getObjectHelp() const;
         virtual std::string getDisplayName() const { return GetObjectName(); }
+        virtual std::vector<std::pair<ISlot*, std::string>> getStaticSlots() const { return {}; }
     };
 }
+
+#endif // MO_OBJECT_IMETA_OBJECT_INFO_HPP

@@ -1,5 +1,8 @@
+
+
 #include "MetaObject/logging/CompileLogger.hpp"
 #include <MetaObject/logging/logging.hpp>
+#include <spdlog/details/registry.h>
 #include <stdio.h>
 using namespace mo;
 
@@ -35,23 +38,23 @@ void CompileLogger::LogInternal(int severity, const char* format, va_list args)
     m_buff[LOGSYSTEM_MAX_BUFFER - 1] = '\0';
     if (severity == 0)
     {
-        BOOST_LOG_TRIVIAL(trace) << m_buff;
+        mo::getDefaultLogger().trace(m_buff);
     }
     if (severity == 1)
     {
-        BOOST_LOG_TRIVIAL(debug) << m_buff;
+        mo::getDefaultLogger().debug(m_buff);
     }
     if (severity == 2)
     {
-        BOOST_LOG_TRIVIAL(info) << m_buff;
+        mo::getDefaultLogger().info(m_buff);
     }
     if (severity == 3)
     {
-        BOOST_LOG_TRIVIAL(warning) << m_buff;
+        mo::getDefaultLogger().warn(m_buff);
     }
     if (severity == 4)
     {
-        BOOST_LOG_TRIVIAL(error) << m_buff;
+        mo::getDefaultLogger().error(m_buff);
     }
 }
 
@@ -61,32 +64,32 @@ bool BuildCallback::TestBuildCallback(const char* file, TestBuildResult type)
     {
     case TESTBUILDRRESULT_SUCCESS:
     {
-        BOOST_LOG_TRIVIAL(info) << file << "TESTBUILDRRESULT_SUCCESS\n";
+        mo::getDefaultLogger().info("{} {}", "TEST BUILD RESULT SUCCESS", file);
         break;
     }
     case TESTBUILDRRESULT_NO_FILES_TO_BUILD:
     {
-        BOOST_LOG_TRIVIAL(info) << file << "TESTBUILDRRESULT_NO_FILES_TO_BUILD\n";
+        mo::getDefaultLogger().info("{} {}", "TESTBUILDRRESULT_NO_FILES_TO_BUILD", file);
         break;
     }
     case TESTBUILDRRESULT_BUILD_FILE_GONE:
     {
-        BOOST_LOG_TRIVIAL(info) << file << "TESTBUILDRRESULT_BUILD_FILE_GONE\n";
+        mo::getDefaultLogger().info("{} {}", "TESTBUILDRRESULT_BUILD_FILE_GONE", file);
         break;
     }
     case TESTBUILDRRESULT_BUILD_NOT_STARTED:
     {
-        BOOST_LOG_TRIVIAL(info) << file << "TESTBUILDRRESULT_BUILD_NOT_STARTED\n";
+        mo::getDefaultLogger().info("{} {}", "TESTBUILDRRESULT_BUILD_NOT_STARTED", file);
         break;
     }
     case TESTBUILDRRESULT_BUILD_FAILED:
     {
-        BOOST_LOG_TRIVIAL(info) << file << "TESTBUILDRRESULT_BUILD_FAILED\n";
+        mo::getDefaultLogger().info("{} {}", "TESTBUILDRRESULT_BUILD_FAILED", file);
         break;
     }
     case TESTBUILDRRESULT_OBJECT_SWAP_FAIL:
     {
-        BOOST_LOG_TRIVIAL(info) << file << "TESTBUILDRRESULT_OBJECT_SWAP_FAIL\n";
+        mo::getDefaultLogger().info("{} {}", "TESTBUILDRRESULT_OBJECT_SWAP_FAIL", file);
         break;
     }
     }

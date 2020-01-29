@@ -1,670 +1,81 @@
-#include "MetaObject/core/detail/AllocatorImpl.hpp"
-#include "MetaObject/thread/cuda.hpp"
-#include <MetaObject/core/SystemTable.hpp>
-#include <RuntimeObjectSystem/ObjectInterfacePerModule.h>
 
-#include "singleton.hpp"
-#include <ctime>
+
+#include "Allocator.hpp"
+#include "MemoryBlock.hpp"
+#include <MetaObject/core/SystemTable.hpp>
 
 namespace mo
 {
-    AllocationPolicy::~AllocationPolicy() {}
-
-    thread_local std::string g_current_scope;
-
-    const std::string& getScopeName() { return g_current_scope; }
-
-    void setScopeName(const std::string& name) { g_current_scope = name; }
-
-    class CpuMemoryPoolImpl : public CpuMemoryPool
+    std::shared_ptr<Allocator> Allocator::getDefault()
     {
-      public:
-        CpuMemoryPoolImpl(size_t initial_size = 1e8) : m_total_usage(0), m_initial_block_size(initial_size)
-        {
-            m_blocks.emplace_back(std::unique_ptr<CpuMemoryBlock>(new CpuMemoryBlock(m_initial_block_size)));
-        }
-
-        bool allocate(void** ptr_out, size_t total, size_t elemSize)
-        {
-            int index = 0;
-            unsigned char* ptr;
-            for (auto& block : m_blocks)
-            {
-                ptr = block->allocate(total, elemSize);
-                if (ptr)
-                {
-                    *ptr_out = ptr;
-                    return true;
-                }
-                ++index;
-            }
-            MO_LOG(trace) << "Creating new block of page locked memory for allocation.";
-            m_blocks.push_back(std::unique_ptr<mo::CpuMemoryBlock>(new mo::CpuMemoryBlock(std::max(m_initial_block_size / 2, total))));
-            ptr = (*m_blocks.rbegin())->allocate(total, elemSize);
-            if (ptr)
-            {
-                *ptr_out = ptr;
-                return true;
-            }
-            return false;
-        }
-
-        uchar* allocate(size_t num_bytes)
-        {
-            int index = 0;
-            unsigned char* ptr;
-            for (auto& block : m_blocks)
-            {
-                ptr = block->allocate(num_bytes, sizeof(uchar));
-                if (ptr)
-                {
-                    return ptr;
-                }
-                ++index;
-            }
-            m_blocks.push_back(std::unique_ptr<mo::CpuMemoryBlock>(new mo::CpuMemoryBlock(std::max(m_initial_block_size / 2, num_bytes))));
-            ptr = (*m_blocks.rbegin())->allocate(num_bytes, sizeof(uchar));
-            if (ptr)
-            {
-                return ptr;
-            }
-            return nullptr;
-        }
-
-        bool deallocate(void* ptr, size_t total)
-        {
-            for (const auto& itr : m_blocks)
-            {
-                if (ptr >= itr->begin() && ptr < itr->end())
-                {
-                    if (itr->deAllocate(static_cast<unsigned char*>(ptr)))
-                    {
-                        m_total_usage -= total;
-                        return true;
-                    }
-                }
-            }
-            return false;
-        }
-
-      private:
-        size_t m_total_usage = 0;
-        size_t m_initial_block_size;
-        std::list<std::unique_ptr<mo::CpuMemoryBlock>> m_blocks;
-    };
-
-    class mt_CpuMemoryPoolImpl : public CpuMemoryPoolImpl
-    {
-      public:
-        bool allocate(void** ptr, size_t total, size_t elemSize)
-        {
-            boost::mutex::scoped_lock lock(mtx);
-            return CpuMemoryPoolImpl::allocate(ptr, total, elemSize);
-        }
-        uchar* allocate(size_t total)
-        {
-            boost::mutex::scoped_lock lock(mtx);
-            return CpuMemoryPoolImpl::allocate(total);
-        }
-
-        bool deallocate(void* ptr, size_t total)
-        {
-            boost::mutex::scoped_lock lock(mtx);
-            return CpuMemoryPoolImpl::deallocate(ptr, total);
-        }
-
-      private:
-        boost::mutex mtx;
-    };
-
-    CpuMemoryPool* CpuMemoryPool::globalInstance()
-    {
-        static CpuMemoryPool* g_inst = nullptr;
-        if (g_inst == nullptr)
-        {
-            g_inst = new mt_CpuMemoryPoolImpl();
-        }
-        return g_inst;
+        return SystemTable::instance()->getDefaultAllocator();
     }
 
-    CpuMemoryPool* CpuMemoryPool::threadInstance()
+    void Allocator::setDefault(std::shared_ptr<Allocator> alloc)
     {
-        static boost::thread_specific_ptr<CpuMemoryPool> g_inst;
-        if (g_inst.get() == nullptr)
-        {
-            g_inst.reset(new CpuMemoryPoolImpl());
-        }
-        return g_inst.get();
+        SystemTable::instance()->setDefaultAllocator(std::move(alloc));
     }
 
-    class CpuMemoryStackImpl : public CpuMemoryStack
+    uint8_t* alignMemory(uint8_t* ptr, const size_t elem_size)
     {
-      public:
-        typedef cv::Mat MatType;
-        CpuMemoryStackImpl(size_t delay) : deallocation_delay(delay) {}
-
-        ~CpuMemoryStackImpl() { cleanup(true, true); }
-
-        bool allocate(void** ptr, size_t total, size_t elemSize)
-        {
-            (void)elemSize;
-            for (auto itr = deallocate_stack.begin(); itr != deallocate_stack.end(); ++itr)
-            {
-                if (std::get<2>(*itr) == total)
-                {
-                    *ptr = std::get<0>(*itr);
-                    deallocate_stack.erase(itr);
-                    return true;
-                }
-            }
-            this->total_usage += total;
-            CV_CUDEV_SAFE_CALL(cudaMallocHost(ptr, total));
-            return true;
-        }
-
-        uchar* allocate(size_t total)
-        {
-            for (auto itr = deallocate_stack.begin(); itr != deallocate_stack.end(); ++itr)
-            {
-                if (std::get<2>(*itr) == total)
-                {
-                    deallocate_stack.erase(itr);
-                    return std::get<0>(*itr);
-                }
-            }
-            this->total_usage += total;
-            uchar* ptr = nullptr;
-            CV_CUDEV_SAFE_CALL(cudaMallocHost(&ptr, total));
-            return ptr;
-        }
-
-        bool deallocate(void* ptr, size_t total)
-        {
-            deallocate_stack.emplace_back(static_cast<unsigned char*>(ptr), clock(), total);
-            cleanup();
-            return true;
-        }
-
-      private:
-        void cleanup(bool force = false, bool destructor = false)
-        {
-            if (isCudaThread())
-                return;
-            auto time = clock();
-            if (force)
-                time = 0;
-            for (auto itr = deallocate_stack.begin(); itr != deallocate_stack.end();)
-            {
-                if ((time - std::get<1>(*itr)) > deallocation_delay)
-                {
-                    total_usage -= std::get<2>(*itr);
-                    MO_CUDA_ERROR_CHECK(cudaFreeHost(static_cast<void*>(std::get<0>(*itr))),
-                                        "Error freeing " << std::get<2>(*itr) << " bytes of memory");
-                    itr = deallocate_stack.erase(itr);
-                }
-                else
-                {
-                    ++itr;
-                }
-            }
-        }
-        size_t total_usage;
-        size_t deallocation_delay;
-        std::list<std::tuple<unsigned char*, clock_t, size_t>> deallocate_stack;
-    };
-
-    class mt_CpuMemoryStackImpl : public CpuMemoryStackImpl
-    {
-      public:
-        mt_CpuMemoryStackImpl(size_t delay) : CpuMemoryStackImpl(delay) {}
-        bool allocate(void** ptr, size_t total, size_t elemSize)
-        {
-            boost::mutex::scoped_lock lock(mtx);
-            return CpuMemoryStackImpl::allocate(ptr, total, elemSize);
-        }
-        uchar* allocate(size_t total)
-        {
-            boost::mutex::scoped_lock lock(mtx);
-            return CpuMemoryStackImpl::allocate(total);
-        }
-
-        bool deallocate(void* ptr, size_t total)
-        {
-            boost::mutex::scoped_lock lock(mtx);
-            return CpuMemoryStackImpl::deallocate(ptr, total);
-        }
-
-      private:
-        boost::mutex mtx;
-    };
-
-    CpuMemoryStack* CpuMemoryStack::globalInstance()
-    {
-        static CpuMemoryStack* g_inst = nullptr;
-        if (g_inst == nullptr)
-        {
-            g_inst = new mt_CpuMemoryStackImpl(static_cast<size_t>(1.5 * CLOCKS_PER_SEC));
-        }
-        return g_inst;
+        return &ptr[alignmentOffset(ptr, elem_size)];
     }
 
-    CpuMemoryStack* CpuMemoryStack::threadInstance()
+    const uint8_t* alignMemory(const uint8_t* ptr, const size_t elem_size)
     {
-        static boost::thread_specific_ptr<CpuMemoryStack> g_inst;
-        if (g_inst.get() == nullptr)
-        {
-            g_inst.reset(new CpuMemoryStackImpl(static_cast<size_t>(1.5 * CLOCKS_PER_SEC)));
-        }
-        return g_inst.get();
+        return &ptr[alignmentOffset(ptr, elem_size)];
     }
 
-    std::shared_ptr<Allocator> Allocator::createAllocator()
+    size_t alignmentOffset(const uint8_t* ptr, const size_t elem_size)
     {
-        auto table = SystemTable::instance();
-        if(table)
-        {
-            if(table->system_info.have_cuda)
-            {
-                return std::make_shared<mt_UniversalAllocator_t>();
-            }else
-            {
-                return std::make_shared<mt_CPUAllocator_t>();
-                // TODO CPU only allocator
-            }
-        }
-
-        return std::make_shared<mt_UniversalAllocator_t>();
-    }
-    std::weak_ptr<Allocator> Allocator::default_allocator;
-
-    void Allocator::setDefaultAllocator(const std::shared_ptr<Allocator>& allocator)
-    {
-        Allocator::default_allocator = allocator;
+        return elem_size - (reinterpret_cast<const size_t>(ptr) % elem_size);
     }
 
-    std::shared_ptr<Allocator> Allocator::getDefaultAllocator()
+    Allocator::~Allocator() = default;
+
+    void Allocator::release()
     {
-        auto out = default_allocator.lock();
-        if (!out)
-        {
-            out = createAllocator();
-            default_allocator = out;
-        }
-        return out;
     }
 
-    // ================================================================
-    // CpuStackPolicy
-    cv::UMatData* CpuStackPolicy::allocate(
-        int dims, const int* sizes, int type, void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
+    void Allocator::setName(const std::string& name)
     {
-        size_t total = CV_ELEM_SIZE(type);
-        for (int i = dims - 1; i >= 0; i--)
-        {
-            if (step)
-            {
-                if (data && step[i] != CV_AUTOSTEP)
-                {
-                    CV_Assert(total <= step[i]);
-                    total = step[i];
-                }
-                else
-                {
-                    step[i] = total;
-                }
-            }
-
-            total *= static_cast<size_t>(sizes[i]);
-        }
-
-        cv::UMatData* u = new cv::UMatData(this);
-        u->size = total;
-
-        if (data)
-        {
-            u->data = u->origdata = static_cast<uchar*>(data);
-            u->flags |= cv::UMatData::USER_ALLOCATED;
-        }
-        else
-        {
-            void* ptr = 0;
-            CpuMemoryStack::threadInstance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
-            CV_Assert(ptr);
-
-            u->data = u->origdata = static_cast<uchar*>(ptr);
-        }
-
-        return u;
-    }
-    uchar* CpuStackPolicy::allocate(size_t total) { return CpuMemoryStack::threadInstance()->allocate(total); }
-
-    bool CpuStackPolicy::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const
-    {
-        (void)data;
-        (void)accessflags;
-        (void)usageFlags;
-        return false;
-    }
-    void CpuStackPolicy::deallocate(uchar* ptr, size_t total)
-    {
-        CpuMemoryStack::threadInstance()->deallocate(ptr, total);
+        m_name = name;
     }
 
-    void CpuStackPolicy::deallocate(cv::UMatData* u) const
+    void Allocator::deallocate(void* ptr, size_t size)
     {
-        if (!u)
-            return;
-
-        CV_Assert(u->urefcount >= 0);
-        CV_Assert(u->refcount >= 0);
-
-        if (u->refcount == 0)
-        {
-            if (!(u->flags & cv::UMatData::USER_ALLOCATED))
-            {
-                CpuMemoryStack::threadInstance()->deallocate(u->origdata, u->size);
-                u->origdata = 0;
-            }
-
-            delete u;
-        }
+        deallocate(static_cast<uint8_t*>(ptr), size);
     }
 
-    // ================================================================
-    // mt_CpuStackPolicy
-
-    cv::UMatData* mt_CpuStackPolicy::allocate(
-        int dims, const int* sizes, int type, void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
+    const std::string& Allocator::name() const
     {
-        (void)flags;
-        (void)usageFlags;
-        size_t total = CV_ELEM_SIZE(type);
-        for (int i = dims - 1; i >= 0; i--)
-        {
-            if (step)
-            {
-                if (data && step[i] != CV_AUTOSTEP)
-                {
-                    CV_Assert(total <= step[i]);
-                    total = step[i];
-                }
-                else
-                {
-                    step[i] = total;
-                }
-            }
-
-            total *= size_t(sizes[i]);
-        }
-
-        cv::UMatData* u = new cv::UMatData(this);
-        u->size = total;
-
-        if (data)
-        {
-            u->data = u->origdata = static_cast<uchar*>(data);
-            u->flags |= cv::UMatData::USER_ALLOCATED;
-        }
-        else
-        {
-            void* ptr = 0;
-            CpuMemoryStack::globalInstance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
-
-            u->data = u->origdata = static_cast<uchar*>(ptr);
-        }
-
-        return u;
+        return m_name;
     }
 
-    bool mt_CpuStackPolicy::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const
+    DeviceAllocator::~DeviceAllocator() = default;
+
+    void DeviceAllocator::setName(const std::string& name)
     {
-        (void)data;
-        (void)accessflags;
-        (void)usageFlags;
-        return false;
+        m_name = name;
     }
 
-    void mt_CpuStackPolicy::deallocate(cv::UMatData* u) const
+    const std::string& DeviceAllocator::name() const
     {
-        if (!u)
-            return;
-
-        CV_Assert(u->urefcount >= 0);
-        CV_Assert(u->refcount >= 0);
-
-        if (u->refcount == 0)
-        {
-            if (!(u->flags & cv::UMatData::USER_ALLOCATED))
-            {
-                CpuMemoryStack::globalInstance()->deallocate(u->origdata, u->size);
-                u->origdata = 0;
-            }
-
-            delete u;
-        }
+        return m_name;
     }
 
-    // ================================================================
-    // CpuPoolPolicy
-    cv::UMatData* CpuPoolPolicy::allocate(
-        int dims, const int* sizes, int type, void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
+    std::shared_ptr<DeviceAllocator> DeviceAllocator::getDefault()
     {
-        (void)flags;
-        (void)usageFlags;
-        size_t total = CV_ELEM_SIZE(type);
-        for (int i = dims - 1; i >= 0; i--)
-        {
-            if (step)
-            {
-                if (data && step[i] != CV_AUTOSTEP)
-                {
-                    CV_Assert(total <= step[i]);
-                    total = step[i];
-                }
-                else
-                {
-                    step[i] = total;
-                }
-            }
-
-            total *= size_t(sizes[i]);
-        }
-
-        cv::UMatData* u = new cv::UMatData(this);
-        u->size = total;
-
-        if (data)
-        {
-            u->data = u->origdata = static_cast<uchar*>(data);
-            u->flags |= cv::UMatData::USER_ALLOCATED;
-        }
-        else
-        {
-            void* ptr = 0;
-            CpuMemoryPool::threadInstance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
-
-            u->data = u->origdata = static_cast<uchar*>(ptr);
-        }
-
-        return u;
+        return SystemTable::instance()->getSingletonOptional<DeviceAllocator>();
     }
 
-    bool CpuPoolPolicy::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const
+    void DeviceAllocator::release()
     {
-        (void)data;
-        (void)accessflags;
-        (void)usageFlags;
-        return false;
     }
 
-    void CpuPoolPolicy::deallocate(cv::UMatData* u) const
+    void DeviceAllocator::deallocate(void* ptr, size_t num_elems)
     {
-        if (!u)
-            return;
-
-        CV_Assert(u->urefcount >= 0);
-        CV_Assert(u->refcount >= 0);
-
-        if (u->refcount == 0)
-        {
-            if (!(u->flags & cv::UMatData::USER_ALLOCATED))
-            {
-                CpuMemoryPool::threadInstance()->deallocate(u->origdata, u->size);
-                u->origdata = 0;
-            }
-
-            delete u;
-        }
-    }
-    uchar* CpuPoolPolicy::allocate(size_t num_bytes) { return CpuMemoryPool::threadInstance()->allocate(num_bytes); }
-
-    void CpuPoolPolicy::deallocate(uchar* ptr, size_t num_bytes)
-    {
-        (void)ptr;
-        (void)num_bytes;
+        deallocate(ct::ptrCast<uint8_t>(ptr), num_elems);
     }
 
-    // ================================================================
-    // mt_CpuPoolPolicy
-    cv::UMatData* mt_CpuPoolPolicy::allocate(
-        int dims, const int* sizes, int type, void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
-    {
-        (void)flags;
-        (void)usageFlags;
-        size_t total = CV_ELEM_SIZE(type);
-        for (int i = dims - 1; i >= 0; i--)
-        {
-            if (step)
-            {
-                if (data && step[i] != CV_AUTOSTEP)
-                {
-                    CV_Assert(total <= step[i]);
-                    total = step[i];
-                }
-                else
-                {
-                    step[i] = total;
-                }
-            }
-
-            total *= size_t(sizes[i]);
-        }
-
-        cv::UMatData* u = new cv::UMatData(this);
-        u->size = total;
-
-        if (data)
-        {
-            u->data = u->origdata = static_cast<uchar*>(data);
-            u->flags |= cv::UMatData::USER_ALLOCATED;
-        }
-        else
-        {
-            void* ptr = 0;
-            CpuMemoryPool::globalInstance()->allocate(&ptr, total, CV_ELEM_SIZE(type));
-
-            u->data = u->origdata = static_cast<uchar*>(ptr);
-        }
-
-        return u;
-    }
-
-    bool mt_CpuPoolPolicy::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const
-    {
-        (void)data;
-        (void)accessflags;
-        (void)usageFlags;
-        return false;
-    }
-
-    void mt_CpuPoolPolicy::deallocate(cv::UMatData* u) const
-    {
-        if (!u)
-            return;
-
-        CV_Assert(u->urefcount >= 0);
-        CV_Assert(u->refcount >= 0);
-
-        if (u->refcount == 0)
-        {
-            if (!(u->flags & cv::UMatData::USER_ALLOCATED))
-            {
-                CpuMemoryPool::globalInstance()->deallocate(u->origdata, u->size);
-                u->origdata = 0;
-            }
-
-            delete u;
-        }
-    }
-
-    cv::UMatData* PinnedAllocator::allocate(
-        int dims, const int* sizes, int type, void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
-    {
-        (void)flags;
-        (void)usageFlags;
-        size_t total = CV_ELEM_SIZE(type);
-        for (int i = dims - 1; i >= 0; i--)
-        {
-            if (step)
-            {
-                if (data && step[i] != CV_AUTOSTEP)
-                {
-                    CV_Assert(total <= step[i]);
-                    total = step[i];
-                }
-                else
-                {
-                    step[i] = total;
-                }
-            }
-
-            total *= size_t(sizes[i]);
-        }
-
-        cv::UMatData* u = new cv::UMatData(this);
-        u->size = total;
-
-        if (data)
-        {
-            u->data = u->origdata = static_cast<uchar*>(data);
-            u->flags |= cv::UMatData::USER_ALLOCATED;
-        }
-        else
-        {
-            void* ptr = 0;
-            cudaMallocHost(&ptr, total);
-
-            u->data = u->origdata = static_cast<uchar*>(ptr);
-        }
-
-        return u;
-    }
-
-    bool PinnedAllocator::allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const
-    {
-        (void)data;
-        (void)accessflags;
-        (void)usageFlags;
-        return false;
-    }
-
-    void PinnedAllocator::deallocate(cv::UMatData* u) const
-    {
-        if (!u)
-            return;
-
-        CV_Assert(u->urefcount >= 0);
-        CV_Assert(u->refcount >= 0);
-
-        if (u->refcount == 0)
-        {
-            if (!(u->flags & cv::UMatData::USER_ALLOCATED))
-            {
-                cudaFreeHost(u->origdata);
-                u->origdata = 0;
-            }
-
-            delete u;
-        }
-    }
 } // namespace mo

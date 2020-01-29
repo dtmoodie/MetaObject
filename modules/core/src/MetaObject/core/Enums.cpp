@@ -1,121 +1,78 @@
-#include "MetaObject/core/detail/Enums.hpp"
-#include "MetaObject/logging/logging.hpp"
-#include <vector>
-using namespace mo;
+#include <MetaObject/core/detail/Enums.hpp>
+#include <MetaObject/logging/logging.hpp>
+#include <ct/enum.hpp>
+#include <ct/reflect.hpp>
 
-#define TYPE_NAME_HELPER(name)                                                                                         \
-    {                                                                                                                  \
-        ParamFlags::name##_e, #name                                                                                    \
+#include <map>
+
+namespace mo
+{
+    namespace
+    {
+        static std::map<const IAsyncStream*, std::map<const IAsyncStream*, BufferFlags>> connection_map;
+        static BufferFlags default_connection_type = BufferFlags::BLOCKING_STREAM_BUFFER;
     }
 
-static const std::vector<std::pair<ParamFlags, std::string>> type_flag_map = {TYPE_NAME_HELPER(None),
-                                                                              TYPE_NAME_HELPER(Input),
-                                                                              TYPE_NAME_HELPER(Output),
-                                                                              TYPE_NAME_HELPER(State),
-                                                                              TYPE_NAME_HELPER(Control),
-                                                                              TYPE_NAME_HELPER(Buffer),
-                                                                              TYPE_NAME_HELPER(Optional),
-                                                                              TYPE_NAME_HELPER(Unstamped),
-                                                                              TYPE_NAME_HELPER(Source),
-                                                                              TYPE_NAME_HELPER(Sync),
-                                                                              TYPE_NAME_HELPER(RequestBuffered),
-                                                                              TYPE_NAME_HELPER(Dynamic),
-                                                                              TYPE_NAME_HELPER(Source)};
+    static_assert(ct::Flags::CT_RESERVED_FLAG_BITS + 1 < 10, "");
+    static_assert(ct::Flags::CT_RESERVED_FLAG_BITS + 1 < 10, "");
 
-std::string mo::paramFlagsToString(EnumClassBitset<ParamFlags> type)
-{
-    std::string output;
-    for (const auto& itr : type_flag_map)
+    std::string paramFlagsToString(ParamFlags type)
     {
-        if (type.test(itr.first))
+        std::stringstream out;
+        out << type;
+        return std::move(out).str();
+    }
+
+    ParamFlags stringToParamFlags(const std::string& str)
+    {
+        return ct::bitsetFromString<ParamFlags>(str);
+    }
+
+    std::string bufferFlagsToString(BufferFlags flags)
+    {
+        std::stringstream ss;
+        ss << flags;
+        return std::move(ss).str();
+    }
+
+    BufferFlags stringToBufferFlags(const std::string& str)
+    {
+        auto flag = ct::fromString<BufferFlags>(str);
+        if (!flag.success())
         {
-            if (output.empty())
+            THROW(debug, "Invalid string {}", str);
+        }
+        return flag.value();
+    }
+
+    BufferFlags getDefaultBufferType(const IAsyncStream* source, const IAsyncStream* dest)
+    {
+        auto itr = connection_map.find(source);
+        if (itr != connection_map.end())
+        {
+            auto itr2 = itr->second.find(dest);
+            if (itr2 != itr->second.end())
             {
-                output = itr.second;
+                return itr2->second;
             }
-            else
+            itr2 = itr->second.find(nullptr);
+            if (itr2 != itr->second.end())
             {
-                output += "|" + itr.second;
+                return itr2->second;
             }
         }
+        return default_connection_type;
     }
-    return output;
-}
 
-EnumClassBitset<ParamFlags> mo::stringToParamFlags(const std::string& str)
-{
-    std::string rest = str;
-    EnumClassBitset<ParamFlags> output;
-    auto pos = rest.find('|');
-    while (pos != std::string::npos)
+    void setDefaultBufferType(const IAsyncStream* source, const IAsyncStream* dest, BufferFlags type)
     {
-        std::string substr = rest.substr(0, pos);
-        rest = rest.substr(pos + 1);
-        for (const auto& itr : type_flag_map)
+        if (source == nullptr && dest == nullptr)
         {
-            if (substr == itr.second)
-                // output = ParamFlags(itr.first | output);
-                output.flip(itr.first);
+            default_connection_type = type;
         }
-        pos = rest.find('|');
+        else
+        {
+            connection_map[source][dest] = type;
+        }
     }
-    for (const auto& itr : type_flag_map)
-    {
-        if (rest == itr.second)
-            // output = ParamFlags(itr.first | output);
-            output.flip(itr.first);
-    }
-    return output;
-}
-
-std::string mo::paramTypeToString(ParamType flags)
-{
-    switch (flags)
-    {
-    case TParam_e:
-        return "T";
-    case CircularBuffer_e:
-        return "circularbuffer";
-    case ConstMap_e:
-        return "constmap";
-    case Map_e:
-        return "map";
-    case StreamBuffer_e:
-        return "StreamBuffer";
-    case BlockingStreamBuffer_e:
-        return "BlockingStreamBuffer";
-    case NNStreamBuffer_e:
-        return "NNStreamBuffer";
-    case Queue_e:
-        return "Queue";
-    case BlockingQueue_e:
-        return "BlockingQueue";
-    case DroppingQueue_e:
-        return "DroppingQueue";
-    case ForceDirectConnection_e:
-        return "ForceDirectConnection";
-    case ForceBufferedConnection_e:
-        return "ForceBufferedConnection";
-    }
-    return "";
-}
-
-ParamType mo::stringToParamType(const std::string& str)
-{
-    if (str == "T")
-        return TParam_e;
-    else if (str == "circularbuffer")
-        return CircularBuffer_e;
-    else if (str == "constmap")
-        return ConstMap_e;
-    else if (str == "map")
-        return Map_e;
-    else if (str == "StreamBuffer")
-        return StreamBuffer_e;
-    else if (str == "BlockingStreamBuffer")
-        return BlockingStreamBuffer_e;
-    else if (str == "NNStreamBuffer")
-        return NNStreamBuffer_e;
-    THROW(debug) << "Invalid string " << str;
-    return TParam_e;
 }

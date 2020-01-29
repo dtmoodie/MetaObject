@@ -19,86 +19,30 @@ https://github.com/dtmoodie/MetaObject
 #pragma once
 #include "MetaObject/types.hpp"
 #include <boost/filesystem/path.hpp>
-#include <ct/reflect/reflect_data.hpp>
+#include <ct/reflect.hpp>
 #include <string>
 #include <vector>
 
 namespace mo
 {
-    struct MO_EXPORTS ReadFile : public boost::filesystem::path
+    struct MO_EXPORTS ReadFile : boost::filesystem::path
     {
         ReadFile(const std::string& str = "");
-
-        template <class AR>
-        void save(AR& ar) const
-        {
-            ar(string());
-        }
-
-        template <class AR>
-        void load(AR& ar)
-        {
-            std::string value;
-            ar(value);
-            *this = value;
-        }
     };
 
-    struct MO_EXPORTS WriteFile : public boost::filesystem::path
+    struct MO_EXPORTS WriteFile : boost::filesystem::path
     {
         WriteFile(const std::string& file = "");
-
-        template <class AR>
-        void save(AR& ar) const
-        {
-            ar(string());
-        }
-
-        template <class AR>
-        void load(AR& ar)
-        {
-            std::string value;
-            ar(value);
-            *this = value;
-        }
     };
 
-    struct MO_EXPORTS ReadDirectory : public boost::filesystem::path
+    struct MO_EXPORTS ReadDirectory : boost::filesystem::path
     {
         ReadDirectory(const std::string& path = "");
-
-        template <class AR>
-        void save(AR& ar) const
-        {
-            ar(string());
-        }
-
-        template <class AR>
-        void load(AR& ar)
-        {
-            std::string value;
-            ar(value);
-            *this = value;
-        }
     };
 
-    struct MO_EXPORTS WriteDirectory : public boost::filesystem::path
+    struct MO_EXPORTS WriteDirectory : boost::filesystem::path
     {
         WriteDirectory(const std::string& str = "");
-
-        template <class AR>
-        void save(AR& ar) const
-        {
-            ar(string());
-        }
-
-        template <class AR>
-        void load(AR& ar)
-        {
-            std::string value;
-            ar(value);
-            *this = value;
-        }
     };
 
     struct MO_EXPORTS EnumParam
@@ -116,16 +60,33 @@ namespace mo
         std::vector<int> values;
         int current_selection = 0;
     };
-}
+} // namespace mo
 
 namespace ct
 {
-    namespace reflect
+    REFLECT_BEGIN(mo::EnumParam)
+        PUBLIC_ACCESS(enumerations)
+        PUBLIC_ACCESS(values)
+        PUBLIC_ACCESS(current_selection)
+    REFLECT_END;
+
+    template <class T>
+    struct ReflectImpl<
+        T,
+        ct::EnableIf<ct::VariadicTypedef<mo::ReadFile, mo::ReadDirectory, mo::WriteFile, mo::WriteDirectory>::
+                         template contains<T>()>>
     {
-        REFLECT_DATA_START(mo::EnumParam)
-            REFLECT_DATA_MEMBER(enumerations)
-            REFLECT_DATA_MEMBER(values)
-            REFLECT_DATA_MEMBER(current_selection)
-        REFLECT_DATA_END;
-    }
-}
+        REFLECT_STUB
+            static constexpr auto getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_BEGIN>)
+            {
+                return ct::makeMemberPropertyPointer(
+                    "path",
+                    ct::selectConstMemberFunctionPointer<boost::filesystem::path, const std::string&>(
+                        &boost::filesystem::path::string),
+                    ct::selectMemberFunctionPointer<boost::filesystem::path,
+                                                    boost::filesystem::path&,
+                                                    const std::string&>(&boost::filesystem::path::operator=));
+            }
+        REFLECT_INTERNAL_END;
+    };
+} // namespace ct

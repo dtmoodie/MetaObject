@@ -16,7 +16,7 @@ namespace boost
             template <class Functor>
             typename std::enable_if<std::is_member_function_pointer<decltype(&Functor::operator())>::value,
                                     typename functor_signature<Functor>::type>::type
-            get_signature(Functor&, void* = 0)
+            get_signature(Functor&, void* = nullptr)
             {
                 return typename functor_signature<Functor>::type();
             }

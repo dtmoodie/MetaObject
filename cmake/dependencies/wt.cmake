@@ -5,6 +5,7 @@ find_package(Wt QUIET)
       wt.dll
       HINTS "${Wt_INCLUDE_DIR}/../bin"
     )
+    set(MO_HAVE_WT 1 CACHE BOOL INTERNAL FORCE)
 
     if(Wt_BIN_DIR)
       set(Wt_BIN_DIR_DBG ${Wt_BIN_DIR} CACHE PATH "" FORCE)

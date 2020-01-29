@@ -1,10 +1,18 @@
-#include "MetaObject/metaparams/MetaParamsInclude.hpp"
-#include <MetaObject/params/MetaParam.hpp>
+#include "common.hpp"
+
+#include <MetaObject/runtime_reflection/StructTraits.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/filesystem.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/string.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
+
+#include "MetaObject/core/metaobject_config.hpp"
 
 #include "MetaObject/types/file_types.hpp"
 #include <MetaObject/params/AccessToken.hpp>
 #include <MetaObject/params/ITAccessibleParam.hpp>
+
 #include <boost/lexical_cast.hpp>
+
 #include <cereal/types/string.hpp>
 #include <cereal/types/vector.hpp>
 
@@ -19,78 +27,110 @@
 #define MO_EXPORTS
 #endif
 
-#include "MetaObject/params/detail/MetaParamImpl.hpp"
-
 using namespace mo;
+
+#ifdef MO_HAVE_PYTHON
+#include <boost/python.hpp>
+namespace ct
+{
+
+    template <>
+    inline bool convertFromPython(const boost::python::object& obj, EnumParam& param)
+    {
+        boost::python::extract<std::string> str_ext(obj);
+        if (str_ext.check())
+        {
+            auto string = str_ext();
+            auto itr = std::find(param.enumerations.begin(), param.enumerations.end(), string);
+            if (itr != param.enumerations.end())
+            {
+                param.current_selection = itr - param.enumerations.begin();
+                return true;
+            }
+            return false;
+        }
+        boost::python::extract<int> int_ext(obj);
+
+        if (int_ext.check())
+        {
+            int val = int_ext();
+            param.current_selection = static_cast<size_t>(val);
+            return true;
+        }
+
+        return false;
+    }
+
+    template <>
+    inline bool convertFromPython(const boost::python::object& obj, ReadFile& result)
+    {
+        boost::python::extract<std::string> extractor(obj);
+        result = extractor();
+        return true;
+    }
+
+    template <>
+    inline bool convertFromPython(const boost::python::object& obj, WriteFile& result)
+    {
+        boost::python::extract<std::string> extractor(obj);
+        result = extractor();
+        return true;
+    }
+
+    template <>
+    inline bool convertFromPython(const boost::python::object& obj, WriteDirectory& result)
+    {
+        boost::python::extract<std::string> extractor(obj);
+        result = extractor();
+        return true;
+    }
+
+    template <>
+    inline bool convertFromPython(const boost::python::object& obj, ReadDirectory& result)
+    {
+        boost::python::extract<std::string> extractor(obj);
+        result = extractor();
+        return true;
+    }
+
+    template <>
+    inline boost::python::object convertToPython(const ReadFile& file)
+    {
+        return boost::python::object(file.string());
+    }
+
+    template <>
+    inline boost::python::object convertToPython(const WriteFile& file)
+    {
+        return boost::python::object(file.string());
+    }
+
+    template <>
+    inline boost::python::object convertToPython(const ReadDirectory& file)
+    {
+        return boost::python::object(file.string());
+    }
+
+    template <>
+    inline boost::python::object convertToPython(const WriteDirectory& file)
+    {
+        return boost::python::object(file.string());
+    }
+} // namespace ct
+
+#endif
 
 namespace mo
 {
-#ifdef MO_HAVE_PYTHON
-    namespace python
+    namespace metaparams
     {
-        template <>
-        inline void convertFromPython(const boost::python::object& obj, EnumParam& param)
+        void instMOTypes(SystemTable* table)
         {
-            boost::python::extract<std::string> str_ext(obj);
-            if (str_ext.check())
-            {
-                auto string = str_ext();
-                auto itr = std::find(param.enumerations.begin(), param.enumerations.end(), string);
-                if (itr != param.enumerations.end())
-                {
-                    param.current_selection = itr - param.enumerations.begin();
-                }
-            }
-            else
-            {
-                boost::python::extract<int> int_ext(obj);
-                MO_ASSERT(int_ext.check());
-                int val = int_ext();
-                param.current_selection = static_cast<size_t>(val);
-            }
+            registerTrait<ReadFile>();
+            registerTrait<WriteFile>();
+            registerTrait<ReadDirectory>();
+            registerTrait<WriteDirectory>();
+            registerTrait<EnumParam>();
         }
-        template <>
-        inline void convertFromPython(const boost::python::object& obj, ReadFile& result)
-        {
-            boost::python::extract<std::string> extractor(obj);
-            result = extractor();
-        }
-
-        template <>
-        inline void convertFromPython(const boost::python::object& obj, WriteFile& result)
-        {
-            boost::python::extract<std::string> extractor(obj);
-            result = extractor();
-        }
-
-        template <>
-        inline boost::python::object convertToPython(const ReadFile& file)
-        {
-            return boost::python::object(file.string());
-        }
-    }
-#endif
-}
-
-namespace std
-{
-    template <class T>
-    ostream& operator<<(ostream& os, const std::vector<T>& data)
-    {
-        os << '[';
-        for (size_t i = 0; i < data.size(); ++i)
-        {
-            if (i != 0)
-                os << ',';
-            os << data[i];
-        }
-        os << ']';
-        return os;
-    }
-}
-
-INSTANTIATE_META_PARAM(ReadFile);
-INSTANTIATE_META_PARAM(WriteFile);
-INSTANTIATE_META_PARAM(ReadDirectory);
-INSTANTIATE_META_PARAM(WriteDirectory);
-INSTANTIATE_META_PARAM(EnumParam);
+    } // namespace metaparams
+} // namespace mo
