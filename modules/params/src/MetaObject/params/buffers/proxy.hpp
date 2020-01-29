@@ -6,18 +6,18 @@ namespace mo
     {
         class IBuffer;
         template <typename T>
-        class Proxy : public ITParam<T>, public IBuffer
+        class Proxy : public TParam<T>, public IBuffer
         {
-            ITParam<T>* _input_Param;
-            std::shared_ptr<ITParam<T>> _buffer;
+            TParam<T>* _input_Param;
+            std::shared_ptr<TParam<T>> _buffer;
 
             std::shared_ptr<Signals::Connection> _input_update_Connection;
             std::shared_ptr<Signals::Connection> _input_delete_Connection;
 
           public:
-            Proxy(ITParam<T>* input, Params::Param::Ptr buffer)
-                : _input_Param(input), _buffer(std::dynamic_pointer_cast<ITParam>(buffer)),
-                  ITParam<T>("proxy for " + (input ? input->getName() : std::string("null")))
+            Proxy(TParam<T>* input, Params::Param::Ptr_t buffer)
+                : _input_Param(input), _buffer(std::dynamic_pointer_cast<TParam>(buffer)),
+                  TParam<T>("proxy for " + (input ? input->getName() : std::string("null")))
             {
                 if (input)
                 {
@@ -28,7 +28,7 @@ namespace mo
                     _input_Param->subscribers++;
                 }
             }
-            Proxy(ITParam<T>* input, ITParam<T>* buffer) : _input_Param(input), _buffer(buffer), ITParam<T>("proxy")
+            Proxy(TParam<T>* input, TParam<T>* buffer) : _input_Param(input), _buffer(buffer), TParam<T>("proxy")
 
             {
                 if (input)
@@ -50,7 +50,7 @@ namespace mo
             }
             void setInput(Param* param)
             {
-                if (_input_Param = dynamic_cast<ITParam<T>*>(param))
+                if (_input_Param = dynamic_cast<TParam<T>*>(param))
                 {
                     _input_update_Connection =
                         _input_Param->RegisterNotifier(std::bind(&Proxy::onInputUpdate, this, std::placeholders::_1));
@@ -75,21 +75,21 @@ namespace mo
                     }
                 }
             }
-            virtual T* Data(mo::Time_t timestamp) { return _buffer->Data(timestamp); }
-            virtual bool GetData(T& value, mo::Time_t ts = -1 * mo::second)
+            virtual T* Data(mo::Time timestamp) { return _buffer->Data(timestamp); }
+            virtual bool GetData(T& value, mo::Time ts = -1 * mo::second)
             {
                 return _buffer->GetData(value, time_index);
             }
-            virtual void updateData(T& data_, mo::Time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr) {}
-            virtual void updateData(const T& data_, mo::Time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
+            virtual void updateData(T& data_, mo::Time ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr) {}
+            virtual void updateData(const T& data_, mo::Time ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
             {
             }
-            virtual void updateData(T* data_, mo::Time_t ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr) {}
+            virtual void updateData(T* data_, mo::Time ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr) {}
 
-            virtual Param::Ptr DeepCopy() const { return Param::Ptr(new Proxy(_input_Param, _buffer->DeepCopy())); }
-            virtual void SetSize(mo::Time_t size) { dynamic_cast<IBuffer*>(_buffer.get())->SetSize(size); }
-            virtual mo::Time_t getSize() { return dynamic_cast<IBuffer*>(_buffer.get())->getSize(); }
-            virtual void getTimestampRange(mo::Time_t& start, mo::Time_t& end)
+            virtual Param::Ptr_t DeepCopy() const { return Param::Ptr(new Proxy(_input_Param, _buffer->DeepCopy())); }
+            virtual void SetSize(mo::Time size) { dynamic_cast<IBuffer*>(_buffer.get())->SetSize(size); }
+            virtual mo::Time getSize() { return dynamic_cast<IBuffer*>(_buffer.get())->getSize(); }
+            virtual void getTimestampRange(mo::Time& start, mo::Time& end)
             {
                 dynamic_cast<IBuffer*>(_buffer.get())->getTimestampRange(start, end);
             }

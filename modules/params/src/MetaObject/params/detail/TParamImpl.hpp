@@ -1,24 +1,21 @@
 #pragma once
+#include "../ITParam.hpp"
 #include "MetaObject/logging/logging.hpp"
 #include "MetaObject/params/AccessToken.hpp"
 namespace mo
 {
     template <class T>
     class TParam;
-    template <class T, int N, typename Enable>
-    struct MetaParam;
 
     template <typename T>
-    TParam<T>::TParam() : ITParam<T>(), _data(), IParam()
+    TParam<T>::TParam() : TParam<T>(), _data(), IParam()
     {
-        (void)&_typed_param_constructor;
-        (void)&_meta_param;
     }
 
     template <typename T>
-    bool TParam<T>::getData(InputStorage_t& value, const OptionalTime_t& ts, Context* ctx, size_t* fn)
+    bool TParam<T>::getData(InputStorage_t& value, const OptionalTime& ts, Context* /*ctx*/, size_t* fn)
     {
-        mo::Mutex_t::scoped_lock lock(IParam::mtx());
+        Lock lock(IParam::mtx());
         if (!ts)
         {
             value = _data;
@@ -26,11 +23,13 @@ namespace mo
         }
         else
         {
-            if (ts == IParam::_ts)
+            if (ts == IParam::header.timestamp)
             {
                 value = _data;
                 if (fn)
+                {
                     *fn = this->_fn;
+                }
                 return true;
             }
         }
@@ -38,9 +37,9 @@ namespace mo
     }
 
     template <typename T>
-    bool TParam<T>::getData(InputStorage_t& value, size_t fn, Context* ctx, OptionalTime_t* ts)
+    bool TParam<T>::getData(InputStorage_t& value, size_t fn, Context* /*ctx*/, OptionalTime* ts)
     {
-        mo::Mutex_t::scoped_lock lock(IParam::mtx());
+        Lock lock(IParam::mtx());
         if (this->_fn == fn)
         {
             if (ts)
@@ -58,14 +57,14 @@ namespace mo
     }
 
     template <typename T>
-    ConstAccessToken<T> TParam<T>::access() const
+    ConstAccessToken<T> TParam<T>::read() const
     {
         return ConstAccessToken<T>(*this, ParamTraits<T>::get(_data));
     }
 
     template <typename T>
     bool TParam<T>::updateDataImpl(const Storage_t& data,
-                                   const OptionalTime_t& ts,
+                                   const OptionalTime& ts,
                                    Context* ctx,
                                    size_t fn,
                                    const std::shared_ptr<ICoordinateSystem>& cs)
@@ -73,12 +72,21 @@ namespace mo
         _data = data;
         this->_fn = fn;
         this->_ts = ts;
-        ITParam<T>::_typed_update_signal(data, this, ctx, ts, this->_fn, cs, ValueUpdated_e);
+        TParamImpl<T>::emitTypedUpdate(_data, this, ctx, ts, this->_fn, cs, UpdateFlags::kVALUE_UPDATED);
         return true;
     }
 
     template <typename T>
-    ParamConstructor<TParam<T>> TParam<T>::_typed_param_constructor;
-    template <typename T>
-    MetaParam<T, 100> TParam<T>::_meta_param;
+    bool TParam<T>::updateDataImpl(Storage_t&& data,
+                                   const OptionalTime& ts,
+                                   Context* ctx,
+                                   size_t fn,
+                                   const std::shared_ptr<ICoordinateSystem>& cs)
+    {
+        _data = std::move(data);
+        this->_fn = fn;
+        this->_ts = ts;
+        TParamImpl<T>::emitTypedUpdate(_data, this, ctx, ts, this->_fn, cs, UpdateFlags::kVALUE_UPDATED);
+        return true;
+    }
 }

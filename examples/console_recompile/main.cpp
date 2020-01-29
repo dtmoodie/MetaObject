@@ -8,24 +8,25 @@ int main()
 
     try
     {
-        THROW(debug) << "Test throw";
+        THROW(debug, "Test throw");
     }
-    catch (mo::ExceptionWithCallStack<std::string>& e)
+    catch (std::runtime_error& e)
     {
         (void)e;
-        MO_LOG(debug) << "Exception caught in the correct handler";
+        MO_LOG(debug, "Exception caught in the correct handler");
     }
     catch (...)
     {
-        MO_LOG(debug) << "Exception caught in the wrong handler";
+        MO_LOG(debug, "Exception caught in the wrong handler");
     }
-
+    std::shared_ptr<SystemTable> table = SystemTable::instance();
     auto factory = mo::MetaObjectFactory::instance(); // ->registerTranslationUnit();
     factory->registerTranslationUnit();
     auto obj = rcc::shared_ptr<printable>::create();
 
     bool recompiling = false;
-    while (1) {
+    while (1)
+    {
         obj->print();
 
         if (factory->checkCompile())

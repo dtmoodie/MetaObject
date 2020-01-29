@@ -6,3 +6,11 @@
 #include "MetaObject/params/IParam.hpp"
 #include "MetaObject/params/ParamMacros.hpp"
 #endif
+
+namespace mo
+{
+    namespace params
+    {
+        void MO_EXPORTS init(SystemTable* table);
+    }
+} // namespace mo

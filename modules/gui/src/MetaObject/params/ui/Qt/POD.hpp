@@ -1,5 +1,4 @@
 #pragma once
-#ifdef HAVE_QT5
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/params/ui/Qt/SignalProxy.hpp"
 #include "THandler.hpp"
@@ -143,9 +142,9 @@ namespace mo
                         box = new QSpinBox(parent);
                         box->setMaximumWidth(100);
                         box->setMaximum(static_cast<int>(
-                            std::max<ssize_t>(std::numeric_limits<T>::max(), std::numeric_limits<int>::max())));
+                            std::max<int64_t>(std::numeric_limits<T>::max(), std::numeric_limits<int>::max())));
                         box->setMinimum(static_cast<int>(
-                            std::min<ssize_t>(std::numeric_limits<T>::min(), std::numeric_limits<int>::min())));
+                            std::min<int64_t>(std::numeric_limits<T>::min(), std::numeric_limits<int>::min())));
                     }
 
                     box->connect(box, SIGNAL(valueChanged(int)), proxy, SLOT(on_update(int)));
@@ -223,4 +222,3 @@ namespace mo
         }
     }
 }
-#endif

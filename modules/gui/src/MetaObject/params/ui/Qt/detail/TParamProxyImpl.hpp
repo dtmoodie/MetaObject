@@ -1,5 +1,4 @@
 #pragma once
-#ifdef HAVE_QT5
 #include "qgridlayout.h"
 #include "qlabel.h"
 #include "qpushbutton.h"
@@ -102,7 +101,7 @@ namespace mo
             {
                 if (param->getTypeInfo() != TypeInfo(typeid(T)))
                     return false;
-                auto TParam = dynamic_cast<ITParam<T>*>(param);
+                auto TParam = dynamic_cast<TParam<T>*>(param);
                 if (TParam)
                 {
                     Param = TParam;
@@ -120,4 +119,4 @@ namespace mo
         }
     }
 }
-#endif // HAVE_QT5
+

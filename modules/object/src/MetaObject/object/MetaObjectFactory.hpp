@@ -1,6 +1,13 @@
 #pragma once
+
 #include "MetaObject/detail/Export.hpp"
+#include "MetaObject/detail/defines.hpp"
+#include "MetaObject/logging/logging.hpp"
+
+#include "MetaObject/core/SystemTable.hpp"
+
 #include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
+
 #include <functional>
 #include <memory>
 
@@ -10,7 +17,7 @@ struct IObjectConstructor;
 struct SystemTable;
 
 namespace mo
-{    
+{
     class IMetaObject;
     template <class Sig>
     class TSlot;
@@ -23,7 +30,11 @@ namespace mo
                    unsigned int time = 0,
                    const char* info = nullptr,
                    unsigned int id = 0)
-            : m_path(path), m_state(state), m_load_time(time), m_build_info(info), m_id(id)
+            : m_path(path)
+            , m_state(state)
+            , m_load_time(time)
+            , m_build_info(info)
+            , m_id(id)
         {
         }
 
@@ -44,23 +55,7 @@ namespace mo
     class MO_EXPORTS MetaObjectFactory
     {
       public:
-        IMetaObject* create(const char* type_name, int interface_id = -1);
-        template <class T>
-        T* create(const char* type_name);
-        IMetaObject* get(ObjectId id, const char* type_name);
-
-        static MetaObjectFactory* instance(SystemTable* system_table = nullptr);
-
-        std::vector<std::string> listConstructableObjects(int interface_id = -1) const;
-        std::string printAllObjectInfo(int64_t interface_id = -1) const;
-
-        std::vector<IObjectConstructor*> getConstructors(int64_t interface_id = -1) const;
-        IObjectConstructor* getConstructor(const char* type_name) const;
-        IObjectInfo* getObjectInfo(const char* type_name) const;
-        std::vector<IObjectInfo*> getAllObjectInfo() const;
-
-        bool loadPlugin(const std::string& filename);
-        int loadPlugins(const std::string& path = "./");
+        using Ptr_t = std::shared_ptr<MetaObjectFactory>;
 
         enum PluginVerbosity
         {
@@ -69,60 +64,138 @@ namespace mo
             debug  // info + build info
         };
 
-        /*!
-             * \brief listLoadedPlugins with their load status
-             * \param verbosity
-             * \return
-             */
-        std::vector<std::string> listLoadedPlugins(PluginVerbosity verbosity = brief) const;
-        std::vector<PluginInfo> listLoadedPluginInfo() const;
+        MO_INLINE static Ptr_t instance();
+        static Ptr_t instance(SystemTable* table);
+
+        MetaObjectFactory() = default;
+        virtual ~MetaObjectFactory();
+
+        virtual rcc::shared_ptr<IMetaObject> create(const char* type_name, int64_t interface_id = -1) = 0;
+        template <class T>
+        rcc::shared_ptr<T> create(const char* type_name);
+
+        virtual rcc::shared_ptr<IMetaObject> get(ObjectId id, const char* type_name) = 0;
+
+        virtual std::vector<std::string> listConstructableObjects(int interface_id = -1) const = 0;
+        virtual std::string printAllObjectInfo(int64_t interface_id = -1) const = 0;
+
+        virtual std::vector<IObjectConstructor*> getConstructors(int64_t interface_id = -1) const = 0;
+        virtual IObjectConstructor* getConstructor(const char* type_name) const = 0;
+        virtual const IObjectInfo* getObjectInfo(const char* type_name) const = 0;
+        virtual std::vector<const IObjectInfo*> getAllObjectInfo() const = 0;
+
+        virtual bool loadPlugin(const std::string& filename) = 0;
+        virtual int loadPlugins(const std::string& path = "./") = 0;
+
+        virtual std::vector<std::string> listLoadedPlugins(PluginVerbosity verbosity = brief) const = 0;
+        virtual std::vector<PluginInfo> listLoadedPluginInfo() const = 0;
 
         // This function is inlined to guarantee it exists in the calling translation unit, which
         // thus makes certain to load the correct PerModuleInterface instance
-        inline void registerTranslationUnit() { setupObjectConstructors(PerModuleInterface::GetInstance()); }
-        void setupObjectConstructors(IPerModuleInterface* pPerModuleInterface);
-        IRuntimeObjectSystem* getObjectSystem();
+        MO_INLINE void registerTranslationUnit();
+        virtual void setupObjectConstructors(IPerModuleInterface* pPerModuleInterface) = 0;
+        virtual IRuntimeObjectSystem* getObjectSystem() = 0;
 
         // Recompilation stuffs
-        bool abortCompilation();
-        bool checkCompile();
-        bool isCurrentlyCompiling();
-        bool isCompileComplete();
-        bool swapObjects();
-        void setCompileCallback(std::function<void(const std::string, int)>& f);
-        std::shared_ptr<Connection> connectConstructorAdded(TSlot<void(void)>* slot);
+        virtual bool abortCompilation() = 0;
+        virtual bool checkCompile() = 0;
+        virtual bool isCurrentlyCompiling() = 0;
+        virtual bool isCompileComplete() = 0;
+        virtual bool swapObjects() = 0;
+        virtual void setCompileCallback(std::function<void(const std::string, int)>& f) = 0;
+        virtual std::shared_ptr<Connection> connectConstructorAdded(TSlot<void(void)>* slot) = 0;
 
         template <class T>
-        std::vector<IObjectConstructor*> getConstructors()
-        {
-            return getConstructors(T::s_interfaceID);
-        }
+        std::vector<IObjectConstructor*> getConstructors();
 
         template <class T>
-        std::vector<typename T::InterfaceInfo*> getObjectInfos()
-        {
-            auto constructors = getConstructors<T>();
-            std::vector<typename T::InterfaceInfo*> output;
-            for (auto constructor : constructors)
-            {
-                typename T::InterfaceInfo* info =
-                    dynamic_cast<typename T::InterfaceInfo*>(constructor->GetObjectInfo());
-                if (info)
-                    output.push_back(info);
-            }
-            return output;
-        }
+        std::vector<typename T::InterfaceInfo*> getObjectInfos();
 
-      private:
-        MetaObjectFactory(SystemTable* system_table);
-        ~MetaObjectFactory();
-        struct impl;
-        impl* _pimpl;
+        template <class TINFO, class SCORING_FUNCTOR>
+        IObjectConstructor* selectBestObjectConstructor(int64_t interface_id, SCORING_FUNCTOR&& scorer) const;
+
+        template <class T, class TINFO, class SCORING_FUNCTOR>
+        rcc::shared_ptr<T> createBestObject(int64_t interface_id, SCORING_FUNCTOR&& scorer) const;
     };
 
-    template <class T>
-    T* MetaObjectFactory::create(const char* type_name)
+    MO_INLINE std::shared_ptr<MetaObjectFactory> MetaObjectFactory::instance()
     {
-        return static_cast<T*>(create(type_name, T::s_interfaceID));
+        return singleton<MetaObjectFactory>();
     }
+
+    template <class T>
+    rcc::shared_ptr<T> MetaObjectFactory::create(const char* type_name)
+    {
+        return create(type_name, T::s_interfaceID);
+    }
+
+    template <class T>
+    std::vector<IObjectConstructor*> MetaObjectFactory::getConstructors()
+    {
+        return getConstructors(T::s_interfaceID);
+    }
+
+    template <class T>
+    std::vector<typename T::InterfaceInfo*> MetaObjectFactory::getObjectInfos()
+    {
+        auto constructors = getConstructors<T>();
+        std::vector<typename T::InterfaceInfo*> output;
+        for (auto constructor : constructors)
+        {
+            const auto* info = dynamic_cast<const typename T::InterfaceInfo*>(constructor->GetObjectInfo());
+            if (info)
+            {
+                output.push_back(info);
+            }
+        }
+        return output;
+    }
+
+    MO_INLINE void MetaObjectFactory::registerTranslationUnit()
+    {
+        auto module = PerModuleInterface::GetInstance();
+        setupObjectConstructors(module);
+    }
+
+    template <class TINFO, class SCORING_FUNCTOR>
+    IObjectConstructor* MetaObjectFactory::selectBestObjectConstructor(int64_t interface_id,
+                                                                       SCORING_FUNCTOR&& scorer) const
+    {
+        IObjectConstructor* best = nullptr;
+        int32_t priority = 0;
+        const auto ctrs = getConstructors(interface_id);
+
+        for (auto ctr : ctrs)
+        {
+            const auto info = ctr->GetObjectInfo();
+            const auto tinfo = dynamic_cast<const TINFO*>(info);
+            if (tinfo)
+            {
+                auto score = scorer(*tinfo);
+                if (score > priority)
+                {
+                    best = ctr;
+                    priority = score;
+                }
+            }
+        }
+        return best;
+    }
+
+    template <class T, class TINFO, class SCORING_FUNCTOR>
+    rcc::shared_ptr<T> MetaObjectFactory::createBestObject(int64_t interface_id, SCORING_FUNCTOR&& scorer) const
+    {
+        auto ctr = selectBestObjectConstructor<TINFO>(interface_id, scorer);
+        if (ctr)
+        {
+            auto obj = ctr->Construct();
+            if (obj)
+            {
+                obj->Init(true);
+                return rcc::shared_ptr<T>(obj);
+            }
+        }
+        return {};
+    }
+
 } // namespace mo

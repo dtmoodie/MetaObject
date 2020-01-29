@@ -1810,7 +1810,7 @@ macro(CUDA_ADD_LIBRARY cuda_target)
   CUDA_LINK_SEPARABLE_COMPILATION_OBJECTS("${link_file}" ${cuda_target} "${_options}" "${${cuda_target}_SEPARABLE_COMPILATION_OBJECTS}")
 
   target_link_libraries(${cuda_target} ${CUDA_LINK_LIBRARIES_KEYWORD}
-    ${CUDA_LIBRARIES}
+      ${CUDA_LIBRARIES}
     )
 
   if(CUDA_SEPARABLE_COMPILATION)

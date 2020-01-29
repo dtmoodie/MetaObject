@@ -1,8 +1,12 @@
-#ifdef HAVE_OPENCV
-#include "MetaObject/metaparams/MetaParamsInclude.hpp"
-#include "MetaObject/metaparams/reflect/cv_types.hpp"
-#include "MetaObject/params/MetaParam.hpp"
-#include "ct/reflect/cereal.hpp"
+#include "common.hpp"
+
+#include "MetaObject/core/metaobject_config.hpp"
+#ifdef MO_HAVE_OPENCV
+#include <MetaObject/runtime_reflection/StructTraits.hpp>
+#include <MetaObject/types/opencv.hpp>
+
+#include <ct/reflect/cerealize.hpp>
+
 #include <opencv2/core/types.hpp>
 
 #ifdef MO_EXPORTS
@@ -16,12 +20,22 @@
 #define MO_EXPORTS
 #endif
 
-#include "MetaObject/params/detail/MetaParamImpl.hpp"
+#include <opencv2/core/types.hpp>
 using namespace cv;
 
-INSTANTIATE_META_PARAM(Point2f);
-INSTANTIATE_META_PARAM(Point2d);
-INSTANTIATE_META_PARAM(Point3d);
-INSTANTIATE_META_PARAM(Point3f);
-INSTANTIATE_META_PARAM(Point);
+namespace mo
+{
+    namespace metaparams
+    {
+        void instCV(SystemTable* table)
+        {
+            registerTrait<Point2f>();
+            registerTrait<Point2d>();
+            registerTrait<Point3d>();
+            registerTrait<Point3f>();
+            registerTrait<Point>();
+        }
+    } // namespace metaparams
+} // namespace mo
+
 #endif

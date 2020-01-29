@@ -1,14 +1,15 @@
-#ifdef HAVE_QT5
 #include "MetaObject/params/ui/Qt/POD.hpp"
 #include "MetaObject/params/ui/Qt/SignalProxy.hpp"
 #include "qcheckbox.h"
-#include <boost/thread/recursive_mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
 
 using namespace mo;
 using namespace mo::UI;
 using namespace mo::UI::qt;
 
-THandler<bool, void>::THandler(IParamProxy& parent) : UiUpdateHandler(parent), chkBox(nullptr)
+THandler<bool, void>::THandler(IParamProxy& parent)
+    : UiUpdateHandler(parent)
+    , chkBox(nullptr)
 {
 }
 
@@ -34,5 +35,3 @@ std::vector<QWidget*> THandler<bool, void>::getUiWidgets(QWidget* parent_)
     output.push_back(chkBox);
     return output;
 }
-
-#endif

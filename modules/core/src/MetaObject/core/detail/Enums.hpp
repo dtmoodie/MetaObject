@@ -1,113 +1,86 @@
-#pragma once
+#ifndef MO_CORE_ENUMS_HPP
+#define MO_CORE_ENUMS_HPP
 #include <MetaObject/detail/Export.hpp>
+
+#include <ct/flags.hpp>
+#include <ct/reflect/MemberObjectPointer.hpp>
+
 #include <bitset>
 #include <string>
 namespace mo
 {
+    struct IAsyncStream;
 
-    template <typename T>
-    struct EnumTraits;
+    BITSET_BEGIN(ParamFlags)
+        ENUM_BITVALUE(kINPUT, 0)
+        ENUM_BITVALUE(kOUTPUT, 1)
+        ENUM_BITVALUE(kSTATE, 2)
+        ENUM_BITVALUE(kCONTROL, 3)
+        ENUM_BITVALUE(kBUFFER, 4)
+        ENUM_BITVALUE(kOPTIONAL, 5)
+        ENUM_BITVALUE(kDESYNCED, 6)
+        ENUM_BITVALUE(kUNSTAMPED, 7)
+        ENUM_BITVALUE(kSYNC, 8)
+        ENUM_BITVALUE(kREQUIRE_BUFFERED, 9)
+        ENUM_BITVALUE(kSOURCE, 10)
+        ENUM_BITVALUE(kDYNAMIC, 11)
+        ENUM_BITVALUE(kOWNS_MUTEX, 12)
+    ENUM_END;
 
-    template <typename T>
-    class EnumClassBitset
-    {
-      public:
-        typedef typename std::underlying_type<T>::type UnderlyingType;
-        EnumClassBitset() : c() {}
-        EnumClassBitset(UnderlyingType v) : c(v) {}
-        EnumClassBitset(T v) : c() { c.set(get_value(v)); }
+    // TODO figure out how to use the above ParamFlags instead
+    BITSET_BEGIN(ParamReflectionFlags)
+        ENUM_BITVALUE(kCONTROL, ct::index(ct::Flags::CT_RESERVED_FLAG_BITS) + 1)
+        ENUM_BITVALUE(kSTATE, ct::index(kCONTROL) + 1)
+        ENUM_BITVALUE(kSTATUS, ct::index(kSTATE) + 1)
+        ENUM_BITVALUE(kINPUT, ct::index(kSTATUS) + 1)
+        ENUM_BITVALUE(kOUTPUT, ct::index(kINPUT) + 1)
+        ENUM_BITVALUE(kOPTIONAL, ct::index(kOUTPUT) + 1)
+        ENUM_BITVALUE(kSOURCE, ct::index(kOPTIONAL) + 1)
+        ENUM_BITVALUE(kSIGNAL, ct::index(kSOURCE) + 1)
+        ENUM_BITVALUE(kSLOT, ct::index(kSIGNAL) + 1)
+    ENUM_END;
 
-        bool test(T pos) const { return c.test(get_value(pos)); }
+    ENUM_BEGIN(UpdateFlags, int)
+        ENUM_VALUE(kVALUE_UPDATED, 0)
+        ENUM_VALUE(kINPUT_SET, 1)
+        ENUM_VALUE(kINPUT_CLEARED, 2)
+        ENUM_VALUE(kINPUT_UPDATED, 3)
+        ENUM_VALUE(kBUFFER_UPDATED, 4)
+    ENUM_END;
 
-        EnumClassBitset& reset(T pos)
-        {
-            c.reset(get_value(pos));
-            return *this;
-        }
+    MO_EXPORTS std::string paramFlagsToString(ParamFlags flags);
+    MO_EXPORTS ParamFlags stringToParamFlags(const std::string& str);
 
-        EnumClassBitset& set(T pos)
-        {
-            c.set(get_value(pos));
-            return *this;
-        }
+    ENUM_BEGIN(BufferFlags, int)
+        ENUM_VALUE(DEFAULT, 0)
+        ENUM_VALUE(CIRCULAR_BUFFER, DEFAULT + 1)
+        ENUM_VALUE(MAP_BUFFER, CIRCULAR_BUFFER + 1)
+        ENUM_VALUE(STREAM_BUFFER, MAP_BUFFER + 1)
+        ENUM_VALUE(BLOCKING_STREAM_BUFFER, STREAM_BUFFER + 1)
+        ENUM_VALUE(DROPPING_STREAM_BUFFER, BLOCKING_STREAM_BUFFER + 1)
+        ENUM_VALUE(NEAREST_NEIGHBOR_BUFFER, DROPPING_STREAM_BUFFER + 1)
+        ENUM_VALUE(QUEUE_BUFFER, NEAREST_NEIGHBOR_BUFFER + 1)
+        ENUM_VALUE(BLOCKING_QUEUE_BUFFER, QUEUE_BUFFER + 1)
+        ENUM_VALUE(DROPPING_QUEUE_BUFFER, BLOCKING_QUEUE_BUFFER + 1)
 
-        EnumClassBitset& flip(T pos)
-        {
-            c.flip(get_value(pos));
-            return *this;
-        }
+        ENUM_BITVALUE(FORCE_BUFFERED, 10)
+        ENUM_BITVALUE(FORCE_DIRECT, ct::index(FORCE_BUFFERED) + 1)
+        ENUM_BITVALUE(SOURCE, ct::index(FORCE_DIRECT) + 1)
+    ENUM_END;
 
-      private:
-        std::bitset<static_cast<UnderlyingType>(EnumTraits<T>::max)> c;
-        typename std::underlying_type<T>::type get_value(T v) const { return static_cast<UnderlyingType>(v); }
-    };
+    MO_EXPORTS std::string bufferFlagsToString(BufferFlags type);
+    MO_EXPORTS BufferFlags stringToBufferFlags(const std::string& str);
 
-    enum class ParamFlags
-    {
-        None_e,
-        /* This flag is set if the Param is an input Param */
-        Input_e,
-        /* This flag is set if the Param is an output parmaeter */
-        Output_e,
-        /* This flag is set if hte Param is an indicator of the underlying state of an object
-           thus it is read only access*/
-        State_e,
-        /* This flag is set if the Param is a control input*/
-        Control_e,
-        /* This flag is set if the Param's underlying type is a buffer object */
-        Buffer_e,
-        /* This flag is set if the Param is an optional input */
-        Optional_e,
-        /* Set this flag on an input Param to allow desychronization between it and
-           other input Params */
-        Desynced_e,
-        /* If this flag is set, the timestamp will not be set on this Param
-         This is needed to differentiate between a Param that has not been set
-         yet and one that will never be set */
-        Unstamped_e,
-        /* Set this flag to signify that this Param should be the one used
-           for synchronizing inputs. */
-        Sync_e,
-        RequestBuffered_e,
-        Source_e,
-        Dynamic_e,   // Dynamically created parameter object
-        OwnsMutex_e, // Interally set by Params to determine if mutex needs to be deleted or not
-        Max_e
-    };
+    MO_EXPORTS BufferFlags getDefaultBufferType(const IAsyncStream* source, const IAsyncStream* dest);
+    MO_EXPORTS void setDefaultBufferType(const IAsyncStream* source, const IAsyncStream* dest, BufferFlags type);
+} // namespace mo
 
+namespace std
+{
     template <>
-    struct EnumTraits<ParamFlags>
+    struct underlying_type<mo::ParamFlags>
     {
-        static const ParamFlags max = ParamFlags::Max_e;
+        using type = ct::Flag_t;
     };
-
-    enum UpdateFlags
-    {
-        ValueUpdated_e,
-        InputSet_e,
-        InputCleared_e,
-        InputUpdated_e,
-        BufferUpdated_e
-    };
-
-    MO_EXPORTS std::string paramFlagsToString(EnumClassBitset<ParamFlags> flags);
-    MO_EXPORTS EnumClassBitset<ParamFlags> stringToParamFlags(const std::string& str);
-
-    enum ParamType
-    {
-        TParam_e = 0,
-        CircularBuffer_e,
-        ConstMap_e,
-        Map_e,
-        StreamBuffer_e,
-        BlockingStreamBuffer_e,
-        NNStreamBuffer_e,
-        Queue_e,
-        BlockingQueue_e,
-        DroppingQueue_e,
-        ForceBufferedConnection_e = 1024,
-        ForceDirectConnection_e = 2048
-    };
-    MO_EXPORTS std::string paramTypeToString(ParamType type);
-    MO_EXPORTS ParamType stringToParamType(const std::string& str);
-}
+} // namespace std
+#endif // MO_CORE_ENUMS_HPP

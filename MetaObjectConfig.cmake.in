@@ -6,8 +6,8 @@
 # Compute paths
 get_filename_component(MetaObject_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
 
-set(MetaObject_WITH_QT5 "@MO_QT5@")
-set(MetaObject_WITH_WT "@MO_WT@")
+set(MetaObject_WITH_QT5 "@MO_HAVE_QT@")
+set(MetaObject_WITH_WT "@MO_HAVE_WT@")
 set(MetaObject_WITH_OPENCV "ON")
 set(bin_dirs_ "")
 
@@ -62,7 +62,6 @@ include(${MetaObject_DIR}/cmake/Cuda.cmake)
 include(${MetaObject_DIR}/cmake/OpenCVPCHSupport.cmake)
 include(${MetaObject_DIR}/cmake/OpenCVParseHeader.cmake)
 
-set(MetaObject_INCLUDE_DIRS "${MetaObject_DIR}/../../include;${RCC_INCLUDE_DIRS};${OpenCV_INCLUDE_DIRS}")
 if(NOT TARGET MetaObject AND NOT TARGET MetaParameter)
   include("${MetaObject_DIR}/MetaObjectTargets.cmake")
 endif()

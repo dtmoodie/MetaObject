@@ -1,138 +1,80 @@
+#ifndef MO_CORE_ALLOCATOR_STL_ALLOCATOR_HPP
+#define MO_CORE_ALLOCATOR_STL_ALLOCATOR_HPP
 #include "Allocator.hpp"
 
 namespace mo
 {
     template <class T>
-    class PinnedStlAllocator
+    class StlAllocator
     {
       public:
-        typedef T value_type;
-        typedef T* pointer;
-        typedef const T* const_pointer;
-        typedef T& reference;
-        typedef const T& const_reference;
-        typedef std::size_t size_type;
-        typedef std::ptrdiff_t difference_type;
+        using value_type = T;
+        using pointer = T*;
+        using const_pointer = const T*;
+        using reference = T&;
+        using const_reference = const T&;
+        using size_type = std::size_t;
+        using difference_type = std::ptrdiff_t;
         template <class U>
         struct rebind
         {
-            typedef PinnedStlAllocator<U> other;
+            using other = StlAllocator<U>;
         };
-        pointer allocate(size_type n, std::allocator<void>::const_pointer hint) { return allocate(n); }
+
+        StlAllocator(std::shared_ptr<Allocator> allocator)
+            : m_allocator(std::move(allocator))
+        {
+        }
+
+        StlAllocator(const StlAllocator& allocator) = default;
+        StlAllocator(StlAllocator&& allocator) = default;
+
+        template <class U>
+        StlAllocator(const StlAllocator<U>& other)
+        {
+            m_allocator = other.getAllocator();
+        }
+
+        template <class U>
+        StlAllocator(StlAllocator<U>&& other)
+        {
+            m_allocator = other.getAllocator();
+        }
+
+        pointer allocate(size_type n, std::allocator<void>::const_pointer)
+        {
+            return allocate(n);
+        }
 
         pointer allocate(size_type n)
         {
-            pointer output = nullptr;
-            cudaSafeCall(cudaMallocHost(&output, n * sizeof(pointer)));
+            auto output = static_cast<pointer>(static_cast<void*>(m_allocator->allocate(sizeof(T) * n, sizeof(T))));
             return output;
         }
 
-        void deallocate(pointer ptr, size_type n) { cudaSafeCall(cudaFreeHost(ptr)); }
-    };
-
-    template <class T>
-    bool operator==(const PinnedStlAllocator<T>& lhs, const PinnedStlAllocator<T>& rhs)
-    {
-        return &lhs == &rhs;
-    }
-    template <class T>
-    bool operator!=(const PinnedStlAllocator<T>& lhs, const PinnedStlAllocator<T>& rhs)
-    {
-        return &lhs != &rhs;
-    }
-
-    // Share pinned pool with CpuPoolPolicy
-    template <class T>
-    class PinnedStlAllocatorPoolThread
-    {
-      public:
-        typedef T value_type;
-        typedef T* pointer;
-        typedef const T* const_pointer;
-        typedef T& reference;
-        typedef const T& const_reference;
-        typedef std::size_t size_type;
-        typedef std::ptrdiff_t difference_type;
-        template <class U>
-        struct rebind
+        void deallocate(pointer ptr, size_type n)
         {
-            typedef PinnedStlAllocatorPoolThread<U> other;
-        };
-        pointer allocate(size_type n, std::allocator<void>::const_pointer hint) { return allocate(n); }
-
-        pointer allocate(size_type n)
-        {
-            pointer ptr = nullptr;
-            CpuMemoryPool::threadInstance()->allocate((void**)&ptr, n * sizeof(T), sizeof(T));
-            return ptr;
+            m_allocator->deallocate(static_cast<uint8_t*>(static_cast<void*>(ptr)), n * sizeof(T));
         }
 
-        void deallocate(pointer ptr, size_type n) { CpuMemoryPool::threadInstance()->deallocate(ptr, n * sizeof(T)); }
-    };
-
-    template <class T>
-    class PinnedStlAllocatorPoolGlobal
-    {
-      public:
-        typedef T value_type;
-        typedef T* pointer;
-        typedef const T* const_pointer;
-        typedef T& reference;
-        typedef const T& const_reference;
-        typedef std::size_t size_type;
-        typedef std::ptrdiff_t difference_type;
-        template <class U>
-        struct rebind
+        bool operator==(const StlAllocator<T>& rhs) const
         {
-            typedef PinnedStlAllocatorPoolGlobal<U> other;
-        };
-
-        pointer allocate(size_type n, std::allocator<void>::const_pointer hint) { return allocate(n); }
-
-        pointer allocate(size_type n)
-        {
-            pointer ptr = nullptr;
-            CpuMemoryPool::globalInstance()->allocate((void**)&ptr, n * sizeof(T), sizeof(T));
-            return ptr;
+            return this->m_allocator == rhs.m_allocator;
         }
 
-        void deallocate(pointer ptr, size_type n) { CpuMemoryPool::globalInstance()->deallocate(ptr, n * sizeof(T)); }
-    };
-
-    template <>
-    class PinnedStlAllocatorPoolGlobal<void>
-    {
-      public:
-        typedef void value_type;
-        typedef void* pointer;
-        typedef const void* const_pointer;
-        typedef std::size_t size_type;
-        typedef std::ptrdiff_t difference_type;
-        template <class U>
-        struct rebind
+        bool operator!=(const StlAllocator<T>& rhs) const
         {
-            typedef PinnedStlAllocatorPoolGlobal<U> other;
-        };
-
-        pointer allocate(size_type n, std::allocator<void>::const_pointer hint) { return allocate(n); }
-
-        pointer allocate(size_type n)
-        {
-            pointer ptr = nullptr;
-            CpuMemoryPool::globalInstance()->allocate(&ptr, n, 1);
-            return ptr;
+            return this->m_allocator != rhs.m_allocator;
         }
 
-        void deallocate(pointer ptr, size_type n) { CpuMemoryPool::globalInstance()->deallocate(ptr, n); }
+        std::shared_ptr<Allocator> getAllocator() const
+        {
+            return m_allocator;
+        }
+
+      protected:
+        std::shared_ptr<Allocator> m_allocator;
     };
-    template <class T, class U>
-    bool operator==(const PinnedStlAllocatorPoolGlobal<T>& lhs, const PinnedStlAllocatorPoolGlobal<U>& rhs)
-    {
-        return &lhs == &rhs;
-    }
-    template <class T, class U>
-    bool operator!=(const PinnedStlAllocatorPoolGlobal<T>& lhs, const PinnedStlAllocatorPoolGlobal<U>& rhs)
-    {
-        return &lhs != &rhs;
-    }
+
 } // namespace mo
+#endif // MO_CORE_ALLOCATOR_STL_ALLOCATOR_HPP

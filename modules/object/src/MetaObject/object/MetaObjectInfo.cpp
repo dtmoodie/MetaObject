@@ -1,4 +1,4 @@
-#include "MetaObject/core/Demangle.hpp"
+#include "MetaObject/core/TypeTable.hpp"
 #include "MetaObject/object/IMetaObjectInfo.hpp"
 #include "MetaObject/params/ParamInfo.hpp"
 #include "MetaObject/signals/SignalInfo.hpp"
@@ -96,37 +96,79 @@ std::string IMetaObjectInfo::Print(Verbosity verbosity) const
 
     auto tooltip = getObjectTooltip();
     if (tooltip.size())
+    {
         ss << "  " << tooltip << "\n";
+    }
     auto help = getObjectHelp();
     if (help.size())
+    {
         ss << "    " << help << "\n";
+    }
     auto params = getParamInfo();
     if (params.size())
     {
         ss << "----------- Params ------------- \n";
         int longest_name = 0;
         for (auto& slot : params)
-            longest_name = std::max<int>(longest_name, static_cast<int>(slot->name.size()));
+        {
+            longest_name = std::max<int>(longest_name, static_cast<int>(slot->getName().size()));
+        }
         longest_name += 1;
         for (auto& param : params)
         {
-            ss << param->name;
-            for (int i = 0; i < longest_name - static_cast<int>(param->name.size()); ++i)
+            ss << param->getName();
+            for (int i = 0; i < longest_name - static_cast<int>(param->getName().size()); ++i)
+            {
                 ss << " ";
-            if (param->type_flags.test(ParamFlags::Control_e))
+            }
+            const auto type = param->getParamFlags();
+            if (type.test(ParamFlags::kCONTROL))
+            {
                 ss << "C";
-            if (param->type_flags.test(ParamFlags::Input_e))
+            }
+            else
+            {
+            }
+            if (type.test(ParamFlags::kINPUT))
+            {
                 ss << "I";
-            if (param->type_flags.test(ParamFlags::Output_e))
+            }
+            else
+            {
+            }
+            if (type.test(ParamFlags::kOUTPUT))
+            {
                 ss << "O";
+            }
+            else
+            {
+            }
 
-            ss << " [" << mo::Demangle::typeToName(param->data_type) << "]\n";
-            if (param->tooltip.size())
-                ss << "    " << param->tooltip << "\n";
-            if (param->description.size())
-                ss << "    " << param->description << "\n";
-            if (param->initial_value.size())
-                ss << "    " << param->initial_value << "\n";
+            ss << " [" << mo::TypeTable::instance()->typeToName(param->getDataType()) << "]\n";
+            const auto& tooltip = param->getTooltip();
+            if (!tooltip.empty())
+            {
+                ss << "    " << tooltip << "\n";
+            }
+            else
+            {
+            }
+            const auto& desc = param->getDescription();
+            if (!desc.empty())
+            {
+                ss << "    " << desc << "\n";
+            }
+            else
+            {
+            }
+            const auto& intitial_value = param->getInitialization();
+            if (!intitial_value.empty())
+            {
+                ss << "    " << intitial_value << "\n";
+            }
+            else
+            {
+            }
         }
     }
     auto sigs = getSignalInfo();

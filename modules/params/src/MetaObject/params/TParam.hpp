@@ -1,3 +1,4 @@
+#pragma once
 /*
 Copyright (c) 2015 Daniel Moodie.
 All rights reserved.
@@ -16,48 +17,402 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 https://github.com/dtmoodie/MetaObject
 */
-#pragma once
-#include "ITAccessibleParam.hpp"
-#include "MetaObject/params/MetaParam.hpp"
-#include "ParamConstructor.hpp"
+#include "AccessToken.hpp"
+#include "IParam.hpp"
+#include "ParamTags.hpp"
+#include "TDataContainer.hpp"
 
+#include <MetaObject/thread/fiber_include.hpp>
+
+#include <boost/thread/locks.hpp>
 namespace mo
 {
     template <typename T>
-    class MO_EXPORTS TParam : virtual public ITAccessibleParam<T>
+    struct AccessToken;
+    template <typename T>
+    struct ConstAccessToken;
+
+    template <typename T>
+    class MO_EXPORTS TParam<T> : virtual public IParam
     {
       public:
-        typedef T ValueType;
-        typedef typename ParamTraits<T>::Storage_t Storage_t;
-        typedef typename ParamTraits<T>::ConstStorageRef_t ConstStorageRef_t;
-        typedef typename ParamTraits<T>::InputStorage_t InputStorage_t;
-        typedef typename ParamTraits<T>::Input_t Input_t;
+        using Container_t = TDataContainer<T>;
+        using TContainerPtr_t = typename TDataContainer<T>::Ptr_t;
+        using type = typename TDataContainer<T>::type;
+        using ContainerConstPtr_t = std::shared_ptr<const Container_t>;
+        using TUpdate_s = void(TContainerPtr_t, IParam*, UpdateFlags);
+        using TUpdateSignal_t = TSignal<TUpdate_s>;
+        using TUpdateSlot_t = TSlot<TUpdate_s>;
 
-        static const ParamType Type = TParam_e;
-        TParam(const std::string& name, const T& value) : IParam(name) { ParamTraits<T>::reset(_data, value); }
-        TParam(const std::string& name) : IParam(name) {}
-        TParam();
+        // brief TParam default constructor, passes args to IParam
+        TParam(const std::string& name = "", ParamFlags flags = ParamFlags::kCONTROL);
 
-        virtual bool getData(InputStorage_t& data,
-                             const OptionalTime_t& ts = OptionalTime_t(),
-                             Context* ctx = nullptr,
-                             size_t* fn_ = nullptr);
+        template <class... Args>
+        auto updateData(const type& data, const Args&... args) -> ct::EnableIf<hasNamedParam<Args...>()>;
 
-        virtual bool getData(InputStorage_t& data, size_t fn, Context* ctx = nullptr, OptionalTime_t* ts_ = nullptr);
+        template <class... Args>
+        auto updateData(type&& data, const Args&... args) -> ct::EnableIf<hasNamedParam<Args...>()>;
+
+        void updateData(const type& data, const Header& header = Header());
+        void updateData(type&& data, Header&& header = Header());
+        void updateData(const TContainerPtr_t& data);
+
+        TypeInfo getTypeInfo() const override;
+
+        ConnectionPtr_t registerUpdateNotifier(ISlot* f) override;
+        ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr_t& relay) override;
+
+        void load(ILoadVisitor&) override;
+        void save(ISaveVisitor&) const override;
+        void load(BinaryInputVisitor& ar) override;
+        void save(BinaryOutputVisitor& ar) const override;
+        void visit(StaticVisitor&) const override;
+
+        virtual bool isValid() const;
+        virtual ConstAccessToken<T> read() const;
         virtual AccessToken<T> access();
-        virtual ConstAccessToken<T> access() const;
+
+        IContainerPtr_t getData(const Header& desired = Header()) override;
+        IContainerConstPtr_t getData(const Header& desired = Header()) const override;
+
+        template <class... ARGS>
+        typename TDataContainer<T>::Ptr_t create(ARGS&&... args) const;
+
+        const type& value() const
+        {
+            MO_ASSERT(m_data);
+            return m_data->data;
+        }
+
+        OptionalTime getTimestamp() const override;
+        FrameNumber getFrameNumber() const override;
+
+        void setAllocator(typename Allocator::Ptr_t alloc)
+        {
+            m_allocator = ParamAllocator::create(alloc);
+        }
 
       protected:
-        virtual bool updateDataImpl(const Storage_t& data,
-                                    const OptionalTime_t& ts,
-                                    Context* ctx,
-                                    size_t fn,
-                                    const std::shared_ptr<ICoordinateSystem>& cs);
-        Storage_t _data;
+        typename TDataContainer<T>::Ptr_t getDataImpl(const Header& desired = Header());
+        typename TDataContainer<T>::ConstPtr_t getDataImpl(const Header& desired = Header()) const;
+
+        virtual void updateDataImpl(const TContainerPtr_t& data, mo::UpdateFlags fg = UpdateFlags::kVALUE_UPDATED);
+
+        void emitTypedUpdate(TContainerPtr_t data, UpdateFlags flags)
+        {
+            m_typed_update_signal(data, this, flags);
+        }
+
+        ParamAllocator::Ptr_t allocator() const
+        {
+            return m_allocator;
+        }
 
       private:
-        static ParamConstructor<TParam<T>> _typed_param_constructor;
-        static MetaParam<T, 100> _meta_param;
+        FrameNumber m_update_count;
+        typename TDataContainer<T>::Ptr_t m_data;
+        TSignal<TUpdate_s> m_typed_update_signal;
+        static const TypeInfo m_type_info;
+        ParamAllocator::Ptr_t m_allocator;
     };
-}
-#include "detail/TParamImpl.hpp"
+
+    ///////////////////////////////////////////////////////////////////////////////////////
+    /// implementation
+    ///////////////////////////////////////////////////////////////////////////////////////
+
+    template <class T>
+    TParam<T>::TParam(const std::string& name, ParamFlags flags)
+        : IParam(name, flags)
+        , m_allocator(ParamAllocator::create())
+    {
+    }
+
+    template <class T>
+    template <class... Args>
+    auto TParam<T>::updateData(const type& data, const Args&... args) -> ct::EnableIf<hasNamedParam<Args...>()>
+    {
+        auto tmp = data;
+        updateData(std::move(tmp), args...);
+    }
+
+    template <class T>
+    template <class... Args>
+    auto TParam<T>::updateData(type&& data, const Args&... args) -> ct::EnableIf<hasNamedParam<Args...>()>
+    {
+        Header header;
+        const IParam* param = getKeywordInputDefault<params::Param>(static_cast<const IParam*>(nullptr), args...);
+        if (param)
+        {
+            header.frame_number = param->getFrameNumber();
+            header.stream = param->getStream();
+            header.coordinate_system = param->getCoordinateSystem();
+            header.timestamp = param->getTimestamp();
+        }
+        const uint64_t* fnptr = getKeywordInputOptional<params::FrameNumber>(args...);
+        if (fnptr)
+        {
+            header.frame_number = *fnptr;
+        }
+
+        auto tsptr = getKeywordInputOptional<params::Timestamp>(args...);
+        if (tsptr)
+        {
+            header.timestamp = *tsptr;
+        }
+
+        auto stream_ = getKeywordInputDefault<params::Stream>(nullptr, args...);
+        if (stream_)
+        {
+            header.stream = stream_;
+        }
+        {
+            mo::Lock_t lock(this->mtx());
+            // If we done goofed and haven't setup a stream, then on the first call with a stream argument we set it
+            // here
+            if (getStream() == nullptr && header.stream)
+            {
+                setStream(header.stream);
+            }
+        }
+
+        updateData(std::move(data), std::move(header));
+    }
+
+    template <class T>
+    void TParam<T>::updateData(const type& data, const Header& header)
+    {
+        auto container = create(data);
+        container->header = header;
+        updateData(container);
+    }
+
+    template <class T>
+    void TParam<T>::updateData(type&& data, Header&& header)
+    {
+        auto container = create(std::move(data));
+        container->header = std::move(header);
+        updateData(container);
+    }
+
+    template <class T>
+    void TParam<T>::updateData(const TContainerPtr_t& data)
+    {
+        if (!data)
+        {
+            return;
+        }
+
+        updateDataImpl(data);
+    }
+
+    template <class T>
+    template <class... ARGS>
+    typename TDataContainer<T>::Ptr_t TParam<T>::create(ARGS&&... args) const
+    {
+        return std::make_shared<TDataContainer<T>>(m_allocator, std::forward<ARGS>(args)...);
+    }
+
+    template <class T>
+    void TParam<T>::updateDataImpl(const TContainerPtr_t& data, mo::UpdateFlags fg)
+    {
+        if (!data->header.frame_number.valid())
+        {
+            ++m_update_count.val;
+            data->header.frame_number = m_update_count;
+        }
+        else
+        {
+            m_update_count = data->header.frame_number;
+        }
+
+        {
+            mo::Lock_t lock(this->mtx());
+            m_data = data;
+        }
+        emitUpdate(IDataContainer::Ptr_t(data), fg);
+        m_typed_update_signal(data, this, fg);
+    }
+
+    template <class T>
+    TypeInfo TParam<T>::getTypeInfo() const
+    {
+        return m_type_info;
+    }
+
+    template <class T>
+    ConnectionPtr_t TParam<T>::registerUpdateNotifier(ISlot* f)
+    {
+        if (f->getSignature() == m_typed_update_signal.getSignature())
+        {
+            auto typed = dynamic_cast<TUpdateSlot_t*>(f);
+            if (typed)
+            {
+                return m_typed_update_signal.connect(typed);
+            }
+        }
+        return IParam::registerUpdateNotifier(f);
+    }
+
+    template <class T>
+    ConnectionPtr_t TParam<T>::registerUpdateNotifier(const ISignalRelay::Ptr_t& relay)
+    {
+        if (relay->getSignature() == m_typed_update_signal.getSignature())
+        {
+            auto tmp = relay;
+            return m_typed_update_signal.connect(tmp);
+        }
+        return IParam::registerUpdateNotifier(relay);
+    }
+
+    template <class T>
+    void TParam<T>::load(ILoadVisitor& visitor)
+    {
+        mo::Lock_t lock(this->mtx());
+        if (m_data)
+        {
+            m_data->load(visitor);
+        }
+    }
+
+    template <class T>
+    void TParam<T>::save(ISaveVisitor& visitor) const
+    {
+        mo::Lock_t lock(this->mtx());
+        if (m_data)
+        {
+            m_data->save(visitor);
+        }
+    }
+
+    template <class T>
+    void TParam<T>::load(BinaryInputVisitor& ar)
+    {
+        mo::Lock_t lock(this->mtx());
+        if (m_data)
+        {
+            m_data->load(ar);
+        }
+    }
+
+    template <class T>
+    void TParam<T>::save(BinaryOutputVisitor& ar) const
+    {
+        mo::Lock_t lock(this->mtx());
+        if (m_data)
+        {
+            m_data->save(ar);
+        }
+    }
+
+    template <class T>
+    void TParam<T>::visit(StaticVisitor& visitor) const
+    {
+        TDataContainer<T>::visitStatic(visitor);
+    }
+
+    template <class T>
+    typename TParam<T>::IContainerPtr_t TParam<T>::getData(const Header& desired)
+    {
+        return getDataImpl(desired);
+    }
+
+    template <class T>
+    typename TParam<T>::IContainerConstPtr_t TParam<T>::getData(const Header& desired) const
+    {
+        return getDataImpl(desired);
+    }
+
+    template <class T>
+    typename TDataContainer<T>::Ptr_t TParam<T>::getDataImpl(const Header& desired)
+    {
+        mo::Lock_t lock(this->mtx());
+        if (m_data)
+        {
+            if (!desired.timestamp && !desired.frame_number.valid())
+            {
+                return m_data;
+            }
+
+            if (desired.timestamp && m_data->header.timestamp == desired.timestamp)
+            {
+                return m_data;
+            }
+
+            if (desired.frame_number.valid() && desired.frame_number == m_data->header.frame_number)
+            {
+                return m_data;
+            }
+        }
+        return {};
+    }
+
+    template <class T>
+    typename TDataContainer<T>::ConstPtr_t TParam<T>::getDataImpl(const Header& desired) const
+    {
+        mo::Lock_t lock(this->mtx());
+        if (m_data)
+        {
+            if (!desired.timestamp && !desired.frame_number.valid())
+            {
+                return m_data;
+            }
+
+            if (desired.timestamp && m_data->header.timestamp == desired.timestamp)
+            {
+                return m_data;
+            }
+
+            if (desired.frame_number != std::numeric_limits<uint64_t>::max() &&
+                desired.frame_number == m_data->header.frame_number)
+            {
+                return m_data;
+            }
+        }
+        return {};
+    }
+
+    template <class T>
+    OptionalTime TParam<T>::getTimestamp() const
+    {
+        if (m_data)
+        {
+            return m_data->getHeader().timestamp;
+        }
+        return {};
+    }
+
+    template <class T>
+    FrameNumber TParam<T>::getFrameNumber() const
+    {
+        if (m_data)
+        {
+            return m_data->getHeader().frame_number;
+        }
+        return {};
+    }
+
+    template <class T>
+    bool TParam<T>::isValid() const
+    {
+        return m_data != nullptr;
+    }
+
+    template <class T>
+    ConstAccessToken<T> TParam<T>::read() const
+    {
+        mo::Lock_t lock(this->mtx());
+        MO_ASSERT(m_data != nullptr);
+        return ConstAccessToken<T>(std::move(lock), *this, m_data->data);
+    }
+
+    template <class T>
+    AccessToken<T> TParam<T>::access()
+    {
+        mo::Lock_t lock(this->mtx());
+        MO_ASSERT(m_data != nullptr);
+        return AccessToken<T>(std::move(lock), *this, m_data->data);
+    }
+
+    template <class T>
+    const TypeInfo TParam<T>::m_type_info = TypeInfo(typeid(TParam<T>::type));
+} // namespace mo

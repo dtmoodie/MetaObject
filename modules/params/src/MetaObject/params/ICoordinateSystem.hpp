@@ -5,9 +5,8 @@
 
 namespace mo
 {
-    class MO_EXPORTS ICoordinateSystem
+    struct MO_EXPORTS ICoordinateSystem
     {
-      public:
         ICoordinateSystem(const std::string& name);
         virtual ~ICoordinateSystem();
         virtual ICoordinateSystem* clone() const = 0;

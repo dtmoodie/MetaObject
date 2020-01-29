@@ -1,5 +1,4 @@
 #pragma once
-#ifdef HAVE_QT5
 #include "IParamProxy.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
 #include "MetaObject/params/ITAccessibleParam.hpp"
@@ -33,8 +32,14 @@ namespace mo
             {
               public:
                 static const bool IS_DEFAULT = THandler<T>::IS_DEFAULT;
-                ParamProxy(IParam* param) : _param_handler(*this) { setParam(param); }
-                ~ParamProxy() {}
+                ParamProxy(IParam* param)
+                    : _param_handler(*this)
+                {
+                    setParam(param);
+                }
+                ~ParamProxy()
+                {
+                }
 
                 QWidget* getParamWidget(QWidget* parent)
                 {
@@ -71,19 +76,22 @@ namespace mo
                             _param_handler.updateUi(token());
                             _param_handler.setUpdating(false);
                         }
-                        catch (mo::ExceptionWithCallStack<std::string>& exc)
+                        catch (...)
                         {
-                            (void)exc; // exception thrown if data hasn't been populated yet on some parameters
+
                         }
                     }
                     return output;
                 }
 
-                bool checkParam(IParam* param) const { return param == this->_param; }
+                bool checkParam(IParam* param) const
+                {
+                    return param == this->_param;
+                }
 
                 bool setParam(IParam* param)
                 {
-                    this->_param = dynamic_cast<ITAccessibleParam<T>*>(param);
+                    this->_param = dynamic_cast<TParam<T>*>(param);
                     if (this->_param)
                     {
                         return true;
@@ -95,7 +103,7 @@ namespace mo
                 void onParamUpdate(typename ParamTraits<T>::ConstStorageRef_t data,
                                    IParam* param,
                                    Context* ctx,
-                                   OptionalTime_t ts,
+                                   OptionalTime ts,
                                    size_t fn,
                                    const std::shared_ptr<ICoordinateSystem>& cs,
                                    UpdateFlags fg)
@@ -127,8 +135,8 @@ namespace mo
                     _param_handler.setUpdating(false);
                 }
                 THandler<T> _param_handler;
-                ITAccessibleParam<T>* _param;
-                typename ITParam<T>::TUpdateSlot_t _slot;
+                TParam<T>* _param;
+                typename TParam<T>::TUpdateSlot_t _slot;
             };
             // **********************************************************************************
             // *************************** Constructor ******************************************
@@ -157,7 +165,11 @@ namespace mo
         : public MetaParam<T, N - 1, void>                                                                             \
     {                                                                                                                  \
         static UI::qt::Constructor<T> _Param_proxy_constructor;                                                        \
-        MetaParam(const char* name) : MetaParam<T, N - 1, void>(name) { (void)&_Param_proxy_constructor; }             \
+        MetaParam(SystemTable* table, const char* name)                                                                \
+            : MetaParam<T, N - 1, void>(table, name)                                                                   \
+        {                                                                                                              \
+            (void)&_Param_proxy_constructor;                                                                           \
+        }                                                                                                              \
     };                                                                                                                 \
     template <class T>                                                                                                 \
     UI::qt::Constructor<T>                                                                                             \
@@ -166,4 +178,3 @@ namespace mo
     MO_UI_QT_PARAMTERPROXY_METAParam(__COUNTER__)
 }
 //#include "detail/TParamProxyImpl.hpp"
-#endif // HAVE_QT5

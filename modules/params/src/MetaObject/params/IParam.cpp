@@ -17,266 +17,271 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 https://github.com/dtmoodie/MetaObject
 */
 #include "MetaObject/params/IParam.hpp"
+#include "ICoordinateSystem.hpp"
+#include "IDataContainer.hpp"
+#include "MetaObject/core/TypeTable.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/TSignalRelay.hpp"
 #include "MetaObject/signals/TSlot.hpp"
+
 #include <algorithm>
-#include <boost/thread/recursive_mutex.hpp>
+
+#include <MetaObject/thread/fiber_include.hpp>
+
+#include <boost/thread/locks.hpp>
 
 namespace mo
 {
 
-    ParamBase::~ParamBase() {}
+    ParamBase::~ParamBase()
+    {
+    }
 
     namespace kwargs
     {
-        TKeyword<tag::param> TKeyword<tag::param>::instance;
-
-        TaggedArgument<tag::param> TKeyword<tag::param>::operator=(const IParam& data)
-        {
-            return TaggedArgument<tag::param>(data);
-        }
-
-        template MO_EXPORTS struct TKeyword<tag::param>;
+        
     }
 
-    IParam::IParam(const std::string& name_, ParamFlags flags_, OptionalTime_t ts, Context* ctx, size_t fn)
-        : _modified(false), _subscribers(0), _mtx(nullptr), _name(name_), _flags(flags_), _ctx(ctx), _fn(fn), _ts(ts)
+    IParam::IParam(const std::string& name_, ParamFlags flags_, IAsyncStream* stream)
+        : m_name(name_)
+        , m_flags(flags_)
+        , m_stream(stream)
     {
     }
 
     IParam::~IParam()
     {
-
-        _delete_signal(this);
-        if (checkFlags(ParamFlags::OwnsMutex_e))
-            delete _mtx;
+        m_delete_signal(this);
+        if (checkFlags(ParamFlags::kOWNS_MUTEX))
+        {
+            delete m_mtx;
+        }
     }
 
     IParam* IParam::setName(const std::string& name_)
     {
-        _name = name_;
+        m_name = name_;
         return this;
     }
 
     IParam* IParam::setTreeRoot(const std::string& treeRoot_)
     {
-        _tree_root = treeRoot_;
-        return this;
-    }
-
-    IParam* IParam::setFrameNumber(size_t fn)
-    {
-        this->_fn = fn;
-        return this;
-    }
-
-    IParam* IParam::setTimestamp(const mo::Time_t& ts)
-    {
-        this->_ts = ts;
+        m_tree_root = treeRoot_;
         return this;
     }
 
     IParam* IParam::setCoordinateSystem(const std::shared_ptr<ICoordinateSystem>& system)
     {
-        this->_cs = system;
+        m_cs = system;
         return this;
     }
 
-    IParam* IParam::setContext(Context* ctx)
+    IParam* IParam::setStream(IAsyncStream* stream)
     {
-        _ctx = ctx;
+        m_stream = stream;
         return this;
     }
 
-    const std::string& IParam::getName() const { return _name; }
+    const std::string& IParam::getName() const
+    {
+        return m_name;
+    }
 
-    const std::string& IParam::getTreeRoot() const { return _tree_root; }
+    const std::string& IParam::getTreeRoot() const
+    {
+        return m_tree_root;
+    }
 
     const std::string IParam::getTreeName() const
     {
-        if (_tree_root.size())
-            return _tree_root + ":" + _name;
-        else
-            return _name;
-    }
-
-    OptionalTime_t IParam::getTimestamp() const { return _ts; }
-
-    size_t IParam::getFrameNumber() const { return _fn; }
-
-    Context* IParam::getContext() const { return _ctx; }
-
-    const std::shared_ptr<ICoordinateSystem>& IParam::getCoordinateSystem() const { return _cs; }
-
-    std::shared_ptr<Connection> IParam::registerUpdateNotifier(UpdateSlot_t* f)
-    {
-        mo::Mutex_t::scoped_lock lock(mtx());
-        return f->connect(&_update_signal);
-    }
-
-    std::shared_ptr<Connection> IParam::registerUpdateNotifier(ISlot* f)
-    {
-        mo::Mutex_t::scoped_lock lock(mtx());
-        auto typed = dynamic_cast<UpdateSlot_t*>(f);
-        if (typed)
+        if (!m_tree_root.empty())
         {
-            return registerUpdateNotifier(typed);
+            return m_tree_root + ":" + m_name;
         }
-        return std::shared_ptr<Connection>();
+        return m_name;
     }
 
-    std::shared_ptr<Connection> IParam::registerUpdateNotifier(std::shared_ptr<ISignalRelay> relay)
+    IAsyncStream* IParam::getStream() const
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
-        auto typed = std::dynamic_pointer_cast<TSignalRelay<UpdateSig_t>>(relay);
-        if (typed)
+        return m_stream;
+    }
+
+    const std::shared_ptr<ICoordinateSystem>& IParam::getCoordinateSystem() const
+    {
+        return m_cs;
+    }
+
+    ConnectionPtr_t IParam::registerUpdateNotifier(ISlot* f)
+    {
+        Lock_t lock(mtx());
+        if (f->getSignature() == m_data_update.getSignature())
         {
-            return registerUpdateNotifier(typed);
+            return m_data_update.connect(f);
         }
-        return std::shared_ptr<Connection>();
-    }
-
-    std::shared_ptr<Connection> IParam::registerUpdateNotifier(std::shared_ptr<TSignalRelay<UpdateSig_t>>& relay)
-    {
-        mo::Mutex_t::scoped_lock lock(mtx());
-        return _update_signal.connect(relay);
-    }
-
-    std::shared_ptr<Connection> IParam::registerDeleteNotifier(DeleteSlot_t* f)
-    {
-        mo::Mutex_t::scoped_lock lock(mtx());
-        return f->connect(&_delete_signal);
-    }
-
-    std::shared_ptr<Connection> IParam::registerDeleteNotifier(ISlot* f)
-    {
-        mo::Mutex_t::scoped_lock lock(mtx());
-        auto typed = dynamic_cast<DeleteSlot_t*>(f);
-        if (typed)
+        if (f->getSignature() == m_update_signal.getSignature())
         {
-            return registerDeleteNotifier(typed);
+            return m_update_signal.connect(f);
         }
-        return std::shared_ptr<Connection>();
+        return {};
     }
 
-    std::shared_ptr<Connection> IParam::registerDeleteNotifier(std::shared_ptr<ISignalRelay> relay)
+    ConnectionPtr_t IParam::registerUpdateNotifier(const ISignalRelay::Ptr_t& relay)
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
-        auto typed = std::dynamic_pointer_cast<TSignalRelay<void(IParam*)>>(relay);
-        if (typed)
+        Lock_t lock(mtx());
+        auto tmp = relay;
+        if (relay->getSignature() == m_data_update.getSignature())
         {
-            return registerDeleteNotifier(typed);
+            return m_data_update.connect(tmp);
         }
-        return std::shared_ptr<Connection>();
+        if (relay->getSignature() == m_update_signal.getSignature())
+        {
+            return m_update_signal.connect(tmp);
+        }
+        return {};
     }
 
-    std::shared_ptr<Connection>
-    IParam::registerDeleteNotifier(std::shared_ptr<TSignalRelay<void(IParam const*)>>& relay)
+    ConnectionPtr_t IParam::registerDeleteNotifier(ISlot* f)
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
-        return _delete_signal.connect(relay);
+        Lock_t lock(mtx());
+        if (m_delete_signal.getSignature() == f->getSignature())
+        {
+            return m_delete_signal.connect(f);
+        }
+        return {};
     }
 
-    IParam* IParam::emitUpdate(const OptionalTime_t& ts_,
-                               Context* ctx_,
-                               const boost::optional<size_t>& fn,
-                               const std::shared_ptr<ICoordinateSystem>& cs_,
-                               UpdateFlags flags_)
+    ConnectionPtr_t IParam::registerDeleteNotifier(const ISignalRelay::Ptr_t& relay)
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
-        _ts = ts_;
-        if (fn)
+        Lock_t lock(mtx());
+        if (relay->getSignature() == m_delete_signal.getSignature())
         {
-            this->_fn = *fn;
+            auto tmp = relay;
+            m_delete_signal.connect(tmp);
         }
-        else
-        {
-            ++this->_fn;
-        }
-        if (cs_ != nullptr)
-        {
-            _cs = cs_;
-        }
-        _modified = true;
-        lock.unlock();
-        _update_signal(this, ctx_, ts_, this->_fn, cs_, flags_);
+        return {};
+    }
+
+    IParam* IParam::emitUpdate(const Header& header, UpdateFlags flags_)
+    {
+        modified(true);
+        m_update_signal(this, header, flags_);
         return this;
     }
 
-    IParam* IParam::emitUpdate(const IParam& other)
+    IParam* IParam::emitUpdate(const IDataContainerPtr_t& data, UpdateFlags flags)
     {
-        return emitUpdate(
-            other.getTimestamp(), other.getContext(), other.getFrameNumber(), other.getCoordinateSystem());
+        modified(true);
+        m_data_update(data, this, flags);
+        m_update_signal(this, data->getHeader(), flags);
+        return this;
+    }
+
+    IParam* IParam::emitUpdate(const IParam& other, UpdateFlags flags_)
+    {
+        auto ts = other.getTimestamp();
+        auto fn = other.getFrameNumber();
+
+        return emitUpdate(mo::Header(ts, fn), flags_);
     }
 
     Mutex_t& IParam::mtx() const
     {
-        if (_mtx == nullptr)
+        if (m_mtx == nullptr)
         {
-            _mtx = new boost::recursive_timed_mutex();
-            _flags.set(ParamFlags::OwnsMutex_e);
+            m_mtx = new Mutex_t();
+            m_flags.set(ParamFlags::kOWNS_MUTEX);
         }
-        return *_mtx;
+        return *m_mtx;
     }
 
-    void IParam::setMtx(boost::recursive_timed_mutex* mtx_)
+    void IParam::setMtx(Mutex_t* mtx_)
     {
-        if (_mtx && checkFlags(ParamFlags::OwnsMutex_e))
+        if (m_mtx && checkFlags(ParamFlags::kOWNS_MUTEX))
         {
-            delete _mtx;
-            _flags.reset(ParamFlags::OwnsMutex_e);
+            delete m_mtx;
+            m_flags.reset(ParamFlags::kOWNS_MUTEX);
         }
-        _mtx = mtx_;
+        m_mtx = mtx_;
     }
 
     void IParam::subscribe()
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
-        ++_subscribers;
+        Lock_t lock(mtx());
+        ++m_subscribers;
     }
 
     void IParam::unsubscribe()
     {
-        mo::Mutex_t::scoped_lock lock(mtx());
-        --_subscribers;
-        _subscribers = std::max(0, _subscribers);
+        Lock_t lock(mtx());
+        --m_subscribers;
+        m_subscribers = std::max(0, m_subscribers);
     }
 
-    bool IParam::hasSubscriptions() const { return _subscribers != 0; }
-
-    EnumClassBitset<ParamFlags> IParam::setFlags(ParamFlags flags_)
+    bool IParam::hasSubscriptions() const
     {
-        auto prev = _flags;
-        _flags.set(flags_);
+        return m_subscribers != 0;
+    }
+
+    ParamFlags IParam::setFlags(ParamFlags flags_)
+    {
+        auto prev = m_flags;
+        m_flags = flags_;
         return prev;
     }
 
-    EnumClassBitset<ParamFlags> IParam::setFlags(EnumClassBitset<ParamFlags> flags_)
+    ParamFlags IParam::appendFlags(ParamFlags flags_)
     {
-        auto prev = _flags;
-        _flags = flags_;
-        return prev;
-    }
-
-    EnumClassBitset<ParamFlags> IParam::appendFlags(ParamFlags flags_)
-    {
-        auto prev = _flags;
-        //_flags          = ParamFlags(_flags | flags_);
-        _flags.set(flags_);
+        auto prev = m_flags;
+        m_flags.set(flags_);
         return prev;
     }
 
     bool IParam::checkFlags(ParamFlags flag) const
     {
-        // return (_flags & flag) != 0;
-        return _flags.test(flag);
+        return m_flags.test(flag);
     }
 
-    EnumClassBitset<ParamFlags> IParam::getFlags() const { return _flags; }
+    ParamFlags IParam::getFlags() const
+    {
+        return m_flags;
+    }
 
-    bool IParam::modified() const { return _modified; }
+    bool IParam::modified() const
+    {
+        return m_modified;
+    }
 
-    void IParam::modified(bool value) { _modified = value; }
+    void IParam::modified(bool value)
+    {
+        Lock_t lock(mtx());
+        m_modified = value;
+    }
+
+    std::ostream& IParam::print(std::ostream& os) const
+    {
+        os << getTreeName();
+        os << " [" << mo::TypeTable::instance()->typeToName(getTypeInfo()) << "]";
+        auto ts = getTimestamp();
+        if (ts)
+        {
+            os << " " << *ts;
+        }
+        auto fn = getFrameNumber();
+        if (fn != std::numeric_limits<uint64_t>::max())
+        {
+            os << " " << fn;
+        }
+        auto cs = getCoordinateSystem();
+        if (cs)
+        {
+            os << " " << cs->getName();
+        }
+        auto stream = getStream();
+        if (stream)
+        {
+            os << " <" << stream->name() << ">";
+        }
+        return os;
+    }
 
 } // namespace mo

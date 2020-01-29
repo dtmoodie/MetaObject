@@ -1,17 +1,28 @@
-#include "MetaObject/metaparams/MetaParamsInclude.hpp"
-#include "MetaObject/params/MetaParam.hpp"
+
+#include "common.hpp"
+
+#include <map>
+#include <ostream>
+#include <string>
+
+namespace std
+{
+    template <class K, class V>
+    ostream& operator<<(ostream& os, const map<K, V>& map_)
+    {
+        for (const auto& kvp : map_)
+        {
+            os << kvp.first << ':' << kvp.second << ' ';
+        }
+        return os;
+    }
+} // namespace std
+
+#include <MetaObject/params/MetaParam.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/map.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/string.hpp>
+
 #include <stdint.h>
-
-#ifdef emit
-#undef emit
-#endif
-#ifdef HAVE_WT
-#define WT_NO_SLOT_MACROS
-#include "MetaObject/params/ui/Wt/IParamProxy.hpp"
-#include "MetaObject/params/ui/Wt/POD.hpp"
-#include "MetaObject/params/ui/Wt/String.hpp"
-#endif
-
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
 #endif
@@ -22,21 +33,32 @@
 #else
 #define MO_EXPORTS
 #endif
+
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 
-INSTANTIATE_META_PARAM(bool);
-INSTANTIATE_META_PARAM(int);
-INSTANTIATE_META_PARAM(unsigned short);
-INSTANTIATE_META_PARAM(unsigned int);
-INSTANTIATE_META_PARAM(char);
-INSTANTIATE_META_PARAM(unsigned char);
-INSTANTIATE_META_PARAM(long);
-INSTANTIATE_META_PARAM(long long);
+namespace mo
+{
+    namespace metaparams
+    {
+        void instantiatePOD(SystemTable*)
+        {
+            registerTrait<bool>();
+            registerTrait<uint8_t>();
+            registerTrait<int8_t>();
+            registerTrait<uint16_t>();
+            registerTrait<int16_t>();
+            registerTrait<uint32_t>();
+            registerTrait<int32_t>();
+            registerTrait<uint64_t>();
+            registerTrait<int64_t>();
+            registerTrait<float>();
+            registerTrait<double>();
 #ifndef __arm__
-INSTANTIATE_META_PARAM(size_t);
+            registerTrait<ssize_t>();
+            registerTrait<size_t>();
 #endif
-INSTANTIATE_META_PARAM(float);
-INSTANTIATE_META_PARAM(double);
-INSTANTIATE_META_PARAM(std::string);
-typedef std::map<std::string, std::string> StringMap;
-INSTANTIATE_META_PARAM(StringMap);
+            registerTrait<std::string>();
+            registerTrait<std::map<std::string, std::string>>();
+        }
+    } // namespace metaparams
+} // namespace mo

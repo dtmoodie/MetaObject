@@ -7,18 +7,21 @@ namespace mo
 
         template <class T>
         NNStreamBuffer<T>::NNStreamBuffer(const std::string& name)
-            : ITParam<T>(name, ParamFlags::Buffer_e), StreamBuffer<T>(name)
+            : TParam<T>(name, ParamFlags::kBUFFER)
+            , StreamBuffer<T>(name)
         {
         }
 
         template <class T>
         typename std::map<SequenceKey, typename NNStreamBuffer<T>::InputStorage_t>::iterator
-        NNStreamBuffer<T>::search(const OptionalTime_t& ts)
+        NNStreamBuffer<T>::search(const OptionalTime& ts)
         {
             if (!ts)
             { // default timestamp passed in, get newest value
                 if (!this->_data_buffer.empty())
+                {
                     return (--this->_data_buffer.end());
+                }
                 return this->_data_buffer.end();
             }
             else
@@ -46,9 +49,15 @@ namespace mo
                 }
             }
             if (!this->_data_buffer.empty())
+            {
                 return (--this->_data_buffer.end());
-            return this->_data_buffer.end();
+            }
+            else
+            {
+                return this->_data_buffer.end();
+            }
         }
+
         template <class T>
         typename std::map<SequenceKey, typename NNStreamBuffer<T>::InputStorage_t>::iterator
         NNStreamBuffer<T>::search(size_t fn)
@@ -74,20 +83,28 @@ namespace mo
             {
                 return upper;
             }
-            return this->_data_buffer.end();
+            else
+            {
+                return this->_data_buffer.end();
+            }
         }
 
         template <class T>
-        bool NNStreamBuffer<T>::getData(InputStorage_t& data, const OptionalTime_t& ts, Context* ctx, size_t* fn_)
+        bool NNStreamBuffer<T>::getData(InputStorage_t& data, const OptionalTime& ts, Context* ctx, size_t* fn_)
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
             auto itr = search(ts);
             if (itr != this->_data_buffer.end())
             {
                 this->_current_timestamp = itr->first.ts;
                 this->_current_frame_number = itr->first.fn;
                 if (fn_)
+                {
                     *fn_ = this->_current_frame_number;
+                }
+                else
+                {
+                }
                 this->_ts = itr->first.ts;
                 this->_fn = itr->first.fn;
                 this->_ctx = itr->first.ctx;
@@ -100,9 +117,9 @@ namespace mo
         }
 
         template <class T>
-        bool NNStreamBuffer<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime_t* ts_)
+        bool NNStreamBuffer<T>::getData(InputStorage_t& data, size_t fn, Context* ctx, OptionalTime* ts_)
         {
-            mo::Mutex_t::scoped_lock lock(IParam::mtx());
+            Lock_t lock(IParam::mtx());
             auto itr = search(fn);
             if (itr != this->_data_buffer.end())
             {
@@ -113,7 +130,9 @@ namespace mo
                 this->_ctx = itr->first.ctx;
                 this->_cs = itr->first.cs;
                 if (ts_)
+                {
                     *ts_ = this->_current_timestamp;
+                }
                 this->prune();
                 data = itr->second;
                 return true;

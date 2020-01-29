@@ -1,45 +1,45 @@
-clone_depth: 5
+version: 1.0.{build}
 
-environment:
-  QTDIR32: C:\Qt\5.7\msvc2015
-  QTDIR64: C:\Qt\5.7\msvc2015_64
-  GENERATOR64: "Visual Studio 14 Win64"
-  GENERATOR32: "Visual Studio 14"
-  CONFIG: Release
-  BOOST_ROOT: C:\Libraries\boost_1_62_0
+clone_depth: 50
 
-configuration:
-  - Release
-
-platform:
-  - x64
-  - Win32
-
-#branches:
-  #only:
-    #- master
+image:
+- Previous Visual Studio 2017
+- Visual Studio 2017
+- Previous Ubuntu1604
+- Previous Ubuntu1804
 
 before_build:
-  - mkdir build
-  - cd build
-  - set PATH=%QTDIR%\bin;%PATH%
-  - cmd: if "%platform%"=="Win32" cmake "-G%GENERATOR32%" -DCMAKE_PREFIX_PATH="%QTDIR32%/lib/cmake/Qt5" -DBOOST_ROOT="%BOOST_ROOT%"..
-  - cmd: if "%platform%"=="x64"   cmake "-G%GENERATOR64%" -DCMAKE_PREFIX_PATH="%QTDIR64%/lib/cmake/Qt5" -DBOOST_ROOT="%BOOST_ROOT%" ..
+- git submodule update --init --recursive
 
-build:
-  parallel: true
-  project: C:\projects\MetaObject\build\MetaObject.sln
+- cmd: >-
+   if not exist "build" mkdir build
+   
+   cd build
+   
+   cmake .. -DBOOST_ROOT=C:\Libraries\boost_1_67_0 -DBOOST_LIBRARYDIR=C:\Libraries\boost_1_67_0\stage\lib -Dcereal_INCLUDE_DIR=%APPVEYOR_BUILD_FOLDER%/cereal/include -DBUILD_EXAMPLES=OFF -DCMAKE_VERBOSE_MAKEFILE=ON -Dgtest_force_shared_crt=ON
 
-#build_script:
-  #- msbuild MetaObject.sln /t:build /p:Configuration=Release
+- sh: >-
+    sudo -E ./scripts/appveyor/install-deps.sh
 
-#deploy:
-  #release: $(APPVEYOR_REPO_TAG_NAME)
-  #provider: GitHub
-  #artifact: /.*\.exe/
-  #auth_token:
-    #secure: j0nBV9xVItdG3j6d0gHoyvrzi7TOhAy9/QIeyCbFeP8PTqq7DPr1oYwL5WIkPaXe
-  #draft: false
-  #prerelease: false
-  #on:
-    #appveyor_repo_tag: true
+    cd .. && sudo -E ./metaobject/scripts/build_boost.sh c++1y && cd metaobject
+
+    mkdir -p build
+    
+    cd build
+    
+    cmake .. -DBUILD_EXAMPLES=OFF -Dcereal_INCLUDE_DIR=$APPVEYOR_BUILD_FOLDER/cereal/include -DBOOST_ROOT=/home/appveyor/projects/boost_1_69_0 -DBOOST_LIBRARYDIR=/home/appveyor/projects/boost_1_69_0/stage/lib -DCMAKE_VERBOSE_MAKEFILE=ON -DCMAKE_BUILD_TYPE=Release
+
+build_script:
+- cmd: >-
+    msbuild metaobject.sln
+
+
+- sh: make
+
+test_script:
+- sh: >-
+    ./test_mo_core
+    
+    ./test_mo_object
+    
+    ./test_mo_params

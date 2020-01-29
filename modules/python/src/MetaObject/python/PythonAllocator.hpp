@@ -1,27 +1,44 @@
 #pragma once
+#define NPY_NO_DEPRECATED_API  NPY_1_7_API_VERSION
+
 #include "converters.hpp"
 #include "numpy/ndarraytypes.h"
 #include <MetaObject/Python.hpp>
 #include <MetaObject/core/detail/Allocator.hpp>
 #include <Python.h>
 
-namespace mo
+#include <ct/interop/boost_python/PythonConverter.hpp>
+
+#include <opencv2/core/mat.hpp>
+
+namespace ct
 {
-    namespace python
+    template <>
+    struct MO_EXPORTS PythonConverter<cv::Mat, 5, void>
     {
-        template <>
-        boost::python::object convertToPython(const cv::Mat& mat);
+        static boost::python::object convertToPython(const cv::Mat& mat);
+        static bool convertFromPython(const boost::python::object& obj, cv::Mat& result);
+        static void registerToPython(const char* name);
+    };
 
-        template <>
-        inline void convertFromPython(const boost::python::object& obj, cv::Mat& result);
-    }
-
-    void setupAllocator();
-    class NumpyAllocator : virtual public Allocator
+    class PyEnsureGIL
     {
       public:
-        NumpyAllocator(std::shared_ptr<Allocator> default_allocator_ = Allocator::getDefaultAllocator());
-        ~NumpyAllocator();
+        PyEnsureGIL();
+        ~PyEnsureGIL();
+
+      private:
+        PyGILState_STATE _state;
+    };
+}
+namespace mo
+{
+    void setupAllocator();
+    class MO_EXPORTS NumpyAllocator : virtual public cv::MatAllocator
+    {
+      public:
+        NumpyAllocator(cv::MatAllocator* default_allocator_ = nullptr);
+        ~NumpyAllocator() override;
 
         cv::Mat fromPython(PyObject* arr) const;
 
@@ -39,16 +56,6 @@ namespace mo
 
         void deallocate(cv::UMatData* u) const override;
 
-        // Used for stl allocators
-        virtual unsigned char* allocateGpu(size_t num_bytes) override;
-        virtual void deallocateGpu(uchar* ptr, size_t numBytes) override;
-
-        virtual unsigned char* allocateCpu(size_t num_bytes) override;
-        virtual void deallocateCpu(uchar* ptr, size_t numBytes) override;
-
-        virtual bool allocate(cv::cuda::GpuMat* mat, int rows, int cols, size_t elemSize) override;
-        virtual void free(cv::cuda::GpuMat* mat) override;
-
-        std::shared_ptr<Allocator> default_allocator;
+        cv::MatAllocator* default_allocator;
     };
 }

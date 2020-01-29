@@ -94,6 +94,11 @@ namespace mo
             MO_ASSERT(value);
             return value.get();
         }
+
+        static inline bool valid(ConstStorageRef_t value)
+        {
+            return value != nullptr;
+        }
     }; // RccParamTraitsImplShared
 
     /*!
@@ -226,6 +231,10 @@ namespace mo
         {
             MO_ASSERT(value);
             return value.get();
+        }
+        static inline bool valid(ConstStorageRef_t value)
+        {
+            return value != nullptr;
         }
     };
 

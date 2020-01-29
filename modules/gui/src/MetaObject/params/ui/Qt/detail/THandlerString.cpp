@@ -1,14 +1,15 @@
-#ifdef HAVE_QT5
-#include "MetaObject/types/file_types.hpp"
 #include "MetaObject/params/ui/Qt/POD.hpp"
+#include "MetaObject/types/file_types.hpp"
 #include "qlineedit.h"
-#include <boost/thread/recursive_mutex.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
 
 using namespace mo;
 using namespace mo::UI;
 using namespace mo::UI::qt;
 
-THandler<std::string, void>::THandler(IParamProxy& parent) : UiUpdateHandler(parent), lineEdit(nullptr)
+THandler<std::string, void>::THandler(IParamProxy& parent)
+    : UiUpdateHandler(parent)
+    , lineEdit(nullptr)
 {
 }
 
@@ -34,4 +35,3 @@ std::vector<QWidget*> THandler<std::string, void>::getUiWidgets(QWidget* parent)
     output.push_back(lineEdit);
     return output;
 }
-#endif

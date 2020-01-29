@@ -1,6 +1,9 @@
-#include "MetaObject/params/MetaParam.hpp"
+#include "common.hpp"
 
-#include "MetaObject/metaparams/MetaParamsInclude.hpp"
+#include "ct/reflect/cerealize.hpp"
+
+#include <MetaObject/runtime_reflection/visitor_traits/string.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
 
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS
@@ -12,12 +15,24 @@
 #else
 #define MO_EXPORTS
 #endif
-#include "MetaObject/params/detail/MetaParamImpl.hpp"
-INSTANTIATE_META_PARAM(std::vector<int>);
-INSTANTIATE_META_PARAM(std::vector<unsigned short>);
-INSTANTIATE_META_PARAM(std::vector<unsigned int>);
-INSTANTIATE_META_PARAM(std::vector<char>);
-INSTANTIATE_META_PARAM(std::vector<unsigned char>);
-INSTANTIATE_META_PARAM(std::vector<float>);
-INSTANTIATE_META_PARAM(std::vector<double>);
-INSTANTIATE_META_PARAM(std::vector<std::string>);
+
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
+
+namespace mo
+{
+    namespace metaparams
+    {
+        void instantiateVectors(SystemTable*)
+        {
+            registerTrait<std::vector<int>>();
+            registerTrait<std::vector<unsigned short>>();
+            registerTrait<std::vector<unsigned int>>();
+            registerTrait<std::vector<char>>();
+            registerTrait<std::vector<unsigned char>>();
+            registerTrait<std::vector<float>>();
+            registerTrait<std::vector<double>>();
+            registerTrait<std::vector<std::string>>();
+        }
+    } // namespace metaparams
+} // namespace mo

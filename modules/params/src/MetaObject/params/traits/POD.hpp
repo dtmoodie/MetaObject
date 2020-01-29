@@ -54,6 +54,8 @@ namespace mo
         static inline const Type& get(ConstStorageRef_t value) { return value; }
         static inline Type* ptr(Storage_t& value) { return &value; }
         static inline const Type* ptr(ConstStorageRef_t value) { return &value; }
+
+        static inline bool valid(ConstStorageRef_t /*stored*/) {return true;}
     };
 
     /*!
@@ -99,5 +101,6 @@ namespace mo
         static inline const Type& get(const Storage_t& value) { return value; }
         static inline Type* ptr(Type& value) { return &value; }
         static inline const Type* ptr(const Type& value) { return &value; }
+        static inline bool valid(ConstStorageRef_t /*stored*/) {return true;}
     };
 }

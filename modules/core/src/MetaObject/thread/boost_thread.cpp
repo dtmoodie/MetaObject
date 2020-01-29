@@ -34,7 +34,7 @@ void mo::setThreadName(boost::thread& thread, const std::string& name)
     pthread_t tid = static_cast<pthread_t>(thread.native_handle());
     if (pthread_setname_np(tid, name.c_str()) != 0)
     {
-        MO_LOG(info) << "Failed to set thread [" << tid << "] to name '" << name << "'";
+        MO_LOG(info, "Failed to set thread [{}] to name '{}'", tid, name);
     }
 #endif
 }
@@ -49,14 +49,14 @@ void mo::setThisThreadName(const std::string& name)
     {
         if (pthread_setname_np(tid, name.substr(0, 15).c_str()) != 0)
         {
-            MO_LOG(info) << "Failed to set thread [" << tid << "] to name '" << name << "'";
+            MO_LOG(info, "Failed to set thread [{}] to name '{}'", tid, name);
         }
     }
     else
     {
         if (pthread_setname_np(tid, name.c_str()) != 0)
         {
-            MO_LOG(info) << "Failed to set thread [" << tid << "] to name '" << name << "'";
+            MO_LOG(info, "Failed to set thread [{}] to name '{}'", tid, name);
         }
     }
 
@@ -73,7 +73,7 @@ std::string mo::getThreadName(boost::thread& thread)
     thread_local char buf[100] = {'\0'};
     if (pthread_getname_np(tid, buf, 100) != 0)
     {
-        MO_LOG(info) << "Failed to get thread [" << tid << "] name";
+        MO_LOG(info, "Failed to get thread [{}] name ", tid);
     }
     output = std::string(buf);
 #endif
@@ -90,7 +90,7 @@ std::string mo::getThisThreadName()
     thread_local char buf[100] = {'\0'};
     if (pthread_getname_np(tid, buf, 100) != 0)
     {
-        MO_LOG(info) << "Failed to get thread [" << tid << "] name";
+        MO_LOG(info, "Failed to get thread [{}] name ", tid);
     }
     output = std::string(buf);
 #endif

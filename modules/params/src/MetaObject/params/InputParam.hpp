@@ -29,34 +29,59 @@ namespace mo
     class MO_EXPORTS InputParam : virtual public IParam
     {
       public:
-        typedef std::function<bool(std::weak_ptr<IParam>)> qualifier_f;
-        typedef std::shared_ptr<InputParam> Ptr;
+        using Qualifier_f = std::function<bool(IParam*)>;
+        using Ptr_t = std::shared_ptr<InputParam>;
 
         InputParam();
-        virtual ~InputParam();
+        ~InputParam() override;
 
-        // This loads the value at the requested timestamp into the input
-        // Param such that it can be read
-        virtual bool getInput(const OptionalTime_t& ts, size_t* fn = nullptr);
-        virtual bool getInput(size_t fn, OptionalTime_t* ts = nullptr);
         // This gets a pointer to the variable that feeds into this input
-        virtual IParam* getInputParam() const = 0;
+        virtual IParam* getInputParam() const;
 
-        virtual bool setInput(std::shared_ptr<IParam> param) = 0;
-        virtual bool setInput(IParam* param = nullptr) = 0;
+        virtual bool setInput(const std::shared_ptr<IParam>& param);
+        virtual bool setInput(IParam* param = nullptr);
 
-        virtual OptionalTime_t getInputTimestamp() = 0;
-        virtual size_t getInputFrameNumber() = 0;
-        virtual bool isInputSet() const = 0;
+        // These values can differ from the current timestamp and frame number
+        // since these values represent the next value that can be read, whereas getTimestamp and
+        // getFramenumber represent that data currently loaded
+        virtual OptionalTime getInputTimestamp();
+        virtual FrameNumber getInputFrameNumber();
+        OptionalTime getTimestamp() const override;
+        FrameNumber getFrameNumber() const override;
 
-        virtual bool acceptsInput(IParam* param) const = 0;
-        virtual bool acceptsType(const TypeInfo& type) const = 0;
+        virtual bool isInputSet() const;
 
-        void setQualifier(std::function<bool(std::weak_ptr<IParam>)> f) { qualifier = f; }
-      protected:
+        virtual bool acceptsInput(IParam* param) const;
+        virtual bool acceptsType(const TypeInfo& type) const;
+
+        void setQualifier(const Qualifier_f& f);
+
+        std::ostream& print(std::ostream& os) const override;
+
+        TypeInfo getTypeInfo() const override;
+
+        void load(ILoadVisitor&) override;
+        void save(ISaveVisitor&) const override;
+        void load(BinaryInputVisitor&) override;
+        void save(BinaryOutputVisitor& ar) const override;
+        void visit(StaticVisitor& visitor) const override;
+
+        IContainerPtr_t getData(const Header& desired = Header()) override;
+        IContainerConstPtr_t getData(const Header& desired = Header()) const override;
+
         InputParam(const InputParam&) = delete;
         InputParam& operator=(const InputParam&) = delete;
         InputParam& operator=(InputParam&&) = delete;
-        qualifier_f qualifier;
+
+      protected:
+        virtual void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) = 0;
+        virtual void onInputDelete(const IParam* param);
+
+        TSlot<DataUpdate_s> m_update_slot;
+        TSlot<void(const IParam*)> m_delete_slot;
+        Qualifier_f qualifier;
+        IParam* m_input_param = nullptr;
+        std::shared_ptr<IParam> m_shared_input;
+        mutable IDataContainerPtr_t m_current_data;
     };
-}
+} // namespace mo

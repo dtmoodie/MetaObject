@@ -7,13 +7,18 @@ namespace mo
     template <class T, int N>
     struct FunctionSignatureBuilder
     {
-        typedef typename ct::append_to_tupple<T, typename FunctionSignatureBuilder<T, N - 1>::VariadicTypedef_t>::type
-            VariadicTypedef_t;
+        using VariadicTypedef_t = typename ct::Append<T, typename FunctionSignatureBuilder<T, N - 1>::VariadicTypedef_t>::type;
     };
 
     template <class T>
     struct FunctionSignatureBuilder<T, 0>
     {
-        typedef ct::variadic_typedef<T> VariadicTypedef_t;
+        using VariadicTypedef_t = ct::VariadicTypedef<T>;
+    };
+
+    template <class T>
+    struct FunctionSignatureBuilder<T, -1>
+    {
+        using VariadicTypedef_t = ct::VariadicTypedef<void> ;
     };
 }

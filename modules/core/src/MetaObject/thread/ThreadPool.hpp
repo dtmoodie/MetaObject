@@ -5,26 +5,24 @@
 namespace mo
 {
     class Thread;
-    class MO_EXPORTS ThreadPool
+    struct PriorityScheduler;
+    class MO_EXPORTS ThreadPool : public std::enable_shared_from_this<ThreadPool>
     {
       public:
-        static ThreadPool* instance();
-        ThreadHandle requestThread();
+        ~ThreadPool();
+        std::shared_ptr<Thread> requestThread();
         void cleanup();
 
-      protected:
-        friend class ThreadHandle;
-        void returnThread(Thread* thread);
+        void addScheduler(PriorityScheduler*);
+        void removeScheduler(PriorityScheduler*);
+        std::vector<PriorityScheduler*> getSchedulers() const;
 
       private:
-        struct PooledThread
-        {
-            PooledThread(bool available_, Thread* thread_) : available(available_), thread(thread_) {}
-            ~PooledThread();
-            bool available = true;
-            int ref_count = 0;
-            Thread* thread;
-        };
-        std::list<PooledThread> _threads;
+        mutable std::mutex m_mtx;
+        void returnThread(const std::shared_ptr<Thread>& thread);
+
+        std::list<std::shared_ptr<Thread>> m_free_threads;
+        std::list<std::shared_ptr<Thread>> m_running_threads;
+        std::set<PriorityScheduler*> m_schedulers;
     };
 }
