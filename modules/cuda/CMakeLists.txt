@@ -15,9 +15,10 @@ if(CUDA_FOUND)
     )
 
     target_link_libraries(metaobject_cuda
-        PUBLIC 
+        PUBLIC
             ${CUDA_CUDART_LIBRARY}
     )
+    target_include_directories(metaobject_cuda PUBLIC ${CUDA_INCLUDE_DIRS})
 
     if(BUILD_TESTS)
         if(WITH_OPENCV)
@@ -27,7 +28,7 @@ if(CUDA_FOUND)
         file(GLOB_RECURSE tests "tests/*.cpp" "tests/*.cu")
         cuda_add_executable(test_mo_cuda ${tests})
         target_include_directories(test_mo_cuda
-            PUBLIC SYSTEM ${Boost_INCLUDE_DIR}    
+            PUBLIC SYSTEM ${Boost_INCLUDE_DIR}
         )
         if(OpenCV_FOUND)
             target_compile_definitions(test_mo_cuda
