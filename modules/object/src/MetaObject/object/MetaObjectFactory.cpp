@@ -8,7 +8,7 @@
 #include "MetaObject/signals/TSlot.hpp"
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
-#include <MetaObject/thread/boost_thread.hpp>
+#include <MetaObject/thread/ThreadInfo.hpp>
 
 #include <boost/optional.hpp>
 

@@ -1,6 +1,6 @@
 #include "MetaObject/params/AccessToken.hpp"
+#include <MetaObject/thread/Mutex.hpp>
 #include <MetaObject/thread/fiber_include.hpp>
-
 #include <boost/thread/locks.hpp>
 
 namespace mo
@@ -27,4 +27,4 @@ namespace mo
     AccessTokenLock::~AccessTokenLock()
     {
     }
-}
+} // namespace mo

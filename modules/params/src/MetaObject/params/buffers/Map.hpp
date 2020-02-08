@@ -21,9 +21,10 @@ https://github.com/dtmoodie/MetaObject
 #include "BufferConstructor.hpp"
 #include "IBuffer.hpp"
 
-#include "MetaObject/params/InputParam.hpp"
+#include <MetaObject/params/InputParam.hpp>
 
-#include <MetaObject/thread/fiber_include.hpp>
+#include <MetaObject/thread/ConditionVariable.hpp>
+#include <MetaObject/thread/Mutex.hpp>
 
 #include <map>
 
@@ -93,7 +94,7 @@ namespace mo
             void pushAndWait(const IDataContainerPtr_t& data);
             uint32_t prune();
 
-            boost::fibers::condition_variable_any m_cv;
+            ConditionVariable m_cv;
 
             Buffer_t m_data_buffer;
 
@@ -104,7 +105,7 @@ namespace mo
             boost::optional<uint64_t> m_frame_padding;
             PushPolicy m_push_policy = GROW;
             SearchPolicy m_search_policy = EXACT;
-            mutable mo::Mutex_t m_mtx;
+            mutable Mutex_t m_mtx;
         };
-    }
-}
+    } // namespace buffer
+} // namespace mo

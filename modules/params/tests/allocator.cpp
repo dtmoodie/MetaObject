@@ -4,6 +4,7 @@
 #include <MetaObject/core/detail/allocator_policies/Stack.hpp>
 #include <MetaObject/params/TDataContainer.hpp>
 #include <MetaObject/params/TParam.hpp>
+#include <MetaObject/thread/Mutex.hpp>
 
 #include <ct/types/TArrayView.hpp>
 
@@ -11,6 +12,7 @@
 
 #include <gtest/gtest.h>
 
+#include <mutex>
 using namespace mo;
 
 struct SaveStream

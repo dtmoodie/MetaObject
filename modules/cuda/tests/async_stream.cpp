@@ -5,7 +5,8 @@
 #include <MetaObject/thread/fiber_include.hpp>
 #include <MetaObject/types/TDynArray.hpp>
 
-#include <MetaObject/thread/fiber_include.hpp>
+#include <MetaObject/thread/Mutex.hpp>
+#include <boost/fiber/operations.hpp>
 
 #include <thrust/device_ptr.h>
 #include <thrust/fill.h>

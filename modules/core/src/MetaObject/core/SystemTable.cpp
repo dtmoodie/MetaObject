@@ -13,6 +13,9 @@
 #include "MetaObject/core/detail/allocator_policies/Stack.hpp"
 #include "MetaObject/core/detail/allocator_policies/Usage.hpp"
 
+#include <boost/fiber/condition_variable.hpp>
+#include <boost/fiber/recursive_timed_mutex.hpp>
+
 #ifdef HAVE_CUDA
 #include <cuda_runtime_api.h>
 #endif

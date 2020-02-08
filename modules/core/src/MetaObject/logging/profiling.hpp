@@ -7,7 +7,7 @@ namespace mo
 {
 
     class IMetaObject;
-    MO_EXPORTS void setThreadName(const char* name);
+    MO_EXPORTS void setThisThreadName(const char* name);
 
     MO_EXPORTS void initProfiling();
     MO_EXPORTS void pushCpu(const char* name);
@@ -24,7 +24,7 @@ namespace mo
 
         ~ScopedProfile();
     };
-}
+} // namespace mo
 
 #define PROFILE_OBJ(name) mo::ScopedProfile profile_object(name, __FUNCTION__)
 

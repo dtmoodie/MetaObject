@@ -11,9 +11,10 @@
 #include "MetaObject/signals/TSignalRelay.hpp"
 #include "MetaObject/signals/TSlot.hpp"
 #include "MetaObject/thread/ThreadRegistry.hpp"
-#include "MetaObject/thread/boost_thread.hpp"
+#include <MetaObject/thread/ThreadInfo.hpp>
 
-#include <MetaObject/thread/fiber_include.hpp>
+#include <boost/fiber/condition_variable.hpp>
+#include <boost/fiber/recursive_timed_mutex.hpp>
 
 #include <future>
 
@@ -98,9 +99,8 @@ void Thread::main()
         }
     }};
 
-    m_mtx.lock();
-    m_cv.wait(m_mtx);
-    m_mtx.unlock();
+    Mutex_t::Lock_t lock(m_mtx);
+    m_cv.wait(lock);
 
     stream.reset();
     m_stream.reset();

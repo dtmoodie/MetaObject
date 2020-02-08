@@ -2,6 +2,8 @@
 #include "AsyncStreamFactory.hpp"
 #include <MetaObject/thread/FiberProperties.hpp>
 
+#include <boost/fiber/fiber.hpp>
+#include <boost/fiber/operations.hpp>
 namespace mo
 {
     IAsyncStream::~IAsyncStream() = default;
@@ -47,4 +49,4 @@ namespace mo
         IAsyncStream::setCurrent(stream);
         boost::this_fiber::properties<FiberProperty>().setDeviceStream(std::move(stream));
     }
-}
+} // namespace mo

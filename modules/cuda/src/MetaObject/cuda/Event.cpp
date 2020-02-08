@@ -2,7 +2,8 @@
 #include "Stream.hpp"
 #include <MetaObject/logging/logging.hpp>
 
-#include <MetaObject/thread/fiber_include.hpp>
+#include <MetaObject/thread/Mutex.hpp>
+#include <boost/fiber/operations.hpp>
 
 #include <cuda_runtime_api.h>
 
@@ -16,7 +17,7 @@ namespace mo
 
         struct Event::Impl
         {
-            mutable boost::fibers::mutex m_mtx;
+            mutable Mutex m_mtx;
             mutable std::shared_ptr<CUevent_st> m_event;
             std::function<void(void)> m_cb;
             ObjectPool<CUevent_st>* m_event_pool;
@@ -24,7 +25,7 @@ namespace mo
 
             bool queryCompletion() const
             {
-                std::lock_guard<boost::fibers::mutex> lock(m_mtx);
+                Mutex::Lock_t lock(m_mtx);
                 if (m_complete)
                 {
                     return m_complete;
@@ -82,7 +83,7 @@ namespace mo
 
         void Event::record(Stream& stream)
         {
-            std::lock_guard<boost::fibers::mutex> lock(m_impl->m_mtx);
+            Mutex::Lock_t lock(m_impl->m_mtx);
             MO_ASSERT(m_impl->m_event == nullptr);
             m_impl->m_event = m_impl->m_event_pool->get();
             cudaStream_t st = stream;
@@ -101,7 +102,7 @@ namespace mo
 
         Event::operator cudaEvent_t()
         {
-            std::lock_guard<boost::fibers::mutex> lock(m_impl->m_mtx);
+            Mutex::Lock_t lock(m_impl->m_mtx);
             if (m_impl->m_event)
             {
                 return m_impl->m_event.get();
@@ -111,7 +112,7 @@ namespace mo
 
         Event::operator constCudaEvent_t() const
         {
-            std::lock_guard<boost::fibers::mutex> lock(m_impl->m_mtx);
+            Mutex::Lock_t lock(m_impl->m_mtx);
             if (m_impl->m_event)
             {
                 return m_impl->m_event.get();
@@ -121,7 +122,7 @@ namespace mo
 
         void Event::setCallback(std::function<void(void)>&& cb)
         {
-            std::lock_guard<boost::fibers::mutex> lock(m_impl->m_mtx);
+            Mutex::Lock_t lock(m_impl->m_mtx);
             MO_ASSERT(m_impl->m_event != nullptr);
             MO_ASSERT(!m_impl->m_cb);
             m_impl->m_cb = std::move(cb);
@@ -132,5 +133,5 @@ namespace mo
             });
             fib.detach();
         }
-    }
-}
+    } // namespace cuda
+} // namespace mo

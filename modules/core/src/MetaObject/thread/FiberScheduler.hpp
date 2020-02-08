@@ -8,6 +8,9 @@
 
 #include <MetaObject/thread/fiber_include.hpp>
 
+#include <boost/fiber/algo/algorithm.hpp>
+#include <boost/fiber/scheduler.hpp>
+
 namespace mo
 {
     class ThreadPool;
@@ -53,6 +56,6 @@ namespace mo
         bool m_is_worker = false;
         static void setCurrent(PriorityScheduler*);
     };
-}
+} // namespace mo
 
 #endif // MO_THREAD_FIBER_SCHEDULER_HPP

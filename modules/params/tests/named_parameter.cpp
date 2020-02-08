@@ -5,11 +5,12 @@
 #include <MetaObject/params/NamedParam.hpp>
 #include <MetaObject/params/ParamTags.hpp>
 #include <MetaObject/params/TParam.hpp>
+#include <MetaObject/thread/Mutex.hpp>
 
 #include <gtest/gtest.h>
 
 #include <iostream>
-
+#include <mutex>
 using namespace mo;
 
 struct WidthParam;

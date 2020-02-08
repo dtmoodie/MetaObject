@@ -1,9 +1,9 @@
 #pragma once
-#include <MetaObject/thread/fiber_include.hpp>
+#include <MetaObject/thread/Mutex.hpp>
 
 namespace mo
 {
-    template <class BaseAllocator, class Mutex = boost::fibers::mutex>
+    template <class BaseAllocator, class Mutex = Mutex_t>
     class LockPolicy : public BaseAllocator
     {
       public:
@@ -18,14 +18,14 @@ namespace mo
     template <class BaseAllocator, class Mutex>
     uint8_t* LockPolicy<BaseAllocator, Mutex>::allocate(const size_t num_bytes, const size_t elem_size)
     {
-        std::lock_guard<Mutex> lock(m_mtx);
+        typename Mutex::Lock_t lock(m_mtx);
         return BaseAllocator::allocate(num_bytes, elem_size);
     }
 
     template <class BaseAllocator, class Mutex>
     void LockPolicy<BaseAllocator, Mutex>::deallocate(uint8_t* ptr, const size_t num_bytes)
     {
-        std::lock_guard<Mutex> lock(m_mtx);
+        typename Mutex::Lock_t lock(m_mtx);
         BaseAllocator::deallocate(ptr, num_bytes);
     }
-}
+} // namespace mo

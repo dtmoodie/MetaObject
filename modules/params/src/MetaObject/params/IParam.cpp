@@ -23,6 +23,7 @@ https://github.com/dtmoodie/MetaObject
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/TSignalRelay.hpp"
 #include "MetaObject/signals/TSlot.hpp"
+#include <MetaObject/thread/Mutex.hpp>
 
 #include <algorithm>
 
@@ -39,7 +40,6 @@ namespace mo
 
     namespace kwargs
     {
-        
     }
 
     IParam::IParam(const std::string& name_, ParamFlags flags_, IAsyncStream* stream)

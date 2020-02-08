@@ -8,6 +8,10 @@
 
 #include "MetaObject/logging/logging.hpp"
 #include <MetaObject/logging/profiling.hpp>
+
+#include <boost/fiber/fiber.hpp>
+#include <boost/fiber/operations.hpp>
+
 #include <cuda_runtime_api.h>
 
 namespace mo
@@ -190,6 +194,6 @@ namespace mo
             };
 
             CUDAAsyncStreamConstructor g_ctr;
-        }
-    }
-}
+        } // namespace
+    }     // namespace cuda
+} // namespace mo

@@ -4,7 +4,8 @@
 #include <MetaObject/params/buffers/BufferFactory.hpp>
 #include <MetaObject/params/buffers/Buffers.hpp>
 #include <MetaObject/params/buffers/IBuffer.hpp>
-#include <MetaObject/thread/fiber_include.hpp>
+
+#include <boost/fiber/operations.hpp>
 
 #include <boost/thread.hpp>
 #include <set>

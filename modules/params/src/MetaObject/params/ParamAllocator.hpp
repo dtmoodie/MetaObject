@@ -1,6 +1,6 @@
 #include <MetaObject/core/detail/Allocator.hpp>
 #include <MetaObject/detail/Export.hpp>
-#include <MetaObject/thread/fiber_include.hpp>
+#include <MetaObject/thread/Mutex.hpp>
 
 #include <list>
 #include <memory>
@@ -38,7 +38,7 @@ namespace mo
         template <class T>
         T* allocate(size_t num)
         {
-            std::lock_guard<boost::fibers::mutex> lock(m_mtx);
+            Mutex::Lock_t lock(m_mtx);
             auto allocation = allocateImpl(num, sizeof(T));
             return ptrCast<T>(allocation.requested);
         }
@@ -82,7 +82,7 @@ namespace mo
         Allocator::Ptr_t m_allocator;
         size_t m_header_pad = 0;
         size_t m_footer_pad = 0;
-        mutable boost::fibers::mutex m_mtx;
+        mutable Mutex m_mtx;
         std::list<CurrentAllocations> m_allocations;
     };
 } // namespace mo
