@@ -2,6 +2,10 @@
 #include "InputParam.hpp"
 #include "OutputParam.hpp"
 
+#include <MetaObject/thread/Mutex.hpp>
+
+#include <mutex>
+
 #ifdef _MSC_VER
 #pragma warning(disable : 4250)
 #endif

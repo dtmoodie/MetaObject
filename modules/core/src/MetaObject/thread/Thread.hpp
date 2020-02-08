@@ -1,12 +1,15 @@
-#pragma once
+#ifndef MO_THREAD_HPP
+#define MO_THREAD_HPP
 
 #include <MetaObject/core/detail/ConcurrentQueue.hpp>
 #include <MetaObject/core/detail/forward.hpp>
 #include <MetaObject/detail/Export.hpp>
 #include <MetaObject/signals/TSignalRelay.hpp>
 
-#include <MetaObject/thread/fiber_include.hpp>
+#include <MetaObject/thread/ConditionVariable.hpp>
+#include <MetaObject/thread/Mutex.hpp>
 
+#include <boost/fiber/operations.hpp>
 #include <boost/thread.hpp>
 
 #include <functional>
@@ -44,7 +47,7 @@ namespace mo
         boost::thread m_thread;
 
         mutable Mutex_t m_mtx;
-        mutable boost::fibers::condition_variable_any m_cv;
+        mutable ConditionVariable m_cv;
 
         std::function<void(void)> m_on_exit;
 
@@ -54,4 +57,5 @@ namespace mo
         std::string m_name;
         std::condition_variable* m_scheduler_wakeup_cv = nullptr;
     };
-}
+} // namespace mo
+#endif // MO_THREAD_HPP

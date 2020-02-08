@@ -1,7 +1,6 @@
 #include "MetaObject/core/AsyncStream.hpp"
 #include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/core/detail/Allocator.hpp"
-#include "MetaObject/core/detail/Allocator.hpp"
 #include "MetaObject/core/detail/HelperMacros.hpp"
 
 #include "MetaObject/logging/logging.hpp"
@@ -9,7 +8,7 @@
 #include "MetaObject/thread/FiberProperties.hpp"
 #include <MetaObject/thread/FiberScheduler.hpp>
 #include <MetaObject/thread/Thread.hpp>
-#include <MetaObject/thread/ThreadRegistry.hpp>
+#include <MetaObject/thread/ThreadInfo.hpp>
 
 #include "AsyncStreamConstructor.hpp"
 #include "AsyncStreamFactory.hpp"
@@ -21,7 +20,7 @@ namespace mo
 {
     AsyncStream::AsyncStream(AllocatorPtr_t alloc)
     {
-        m_thread_id = getThisThread();
+        m_thread_id = getThisThreadId();
         m_allocator = std::move(alloc);
         m_device_id = -1;
     }
@@ -36,7 +35,7 @@ namespace mo
             {
                 m_allocator->setName(name);
             }
-            mo::setThreadName(name.c_str());
+            mo::setThisThreadName(name.c_str());
         }
         else
         {
@@ -149,5 +148,5 @@ namespace mo
         };
 
         CPUAsyncStreamConstructor g_ctr;
-    }
-}
+    } // namespace
+} // namespace mo

@@ -44,7 +44,6 @@ if(CUDA_FOUND)
 
         cuda_add_executable(test_mo_cuda_fiber tests2/cuda_build.cu)
         TARGET_INCLUDE_DIRECTORIES(test_mo_cuda_fiber PRIVATE "../core/src")
-        TARGET_INCLUDE_DIRECTORIES(test_mo_cuda_fiber PRIVATE "../core/jetson_patch")
         target_link_libraries(test_mo_cuda_fiber PRIVATE gtest gtest_main )
         if(TARGET Boost::system)
             target_link_libraries(test_mo_cuda_fiber PRIVATE Boost::system)

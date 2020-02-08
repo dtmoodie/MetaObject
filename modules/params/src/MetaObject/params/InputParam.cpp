@@ -1,7 +1,8 @@
-#include "MetaObject/params/InputParam.hpp"
-#include <MetaObject/thread/fiber_include.hpp>
+#include <MetaObject/params/InputParam.hpp>
 
-#include <boost/thread/locks.hpp>
+#include <MetaObject/thread/Mutex.hpp>
+#include <mutex>
+
 using namespace mo;
 
 InputParam::InputParam()

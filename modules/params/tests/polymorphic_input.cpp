@@ -2,8 +2,7 @@
 #include <MetaObject/params/TMultiOutput.hpp>
 #include <MetaObject/params/TParamOutput.hpp>
 #include <MetaObject/params/TParamPtr.hpp>
-
-#include <MetaObject/thread/fiber_include.hpp>
+#include <MetaObject/thread/Mutex.hpp>
 
 #include <gtest/gtest.h>
 

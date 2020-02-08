@@ -3,7 +3,7 @@
 #include "ObjectConstructor.hpp"
 
 #include <MetaObject/logging/logging.hpp>
-#include <MetaObject/thread/fiber_include.hpp>
+#include <MetaObject/thread/Mutex.hpp>
 
 #include <list>
 
@@ -26,7 +26,7 @@ namespace mo
 
         Ptr_t get()
         {
-            std::lock_guard<boost::fibers::mutex> lock(m_mtx);
+            Mutex::Lock_t lock(m_mtx);
             Ptr_t owning_ptr;
             if (m_free_objects.empty())
             {
@@ -44,14 +44,14 @@ namespace mo
       private:
         void returnObject(const Ptr_t& obj)
         {
-            std::lock_guard<boost::fibers::mutex> lock(m_mtx);
+            Mutex::Lock_t lock(m_mtx);
             m_free_objects.push_front(std::move(obj));
         }
 
         std::list<Ptr_t> m_free_objects;
         ObjectConstructor<T> m_ctr;
-        boost::fibers::mutex m_mtx;
+        Mutex m_mtx;
     };
-}
+} // namespace mo
 
 #endif // MO_CORE_OBJECT_POOL_HPP

@@ -67,7 +67,7 @@ namespace mo
         size_t num = 0;
         CurrentAllocations allocation;
         {
-            std::lock_guard<boost::fibers::mutex> lock(m_mtx);
+            Mutex::Lock_t lock(m_mtx);
             for (auto& itr : m_allocations)
             {
                 if (itr.requested == ptrCast<uint8_t>(ptr))
@@ -93,7 +93,7 @@ namespace mo
 
     void ParamAllocator::deallocateImpl(void* ptr)
     {
-        std::lock_guard<boost::fibers::mutex> lock(m_mtx);
+        Mutex::Lock_t lock(m_mtx);
         if (!m_allocator)
         {
             MO_LOG(error, "Root allocator has been cleaned up, cannot release memory to it");
@@ -117,13 +117,13 @@ namespace mo
 
     Allocator::Ptr_t ParamAllocator::getAllocator() const
     {
-        std::lock_guard<boost::fibers::mutex> lock(m_mtx);
+        Mutex::Lock_t lock(m_mtx);
         return m_allocator;
     }
 
     void ParamAllocator::setAllocator(Allocator::Ptr_t allocator)
     {
-        std::lock_guard<boost::fibers::mutex> lock(m_mtx);
+        Mutex::Lock_t lock(m_mtx);
         m_allocator = std::move(allocator);
     }
 

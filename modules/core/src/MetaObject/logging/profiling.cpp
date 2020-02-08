@@ -1,6 +1,7 @@
 #include "MetaObject/logging/profiling.hpp"
 #include "MetaObject/logging/logging.hpp"
-#include "MetaObject/thread/ThreadRegistry.hpp"
+#include "MetaObject/thread/ThreadInfo.hpp"
+
 #include <sstream>
 #include <string>
 
@@ -26,11 +27,11 @@ static nvtx_name_thread_f nvtx_name_thread = nullptr;
 static nvtx_name_stream_f nvtx_name_stream = nullptr;
 #endif
 
-void mo::setThreadName(const char* name)
+void mo::setThisThreadName(const char* name)
 {
     if (nvtx_name_thread)
     {
-        nvtx_name_thread(static_cast<uint32_t>(mo::getThisThread()), name);
+        nvtx_name_thread(static_cast<uint32_t>(mo::getThisThreadId()), name);
     }
 }
 

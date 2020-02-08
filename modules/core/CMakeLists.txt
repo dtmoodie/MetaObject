@@ -1,11 +1,5 @@
 FILE(GLOB_RECURSE src "src/*.hpp" "src/*.cu" "src/*.cpp")
 
-if(JETSON_COMPATABILITY)
-    message(STATUS "Compiling with boost fiber patches for nvidia jetson")
-    file(GLOB_RECURSE aux_src "jetson_patch/*.hpp" "jetson_patch/*.cpp")
-    LIST(APPEND src ${aux_src})
-endif()
-
 metaobject_declare_module(NAME core SRC src DEPENDS
     Boost::thread
     Boost::fiber
@@ -32,12 +26,6 @@ target_include_directories(metaobject_core
 
 if(${CMAKE_CXX_COMPILER_ID} STREQUAL "GNU")
     target_link_libraries(metaobject_core PUBLIC pthread)
-    if(${CMAKE_CXX_COMPILER_VERSION} VERSION_LESS 5.0)
-        target_include_directories(metaobject_core
-            PUBLIC
-                $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/jetson_patch>
-        )
-    endif()
 endif()
 
 if(${MO_HAVE_CUDA})

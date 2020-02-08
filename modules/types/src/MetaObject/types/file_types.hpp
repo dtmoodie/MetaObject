@@ -77,7 +77,13 @@ namespace ct
                          template contains<T>()>>
     {
         REFLECT_STUB
-            static constexpr auto getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_BEGIN>)
+            static constexpr decltype(ct::makeMemberPropertyPointer(
+                "path",
+                ct::selectConstMemberFunctionPointer<boost::filesystem::path, const std::string&>(
+                    &boost::filesystem::path::string),
+                ct::selectMemberFunctionPointer<boost::filesystem::path, boost::filesystem::path&, const std::string&>(
+                    &boost::filesystem::path::operator=)))
+            getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_BEGIN>)
             {
                 return ct::makeMemberPropertyPointer(
                     "path",

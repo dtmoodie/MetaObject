@@ -1,9 +1,9 @@
 #pragma once
 #include "ISignalRelay.hpp"
 
-#include "MetaObject/logging/logging.hpp"
 #include <MetaObject/core/AsyncStream.hpp>
-#include <MetaObject/thread/fiber_include.hpp>
+#include <MetaObject/logging/logging.hpp>
+#include <MetaObject/thread/Mutex.hpp>
 
 #include <set>
 
@@ -328,4 +328,4 @@ namespace mo
             return false;
         return *m_slot;
     }
-}
+} // namespace mo

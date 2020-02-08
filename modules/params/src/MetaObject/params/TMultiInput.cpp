@@ -1,5 +1,6 @@
 #include "TMultiInput-inl.hpp"
 #include <MetaObject/signals/Connection.hpp>
+#include <MetaObject/thread/Mutex.hpp>
 #include <MetaObject/thread/fiber_include.hpp>
 
 namespace mo
@@ -246,4 +247,4 @@ namespace mo
         }
         return true;
     }
-}
+} // namespace mo

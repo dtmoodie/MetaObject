@@ -8,16 +8,17 @@
 #include "MetaObject/signals/detail/SignalMacros.hpp"
 #include "MetaObject/signals/detail/SlotMacros.hpp"
 #include "MetaObject/types/file_types.hpp"
+#include <MetaObject/thread/Mutex.hpp>
 
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 
-#include <MetaObject/thread/fiber_include.hpp>
 #include <boost/any.hpp>
 
 #include "gtest/gtest.h"
 
 #include <iostream>
+#include <mutex>
 
 using namespace mo;
 

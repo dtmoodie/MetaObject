@@ -2,9 +2,10 @@
 #define MO_THREAD_FIBER_PROPERTIES_HPP
 #include "PriorityLevels.hpp"
 
-#include <MetaObject/thread/fiber_include.hpp>
+#include <boost/fiber/properties.hpp>
 
 #include <cstdint>
+#include <memory>
 
 namespace mo
 {
@@ -43,6 +44,6 @@ namespace mo
         std::shared_ptr<IAsyncStream> m_stream;
         std::shared_ptr<IDeviceStream> m_device_stream;
     };
-}
+} // namespace mo
 
 #endif // MO_THREAD_FIBER_PROPERTIES_HPP

@@ -13,3 +13,6 @@ MetaObject provides the following features:
 All objects created with the appropriate macros and inheritance from IMetaObject are runtime modifiable classes.
 
 A quick example program using MetaObject can be found in the examples/console_reflection folder
+
+branches:
+fiber_refactor: redesign threading and cuda code such that nvcc will never have to see a boost fiber include file

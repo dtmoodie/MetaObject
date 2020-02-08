@@ -1,6 +1,8 @@
 #pragma once
 #include "IMetaObject.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
+#include <MetaObject/thread/Mutex.hpp>
+
 #include <list>
 
 namespace mo
@@ -202,7 +204,7 @@ namespace mo
         std::map<std::string, InputParam*> m_input_params;
         TSlot<Update_s> m_slot_param_updated;
         std::shared_ptr<IParamServer> m_param_server;
-        mutable mo::Mutex_t m_mutex;
+        mutable Mutex_t m_mutex;
         bool m_initialized = false;
     };
 } // namespace mo
