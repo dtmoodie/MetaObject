@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MO_SIGNALS_ISLOT_HPP
+#define MO_SIGNALS_ISLOT_HPP
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
 #include <memory>
@@ -14,16 +15,18 @@ namespace mo
     {
       public:
         virtual ~ISlot();
-        virtual std::shared_ptr<Connection> connect(ISignal* sig) = 0;
+        virtual std::shared_ptr<Connection> connect(ISignal& sig) = 0;
         virtual std::shared_ptr<Connection> connect(std::shared_ptr<ISignalRelay>& relay) = 0;
         virtual bool disconnect(std::weak_ptr<ISignalRelay> relay) = 0;
         virtual void clear() = 0;
         virtual const TypeInfo& getSignature() const = 0;
         IMetaObject* getParent() const;
         IAsyncStream* getStream() const;
-        void setStream(IAsyncStream* ctx);
+        void setStream(IAsyncStream& stream);
 
       protected:
         IAsyncStream* m_stream = nullptr;
     };
-}
+} // namespace mo
+
+#endif // MO_SIGNALS_ISLOT_HPP

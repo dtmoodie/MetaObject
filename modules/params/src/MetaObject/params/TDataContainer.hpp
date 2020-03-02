@@ -128,7 +128,7 @@ namespace mo
         }
     };
 
-    template <class T, class ENABLE = void>
+    template <class T, class ENABLE>
     struct TDataContainer : public TDataContainerBase<T>
     {
         using type = T;

@@ -21,7 +21,7 @@ TEST(signals, single_threaded)
     TSignal<int(int)> signal;
     {
         TSlot<int(int)> slot([](int val) { return val * 2; });
-        signal.connect(&slot);
+        signal.connect(slot);
 
         ASSERT_EQ(signal(4), 8);
         ASSERT_EQ(signal(8), 16);
@@ -51,13 +51,13 @@ TEST(signals, multi_threaded)
     });
     boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
 
-    slot.setStream(thread_ctx.get());
+    slot.setStream(*thread_ctx);
 
     TSignal<void(int)> signal;
-    auto Connection = slot.connect(&signal);
+    auto Connection = slot.connect(signal);
 
     boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
-    signal(stream.get(), 5);
+    signal(*stream, 5);
     thread.interrupt();
     thread.join();
 }

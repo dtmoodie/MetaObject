@@ -174,7 +174,7 @@ namespace mo
         return false;
     }
 
-    ConnectionPtr_t IMultiInput::registerUpdateNotifier(ISlot* f)
+    ConnectionPtr_t IMultiInput::registerUpdateNotifier(ISlot& f)
     {
         ConnectionPtr_t out;
         for (auto input : m_inputs)

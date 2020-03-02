@@ -39,6 +39,16 @@ namespace mo
         boost::this_fiber::properties<FiberProperty>().setStream(std::move(stream));
     }
 
+    IDeviceStream* IAsyncStream::getDeviceStream()
+    {
+        return nullptr;
+    }
+
+    const IDeviceStream* IAsyncStream::getDeviceStream() const
+    {
+        return nullptr;
+    }
+
     auto IDeviceStream::current() -> Ptr_t
     {
         return boost::this_fiber::properties<FiberProperty>().deviceStream();
@@ -48,5 +58,15 @@ namespace mo
     {
         IAsyncStream::setCurrent(stream);
         boost::this_fiber::properties<FiberProperty>().setDeviceStream(std::move(stream));
+    }
+
+    IDeviceStream* IDeviceStream::getDeviceStream()
+    {
+        return this;
+    }
+
+    const IDeviceStream* IDeviceStream::getDeviceStream() const
+    {
+        return this;
     }
 } // namespace mo

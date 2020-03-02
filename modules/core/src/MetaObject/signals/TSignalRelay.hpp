@@ -1,19 +1,18 @@
-#pragma once
-#include "ISignalRelay.hpp"
+#ifndef MO_SIGNALS_TSIGNALRELAY_HPP
+#define MO_SIGNALS_TSIGNALRELAY_HPP
 
+#include <MetaObject/core/detail/forward.hpp>
+
+#include "ISignalRelay.hpp"
 #include <MetaObject/core/AsyncStream.hpp>
 #include <MetaObject/logging/logging.hpp>
+#include <MetaObject/signals/ArgumentPack.hpp>
 #include <MetaObject/thread/Mutex.hpp>
 
 #include <set>
 
 namespace mo
 {
-    template <class Sig>
-    class TSlot;
-    template <class Sig>
-    class TSignal;
-
     template <class Sig, class Mutex>
     class TSignalRelay
     {
@@ -27,27 +26,26 @@ namespace mo
         using Ptr_t = std::shared_ptr<TSignalRelay<void(T...)>>;
         using ConstPtr_t = std::shared_ptr<const TSignalRelay<void(T...)>>;
 
-        void operator()(TSignal<void(T...)>* sig, const T&... args);
-        void operator()(const T&... args);
-        void operator()(IAsyncStream* ctx, const T&... args);
-        const TypeInfo& getSignature() const override;
+        void operator()(IAsyncStream& src_stream, T&&... args);
+        TypeInfo getSignature() const override;
         bool hasSlots() const override;
 
       protected:
         friend TSignal<void(T...)>;
         friend TSlot<void(T...)>;
 
-        bool connect(ISlot* slot) override;
-        bool connect(ISignal* signal) override;
+        bool connect(ISlot& slot) override;
+        bool connect(ISignal& signal) override;
 
-        bool connect(TSlot<void(T...)>* slot);
-        bool connect(TSignal<void(T...)>* sig);
+        bool connect(TSlot<void(T...)>& slot);
+        bool connect(TSignal<void(T...)>& sig);
 
-        bool disconnect(ISlot* slot) override;
-        bool disconnect(ISignal* signal) override;
+        bool disconnect(const ISlot& slot) override;
+        bool disconnect(const ISignal& signal) override;
 
+      private:
         std::set<TSlot<void(T...)>*> m_slots;
-        Mutex m_mtx;
+        mutable Mutex m_mtx;
     };
 
     // Specialization for return value
@@ -59,27 +57,27 @@ namespace mo
         using ConstPtr_t = std::shared_ptr<const TSignalRelay<R(T...)>>;
 
         TSignalRelay();
-        R operator()(TSignal<R(T...)>* sig, const T&... args);
-        R operator()(const T&... args);
-        R operator()(IAsyncStream* ctx, const T&... args);
-        const TypeInfo& getSignature() const override;
+        R operator()(IAsyncStream& src_stream, T&&... args);
+
+        TypeInfo getSignature() const override;
         bool hasSlots() const override;
 
       protected:
         friend TSignal<R(T...)>;
         friend TSlot<R(T...)>;
 
-        bool connect(ISlot* slot) override;
-        bool connect(ISignal* signal) override;
+        bool connect(ISlot& slot) override;
+        bool connect(ISignal& signal) override;
 
-        bool connect(TSlot<R(T...)>* slot);
-        bool connect(TSignal<R(T...)>* sig);
+        bool connect(TSlot<R(T...)>& slot);
+        bool connect(TSignal<R(T...)>& sig);
 
-        bool disconnect(ISlot* slot) override;
-        bool disconnect(ISignal* signal) override;
+        bool disconnect(const ISlot& slot) override;
+        bool disconnect(const ISignal& signal) override;
 
+      private:
         TSlot<R(T...)>* m_slot;
-        Mutex m_mtx;
+        mutable Mutex m_mtx;
     };
 
     //////////////////////////////////////////////////////////////////
@@ -87,130 +85,100 @@ namespace mo
     //////////////////////////////////////////////////////////////////
 
     template <class... T, class Mutex>
-    void TSignalRelay<void(T...), Mutex>::operator()(TSignal<void(T...)>* sig, const T&... args)
+    void TSignalRelay<void(T...), Mutex>::operator()(IAsyncStream& src, T&&... args)
     {
         std::unique_lock<Mutex> lock(m_mtx);
-        auto mym_slots = m_slots;
+        auto slots = m_slots;
         lock.unlock();
-        for (auto slot : mym_slots)
+        for (auto slot : slots)
         {
-            auto slot_ctx = slot->getStream();
-            auto sig_ctx = sig->getStream();
-            if (slot_ctx && sig_ctx)
+            auto dst_stream = slot->getStream();
+            if (dst_stream)
             {
-                if (slot_ctx->processId() == sig_ctx->processId())
+                if (dst_stream->processId() == src.processId())
                 {
-                    if (slot_ctx->threadId() != sig_ctx->threadId())
+                    if (dst_stream->threadId() != src.threadId())
                     {
-                        // TODO fiber implementation
-                        // ThreadSpecificQueue::push(
-                        //    std::bind([slot](T... args) { (*slot)(args...); }, args...), slot_ctx->threadId(), slot);
-                        continue;
+                        // push as a task to the slot stream
+                        auto arg_pack =
+                            std::make_shared<ArgumentPack<T...>>(src, *dst_stream, std::forward<T>(args)...);
+                        dst_stream->pushWork([arg_pack, slot]() { slot->invokeArgpack(*arg_pack); });
                     }
                 }
                 else
                 {
-                    THROW(error, "Not implemented yet");
+                    THROW(error, "IPC not implemented yet");
                 }
             }
-            if (slot)
+            else
             {
+                // slot_stream == nullptr
                 (*slot)(args...);
             }
         }
     }
 
     template <class... T, class Mutex>
-    void TSignalRelay<void(T...), Mutex>::operator()(const T&... args)
+    bool TSignalRelay<void(T...), Mutex>::connect(ISignal& signal)
     {
-        std::lock_guard<Mutex> lock(m_mtx);
-        for (auto slot : m_slots)
+        auto typed = dynamic_cast<TSignal<void(T...)>*>(&signal);
+        if (typed)
         {
-            (*slot)(args...);
+            return connect(*typed);
         }
+        return false;
     }
 
     template <class... T, class Mutex>
-    void TSignalRelay<void(T...), Mutex>::operator()(IAsyncStream* ctx, const T&... args)
+    bool TSignalRelay<void(T...), Mutex>::connect(TSignal<void(T...)>&)
+    {
+        return true;
+    }
+
+    template <class... T, class Mutex>
+    bool TSignalRelay<void(T...), Mutex>::connect(ISlot& slot)
+    {
+        auto typed = dynamic_cast<TSlot<void(T...)>*>(&slot);
+        if (typed)
+        {
+            return connect(*typed);
+        }
+        return false;
+    }
+
+    template <class... T, class Mutex>
+    bool TSignalRelay<void(T...), Mutex>::connect(TSlot<void(T...)>& slot)
     {
         std::lock_guard<Mutex> lock(m_mtx);
-        for (auto slot : m_slots)
+        m_slots.insert(&slot);
+        return true;
+    }
+
+    template <class... T, class Mutex>
+    bool TSignalRelay<void(T...), Mutex>::disconnect(const ISlot& slot)
+    {
+        std::lock_guard<Mutex> lock(m_mtx);
+        for (auto itr = m_slots.begin(); itr != m_slots.end(); ++itr)
         {
-            auto slot_stream = slot->getStream();
-            if (slot_stream)
+            if (*itr == &slot)
             {
-                if (slot_stream->processId() == ctx->processId())
-                {
-                    if (slot_stream->threadId() != ctx->threadId())
-                    {
-                        // TODO fibers
-                        // ThreadSpecificQueue::push(
-                        //    std::bind([slot](T... args) { (*slot)(args...); }, args...), slot_ctx->threadId(), slot);
-                    }
-
-                    continue;
-                }
-
-                THROW(error, "Not implemented yet");
+                m_slots.erase(itr);
+                return true;
             }
-            (*slot)(args...);
-        }
-    }
-
-    template <class... T, class Mutex>
-    bool TSignalRelay<void(T...), Mutex>::connect(ISignal* signal)
-    {
-        auto typed = dynamic_cast<TSignal<void(T...)>*>(signal);
-        if (typed)
-        {
-            return connect(typed);
         }
         return false;
     }
 
     template <class... T, class Mutex>
-    bool TSignalRelay<void(T...), Mutex>::connect(TSignal<void(T...)>*)
-    {
-        return true;
-    }
-
-    template <class... T, class Mutex>
-    bool TSignalRelay<void(T...), Mutex>::connect(ISlot* slot)
-    {
-        auto typed = dynamic_cast<TSlot<void(T...)>*>(slot);
-        if (typed)
-        {
-            return connect(typed);
-        }
-        return false;
-    }
-
-    template <class... T, class Mutex>
-    bool TSignalRelay<void(T...), Mutex>::connect(TSlot<void(T...)>* slot)
-    {
-        std::lock_guard<Mutex> lock(m_mtx);
-        m_slots.insert(slot);
-        return true;
-    }
-
-    template <class... T, class Mutex>
-    bool TSignalRelay<void(T...), Mutex>::disconnect(ISlot* slot)
-    {
-        std::lock_guard<Mutex> lock(m_mtx);
-        return m_slots.erase(static_cast<TSlot<void(T...)>*>(slot)) > 0;
-    }
-
-    template <class... T, class Mutex>
-    bool TSignalRelay<void(T...), Mutex>::disconnect(ISignal*)
+    bool TSignalRelay<void(T...), Mutex>::disconnect(const ISignal&)
     {
         return false; // Currently not storing signal information to cache the Connection types
     }
 
     template <class... T, class Mutex>
-    const TypeInfo& TSignalRelay<void(T...), Mutex>::getSignature() const
+    TypeInfo TSignalRelay<void(T...), Mutex>::getSignature() const
     {
-        static TypeInfo type(typeid(void(T...)));
-        return type;
+        return TypeInfo::create<void(T...)>();
     }
     template <class... T, class Mutex>
     bool TSignalRelay<void(T...), Mutex>::hasSlots() const
@@ -227,80 +195,59 @@ namespace mo
     {
     }
 
+    // TODO the stream thing
     template <class R, class... T, class Mutex>
-    R TSignalRelay<R(T...), Mutex>::operator()(TSignal<R(T...)>*, const T&... args)
+    R TSignalRelay<R(T...), Mutex>::operator()(IAsyncStream&, T&&... args)
     {
-        std::lock_guard<Mutex> lock(m_mtx);
-        if (m_slot)
+        std::unique_lock<Mutex> lock(m_mtx);
+        auto slot = m_slot;
+        lock.unlock();
+        if (slot && *slot)
         {
-            return (*m_slot)(args...);
+            return (*slot)(std::forward<T>(args)...);
         }
         THROW(debug, "Slot not connected");
         return R();
     }
 
     template <class R, class... T, class Mutex>
-    R TSignalRelay<R(T...), Mutex>::operator()(IAsyncStream*, const T&... args)
+    bool TSignalRelay<R(T...), Mutex>::connect(ISlot& slot)
     {
-        std::lock_guard<Mutex> lock(m_mtx);
-        if (m_slot)
-        {
-            return (*m_slot)(args...);
-        }
-        THROW(debug, "Slot not connected");
-        return R();
-    }
-
-    template <class R, class... T, class Mutex>
-    R TSignalRelay<R(T...), Mutex>::operator()(const T&... args)
-    {
-        std::lock_guard<Mutex> lock(m_mtx);
-        if (m_slot && *m_slot)
-        {
-            return (*m_slot)(args...);
-        }
-        THROW(debug, "Slot not connected");
-        return R();
-    }
-
-    template <class R, class... T, class Mutex>
-    bool TSignalRelay<R(T...), Mutex>::connect(ISlot* slot)
-    {
-        auto typed = dynamic_cast<TSlot<R(T...)>*>(slot);
+        auto typed = dynamic_cast<TSlot<R(T...)>*>(&slot);
         if (typed)
         {
-            return connect(typed);
+            return connect(*typed);
         }
         return true;
     }
 
     template <class R, class... T, class Mutex>
-    bool TSignalRelay<R(T...), Mutex>::connect(TSlot<R(T...)>* slot)
+    bool TSignalRelay<R(T...), Mutex>::connect(TSlot<R(T...)>& slot)
     {
         std::lock_guard<Mutex> lock(m_mtx);
-        if (m_slot == slot)
+        if (m_slot == &slot)
             return false;
-        m_slot = slot;
+        m_slot = &slot;
         return true;
     }
 
     template <class R, class... T, class Mutex>
-    bool TSignalRelay<R(T...), Mutex>::connect(ISignal*)
+    bool TSignalRelay<R(T...), Mutex>::connect(ISignal&)
     {
         return true;
     }
 
     template <class R, class... T, class Mutex>
-    bool TSignalRelay<R(T...), Mutex>::connect(TSignal<R(T...)>*)
+    bool TSignalRelay<R(T...), Mutex>::connect(TSignal<R(T...)>&)
     {
         return true;
     }
 
     template <class R, class... T, class Mutex>
-    bool TSignalRelay<R(T...), Mutex>::disconnect(ISlot* slot)
+    bool TSignalRelay<R(T...), Mutex>::disconnect(const ISlot& slot)
     {
         std::lock_guard<Mutex> lock(m_mtx);
-        if (m_slot == slot)
+        if (m_slot == &slot)
         {
             m_slot = nullptr;
             return true;
@@ -309,23 +256,25 @@ namespace mo
     }
 
     template <class R, class... T, class Mutex>
-    bool TSignalRelay<R(T...), Mutex>::disconnect(ISignal*)
+    bool TSignalRelay<R(T...), Mutex>::disconnect(const ISignal&)
     {
         return false;
     }
 
     template <class R, class... T, class Mutex>
-    const TypeInfo& TSignalRelay<R(T...), Mutex>::getSignature() const
+    TypeInfo TSignalRelay<R(T...), Mutex>::getSignature() const
     {
-        static TypeInfo type(typeid(R(T...)));
-        return type;
+        return TypeInfo::create<R(T...)>();
     }
 
     template <class R, class... T, class Mutex>
     bool TSignalRelay<R(T...), Mutex>::hasSlots() const
     {
+        std::lock_guard<Mutex> lock(m_mtx);
         if (m_slot == nullptr)
             return false;
         return *m_slot;
     }
 } // namespace mo
+
+#endif // MO_SIGNALS_TSIGNALRELAY_HPP

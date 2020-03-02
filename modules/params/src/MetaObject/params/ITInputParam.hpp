@@ -1,6 +1,7 @@
 #pragma once
 #include "InputParam.hpp"
 #include "OutputParam.hpp"
+#include "TParam.hpp"
 
 #include <MetaObject/thread/Mutex.hpp>
 

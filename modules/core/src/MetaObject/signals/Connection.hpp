@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MO_SIGNALS_CONNECTION_HPP
+#define MO_SIGNALS_CONNECTION_HPP
 #include "MetaObject/detail/Export.hpp"
 #include <memory>
 #include <vector>
@@ -88,4 +89,5 @@ namespace mo
         std::vector<Connection::Ptr_t> m_connections;
     };
 
-} // namespace Signals
+} // namespace mo
+#endif // MO_SIGNALS_CONNECTION_HPP

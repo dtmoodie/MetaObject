@@ -111,14 +111,14 @@ namespace mo
         return m_cs;
     }
 
-    ConnectionPtr_t IParam::registerUpdateNotifier(ISlot* f)
+    ConnectionPtr_t IParam::registerUpdateNotifier(ISlot& f)
     {
         Lock_t lock(mtx());
-        if (f->getSignature() == m_data_update.getSignature())
+        if (f.getSignature() == m_data_update.getSignature())
         {
             return m_data_update.connect(f);
         }
-        if (f->getSignature() == m_update_signal.getSignature())
+        if (f.getSignature() == m_update_signal.getSignature())
         {
             return m_update_signal.connect(f);
         }
@@ -140,10 +140,10 @@ namespace mo
         return {};
     }
 
-    ConnectionPtr_t IParam::registerDeleteNotifier(ISlot* f)
+    ConnectionPtr_t IParam::registerDeleteNotifier(ISlot& f)
     {
         Lock_t lock(mtx());
-        if (m_delete_signal.getSignature() == f->getSignature())
+        if (m_delete_signal.getSignature() == f.getSignature())
         {
             return m_delete_signal.connect(f);
         }
@@ -161,22 +161,22 @@ namespace mo
         return {};
     }
 
-    IParam* IParam::emitUpdate(const Header& header, UpdateFlags flags_)
+    IParam* IParam::emitUpdate(const Header& header, const UpdateFlags& flags, IAsyncStream& stream)
     {
         modified(true);
-        m_update_signal(this, header, flags_);
+        m_update_signal(this, header, flags, stream);
         return this;
     }
 
-    IParam* IParam::emitUpdate(const IDataContainerPtr_t& data, UpdateFlags flags)
+    IParam* IParam::emitUpdate(const IDataContainerPtr_t& data, const UpdateFlags& flags, IAsyncStream& stream)
     {
         modified(true);
-        m_data_update(data, this, flags);
-        m_update_signal(this, data->getHeader(), flags);
+        m_data_update(data, this, flags, stream);
+        m_update_signal(this, data->getHeader(), flags, stream);
         return this;
     }
 
-    IParam* IParam::emitUpdate(const IParam& other, UpdateFlags flags_)
+    IParam* IParam::emitUpdate(const IParam& other, const UpdateFlags& flags_)
     {
         auto ts = other.getTimestamp();
         auto fn = other.getFrameNumber();

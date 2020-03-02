@@ -42,6 +42,8 @@ namespace mo
         virtual std::string name() const = 0;
         virtual uint64_t threadId() const = 0;
         virtual bool isDeviceStream() const = 0;
+        virtual IDeviceStream* getDeviceStream();
+        virtual const IDeviceStream* getDeviceStream() const;
         virtual uint64_t processId() const = 0;
         virtual uint64_t streamId() const = 0;
         virtual AllocatorPtr_t hostAllocator() const = 0;
@@ -65,7 +67,10 @@ namespace mo
         virtual void synchronize() override = 0;
         virtual void synchronize(IDeviceStream* other) = 0;
 
+        virtual IDeviceStream* getDeviceStream() override;
+        virtual const IDeviceStream* getDeviceStream() const override;
+
         virtual std::shared_ptr<DeviceAllocator> deviceAllocator() const = 0;
     };
-}
+} // namespace mo
 #endif // MO_CORE_IASYNC_STREAM_HPP

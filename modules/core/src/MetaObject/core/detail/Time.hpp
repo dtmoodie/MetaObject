@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MO_CORE_TIME_HPP
+#define MO_CORE_TIME_HPP
 #include <MetaObject/detail/Export.hpp>
 
 #include <boost/optional.hpp>
@@ -7,6 +8,7 @@
 #include <ct/reflect.hpp>
 
 #include <chrono>
+
 namespace mo
 {
     using Duration = std::chrono::high_resolution_clock::duration;
@@ -189,3 +191,4 @@ namespace ct
         MEMBER_FUNCTION("valid", &mo::FrameNumber::valid)
     REFLECT_END;
 } // namespace ct
+#endif // MO_CORE_TIME_HPP

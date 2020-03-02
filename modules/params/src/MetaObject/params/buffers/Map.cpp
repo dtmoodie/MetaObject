@@ -1,7 +1,7 @@
 #include "Map.hpp"
 #include <MetaObject/thread/fiber_include.hpp>
-
 #include <boost/thread/locks.hpp>
+#include <ct/bind.hpp>
 
 namespace mo
 {
@@ -12,8 +12,7 @@ namespace mo
             , m_push_policy(push_policy)
             , m_search_policy(search_policy)
         {
-            m_update_slot = std::bind(
-                &Map::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+            m_update_slot = ct::variadicBind(&Map::onInputUpdate, this);
             IParam::setMtx(&m_mtx);
             appendFlags(mo::ParamFlags::kBUFFER);
         }
@@ -98,27 +97,32 @@ namespace mo
         {
             if (IBuffer::setInput(param))
             {
+                auto stream = param->getStream();
+                if (!stream)
+                {
+                    stream = IAsyncStream::current().get();
+                }
                 auto data = IBuffer::getData();
                 if (data)
                 {
-                    pushData(data);
+                    pushData(data, *stream);
                 }
                 return true;
             }
             return false;
         }
 
-        void Map::onInputUpdate(const IDataContainerPtr_t& data, IParam* param, UpdateFlags flags)
+        void Map::onInputUpdate(const IDataContainerPtr_t& data, IParam* param, UpdateFlags flags, IAsyncStream& stream)
         {
             (void)param;
             (void)flags;
             if (data)
             {
-                pushData(data);
+                pushData(data, stream);
             }
         }
 
-        void Map::pushData(const IDataContainerPtr_t& data)
+        void Map::pushData(const IDataContainerPtr_t& data, IAsyncStream& stream)
         {
             if ((m_push_policy == GROW) || (m_push_policy == PRUNE))
             {
@@ -126,22 +130,22 @@ namespace mo
                     Lock_t lock(IParam::mtx());
                     m_data_buffer[data->getHeader()] = data;
                 }
-                emitUpdate(data, UpdateFlags::kBUFFER_UPDATED);
+                emitUpdate(data, UpdateFlags::kBUFFER_UPDATED, stream);
             }
             else
             {
                 if (m_push_policy == BLOCK)
                 {
-                    pushAndWait(data);
+                    pushAndWait(data, stream);
                 }
                 else
                 {
-                    pushOrDrop(data);
+                    pushOrDrop(data, stream);
                 }
             }
         }
 
-        void Map::pushOrDrop(const IDataContainerPtr_t& data)
+        void Map::pushOrDrop(const IDataContainerPtr_t& data, IAsyncStream& stream)
         {
             {
                 Lock_t lock(IParam::mtx());
@@ -154,10 +158,10 @@ namespace mo
                 }
                 m_data_buffer[data->getHeader()] = data;
             }
-            emitUpdate(data, mo::UpdateFlags::kBUFFER_UPDATED);
+            emitUpdate(data, mo::UpdateFlags::kBUFFER_UPDATED, stream);
         }
 
-        void Map::pushAndWait(const IDataContainerPtr_t& data)
+        void Map::pushAndWait(const IDataContainerPtr_t& data, IAsyncStream& stream)
         {
             {
                 Lock_t lock(IParam::mtx());
@@ -175,7 +179,7 @@ namespace mo
 
                 m_data_buffer[data->getHeader()] = data;
             }
-            emitUpdate(data, mo::UpdateFlags::kBUFFER_UPDATED);
+            emitUpdate(data, mo::UpdateFlags::kBUFFER_UPDATED, stream);
         }
 
         Map::IContainerPtr_t Map::getData(const Header& desired)
@@ -411,5 +415,5 @@ namespace mo
         static MapConstructor<Map::BLOCK, Map::EXACT, BufferFlags::BLOCKING_STREAM_BUFFER> g_blocking_ctr;
         static MapConstructor<Map::DROP, Map::EXACT, BufferFlags::DROPPING_STREAM_BUFFER> g_dropping_ctr;
         static MapConstructor<Map::BLOCK, Map::NEAREST, BufferFlags::NEAREST_NEIGHBOR_BUFFER> g_nn_ctr;
-    }
-}
+    } // namespace buffer
+} // namespace mo

@@ -33,14 +33,14 @@ namespace mo
     struct ConstAccessToken;
 
     template <typename T>
-    class MO_EXPORTS TParam<T> : virtual public IParam
+    class MO_EXPORTS TParam : virtual public IParam
     {
       public:
         using Container_t = TDataContainer<T>;
         using TContainerPtr_t = typename TDataContainer<T>::Ptr_t;
         using type = typename TDataContainer<T>::type;
         using ContainerConstPtr_t = std::shared_ptr<const Container_t>;
-        using TUpdate_s = void(TContainerPtr_t, IParam*, UpdateFlags);
+        using TUpdate_s = void(TContainerPtr_t, IParam*, UpdateFlags, IAsyncStream&);
         using TUpdateSignal_t = TSignal<TUpdate_s>;
         using TUpdateSlot_t = TSlot<TUpdate_s>;
 
@@ -53,13 +53,13 @@ namespace mo
         template <class... Args>
         auto updateData(type&& data, const Args&... args) -> ct::EnableIf<hasNamedParam<Args...>()>;
 
-        void updateData(const type& data, const Header& header = Header());
-        void updateData(type&& data, Header&& header = Header());
-        void updateData(const TContainerPtr_t& data);
+        void updateData(const type& data, const Header& header = Header(), IAsyncStream* stream = nullptr);
+        void updateData(type&& data, Header&& header = Header(), IAsyncStream* stream = nullptr);
+        void updateData(const TContainerPtr_t& data, IAsyncStream* stream = nullptr);
 
         TypeInfo getTypeInfo() const override;
 
-        ConnectionPtr_t registerUpdateNotifier(ISlot* f) override;
+        ConnectionPtr_t registerUpdateNotifier(ISlot& f) override;
         ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr_t& relay) override;
 
         void load(ILoadVisitor&) override;
@@ -96,11 +96,11 @@ namespace mo
         typename TDataContainer<T>::Ptr_t getDataImpl(const Header& desired = Header());
         typename TDataContainer<T>::ConstPtr_t getDataImpl(const Header& desired = Header()) const;
 
-        virtual void updateDataImpl(const TContainerPtr_t& data, mo::UpdateFlags fg = UpdateFlags::kVALUE_UPDATED);
+        virtual void updateDataImpl(const TContainerPtr_t& data, mo::UpdateFlags fg, IAsyncStream& stream);
 
-        void emitTypedUpdate(TContainerPtr_t data, UpdateFlags flags)
+        void emitTypedUpdate(TContainerPtr_t data, UpdateFlags flags, IAsyncStream& stream)
         {
-            m_typed_update_signal(data, this, flags);
+            m_typed_update_signal(data, this, flags, stream);
         }
 
         ParamAllocator::Ptr_t allocator() const
@@ -144,8 +144,6 @@ namespace mo
         if (param)
         {
             header.frame_number = param->getFrameNumber();
-            header.stream = param->getStream();
-            header.coordinate_system = param->getCoordinateSystem();
             header.timestamp = param->getTimestamp();
         }
         const uint64_t* fnptr = getKeywordInputOptional<params::FrameNumber>(args...);
@@ -160,49 +158,54 @@ namespace mo
             header.timestamp = *tsptr;
         }
 
-        auto stream_ = getKeywordInputDefault<params::Stream>(nullptr, args...);
-        if (stream_)
+        auto stream = getKeywordInputDefault<params::Stream>(nullptr, args...);
+        if (!stream)
         {
-            header.stream = stream_;
+            stream = getStream();
         }
+        if (!stream)
         {
-            mo::Lock_t lock(this->mtx());
-            // If we done goofed and haven't setup a stream, then on the first call with a stream argument we set it
-            // here
-            if (getStream() == nullptr && header.stream)
-            {
-                setStream(header.stream);
-            }
+            stream = IAsyncStream::current().get();
         }
 
         updateData(std::move(data), std::move(header));
     }
 
     template <class T>
-    void TParam<T>::updateData(const type& data, const Header& header)
+    void TParam<T>::updateData(const type& data, const Header& header, IAsyncStream* stream)
     {
         auto container = create(data);
         container->header = header;
-        updateData(container);
+        updateData(container, stream);
     }
 
     template <class T>
-    void TParam<T>::updateData(type&& data, Header&& header)
+    void TParam<T>::updateData(type&& data, Header&& header, IAsyncStream* stream)
     {
         auto container = create(std::move(data));
         container->header = std::move(header);
-        updateData(container);
+        updateData(container, stream);
     }
 
     template <class T>
-    void TParam<T>::updateData(const TContainerPtr_t& data)
+    void TParam<T>::updateData(const TContainerPtr_t& data, IAsyncStream* stream)
     {
         if (!data)
         {
             return;
         }
 
-        updateDataImpl(data);
+        if (!stream)
+        {
+            stream = this->getStream();
+        }
+        if (!stream)
+        {
+            stream = IAsyncStream::current().get();
+        }
+        MO_ASSERT(stream != nullptr);
+
+        updateDataImpl(data, UpdateFlags::kVALUE_UPDATED, *stream);
     }
 
     template <class T>
@@ -213,7 +216,7 @@ namespace mo
     }
 
     template <class T>
-    void TParam<T>::updateDataImpl(const TContainerPtr_t& data, mo::UpdateFlags fg)
+    void TParam<T>::updateDataImpl(const TContainerPtr_t& data, mo::UpdateFlags fg, IAsyncStream& stream)
     {
         if (!data->header.frame_number.valid())
         {
@@ -229,8 +232,8 @@ namespace mo
             mo::Lock_t lock(this->mtx());
             m_data = data;
         }
-        emitUpdate(IDataContainer::Ptr_t(data), fg);
-        m_typed_update_signal(data, this, fg);
+        emitUpdate(IDataContainer::Ptr_t(data), fg, stream);
+        m_typed_update_signal(data, this, fg, stream);
     }
 
     template <class T>
@@ -240,14 +243,15 @@ namespace mo
     }
 
     template <class T>
-    ConnectionPtr_t TParam<T>::registerUpdateNotifier(ISlot* f)
+    ConnectionPtr_t TParam<T>::registerUpdateNotifier(ISlot& f)
     {
-        if (f->getSignature() == m_typed_update_signal.getSignature())
+        if (f.getSignature() == m_typed_update_signal.getSignature())
         {
-            auto typed = dynamic_cast<TUpdateSlot_t*>(f);
+            // Is the additional check necessary since we do the above check?
+            auto typed = dynamic_cast<TUpdateSlot_t*>(&f);
             if (typed)
             {
-                return m_typed_update_signal.connect(typed);
+                return m_typed_update_signal.connect(*typed);
             }
         }
         return IParam::registerUpdateNotifier(f);

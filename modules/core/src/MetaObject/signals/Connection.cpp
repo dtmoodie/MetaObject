@@ -60,7 +60,11 @@ bool SignalConnection::disconnect()
 {
     if (_signal)
     {
-        return _signal->disconnect(_relay);
+        auto relay = _relay.lock();
+        if (relay)
+        {
+            return _signal->disconnect(*relay);
+        }
     }
     return false;
 }

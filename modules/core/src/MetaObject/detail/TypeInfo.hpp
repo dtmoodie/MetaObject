@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MO_CORE_TYPE_INFO_HPP
+#define MO_CORE_TYPE_INFO_HPP
 #include "Export.hpp"
 #include <ostream>
 #include <string>
@@ -54,7 +55,7 @@ namespace mo
     }
 
     MO_EXPORTS std::ostream& operator<<(std::ostream& os, const TypeInfo& type);
-}
+} // namespace mo
 
 namespace std
 {
@@ -65,4 +66,6 @@ namespace std
         using result_type = std::size_t;
         result_type operator()(argument_type const& s) const noexcept;
     };
-}
+} // namespace std
+
+#endif // MO_CORE_TYPE_INFO_HPP

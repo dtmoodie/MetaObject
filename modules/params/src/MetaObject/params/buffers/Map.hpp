@@ -81,7 +81,7 @@ namespace mo
             void setMtx(Mutex_t* mtx) override;
 
           protected:
-            void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) override;
+            void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags, IAsyncStream&) override;
             IDataContainerPtr_t search(const Header& hdr) const;
             IDataContainerPtr_t searchExact(const Header& hdr) const;
             IDataContainerPtr_t searchNearest(const Header& hdr) const;
@@ -89,9 +89,9 @@ namespace mo
             using Buffer_t = std::map<Header, IDataContainerPtr_t>;
 
           private:
-            void pushData(const IDataContainerPtr_t& data);
-            void pushOrDrop(const IDataContainerPtr_t& data);
-            void pushAndWait(const IDataContainerPtr_t& data);
+            void pushData(const IDataContainerPtr_t& data, IAsyncStream&);
+            void pushOrDrop(const IDataContainerPtr_t& data, IAsyncStream&);
+            void pushAndWait(const IDataContainerPtr_t& data, IAsyncStream&);
             uint32_t prune();
 
             ConditionVariable m_cv;

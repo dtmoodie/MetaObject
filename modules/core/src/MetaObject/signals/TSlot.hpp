@@ -1,9 +1,13 @@
-#pragma once
+#ifndef MO_SIGNALS_TSLOT_HPP
+#define MO_SIGNALS_TSLOT_HPP
+#include "ArgumentPack.hpp"
 #include "Connection.hpp"
 #include "ISlot.hpp"
 #include "MetaObject/core/AsyncStream.hpp"
 #include "TSignal.hpp"
 #include "TSignalRelay.hpp"
+
+#include <ct/bind.hpp>
 
 #include <functional>
 
@@ -28,16 +32,20 @@ namespace mo
         TSlot& operator=(const std::function<R(T...)>& other);
         TSlot& operator=(const TSlot& other);
 
-        std::shared_ptr<Connection> connect(ISignal* sig) override;
-        std::shared_ptr<Connection> connect(TSignal<R(T...)>* signal);
+        R invokeArgpack(const ArgumentPack<T...>&);
+
+        std::shared_ptr<Connection> connect(ISignal& sig) override;
+        std::shared_ptr<Connection> connect(TSignal<R(T...)>& signal);
         std::shared_ptr<Connection> connect(std::shared_ptr<ISignalRelay>& relay) override;
         std::shared_ptr<Connection> connect(std::shared_ptr<TSignalRelay<R(T...)>>& relay);
-        virtual bool disconnect(std::weak_ptr<ISignalRelay> relay) override;
+        bool disconnect(std::weak_ptr<ISignalRelay> relay) override;
         void clear() override;
         const TypeInfo& getSignature() const override;
         operator bool() const;
 
-      protected:
+      private:
+        template <int... Is>
+        R invokeArgpack(const ArgumentPack<T...>& arg_pack, ct::int_sequence<Is...>);
         std::vector<std::shared_ptr<TSignalRelay<R(T...)>>> _relays;
     };
 
@@ -83,22 +91,35 @@ namespace mo
     }
 
     template <class R, class... T>
-    std::shared_ptr<Connection> TSlot<R(T...)>::connect(ISignal* sig)
+    R TSlot<R(T...)>::invokeArgpack(const ArgumentPack<T...>& arg_pack)
     {
-        auto typed = dynamic_cast<TSignal<R(T...)>*>(sig);
+        return invokeArgpack(arg_pack, ct::make_int_sequence<sizeof...(T)>{});
+    }
+
+    template <class R, class... T>
+    template <int... Is>
+    R TSlot<R(T...)>::invokeArgpack(const ArgumentPack<T...>& arg_pack, ct::int_sequence<Is...>)
+    {
+        return (*this)(std::get<Is>(arg_pack.data)...);
+    }
+
+    template <class R, class... T>
+    std::shared_ptr<Connection> TSlot<R(T...)>::connect(ISignal& sig)
+    {
+        auto typed = dynamic_cast<TSignal<R(T...)>*>(&sig);
         if (typed)
         {
-            return connect(typed);
+            return connect(*typed);
         }
         return std::shared_ptr<Connection>();
     }
 
     template <class R, class... T>
-    std::shared_ptr<Connection> TSlot<R(T...)>::connect(TSignal<R(T...)>* typed)
+    std::shared_ptr<Connection> TSlot<R(T...)>::connect(TSignal<R(T...)>& typed)
     {
         std::shared_ptr<TSignalRelay<R(T...)>> relay(new TSignalRelay<R(T...)>());
-        relay->connect(this);
-        typed->connect(relay);
+        relay->connect(*this);
+        typed.connect(relay);
         _relays.push_back(relay);
         return std::shared_ptr<Connection>(new SlotConnection(this, relay));
     }
@@ -122,7 +143,7 @@ namespace mo
         if (typed)
         {
             _relays.push_back(typed);
-            if (relay->connect(this))
+            if (relay->connect(*this))
             {
                 return std::shared_ptr<Connection>(new SlotConnection(this, relay));
             }
@@ -138,7 +159,7 @@ namespace mo
         {
             if ((*itr) == relay)
             {
-                (*itr)->disconnect(this);
+                (*itr)->disconnect(*this);
                 _relays.erase(itr);
                 return true;
             }
@@ -151,7 +172,7 @@ namespace mo
     {
         for (auto& relay : _relays)
         {
-            relay->disconnect(this);
+            relay->disconnect(*this);
         }
     }
 
@@ -167,4 +188,5 @@ namespace mo
     {
         return std::function<R(T...)>::operator bool();
     }
-}
+} // namespace mo
+#endif // MO_SIGNALS_TSLOT_HPP

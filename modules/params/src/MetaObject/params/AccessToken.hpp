@@ -1,6 +1,7 @@
 #pragma once
-#include "MetaObject/params/IParam.hpp"
 #include "traits/TypeTraits.hpp"
+#include <MetaObject/core/detail/forward.hpp>
+#include <MetaObject/params/Header.hpp>
 
 namespace mo
 {
@@ -54,26 +55,6 @@ namespace mo
             return _data;
         }
 
-        AccessToken<T>& operator()(const OptionalTime& ts_)
-        {
-            _header.timestamp = ts_;
-            _modified = true;
-            return *this;
-        }
-
-        AccessToken<T>& operator()(const uint64_t fn_)
-        {
-            _header.frame_number = fn_;
-            _modified = true;
-            return *this;
-        }
-
-        AccessToken<T>& operator()(IAsyncStream* ctx)
-        {
-            _header.stream = ctx;
-            return *this;
-        }
-
         void setModified(bool value)
         {
             _modified = value;
@@ -118,4 +99,4 @@ namespace mo
         const TParam<T>& _param;
         const type& _data;
     };
-}
+} // namespace mo

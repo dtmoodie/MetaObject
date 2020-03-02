@@ -165,19 +165,19 @@ namespace mo
         bool hasSubscriptions() const;
 
         // Virtual to allow typed overload for interface slot input
-        virtual ConnectionPtr_t registerUpdateNotifier(ISlot* f);
+        virtual ConnectionPtr_t registerUpdateNotifier(ISlot& f);
         virtual ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr_t& relay);
 
         // Register slots to be called on delete of this param
-        virtual ConnectionPtr_t registerDeleteNotifier(ISlot* f);
+        virtual ConnectionPtr_t registerDeleteNotifier(ISlot& f);
         virtual ConnectionPtr_t registerDeleteNotifier(const ISignalRelay::Ptr_t& relay);
 
         // commit changes to a param, updates underlying meta info and emits signals accordingly
-        virtual IParam* emitUpdate(const Header& header = Header(), UpdateFlags flags_ = UpdateFlags::kVALUE_UPDATED);
-        virtual IParam* emitUpdate(const IDataContainerPtr_t& data, UpdateFlags flags = UpdateFlags::kVALUE_UPDATED);
+        virtual IParam* emitUpdate(const Header& header, const UpdateFlags& flags, IAsyncStream&);
+        virtual IParam* emitUpdate(const IDataContainerPtr_t& data, const UpdateFlags& flags, IAsyncStream&);
 
         // commit a param's value copying metadata info from another parmaeter
-        virtual IParam* emitUpdate(const IParam& other, UpdateFlags flags_ = UpdateFlags::kVALUE_UPDATED);
+        virtual IParam* emitUpdate(const IParam& other, const UpdateFlags& flags_, IAsyncStream&);
 
         // Get reference to param mutex.  If setMtx was called, this will reference the mutex that
         // was set, otherwise one will be created
@@ -275,4 +275,4 @@ namespace mo
         }
         return false;
     }
-}
+} // namespace mo

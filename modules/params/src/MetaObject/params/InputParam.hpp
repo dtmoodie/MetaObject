@@ -74,7 +74,7 @@ namespace mo
         InputParam& operator=(InputParam&&) = delete;
 
       protected:
-        virtual void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags) = 0;
+        virtual void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags, IAsyncStream& stream);
         virtual void onInputDelete(const IParam* param);
 
         TSlot<DataUpdate_s> m_update_slot;

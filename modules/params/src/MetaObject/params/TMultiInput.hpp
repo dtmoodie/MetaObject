@@ -33,7 +33,7 @@ namespace mo
         bool acceptsType(const TypeInfo& type) const override;
 
         // Virtual to allow typed overload for interface slot input
-        virtual ConnectionPtr_t registerUpdateNotifier(ISlot* f) override;
+        virtual ConnectionPtr_t registerUpdateNotifier(ISlot& f) override;
         virtual ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr_t& relay) override;
 
         virtual bool modified() const override;

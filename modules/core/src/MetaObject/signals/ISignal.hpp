@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MO_SIGNALS_ISIGNAL_HPP
+#define MO_SIGNALS_ISIGNAL_HPP
 #include "MetaObject/detail/Export.hpp"
 
 #include "MetaObject/core/detail/forward.hpp"
@@ -25,18 +26,20 @@ namespace mo
     {
       public:
         virtual ~ISignal();
-        virtual const TypeInfo& getSignature() const = 0;
-        virtual std::shared_ptr<Connection> connect(ISlot* slot) = 0;
-        virtual std::shared_ptr<Connection> connect(std::shared_ptr<ISignalRelay>& relay) = 0;
+        virtual TypeInfo getSignature() const = 0;
+        virtual ConnectionPtr_t connect(ISlot& slot) = 0;
+        virtual ConnectionPtr_t connect(std::shared_ptr<ISignalRelay>& relay) = 0;
         virtual bool disconnect() = 0;
-        virtual bool disconnect(ISlot* slot) = 0;
-        virtual bool disconnect(std::weak_ptr<ISignalRelay> relay) = 0;
+        virtual bool disconnect(const ISlot& slot) = 0;
+        virtual bool disconnect(const ISignalRelay& relay) = 0;
         virtual bool isConnected() const = 0;
 
         IAsyncStream* getStream() const;
-        void setStream(IAsyncStream* ctx);
+        void setStream(IAsyncStream& stream);
 
       protected:
         IAsyncStream* m_stream = nullptr;
     };
-}
+} // namespace mo
+
+#endif // MO_SIGNALS_ISIGNAL_HPP

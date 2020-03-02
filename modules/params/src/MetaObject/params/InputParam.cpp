@@ -1,6 +1,8 @@
 #include <MetaObject/params/InputParam.hpp>
 
 #include <MetaObject/thread/Mutex.hpp>
+#include <ct/bind.hpp>
+
 #include <mutex>
 
 using namespace mo;
@@ -8,9 +10,8 @@ using namespace mo;
 InputParam::InputParam()
     : IParam("", mo::ParamFlags::kINPUT)
 {
-    m_delete_slot = std::bind(&InputParam::onInputDelete, this, std::placeholders::_1);
-    m_update_slot = std::bind(
-        &InputParam::onInputUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+    m_delete_slot = ct::variadicBind(&InputParam::onInputDelete, this);
+    m_update_slot = ct::variadicBind(&InputParam::onInputUpdate, this);
 }
 
 InputParam::~InputParam()
@@ -138,9 +139,9 @@ bool InputParam::setInput(IParam* param)
         m_input_param = param;
     }
     param->subscribe();
-    param->registerUpdateNotifier(&m_update_slot);
-    param->registerDeleteNotifier(&m_delete_slot);
-    emitUpdate(Header(), UpdateFlags::kINPUT_SET);
+    param->registerUpdateNotifier(m_update_slot);
+    param->registerDeleteNotifier(m_delete_slot);
+    emitUpdate(Header(), UpdateFlags::kINPUT_SET, *IAsyncStream::current());
     return true;
 }
 
@@ -228,19 +229,19 @@ void InputParam::visit(StaticVisitor& visitor) const
     data->visit(visitor);
 }
 
-void InputParam::onInputUpdate(const IDataContainerPtr_t& data, IParam* param, UpdateFlags)
+void InputParam::onInputUpdate(const IDataContainerPtr_t& data, IParam* param, UpdateFlags, IAsyncStream& stream)
 {
-    if (data->getHeader().stream == getStream())
+    if (&stream == getStream())
     {
         m_current_data = data;
-        emitUpdate(data, UpdateFlags::kINPUT_UPDATED);
+        emitUpdate(data, UpdateFlags::kINPUT_UPDATED, stream);
     }
     else
     {
-        // mer figure out what do
+        // TODO mer figure out what do
         if (param->checkFlags(ParamFlags::kBUFFER))
         {
-            emitUpdate(data, UpdateFlags::kBUFFER_UPDATED);
+            emitUpdate(data, UpdateFlags::kBUFFER_UPDATED, stream);
         }
     }
 }

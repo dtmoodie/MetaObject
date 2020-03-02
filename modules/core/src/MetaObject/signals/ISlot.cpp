@@ -12,7 +12,7 @@ IAsyncStream* ISlot::getStream() const
 {
     return m_stream;
 }
-void ISlot::setStream(IAsyncStream* ctx)
+void ISlot::setStream(IAsyncStream& stream)
 {
-    m_stream = ctx;
+    m_stream = &stream;
 }

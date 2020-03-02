@@ -26,7 +26,7 @@ void ParamServer::addParam(IMetaObject* obj, IParam* param)
 {
     _params[param->getTreeName()] = param;
     _obj_params[obj].push_back(param->getTreeName());
-    param->registerDeleteNotifier(&delete_slot);
+    param->registerDeleteNotifier(delete_slot);
 }
 
 void ParamServer::removeParam(IMetaObject* /*obj*/, IParam* param)
