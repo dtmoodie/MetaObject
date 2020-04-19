@@ -19,7 +19,7 @@ https://github.com/dtmoodie/MetaObject
 
 #include "MetaObject/detail/TypeInfo.hpp"
 #include "MetaObject/logging/logging.hpp"
-#include "MetaObject/params/IParam.hpp"
+#include "MetaObject/params/IControlParam.hpp"
 #include "MetaObject/params/ui/Qt/DefaultProxy.hpp"
 #include "MetaObject/params/ui/WidgetFactory.hpp"
 #include <map>
@@ -62,14 +62,18 @@ std::string print_types(std::map<TypeInfo, WidgetFactory::HandlerConstructor_f>&
     return ss.str();
 }
 
-std::shared_ptr<IParamProxy> WidgetFactory::CreateProxy(IParam* param)
+std::shared_ptr<IParamProxy> WidgetFactory::CreateProxy(IControlParam* param)
 {
     std::string typeName = param->getTypeInfo().name();
     std::string treeName = param->getTreeName();
     auto itr = _pimpl->registry.find(param->getTypeInfo());
     if (itr == _pimpl->registry.end())
     {
-        MO_LOG(debug, "No Widget Factory registered for type {}  unable to make widget for param: {} Known types: {}", typeName, treeName, print_types(_pimpl->registry));
+        MO_LOG(debug,
+               "No Widget Factory registered for type {}  unable to make widget for param: {} Known types: {}",
+               typeName,
+               treeName,
+               print_types(_pimpl->registry));
 
         return std::shared_ptr<IParamProxy>(new DefaultProxy(param));
     }

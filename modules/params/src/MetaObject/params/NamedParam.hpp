@@ -6,177 +6,131 @@
 
 namespace mo
 {
-    // https://www.fluentcpp.com/2016/12/08/strong-types-for-strong-interfaces/
-    struct NamedParamBase
+    template <class T>
+    const T* getPointer(const T& ref)
     {
-    };
+        return &ref;
+    }
 
-    template <class Tag, class T, class U = const T&>
-    struct TNamedParam : public NamedParamBase
+    template <class T>
+    const T* getPointer(const T* ptr)
     {
-        using type = T;
-        using tag = Tag;
-        using storage_type = U;
-        using pointer_type = const T*;
+        return ptr;
+    }
 
-        explicit TNamedParam(storage_type value)
-            : m_value(value)
+    template <class T>
+    T* getPointer(T* ptr)
+    {
+        return ptr;
+    }
+
+    template <class T>
+    T* getPointer(T& ref)
+    {
+        return &ref;
+    }
+
+    template <class Storage, class Pointer>
+    struct TaggedBase
+    {
+        template <class T>
+        TaggedBase(T&& val)
+            : m_value(std::forward<T>(val))
         {
         }
 
-        TNamedParam(const TNamedParam<Tag, T, T>& other)
-            : m_value(other.get())
-        {
-        }
-
-        operator storage_type() const
+        operator Storage() const
         {
             return m_value;
         }
 
-        const storage_type& get() const
+        operator Pointer()
         {
-            return m_value;
-        }
-
-        const T* ptr() const
-        {
-            return &m_value;
+            return getPointer(m_value);
         }
 
       private:
-        storage_type m_value;
+        Storage m_value;
     };
 
-    template <class Tag, class T>
-    struct TNamedParam<Tag, T, T> : public NamedParamBase
+    template <class Storage>
+    struct TaggedBase<Storage, Storage>
     {
-        using type = T;
-        using tag = Tag;
-        using storage_type = T;
-        using pointer_type = const T*;
-
-        explicit TNamedParam(storage_type value)
-            : m_value(std::move(value))
+        template <class T>
+        TaggedBase(T&& val)
+            : m_value(std::forward<T>(val))
         {
         }
 
-        operator storage_type() const
-        {
-            return m_value;
-        }
-
-        const storage_type& get() const
-        {
-            return m_value;
-        }
-
-        const T* ptr() const
-        {
-            return &m_value;
-        }
-
-      private:
-        storage_type m_value;
-    };
-
-    template <class Tag, class T>
-    struct TNamedParam<Tag, const T*, const T*> : public NamedParamBase
-    {
-        using type = T;
-        using tag = Tag;
-        using storage_type = const T*;
-        using pointer_type = const T*;
-
-        explicit TNamedParam(storage_type value)
-            : m_value(value)
+        template <class T>
+        TaggedBase(boost::optional<T>& val)
+            : m_value(val.get_ptr())
         {
         }
 
-        explicit TNamedParam(const boost::optional<const T>& value)
-        {
-            if (value)
-            {
-                m_value = &(*value);
-            }
-        }
-
-        explicit TNamedParam(const boost::optional<T>& value)
-        {
-            if (value)
-            {
-                m_value = &(*value);
-            }
-        }
-
-        operator storage_type() const
-        {
-            return m_value;
-        }
-
-        storage_type get() const
-        {
-            return m_value;
-        }
-
-        storage_type ptr() const
+        operator Storage() const
         {
             return m_value;
         }
 
       private:
-        storage_type m_value = nullptr;
+        Storage m_value;
+    };
+
+    template <class Tag>
+    struct TaggedValue : TaggedBase<typename Tag::storage_type, typename Tag::pointer_type>
+    {
+        using type = typename Tag::value_type;
+        using tag = Tag;
+        using storage_type = typename Tag::storage_type;
+
+        using Super_t = TaggedBase<typename Tag::storage_type, typename Tag::pointer_type>;
+
+        template <class T>
+        TaggedValue(T&& value)
+            : Super_t(std::forward<T>(value))
+        {
+        }
+
+        TaggedValue(const TaggedValue& other) = default;
+        TaggedValue(TaggedValue&& other) = default;
+
+        TaggedValue& operator=(const TaggedValue& other) = default;
+        TaggedValue& operator=(TaggedValue&& other) = default;
     };
 
     // Example
     // struct TimestampParameter;
-    // using Timestamp = TNamedParam<TimestampParameter, mo::Time>
+    // using Timestamp = TaggedValue<TimestampParameter, mo::Time>
 
     template <class T>
-    struct IsNamedParam
+    struct IsTaggedValue : std::false_type
     {
-        static constexpr bool value = ct::IsBase<ct::Base<NamedParamBase>, ct::Derived<T>>::value;
     };
 
-    constexpr bool hasNamedParam(ct::VariadicTypedef<> = {})
+    template <class T>
+    struct IsTaggedValue<TaggedValue<T>> : std::true_type
+    {
+    };
+
+    constexpr bool hasTaggedValue(ct::VariadicTypedef<> = {})
     {
         return false;
     }
 
     template <class T, class... Ts>
-    constexpr bool hasNamedParam(ct::VariadicTypedef<T, Ts...> = {})
+    constexpr bool hasTaggedValue(ct::VariadicTypedef<T, Ts...> = {})
     {
-        return IsNamedParam<ct::decay_t<T>>::value || hasNamedParam(ct::VariadicTypedef<Ts...>{});
+        return IsTaggedValue<ct::decay_t<T>>::value || hasTaggedValue(ct::VariadicTypedef<Ts...>{});
     }
 
-    template <class Tag, class Type, class Storage, class Enable = void>
+    template <class Tag, class Type, class Storage>
     struct TKeywordBase
     {
-        using type = typename Tag::type;
-        using tag = typename Tag::tag;
-
-        Tag operator=(Storage data) const
+        template <class T>
+        constexpr TaggedValue<Tag> operator=(T&& data) const
         {
-            return Tag(data);
-        }
-    };
-
-    template <class Tag, class Type, class Storage>
-    struct TKeywordBase<Tag, Type, Storage, ct::EnableIf<!std::is_pointer<typename std::decay<Type>::type>::value>>
-    {
-        using type = typename Tag::type;
-        using tag = typename Tag::tag;
-
-        // This returns a TNamedParam with the same tag but it stores a copy of the data instead of a const ref.
-        // This is needed since the operator = could be passed a temporary which we can't take a const ref of
-        TNamedParam<tag, type, type> operator=(type&& data) const
-        {
-            return TNamedParam<tag, type, type>(std::forward<type>(data));
-        }
-
-        Tag operator=(Storage data) const
-        {
-            return Tag(data);
+            return TaggedValue<Tag>(std::forward<T>(data));
         }
     };
 
@@ -184,73 +138,167 @@ namespace mo
     // TKeyword<Timestamp>
     // static const constexpr TKeyword<Timestamp> timestamp;
     template <class Tag>
-    struct TKeyword : TKeywordBase<Tag, typename Tag::type, typename Tag::storage_type>
+    struct TKeyword : TKeywordBase<Tag, typename Tag::value_type, typename Tag::storage_type>
     {
-        using TKeywordBase<Tag, typename Tag::type, typename Tag::storage_type>::operator=;
+        using TKeywordBase<Tag, typename Tag::value_type, typename Tag::storage_type>::operator=;
         constexpr TKeyword()
         {
         }
     };
 
-    // This simplifies the number of overloads needed below for some compilers
     struct NullArgType
     {
+        constexpr NullArgType()
+        {
+        }
     };
 
     template <class Tag, class T>
-    struct SameTag
-    {
-        static constexpr const bool value = false;
-    };
-    template <class Tag, class U, class V>
-    struct SameTag<Tag, TNamedParam<typename Tag::tag, U, V>>
-    {
-        static constexpr const bool value = true;
-    };
-
-    template <class Tag, class T>
-    constexpr typename Tag::pointer_type getKeywordInputOptionalImpl(T&&)
+    typename Tag::pointer_type getKeywordInputOptionalImpl(T&&)
     {
         return nullptr;
     }
 
-    template <class Tag, class T, class... Ts>
-    constexpr auto getKeywordInputOptionalImpl(T&&, Ts&&... args)
-        -> ct::DisableIf<SameTag<Tag, ct::decay_t<T>>::value, typename Tag::pointer_type>
+    template <class Tag, class... Ts>
+    typename Tag::pointer_type getKeywordInputOptionalImpl(TaggedValue<Tag>&& arg, Ts&&...)
     {
+        return arg;
+    }
+
+    template <class Tag, class T, class... Ts>
+    auto getKeywordInputOptionalImpl(T&&, Ts&&... args)
+        -> ct::EnableIf<!std::is_same<ct::decay_t<T>, TaggedValue<Tag>>::value, typename Tag::pointer_type>
+    {
+        // Stip off incorrect arg and forward to next iteration
         return getKeywordInputOptionalImpl<Tag>(std::forward<Ts>(args)...);
     }
 
-    template <class Tag, class U, class V, class... Ts>
-    constexpr typename Tag::pointer_type getKeywordInputOptionalImpl(const TNamedParam<typename Tag::tag, U, V>& arg,
-                                                                     Ts&&...)
+    template <class Tag, class Types, bool STRICT>
+    struct GetKeywordInputOptional
     {
-        return arg.ptr();
-    }
+    };
 
-    template <class Tag, class... Ts>
-    constexpr typename Tag::pointer_type getKeywordInputOptional(Ts&&... args)
+    template <class Tag, bool STRICT>
+    struct GetKeywordInputOptional<Tag, ct::VariadicTypedef<>, STRICT>
     {
-        return getKeywordInputOptionalImpl<Tag>(std::forward<Ts>(args)..., NullArgType{});
+        using Pointer_t = typename Tag::pointer_type;
+
+        static Pointer_t get()
+        {
+            return nullptr;
+        }
+    };
+
+    // This is the case that just strips off an argument and forwards to the next one
+    template <class Tag, class T, class... Ts, bool STRICT>
+    struct GetKeywordInputOptional<Tag, ct::VariadicTypedef<T, Ts...>, STRICT>
+    {
+        using Pointer_t = typename Tag::pointer_type;
+        template <class U, class... Us>
+        static Pointer_t get(U&& arg, Us&&... args)
+        {
+            return GetKeywordInputOptional<Tag, ct::VariadicTypedef<Ts...>, STRICT>::get(std::forward<Us>(args)...);
+        }
+    };
+
+    // if we're not being strict, we can do an implicit conversion
+    template <class Tag, class... Ts>
+    struct GetKeywordInputOptional<Tag, ct::VariadicTypedef<typename Tag::storage_type, Ts...>, false>
+    {
+        using Pointer_t = typename Tag::pointer_type;
+        template <class U, class... Us>
+        static Pointer_t get(U&& arg, Us&&...)
+        {
+            return getPointer(arg);
+        }
+    };
+
+    template <class Tag, class... Ts, bool STRICT>
+    struct GetKeywordInputOptional<Tag, ct::VariadicTypedef<TaggedValue<Tag>, Ts...>, STRICT>
+    {
+        using Pointer_t = typename Tag::pointer_type;
+        template <class U, class... Us>
+        static Pointer_t get(U&& arg, Us&&...)
+        {
+            return arg;
+        }
+    };
+
+    template <class Tag, bool STRICT = false, class... Ts>
+    typename Tag::pointer_type getKeywordInputOptional(Ts&&... args)
+    {
+        // have to use a NullArgType for msvc due to some weirdness in template parsing
+        return GetKeywordInputOptional<Tag, ct::VariadicTypedef<ct::decay_t<Ts>...>, STRICT>::get(
+            std::forward<Ts>(args)...);
     }
 
     //////////////////////////////////////////////////////////////////
     // getKeywordInputDefault
-    template <class Tag>
-    constexpr typename Tag::storage_type getKeywordInputDefault(typename Tag::storage_type dv)
-    {
-        return dv;
-    }
 
-    template <class Tag, class T, class... Ts>
-    constexpr typename Tag::storage_type getKeywordInputDefault(typename Tag::storage_type dv, T&&, Ts&&... args)
+    template <class Tag, class T, bool STRICT>
+    struct GetKeywordInputDefault
     {
-        return getKeywordInputDefault<Tag>(dv, std::forward<Ts>(args)...);
-    }
+    };
 
     template <class Tag, class... Ts>
+    struct GetKeywordInputDefault<Tag, ct::VariadicTypedef<typename Tag::storage_type, Ts...>, false>
+    {
+        template <class U, class... Us>
+        static typename Tag::storage_type get(typename Tag::storage_type&&, U&& arg, Us&&...)
+        {
+            return std::move(arg);
+        }
+    };
+
+    // explicitly tagged value
+    template <class Tag, class... Ts, bool STRICT>
+    struct GetKeywordInputDefault<Tag, ct::VariadicTypedef<TaggedValue<Tag>, Ts...>, STRICT>
+    {
+        template <class U, class... Us>
+        static typename Tag::storage_type get(typename Tag::storage_type&&, U&& arg, Us&&...)
+        {
+            return std::move(arg);
+        }
+    };
+
+    template <class Tag, class T, class... Ts, bool STRICT>
+    struct GetKeywordInputDefault<Tag, ct::VariadicTypedef<T, Ts...>, STRICT>
+    {
+        template <class U, class... Us>
+        static typename Tag::storage_type get(typename Tag::storage_type&& dv, U&& arg, Us&&... args)
+        {
+            return GetKeywordInputDefault<Tag, ct::VariadicTypedef<Ts...>, STRICT>::get(std::move(dv),
+                                                                                        std::forward<Us>(args)...);
+        }
+    };
+
+    template <class Tag, bool STRICT>
+    struct GetKeywordInputDefault<Tag, ct::VariadicTypedef<>, STRICT>
+    {
+        static typename Tag::storage_type get(typename Tag::storage_type&& dv)
+        {
+            return std::move(dv);
+        }
+    };
+
+    template <class Tag, bool STRICT = false, class... Ts>
+    constexpr typename Tag::storage_type getKeywordInputDefault(typename Tag::storage_type dv, Ts&&... args)
+    {
+        return GetKeywordInputDefault<Tag, ct::VariadicTypedef<ct::decay_t<Ts>...>, STRICT>::get(
+            std::move(dv), std::forward<Ts>(args)...);
+    }
+
+    /*template <class Tag, class... Ts>
+    constexpr typename Tag::storage_type getKeywordInputDefault(typename Tag::storage_type dv,
+                                                                const ct::decay_t<typename Tag::storage_type>& val,
+                                                                Ts&&... args)
+    {
+        return val;
+    }*/
+
+    /*template <class Tag, class... Ts>
     constexpr typename Tag::storage_type getKeywordInputDefault(typename Tag::storage_type, Tag arg, Ts&&...)
     {
         return arg.get();
-    }
+    }*/
 } // namespace mo

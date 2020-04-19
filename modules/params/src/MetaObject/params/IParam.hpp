@@ -18,12 +18,18 @@ https://github.com/dtmoodie/MetaObject
 */
 #pragma once
 #include "Header.hpp"
-#include "MetaObject/core.hpp"
-#include "MetaObject/core/detail/forward.hpp"
-#include "MetaObject/signals/TSignal.hpp"
 #include "ParamTags.hpp"
 #include "TDataContainer.hpp"
+
+#include <MetaObject/core/detail/forward.hpp>
 #include <MetaObject/detail/Export.hpp>
+
+#include <MetaObject/core.hpp>
+
+#include <MetaObject/signals/TSignal.hpp>
+#include <MetaObject/signals/TSlot.hpp>
+
+#include <memory>
 #include <string>
 
 namespace mo
@@ -36,53 +42,60 @@ namespace mo
     using DataUpdateSignal_t = TSignal<DataUpdate_s>;
     using UpdateSlotPtr_t = std::shared_ptr<UpdateSlot_t>;
 
-    using DeleteSlot_t = TSlot<void(const IParam*)>;
-    using DeleteSignal_t = TSignal<void(const IParam*)>;
+    using DeleteSlot_t = TSlot<Delete_s>;
+    using DeleteSignal_t = TSignal<Delete_s>;
     using DeleteSlotPtr_t = std::shared_ptr<DeleteSlot_t>;
 
     // need a pure virtual base class for python bindings
-    class MO_EXPORTS ParamBase
+
+    struct MO_EXPORTS IParam
     {
-      public:
-        using Ptr_t = std::shared_ptr<ParamBase>;
-        using ConstPtr_t = std::shared_ptr<const ParamBase>;
-        using IContainerPtr_t = std::shared_ptr<IDataContainer>;
-        using IContainerConstPtr_t = std::shared_ptr<const IDataContainer>;
+        using Ptr_t = std::shared_ptr<IParam>;
+        using ConstPtr_t = std::shared_ptr<const IParam>;
 
-        ParamBase() = default;
-        ParamBase(const ParamBase&) = delete;
-        ParamBase& operator=(const ParamBase&) = delete;
-        ParamBase(ParamBase&&) = delete;
-        ParamBase& operator=(ParamBase&&) = delete;
+        IParam();
+        IParam(const IParam&) = delete;
+        IParam(IParam&&) = delete;
+        IParam& operator=(const IParam&) = delete;
+        IParam& operator=(IParam&&) = delete;
 
-        virtual ~ParamBase();
+        virtual ~IParam();
 
         // Get the name of this param
-        virtual const std::string& getName() const = 0;
+        virtual void setName(std::string name_) = 0;
+
+        // Set the root to the name of this param. IE objname:paramanme, set objname
+        virtual void setTreeRoot(std::string tree_root_) = 0;
+
+        // Set the compute stream of this param
+        virtual void setStream(IAsyncStream& stream) = 0;
+
+        // Get the name of this param
+        virtual std::string getName() const = 0;
 
         // Get the name of this parmaeter appended with the tree root. IE root_name:param_name
-        virtual const std::string getTreeName() const = 0;
+        virtual std::string getTreeName() const = 0;
 
         // Get the tree root of this param, ie the name of the owning parent object
-        virtual const std::string& getTreeRoot() const = 0;
-
-        // Get the timestamp of this param, may not exist for all params
-        virtual OptionalTime getTimestamp() const = 0;
-
-        // Get the frame number for this param. Initialized such that first
-        // update will set to 0, and increment at every update unless
-        // specified
-        virtual FrameNumber getFrameNumber() const = 0;
+        virtual std::string getTreeRoot() const = 0;
 
         // Get the compute stream of this param
         virtual IAsyncStream* getStream() const = 0;
 
-        // Get the coordinate system of this param
-        virtual const ICoordinateSystemPtr_t& getCoordinateSystem() const = 0;
+        // Virtual to allow typed overload for interface slot input
+        virtual ConnectionPtr_t registerUpdateNotifier(ISlot& f) = 0;
+        virtual ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr_t& relay) = 0;
 
-        // Implemented in concrete type
-        virtual TypeInfo getTypeInfo() const = 0;
-        virtual std::ostream& print(std::ostream& os) const = 0;
+        // Register slots to be called on delete of this param
+        virtual ConnectionPtr_t registerDeleteNotifier(TSlot<Delete_s>& f) = 0;
+        virtual ConnectionPtr_t registerDeleteNotifier(const TSignalRelay<Delete_s>::Ptr_t& relay) = 0;
+
+        // Get reference to param mutex.  If setMtx was called, this will reference the mutex that
+        // was set, otherwise one will be created
+        virtual Mutex_t& mtx() const = 0;
+
+        // Use this to share a mutex with an owning object, ie a parent.
+        virtual void setMtx(Mutex_t& mtx) = 0;
 
         // Append a flag to the Param, return previous values
         virtual ParamFlags appendFlags(ParamFlags flags_) = 0;
@@ -95,184 +108,14 @@ namespace mo
 
         virtual ParamFlags getFlags() const = 0;
 
+        virtual std::ostream& print(std::ostream& os) const = 0;
+
         virtual void load(ILoadVisitor&) = 0;
         virtual void save(ISaveVisitor&) const = 0;
         virtual void load(BinaryInputVisitor& ar) = 0;
         virtual void save(BinaryOutputVisitor& ar) const = 0;
         virtual void visit(StaticVisitor&) const = 0;
 
-        virtual IContainerPtr_t getData(const Header& desired = Header()) = 0;
-        virtual IContainerConstPtr_t getData(const Header& desired = Header()) const = 0;
-
-        template <class T>
-        std::shared_ptr<TDataContainer<T>> getTypedData(const Header& desired = Header());
-        template <class T>
-        std::shared_ptr<const TDataContainer<T>> getTypedData(const Header& desired = Header()) const;
-
-        template <class T>
-        bool getTypedData(T*, const Header& desired = Header(), Header* retrieved = nullptr) const;
-        template <class T>
-        bool getTypedData(T*, const Header& desired = Header(), Header* retrieved = nullptr);
+        virtual void setLogger(spdlog::logger& logger) = 0;
     };
-
-    class MO_EXPORTS IParam : public ParamBase
-    {
-      public:
-        using Ptr_t = std::shared_ptr<IParam>;
-        using ConstPtr_t = std::shared_ptr<const IParam>;
-
-        IParam(const IParam&) = delete;
-        IParam(IParam&&) = delete;
-        IParam& operator=(const IParam&) = delete;
-        IParam& operator=(IParam&&) = delete;
-
-        IParam(const std::string& name_ = "", ParamFlags flags_ = ParamFlags::kCONTROL, IAsyncStream* ctx_ = nullptr);
-
-        ~IParam() override;
-
-        // Get the name of this param
-        IParam* setName(const std::string& name_);
-
-        // Set the root to the name of this param. IE objname:paramanme, set objname
-        IParam* setTreeRoot(const std::string& tree_root_);
-
-        // Set the compute stream of this param
-        virtual IParam* setStream(IAsyncStream* ctx);
-
-        // Set the coordinate system for this param
-        IParam* setCoordinateSystem(const std::shared_ptr<ICoordinateSystem>& cs_);
-
-        // Get the name of this param
-        const std::string& getName() const override;
-
-        // Get the name of this parmaeter appended with the tree root. IE root_name:param_name
-        const std::string getTreeName() const override;
-
-        // Get the tree root of this param, ie the name of the owning parent object
-        const std::string& getTreeRoot() const override;
-
-        // Get the compute stream of this param
-        IAsyncStream* getStream() const override;
-
-        // Get the coordinate system of this Param
-        const ICoordinateSystemPtr_t& getCoordinateSystem() const override;
-
-        // Subscribe to this param as an output
-        void subscribe();
-        // unsubscribe to this param as an output
-        void unsubscribe();
-        // Determine if there are any input Params using this Param as an output
-        bool hasSubscriptions() const;
-
-        // Virtual to allow typed overload for interface slot input
-        virtual ConnectionPtr_t registerUpdateNotifier(ISlot& f);
-        virtual ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr_t& relay);
-
-        // Register slots to be called on delete of this param
-        virtual ConnectionPtr_t registerDeleteNotifier(ISlot& f);
-        virtual ConnectionPtr_t registerDeleteNotifier(const ISignalRelay::Ptr_t& relay);
-
-        // commit changes to a param, updates underlying meta info and emits signals accordingly
-        virtual IParam* emitUpdate(const Header& header, const UpdateFlags& flags, IAsyncStream&);
-        virtual IParam* emitUpdate(const IDataContainerPtr_t& data, const UpdateFlags& flags, IAsyncStream&);
-
-        // commit a param's value copying metadata info from another parmaeter
-        virtual IParam* emitUpdate(const IParam& other, const UpdateFlags& flags_, IAsyncStream&);
-
-        // Get reference to param mutex.  If setMtx was called, this will reference the mutex that
-        // was set, otherwise one will be created
-        Mutex_t& mtx() const;
-
-        // Use this to share a mutex with an owning object, ie a parent.
-        virtual void setMtx(Mutex_t* mtx);
-
-        // Append a flag to the Param, return previous values
-        ParamFlags appendFlags(ParamFlags flags_) override;
-
-        // Check if a single flag is set
-        bool checkFlags(ParamFlags flag) const override;
-
-        // Set flags of the param, return previous values
-        ParamFlags setFlags(ParamFlags flags_) override;
-
-        ParamFlags getFlags() const override;
-
-        // Check if has been modified
-        virtual bool modified() const;
-
-        // Set if it has been modified
-        virtual void modified(bool value);
-
-        std::ostream& print(std::ostream& os) const override;
-
-      protected:
-        std::string m_name;
-        std::string m_tree_root;
-        mutable ParamFlags m_flags;
-
-      private:
-        UpdateSignal_t m_update_signal;
-        DataUpdateSignal_t m_data_update;
-        DeleteSignal_t m_delete_signal;
-        // Set to true if modified by the user interface etc, set to false by the owning object.
-        bool m_modified = false;
-        int m_subscribers = 0;
-        mutable Mutex_t* m_mtx = nullptr;
-
-        IAsyncStream* m_stream;
-        std::shared_ptr<ICoordinateSystem> m_cs;
-    };
-
-    template <class T>
-    std::shared_ptr<TDataContainer<T>> ParamBase::getTypedData(const Header& desired)
-    {
-        auto data = getData(desired);
-        if (data)
-        {
-            return std::static_pointer_cast<TDataContainer<T>>(data);
-        }
-        return {};
-    }
-
-    template <class T>
-    std::shared_ptr<const TDataContainer<T>> ParamBase::getTypedData(const Header& desired) const
-    {
-        auto data = getData(desired);
-        if (data)
-        {
-            return std::static_pointer_cast<const TDataContainer<T>>(data);
-        }
-        return {};
-    }
-    template <class T>
-    bool ParamBase::getTypedData(T* data, const Header& desired, Header* retrieved) const
-    {
-        auto container = getTypedData<T>(desired);
-        if (container)
-        {
-            if (retrieved)
-            {
-                *retrieved = container->getHeader();
-            }
-            *data = container->data;
-            return true;
-        }
-        return false;
-    }
-
-    template <class T>
-    bool ParamBase::getTypedData(T* data, const Header& desired, Header* retrieved)
-    {
-        auto container = getTypedData<T>(desired);
-        if (container)
-        {
-            if (retrieved)
-            {
-                *retrieved = container->getHeader();
-            }
-            *data = container->data;
-            return true;
-        }
-        return false;
-    }
 } // namespace mo

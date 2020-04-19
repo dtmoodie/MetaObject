@@ -33,6 +33,7 @@ namespace mo
         virtual bool disconnect(const ISlot& slot) = 0;
         virtual bool disconnect(const ISignalRelay& relay) = 0;
         virtual bool isConnected() const = 0;
+        virtual uint32_t numSlots() const = 0;
 
         IAsyncStream* getStream() const;
         void setStream(IAsyncStream& stream);

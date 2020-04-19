@@ -9,7 +9,6 @@
 
 #include "MetaObject/types/file_types.hpp"
 #include <MetaObject/params/AccessToken.hpp>
-#include <MetaObject/params/ITAccessibleParam.hpp>
 
 #include <boost/lexical_cast.hpp>
 

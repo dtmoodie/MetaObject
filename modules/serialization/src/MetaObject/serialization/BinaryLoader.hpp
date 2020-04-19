@@ -36,9 +36,17 @@ namespace mo
         ILoadVisitor&
         operator()(IContainerTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
 
+        template <class T>
+        ILoadVisitor& operator()(T* val, const std::string& name = "", size_t cnt = 1)
+        {
+            return ILoadVisitor::operator()(val, name, cnt);
+        }
+
         VisitorTraits traits() const override;
         std::string getCurrentElementName() const override;
         size_t getCurrentContainerSize() const override;
+        std::shared_ptr<Allocator> getAllocator() const override;
+        void setAllocator(std::shared_ptr<Allocator>) override;
 
       private:
         template <class T>
@@ -47,5 +55,6 @@ namespace mo
 
         std::istream& m_is;
         size_t m_current_size = 0;
+        std::shared_ptr<Allocator> m_allocator;
     };
 } // namespace mo

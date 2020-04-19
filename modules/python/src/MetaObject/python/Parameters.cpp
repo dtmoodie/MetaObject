@@ -1,11 +1,9 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include "Parameters.hpp"
 #include "MetaObject/core/TypeTable.hpp"
-#include "MetaObject/core/TypeTable.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
-#include "MetaObject/params/ICoordinateSystem.hpp"
 #include "MetaObject/params/IParam.hpp"
-#include "MetaObject/params/InputParam.hpp"
+#include "MetaObject/params/ISubscriber.hpp"
 #include "MetaObject/python/DataConverter.hpp"
 #include "PythonAllocator.hpp"
 #include <boost/python.hpp>
@@ -15,19 +13,19 @@
 
 namespace mo
 {
-    std::string printParam(const mo::ParamBase* param)
+    std::string printParam(const IParam* param)
     {
         std::stringstream ss;
         param->print(ss);
         return ss.str();
     }
 
-    std::string printInputParam(const mo::InputParam* param)
+    std::string printInputParam(const mo::ISubscriber* param)
     {
         std::stringstream ss;
         ss << printParam(param);
         ss << "\n";
-        auto input = param->getInputParam();
+        auto input = param->getPublisher();
         if (input)
         {
             ss << printParam(input);
@@ -56,57 +54,78 @@ namespace mo
         return ss.str();
     }
 
-    boost::python::object getData(const mo::ParamBase* param)
+    boost::python::object getData(const IParam* param)
     {
-        auto getter = mo::python::DataConverterRegistry::instance()->getGetter(param->getTypeInfo());
-        if (getter)
+        if (param->checkFlags(ParamFlags::kCONTROL))
         {
-            return getter(param);
+            auto control = static_cast<const IControlParam*>(param);
+            if (control)
+            {
+                auto getter = mo::python::DataConverterRegistry::instance()->getGetter(control->getTypeInfo());
+                if (getter)
+                {
+                    return getter(control);
+                }
+                MO_LOG(trace,
+                       "Accessor function not found for for {} Available converters:\n {}",
+                       control->getTypeInfo(),
+                       printTypes());
+                return boost::python::object(std::string("No to python converter registered for ") +
+                                             TypeTable::instance()->typeToName(control->getTypeInfo()));
+            }
         }
-        MO_LOG(trace,
-               "Accessor function not found for for {} Available converters:\n {}",
-               mo::TypeTable::instance()->typeToName(param->getTypeInfo()),
-               printTypes());
-        return boost::python::object(std::string("No to python converter registered for " +
-                                                 mo::TypeTable::instance()->typeToName(param->getTypeInfo())));
+        return boost::python::object();
     }
 
     bool setData(mo::IParam* param, const boost::python::object& obj)
     {
-        auto setter = mo::python::DataConverterRegistry::instance()->getSetter(param->getTypeInfo());
-        if (setter)
+        if (param->checkFlags(ParamFlags::kCONTROL))
         {
-            return setter(param, obj);
+            auto control = static_cast<IControlParam*>(param);
+            if (control)
+            {
+                auto setter = mo::python::DataConverterRegistry::instance()->getSetter(control->getTypeInfo());
+                if (setter)
+                {
+                    return setter(control, obj);
+                }
+                MO_LOG(trace, "Setter function not found for {}", control->getTypeInfo());
+            }
         }
-        MO_LOG(trace, "Setter function not found for {}", mo::TypeTable::instance()->typeToName(param->getTypeInfo()));
         return false;
     }
 
-    std::string getDataTypeName(const mo::ParamBase* param)
+    std::string getDataTypeName(const mo::IParam* param)
     {
-        return mo::TypeTable::instance()->typeToName(param->getTypeInfo());
+        if (param->checkFlags(ParamFlags::kCONTROL))
+        {
+            auto control = static_cast<const IControlParam*>(param);
+            if (control)
+            {
+                return mo::TypeTable::instance()->typeToName(control->getTypeInfo());
+            }
+        }
+        return {};
     }
 
-    python::ParamCallbackContainer::ParamCallbackContainer(mo::IParam* ptr, const boost::python::object& obj)
+    python::ParamCallbackContainer::ParamCallbackContainer(mo::IControlParam* ptr, const boost::python::object& obj)
         : m_ptr(ptr)
         , m_callback(obj)
     {
-        m_slot = std::bind(&ParamCallbackContainer::onParamUpdate,
-                           this,
-                           std::placeholders::_1,
-                           std::placeholders::_2,
-                           std::placeholders::_3);
-        m_delete_slot = std::bind(&ParamCallbackContainer::onParamDelete, this, std::placeholders::_1);
+        m_slot.bind(&ParamCallbackContainer::onParamUpdate, this);
+        m_delete_slot.bind(&ParamCallbackContainer::onParamDelete, this);
         if (ptr)
         {
             m_getter = mo::python::DataConverterRegistry::instance()->getGetter(ptr->getTypeInfo());
-            update_connection = ptr->registerUpdateNotifier(&m_slot);
-            del_connection = ptr->registerDeleteNotifier(&m_delete_slot);
+            update_connection = ptr->registerUpdateNotifier(m_slot);
+            del_connection = ptr->registerDeleteNotifier(m_delete_slot);
         }
     }
 
-    void python::ParamCallbackContainer::onParamUpdate(IParam* param, Header header, UpdateFlags flags)
+    void
+    python::ParamCallbackContainer::onParamUpdate(const IParam& param, Header header, UpdateFlags flags, IAsyncStream&)
     {
+        // TODO use stream?
         if (m_ptr == nullptr)
         {
             return;
@@ -118,9 +137,9 @@ namespace mo
         }
         if (!m_getter)
         {
-            m_getter = mo::python::DataConverterRegistry::instance()->getGetter(param->getTypeInfo());
+            m_getter = mo::python::DataConverterRegistry::instance()->getGetter(m_ptr->getTypeInfo());
         }
-        auto obj = m_getter(param);
+        auto obj = m_getter(m_ptr);
         if (obj)
         {
             try
@@ -143,7 +162,7 @@ namespace mo
         }
     }
 
-    void python::ParamCallbackContainer::onParamDelete(const mo::ParamBase*)
+    void python::ParamCallbackContainer::onParamDelete(const IParam&)
     {
         m_ptr = nullptr;
     }
@@ -167,9 +186,15 @@ namespace mo
 
     void addCallback(mo::IParam* param, const boost::python::object& obj)
     {
-        auto registry = python::ParamCallbackContainer::registry();
-        (*registry)[param].emplace_back(
-            python::ParamCallbackContainer::Ptr_t(new python::ParamCallbackContainer(param, obj)));
+        if (param->checkFlags(ParamFlags::kCONTROL))
+        {
+            if (auto control = static_cast<IControlParam*>(param))
+            {
+                auto registry = python::ParamCallbackContainer::registry();
+                (*registry)[param].emplace_back(
+                    python::ParamCallbackContainer::Ptr_t(new python::ParamCallbackContainer(control, obj)));
+            }
+        }
     }
 
     std::string printTime(const mo::Time& ts)
@@ -191,32 +216,24 @@ namespace mo
         boost::python::scope().attr("datatypes") = datatype_module;
         boost::python::scope datatype_scope = datatype_module;
 
-        boost::python::class_<ParamBase, boost::noncopyable>("ParamBase", boost::python::no_init)
-            .def("getName", &ParamBase::getTreeName)
+        boost::python::class_<IParam, boost::noncopyable>("IParam", boost::python::no_init)
+            .def("setCallback", &addCallback)
+            .def("getName", &IParam::getTreeName)
             .def("getType", &getDataTypeName)
             .def("__repr__", &printParam)
             .add_property("data", &getData, &setData);
 
-        boost::python::class_<IParam, boost::noncopyable, boost::python::bases<ParamBase>>("IParam",
-                                                                                           boost::python::no_init)
-            .def("setCallback", &addCallback);
-
-        boost::python::implicitly_convertible<IParam*, ParamBase*>();
-
-        boost::python::class_<std::vector<ParamBase*>> param_vec("ParamVec", boost::python::no_init);
-        param_vec.def(boost::python::vector_indexing_suite<std::vector<ParamBase*>>());
-
         boost::python::class_<std::vector<IParam*>> iparam_vec("IParamVec", boost::python::no_init);
         iparam_vec.def(boost::python::vector_indexing_suite<std::vector<IParam*>>());
 
-        boost::python::class_<InputParam, InputParam*, boost::python::bases<ParamBase>, boost::noncopyable> input_param(
+        boost::python::class_<ISubscriber, ISubscriber*, boost::python::bases<IParam>, boost::noncopyable> input_param(
             "InputParam", boost::python::no_init);
         input_param.def("__repr__", &printInputParam);
 
-        boost::python::implicitly_convertible<InputParam*, IParam*>();
+        boost::python::implicitly_convertible<ISubscriber*, IParam*>();
 
-        boost::python::class_<std::vector<InputParam*>> input_param_vec("InputParamVec", boost::python::no_init);
-        input_param_vec.def(boost::python::vector_indexing_suite<std::vector<InputParam*>>());
+        boost::python::class_<std::vector<ISubscriber*>> input_param_vec("InputParamVec", boost::python::no_init);
+        input_param_vec.def(boost::python::vector_indexing_suite<std::vector<ISubscriber*>>());
 
         // boost::python::class_<ICoordinateSystem, std::shared_ptr<ICoordinateSystem>, boost::noncopyable>
         // cs_obj("ICoordinateSystem", boost::python::no_init);
@@ -248,4 +265,4 @@ namespace mo
         boost::python::class_<mo::OptionalTime, boost::noncopyable> optional_time("OptionalTime");
         // optional_time.def("get", &getTime);
     }
-}
+} // namespace mo

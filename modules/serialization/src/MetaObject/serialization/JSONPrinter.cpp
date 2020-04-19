@@ -118,7 +118,13 @@ namespace mo
 
     ISaveVisitor& JSONSaver::operator()(const void* val, const std::string& name, const size_t cnt)
     {
-        m_ar.saveBinaryValue(val, cnt, name.c_str());
+        const char* name_ptr = nullptr;
+        if (!name.empty())
+        {
+            name_ptr = name.c_str();
+        }
+
+        m_ar.saveBinaryValue(val, cnt, name_ptr);
         return *this;
     }
 
@@ -141,29 +147,44 @@ namespace mo
 
     ISaveVisitor& JSONSaver::operator()(IContainerTraits* val, const void* inst, const std::string& name, size_t cnt)
     {
+        const bool saving_string = val->type() == TypeInfo(typeid(std::string));
+        const bool saving_binary = val->valueType() == TypeInfo::Void();
+        const bool saving_string_dictionary = val->keyType() == TypeInfo(typeid(std::string));
+
         if (!name.empty())
         {
             m_ar.setNextName(name.c_str());
         }
-        if (val->type() != TypeInfo(typeid(std::string)))
-        {
-            m_ar.startNode();
-            if (val->keyType() != TypeInfo(typeid(std::string)))
-            {
-                m_ar.makeArray();
-            }
-        }
-        if (val->type() == TypeInfo::create<std::string>())
+
+        if (saving_string)
         {
             m_ar.writeName();
             m_ar.saveValue(*static_cast<const std::string*>(inst));
             return *this;
         }
+
+        if (saving_binary)
+        {
+            auto size = val->getContainerSize(inst);
+            m_ar(cereal::make_nvp("size", size));
+        }
+
+        if (!saving_binary)
+        {
+            m_ar.startNode();
+            if (!saving_string_dictionary)
+            {
+                m_ar.makeArray();
+            }
+        }
+
         val->save(*this, inst, name, cnt);
-        if (val->type() != TypeInfo(typeid(std::string)))
+
+        if (!saving_binary)
         {
             m_ar.finishNode();
         }
+
         return *this;
     }
 
@@ -173,6 +194,16 @@ namespace mo
         out.supports_named_access = true;
         out.reader = false;
         return out;
+    }
+
+    std::shared_ptr<Allocator> JSONSaver::getAllocator() const
+    {
+        return m_allocator;
+    }
+
+    void JSONSaver::setAllocator(std::shared_ptr<Allocator> alloc)
+    {
+        m_allocator = std::move(alloc);
     }
 
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -299,7 +330,12 @@ namespace mo
 
     ILoadVisitor& JSONLoader::operator()(void* val, const std::string& name, const size_t cnt)
     {
-        m_ar.loadBinaryValue(val, cnt, name.c_str());
+        const char* name_ptr = nullptr;
+        if (!name.empty())
+        {
+            name_ptr = name.c_str();
+        }
+        m_ar.loadBinaryValue(val, cnt, name_ptr);
         return *this;
     }
 
@@ -331,8 +367,8 @@ namespace mo
     {
         MO_ASSERT_EQ(cnt, 1);
         std::string container_name = name;
-        const std::string node_name = m_ar.getNodeName();
-        if (val->type() == TypeInfo::create<std::string>() && name == node_name)
+        const char* node_name = m_ar.getNodeName();
+        if (val->type() == TypeInfo::create<std::string>() && node_name && name == node_name)
         {
             std::string val;
             m_ar.loadValue(val);
@@ -343,44 +379,66 @@ namespace mo
         {
             m_ar.setNextName(name.c_str());
         }
-        if (val->type() != TypeInfo(typeid(std::string)))
+        const bool loading_string = val->type() == TypeInfo::create<std::string>();
+        const bool loading_binary = val->valueType() == TypeInfo::Void();
+        const bool loading_string_dict = val->keyType() == TypeInfo::create<std::string>();
+
+        if (!loading_string)
         {
-            m_ar.startNode();
-            if (node_name == name)
+            if (node_name && !loading_binary)
+            {
+                m_ar.startNode();
+            }
+
+            if (node_name && name == node_name)
             {
                 container_name.clear();
             }
 
-            if (val->keyType() != TypeInfo(typeid(std::string)))
+            if (loading_binary)
             {
-                uint64_t size;
-                m_ar.loadSize(size);
+                uint64_t size = 0;
+                m_ar(cereal::make_nvp("size", size));
                 val->setContainerSize(size, inst);
                 m_current_size = size;
             }
             else
             {
-                uint64_t count = 0;
-                while (true)
+                if (!loading_string_dict)
                 {
-                    const auto name = m_ar.getNodeName();
-                    if (!name)
-                    {
-                        break;
-                    }
-                    count += 1;
-                    m_ar.startNode();
-                    m_ar.finishNode();
+                    uint64_t size;
+                    m_ar.loadSize(size);
+                    val->setContainerSize(size, inst);
+                    m_current_size = size;
                 }
-                val->setContainerSize(count, inst);
-                m_current_size = count;
-                m_ar.finishNode();
-                m_ar.setNextName(node_name.c_str());
-                m_ar.startNode();
+                else
+                {
+                    uint64_t count = 0;
+                    while (true)
+                    {
+                        const auto name = m_ar.getNodeName();
+                        if (!name)
+                        {
+                            break;
+                        }
+                        count += 1;
+                        m_ar.startNode();
+                        m_ar.finishNode();
+                    }
+                    val->setContainerSize(count, inst);
+                    m_current_size = count;
+                    m_ar.finishNode();
+                    if (node_name)
+                    {
+                        m_ar.setNextName(node_name);
+                    }
+
+                    m_ar.startNode();
+                }
             }
         }
         val->load(*this, inst, container_name, cnt);
-        if (val->type() != TypeInfo(typeid(std::string)))
+        if (!loading_string && !loading_binary)
         {
             m_ar.finishNode();
         }
@@ -403,5 +461,15 @@ namespace mo
     size_t JSONLoader::getCurrentContainerSize() const
     {
         return m_current_size;
+    }
+
+    std::shared_ptr<Allocator> JSONLoader::getAllocator() const
+    {
+        return m_allocator;
+    }
+
+    void JSONLoader::setAllocator(std::shared_ptr<Allocator> alloc)
+    {
+        m_allocator = std::move(alloc);
     }
 } // namespace mo

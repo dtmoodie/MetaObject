@@ -143,4 +143,14 @@ namespace mo
         out.supports_named_access = false;
         return out;
     }
-}
+
+    std::shared_ptr<Allocator> BinarySaver::getAllocator() const
+    {
+        return m_allocator;
+    }
+
+    void BinarySaver::setAllocator(std::shared_ptr<Allocator> alloc)
+    {
+        m_allocator = std::move(alloc);
+    }
+} // namespace mo

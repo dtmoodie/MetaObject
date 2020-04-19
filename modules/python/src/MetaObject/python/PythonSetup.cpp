@@ -41,21 +41,11 @@
 
 namespace boost
 {
-    inline const mo::ParamBase* get_pointer(const mo::ParamBase* ptr)
+    inline const mo::IParam* get_pointer(const mo::IParam* ptr)
     {
         return ptr;
     }
-
-    inline const mo::ICoordinateSystem* get_pointer(const mo::ICoordinateSystem* cs)
-    {
-        return cs;
-    }
-
-    inline const mo::ICoordinateSystem* get_pointer(const std::shared_ptr<mo::ICoordinateSystem>& ptr)
-    {
-        return ptr.get();
-    }
-}
+} // namespace boost
 
 namespace
 {
@@ -84,7 +74,7 @@ namespace
     {
     }
 #endif
-}
+} // namespace
 
 namespace mo
 {
@@ -92,7 +82,7 @@ namespace mo
 
     void setupPlugins(const std::string& module_name);
 
-    inline const mo::ParamBase* get_pointer(const mo::ParamBase* ptr)
+    inline const mo::IParam* get_pointer(const mo::IParam* ptr)
     {
         return ptr;
     }
@@ -493,8 +483,8 @@ namespace mo
 
             return lib_guard->m_system_table;
         }
-    }
-}
+    } // namespace python
+} // namespace mo
 
 BOOST_PYTHON_MODULE(metaobject)
 {

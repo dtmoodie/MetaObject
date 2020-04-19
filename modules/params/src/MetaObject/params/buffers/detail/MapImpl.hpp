@@ -6,7 +6,7 @@ namespace mo
     {
         template <class T>
         Map<T>::Map(const std::string& name)
-            : ITInputParam<T>(name)
+            : TSubscriber<T>(name)
         {
             this->appendFlags(ParamFlags::kBUFFER);
         }

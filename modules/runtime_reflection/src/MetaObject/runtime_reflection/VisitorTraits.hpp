@@ -1,13 +1,16 @@
 #ifndef MO_VISITATION_VISITORTRAITS_HPP
 #define MO_VISITATION_VISITORTRAITS_HPP
+#include "StructTraits.hpp"
 #include "TraitRegistry.hpp"
 #include "type_traits.hpp"
-#include "StructTraits.hpp"
 
 #include <MetaObject/logging/logging.hpp>
 
 #include <ct/reflect.hpp>
+#include <ct/reflect/print.hpp>
 #include <ct/type_traits.hpp>
+
+#include <sstream>
 
 namespace mo
 {
@@ -19,9 +22,10 @@ namespace mo
     auto visitValue(ILoadVisitor& visitor, T& obj, const Indexer<I> idx) -> ct::EnableIf<ct::IsWritable<T, I>::value>
     {
         auto accessor = ct::Reflect<T>::getPtr(idx);
-        using RefType = typename ct::ReferenceType<typename ct::SetType<decltype(accessor)>::type>::Type;
-        RefType ref = static_cast<RefType>(accessor.set(obj));
-        visitor(&ref, ct::getName<I, T>());
+        using Ret_t = decltype(accessor.set(obj));
+        Ret_t tmp = accessor.set(obj);
+        auto ptr = &tmp;
+        visitor(ptr, ct::getName<I, T>());
     }
 
     template <class T, index_t I>
@@ -70,15 +74,27 @@ namespace mo
         visitValue(visitor, obj, idx);
     }
 
+    template <class T, index_t I, class U = void>
+    using EnableVisitation =
+        ct::EnableIf<!ct::IsMemberFunction<T, I>::value &&
+                         !ct::IsEnumField<decltype(ct::Reflect<T>::getPtr(ct::Indexer<I>{}))>::value,
+                     U>;
+
+    template <class T, index_t I, class U = void>
+    using DisableVisitation =
+        ct::EnableIf<ct::IsMemberFunction<T, I>::value ||
+                         ct::IsEnumField<decltype(ct::Reflect<T>::getPtr(ct::Indexer<I>{}))>::value,
+                     U>;
+
     template <class T, index_t I>
-    auto visitValue(StaticVisitor& visitor, const Indexer<I> idx) -> ct::DisableIfMemberFunction<T, I>
+    auto visitValue(StaticVisitor& visitor, const Indexer<I> idx) -> EnableVisitation<T, I>
     {
         using Type = typename ct::GetType<decltype(ct::Reflect<T>::getPtr(idx))>::type;
         visitor.visit<typename std::decay<Type>::type>(ct::getName<I, T>());
     }
 
     template <class T, index_t I>
-    auto visitValue(StaticVisitor&, const Indexer<I>) -> ct::EnableIfMemberFunction<T, I>
+    auto visitValue(StaticVisitor&, const Indexer<I>) -> DisableVisitation<T, I>
     {
     }
 
@@ -102,7 +118,7 @@ namespace mo
         {
         }
 
-        void load(ILoadVisitor& visitor, void* instance, const std::string& , size_t ) const override
+        void load(ILoadVisitor& visitor, void* instance, const std::string&, size_t) const override
         {
             auto ptr = static_cast<T*>(instance);
             visitHelper(visitor, *ptr, ct::Reflect<T>::end());
@@ -125,6 +141,39 @@ namespace mo
         }
     };
 
-}
+    template <class T>
+    struct TTraits<T, 5, ct::EnableIfIsEnum<T>> : public StructBase<T>
+    {
+        void load(ILoadVisitor& visitor, void* instance, const std::string&, size_t) const override
+        {
+            auto ptr = static_cast<T*>(instance);
+            std::stringstream ss;
+            ss << *ptr;
+            auto str = ss.str();
+            visitor(&str, "value");
+            *ptr = ct::fromString<T>(str);
+        }
+
+        void save(ISaveVisitor& visitor, const void* instance, const std::string&, size_t) const override
+        {
+            auto ptr = static_cast<const T*>(instance);
+            std::stringstream ss;
+            ss << *ptr;
+            auto str = ss.str();
+            visitor(&str, "value");
+        }
+
+        void visit(StaticVisitor& visitor, const std::string&) const override
+        {
+            visitHelper<T>(visitor, ct::Reflect<T>::end());
+        }
+
+        std::string name() const override
+        {
+            return ct::Reflect<T>::getName();
+        }
+    };
+
+} // namespace mo
 
 #endif // MO_VISITATION_VISITORTRAITS_HPP

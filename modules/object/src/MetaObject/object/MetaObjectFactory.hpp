@@ -103,7 +103,7 @@ namespace mo
         virtual bool isCompileComplete() = 0;
         virtual bool swapObjects() = 0;
         virtual void setCompileCallback(std::function<void(const std::string, int)>& f) = 0;
-        virtual std::shared_ptr<Connection> connectConstructorAdded(TSlot<void(void)>* slot) = 0;
+        virtual std::shared_ptr<Connection> connectConstructorAdded(TSlot<void(void)>& slot) = 0;
 
         template <class T>
         std::vector<IObjectConstructor*> getConstructors();

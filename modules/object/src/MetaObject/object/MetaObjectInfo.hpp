@@ -5,16 +5,17 @@
 
 #include "MetaObject/core/detail/HelperMacros.hpp"
 
-#include "MetaObject/object/MetaObjectInfoDatabase.hpp"
-#include "MetaObject/object/detail/MetaObjectMacros.hpp"
+#include <MetaObject/object/MetaObjectInfoDatabase.hpp>
+#include <MetaObject/object/detail/MetaObjectMacros.hpp>
 
-#include "MetaObject/params/ParamInfo.hpp"
-#include "MetaObject/params/TInputParam.hpp"
-#include "MetaObject/params/TParamPtr.hpp"
-#include <MetaObject/params/TParamOutput.hpp>
+#include <MetaObject/params/ParamInfo.hpp>
+#include <MetaObject/params/TControlParam.hpp>
+#include <MetaObject/params/TParamPtr.hpp>
+#include <MetaObject/params/TPublisher.hpp>
+#include <MetaObject/params/TSubscriberPtr.hpp>
 
-#include "MetaObject/signals/SignalInfo.hpp"
-#include "MetaObject/signals/SlotInfo.hpp"
+#include <MetaObject/signals/SignalInfo.hpp>
+#include <MetaObject/signals/SlotInfo.hpp>
 
 #include <RuntimeObjectSystem/ISimpleSerializer.h>
 
@@ -28,7 +29,7 @@
 namespace mo
 {
     template <class... T>
-    class TMultiInput;
+    class TMultiSubscriber;
     template <class... T>
     class TMultiOutput;
 
@@ -102,46 +103,59 @@ namespace mo
         }
 
         template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
-        void initParam(ct::MemberObjectPointer<mo::TInputParamPtr<DTYPE> CTYPE::*, FLAGS, METADATA> ptr, ct::Indexer<I>)
+        void initParam(ct::MemberObjectPointer<mo::TSubscriberPtr<DTYPE> CTYPE::*, FLAGS, METADATA> ptr, ct::Indexer<I>)
         {
             constexpr const ct::index_t J = ct::indexOfField<T>(ct::getName<I, T>().slice(0, -6));
             ct::StaticInequality<ct::index_t, J, -1>{};
             auto wrapped_field_ptr = ct::Reflect<T>::getPtr(Indexer<J>{});
-            auto param_ptr = &ptr.set(*this);
-            param_ptr->setName(ct::getName<I, T>().slice(0, -6));
-            param_ptr->setUserDataPtr(&wrapped_field_ptr.set(*this));
-            T::addParam(param_ptr);
-        }
-
-        template <class DTYPE, class CTYPE, uint64_t PARAM_FLAGS, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
-        void initParam(ct::MemberObjectPointer<mo::TParamOutput<DTYPE, PARAM_FLAGS> CTYPE::*, FLAGS, METADATA> ptr,
-                       ct::Indexer<I>)
-        {
-            auto param_ptr = &ptr.set(*this);
-            param_ptr->setName(ct::getName<I, T>());
-            auto initializer = ct::metadata<ct::Initializer<DTYPE>>(ptr);
-            if (initializer)
-            {
-                param_ptr->updateData(initializer->getInitialValue());
-            }
-            T::addParam(param_ptr);
+            auto& param = ptr.set(*this);
+            param.setName(ct::getName<I, T>().slice(0, -6));
+            param.setUserDataPtr(&wrapped_field_ptr.set(*this));
+            T::addParam(param);
         }
 
         template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
-        void initParam(ct::MemberObjectPointer<mo::TParamPtr<DTYPE> CTYPE::*, FLAGS, METADATA> ptr, ct::Indexer<I>)
+        void initParam(ct::MemberObjectPointer<mo::TPublisher<DTYPE> CTYPE::*, FLAGS, METADATA> ptr, ct::Indexer<I>)
+        {
+            auto& param = ptr.set(*this);
+            param.setName(ct::getName<I, T>());
+            auto initializer = ct::metadata<ct::Initializer<DTYPE>>(ptr);
+            if (initializer)
+            {
+                param.publish(initializer->getInitialValue());
+            }
+            T::addParam(param);
+        }
+
+        template <class DTYPE, class CTYPE, uint64_t PARAM_FLAGS, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
+        void initParam(ct::MemberObjectPointer<mo::TFPublisher<DTYPE, PARAM_FLAGS> CTYPE::*, FLAGS, METADATA> ptr,
+                       ct::Indexer<I>)
+        {
+            auto& param = ptr.set(*this);
+            param.setName(ct::getName<I, T>());
+            auto initializer = ct::metadata<ct::Initializer<DTYPE>>(ptr);
+            if (initializer)
+            {
+                param.publish(initializer->getInitialValue());
+            }
+            T::addParam(param);
+        }
+
+        template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
+        void initParam(ct::MemberObjectPointer<mo::TControlParam<DTYPE*> CTYPE::*, FLAGS, METADATA> ptr, ct::Indexer<I>)
         {
             constexpr const ct::index_t J = ct::indexOfField<T>(ct::getName<I, T>().slice(0, -6));
             ct::StaticInequality<ct::index_t, J, -1>{};
             auto wrapped_field_ptr = ct::Reflect<T>::getPtr(Indexer<J>{});
-            auto param_ptr = &ptr.set(*this);
-            param_ptr->setName(ct::getName<I, T>().slice(0, -6));
-            param_ptr->updatePtr(&wrapped_field_ptr.set(*this), false);
+            auto& param = ptr.set(*this);
+            param.setName(ct::getName<I, T>().slice(0, -6));
+            param.setUserDataPtr(&wrapped_field_ptr.set(*this));
             auto initializer = ct::metadata<ct::Initializer<DTYPE>>(wrapped_field_ptr);
             if (initializer)
             {
                 wrapped_field_ptr.set(*this) = initializer->getInitialValue();
             }
-            T::addParam(param_ptr);
+            T::addParam(param);
         }
 
         template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
@@ -176,14 +190,21 @@ namespace mo
 
         template <class SERIALIZER, class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
         void serializeParam(SERIALIZER&,
-                            ct::MemberObjectPointer<mo::TParamPtr<DTYPE> CTYPE::*, FLAGS, METADATA>,
+                            ct::MemberObjectPointer<mo::TControlParam<DTYPE*> CTYPE::*, FLAGS, METADATA>,
                             ct::Indexer<I>) const
         {
         }
 
         template <class SERIALIZER, class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
         void serializeParam(SERIALIZER&,
-                            ct::MemberObjectPointer<mo::TInputParamPtr<DTYPE> CTYPE::*, FLAGS, METADATA>,
+                            ct::MemberObjectPointer<mo::TSubscriberPtr<DTYPE> CTYPE::*, FLAGS, METADATA>,
+                            ct::Indexer<I>) const
+        {
+        }
+
+        template <class SERIALIZER, class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
+        void serializeParam(SERIALIZER&,
+                            ct::MemberObjectPointer<mo::TPublisher<DTYPE> CTYPE::*, FLAGS, METADATA>,
                             ct::Indexer<I>) const
         {
         }
@@ -191,12 +212,12 @@ namespace mo
         template <class SERIALIZER,
                   class DTYPE,
                   class CTYPE,
-                  mo::ParamFlags::EnumValueType PARAM_FLAGS,
+                  uint64_t PARAM_FLAGS,
                   ct::Flag_t FLAGS,
                   class METADATA,
                   ct::index_t I>
         void serializeParam(SERIALIZER&,
-                            ct::MemberObjectPointer<mo::TParamOutput<DTYPE, PARAM_FLAGS> CTYPE::*, FLAGS, METADATA>,
+                            ct::MemberObjectPointer<mo::TFPublisher<DTYPE, PARAM_FLAGS> CTYPE::*, FLAGS, METADATA>,
                             ct::Indexer<I>) const
         {
         }
@@ -261,7 +282,7 @@ namespace mo
 
         template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
         static void paramInfo(std::vector<mo::ParamInfo*>& vec,
-                              ct::MemberObjectPointer<mo::TInputParamPtr<DTYPE> CTYPE::*, FLAGS, METADATA> ptr,
+                              ct::MemberObjectPointer<mo::TSubscriberPtr<DTYPE> CTYPE::*, FLAGS, METADATA> ptr,
                               ct::Indexer<I>)
         {
             static mo::ParamInfo param_info(
@@ -271,7 +292,7 @@ namespace mo
 
         template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
         static void paramInfo(std::vector<mo::ParamInfo*>& vec,
-                              ct::MemberObjectPointer<mo::TParamPtr<DTYPE> CTYPE::*, FLAGS, METADATA> ptr,
+                              ct::MemberObjectPointer<mo::TControlParam<DTYPE*> CTYPE::*, FLAGS, METADATA> ptr,
                               ct::Indexer<I>)
         {
             static mo::ParamInfo param_info(
@@ -328,7 +349,7 @@ namespace mo
                        const ct::Indexer<I>,
                        const bool)
         {
-            this->addSignal(&ptr.set(*this), ptr.m_name);
+            this->addSignal(ptr.set(*this), ptr.m_name);
             return 1;
         }
 

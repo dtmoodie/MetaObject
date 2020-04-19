@@ -45,6 +45,10 @@ namespace mo
 
 namespace ct
 {
+    REFLECT_BEGIN(mo::SourceId)
+        PUBLIC_ACCESS(id)
+    REFLECT_END;
+
     REFLECT_BEGIN(mo::Header)
         PUBLIC_ACCESS(timestamp)
         PUBLIC_ACCESS(frame_number)

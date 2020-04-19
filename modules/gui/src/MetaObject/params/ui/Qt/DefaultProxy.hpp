@@ -1,8 +1,8 @@
 #pragma once
 #include "IParamProxy.hpp"
-#include "MetaObject/params/IParam.hpp"
-#include "MetaObject/signals/Connection.hpp"
-#include "MetaObject/signals/TSlot.hpp"
+#include <MetaObject/params/IControlParam.hpp>
+#include <MetaObject/signals/Connection.hpp>
+#include <MetaObject/signals/TSlot.hpp>
 namespace mo
 {
     class Context;
@@ -17,19 +17,19 @@ namespace mo
             class MO_EXPORTS DefaultProxy : public IParamProxy
             {
               public:
-                DefaultProxy(IParam* param);
-                virtual bool checkParam(IParam* param) const;
-                bool setParam(IParam* param);
+                DefaultProxy(IControlParam* param);
+                virtual bool checkParam(IControlParam* param) const;
+                bool setParam(IControlParam* param);
                 QWidget* getParamWidget(QWidget* parent);
 
               protected:
-                IParam* param;
-                TSlot<void(IParam const*)> delete_slot;
+                IControlParam* m_param;
+                TSlot<void(const IParam&)> delete_slot;
                 UpdateSlot_t update_slot;
                 virtual void onUiUpdate(QObject* source);
-                virtual void onParamUpdate(IParam*, Header, UpdateFlags);
-                virtual void onParamDelete(IParam const*);
+                virtual void onParamUpdate(const IParam&, Header, UpdateFlags, IAsyncStream&);
+                virtual void onParamDelete(const IParam&);
             };
-        }
-    }
-}
+        } // namespace qt
+    }     // namespace UI
+} // namespace mo

@@ -7,7 +7,8 @@
 
 namespace mo
 {
-    class ParamBase;
+    template <class BASE>
+    struct TParam;
     class IParam;
     class ISlot;
     class ISignal;
@@ -42,8 +43,8 @@ namespace mo
 
     using Type = NamedType<const mo::TypeInfo>;
 
-    template <class T>
-    using Param = NamedType<T, ParamBase>;
+    template <class U>
+    using Param = NamedType<TParam<U>>;
 
     template <class T>
     using Data = NamedType<T>;
@@ -52,12 +53,6 @@ namespace mo
     Data<T> tagData(T* data)
     {
         return Data<T>(data);
-    }
-
-    template <class T>
-    Param<T> tagParam(T& param)
-    {
-        return Param<T>(&param);
     }
 
     template <class T>

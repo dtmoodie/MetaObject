@@ -13,7 +13,7 @@ namespace mo
 
     const TypeInfo& TypeInfo::Void()
     {
-        static TypeInfo g_info(typeid(void));
+        static const TypeInfo g_info(typeid(void));
         return g_info;
     }
     TypeInfo::TypeInfo()
@@ -118,4 +118,4 @@ namespace std
     {
         return std::hash<const std::type_info*>{}(s.ptr());
     }
-}
+} // namespace std

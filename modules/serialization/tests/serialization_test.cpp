@@ -481,63 +481,83 @@ struct Serialization<std::shared_ptr<T>> : ::testing::Test
     }
 };
 
-TYPED_TEST_SUITE_P(Serialization);
-
-TYPED_TEST_P(Serialization, binaryCerealSaveCerealLoad)
+template <class T>
+struct SerializationBinary : Serialization<T>
 {
-    this->saveBinaryCereal("test.bin");
-    this->loadBinaryCereal("test.bin");
+};
+
+template <class T>
+struct SerializationJson : Serialization<T>
+{
+};
+
+TYPED_TEST_SUITE_P(SerializationBinary);
+TYPED_TEST_SUITE_P(SerializationJson);
+
+TYPED_TEST_P(SerializationBinary, CerealSave)
+{
+    this->saveBinaryCereal("cereal_test.bin");
 }
 
-TYPED_TEST_P(Serialization, binaryRuntimeSaveCerealLoad)
+TYPED_TEST_P(SerializationBinary, RuntimeSave)
 {
-    this->saveBinaryRuntime("test.bin");
-    this->loadBinaryCereal("test.bin");
+    this->saveBinaryRuntime("runtime_test.bin");
 }
 
-TYPED_TEST_P(Serialization, binaryRuntimeSaveRuntimeLoad)
+TYPED_TEST_P(SerializationBinary, CerealSaveCerealLoad)
 {
-    this->saveBinaryRuntime("test.bin");
-    this->loadBinaryRuntime("test.bin");
+    this->loadBinaryCereal("cereal_test.bin");
 }
 
-TYPED_TEST_P(Serialization, binaryCerealSaveRuntimeLoad)
+TYPED_TEST_P(SerializationBinary, RuntimeSaveCerealLoad)
 {
-    this->saveBinaryCereal("test.bin");
-    this->loadBinaryRuntime("test.bin");
+    this->loadBinaryCereal("runtime_test.bin");
 }
 
-TYPED_TEST_P(Serialization, jsonCerealSaveCerealLoad)
+TYPED_TEST_P(SerializationBinary, RuntimeSaveRuntimeLoad)
+{
+    this->loadBinaryRuntime("runtime_test.bin");
+}
+
+TYPED_TEST_P(SerializationBinary, CerealSaveRuntimeLoad)
+{
+    this->loadBinaryRuntime("cereal_test.bin");
+}
+
+REGISTER_TYPED_TEST_SUITE_P(SerializationBinary,
+                            CerealSave,
+                            RuntimeSave,
+                            CerealSaveCerealLoad,
+                            RuntimeSaveRuntimeLoad,
+                            RuntimeSaveCerealLoad,
+                            CerealSaveRuntimeLoad);
+
+INSTANTIATE_TYPED_TEST_SUITE_P(serialization_binary, SerializationBinary, RuntimeReflectionTypeTest);
+
+TYPED_TEST_P(SerializationJson, CerealSaveCerealLoad)
 {
     this->testJsonCerealSaveCerealLoad();
 }
 
-TYPED_TEST_P(Serialization, jsonCerealSaveRuntimeLoad)
+TYPED_TEST_P(SerializationJson, CerealSaveRuntimeLoad)
 {
     this->testJsonCerealSaveRuntimeReflectionLoad();
 }
 
-TYPED_TEST_P(Serialization, jsonRuntimeSaveCerealLoad)
+TYPED_TEST_P(SerializationJson, RuntimeSaveCerealLoad)
 {
     this->testJsonRuntimeReflectionSaveCerealLoad();
 }
 
-TYPED_TEST_P(Serialization, jsonRuntimeSaveRuntimeLoad)
+TYPED_TEST_P(SerializationJson, RuntimeSaveRuntimeLoad)
 {
     this->testJsonRuntimeReflectionSaveRuntimeLoad();
 }
 
-REGISTER_TYPED_TEST_SUITE_P(Serialization,
-                            binaryCerealSaveCerealLoad,
-                            binaryRuntimeSaveRuntimeLoad,
-                            binaryRuntimeSaveCerealLoad,
-                            binaryCerealSaveRuntimeLoad,
-                            jsonCerealSaveCerealLoad,
-                            jsonCerealSaveRuntimeLoad,
-                            jsonRuntimeSaveCerealLoad,
-                            jsonRuntimeSaveRuntimeLoad);
+REGISTER_TYPED_TEST_SUITE_P(
+    SerializationJson, CerealSaveCerealLoad, CerealSaveRuntimeLoad, RuntimeSaveCerealLoad, RuntimeSaveRuntimeLoad);
 
-INSTANTIATE_TYPED_TEST_SUITE_P(serialization, Serialization, RuntimeReflectionTypeTest);
+INSTANTIATE_TYPED_TEST_SUITE_P(serialization_json, SerializationJson, RuntimeReflectionTypeTest);
 
 struct RawPointerTestStruct
 {

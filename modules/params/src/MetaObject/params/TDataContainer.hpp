@@ -1,13 +1,13 @@
-#pragma once
+#ifndef MO_PARAMS_TDATACONTAINER_HPP
+#define MO_PARAMS_TDATACONTAINER_HPP
+#include "ContainerTraits.hpp"
 #include "Header.hpp"
 #include "IDataContainer.hpp"
-#include "ParamAllocator.hpp"
 
 #include <MetaObject/core/detail/Allocator.hpp>
 #include <MetaObject/runtime_reflection.hpp>
 #include <MetaObject/runtime_reflection/type_traits.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/time.hpp>
-#include <MetaObject/thread/fiber_include.hpp>
 
 #include <ct/reflect/cerealize.hpp>
 
@@ -84,6 +84,7 @@ namespace mo
         operator std::shared_ptr<T>();
         operator T*();
         T* ptr();
+        using Super_t::ptr;
         std::shared_ptr<T> sharedPtr();
     };
 
@@ -128,161 +129,30 @@ namespace mo
         }
     };
 
-    template <class T, class ENABLE>
-    struct TDataContainer : public TDataContainerBase<T>
+    template <class T>
+    struct TDataContainer : public TDataContainerBase<typename ContainerTraits<T>::type, ContainerTraits<T>::CONST>
     {
-        using type = T;
+        using type = typename ContainerTraits<T>::type;
         using Ptr_t = std::shared_ptr<TDataContainer<type>>;
         using ConstPtr_t = std::shared_ptr<const TDataContainer<type>>;
-        using Super_t = TDataContainerBase<T>;
+        using Super_t = TDataContainerBase<typename ContainerTraits<T>::type, ContainerTraits<T>::CONST>;
 
         template <class... ARGS>
-        TDataContainer(typename ParamAllocator::Ptr_t, ARGS&&... args)
-            : Super_t(T(std::forward<ARGS>(args)...))
-        {
-        }
-    };
+        TDataContainer(typename ParamAllocator::Ptr_t alloc, ARGS&&... args);
 
-    template <class T>
-    class TVectorAllocator
-    {
-      public:
-        using value_type = T;
-        using pointer = T*;
-        using const_pointer = const T*;
-        using reference = T&;
-        using const_reference = const T&;
-        using size_type = std::size_t;
-        using difference_type = std::ptrdiff_t;
-        template <class U>
-        struct rebind
-        {
-            using other = TVectorAllocator<U>;
-        };
+        TDataContainer();
 
-        TVectorAllocator(typename ParamAllocator::Ptr_t allocator = ParamAllocator::create())
-            : m_allocator(std::move(allocator))
-        {
-        }
+        ParamAllocator::Ptr_t getAllocator() const;
 
-        TVectorAllocator(TVectorAllocator<T>&& other) = default;
-        TVectorAllocator(const TVectorAllocator<T>& other) = default;
-
-        template <class U>
-        TVectorAllocator(TVectorAllocator<U>&& other, ct::EnableIf<sizeof(U) == sizeof(T), const void*> = nullptr)
-        {
-            m_allocator = other.getAllocator();
-        }
-
-        template <class U>
-        TVectorAllocator(TVectorAllocator<U>&& other, ct::EnableIf<sizeof(U) != sizeof(T), const void*> = nullptr)
-        {
-            auto alloc = other.getAllocator();
-            if (alloc)
-            {
-                m_allocator = ParamAllocator::create(alloc->getAllocator());
-            }
-        }
-
-        template <class U>
-        TVectorAllocator(const TVectorAllocator<U>& other, ct::EnableIf<sizeof(U) == sizeof(T), const void*> = nullptr)
-            : m_allocator(other.getAllocator())
-        {
-        }
-
-        template <class U>
-        TVectorAllocator(const TVectorAllocator<U>& other, ct::EnableIf<sizeof(U) != sizeof(T), const void*> = nullptr)
-        {
-            auto alloc = other.getAllocator();
-            if (alloc)
-            {
-                m_allocator = ParamAllocator::create(alloc->getAllocator());
-            }
-        }
-
-        pointer allocate(size_type n, std::allocator<void>::const_pointer)
-        {
-            return allocate(n);
-        }
-
-        pointer allocate(size_type n)
-        {
-            auto output = m_allocator->allocate<T>(n);
-            return output;
-        }
-
-        void deallocate(pointer ptr, size_type)
-        {
-            if (m_allocator)
-            {
-                m_allocator->deallocate(ptr);
-            }
-        }
-
-        typename ParamAllocator::Ptr_t getAllocator() const
-        {
-            return m_allocator;
-        }
-
-        bool operator==(const TVectorAllocator<T>& rhs) const
-        {
-            return this->m_allocator == rhs.m_allocator;
-        }
-
-        bool operator!=(const TVectorAllocator<T>& rhs) const
-        {
-            return this->m_allocator != rhs.m_allocator;
-        }
+        void record(IAsyncStream& src) const override;
+        void sync(IAsyncStream& dest) const override;
 
       private:
-        typename ParamAllocator::Ptr_t m_allocator;
+        ContainerTraits<T> m_traits;
     };
 
     template <class T>
-    using vector = std::vector<T, TVectorAllocator<T>>;
-
-    template <class T, class A>
-    struct TDataContainer<std::vector<T, A>, ct::EnableIf<std::is_trivially_copyable<T>::value>>
-        : public TDataContainerBase<std::vector<T, TVectorAllocator<T>>>
-    {
-        using Super_t = TDataContainerBase<std::vector<T, TVectorAllocator<T>>>;
-        using type = std::vector<T, TVectorAllocator<T>>;
-        using Ptr_t = std::shared_ptr<TDataContainer<std::vector<T, A>>>;
-        using ConstPtr_t = std::shared_ptr<const TDataContainer<std::vector<T, A>>>;
-
-        TDataContainer()
-            : m_allocator(ParamAllocator::create())
-        {
-        }
-
-        template <class... ARGS>
-        TDataContainer(ParamAllocator::Ptr_t allocator, ARGS&&... args)
-            : m_allocator(allocator)
-            , Super_t(type(std::forward<ARGS>(args)..., TVectorAllocator<T>(allocator)))
-        {
-        }
-
-        ParamAllocator::Ptr_t getAllocator() const
-        {
-            return m_allocator;
-        }
-
-      private:
-        ParamAllocator::Ptr_t m_allocator;
-    };
-
-    template <class T>
-    struct TDataContainer<ct::TArrayView<const T>, void> : public TDataContainerBase<ct::TArrayView<const T>, true>
-    {
-        using Super_t = TDataContainerBase<ct::TArrayView<const T>, true>;
-        using type = typename Super_t::type;
-
-        template <class... ARGS>
-        TDataContainer(typename ParamAllocator::Ptr_t, ARGS&&... args)
-            : Super_t(ct::TArrayView<const T>(std::forward<ARGS>(args)...))
-        {
-        }
-    };
+    using vector = std::vector<T, TStlAllocator<T>>;
 
     ////////////////////////////////////////////////////////////////////////
     ///  Implementation
@@ -391,6 +261,65 @@ namespace mo
         auto owning_ptr = this->shared_from_this();
         return std::shared_ptr<T>(&this->data, [owning_ptr](T*) {});
     }
+
+    template <class T>
+    template <class... ARGS>
+    TDataContainer<T>::TDataContainer(typename ParamAllocator::Ptr_t alloc, ARGS&&... args)
+        : m_traits(alloc)
+        , Super_t(ContainerTraits<T>::staticCreate(alloc, std::forward<ARGS>(args)...))
+    {
+    }
+
+    template <class T>
+    TDataContainer<T>::TDataContainer()
+    {
+    }
+
+    template <class T>
+    ParamAllocator::Ptr_t TDataContainer<T>::getAllocator() const
+    {
+        return m_traits.getAllocator();
+    }
+
+template <class T>
+    void TDataContainer<T>::record(IAsyncStream& src) const
+    {
+        m_traits.record(src);
+    }
+
+    template <class T>
+    void TDataContainer<T>::sync(IAsyncStream& dest) const
+    {
+        m_traits.sync(dest);
+    }
+
+    template <class T>
+    T* IDataContainer::ptr()
+    {
+        if (getType().isType<T>())
+        {
+            auto typed = static_cast<TDataContainer<T>*>(this);
+            if (typed)
+            {
+                return &typed->data;
+            }
+        }
+        return nullptr;
+    }
+
+    template <class T>
+    const T* IDataContainer::ptr() const
+    {
+        if (getType().isType<T>())
+        {
+            auto typed = static_cast<const TDataContainer<T>*>(this);
+            if (typed)
+            {
+                return &typed->data;
+            }
+        }
+        return nullptr;
+    }
 } // namespace mo
 
 namespace cereal
@@ -430,3 +359,4 @@ namespace cereal
         }
     }
 } // namespace cereal
+#endif // MO_PARAMS_TDATACONTAINER_HPP

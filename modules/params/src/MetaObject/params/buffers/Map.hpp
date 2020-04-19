@@ -16,13 +16,11 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 https://github.com/dtmoodie/MetaObject
 */
-#pragma once
+#ifndef MO_PARAMS_BUFFER_MAP_HPP
+#define MO_PARAMS_BUFFER_MAP_HPP
 
-#include "BufferConstructor.hpp"
 #include "IBuffer.hpp"
-
-#include <MetaObject/params/InputParam.hpp>
-
+#include <MetaObject/params/TParam.hpp>
 #include <MetaObject/thread/ConditionVariable.hpp>
 #include <MetaObject/thread/Mutex.hpp>
 
@@ -32,7 +30,7 @@ namespace mo
 {
     namespace buffer
     {
-        class Map : public IBuffer
+        class MO_EXPORTS Map : public TParam<IBuffer>
         {
           public:
             enum PushPolicy
@@ -67,45 +65,122 @@ namespace mo
             bool getFrameNumberRange(uint64_t& start, uint64_t& end) override;
             BufferFlags getBufferType() const override;
 
-            // InputParam
-            bool setInput(const std::shared_ptr<IParam>& param) override;
-            bool setInput(IParam* param = nullptr) override;
+            // ISubscriber
+            bool acceptsPublisher(const IPublisher&) const;
+            bool acceptsType(const TypeInfo&) const;
+            std::vector<TypeInfo> getInputTypes() const;
+            bool isInputSet() const;
+            IPublisher* getPublisher() const;
+
+            bool setInput(std::shared_ptr<IPublisher> param) override;
+            bool setInput(IPublisher* param = nullptr) override;
+
+            IDataContainerConstPtr_t getCurrentData(IAsyncStream* = nullptr) const override;
+
+            IDataContainerConstPtr_t getData(const Header* desired = nullptr, IAsyncStream* stream = nullptr) override;
+
+            // IPublisher
+            bool providesOutput(TypeInfo type) const override;
+            std::vector<TypeInfo> getOutputTypes() const override;
+
+            std::vector<Header> getAvailableHeaders() const override;
+            boost::optional<Header> getNewestHeader() const override;
+
+            uint32_t getNumSubscribers() const;
+            void setAllocator(Allocator::Ptr_t);
 
             // IParam
+            void setMtx(Mutex_t& mtx) override;
 
-            OptionalTime getTimestamp() const override;
-            FrameNumber getFrameNumber() const override;
+            ConnectionPtr_t registerUpdateNotifier(ISlot& f) override;
+            ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr_t& relay) override;
 
-            IContainerPtr_t getData(const Header& desired = Header()) override;
-            IContainerConstPtr_t getData(const Header& desired = Header()) const override;
-            void setMtx(Mutex_t* mtx) override;
+            bool hasNewData() const override;
+
+            std::ostream& print(std::ostream& os) const override;
 
           protected:
-            void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags, IAsyncStream&) override;
-            IDataContainerPtr_t search(const Header& hdr) const;
-            IDataContainerPtr_t searchExact(const Header& hdr) const;
-            IDataContainerPtr_t searchNearest(const Header& hdr) const;
+            void onInputUpdate(const IDataContainerConstPtr_t&, const IParam&, UpdateFlags, IAsyncStream&);
 
-            using Buffer_t = std::map<Header, IDataContainerPtr_t>;
+            IDataContainerConstPtr_t search(const Header& hdr) const;
+            IDataContainerConstPtr_t searchExact(const Header& hdr) const;
+            IDataContainerConstPtr_t searchNearest(const Header& hdr) const;
+
+            struct StoragePair
+            {
+                StoragePair() = default;
+                StoragePair(IDataContainerConstPtr_t&& d)
+                    : data(std::move(d))
+                {
+                }
+
+                StoragePair& operator=(const IDataContainerConstPtr_t& d)
+                {
+                    data = d;
+                    return *this;
+                }
+
+                IDataContainerConstPtr_t getData() const
+                {
+                    retrieved = true;
+                    return data;
+                }
+
+                bool hasBeenRetrieved() const
+                {
+                    return retrieved;
+                }
+
+                operator IDataContainerConstPtr_t() const
+                {
+                    retrieved = true;
+                    return data;
+                }
+                operator bool()
+                {
+                    return retrieved;
+                }
+
+              private:
+                IDataContainerConstPtr_t data;
+                mutable bool retrieved = false;
+            };
+
+            using Buffer_t = std::map<Header, StoragePair>;
 
           private:
-            void pushData(const IDataContainerPtr_t& data, IAsyncStream&);
-            void pushOrDrop(const IDataContainerPtr_t& data, IAsyncStream&);
-            void pushAndWait(const IDataContainerPtr_t& data, IAsyncStream&);
+            void pushData(const IDataContainerConstPtr_t& data, IAsyncStream&);
+            void pushOrDrop(const IDataContainerConstPtr_t& data, IAsyncStream&);
+            void pushAndWait(const IDataContainerConstPtr_t& data, IAsyncStream&);
             uint32_t prune();
 
             ConditionVariable m_cv;
 
             Buffer_t m_data_buffer;
+            IDataContainerConstPtr_t m_current_data;
 
             OptionalTime m_current_timestamp;
             FrameNumber m_current_frame_number;
 
             boost::optional<Duration> m_time_padding;
             boost::optional<uint64_t> m_frame_padding;
+
             PushPolicy m_push_policy = GROW;
             SearchPolicy m_search_policy = EXACT;
+
             mutable Mutex_t m_mtx;
+
+            TSlot<DataUpdate_s> m_update_slot;
+            TSlot<Delete_s> m_delete_slot;
+
+            ConnectionPtr_t m_update_connection;
+            ConnectionPtr_t m_delete_connection;
+
+            TSignal<DataUpdate_s> m_update_signal;
+
+            std::shared_ptr<IPublisher> m_shared_publisher;
+            IPublisher* m_publisher = nullptr;
         };
     } // namespace buffer
 } // namespace mo
+#endif // MO_PARAMS_BUFFER_MAP_HPP

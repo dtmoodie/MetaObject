@@ -1,4 +1,6 @@
 #pragma once
+#include <MetaObject/core/detail/forward.hpp>
+
 #include "MetaObject/core/SystemTable.hpp"
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
@@ -14,8 +16,7 @@ namespace mo
     class ISignalRelay;
     class Connection;
     class TypeInfo;
-    template <typename T>
-    class TSignal;
+
     template <typename T>
     class TSlot;
     template <typename T, class MUTEX>
@@ -82,4 +83,4 @@ namespace mo
     {
         return singleton<RelayManager>();
     }
-} // namespace Signals
+} // namespace mo

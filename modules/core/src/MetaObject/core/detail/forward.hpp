@@ -41,7 +41,17 @@ namespace mo
     } // namespace cuda
 
     class Thread;
-    class IParam;
+
+    struct IParam;
+    struct IControlParam;
+    struct IPublisher;
+    struct ISubscriber;
+
+    template <class>
+    struct TSubscriber;
+    template <class>
+    struct TPublisher;
+
     struct IDataContainer;
     class RelayManager;
     class Connection;
@@ -61,13 +71,14 @@ namespace mo
     template <class T>
     class TSlot;
 
-    template <class T>
+    template <class BASE>
     class TParam;
 
-    template <class T, class ENABLE = void>
+    template <class T>
     struct TDataContainer;
 
-    using ParamVec_t = std::vector<IParam*>;
+    using ParamVec_t = std::vector<IControlParam*>;
+    using ConstParamVec_t = std::vector<const IControlParam*>;
     using ParamInfoVec_t = std::vector<ParamInfo*>;
     using SignalInfoVec_t = std::vector<SignalInfo*>;
     using SlotInfoVec_t = std::vector<SlotInfo*>;
@@ -78,16 +89,29 @@ namespace mo
 
     using ConnectionPtr_t = std::shared_ptr<Connection>;
     using IParamPtr_t = std::shared_ptr<IParam>;
-
-    using Update_s = void(IParam*, Header, UpdateFlags, IAsyncStream&);
-    using DataUpdate_s = void(const std::shared_ptr<IDataContainer>&, IParam*, UpdateFlags, IAsyncStream&);
-    template <class T>
-    using TDataUpdate_s = void(const std::shared_ptr<TDataContainer<T>>&, IParam*, UpdateFlags, IAsyncStream&);
-    using UpdateSlot_t = TSlot<Update_s>;
-    template <class T>
-    using TUpdateSlot_t = TSlot<TDataUpdate_s<T>>;
     using IDataContainerPtr_t = std::shared_ptr<IDataContainer>;
     using IDataContainerConstPtr_t = std::shared_ptr<const IDataContainer>;
+    template <class T>
+    using TDataContainerPtr_t = std::shared_ptr<TDataContainer<T>>;
+    template <class T>
+    using TDataContainerConstPtr_t = std::shared_ptr<const TDataContainer<T>>;
+
+    using Delete_s = void(const IParam&);
+
+    using Update_s = void(const IParam&, Header, UpdateFlags, IAsyncStream&);
+    using DataUpdate_s = void(const IDataContainerConstPtr_t&, const IParam&, UpdateFlags, IAsyncStream&);
+    template <class T>
+    using TDataUpdate_s = void(const TDataContainerConstPtr_t<T>&, const IParam&, UpdateFlags, IAsyncStream&);
+
+    using UpdateSlot_t = TSlot<Update_s>;
+
+    template <class T>
+    using TUpdateSlot_t = TSlot<TDataUpdate_s<T>>;
+
+    template <class T>
+
+    using TUpdateSignal_t = TSignal<TDataUpdate_s<T>>;
+
     using AllocatorPtr_t = std::shared_ptr<Allocator>;
 
     using BinaryInputVisitor = cereal::BinaryInputArchive;
@@ -96,4 +120,8 @@ namespace mo
     template <class T, class Mutex = Mutex_t>
     class TSignalRelay;
 } // namespace mo
+
+#include <cereal/types/string.hpp>
+#include <cereal/types/vector.hpp>
+
 #endif // MO_CORE_FORWARD_HPP

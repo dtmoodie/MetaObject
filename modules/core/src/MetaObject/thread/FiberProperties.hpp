@@ -41,8 +41,9 @@ namespace mo
         uint64_t m_id = 0;
         bool m_enabled = true;
         bool m_is_work = true;
-        std::shared_ptr<IAsyncStream> m_stream;
-        std::shared_ptr<IDeviceStream> m_device_stream;
+        // Weak pointer or shared ptr?
+        std::weak_ptr<IAsyncStream> m_stream;
+        std::weak_ptr<IDeviceStream> m_device_stream;
     };
 } // namespace mo
 

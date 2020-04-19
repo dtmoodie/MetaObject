@@ -99,7 +99,7 @@ class MetaObjectFactoryImpl : public MetaObjectFactory
     bool isCompileComplete() override;
     bool swapObjects() override;
     void setCompileCallback(std::function<void(const std::string, int)>& f) override;
-    std::shared_ptr<Connection> connectConstructorAdded(TSlot<void(void)>* slot) override;
+    std::shared_ptr<Connection> connectConstructorAdded(TSlot<void(void)>& slot) override;
 
   private:
     RuntimeObjectSystem obj_system;
@@ -634,7 +634,7 @@ void MetaObjectFactoryImpl::setCompileCallback(std::function<void(const std::str
 {
 }
 
-std::shared_ptr<Connection> MetaObjectFactoryImpl::connectConstructorAdded(TSlot<void(void)>* slot)
+std::shared_ptr<Connection> MetaObjectFactoryImpl::connectConstructorAdded(TSlot<void(void)>& slot)
 {
     return on_constructor_added.connect(slot);
 }

@@ -1,6 +1,6 @@
 #include "AsyncStreamFactory.hpp"
 #include "AsyncStreamConstructor.hpp"
-
+#include <MetaObject/core/IAsyncStream.hpp>
 #include <MetaObject/core/SystemTable.hpp>
 namespace mo
 {
@@ -37,8 +37,10 @@ namespace mo
         }
         if (best_ctr)
         {
-            return best_ctr->create(name, device_id, device_priority, thread_priority);
+            auto ret = best_ctr->create(name, device_id, device_priority, thread_priority);
+            IAsyncStream::setCurrent(ret);
+            return ret;
         }
         return {};
     }
-}
+} // namespace mo

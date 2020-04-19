@@ -1,4 +1,5 @@
-#include "TMultiInput-inl.hpp"
+#include "TMultiSubscriber-inl.hpp"
+#include "TMultiSubscriber.hpp"
 #include <MetaObject/signals/Connection.hpp>
 #include <MetaObject/thread/Mutex.hpp>
 #include <MetaObject/thread/fiber_include.hpp>
@@ -6,23 +7,22 @@
 namespace mo
 {
 
-    IMultiInput::IMultiInput()
-        : IParam()
-        , InputParam()
+    IMultiSubscriber::IMultiSubscriber()
     {
     }
 
-    void IMultiInput::setInputs(const std::vector<InputParam*>& inputs)
+    void IMultiSubscriber::setInputs(const std::vector<ISubscriber*>& inputs)
     {
         m_inputs = inputs;
     }
 
-    bool IMultiInput::setInput(const std::shared_ptr<IParam>& publisher)
+    bool IMultiSubscriber::setInput(std::shared_ptr<IPublisher> publisher)
     {
+        MO_ASSERT(publisher != nullptr);
         Lock_t lock(mtx());
         for (auto input : m_inputs)
         {
-            if (input->acceptsInput(publisher.get()))
+            if (input->acceptsPublisher(*publisher))
             {
                 if (input->setInput(publisher))
                 {
@@ -38,12 +38,12 @@ namespace mo
         return false;
     }
 
-    bool IMultiInput::setInput(IParam* publisher)
+    bool IMultiSubscriber::setInput(IPublisher* publisher)
     {
         Lock_t lock(mtx());
         for (auto input : m_inputs)
         {
-            if (input->acceptsInput(publisher))
+            if (publisher && input->acceptsPublisher(*publisher))
             {
                 if (input->setInput(publisher))
                 {
@@ -59,27 +59,43 @@ namespace mo
         return false;
     }
 
-    IMultiInput::IContainerPtr_t IMultiInput::getData(const Header& desired)
+    /*IDataContainerConstPtr_t IMultiSubscriber::getInputData(IAsyncStream* stream) const
     {
         Lock_t lock(mtx());
-        if (m_current_input)
+        auto input = m_current_input;
+        lock.unlock();
+        if (input)
         {
-            return m_current_input->getData(desired);
+            return input->getInputData(stream);
+        }
+        return {};
+    }*/
+
+    IDataContainerConstPtr_t IMultiSubscriber::getCurrentData(IAsyncStream* stream) const
+    {
+        Lock_t lock(mtx());
+        auto input = m_current_input;
+        lock.unlock();
+        if (input)
+        {
+            return input->getCurrentData(stream);
         }
         return {};
     }
 
-    IMultiInput::IContainerConstPtr_t IMultiInput::getData(const Header& desired) const
+    IDataContainerConstPtr_t IMultiSubscriber::getData(const Header* desired, IAsyncStream* stream)
     {
         Lock_t lock(mtx());
-        if (m_current_input)
+        auto input = m_current_input;
+        lock.unlock();
+        if (input)
         {
-            return m_current_input->getData(desired);
+            return input->getData(desired, stream);
         }
         return {};
     }
 
-    void IMultiInput::setMtx(Mutex_t* mtx)
+    void IMultiSubscriber::setMtx(Mutex_t& mtx)
     {
         for (auto input : m_inputs)
         {
@@ -87,74 +103,25 @@ namespace mo
         }
     }
 
-    mo::TypeInfo IMultiInput::getTypeInfo() const
-    {
-        Lock_t lock(mtx());
-        if (m_current_input)
-        {
-            return m_current_input->getTypeInfo();
-        }
-
-        return _void_type_info;
-    }
-
-    const mo::TypeInfo IMultiInput::_void_type_info = mo::TypeInfo(typeid(void));
-
-    mo::IParam* IMultiInput::getInputParam() const
+    IPublisher* IMultiSubscriber::getPublisher() const
     {
         if (m_current_input)
         {
-            return m_current_input->getInputParam();
+            return m_current_input->getPublisher();
         }
         return nullptr;
     }
 
-    OptionalTime IMultiInput::getInputTimestamp()
-    {
-        if (m_current_input)
-        {
-            return m_current_input->getInputTimestamp();
-        }
-        return {};
-    }
-
-    FrameNumber IMultiInput::getInputFrameNumber()
-    {
-        if (m_current_input)
-        {
-            return m_current_input->getInputFrameNumber();
-        }
-        return {};
-    }
-
-    OptionalTime IMultiInput::getTimestamp() const
-    {
-        if (m_current_input)
-        {
-            return m_current_input->getTimestamp();
-        }
-        return {};
-    }
-
-    FrameNumber IMultiInput::getFrameNumber() const
-    {
-        if (m_current_input)
-        {
-            return m_current_input->getFrameNumber();
-        }
-        return -1;
-    }
-
-    bool IMultiInput::isInputSet() const
+    bool IMultiSubscriber::isInputSet() const
     {
         return m_current_input != nullptr;
     }
 
-    bool IMultiInput::acceptsInput(IParam* input) const
+    bool IMultiSubscriber::acceptsPublisher(const IPublisher& input) const
     {
         for (auto in : m_inputs)
         {
-            if (in->acceptsInput(input))
+            if (in->acceptsPublisher(input))
             {
                 return true;
             }
@@ -162,7 +129,7 @@ namespace mo
         return false;
     }
 
-    bool IMultiInput::acceptsType(const TypeInfo& type) const
+    bool IMultiSubscriber::acceptsType(const TypeInfo& type) const
     {
         for (auto in : m_inputs)
         {
@@ -174,21 +141,21 @@ namespace mo
         return false;
     }
 
-    ConnectionPtr_t IMultiInput::registerUpdateNotifier(ISlot& f)
+    ConnectionPtr_t IMultiSubscriber::registerUpdateNotifier(ISlot& f)
     {
-        ConnectionPtr_t out;
+        std::vector<ConnectionPtr_t> connections;
         for (auto input : m_inputs)
         {
-            out = input->registerUpdateNotifier(f);
-            if (out)
+            auto connection = input->registerUpdateNotifier(f);
+            if (connection)
             {
-                break;
+                connections.push_back(std::move(connection));
             }
         }
-        return out;
+        return std::make_shared<ConnectionSet>(std::move(connections));
     }
 
-    ConnectionPtr_t IMultiInput::registerUpdateNotifier(const ISignalRelay::Ptr_t& relay)
+    ConnectionPtr_t IMultiSubscriber::registerUpdateNotifier(const ISignalRelay::Ptr_t& relay)
     {
         // TODO
         std::vector<ConnectionPtr_t> connections;
@@ -203,15 +170,25 @@ namespace mo
         return std::make_shared<ConnectionSet>(std::move(connections));
     }
 
-    bool IMultiInput::modified() const
+    std::ostream& IMultiSubscriber::print(std::ostream& os) const
     {
-        if (m_current_input)
-        {
-            return m_current_input->modified();
-        }
+        os << this->getTreeName();
+        os << '\n';
         for (auto in : m_inputs)
         {
-            if (in->modified())
+            os << ' ';
+            in->print(os);
+            os << '\n';
+        }
+
+        return os;
+    }
+
+    bool IMultiSubscriber::hasNewData() const
+    {
+        for (auto in : m_inputs)
+        {
+            if (in->hasNewData())
             {
                 return true;
             }
@@ -219,32 +196,53 @@ namespace mo
         return false;
     }
 
-    void IMultiInput::modified(bool value)
+    std::vector<Header> IMultiSubscriber::getAvailableHeaders() const
     {
+        std::vector<Header> output;
         for (auto in : m_inputs)
         {
-            in->modified(value);
+            auto tmp = in->getAvailableHeaders();
+            output.insert(tmp.begin(), tmp.end(), output.end());
         }
+        return output;
     }
 
-    MultiConnection::MultiConnection(std::vector<std::shared_ptr<Connection>>&& connections)
-        : m_connections(connections)
+    boost::optional<Header> IMultiSubscriber::getNewestHeader() const
     {
-    }
-
-    MultiConnection::~MultiConnection()
-    {
-    }
-
-    bool MultiConnection::disconnect()
-    {
-        for (const auto& con : m_connections)
+        boost::optional<Header> out;
+        for (auto in : m_inputs)
         {
-            if (con)
+            const auto tmp = in->getNewestHeader();
+            if (tmp && !out)
             {
-                con->disconnect();
+                out = tmp;
+            }
+            if (tmp && out)
+            {
+                if (tmp->timestamp && !out->timestamp)
+                {
+                    out = tmp;
+                }
+                else
+                {
+                    if (tmp->timestamp && out->timestamp)
+                    {
+                        if (*tmp->timestamp > *out->timestamp)
+                        {
+                            out = tmp;
+                        }
+                    }
+                    else
+                    {
+                        if (tmp->frame_number > out->frame_number)
+                        {
+                            out = tmp;
+                        }
+                    }
+                }
             }
         }
-        return true;
+        return out;
     }
+
 } // namespace mo

@@ -19,6 +19,7 @@ void testGetSlot(const std::string& name, IMetaObject* obj)
 
 TEST(slot, init_and_get)
 {
+    auto stream = IAsyncStream::create();
     auto obj = DerivedSignals::create();
     ASSERT_NE(obj, nullptr);
     auto all_slots = obj->getSlots();
@@ -32,6 +33,7 @@ TEST(slot, init_and_get)
 
 TEST(slot, reception)
 {
+    auto stream = IAsyncStream::create();
     auto obj = DerivedSignals::create();
     ASSERT_NE(obj, nullptr);
 
@@ -59,9 +61,10 @@ TEST(slot, reception)
 
 TEST(slot, call_base)
 {
+    auto stream = IAsyncStream::create();
     auto derived_obj = DerivedSignals::create();
     TSignal<void(int)> sig;
-    derived_obj->connectByName("base_slot", &sig);
+    derived_obj->connectByName("base_slot", sig);
     ASSERT_EQ(derived_obj->base_count, 0);
     sig(100);
     ASSERT_EQ(derived_obj->base_count, 100);
@@ -69,9 +72,10 @@ TEST(slot, call_base)
 
 TEST(slot, call_derived)
 {
+    auto stream = IAsyncStream::create();
     auto derived_obj = DerivedSignals::create();
     TSignal<void(int)> sig;
-    derived_obj->connectByName("derived_slot", &sig);
+    derived_obj->connectByName("derived_slot", sig);
     ASSERT_EQ(derived_obj->derived_count, 0);
     sig(100);
     ASSERT_EQ(derived_obj->derived_count, 100);
@@ -79,9 +83,10 @@ TEST(slot, call_derived)
 
 TEST(slot, call_overloaded)
 {
+    auto stream = IAsyncStream::create();
     auto derived_obj = DerivedSignals::create();
     TSignal<void(int)> sig;
-    derived_obj->connectByName("override_slot", &sig);
+    derived_obj->connectByName("override_slot", sig);
     ASSERT_EQ(derived_obj->derived_count, 0);
     sig(100);
     ASSERT_EQ(derived_obj->derived_count, 300);

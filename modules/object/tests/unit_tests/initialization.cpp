@@ -6,6 +6,7 @@ using namespace test;
 
 TEST(object_initialization, SerializableObject)
 {
+    auto stream = IAsyncStream::create();
     {
         auto inst = mo::MetaObjectFactory::instance()->create("SerializableObject");
         ASSERT_NE(inst, nullptr);
@@ -50,12 +51,14 @@ void checkParam(rcc::shared_ptr<U> inst, const std::string& name, const T& val)
 
 TEST(object_initialization, SerializableObject_)
 {
+    auto stream = IAsyncStream::create();
     auto inst = SerializableObject::create();
     testDynamicReflection(inst);
 }
 
 TEST(object_initialization, DerivedParams_)
 {
+    auto stream = IAsyncStream::create();
     auto inst = DerivedParams::create();
     testDynamicReflection(inst);
     inst->base_param = 10;
@@ -66,54 +69,63 @@ TEST(object_initialization, DerivedParams_)
 
 TEST(object_initialization, DerivedSignals_)
 {
+    auto stream = IAsyncStream::create();
     auto inst = DerivedSignals::create();
     testDynamicReflection(inst);
 }
 
 TEST(object_initialization, MultipleInheritance_)
 {
+    auto stream = IAsyncStream::create();
     auto inst = MultipleInheritance::create();
     testDynamicReflection(inst);
 }
 
 TEST(object_initialization, Derived1_)
 {
+    auto stream = IAsyncStream::create();
     auto inst = Derived1::create();
     testDynamicReflection(inst);
 }
 
 TEST(object_initialization, MetaObjectPublisher_)
 {
+    auto stream = IAsyncStream::create();
     auto inst = MetaObjectPublisher::create();
     testDynamicReflection(inst);
 }
 
 TEST(object_initialization, ParamedObject_)
 {
+    auto stream = IAsyncStream::create();
     auto inst = ParamedObject::create();
     testDynamicReflection(inst);
 }
 
 TEST(object_initialization, MetaObjectSubscriber_)
 {
+    auto stream = IAsyncStream::create();
     auto inst = MetaObjectSubscriber::create();
     testDynamicReflection(inst);
 }
 
 TEST(object_initialization, MetaObjectSignals_)
 {
+    auto stream = IAsyncStream::create();
     auto inst = MetaObjectSubscriber::create();
     testDynamicReflection(inst);
 }
 
 TEST(object_initialization, MetaObjectSlots_)
 {
+    auto stream = IAsyncStream::create();
     auto inst = MetaObjectSubscriber::create();
     testDynamicReflection(inst);
 }
 
 TEST(object_initialization, MetaObjectCallback_)
 {
+    auto stream = IAsyncStream::create();
     auto inst = MetaObjectSubscriber::create();
     testDynamicReflection(inst);
 }

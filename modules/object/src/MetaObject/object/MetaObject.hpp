@@ -25,7 +25,7 @@ namespace mo
         int setupSignals(const std::shared_ptr<RelayManager>& mgr) override;
         std::shared_ptr<RelayManager> getRelayManager() override;
         int setupParamServer(const std::shared_ptr<IParamServer>& mgr) override;
-        int removeParamServer(IParamServer* mgr) override;
+        int removeParamServer(IParamServer& param_server) override;
 
         void Init(bool firstInit) override; // inherited from RCC, thus the PascalCase
         void initCustom(bool firstInit) override;
@@ -51,13 +51,13 @@ namespace mo
         // -------- Signals / slots
         // If this class emits a signal by the given name, then the input sig will be added to the list of signals
         // that will be called when the signal is emitted.
-        bool connectByName(const std::string& signal_name, ISlot* slot) override;
-        bool connectByName(const std::string& slot_name, ISignal* signal) override;
+        bool connectByName(const std::string& signal_name, ISlot& slot) override;
+        bool connectByName(const std::string& slot_name, ISignal& signal) override;
 
         // Be careful to only call this once for each mgr object
         // This will call getSignal<>(name) on the input mgr object and add the obtained signal
         // To the list of signals that is called whenever sig_{name} is emitted
-        int connectByName(const std::string& name, RelayManager* mgr) override;
+        int connectByName(const std::string& name, RelayManager& mgr) override;
         int connectByName(const std::string& signal_name, IMetaObject* receiver, const std::string& slot_name) override;
         bool connectByName(const std::string& signal_name,
                            IMetaObject* receiver,
@@ -66,9 +66,10 @@ namespace mo
 
         // Be careful to only call once for each mgr object
         // This will call mgr->getSignal<>() for each declared signal
-        int connectAll(RelayManager* mgr) override;
+        int connectAll(RelayManager& mgr) override;
 
         std::vector<std::pair<ISignal*, std::string>> getSignals() override;
+        std::vector<std::pair<const ISignal*, std::string>> getSignals() const override;
         std::vector<ISignal*> getSignals(const std::string& name) override;
         std::vector<std::pair<ISignal*, std::string>> getSignals(const TypeInfo& type) override;
         ISignal* getSignal(const std::string& name, const TypeInfo& type) override;
@@ -80,29 +81,37 @@ namespace mo
         UpdateSlot_t* getSlot_param_updated() override;
 
         int disconnectByName(const std::string& name) override;
-        bool disconnect(ISignal* sig) override;
-        int disconnect(IMetaObject* obj) override;
+        bool disconnect(const ISignal& sig) override;
+        int disconnect(const IMetaObject& obj) override;
 
         // Params
-        ParamVec_t getDisplayParams() const override;
 
-        InputParamVec_t getInputs(const std::string& name_filter = "") const override;
-        InputParamVec_t getInputs(const TypeInfo& type_filter, const std::string& name_filter = "") const override;
+        SubscriberVec_t getInputs(const std::string& name_filter = "") const override;
+        SubscriberVec_t getInputs(const TypeInfo& type_filter, const std::string& name_filter = "") const override;
         template <class T>
-        InputParamVec_t getInputs(const std::string& name_filter = "") const;
+        SubscriberVec_t getInputs(const std::string& name_filter = "") const;
 
-        InputParam* getInput(const std::string& name) const override;
+        const ISubscriber* getInput(const std::string& name) const override;
+        ISubscriber* getInput(const std::string& name) override;
 
-        ParamVec_t getOutputs(const std::string& name_filter = "") const override;
-        ParamVec_t getOutputs(const TypeInfo& type_filter, const std::string& name_filter = "") const override;
+        PublisherVec_t getOutputs(const std::string& name_filter = "") override;
+        PublisherVec_t getOutputs(const TypeInfo& type_filter, const std::string& name_filter = "") override;
 
-        IParam* getOutput(const std::string& name) const override;
+        ConstPublisherVec_t getOutputs(const std::string& name_filter = "") const override;
+        ConstPublisherVec_t getOutputs(const TypeInfo& type_filter, const std::string& name_filter = "") const override;
 
-        IParam* getParam(const std::string& name) const override;
-        IParam* getParamOptional(const std::string& name) const override;
-        ParamVec_t getParams(const std::string& filter = "") const override;
-        ParamVec_t getParams(const TypeInfo& filter) const override;
-        std::vector<IParamPtr_t> getImplictParams() const override;
+        const IPublisher* getOutput(const std::string& name) const override;
+        IPublisher* getOutput(const std::string& name) override;
+
+        const IControlParam* getParam(const std::string& name) const override;
+        IControlParam* getParam(const std::string& name) override;
+
+        ConstParamVec_t getParams(const std::string& filter = "") const override;
+        ConstParamVec_t getParams(const TypeInfo& filter) const override;
+
+        ParamVec_t getParams(const std::string& filter = "") override;
+        ParamVec_t getParams(const TypeInfo& filter) override;
+        // std::vector<std::shared_ptr<IControlParam>> getImplictParams() const override;
 
         // Connects an input Param to an output Param
         bool connectInput(const std::string& input_name,
@@ -110,35 +119,19 @@ namespace mo
                           const std::string& output_name,
                           BufferFlags type = BufferFlags::BLOCKING_STREAM_BUFFER) override;
 
-        bool connectInput(InputParam* input,
+        bool connectInput(ISubscriber* input,
                           IMetaObject* output_object,
-                          IParam* output_param,
+                          IPublisher* output_param,
                           BufferFlags type = BufferFlags::BLOCKING_STREAM_BUFFER) override;
 
         Mutex_t& getMutex() const override;
 
-        template <class T>
-        ITInputParam<T>* getInput(const std::string& name);
-
-        template <class T>
-        TParam<T>* getOutput(const std::string& name) const;
-
-        template <class T>
-        T getParamValue(const std::string& name,
-                        const OptionalTime& ts = OptionalTime(),
-                        IAsyncStream* ctx = nullptr) const;
-
-        template <class T>
-        TParam<T>* getParam(const std::string& name) const;
-        template <class T>
-        TParam<T>* getParamOptional(const std::string& name) const;
-
       protected:
-        IParam* addParam(IParamPtr_t param) override;
-        IParam* addParam(IParam* param) override;
+        void addParam(std::shared_ptr<IParam> param) override;
+        void addParam(IParam& param) override;
 
-        void addSignal(ISignal* signal, const std::string& name) override;
-        void addSlot(ISlot* slot, const std::string& name) override;
+        void addSignal(ISignal& signal, const std::string& name) override;
+        void addSlot(ISlot& slot, const std::string& name) override;
         void addSlot(std::unique_ptr<ISlot>&& slot, const std::string& name) override;
         void setParamRoot(const std::string& root) override;
         void addConnection(ConnectionPtr_t&& Connection,
@@ -147,16 +140,8 @@ namespace mo
                            const TypeInfo& signature,
                            rcc::shared_ptr<IMetaObject> obj = {}) override;
 
-        void onParamUpdate(IParam*, Header, UpdateFlags) override;
+        virtual void onParamUpdate(const IParam&, Header, UpdateFlags, IAsyncStream&);
 
-        template <class T>
-        TParam<T>* updateParam(const std::string& name, T& value, const OptionalTime& ts = OptionalTime());
-        template <class T>
-        TParam<T>* updateParam(const std::string& name, const T& value, const OptionalTime& ts = OptionalTime());
-        template <class T>
-        TParam<T>* updateParamPtr(const std::string& name, T& ptr);
-
-        friend class RelayManager;
         bool isInitialized() const override;
 
       private:
@@ -199,9 +184,9 @@ namespace mo
         std::list<ConnectionInfo> m_connections;
         std::list<ParamConnectionInfo> m_param_connections;
 
-        TSignal<void(IMetaObject*, Header, IParam*)> m_sig_param_updated;
-        TSignal<void(IMetaObject*, IParam*)> m_sig_param_added;
-        std::map<std::string, InputParam*> m_input_params;
+        TSignal<void(const IMetaObject&, Header, const IParam&)> m_sig_param_updated;
+        TSignal<void(const IMetaObject&, const IParam&)> m_sig_param_added;
+        std::map<std::string, ISubscriber*> m_input_params;
         TSlot<Update_s> m_slot_param_updated;
         std::shared_ptr<IParamServer> m_param_server;
         mutable Mutex_t m_mutex;

@@ -6,8 +6,9 @@
 #include "MetaObject/object/detail/IMetaObjectImpl.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
 #include "MetaObject/params//ParamMacros.hpp"
-#include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
+#include "MetaObject/params/TSubscriberPtr.hpp"
+#include <MetaObject/params/buffers/IBuffer.hpp>
 
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
@@ -29,9 +30,10 @@ using namespace test;
 TEST(object, param_access)
 {
     static_assert(std::is_same<typename ParamedObject::ParentClass, ct::VariadicTypedef<MetaObject>>::value, "");
+    auto stream = IAsyncStream::create();
     auto obj = rcc::shared_ptr<ParamedObject>::create();
-    obj->getParam<int>("int_value");
-    obj->getParam<double>("double_value");
+    ASSERT_TRUE(obj->getParam("int_value"));
+    ASSERT_TRUE(obj->getParam("double_value"));
     // TODO fix unit test
     // ASSERT_EQ(obj->getParamValue<int>("int_value"), 0);
     obj->update(10);
@@ -102,7 +104,7 @@ TEST(object, external_slot)
     meta_obj->Init(true);
     bool slot_called = false;
     TSlot<void(int)> int_slot([&slot_called](int value) { slot_called = value == 5; });
-    ASSERT_EQ(meta_obj->connectByName("test_int", &int_slot), true);
+    ASSERT_EQ(meta_obj->connectByName("test_int", int_slot), true);
     int desired_value = 5;
     meta_obj->sig_test_int(desired_value);
     ASSERT_EQ(slot_called, true);
@@ -122,7 +124,7 @@ TEST(object, internal_slot)
     meta_obj->Init(true);
     meta_obj->setupSignals(mgr);
     TSignal<void(void)> signal;
-    ASSERT_EQ(meta_obj->connectByName("test_void", &signal), true);
+    ASSERT_EQ(meta_obj->connectByName("test_void", signal), true);
     signal();
     ASSERT_EQ(meta_obj->slot_called_count, 1);
     signal();
@@ -176,6 +178,7 @@ TEST(object, inter_object_named)
 
 TEST(object, rest)
 {
+    auto stream = IAsyncStream::create();
     auto mgr = std::make_shared<RelayManager>();
     {
         auto constructor = MetaObjectFactory::instance()->getConstructor("MetaObjectCallback");
@@ -188,7 +191,7 @@ TEST(object, rest)
         TSignal<int(void)> signal;
         auto slot = meta_obj->getSlot("test_int", TypeInfo(typeid(int(void))));
         ASSERT_NE(slot, nullptr);
-        auto connection = slot->connect(&signal);
+        auto connection = slot->connect(signal);
         ASSERT_NE(connection, nullptr);
         ASSERT_EQ(signal(), 5);
     }
@@ -226,9 +229,8 @@ void testParams(mo::BufferFlags flags)
     auto num_signals = publisher->setupSignals(mgr);
     EXPECT_GT(num_signals, 0);
 
-    ASSERT_NE(publisher->getParam("test_int"), nullptr);
+    ASSERT_NE(publisher->getOutput("test_int"), nullptr);
     auto params = publisher->getParams();
-    ASSERT_EQ(params.size(), 1);
 
     auto subscriber = MetaObjectSubscriber::create();
     ASSERT_EQ(subscriber->getStream().get(), stream.get());
@@ -241,17 +243,25 @@ void testParams(mo::BufferFlags flags)
     auto input_param = subscriber->getInput("test_int");
     ASSERT_NE(input_param, nullptr);
 
-    auto output_param = publisher->getParam("test_int");
+    auto output_param = publisher->getOutput("test_int");
     ASSERT_NE(output_param, nullptr);
 
     ASSERT_EQ(subscriber->update_count, 0);
     ASSERT_TRUE(subscriber->connectInput("test_int", publisher.get(), "test_int", flags));
     ASSERT_EQ(subscriber->update_count, 1);
-    publisher->test_int.updateData(10);
+    publisher->test_int.publish(10);
 
     if (flags & ct::value(mo::BufferFlags::FORCE_BUFFERED))
     {
-        subscriber->test_int_param.getData();
+        auto pub = subscriber->test_int_param.getPublisher();
+        ASSERT_TRUE(pub);
+        ASSERT_TRUE(pub->checkFlags(mo::ParamFlags::kBUFFER));
+        auto buffer = dynamic_cast<mo::buffer::IBuffer*>(pub);
+        ASSERT_TRUE(buffer);
+        auto buffer_pub = buffer->getPublisher();
+        ASSERT_EQ(buffer_pub, &publisher->test_int);
+        ASSERT_EQ(buffer->getSize(), 2);
+        ASSERT_TRUE(subscriber->test_int_param.getData());
     }
 
     ASSERT_NE(subscriber->test_int, nullptr);

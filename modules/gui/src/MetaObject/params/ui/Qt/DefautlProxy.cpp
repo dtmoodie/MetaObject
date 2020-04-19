@@ -7,25 +7,24 @@
 using namespace mo;
 using namespace mo::UI::qt;
 
-DefaultProxy::DefaultProxy(IParam* param)
+DefaultProxy::DefaultProxy(IControlParam* param)
 {
-    delete_slot = std::bind(&DefaultProxy::onParamDelete, this, std::placeholders::_1);
-    update_slot = std::bind(
-        &DefaultProxy::onParamUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
-    this->param = param;
-    param->registerUpdateNotifier(&update_slot);
-    param->registerDeleteNotifier(&delete_slot);
+    delete_slot.bind(&DefaultProxy::onParamDelete, this);
+    update_slot.bind(&DefaultProxy::onParamUpdate, this);
+    this->m_param = param;
+    m_param->registerUpdateNotifier(update_slot);
+    m_param->registerDeleteNotifier(delete_slot);
 }
-bool DefaultProxy::setParam(IParam* param)
+bool DefaultProxy::setParam(IControlParam* param)
 {
-    this->param = param;
-    param->registerUpdateNotifier(&update_slot);
-    param->registerDeleteNotifier(&delete_slot);
+    this->m_param = param;
+    m_param->registerUpdateNotifier(update_slot);
+    m_param->registerDeleteNotifier(delete_slot);
     return true;
 }
-bool DefaultProxy::checkParam(IParam* param) const
+bool DefaultProxy::checkParam(IControlParam* param) const
 {
-    return this->param == param;
+    return this->m_param == param;
 }
 
 QWidget* DefaultProxy::getParamWidget(QWidget* parent)
@@ -33,8 +32,8 @@ QWidget* DefaultProxy::getParamWidget(QWidget* parent)
     QWidget* output = new QWidget(parent);
 
     QGridLayout* layout = new QGridLayout(output);
-    QLabel* nameLbl = new QLabel(QString::fromStdString(param->getName()), output);
-    nameLbl->setToolTip(QString::fromStdString(param->getTypeInfo().name()));
+    QLabel* nameLbl = new QLabel(QString::fromStdString(m_param->getName()), output);
+    nameLbl->setToolTip(QString::fromStdString(m_param->getTypeInfo().name()));
     layout->addWidget(nameLbl, 0, 0);
     output->setLayout(layout);
     return output;
@@ -45,11 +44,11 @@ void DefaultProxy::onUiUpdate(QObject* source)
     (void)source;
 }
 
-void DefaultProxy::onParamUpdate(IParam*, Header, UpdateFlags)
+void DefaultProxy::onParamUpdate(const IParam&, Header, UpdateFlags, IAsyncStream&)
 {
 }
 
-void DefaultProxy::onParamDelete(IParam const* param)
+void DefaultProxy::onParamDelete(const IParam& param)
 {
-    param = nullptr;
+    m_param = nullptr;
 }

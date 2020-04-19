@@ -16,17 +16,17 @@ namespace mo
         struct ParamCallbackContainer
         {
             using Ptr_t = std::unique_ptr<ParamCallbackContainer>;
-            using Registry_t = std::map<mo::ParamBase*, std::vector<Ptr_t>>;
+            using Registry_t = std::map<IParam*, std::vector<Ptr_t>>;
 
             static std::shared_ptr<Registry_t> registry();
-            ParamCallbackContainer(mo::IParam* ptr, const boost::python::object& obj);
+            ParamCallbackContainer(mo::IControlParam* ptr, const boost::python::object& obj);
 
-            void onParamUpdate(IParam*, Header, UpdateFlags);
+            void onParamUpdate(const IParam&, Header, UpdateFlags, IAsyncStream&);
 
-            void onParamDelete(const mo::ParamBase*);
+            void onParamDelete(const IParam&);
 
           private:
-            mo::IParam* m_ptr = nullptr;
+            mo::IControlParam* m_ptr = nullptr;
             boost::python::object m_callback;
             mo::python::DataConverterRegistry::Get_t m_getter;
             UpdateSlot_t m_slot;
@@ -34,5 +34,5 @@ namespace mo
             std::shared_ptr<Connection> del_connection;
             std::shared_ptr<Connection> update_connection;
         };
-    }
-}
+    } // namespace python
+} // namespace mo

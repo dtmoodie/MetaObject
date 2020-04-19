@@ -1,4 +1,3 @@
-#pragma once
 /*
 Copyright (c) 2015 Daniel Moodie.
 All rights reserved.
@@ -17,50 +16,42 @@ WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.
 
 https://github.com/dtmoodie/MetaObject
 */
-#include "AccessToken.hpp"
-#include "IParam.hpp"
-#include "ParamTags.hpp"
-#include "TDataContainer.hpp"
+#ifndef MO_PARAMS_TPARAM_HPP
+#define MO_PARAMS_TPARAM_HPP
+#include <MetaObject/detail/Export.hpp>
 
-#include <MetaObject/thread/fiber_include.hpp>
+#include <MetaObject/params/IControlParam.hpp>
+#include <MetaObject/params/IPublisher.hpp>
+#include <MetaObject/params/ISubscriber.hpp>
 
-#include <boost/thread/locks.hpp>
+#include <string>
+
 namespace mo
 {
-    template <typename T>
-    struct AccessToken;
-    template <typename T>
-    struct ConstAccessToken;
 
-    template <typename T>
-    class MO_EXPORTS TParam : virtual public IParam
+    template <class BASE>
+    struct MO_EXPORTS TParam : BASE
     {
-      public:
-        using Container_t = TDataContainer<T>;
-        using TContainerPtr_t = typename TDataContainer<T>::Ptr_t;
-        using type = typename TDataContainer<T>::type;
-        using ContainerConstPtr_t = std::shared_ptr<const Container_t>;
-        using TUpdate_s = void(TContainerPtr_t, IParam*, UpdateFlags, IAsyncStream&);
-        using TUpdateSignal_t = TSignal<TUpdate_s>;
-        using TUpdateSlot_t = TSlot<TUpdate_s>;
-
-        // brief TParam default constructor, passes args to IParam
-        TParam(const std::string& name = "", ParamFlags flags = ParamFlags::kCONTROL);
-
-        template <class... Args>
-        auto updateData(const type& data, const Args&... args) -> ct::EnableIf<hasNamedParam<Args...>()>;
-
-        template <class... Args>
-        auto updateData(type&& data, const Args&... args) -> ct::EnableIf<hasNamedParam<Args...>()>;
-
-        void updateData(const type& data, const Header& header = Header(), IAsyncStream* stream = nullptr);
-        void updateData(type&& data, Header&& header = Header(), IAsyncStream* stream = nullptr);
-        void updateData(const TContainerPtr_t& data, IAsyncStream* stream = nullptr);
-
-        TypeInfo getTypeInfo() const override;
+        ~TParam() override;
+        void setName(std::string name) override;
+        void setTreeRoot(std::string tree_root) override;
+        void setStream(IAsyncStream& stream) override;
+        std::string getName() const override;
+        std::string getTreeName() const override;
+        std::string getTreeRoot() const override;
+        IAsyncStream* getStream() const override;
 
         ConnectionPtr_t registerUpdateNotifier(ISlot& f) override;
         ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr_t& relay) override;
+        ConnectionPtr_t registerDeleteNotifier(TSlot<Delete_s>& f) override;
+        ConnectionPtr_t registerDeleteNotifier(const TSignalRelay<Delete_s>::Ptr_t& relay) override;
+        Mutex_t& mtx() const override;
+        void setMtx(Mutex_t& mtx) override;
+        ParamFlags appendFlags(ParamFlags flags) override;
+        bool checkFlags(ParamFlags flag) const override;
+        ParamFlags setFlags(ParamFlags flags) override;
+        ParamFlags getFlags() const override;
+        void setLogger(spdlog::logger& logger) override;
 
         void load(ILoadVisitor&) override;
         void save(ISaveVisitor&) const override;
@@ -68,355 +59,239 @@ namespace mo
         void save(BinaryOutputVisitor& ar) const override;
         void visit(StaticVisitor&) const override;
 
-        virtual bool isValid() const;
-        virtual ConstAccessToken<T> read() const;
-        virtual AccessToken<T> access();
-
-        IContainerPtr_t getData(const Header& desired = Header()) override;
-        IContainerConstPtr_t getData(const Header& desired = Header()) const override;
-
-        template <class... ARGS>
-        typename TDataContainer<T>::Ptr_t create(ARGS&&... args) const;
-
-        const type& value() const
-        {
-            MO_ASSERT(m_data);
-            return m_data->data;
-        }
-
-        OptionalTime getTimestamp() const override;
-        FrameNumber getFrameNumber() const override;
-
-        void setAllocator(typename Allocator::Ptr_t alloc)
-        {
-            m_allocator = ParamAllocator::create(alloc);
-        }
-
       protected:
-        typename TDataContainer<T>::Ptr_t getDataImpl(const Header& desired = Header());
-        typename TDataContainer<T>::ConstPtr_t getDataImpl(const Header& desired = Header()) const;
+        spdlog::logger& getLogger();
 
-        virtual void updateDataImpl(const TContainerPtr_t& data, mo::UpdateFlags fg, IAsyncStream& stream);
-
-        void emitTypedUpdate(TContainerPtr_t data, UpdateFlags flags, IAsyncStream& stream)
-        {
-            m_typed_update_signal(data, this, flags, stream);
-        }
-
-        ParamAllocator::Ptr_t allocator() const
-        {
-            return m_allocator;
-        }
+        void emitUpdate(Header, UpdateFlags, IAsyncStream&) const;
 
       private:
-        FrameNumber m_update_count;
-        typename TDataContainer<T>::Ptr_t m_data;
-        TSignal<TUpdate_s> m_typed_update_signal;
-        static const TypeInfo m_type_info;
-        ParamAllocator::Ptr_t m_allocator;
+        mutable mo::Mutex_t* m_mtx = nullptr;
+        IAsyncStream* m_stream = nullptr;
+        spdlog::logger* m_logger = nullptr;
+
+        std::string m_name;
+        std::string m_root_name;
+
+        ParamFlags m_flags;
+        bool m_modified = false;
+
+        TSignal<Update_s> m_update_signal;
+        TSignal<Delete_s> m_delete_signal;
+
+        mutable std::unique_ptr<Mutex_t> m_mtx_ptr;
     };
 
-    ///////////////////////////////////////////////////////////////////////////////////////
-    /// implementation
-    ///////////////////////////////////////////////////////////////////////////////////////
+    extern template struct TParam<ISubscriber>;
+    extern template struct TParam<IPublisher>;
+    // extern template struct TParam<IControlParam>;
 
-    template <class T>
-    TParam<T>::TParam(const std::string& name, ParamFlags flags)
-        : IParam(name, flags)
-        , m_allocator(ParamAllocator::create())
+    /////////////////////////////////////////////////////////////////////////
+
+    template <class BASE>
+    TParam<BASE>::~TParam()
     {
+        m_delete_signal(*this);
     }
 
-    template <class T>
-    template <class... Args>
-    auto TParam<T>::updateData(const type& data, const Args&... args) -> ct::EnableIf<hasNamedParam<Args...>()>
+    template <class BASE>
+    void TParam<BASE>::setName(std::string name)
     {
-        auto tmp = data;
-        updateData(std::move(tmp), args...);
+        Mutex_t::Lock_t lock(mtx());
+        m_name = std::move(name);
     }
 
-    template <class T>
-    template <class... Args>
-    auto TParam<T>::updateData(type&& data, const Args&... args) -> ct::EnableIf<hasNamedParam<Args...>()>
+    template <class BASE>
+    void TParam<BASE>::setTreeRoot(std::string tree_root)
     {
-        Header header;
-        const IParam* param = getKeywordInputDefault<params::Param>(static_cast<const IParam*>(nullptr), args...);
-        if (param)
+        Mutex_t::Lock_t lock(mtx());
+        m_root_name = std::move(tree_root);
+    }
+
+    template <class BASE>
+    void TParam<BASE>::setStream(IAsyncStream& stream)
+    {
+        Mutex_t::Lock_t lock(mtx());
+        m_stream = &stream;
+    }
+
+    template <class BASE>
+    std::string TParam<BASE>::getName() const
+    {
+        Mutex_t::Lock_t lock(mtx());
+        return m_name;
+    }
+
+    template <class BASE>
+    std::string TParam<BASE>::getTreeName() const
+    {
+        Mutex_t::Lock_t lock(mtx());
+        if (m_root_name.empty())
         {
-            header.frame_number = param->getFrameNumber();
-            header.timestamp = param->getTimestamp();
+            return m_name;
         }
-        const uint64_t* fnptr = getKeywordInputOptional<params::FrameNumber>(args...);
-        if (fnptr)
+        return m_root_name + ':' + m_name;
+    }
+
+    template <class BASE>
+    std::string TParam<BASE>::getTreeRoot() const
+    {
+        Mutex_t::Lock_t lock(mtx());
+        return m_root_name;
+    }
+
+    template <class BASE>
+    IAsyncStream* TParam<BASE>::getStream() const
+    {
+        return m_stream;
+    }
+
+    template <class BASE>
+    ConnectionPtr_t TParam<BASE>::registerUpdateNotifier(ISlot& f)
+    {
+        return m_update_signal.connect(f);
+    }
+
+    template <class BASE>
+    ConnectionPtr_t TParam<BASE>::registerUpdateNotifier(const ISignalRelay::Ptr_t& relay_)
+    {
+        if (relay_ == nullptr)
         {
-            header.frame_number = *fnptr;
+            return {};
         }
+        auto relay = relay_;
+        return m_update_signal.connect(relay);
+    }
 
-        auto tsptr = getKeywordInputOptional<params::Timestamp>(args...);
-        if (tsptr)
+    template <class BASE>
+    ConnectionPtr_t TParam<BASE>::registerDeleteNotifier(TSlot<Delete_s>& f)
+    {
+        return m_delete_signal.connect(f);
+    }
+
+    template <class BASE>
+    ConnectionPtr_t TParam<BASE>::registerDeleteNotifier(const TSignalRelay<Delete_s>::Ptr_t& relay)
+    {
+        if (relay == nullptr)
         {
-            header.timestamp = *tsptr;
+            return {};
         }
-
-        auto stream = getKeywordInputDefault<params::Stream>(nullptr, args...);
-        if (!stream)
+        auto tmp = relay;
+        return m_delete_signal.connect(tmp);
+    }
+    template <class BASE>
+    Mutex_t& TParam<BASE>::mtx() const
+    {
+        if (!m_mtx)
         {
-            stream = getStream();
+            m_mtx_ptr.reset(new Mutex_t());
+            m_mtx = m_mtx_ptr.get();
         }
-        if (!stream)
+        return *m_mtx;
+    }
+
+    template <class BASE>
+    void TParam<BASE>::setMtx(Mutex_t& mtx)
+    {
+        if (m_mtx)
         {
-            stream = IAsyncStream::current().get();
+            m_mtx_ptr.reset();
+            m_mtx = nullptr;
         }
-
-        updateData(std::move(data), std::move(header));
+        m_mtx = &mtx;
     }
 
-    template <class T>
-    void TParam<T>::updateData(const type& data, const Header& header, IAsyncStream* stream)
+    template <class BASE>
+    ParamFlags TParam<BASE>::appendFlags(ParamFlags flags_)
     {
-        auto container = create(data);
-        container->header = header;
-        updateData(container, stream);
+        Mutex_t::Lock_t lock(mtx());
+        auto prev = m_flags;
+        m_flags.set(flags_);
+        return prev;
     }
 
-    template <class T>
-    void TParam<T>::updateData(type&& data, Header&& header, IAsyncStream* stream)
+    template <class BASE>
+    bool TParam<BASE>::checkFlags(ParamFlags flag) const
     {
-        auto container = create(std::move(data));
-        container->header = std::move(header);
-        updateData(container, stream);
+        Mutex_t::Lock_t lock(mtx());
+        return m_flags.test(flag);
     }
 
-    template <class T>
-    void TParam<T>::updateData(const TContainerPtr_t& data, IAsyncStream* stream)
+    template <class BASE>
+    ParamFlags TParam<BASE>::setFlags(ParamFlags flags_)
     {
-        if (!data)
-        {
-            return;
-        }
-
-        if (!stream)
-        {
-            stream = this->getStream();
-        }
-        if (!stream)
-        {
-            stream = IAsyncStream::current().get();
-        }
-        MO_ASSERT(stream != nullptr);
-
-        updateDataImpl(data, UpdateFlags::kVALUE_UPDATED, *stream);
+        Mutex_t::Lock_t lock(mtx());
+        auto prev = m_flags;
+        m_flags = flags_;
+        return prev;
     }
 
-    template <class T>
-    template <class... ARGS>
-    typename TDataContainer<T>::Ptr_t TParam<T>::create(ARGS&&... args) const
+    template <class BASE>
+    ParamFlags TParam<BASE>::getFlags() const
     {
-        return std::make_shared<TDataContainer<T>>(m_allocator, std::forward<ARGS>(args)...);
+        Mutex_t::Lock_t lock(mtx());
+        return m_flags;
     }
 
-    template <class T>
-    void TParam<T>::updateDataImpl(const TContainerPtr_t& data, mo::UpdateFlags fg, IAsyncStream& stream)
+    template <class BASE>
+    void TParam<BASE>::setLogger(spdlog::logger& logger)
     {
-        if (!data->header.frame_number.valid())
-        {
-            ++m_update_count.val;
-            data->header.frame_number = m_update_count;
-        }
-        else
-        {
-            m_update_count = data->header.frame_number;
-        }
-
-        {
-            mo::Lock_t lock(this->mtx());
-            m_data = data;
-        }
-        emitUpdate(IDataContainer::Ptr_t(data), fg, stream);
-        m_typed_update_signal(data, this, fg, stream);
+        Mutex_t::Lock_t lock(mtx());
+        m_logger = &logger;
     }
 
-    template <class T>
-    TypeInfo TParam<T>::getTypeInfo() const
+    template <class BASE>
+    void TParam<BASE>::load(ILoadVisitor& visitor)
     {
-        return m_type_info;
+        visitor(&m_name, "name");
+        visitor(&m_root_name, "root_name");
+        visitor(&m_flags, "flags");
     }
 
-    template <class T>
-    ConnectionPtr_t TParam<T>::registerUpdateNotifier(ISlot& f)
+    template <class BASE>
+    void TParam<BASE>::save(ISaveVisitor& visitor) const
     {
-        if (f.getSignature() == m_typed_update_signal.getSignature())
-        {
-            // Is the additional check necessary since we do the above check?
-            auto typed = dynamic_cast<TUpdateSlot_t*>(&f);
-            if (typed)
-            {
-                return m_typed_update_signal.connect(*typed);
-            }
-        }
-        return IParam::registerUpdateNotifier(f);
+        visitor(&m_name, "name");
+        visitor(&m_root_name, "root_name");
+        visitor(&m_flags, "flags");
     }
 
-    template <class T>
-    ConnectionPtr_t TParam<T>::registerUpdateNotifier(const ISignalRelay::Ptr_t& relay)
+    template <class BASE>
+    void TParam<BASE>::load(BinaryInputVisitor& ar)
     {
-        if (relay->getSignature() == m_typed_update_signal.getSignature())
-        {
-            auto tmp = relay;
-            return m_typed_update_signal.connect(tmp);
-        }
-        return IParam::registerUpdateNotifier(relay);
+        ar(m_name);
+        ar(m_root_name);
+        ar(m_flags);
     }
 
-    template <class T>
-    void TParam<T>::load(ILoadVisitor& visitor)
+    template <class BASE>
+    void TParam<BASE>::save(BinaryOutputVisitor& ar) const
     {
-        mo::Lock_t lock(this->mtx());
-        if (m_data)
-        {
-            m_data->load(visitor);
-        }
+        ar(m_name);
+        ar(m_root_name);
+        ar(m_flags);
     }
 
-    template <class T>
-    void TParam<T>::save(ISaveVisitor& visitor) const
+    template <class BASE>
+    void TParam<BASE>::visit(StaticVisitor& visitor) const
     {
-        mo::Lock_t lock(this->mtx());
-        if (m_data)
-        {
-            m_data->save(visitor);
-        }
+        visitor.template visit<std::string>("name");
+        visitor.template visit<std::string>("root_name");
+        visitor.template visit<ParamFlags>("flags");
     }
 
-    template <class T>
-    void TParam<T>::load(BinaryInputVisitor& ar)
+    template <class BASE>
+    spdlog::logger& TParam<BASE>::getLogger()
     {
-        mo::Lock_t lock(this->mtx());
-        if (m_data)
-        {
-            m_data->load(ar);
-        }
+        Mutex_t::Lock_t lock(mtx());
+        MO_ASSERT(m_logger != nullptr);
+        return *m_logger;
     }
 
-    template <class T>
-    void TParam<T>::save(BinaryOutputVisitor& ar) const
+    template <class BASE>
+    void TParam<BASE>::emitUpdate(Header hdr, UpdateFlags fgs, IAsyncStream& stream) const
     {
-        mo::Lock_t lock(this->mtx());
-        if (m_data)
-        {
-            m_data->save(ar);
-        }
+        m_update_signal(*this, std::move(hdr), std::move(fgs), stream);
     }
 
-    template <class T>
-    void TParam<T>::visit(StaticVisitor& visitor) const
-    {
-        TDataContainer<T>::visitStatic(visitor);
-    }
-
-    template <class T>
-    typename TParam<T>::IContainerPtr_t TParam<T>::getData(const Header& desired)
-    {
-        return getDataImpl(desired);
-    }
-
-    template <class T>
-    typename TParam<T>::IContainerConstPtr_t TParam<T>::getData(const Header& desired) const
-    {
-        return getDataImpl(desired);
-    }
-
-    template <class T>
-    typename TDataContainer<T>::Ptr_t TParam<T>::getDataImpl(const Header& desired)
-    {
-        mo::Lock_t lock(this->mtx());
-        if (m_data)
-        {
-            if (!desired.timestamp && !desired.frame_number.valid())
-            {
-                return m_data;
-            }
-
-            if (desired.timestamp && m_data->header.timestamp == desired.timestamp)
-            {
-                return m_data;
-            }
-
-            if (desired.frame_number.valid() && desired.frame_number == m_data->header.frame_number)
-            {
-                return m_data;
-            }
-        }
-        return {};
-    }
-
-    template <class T>
-    typename TDataContainer<T>::ConstPtr_t TParam<T>::getDataImpl(const Header& desired) const
-    {
-        mo::Lock_t lock(this->mtx());
-        if (m_data)
-        {
-            if (!desired.timestamp && !desired.frame_number.valid())
-            {
-                return m_data;
-            }
-
-            if (desired.timestamp && m_data->header.timestamp == desired.timestamp)
-            {
-                return m_data;
-            }
-
-            if (desired.frame_number != std::numeric_limits<uint64_t>::max() &&
-                desired.frame_number == m_data->header.frame_number)
-            {
-                return m_data;
-            }
-        }
-        return {};
-    }
-
-    template <class T>
-    OptionalTime TParam<T>::getTimestamp() const
-    {
-        if (m_data)
-        {
-            return m_data->getHeader().timestamp;
-        }
-        return {};
-    }
-
-    template <class T>
-    FrameNumber TParam<T>::getFrameNumber() const
-    {
-        if (m_data)
-        {
-            return m_data->getHeader().frame_number;
-        }
-        return {};
-    }
-
-    template <class T>
-    bool TParam<T>::isValid() const
-    {
-        return m_data != nullptr;
-    }
-
-    template <class T>
-    ConstAccessToken<T> TParam<T>::read() const
-    {
-        mo::Lock_t lock(this->mtx());
-        MO_ASSERT(m_data != nullptr);
-        return ConstAccessToken<T>(std::move(lock), *this, m_data->data);
-    }
-
-    template <class T>
-    AccessToken<T> TParam<T>::access()
-    {
-        mo::Lock_t lock(this->mtx());
-        MO_ASSERT(m_data != nullptr);
-        return AccessToken<T>(std::move(lock), *this, m_data->data);
-    }
-
-    template <class T>
-    const TypeInfo TParam<T>::m_type_info = TypeInfo(typeid(TParam<T>::type));
 } // namespace mo
+#endif // MO_PARAMS_TPARAM_HPP

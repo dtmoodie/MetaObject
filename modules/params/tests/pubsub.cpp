@@ -1,5 +1,6 @@
-#include <MetaObject/params/TInputParam.hpp>
 #include <MetaObject/params/TParamPtr.hpp>
+#include <MetaObject/params/TPublisher.hpp>
+#include <MetaObject/params/TSubscriberPtr.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/array_adapter.hpp>
 
 #include <MetaObject/thread/fiber_include.hpp>
@@ -29,7 +30,7 @@ namespace ct
         }
         return true;
     }
-}
+} // namespace ct
 
 namespace
 {
@@ -55,12 +56,12 @@ namespace
     template <class T, class A>
     struct TestData<std::vector<T, A>>
     {
-        static std::vector<T, mo::TVectorAllocator<T>> init(T val)
+        static std::vector<T, mo::TStlAllocator<T>> init(T val)
         {
-            return std::vector<T, mo::TVectorAllocator<T>>(val, val);
+            return std::vector<T, mo::TStlAllocator<T>>(val, val);
         }
 
-        static std::vector<T, mo::TVectorAllocator<T>> update(T val)
+        static std::vector<T, mo::TStlAllocator<T>> update(T val)
         {
             return init(val);
         }
@@ -89,70 +90,64 @@ namespace
     template <class T, class U>
     struct PublishSubscribe<ct::VariadicTypedef<T, U>> : ::testing::Test
     {
-        using type = typename TParamPtr<T>::type;
 
-        type value;
-        TParamPtr<T> output_param;
+        T value;
+        mo::TPublisher<T> output_param;
 
-        ITInputParam<U> input_param;
-        std::vector<std::pair<IParam*, UpdateFlags>> update_flag;
+        mo::TSubscriber<U> input_param;
+        std::vector<std::pair<const IParam*, UpdateFlags>> update_flag;
 
-        TSlot<void(IParam*, Header, UpdateFlags)> update_slot;
-        TSlot<void(const std::shared_ptr<IDataContainer>&, IParam*, UpdateFlags)> data_slot;
-        TSlot<void(typename mo::TParam<U>::TContainerPtr_t, IParam*, UpdateFlags)> typed_slot;
+        TSlot<Update_s> update_slot;
+        TSlot<DataUpdate_s> data_slot;
         std::shared_ptr<Connection> connection;
 
-        typename ITInputParam<U>::type update_val;
+        typename TSubscriber<U>::type update_val;
+
+        IAsyncStreamPtr_t m_stream;
         bool update_called = false;
 
         PublishSubscribe()
-            : output_param("pub", &value)
-            , input_param("sub")
         {
-            update_slot = std::bind(&PublishSubscribe<ct::VariadicTypedef<T, U>>::onUpdate,
-                                    this,
-                                    std::placeholders::_1,
-                                    std::placeholders::_2,
-                                    std::placeholders::_3);
+            output_param.setName("pub");
+            input_param.setName("sub");
 
-            data_slot = std::bind(&PublishSubscribe<ct::VariadicTypedef<T, U>>::onDataUpdate,
-                                  this,
-                                  std::placeholders::_1,
-                                  std::placeholders::_2,
-                                  std::placeholders::_3);
+            m_stream = IAsyncStream::create();
+            output_param.setStream(*m_stream);
+            input_param.setStream(*m_stream);
+            update_slot.bind(&PublishSubscribe<ct::VariadicTypedef<T, U>>::onUpdate, this);
 
-            typed_slot = std::bind(&PublishSubscribe<ct::VariadicTypedef<T, U>>::onTypedDataUpdate,
-                                   this,
-                                   std::placeholders::_1,
-                                   std::placeholders::_2,
-                                   std::placeholders::_3);
+            data_slot.bind(&PublishSubscribe<ct::VariadicTypedef<T, U>>::onDataUpdate, this);
         }
 
         template <class V>
         void init(V&& data)
         {
-            value = TestData<type>::init(std::move(data));
+            value = TestData<T>::init(std::move(data));
         }
 
-        void onUpdate(IParam* param, Header, UpdateFlags fg)
+        void onUpdate(const IParam& param, Header, UpdateFlags fg, IAsyncStream&)
         {
             update_called = true;
-            update_flag.emplace_back(param, fg);
+            update_flag.emplace_back(&param, fg);
         }
 
-        void onDataUpdate(const std::shared_ptr<IDataContainer>& data, IParam* param, UpdateFlags fg)
+        void onDataUpdate(const std::shared_ptr<const IDataContainer>& data,
+                          const IParam& param,
+                          UpdateFlags fg,
+                          IAsyncStream&)
         {
             update_called = true;
-            update_flag.emplace_back(param, fg);
-            auto typed = std::dynamic_pointer_cast<TDataContainer<U>>(data);
+            update_flag.emplace_back(&param, fg);
+            auto typed = std::dynamic_pointer_cast<const TDataContainer<U>>(data);
             ASSERT_NE(typed, nullptr);
             update_val = typed->data;
         }
 
-        void onTypedDataUpdate(typename mo::TParam<U>::TContainerPtr_t data, IParam* param, UpdateFlags fg)
+        void
+        onTypedDataUpdate(const TDataContainerConstPtr_t<U>& data, const IParam& param, UpdateFlags fg, IAsyncStream&)
         {
             update_called = true;
-            update_flag.emplace_back(param, fg);
+            update_flag.emplace_back(&param, fg);
             update_val = data->data;
         }
 
@@ -161,32 +156,30 @@ namespace
             init(10);
             ASSERT_EQ(input_param.checkFlags(mo::ParamFlags::kINPUT), true);
             ASSERT_EQ(input_param.getName(), "sub");
-            ASSERT_FALSE(input_param.getInputFrameNumber().valid());
+            ASSERT_FALSE(input_param.getCurrentData());
+            // ASSERT_FALSE(input_param.getCurrentData().valid());
         }
 
         void testGetData()
         {
             init(10);
-            output_param.updateData(this->value);
-            typename ITInputParam<U>::type data;
+            output_param.publish(int(this->value));
+            typename TSubscriber<U>::type data;
             ASSERT_TRUE(input_param.setInput(&this->output_param));
-            ASSERT_TRUE(input_param.getTypedData(&data));
+            ASSERT_TRUE(input_param.getData(data));
             ASSERT_EQ(data, value);
         }
 
         void testSubscribeCallback()
         {
             init(10);
-            connection = input_param.registerUpdateNotifier(&update_slot);
+            connection = input_param.registerUpdateNotifier(update_slot);
             ASSERT_NE(connection.get(), nullptr);
             EXPECT_FALSE(update_called);
             input_param.setInput(&output_param);
             EXPECT_TRUE(update_called);
-            ASSERT_EQ(update_flag.size(), 3);
+            ASSERT_EQ(update_flag.size(), 1);
             EXPECT_EQ(update_flag[0].second, ct::value(UpdateFlags::kINPUT_SET));
-            EXPECT_EQ(update_flag[1].second, ct::value(UpdateFlags::kINPUT_UPDATED));
-            EXPECT_EQ(update_flag[2].second, ct::value(UpdateFlags::kVALUE_UPDATED));
-
         }
 
         void testUpdateCallback()
@@ -194,38 +187,26 @@ namespace
             init(10);
             ASSERT_EQ(input_param.setInput(&output_param), true);
 
-            connection = input_param.registerUpdateNotifier(&update_slot);
+            connection = input_param.registerUpdateNotifier(update_slot);
             ASSERT_NE(connection, nullptr);
             EXPECT_FALSE(update_called);
-            output_param.updateData(TestData<T>::update(5));
+            output_param.publish(TestData<T>::update(5));
             EXPECT_TRUE(update_called);
-            const auto count = std::count_if(update_flag.begin(), update_flag.end(), [](std::pair<IParam*, UpdateFlags> val)->bool{return val.second == UpdateFlags::kINPUT_UPDATED;});
+            const auto count = std::count_if(
+                update_flag.begin(), update_flag.end(), [](std::pair<const IParam*, UpdateFlags> val) -> bool {
+                    return val.second == UpdateFlags::kINPUT_UPDATED;
+                });
             EXPECT_EQ(count, 1);
         }
-
-        void testTypedCallback()
-        {
-            init(10);
-            ASSERT_EQ(input_param.setInput(&output_param), true);
-
-            connection = input_param.registerUpdateNotifier(&typed_slot);
-            ASSERT_NE(connection.get(), nullptr);
-            ASSERT_FALSE(update_called);
-            output_param.updateData(TestData<T>::update(5));
-            ASSERT_TRUE(update_called);
-            const auto count = std::count_if(update_flag.begin(), update_flag.end(), [](std::pair<IParam*, UpdateFlags> val)->bool{return val.second == UpdateFlags::kINPUT_UPDATED;});
-            ASSERT_EQ(count, 1);
-            ASSERT_EQ(update_val, TestData<T>::update(5));
-        }
     };
-}
+} // namespace
 
 TYPED_TEST_SUITE_P(PublishSubscribe);
 
 using PubSubTestTypes = ::testing::Types<ct::VariadicTypedef<int, int>>;
 
-//ct::VariadicTypedef<std::vector<int>, std::vector<int>>,
-//ct::VariadicTypedef<std::vector<int>, ct::TArrayView<int>>
+// ct::VariadicTypedef<std::vector<int>, std::vector<int>>,
+// ct::VariadicTypedef<std::vector<int>, ct::TArrayView<int>>
 
 TYPED_TEST_P(PublishSubscribe, initialization)
 {
@@ -247,12 +228,7 @@ TYPED_TEST_P(PublishSubscribe, updateCallback)
     this->testUpdateCallback();
 }
 
-TYPED_TEST_P(PublishSubscribe, typedUpdateCallback)
-{
-    this->testTypedCallback();
-}
-
-REGISTER_TYPED_TEST_SUITE_P(PublishSubscribe, initialization, getData, subscriberCallback, updateCallback, typedUpdateCallback);
+REGISTER_TYPED_TEST_SUITE_P(PublishSubscribe, initialization, getData, subscriberCallback, updateCallback);
 
 INSTANTIATE_TYPED_TEST_SUITE_P(PublishSubscribeTest, PublishSubscribe, PubSubTestTypes);
 
@@ -267,7 +243,7 @@ TEST_F(PublishSubscribeWrapping, wrapVecWithView)
     ASSERT_EQ(this->input_param.getTypedData(&view), true);
     ASSERT_EQ(view, this->value);
 
-    TInputParamPtr<ct::TArrayView<int>> wrapped_sub;
+    TSubscriberPtr<ct::TArrayView<int>> wrapped_sub;
     ASSERT_EQ(wrapped_sub.setInput(&this->output_param), true);
 
     auto wrapped_data = wrapped_sub.getTypedData();

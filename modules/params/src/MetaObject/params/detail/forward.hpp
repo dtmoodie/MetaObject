@@ -14,13 +14,13 @@ namespace mo
     // concrete types
     struct AccessTokenLock;
     class InputParamAny;
-    class InputParam;
+    class ISubscriber;
 
     class ParamFactory;
 
     // templated types
     template <class T>
     struct AccessToken;
-}
+} // namespace mo
 
 #endif // MO_PARAMS_FORWARD_HPP

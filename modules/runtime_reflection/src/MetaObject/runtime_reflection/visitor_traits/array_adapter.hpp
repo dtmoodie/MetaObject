@@ -5,6 +5,7 @@
 #include <MetaObject/logging/logging.hpp>
 #include <MetaObject/runtime_reflection/IDynamicVisitor.hpp>
 #include <MetaObject/types/ArrayAdapater.hpp>
+#include <MetaObject/types/TDynArray.hpp>
 
 #include <ct/types/TArrayView.hpp>
 namespace mo
@@ -64,13 +65,13 @@ namespace mo
         void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t) const override
         {
             auto ptr = this->ptr(inst);
-            visitor(ptr->data(), "data", ptr->size());
+            visitor(ptr->data(), "", ptr->size());
         }
 
         void save(ISaveVisitor& visitor, const void* val, const std::string&, size_t) const override
         {
             auto ptr = this->ptr(val);
-            visitor(ptr->data(), "data", ptr->size());
+            visitor(ptr->data(), "", ptr->size());
         }
 
         void visit(StaticVisitor& visitor, const std::string&) const override
@@ -114,7 +115,7 @@ namespace mo
     template <class T>
     struct TTraits<ct::TArrayView<const T>, 4, void> : virtual ContainerBase<ct::TArrayView<const T>, const T>
     {
-        void load(ILoadVisitor&, void* , const std::string&, size_t) const override
+        void load(ILoadVisitor&, void*, const std::string&, size_t) const override
         {
             THROW(warn, "Unable to load to a const array view");
         }
@@ -122,7 +123,8 @@ namespace mo
         void save(ISaveVisitor& visitor, const void* val, const std::string&, size_t) const override
         {
             auto ptr = this->ptr(val);
-            visitor(ptr->data(), "data", ptr->size());
+            auto sz = ptr->size();
+            visitor(ptr->data(), "", ptr->size());
         }
 
         void visit(StaticVisitor& visitor, const std::string&) const override
@@ -185,6 +187,37 @@ namespace mo
             visitor.template visit<T>("data", ROWS * COLS);
         }
     };
-}
+
+    template <class T, class ALLOC>
+    struct TTraits<TDynArray<T, ALLOC>, 5, void> : public ContainerBase<TDynArray<T, ALLOC>, T>
+    {
+        TTraits()
+        {
+        }
+
+        void load(ILoadVisitor& visitor, void* instance, const std::string&, size_t) const override
+        {
+            size_t sz = visitor.getCurrentContainerSize();
+            TDynArray<T, ALLOC>& obj = this->ref(instance);
+            obj.resize(sz);
+            auto view = obj.mutableView();
+            visitor(view.data(), "", view.size());
+        }
+
+        void save(ISaveVisitor& visitor, const void* instance, const std::string&, size_t) const override
+        {
+        }
+
+        void visit(StaticVisitor& visitor, const std::string&) const override
+        {
+            // TODO
+        }
+
+        std::string name() const override
+        {
+            return ct::Reflect<T>::getName();
+        }
+    };
+} // namespace mo
 
 #endif // MO_VISITATION_ARRAY_ADAPTER_HPP

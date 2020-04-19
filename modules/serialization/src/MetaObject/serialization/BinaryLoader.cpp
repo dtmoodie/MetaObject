@@ -153,8 +153,19 @@ namespace mo
     {
         return "";
     }
+
     size_t BinaryLoader::getCurrentContainerSize() const
     {
         return m_current_size;
     }
-}
+
+    std::shared_ptr<Allocator> BinaryLoader::getAllocator() const
+    {
+        return m_allocator;
+    }
+
+    void BinaryLoader::setAllocator(std::shared_ptr<Allocator> alloc)
+    {
+        m_allocator = std::move(alloc);
+    }
+} // namespace mo

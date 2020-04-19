@@ -47,7 +47,7 @@ namespace mo
                 static WidgetFactory* Instance();
 
                 void RegisterConstructor(const TypeInfo& type, HandlerConstructor_f f);
-                std::shared_ptr<IParamProxy> CreateProxy(IParam* param);
+                std::shared_ptr<IParamProxy> CreateProxy(IControlParam* param);
 
               private:
                 WidgetFactory();
@@ -94,4 +94,4 @@ namespace mo
         } /* namespace wt */
 
     } /* namespace UI */
-} /* namespace Perameters */
+} // namespace mo

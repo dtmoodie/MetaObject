@@ -35,19 +35,23 @@
 #define LOG_OCCURRENCES LOG_EVERY_N_VARNAME(occurrences_, __LINE__)
 #define LOG_OCCURRENCES_MOD_N LOG_EVERY_N_VARNAME(occurrences_mod_n_, __LINE__)
 
-#define LOG_THEN_THROW(level, ...)                                                                                     \
+#define LOG_THEN_THROW(level, LOGGER, ...)                                                                             \
     do                                                                                                                 \
     {                                                                                                                  \
-        const std::string msg = fmt::format(__VA_ARGS__);                                                              \
-        mo::getDefaultLogger().level(msg);                                                                             \
-        mo::throwWithCallstack(std::runtime_error(msg));                                                               \
+        std::string msg = fmt::format(__VA_ARGS__);                                                                    \
+        LOGGER.level(msg);                                                                                             \
+        mo::throwWithCallstack(std::runtime_error(std::move(msg)));                                                    \
     } while (0)
 
-#define THROW(level, ...) LOG_THEN_THROW(level, __VA_ARGS__)
+#define THROW(level, ...) LOG_THEN_THROW(level, mo::getDefaultLogger(), __VA_ARGS__)
 
-#define MO_ASSERT(CHECK)                                                                                               \
+#define THROW_LOGGER(LOGGER, level, ...) LOG_THEN_THROW(level, LOGGER, __VA_ARGS__)
+
+#define MO_ASSERT_LOGGER(LOGGER, CHECK)                                                                                \
     if (!(CHECK))                                                                                                      \
     THROW(error, #CHECK)
+
+#define MO_ASSERT(CHECK) MO_ASSERT_LOGGER(mo::getDefaultLogger(), CHECK)
 
 #define MO_ASSERT_EQ(LHS, RHS)                                                                                         \
     if ((LHS) != (RHS))                                                                                                \

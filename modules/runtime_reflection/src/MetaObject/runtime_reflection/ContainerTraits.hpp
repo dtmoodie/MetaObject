@@ -95,7 +95,7 @@ namespace mo
 
         TypeInfo valueType() const override
         {
-            return TypeInfo(typeid(V));
+            return TypeInfo(typeid(typename std::remove_const<V>::type));
         }
 
         bool isContinuous() const override

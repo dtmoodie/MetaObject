@@ -1,6 +1,10 @@
 #ifndef MO_CORE_TYPE_INFO_HPP
 #define MO_CORE_TYPE_INFO_HPP
 #include "Export.hpp"
+
+#include <ct/reflect.hpp>
+#include <ct/reflect_macros.hpp>
+
 #include <ostream>
 #include <string>
 #include <typeinfo>
@@ -67,5 +71,12 @@ namespace std
         result_type operator()(argument_type const& s) const noexcept;
     };
 } // namespace std
+
+namespace ct
+{
+    REFLECT_BEGIN(mo::TypeInfo)
+        PROPERTY(name, &mo::TypeInfo::name)
+    REFLECT_END;
+} // namespace ct
 
 #endif // MO_CORE_TYPE_INFO_HPP

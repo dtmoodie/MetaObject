@@ -3,7 +3,7 @@
 #include "MetaObject.hpp"
 #include "MetaObject/object/IMetaObjectInfo.hpp"
 #include "MetaObject/object/MetaObject.hpp"
-#include "MetaObject/params/InputParam.hpp"
+#include "MetaObject/params/ISubscriber.hpp"
 #include "MetaObject/params/ParamInfo.hpp"
 #include "MetaObject/python/DataConverter.hpp"
 
@@ -74,32 +74,32 @@ namespace mo
             boost::python::class_<IMetaObject, rcc::shared_ptr<IMetaObject>, boost::noncopyable> bpobj(
                 "IMetaObject", boost::python::no_init);
             bpobj.def("__repr__", &printObject<IMetaObject>);
-            bpobj.def(
-                "getParams",
-                static_cast<std::vector<IParam*> (IMetaObject::*)(const std::string&) const>(&IMetaObject::getParams),
-                (boost::python::arg("name_filter") = ""));
+            bpobj.def("getParams",
+                      static_cast<ParamVec_t (IMetaObject::*)(const std::string&)>(&IMetaObject::getParams),
+                      (boost::python::arg("name_filter") = ""));
 
             bpobj.def("getInputs",
-                      static_cast<std::vector<InputParam*> (IMetaObject::*)(const std::string&) const>(
+                      static_cast<std::vector<ISubscriber*> (IMetaObject::*)(const std::string&) const>(
                           &IMetaObject::getInputs),
                       (boost::python::arg("name_filter") = ""));
 
-            bpobj.def("getOutputs",
-                      static_cast<ParamVec_t (IMetaObject::*)(const std::string&) const>(&IMetaObject::getOutputs),
-                      (boost::python::arg("name_filter") = ""));
+            bpobj.def(
+                "getOutputs",
+                static_cast<IMetaObject::PublisherVec_t (IMetaObject::*)(const std::string&)>(&IMetaObject::getOutputs),
+                (boost::python::arg("name_filter") = ""));
 
             bpobj.def("getParam",
-                      static_cast<IParam* (IMetaObject::*)(const std::string&)const>(&IMetaObject::getParam),
+                      static_cast<IControlParam* (IMetaObject::*)(const std::string&)>(&IMetaObject::getParam),
                       (boost::python::arg("name")),
                       boost::python::return_internal_reference<>());
 
             bpobj.def("getInput",
-                      static_cast<InputParam* (IMetaObject::*)(const std::string&)const>(&IMetaObject::getInput),
+                      static_cast<ISubscriber* (IMetaObject::*)(const std::string&)>(&IMetaObject::getInput),
                       (boost::python::arg("name")),
                       boost::python::return_internal_reference<>());
 
             bpobj.def("getOutput",
-                      static_cast<IParam* (IMetaObject::*)(const std::string&)const>(&IMetaObject::getOutput),
+                      static_cast<IPublisher* (IMetaObject::*)(const std::string&)>(&IMetaObject::getOutput),
                       (boost::python::arg("name")),
                       boost::python::return_internal_reference<>());
 

@@ -10,28 +10,54 @@
 
 #include <gtest/gtest.h>
 
+bool beQuiet(int argc, char** argv)
+{
+    for (int i = 0; i < argc; ++i)
+    {
+        if (std::string("--gtest_list_tests") == argv[i])
+        {
+            return true;
+        }
+    }
+    return false;
+}
+
 int main(int argc, char** argv)
 {
+    const auto quiet = beQuiet(argc, argv);
     ::testing::InitGoogleTest(&argc, argv);
     auto table = SystemTable::instance();
+    if (quiet)
+    {
+        table->getDefaultLogger()->set_level(spdlog::level::critical);
+    }
     PerModuleInterface::GetInstance()->SetSystemTable(table.get());
     mo::params::init(table.get());
     mo::MetaObjectFactory::instance()->registerTranslationUnit();
     test::setupPlugin(table.get());
+    if (!quiet)
+    {
+        MO_LOG(info, "Current working directory {}", boost::filesystem::current_path().string());
+    }
 
-    MO_LOG(info, "Current working directory {}", boost::filesystem::current_path().string());
     std::string postfix;
 #ifdef _DEBUG
     postfix = "d";
 #endif
-    table->getDefaultLogger()->set_level(spdlog::level::debug);
+    if (!quiet)
+    {
+        table->getDefaultLogger()->set_level(spdlog::level::debug);
+    }
+
 #ifdef _MSC_VER
     const bool loaded = mo::MetaObjectFactory::instance()->loadPlugin("./mo_objectplugin" + postfix + ".dll");
 #else
     const bool loaded = mo::MetaObjectFactory::instance()->loadPlugin("./libmo_objectplugin" + postfix + ".so");
 #endif
-
-    table->getDefaultLogger()->set_level(spdlog::level::info);
+    if (!quiet)
+    {
+        table->getDefaultLogger()->set_level(spdlog::level::info);
+    }
     if (!loaded)
     {
         MO_LOG(warn,

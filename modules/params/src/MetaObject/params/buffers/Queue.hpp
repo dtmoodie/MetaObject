@@ -2,7 +2,7 @@
 #include "BufferConstructor.hpp"
 #include "IBuffer.hpp"
 #include "MetaObject/detail/ConcurrentQueue.hpp"
-#include "MetaObject/params/ITInputParam.hpp"
+#include "MetaObject/params/TSubscriber.hpp"
 #include "MetaObject/params/MetaParam.hpp"
 #include "MetaObject/params/ParamConstructor.hpp"
 
@@ -12,7 +12,7 @@ namespace mo
     namespace Buffer
     {
         template <class T>
-        class Queue : public ITInputParam<T>, public IBuffer
+        class Queue : public TSubscriber<T>, public IBuffer
         {
           public:
             typedef T ValueType;
@@ -38,10 +38,14 @@ namespace mo
             void SetSize(long long size);
             long long getSize();
             void getTimestampRange(mo::Time& start, mo::Time& end);
-            virtual BufferFlags getBufferType() const { return Queue_e; }
+            virtual BufferFlags getBufferType() const
+            {
+                return Queue_e;
+            }
+
           protected:
             virtual void onInputUpdate(Context* ctx, IParam* param);
             moodycamel::ConcurrentQueue<T> _queue;
         };
-    }
-}
+    } // namespace Buffer
+} // namespace mo

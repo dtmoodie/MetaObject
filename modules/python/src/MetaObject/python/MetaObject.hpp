@@ -72,7 +72,7 @@ namespace mo
         {
             if (args[i])
             {
-                IParam* param = obj->getParamOptional(param_names[i]);
+                auto param = obj->getParam(param_names[i]);
                 if (param)
                 {
                     if (param->checkFlags(mo::ParamFlags::kINPUT))
@@ -222,7 +222,7 @@ namespace mo
                         T& obj,
                         const boost::python::object& python_obj)
     {
-        auto param = obj.getParamOptional(name);
+        auto param = obj.getParam(name);
         if (param)
         {
             return setter(param, python_obj);
@@ -233,7 +233,7 @@ namespace mo
     template <class T>
     boost::python::object getParamHelper(python::DataConverterRegistry::Get_t getter, std::string name, const T& obj)
     {
-        auto param = obj.getParamOptional(name);
+        auto param = obj.getParam(name);
         if (param)
         {
             return getter(param);

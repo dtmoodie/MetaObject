@@ -36,11 +36,14 @@ namespace mo
         // Used for input parameters
         // Wrapping param storage
         typedef std::shared_ptr<const Type> InputStorage_t;
-        // User space input pointer, used in TInputParamPtr
+        // User space input pointer, used in TSubscriberPtr
         typedef const Type* Input_t;
 
         // Shallow copy if possible
-        static inline Storage_t copy(const Type& value) { return Storage_t(new Type(value)); }
+        static inline Storage_t copy(const Type& value)
+        {
+            return Storage_t(new Type(value));
+        }
 
         static inline Storage_t copy(ConstStorageRef_t value)
         {
@@ -80,8 +83,14 @@ namespace mo
             return *input_storage;
         }
 
-        static void move(Storage_t& storage, Type&& data) { storage = std::make_shared<Type>(std::move(data)); }
-        static void move(Type& data, Storage_t&& storage) { data = std::move(*storage); }
+        static void move(Storage_t& storage, Type&& data)
+        {
+            storage = std::make_shared<Type>(std::move(data));
+        }
+        static void move(Type& data, Storage_t&& storage)
+        {
+            data = std::move(*storage);
+        }
 
         template <class... Args>
         static void reset(InputStorage_t& input_storage, Args&&... args)
@@ -108,12 +117,24 @@ namespace mo
             return *value;
         }
 
-        static ConstTypeRef_t get(ConstTypeRef_t value) { return value; }
+        static ConstTypeRef_t get(ConstTypeRef_t value)
+        {
+            return value;
+        }
 
-        static inline StoragePtr_t ptr(const Storage_t& data) { return data.get(); }
-        static inline ConstStoragePtr_t ptr(ConstStorageRef_t& data) { return data.get(); }
+        static inline StoragePtr_t ptr(const Storage_t& data)
+        {
+            return data.get();
+        }
+        static inline ConstStoragePtr_t ptr(ConstStorageRef_t& data)
+        {
+            return data.get();
+        }
 
-        static inline bool valid(ConstStorageRef_t stored) { return stored != nullptr; }
+        static inline bool valid(ConstStorageRef_t stored)
+        {
+            return stored != nullptr;
+        }
     };
 
     template <class Type>
@@ -142,11 +163,14 @@ namespace mo
         // Used for input parameters
         // Wrapping param storage
         typedef std::shared_ptr<Type> InputStorage_t;
-        // User space input pointer, used in TInputParamPtr
+        // User space input pointer, used in TSubscriberPtr
         typedef const Type* Input_t;
 
         // Shallow copy if possible
-        static inline Storage_t copy(const Type& value) { return Storage_t(new Type(value)); }
+        static inline Storage_t copy(const Type& value)
+        {
+            return Storage_t(new Type(value));
+        }
 
         static inline Storage_t copy(ConstStorageRef_t value)
         {
@@ -186,9 +210,15 @@ namespace mo
             return *input_storage;
         }
 
-        static inline bool valid(ConstStorageRef_t stored) { return stored != nullptr; }
+        static inline bool valid(ConstStorageRef_t stored)
+        {
+            return stored != nullptr;
+        }
 
-        static void move(Storage_t& storage, Type&& data) { storage = std::make_shared<Type>(std::move(data)); }
+        static void move(Storage_t& storage, Type&& data)
+        {
+            storage = std::make_shared<Type>(std::move(data));
+        }
 
         template <class... Args>
         static void reset(InputStorage_t& input_storage, Args&&... args)
@@ -209,9 +239,15 @@ namespace mo
             return *value;
         }
 
-        static ConstTypeRef_t get(ConstTypeRef_t value) { return value; }
+        static ConstTypeRef_t get(ConstTypeRef_t value)
+        {
+            return value;
+        }
 
-        static inline StoragePtr_t ptr(const Storage_t& data) { return data.get(); }
+        static inline StoragePtr_t ptr(const Storage_t& data)
+        {
+            return data.get();
+        }
     };
 
 } // namespace mo

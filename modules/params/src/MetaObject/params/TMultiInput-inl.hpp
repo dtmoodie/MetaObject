@@ -1,6 +1,6 @@
-#ifndef TMULTIINPUTINL_HPP
-#define TMULTIINPUTINL_HPP
-#include "TMultiInput.hpp"
+#ifndef TMultiSubscriberINL_HPP
+#define TMultiSubscriberINL_HPP
+#include "TMultiSubscriber.hpp"
 #include <ct/Indexer.hpp>
 namespace mo
 {
@@ -19,7 +19,7 @@ namespace mo
     template <class T, class... Ts>
     constexpr int indexOf()
     {
-        return sizeof...(Ts)-indexOfHelper<T, Ts...>(sizeof...(Ts), static_cast<std::tuple<Ts...>*>(nullptr));
+        return sizeof...(Ts) - indexOfHelper<T, Ts...>(sizeof...(Ts), static_cast<std::tuple<Ts...>*>(nullptr));
     }
 
     template <class T, class... Ts>
@@ -85,22 +85,22 @@ namespace mo
     std::vector<T*> globParamPtrs(std::tuple<Args...>& tuple)
     {
         std::vector<T*> out;
-        globHelper(out, tuple, ct::Indexer<sizeof...(Args)-1>{});
+        globHelper(out, tuple, ct::Indexer<sizeof...(Args) - 1>{});
         return out;
     }
 
     template <class... Types>
-    TMultiInput<Types...>::TMultiInput()
+    TMultiSubscriber<Types...>::TMultiSubscriber()
         : m_inputs()
-        , IMultiInput()
+        , IMultiSubscriber()
         , IParam("", mo::ParamFlags::kINPUT)
     {
-        IMultiInput::setInputs(globParamPtrs<InputParam>(m_inputs));
+        IMultiSubscriber::setInputs(globParamPtrs<ISubscriber>(m_inputs));
         this->setFlags(mo::ParamFlags::kINPUT);
     }
 
     template <class... Types>
-    typename TMultiInput<Types...>::InputTypeTuple TMultiInput<Types...>::initNullptr()
+    typename TMultiSubscriber<Types...>::InputTypeTuple TMultiSubscriber<Types...>::initNullptr()
     {
         InputTypeTuple out;
         Initializer init;
@@ -109,22 +109,22 @@ namespace mo
     }
 
     template <class... Types>
-    void TMultiInput<Types...>::setUserDataPtr(std::tuple<const Types*...>* user_var_)
+    void TMultiSubscriber<Types...>::setUserDataPtr(std::tuple<const Types*...>* user_var_)
     {
         typeLoop<Types...>(*this, user_var_);
     }
 
     template <class... Types>
     template <class T>
-    void TMultiInput<Types...>::apply(std::tuple<const Types*...>* user_var_)
+    void TMultiSubscriber<Types...>::apply(std::tuple<const Types*...>* user_var_)
     {
-        mo::get<TInputParamPtr<T>>(m_inputs).setUserDataPtr(&mo::get<const T*>(*user_var_));
+        mo::get<TSubscriberPtr<T>>(m_inputs).setUserDataPtr(&mo::get<const T*>(*user_var_));
     }
 
     template <class... Types>
-    void TMultiInput<Types...>::onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags)
+    void TMultiSubscriber<Types...>::onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags)
     {
     }
 
 } // namespace mo
-#endif // TMULTIINPUTINL_HPP
+#endif // TMultiSubscriberINL_HPP

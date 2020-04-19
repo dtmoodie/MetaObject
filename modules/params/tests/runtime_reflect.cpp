@@ -10,7 +10,7 @@ using namespace mo;
 template <class T>
 void reflectImpl(StaticVisitor& visitor)
 {
-    TParam<T> param;
+    TPublisher<T> param;
     param.visit(visitor);
 }
 
@@ -40,19 +40,11 @@ namespace
         template <class T>
         void test(const T& data)
         {
-            TParam<T> param;
-            param.updateData(data);
+            TPublisher<T> param;
+            param.publish(data);
         }
     };
 } // namespace
-
-void acceptsPtr(const uint32_t* ptr)
-{
-}
-
-void acceptsPtr(const int64_t* ptr)
-{
-}
 
 TEST(runtime_reflection, reflect)
 {

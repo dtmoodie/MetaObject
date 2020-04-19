@@ -8,7 +8,7 @@
 #include "MetaObject/object/MetaObjectFactory.hpp"
 #include "MetaObject/params/ParamInfo.hpp"
 #include "MetaObject/params/ParamMacros.hpp"
-#include "MetaObject/params/TInputParam.hpp"
+#include "MetaObject/params/TSubscriberPtr.hpp"
 
 #include <MetaObject/thread/fiber_include.hpp>
 

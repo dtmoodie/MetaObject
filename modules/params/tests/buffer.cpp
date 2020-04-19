@@ -1,9 +1,12 @@
-#include <MetaObject/params/ITInputParam.hpp>
-#include <MetaObject/params/TInputParam.hpp>
 #include <MetaObject/params/TParamPtr.hpp>
+#include <MetaObject/params/TPublisher.hpp>
+#include <MetaObject/params/TSubscriber.hpp>
+#include <MetaObject/params/TSubscriberPtr.hpp>
+
 #include <MetaObject/params/buffers/BufferFactory.hpp>
 #include <MetaObject/params/buffers/Buffers.hpp>
 #include <MetaObject/params/buffers/IBuffer.hpp>
+#include <MetaObject/params/buffers/Map.hpp>
 
 #include <boost/fiber/operations.hpp>
 
@@ -17,61 +20,71 @@ using namespace mo;
 namespace
 {
 
-    struct ParamBufferFixture : ::testing::Test
+    struct buffers : ::testing::Test
     {
-        int val = 0;
-        ITInputParam<int> input_param;
-        TParamPtr<int> param;
+        TSubscriber<int> input_param;
+        TPublisher<int> param;
 
-        std::unique_ptr<buffer::IBuffer> buffer;
+        std::shared_ptr<buffer::IBuffer> buffer;
+        IAsyncStreamPtr_t m_stream;
 
-        ParamBufferFixture()
-            : input_param("sub")
-            , param("pub", &val)
+        buffers()
         {
+            m_stream = IAsyncStream::create();
+            param.setStream(*m_stream);
             param.setName("pub");
+
+            input_param.setStream(*m_stream);
             input_param.setName("sub");
         }
 
         void init(BufferFlags buffer_type)
         {
             ASSERT_EQ(param.getName(), "pub");
-            // ASSERT_EQ(param.getData(), nullptr);
-
-            // buffer.reset(buffer::BufferFactory::createBuffer(&param, buffer_type));
-            buffer.reset(mo::buffer::IBuffer::create(buffer_type));
+            buffer = mo::buffer::IBuffer::create(buffer_type);
             buffer->setInput(&param);
             ASSERT_NE(buffer, nullptr);
-            ASSERT_EQ(input_param.setInput(buffer.get()), true);
+            ASSERT_TRUE(input_param.setInput(buffer.get()));
         }
 
         void testRead()
         {
-            int data;
-            param.updateData(1, Header(Time(mo::ms * 1.0)));
+            int data = 0;
+            Header header(mo::ms * 1.0);
+            param.publish(1, header);
 
-            ASSERT_EQ(buffer->getSize(), 2);
-            ASSERT_NE(input_param.getData(Header()), nullptr);
-            ASSERT_NE(input_param.getData(Header(Time(mo::ms * 1.0))), nullptr);
-            ASSERT_EQ(input_param.getTypedData(&data, Header(Time(mo::ms * 1.0))), true);
+            ASSERT_EQ(buffer->getSize(), 1);
+
+            ASSERT_NE(input_param.getData(), nullptr);
+            ASSERT_TRUE(input_param.getData(data));
             ASSERT_EQ(data, 1);
 
-            param.updateData(2, Header(Time(mo::ms * 2.0)));
-            ASSERT_EQ(buffer->getSize(), 3);
-            ASSERT_EQ(input_param.getTypedData(&data, Header(Time(mo::ms * 2.0))), true);
+            ASSERT_NE(input_param.getData(&header), nullptr);
+
+            header = Header(mo::ms * 2.0);
+            auto retrieved_data = input_param.getData(&header);
+            ASSERT_EQ(retrieved_data, nullptr)
+                << "We don't expect to be able to retrieve data when requesting an invalid timestamp " << header
+                << " yet we retrieved data at " << retrieved_data->getHeader()
+                << " \navailable data: " << buffer->getAvailableHeaders();
+
+            param.publish(2, header);
+
+            ASSERT_EQ(buffer->getSize(), 2);
+            ASSERT_TRUE(input_param.getData(data));
             ASSERT_EQ(data, 2);
 
-            param.updateData(5, Header(Time(mo::ms * 5.0)));
-            ASSERT_EQ(buffer->getSize(), 4);
-            ASSERT_EQ(input_param.getTypedData(&data, Header(Time(mo::ms * 5.0))), true);
-            ASSERT_EQ(data, 5);
+            header = Header(mo::ms * 5.0);
+            param.publish(5, header);
+            ASSERT_EQ(buffer->getSize(), 3);
 
-            ASSERT_NE(input_param.getData(Header()), nullptr);
-            ASSERT_EQ(input_param.getTypedData(&data, Header()), true);
+            ASSERT_NE(input_param.getData(), nullptr);
+            ASSERT_TRUE(input_param.getData(data));
             ASSERT_EQ(data, 5);
 
             data = 10;
-            ASSERT_EQ(input_param.getTypedData(&data, Header(mo::ms * 5.0)), true);
+            header = Header(mo::ms * 5.0);
+            ASSERT_TRUE(input_param.getData(data, &header));
             ASSERT_EQ(data, 5);
         }
 
@@ -79,11 +92,15 @@ namespace
         {
             ASSERT_NE(buffer, nullptr);
             buffer->clear();
+            ASSERT_EQ(buffer->getSize(), 0);
             int32_t data;
+
             for (int32_t i = 0; i < num; ++i)
             {
-                param.updateData(i, Header(i * ms));
-                input_param.getTypedData(&data, Header(i * ms));
+                const auto header = Header(i * ms);
+                param.publish(i, header);
+                ASSERT_TRUE(input_param.getData(data, &header)) << "Unable to retrive data by header " << header
+                                                                << " existing data " << buffer->getAvailableHeaders();
             }
         }
 
@@ -113,14 +130,16 @@ namespace
                         {
                             for (int j = 0; j < 15 && !result; ++j)
                             {
-                                result = input_param.getTypedData(&data, Header(i * ms));
+                                const auto header = Header(i * ms);
+                                result = input_param.getData(data, &header);
                                 boost::this_fiber::sleep_for(std::chrono::nanoseconds(5));
                             }
                         }
                         else
                         {
                             int new_value;
-                            result = input_param.getTypedData(&new_value, Header(i * ms));
+                            const auto header = Header(i * ms);
+                            result = input_param.getData(new_value, &header);
                             if (new_value == data || !result)
                             {
                                 continue;
@@ -143,7 +162,6 @@ namespace
                             ++read_values;
                         }
                         auto wait = rand() % 5 + 30;
-                        // boost::this_thread::sleep_for(boost::chrono::nanoseconds(wait));
                         boost::this_fiber::sleep_for(std::chrono::nanoseconds(wait));
                         if (interrupt)
                         {
@@ -160,7 +178,6 @@ namespace
                 }
             };
             boost::fibers::fiber thread(read_func);
-            // boost::thread thread(read_func);
             while (!started)
             {
                 boost::this_fiber::sleep_for(std::chrono::nanoseconds(10));
@@ -168,7 +185,7 @@ namespace
             for (int i = 0; i < 10000; ++i)
             {
                 // TODO fix
-                param.updateData(i, timestamp = i * ms);
+                param.publish(i, tags::timestamp = i * ms);
                 boost::this_fiber::sleep_for(std::chrono::nanoseconds(33));
             }
             thread.join();
@@ -177,7 +194,48 @@ namespace
     };
 } // namespace
 
-TEST_F(ParamBufferFixture, read_map)
+TEST_F(buffers, map_lookup)
+{
+    using Buffer_t = std::map<Header, IDataContainerConstPtr_t>;
+    Buffer_t buffer;
+    buffer[mo::Header(1.0 * mo::ms)] = IDataContainerConstPtr_t();
+    buffer[mo::Header(2.0 * mo::ms)] = IDataContainerConstPtr_t();
+    buffer[mo::Header(3.0 * mo::ms)] = IDataContainerConstPtr_t();
+
+    auto itr = buffer.find(mo::Header(1.0 * mo::ms));
+    ASSERT_NE(itr, buffer.end());
+    itr = buffer.find(mo::Header(2.0 * mo::ms));
+    ASSERT_NE(itr, buffer.end());
+    itr = buffer.find(mo::Header(3.0 * mo::ms));
+    ASSERT_NE(itr, buffer.end());
+}
+
+TEST_F(buffers, map_push)
+{
+    mo::buffer::Map map;
+
+    mo::TPublisher<int> pub;
+    map.setInput(&pub);
+
+    pub.publish(5, mo::Header(1.0 * mo::ms));
+
+    EXPECT_EQ(map.getSize(), 1);
+}
+
+TEST_F(buffers, map_retrieve)
+{
+    mo::buffer::Map map;
+
+    mo::TPublisher<int> pub;
+    map.setInput(&pub);
+    auto header = mo::Header(1.0 * mo::ms);
+    pub.publish(5, header);
+
+    auto data = map.getData(&header);
+    EXPECT_TRUE(data);
+}
+
+TEST_F(buffers, read_map)
 {
     init(BufferFlags::MAP_BUFFER);
     testRead();
@@ -188,7 +246,7 @@ TEST_F(ParamBufferFixture, read_map)
     ASSERT_EQ(read_values, 10000);
 }
 
-TEST_F(ParamBufferFixture, read_stream)
+TEST_F(buffers, read_stream)
 {
     init(BufferFlags::STREAM_BUFFER);
     testRead();
@@ -197,7 +255,7 @@ TEST_F(ParamBufferFixture, read_stream)
     ASSERT_EQ(read_values, 10000);
 }
 
-TEST_F(ParamBufferFixture, blocking_stream)
+TEST_F(buffers, blocking_stream)
 {
     init(BufferFlags::BLOCKING_STREAM_BUFFER);
     testRead();
@@ -206,7 +264,7 @@ TEST_F(ParamBufferFixture, blocking_stream)
     ASSERT_EQ(read_values, 10000);
 }
 
-TEST_F(ParamBufferFixture, read_dropping_stream)
+TEST_F(buffers, read_dropping_stream)
 {
     init(BufferFlags::DROPPING_STREAM_BUFFER);
     testRead();
@@ -216,26 +274,48 @@ TEST_F(ParamBufferFixture, read_dropping_stream)
     // BOOST_REQUIRE_GT(read_values, 1000);
 }
 
-TEST_F(ParamBufferFixture, read_nearest_neighbor)
+TEST_F(buffers, read_nearest_neighbor)
 {
     init(BufferFlags::NEAREST_NEIGHBOR_BUFFER);
-    testRead();
 
-    int data = 10;
-    ASSERT_EQ(input_param.getTypedData(&data, Header(4.0 * mo::ms)), true);
-    ASSERT_EQ(data, 5);
+    Header header;
+    for (int time = 1; time < 10; ++time)
+    {
+        header = Header(time * mo::ms);
+        param.publish(time, header);
+    }
 
-    data = 10;
-    ASSERT_EQ(input_param.getTypedData(&data, Header(6.0 * mo::ms)), true);
-    ASSERT_EQ(data, 5);
+    int data = 0;
 
-    data = 10;
-    ASSERT_EQ(input_param.getTypedData(&data, Header(1.6 * mo::ms)), true);
-    ASSERT_EQ(data, 2);
+    header = Header(0.5 * mo::ms);
+    EXPECT_TRUE(input_param.getData(data, &header));
+    EXPECT_EQ(data, 1) << "Retrieved an incorrect value from the buffer at header " << header
+                       << " available data: " << input_param.getAvailableHeaders();
 
-    data = 10;
-    ASSERT_EQ(input_param.getTypedData(&data, Header(1.2 * mo::ms)), true);
-    ASSERT_EQ(data, 1);
+    header = Header(1.4 * mo::ms);
+    EXPECT_TRUE(input_param.getData(data, &header));
+    EXPECT_EQ(data, 1) << "Retrieved an incorrect value from the buffer at header " << header
+                       << " available data: " << input_param.getAvailableHeaders();
+
+    header = Header(1.6 * mo::ms);
+    EXPECT_TRUE(input_param.getData(data, &header));
+    EXPECT_EQ(data, 2) << "Retrieved an incorrect value from the buffer at header " << header
+                       << " available data: " << input_param.getAvailableHeaders();
+
+    header = Header(3.6 * mo::ms);
+    EXPECT_TRUE(input_param.getData(data, &header));
+    EXPECT_EQ(data, 4) << "Retrieved an incorrect value from the buffer at header " << header
+                       << " available data: " << input_param.getAvailableHeaders();
+
+    header = Header(8.4 * mo::ms);
+    EXPECT_TRUE(input_param.getData(data, &header));
+    EXPECT_EQ(data, 8) << "Retrieved an incorrect value from the buffer at header " << header
+                       << " available data: " << input_param.getAvailableHeaders();
+
+    header = Header(8.6 * mo::ms);
+    EXPECT_TRUE(input_param.getData(data, &header));
+    EXPECT_EQ(data, 9) << "Retrieved an incorrect value from the buffer at header " << header
+                       << " available data: " << input_param.getAvailableHeaders();
 
     testPruning();
 }

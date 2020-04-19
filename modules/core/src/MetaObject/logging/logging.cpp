@@ -44,7 +44,12 @@ spdlog::logger& mo::getDefaultLogger()
     {
         throw std::runtime_error("SystemTable == nullptr");
     }
-    return *table->getDefaultLogger();
+    auto logger = table->getDefaultLogger();
+    if (logger == nullptr)
+    {
+        throw std::runtime_error("table->getDefaultLogger() == nullptr");
+    }
+    return *logger;
 }
 
 std::shared_ptr<spdlog::logger> mo::getLogger()

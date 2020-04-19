@@ -39,34 +39,58 @@ namespace mo
     ConditionVariable::STATUS ConditionVariable::wait_until(RecursiveMutex::Lock_t& lt,
                                                             const std::chrono::steady_clock::time_point& timeout_time_)
     {
-        m_cv->wait_until(lt, timeout_time_);
+        if (m_cv->wait_until(lt, timeout_time_) == boost::fibers::cv_status::no_timeout)
+        {
+            return STATUS::kNO_TIMEOUT;
+        }
+        return STATUS::kTIMEOUT;
     }
 
     ConditionVariable::STATUS ConditionVariable::wait_until(TimedMutex::Lock_t& lt,
                                                             const std::chrono::steady_clock::time_point& timeout_time_)
     {
-        m_cv->wait_until(lt, timeout_time_);
+        if (m_cv->wait_until(lt, timeout_time_) == boost::fibers::cv_status::no_timeout)
+        {
+            return STATUS::kNO_TIMEOUT;
+        }
+        return STATUS::kTIMEOUT;
     }
 
     ConditionVariable::STATUS ConditionVariable::wait_until(Mutex::Lock_t& lt,
                                                             const std::chrono::steady_clock::time_point& timeout_time_)
     {
-        m_cv->wait_until(lt, timeout_time_);
+        if (m_cv->wait_until(lt, timeout_time_) == boost::fibers::cv_status::no_timeout)
+        {
+            return STATUS::kNO_TIMEOUT;
+        }
+        return STATUS::kTIMEOUT;
     }
 
     ConditionVariable::STATUS ConditionVariable::wait_for(RecursiveMutex::Lock_t& lt,
                                                           const Duration_t& timeout_duration)
     {
-        m_cv->wait_for(lt, timeout_duration);
+        if (m_cv->wait_for(lt, timeout_duration) == boost::fibers::cv_status::no_timeout)
+        {
+            return STATUS::kNO_TIMEOUT;
+        }
+        return STATUS::kTIMEOUT;
     }
 
     ConditionVariable::STATUS ConditionVariable::wait_for(TimedMutex::Lock_t& lt, const Duration_t& timeout_duration)
     {
-        m_cv->wait_for(lt, timeout_duration);
+        if (m_cv->wait_for(lt, timeout_duration) == boost::fibers::cv_status::no_timeout)
+        {
+            return STATUS::kNO_TIMEOUT;
+        }
+        return STATUS::kTIMEOUT;
     }
 
     ConditionVariable::STATUS ConditionVariable::wait_for(Mutex::Lock_t& lt, const Duration_t& timeout_duration)
     {
-        m_cv->wait_for(lt, timeout_duration);
+        if (m_cv->wait_for(lt, timeout_duration) == boost::fibers::cv_status::no_timeout)
+        {
+            return STATUS::kNO_TIMEOUT;
+        }
+        return STATUS::kTIMEOUT;
     }
 } // namespace mo

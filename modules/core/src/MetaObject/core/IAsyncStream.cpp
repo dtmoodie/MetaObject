@@ -1,6 +1,7 @@
 #include "IAsyncStream.hpp"
 #include "AsyncStreamFactory.hpp"
 #include <MetaObject/thread/FiberProperties.hpp>
+#include <MetaObject/thread/Thread.hpp>
 
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/operations.hpp>
@@ -31,11 +32,29 @@ namespace mo
 
     auto IAsyncStream::current() -> Ptr_t
     {
+        auto props = boost::fibers::context::active()->get_properties();
+        if (!props)
+        {
+            initThread();
+        }
         return boost::this_fiber::properties<FiberProperty>().stream();
+    }
+
+    IAsyncStream& IAsyncStream::currentRef()
+    {
+        auto cur = current();
+        MO_ASSERT(cur != nullptr);
+        return *cur;
     }
 
     void IAsyncStream::setCurrent(Ptr_t stream)
     {
+        auto props = boost::fibers::context::active()->get_properties();
+        if (!props)
+        {
+            initThread();
+        }
+
         boost::this_fiber::properties<FiberProperty>().setStream(std::move(stream));
     }
 

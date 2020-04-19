@@ -24,7 +24,6 @@ namespace mo
         ENUM_BITVALUE(kREQUIRE_BUFFERED, 9)
         ENUM_BITVALUE(kSOURCE, 10)
         ENUM_BITVALUE(kDYNAMIC, 11)
-        ENUM_BITVALUE(kOWNS_MUTEX, 12)
     ENUM_END;
 
     // TODO figure out how to use the above ParamFlags instead

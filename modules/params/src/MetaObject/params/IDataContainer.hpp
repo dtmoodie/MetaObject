@@ -17,6 +17,7 @@ namespace mo
     struct ISaveVisitor;
     struct StaticVisitor;
     struct Header;
+    struct IAsyncStream;
 
     struct MO_EXPORTS IDataContainer : public std::enable_shared_from_this<IDataContainer>
     {
@@ -39,5 +40,13 @@ namespace mo
         virtual void visit(StaticVisitor&) const = 0;
 
         virtual const Header& getHeader() const = 0;
+
+        virtual void record(IAsyncStream& src) const = 0;
+        virtual void sync(IAsyncStream& dest) const = 0;
+
+        template <class T>
+        T* ptr();
+        template <class T>
+        const T* ptr() const;
     };
 } // namespace mo

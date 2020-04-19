@@ -6,7 +6,7 @@
 #include "MetaObject/object/detail/IMetaObjectImpl.hpp"
 #include "MetaObject/object/detail/IMetaObject_pImpl.hpp"
 #include "MetaObject/params/IParam.hpp"
-#include "MetaObject/params/InputParam.hpp"
+#include "MetaObject/params/ISubscriber.hpp"
 #include "MetaObject/params/ParamServer.hpp"
 #include "MetaObject/params/buffers/BufferFactory.hpp"
 #include "MetaObject/params/buffers/IBuffer.hpp"
@@ -74,11 +74,14 @@ namespace mo
 
         for (auto signal : my_signals)
         {
+            MO_ASSERT(signal != nullptr);
             for (auto slot : my_slots)
             {
+                MO_ASSERT(slot != nullptr);
+
                 if (signal->getSignature() == slot->getSignature())
                 {
-                    auto connection = slot->connect(signal);
+                    auto connection = slot->connect(*signal);
                     if (connection)
                     {
                         sender.addConnection(std::move(connection),
@@ -130,7 +133,7 @@ namespace mo
                    receiver.getSlots());
             return false;
         }
-        auto connection = slot->connect(signal);
+        auto connection = slot->connect(*signal);
         if (!connection)
         {
             MO_LOG(info,
@@ -147,8 +150,7 @@ namespace mo
 
     MetaObject::MetaObject()
     {
-        m_slot_param_updated = std::bind(
-            &MetaObject::onParamUpdate, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3);
+        m_slot_param_updated.bind(&MetaObject::onParamUpdate, this);
         m_signals["param_updated"][m_sig_param_updated.getSignature()] = &m_sig_param_updated;
         m_signals["param_added"][m_sig_param_updated.getSignature()] = &m_sig_param_added;
 
@@ -159,7 +161,7 @@ namespace mo
     {
         if (m_param_server)
         {
-            m_param_server->removeParam(this);
+            m_param_server->removeParams(*this);
         }
     }
 
@@ -286,7 +288,7 @@ namespace mo
                 }
                 if (signal && slot)
                 {
-                    auto connection_ = slot->connect(signal);
+                    auto connection_ = slot->connect(*signal);
                     if (connection_)
                     {
                         connection.connection = connection_;
@@ -313,7 +315,7 @@ namespace mo
             auto update_slot = IMetaObject::template getSlot<Update_s>("on_" + param->getName() + "_modified");
             if (update_slot)
             {
-                auto connection = param->registerUpdateNotifier(update_slot);
+                auto connection = param->registerUpdateNotifier(*update_slot);
                 if (connection)
                 {
                     this->addConnection(std::move(connection),
@@ -324,10 +326,10 @@ namespace mo
                 }
             }
             auto delete_slot =
-                IMetaObject::template getSlot<void(IParam const*)>("on_" + param->getName() + "_deleted");
+                IMetaObject::template getSlot<void(const IParam&)>("on_" + param->getName() + "_deleted");
             if (delete_slot)
             {
-                auto connection = param->registerDeleteNotifier(delete_slot);
+                auto connection = param->registerDeleteNotifier(*delete_slot);
                 if (connection)
                 {
                     this->addConnection(std::move(connection),
@@ -407,27 +409,27 @@ namespace mo
     {
         if (m_param_server != nullptr)
         {
-            removeParamServer(m_param_server.get());
+            removeParamServer(*m_param_server);
         }
         m_param_server = server;
         int count = 0;
         for (auto& param : m_implicit_params)
         {
-            server->addParam(this, param.second.get());
+            server->addParam(*this, *param.second);
             ++count;
         }
         for (auto& param : m_params)
         {
-            server->addParam(this, param.second);
+            server->addParam(*this, *param.second);
             ++count;
         }
         return count;
     }
 
-    int MetaObject::removeParamServer(IParamServer* mgr)
+    int MetaObject::removeParamServer(IParamServer& mgr)
     {
         int count = 0;
-        mgr->removeParam(this);
+        mgr.removeParams(*this);
         return count;
     }
 
@@ -449,19 +451,23 @@ namespace mo
 
     void MetaObject::setStream(const IAsyncStreamPtr_t& ctx)
     {
-        if (ctx == nullptr && m_stream != nullptr)
+        if (ctx == nullptr)
         {
-            MO_LOG(info, "Setting stream to nullptr");
+            MO_LOG(info, "Attempting to set stream to nullptr");
+            return;
         }
         m_stream = ctx;
         auto ptr = ctx.get();
-        for (auto& param : m_implicit_params)
+        if (ptr)
         {
-            param.second->setStream(ptr);
-        }
-        for (auto& param : m_params)
-        {
-            param.second->setStream(ptr);
+            for (auto& param : m_implicit_params)
+            {
+                param.second->setStream(*ptr);
+            }
+            for (auto& param : m_params)
+            {
+                param.second->setStream(*ptr);
+            }
         }
     }
 
@@ -481,127 +487,193 @@ namespace mo
         return count;
     }
 
-    bool MetaObject::disconnect(ISignal*)
+    bool MetaObject::disconnect(const ISignal&)
     {
         return false;
     }
 
-    int MetaObject::disconnect(IMetaObject* obj)
+    int MetaObject::disconnect(const IMetaObject& obj)
     {
-        auto obj_signals = obj->getSignals();
+        auto obj_signals = obj.getSignals();
         int count = 0;
         for (auto signal : obj_signals)
         {
-            count += disconnect(signal.first) ? 1 : 0;
+            count += disconnect(*signal.first) ? 1 : 0;
         }
         return count;
     }
 
-    std::vector<IParam*> MetaObject::getDisplayParams() const
+    ConstParamVec_t MetaObject::getParams(const std::string& filter) const
     {
-        std::vector<IParam*> output;
-        for (auto& param : m_params)
-        {
-            output.push_back(param.second);
-        }
-        for (auto& param : m_implicit_params)
-        {
-            output.push_back(param.second.get());
-        }
-        return output;
-    }
-
-    IParam* MetaObject::getParam(const std::string& name) const
-    {
-        auto param = this->getParamOptional(name);
-        if (!param)
-        {
-            THROW(debug, "Param with name {} not found", name);
-        }
-        return param;
-    }
-
-    std::vector<IParam*> MetaObject::getParams(const std::string& filter) const
-    {
-        std::vector<IParam*> output;
+        ConstParamVec_t output;
         for (auto& itr : m_params)
         {
-            if (!filter.empty())
+            if (filter.empty() || itr.first.find(filter) != std::string::npos)
             {
-                if (itr.first.find(filter) != std::string::npos)
+                if (itr.second->checkFlags(ParamFlags::kCONTROL))
                 {
-                    output.push_back(itr.second);
+                    output.push_back(static_cast<IControlParam*>(itr.second));
                 }
-            }
-            else
-            {
-                output.push_back(itr.second);
             }
         }
         for (auto& itr : m_implicit_params)
         {
-            if (!filter.empty())
+            if (filter.empty() || itr.first.find(filter) != std::string::npos)
             {
-                if (itr.first.find(filter) != std::string::npos)
+                auto ptr = itr.second.get();
+                if (ptr->checkFlags(ParamFlags::kCONTROL))
                 {
-                    output.push_back(itr.second.get());
+                    output.push_back(static_cast<IControlParam*>(ptr));
                 }
-            }
-            else
-            {
-                output.push_back(itr.second.get());
             }
         }
         return output;
     }
 
-    std::vector<IParam*> MetaObject::getParams(const TypeInfo& filter) const
+    ConstParamVec_t MetaObject::getParams(const TypeInfo& filter) const
     {
-        std::vector<IParam*> output;
+        ConstParamVec_t output;
         for (auto& itr : m_params)
         {
-            if (itr.second->getTypeInfo() == filter)
+            if (itr.second->checkFlags(ParamFlags::kCONTROL))
             {
-                output.push_back(itr.second);
+                auto ptr = static_cast<IControlParam*>(itr.second);
+                if (ptr->getTypeInfo() == filter)
+                {
+                    output.push_back(ptr);
+                }
             }
         }
         for (auto& itr : m_implicit_params)
         {
-            if (itr.second->getTypeInfo() == filter)
+            if (itr.second->checkFlags(ParamFlags::kCONTROL))
             {
-                output.push_back(itr.second.get());
+                auto ptr = static_cast<IControlParam*>(itr.second.get());
+                if (ptr)
+                {
+                    if (ptr->getTypeInfo() == filter)
+                    {
+                        output.push_back(ptr);
+                    }
+                }
             }
         }
         return output;
     }
 
-    std::vector<std::shared_ptr<IParam>> MetaObject::getImplictParams() const
+    ParamVec_t MetaObject::getParams(const std::string& filter)
     {
-        std::vector<std::shared_ptr<IParam>> output;
+        ParamVec_t output;
+        for (auto& itr : m_params)
+        {
+            if (filter.empty() || itr.first.find(filter) != std::string::npos)
+            {
+                if (itr.second->checkFlags(ParamFlags::kCONTROL))
+                {
+                    output.push_back(static_cast<IControlParam*>(itr.second));
+                }
+            }
+        }
+        for (auto& itr : m_implicit_params)
+        {
+            if (filter.empty() || itr.first.find(filter) != std::string::npos)
+            {
+                auto ptr = itr.second.get();
+                if (ptr->checkFlags(ParamFlags::kCONTROL))
+                {
+                    output.push_back(static_cast<IControlParam*>(ptr));
+                }
+            }
+        }
+        return output;
+    }
+
+    ParamVec_t MetaObject::getParams(const TypeInfo& filter)
+    {
+        ParamVec_t output;
+        for (auto& itr : m_params)
+        {
+            if (itr.second->checkFlags(ParamFlags::kCONTROL))
+            {
+                auto ptr = static_cast<IControlParam*>(itr.second);
+                if (ptr->getTypeInfo() == filter)
+                {
+                    output.push_back(ptr);
+                }
+            }
+        }
+        for (auto& itr : m_implicit_params)
+        {
+            if (itr.second->checkFlags(ParamFlags::kCONTROL))
+            {
+                auto ptr = static_cast<IControlParam*>(itr.second.get());
+                if (ptr)
+                {
+                    if (ptr->getTypeInfo() == filter)
+                    {
+                        output.push_back(ptr);
+                    }
+                }
+            }
+        }
+        return output;
+    }
+
+    /*std::vector<std::shared_ptr<IControlParam>> MetaObject::getImplictParams() const
+    {
+        std::vector<std::shared_ptr<IControlParam>> output;
         for (const auto& param : m_implicit_params)
         {
             output.emplace_back(param.second);
         }
         return output;
-    }
+    }*/
 
-    IParam* MetaObject::getParamOptional(const std::string& name) const
+    const IControlParam* MetaObject::getParam(const std::string& name) const
     {
         auto itr = m_params.find(name);
         if (itr != m_params.end())
         {
-            return itr->second;
+            if (itr->second->checkFlags(ParamFlags::kCONTROL))
+            {
+                return static_cast<IControlParam*>(itr->second);
+            }
         }
         auto itr2 = m_implicit_params.find(name);
         if (itr2 != m_implicit_params.end())
         {
-            return itr2->second.get();
+            if (itr->second->checkFlags(ParamFlags::kCONTROL))
+            {
+                return static_cast<IControlParam*>(itr2->second.get());
+            }
         }
         MO_LOG(trace, "Param with name {} not found", name);
         return nullptr;
     }
 
-    InputParam* MetaObject::getInput(const std::string& name) const
+    IControlParam* MetaObject::getParam(const std::string& name)
+    {
+        auto itr = m_params.find(name);
+        if (itr != m_params.end())
+        {
+            if (itr->second->checkFlags(ParamFlags::kCONTROL))
+            {
+                return static_cast<IControlParam*>(itr->second);
+            }
+        }
+        auto itr2 = m_implicit_params.find(name);
+        if (itr2 != m_implicit_params.end())
+        {
+            if (itr->second->checkFlags(ParamFlags::kCONTROL))
+            {
+                return static_cast<IControlParam*>(itr2->second.get());
+            }
+        }
+        MO_LOG(trace, "Param with name {} not found", name);
+        return nullptr;
+    }
+
+    const ISubscriber* MetaObject::getInput(const std::string& name) const
     {
         auto itr = m_input_params.find(name);
         if (itr != m_input_params.end())
@@ -611,36 +683,34 @@ namespace mo
         return nullptr;
     }
 
-    std::vector<InputParam*> MetaObject::getInputs(const std::string& name_filter) const
+    ISubscriber* MetaObject::getInput(const std::string& name)
+    {
+        auto itr = m_input_params.find(name);
+        if (itr != m_input_params.end())
+        {
+            return itr->second;
+        }
+        return nullptr;
+    }
+
+    std::vector<ISubscriber*> MetaObject::getInputs(const std::string& name_filter) const
     {
         return getInputs(TypeInfo::Void(), name_filter);
     }
 
-    std::vector<InputParam*> MetaObject::getInputs(const TypeInfo& type_filter, const std::string& name_filter) const
+    std::vector<ISubscriber*> MetaObject::getInputs(const TypeInfo& type_filter, const std::string& name_filter) const
     {
-        std::vector<InputParam*> output;
+        std::vector<ISubscriber*> output;
         for (auto param : m_params)
         {
             if (param.second->checkFlags(ParamFlags::kINPUT))
             {
-                if (param.second->getTypeInfo() == type_filter || type_filter == TypeInfo::Void())
+                auto sub = dynamic_cast<ISubscriber*>(param.second);
+                if (sub && (type_filter == TypeInfo::Void() || sub->acceptsType(type_filter)))
                 {
-                    if (!name_filter.empty())
+                    if (name_filter.empty() || name_filter.find(param.first) != std::string::npos)
                     {
-                        if (name_filter.find(param.first) != std::string::npos)
-                        {
-                            if (auto out = dynamic_cast<InputParam*>(param.second))
-                            {
-                                output.push_back(out);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (auto out = dynamic_cast<InputParam*>(param.second))
-                        {
-                            output.push_back(out);
-                        }
+                        output.push_back(sub);
                     }
                 }
             }
@@ -649,24 +719,13 @@ namespace mo
         {
             if (param.second->checkFlags(ParamFlags::kINPUT))
             {
-                if (param.second->getTypeInfo() == type_filter || type_filter == TypeInfo::Void())
+                auto sub = dynamic_cast<ISubscriber*>(param.second.get());
+                if (sub && (type_filter == TypeInfo::Void() || sub->acceptsType(type_filter)))
                 {
-                    if (!name_filter.empty())
+
+                    if (name_filter.empty() || name_filter.find(param.first) != std::string::npos)
                     {
-                        if (name_filter.find(param.first) != std::string::npos)
-                        {
-                            if (auto out = dynamic_cast<InputParam*>(param.second.get()))
-                            {
-                                output.push_back(out);
-                            }
-                        }
-                    }
-                    else
-                    {
-                        if (auto out = dynamic_cast<InputParam*>(param.second.get()))
-                        {
-                            output.push_back(out);
-                        }
+                        output.push_back(sub);
                     }
                 }
             }
@@ -674,14 +733,14 @@ namespace mo
         return output;
     }
 
-    IParam* MetaObject::getOutput(const std::string& name) const
+    const IPublisher* MetaObject::getOutput(const std::string& name) const
     {
         auto itr = m_params.find(name);
         if (itr != m_params.end())
         {
             if (itr->second->checkFlags(mo::ParamFlags::kOUTPUT))
             {
-                return itr->second;
+                return dynamic_cast<IPublisher*>(itr->second);
             }
         }
         auto itr2 = m_implicit_params.find(name);
@@ -689,7 +748,7 @@ namespace mo
         {
             if (itr->second->checkFlags(mo::ParamFlags::kOUTPUT))
             {
-                return itr2->second.get();
+                return dynamic_cast<IPublisher*>(itr2->second.get());
             }
         }
         // do a pass through all params to see if the param was renamed
@@ -699,7 +758,7 @@ namespace mo
             {
                 if (itr.second->checkFlags(mo::ParamFlags::kOUTPUT))
                 {
-                    return itr.second;
+                    return dynamic_cast<IPublisher*>(itr.second);
                 }
             }
         }
@@ -709,40 +768,84 @@ namespace mo
             {
                 if (itr.second->checkFlags(mo::ParamFlags::kOUTPUT))
                 {
-                    return itr.second.get();
+                    return dynamic_cast<IPublisher*>(itr.second.get());
                 }
             }
         }
         return nullptr;
     }
 
-    std::vector<IParam*> MetaObject::getOutputs(const std::string& name_filter) const
+    IPublisher* MetaObject::getOutput(const std::string& name)
+    {
+        auto itr = m_params.find(name);
+        if (itr != m_params.end())
+        {
+            if (itr->second->checkFlags(mo::ParamFlags::kOUTPUT))
+            {
+                return dynamic_cast<IPublisher*>(itr->second);
+            }
+        }
+        auto itr2 = m_implicit_params.find(name);
+        if (itr2 != m_implicit_params.end())
+        {
+            if (itr->second->checkFlags(mo::ParamFlags::kOUTPUT))
+            {
+                return dynamic_cast<IPublisher*>(itr2->second.get());
+            }
+        }
+        // do a pass through all params to see if the param was renamed
+        for (const auto& itr : m_params)
+        {
+            if (itr.second->getName() == name)
+            {
+                if (itr.second->checkFlags(mo::ParamFlags::kOUTPUT))
+                {
+                    return dynamic_cast<IPublisher*>(itr.second);
+                }
+            }
+        }
+        for (const auto& itr : m_implicit_params)
+        {
+            if (itr.second->getName() == name)
+            {
+                if (itr.second->checkFlags(mo::ParamFlags::kOUTPUT))
+                {
+                    return dynamic_cast<IPublisher*>(itr.second.get());
+                }
+            }
+        }
+        return nullptr;
+    }
+
+    MetaObject::ConstPublisherVec_t MetaObject::getOutputs(const std::string& name_filter) const
     {
         return getOutputs(TypeInfo::Void(), name_filter);
     }
 
-    std::vector<IParam*> MetaObject::getOutputs(const TypeInfo& type_filter, const std::string& name_filter) const
+    MetaObject::PublisherVec_t MetaObject::getOutputs(const std::string& name_filter)
     {
-        std::vector<IParam*> output;
+        return getOutputs(TypeInfo::Void(), name_filter);
+    }
+
+    MetaObject::ConstPublisherVec_t MetaObject::getOutputs(const TypeInfo& type_filter,
+                                                           const std::string& name_filter) const
+    {
+        ConstPublisherVec_t output;
         for (auto param : m_params)
         {
             if (param.second->checkFlags(ParamFlags::kOUTPUT))
             {
-                if (!name_filter.empty())
+                auto pub = dynamic_cast<const IPublisher*>(param.second);
+                if (!pub)
                 {
-                    if (name_filter.find(param.first) != std::string::npos)
-                    {
-                        if (param.second->getTypeInfo() == type_filter || type_filter == TypeInfo::Void())
-                        {
-                            output.push_back(param.second);
-                        }
-                    }
+                    continue;
                 }
-                else
+
+                if (name_filter.empty() || name_filter.find(param.first) != std::string::npos)
                 {
-                    if (param.second->getTypeInfo() == type_filter || type_filter == TypeInfo::Void())
+                    if ((type_filter == TypeInfo::Void() || pub->providesOutput(type_filter)))
                     {
-                        output.push_back(param.second);
+                        output.push_back(pub);
                     }
                 }
             }
@@ -751,21 +854,65 @@ namespace mo
         {
             if (param.second->checkFlags(ParamFlags::kOUTPUT))
             {
-                if (!name_filter.empty())
+                auto sub = dynamic_cast<const IPublisher*>(param.second.get());
+                if (!sub)
                 {
-                    if (name_filter.find(param.first) != std::string::npos)
-                    {
-                        if (param.second->getTypeInfo() == type_filter || type_filter == TypeInfo::Void())
-                            output.push_back(param.second.get());
-                    }
+                    continue;
                 }
-                else
+                if (name_filter.empty() || name_filter.find(param.first) != std::string::npos)
                 {
-                    if (param.second->getTypeInfo() == type_filter || type_filter == TypeInfo::Void())
-                        output.push_back(param.second.get());
+                    if (type_filter == TypeInfo::Void() || sub->providesOutput(type_filter))
+                    {
+                        output.push_back(sub);
+                    }
                 }
             }
         }
+
+        return output;
+    }
+
+    MetaObject::PublisherVec_t MetaObject::getOutputs(const TypeInfo& type_filter, const std::string& name_filter)
+    {
+        PublisherVec_t output;
+        for (auto param : m_params)
+        {
+            if (param.second->checkFlags(ParamFlags::kOUTPUT))
+            {
+                auto pub = dynamic_cast<IPublisher*>(param.second);
+                if (!pub)
+                {
+                    continue;
+                }
+
+                if (name_filter.empty() || name_filter.find(param.first) != std::string::npos)
+                {
+                    if ((type_filter == TypeInfo::Void() || pub->providesOutput(type_filter)))
+                    {
+                        output.push_back(pub);
+                    }
+                }
+            }
+        }
+        for (auto param : m_implicit_params)
+        {
+            if (param.second->checkFlags(ParamFlags::kOUTPUT))
+            {
+                auto sub = dynamic_cast<IPublisher*>(param.second.get());
+                if (!sub)
+                {
+                    continue;
+                }
+                if (name_filter.empty() || name_filter.find(param.first) != std::string::npos)
+                {
+                    if (type_filter == TypeInfo::Void() || sub->providesOutput(type_filter))
+                    {
+                        output.push_back(sub);
+                    }
+                }
+            }
+        }
+
         return output;
     }
 
@@ -798,7 +945,7 @@ namespace mo
         return false;
     }
 
-    bool MetaObject::connectInput(InputParam* input, IMetaObject* output_object, IParam* output, BufferFlags type_)
+    bool MetaObject::connectInput(ISubscriber* input, IMetaObject* output_object, IPublisher* output, BufferFlags type_)
     {
         if (input == nullptr || output == nullptr)
         {
@@ -806,7 +953,7 @@ namespace mo
             return false;
         }
 
-        if (input && input->acceptsInput(output))
+        if (input && input->acceptsPublisher(*output))
         {
             // Check contexts to see if a buffer needs to be setup
             auto output_stream = output->getStream();
@@ -815,23 +962,27 @@ namespace mo
             {
                 type_ = getDefaultBufferType(output_stream, input_stream);
             }
+            const bool different_streams = output_stream != input_stream;
             const bool force = type_ & BufferFlags::FORCE_BUFFERED;
             const bool buffer_input = input->checkFlags(mo::ParamFlags::kREQUIRE_BUFFERED);
             const bool buffer_output = output->checkFlags(mo::ParamFlags::kREQUIRE_BUFFERED);
-            if (force || buffer_input || buffer_output)
+            if (force || buffer_input || buffer_output || different_streams)
             {
                 type_ = BufferFlags(type_ & ~ct::value(BufferFlags::FORCE_BUFFERED));
-                auto buffer = buffer::BufferFactory::instance()->createBuffer(output, type_);
+                auto buffer = buffer::IBuffer::create(type_);
                 if (!buffer)
                 {
-                    MO_LOG(warn,
-                           "Unable to create {} for datatype {}",
-                           bufferFlagsToString(type_),
-                           TypeTable::instance()->typeToName(output->getTypeInfo()));
+                    const auto output_types = output->getOutputTypes();
+                    MO_LOG(warn, "Unable to create {} for datatypes {}", bufferFlagsToString(type_), output_types);
                     return false;
                 }
                 std::string buffer_type = bufferFlagsToString(type_);
                 buffer->setName(output->getTreeName() + " " + buffer_type + " buffer for " + input->getTreeName());
+                if (!buffer->setInput(output))
+                {
+                    MO_LOG(debug, "Failed to connect output '{}' to buffer", output->getName());
+                    return false;
+                }
                 if (input->setInput(buffer))
                 {
                     if (output_object)
@@ -842,20 +993,21 @@ namespace mo
 
                     return true;
                 }
-
+                const auto output_types = output->getOutputTypes();
+                const auto input_types = input->getInputTypes();
                 MO_LOG(debug,
-                       "Failed to connect output {} [{}] to input {} [{}]",
+                       "Failed to connect output {} {} to input {} {}",
                        output->getName(),
-                       TypeTable::instance()->typeToName(output->getTypeInfo()),
-                       dynamic_cast<IParam*>(input)->getName(),
-                       TypeTable::instance()->typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()));
+                       output_types,
+                       input->getName(),
+                       input_types);
                 return false;
             }
             if (output_stream && m_stream.get())
             {
                 if (output_stream->threadId() != m_stream.get()->threadId())
                 {
-                    auto buffer = buffer::BufferFactory::instance()->createBuffer(output, type_);
+                    auto buffer = buffer::BufferFactory::instance()->createBuffer(*output, type_);
                     if (buffer)
                     {
                         buffer->setName(output->getTreeName() + " buffer for " + input->getTreeName());
@@ -875,15 +1027,13 @@ namespace mo
                         MO_LOG(debug,
                                "Failed to connect output {} [{}] to input {} [{}]",
                                output->getName(),
-                               TypeTable::instance()->typeToName(output->getTypeInfo()),
+                               output->getOutputTypes(),
                                dynamic_cast<IParam*>(input)->getName(),
-                               TypeTable::instance()->typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()));
+                               input->getInputTypes());
                         return false;
                     }
 
-                    MO_LOG(debug,
-                           "No buffer of desired type found for type {}",
-                           TypeTable::instance()->typeToName(output->getTypeInfo()));
+                    MO_LOG(debug, "No buffer of desired type found for type {}", output->getOutputTypes());
                 }
                 else
                 {
@@ -900,9 +1050,9 @@ namespace mo
                     MO_LOG(debug,
                            "Failed to connect output {} [{}] to input {} [{}]",
                            output->getName(),
-                           TypeTable::instance()->typeToName(output->getTypeInfo()),
-                           dynamic_cast<IParam*>(input)->getName(),
-                           TypeTable::instance()->typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()));
+                           output->getOutputTypes(),
+                           input->getName(),
+                           input->getInputTypes());
                     return false;
                 }
             }
@@ -920,81 +1070,68 @@ namespace mo
                 }
 
                 MO_LOG(debug,
-                       "Failed to connect output {} [{}] to input {} [{}]",
+                       "Failed to connect output {} {} to input {} {}",
                        output->getName(),
-                       TypeTable::instance()->typeToName(output->getTypeInfo()),
-                       dynamic_cast<IParam*>(input)->getName(),
-                       TypeTable::instance()->typeToName(dynamic_cast<IParam*>(input)->getTypeInfo()));
+                       output->getOutputTypes(),
+                       input->getName(),
+                       input->getInputTypes());
                 return false;
             }
         }
         else
         {
-            MO_LOG(debug,
-                   "Input {} does not accept input of type {}",
-                   input->getTreeName(),
-                   TypeTable::instance()->typeToName(output->getTypeInfo()));
+            MO_LOG(debug, "Input {} does not accept input of type {}", input->getTreeName(), output->getOutputTypes());
         }
         return false;
     }
 
     bool IMetaObject::connectInput(
-        IMetaObject* out_obj, IParam* out_param, IMetaObject* in_obj, InputParam* in_param, BufferFlags type)
+        IMetaObject* out_obj, IPublisher* out_param, IMetaObject* in_obj, ISubscriber* in_param, BufferFlags type)
     {
         return in_obj->connectInput(in_param, out_obj, out_param, type);
     }
 
-    IParam* MetaObject::addParam(std::shared_ptr<IParam> param)
+    void MetaObject::addParam(std::shared_ptr<IParam> param)
     {
-        param->setMtx(&getMutex());
-        param->setStream(m_stream.get());
-#ifdef _DEBUG
-        for (auto& param_ : m_params)
-        {
-            if (param_.second == param.get())
-            {
-                MO_LOG(debug, "Trying to add a param a second time");
-                return param.get();
-            }
-        }
-#endif
+        MO_ASSERT(param != nullptr);
+        addParam(*param);
         m_implicit_params[param->getName()] = param;
-        if (param->checkFlags(ParamFlags::kINPUT))
-        {
-            m_input_params[param->getName()] = dynamic_cast<InputParam*>(param.get());
-        }
-        auto connection = param->registerUpdateNotifier(&(this->m_slot_param_updated));
-        m_sig_param_added(this, param.get());
-        return param.get();
     }
 
-    IParam* MetaObject::addParam(IParam* param)
+    void MetaObject::addParam(IParam& param)
     {
-        param->setMtx(&getMutex());
-        param->setStream(m_stream.get());
+        MO_ASSERT(m_stream);
+        param.setMtx(getMutex());
+        param.setStream(*m_stream);
 #ifdef _DEBUG
         for (auto& param_ : m_params)
         {
-            if (param_.second == param)
+            if (param_.second == &param)
             {
                 MO_LOG(debug, "Trying to add a param a second time");
-                return param;
+                return;
             }
         }
 #endif
-        m_params[param->getName()] = param;
-        if (param->checkFlags(ParamFlags::kINPUT))
+        m_params[param.getName()] = &param;
+        if (param.checkFlags(ParamFlags::kINPUT))
         {
-            m_input_params[param->getName()] = dynamic_cast<InputParam*>(param);
+            m_input_params[param.getName()] = dynamic_cast<ISubscriber*>(&param);
         }
-        auto connection = param->registerUpdateNotifier(&(this->m_slot_param_updated));
-        m_sig_param_added(this, param);
-        this->addConnection(std::move(connection),
-                            "param_updated",
-                            "param_updated",
-                            this->m_slot_param_updated.getSignature(),
-                            rcc::shared_ptr<IMetaObject>(*this));
-        return param;
+        auto connection = param.registerUpdateNotifier(this->m_slot_param_updated);
+        if (!connection)
+        {
+            MO_LOG(debug, "Unable to connect param_updated slot to new param {}", param.getName());
+        }
+        else
+        {
+            this->addConnection(std::move(connection),
+                                "param_updated",
+                                "param_updated",
+                                this->m_slot_param_updated.getSignature(),
+                                rcc::shared_ptr<IMetaObject>(*this));
+        }
+        m_sig_param_added(*this, param);
     }
 
     void MetaObject::setParamRoot(const std::string& root)
@@ -1125,37 +1262,37 @@ namespace mo
         return &m_slot_param_updated;
     }
 
-    bool MetaObject::connectByName(const std::string& name, ISlot* slot)
+    bool MetaObject::connectByName(const std::string& name, ISlot& slot)
     {
-        auto signal = getSignal(name, slot->getSignature());
+        auto signal = getSignal(name, slot.getSignature());
         if (signal)
         {
             auto connection = signal->connect(slot);
             if (connection)
             {
-                addConnection(std::move(connection), name, "", slot->getSignature());
+                addConnection(std::move(connection), name, "", slot.getSignature());
                 return true;
             }
         }
         return false;
     }
 
-    bool MetaObject::connectByName(const std::string& name, ISignal* signal)
+    bool MetaObject::connectByName(const std::string& name, ISignal& signal)
     {
-        auto slot = getSlot(name, signal->getSignature());
+        auto slot = getSlot(name, signal.getSignature());
         if (slot)
         {
             auto connection = slot->connect(signal);
             if (connection)
             {
-                addConnection(std::move(connection), "", name, signal->getSignature());
+                addConnection(std::move(connection), "", name, signal.getSignature());
                 return true;
             }
         }
         return false;
     }
 
-    int MetaObject::connectByName(const std::string& /*name*/, RelayManager* /*mgr*/)
+    int MetaObject::connectByName(const std::string& /*name*/, RelayManager& /*mgr*/)
     {
         // TODO implement
         return 0;
@@ -1168,11 +1305,13 @@ namespace mo
         auto my_slots = receiver->getSlots(slot_name);
         for (auto signal : my_signals)
         {
+            MO_ASSERT(signal != nullptr);
             for (auto slot : my_slots)
             {
+                MO_ASSERT(slot != nullptr);
                 if (signal->getSignature() == slot->getSignature())
                 {
-                    auto connection = slot->connect(signal);
+                    auto connection = slot->connect(*signal);
                     if (connection)
                     {
                         addConnection(std::move(connection),
@@ -1198,7 +1337,7 @@ namespace mo
         auto slot = receiver->getSlot(slot_name, signature);
         if (signal && slot)
         {
-            auto connection = slot->connect(signal);
+            auto connection = slot->connect(*signal);
             if (connection)
             {
                 addConnection(
@@ -1209,7 +1348,7 @@ namespace mo
         return false;
     }
 
-    int MetaObject::connectAll(RelayManager* mgr)
+    int MetaObject::connectAll(RelayManager& mgr)
     {
         auto my_signals = getSignalInfo();
         int count = 0;
@@ -1220,26 +1359,27 @@ namespace mo
         return count;
     }
 
-    void MetaObject::addSlot(ISlot* slot, const std::string& name)
+    void MetaObject::addSlot(ISlot& slot, const std::string& name)
     {
-        m_slots[name][slot->getSignature()] = slot;
+        m_slots[name][slot.getSignature()] = &slot;
     }
 
     void MetaObject::addSlot(std::unique_ptr<ISlot>&& slot, const std::string& name)
     {
-        addSlot(slot.get(), name);
+        MO_ASSERT(slot != nullptr);
+        addSlot(*slot, name);
         m_implicit_slots.emplace_back(std::move(slot));
     }
 
-    void MetaObject::addSignal(ISignal* sig, const std::string& name)
+    void MetaObject::addSignal(ISignal& sig, const std::string& name)
     {
-        m_signals[name][sig->getSignature()] = sig;
+        m_signals[name][sig.getSignature()] = &sig;
         if (m_sig_manager)
         {
-            auto connection = m_sig_manager->connect(sig, name, this);
+            auto connection = m_sig_manager->connect(&sig, name, this);
             ConnectionInfo info;
             info.signal_name = name;
-            info.signature = sig->getSignature();
+            info.signature = sig.getSignature();
             info.connection = connection;
             m_connections.push_back(info);
         }
@@ -1248,6 +1388,19 @@ namespace mo
     std::vector<std::pair<ISignal*, std::string>> MetaObject::getSignals()
     {
         std::vector<std::pair<ISignal*, std::string>> my_signals;
+        for (auto& name_itr : m_signals)
+        {
+            for (auto& sig_itr : name_itr.second)
+            {
+                my_signals.emplace_back(std::make_pair(sig_itr.second, name_itr.first));
+            }
+        }
+        return my_signals;
+    }
+
+    std::vector<std::pair<const ISignal*, std::string>> MetaObject::getSignals() const
+    {
+        std::vector<std::pair<const ISignal*, std::string>> my_signals;
         for (auto& name_itr : m_signals)
         {
             for (auto& sig_itr : name_itr.second)
@@ -1323,9 +1476,9 @@ namespace mo
         m_connections.push_back(info);
     }
 
-    void MetaObject::onParamUpdate(IParam* param, Header hdr, UpdateFlags)
+    void MetaObject::onParamUpdate(const IParam& param, Header hdr, UpdateFlags, IAsyncStream&)
     {
-        m_sig_param_updated(this, hdr, param);
+        m_sig_param_updated(*this, hdr, param);
     }
 
     MetaObject::ParamConnectionInfo::ParamConnectionInfo(rcc::weak_ptr<mo::IMetaObject> out,

@@ -85,15 +85,15 @@ namespace test
 
     void ParamedObject::update(int value)
     {
-        this->updateParam<int>("int_value", value);
+        this->setParamValue(std::move(value), "int_value");
     }
 
-    void MetaObjectSubscriber::onParamUpdate(IParam* param, Header hdr, UpdateFlags flgs)
+    void MetaObjectSubscriber::onParamUpdate(const IParam& param, Header hdr, UpdateFlags flgs, IAsyncStream&)
     {
         ++update_count;
     }
 
-    void MetaObjectPublisher::onParamUpdate(IParam*, Header, UpdateFlags)
+    void MetaObjectPublisher::onParamUpdate(const IParam&, Header, UpdateFlags, IAsyncStream&)
     {
         ++update_count;
     }

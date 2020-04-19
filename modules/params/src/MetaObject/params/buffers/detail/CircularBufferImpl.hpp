@@ -7,7 +7,7 @@ namespace mo
     {
         template <class T>
         CircularBuffer<T>::CircularBuffer(T&& init, const std::string& name, OptionalTime ts, ParamFlags type)
-            : ITInputParam<T>(name)
+            : TSubscriber<T>(name)
             , TParam<T>(name, mo::ParamFlags::kBUFFER)
             , IParam(name, mo::ParamFlags::kBUFFER)
         {
@@ -19,7 +19,7 @@ namespace mo
 
         template <class T>
         CircularBuffer<T>::CircularBuffer(const std::string& name, OptionalTime ts, ParamFlags type)
-            : ITInputParam<T>(name)
+            : TSubscriber<T>(name)
             , TParam<T>(name, mo::ParamFlags::kBUFFER)
             , IParam(name, mo::ParamFlags::kBUFFER)
         {
@@ -226,5 +226,5 @@ namespace mo
         ParamConstructor<CircularBuffer<T>> CircularBuffer<T>::_circular_buffer_param_constructor;
         template <typename T>
         BufferConstructor<CircularBuffer<T>> CircularBuffer<T>::_circular_buffer_constructor;
-    }
-}
+    } // namespace Buffer
+} // namespace mo

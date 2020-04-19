@@ -6,7 +6,7 @@ class QWidget;
 class QObject;
 namespace mo
 {
-    class IParam;
+    class IControlParam;
     namespace UI
     {
         namespace qt
@@ -23,10 +23,10 @@ namespace mo
                 virtual ~IParamProxy();
 
                 virtual QWidget* getParamWidget(QWidget* parent) = 0;
-                virtual bool checkParam(IParam* param) const = 0;
-                virtual bool setParam(IParam* param) = 0;
+                virtual bool checkParam(IControlParam* param) const = 0;
+                virtual bool setParam(IControlParam* param) = 0;
                 virtual void onUiUpdate(QObject* source) = 0;
             };
-        } // namespace mo::UI::qt
-    }     // namespace mo::UI
+        } // namespace qt
+    }     // namespace UI
 } // namespace mo

@@ -9,9 +9,9 @@
 #include <MetaObject/thread/ConditionVariable.hpp>
 #include <MetaObject/thread/Mutex.hpp>
 
-#include <boost/fiber/operations.hpp>
 #include <boost/thread.hpp>
 
+#include <chrono>
 #include <functional>
 #include <queue>
 
@@ -21,6 +21,13 @@ namespace mo
     class Context;
     class ThreadHandle;
     class ISlot;
+
+    void MO_EXPORTS initThread();
+    void MO_EXPORTS initThread(SystemTable& table);
+
+    void MO_EXPORTS sleepFor(std::chrono::nanoseconds);
+    void MO_EXPORTS sleepUntil(std::chrono::high_resolution_clock::time_point);
+    void MO_EXPORTS yield();
 
     class MO_EXPORTS Thread
     {

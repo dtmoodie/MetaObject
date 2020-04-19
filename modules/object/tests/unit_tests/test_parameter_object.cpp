@@ -3,8 +3,8 @@
 #include "MetaObject/object/MetaObject.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
 #include "MetaObject/params/ParamMacros.hpp"
-#include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
+#include "MetaObject/params/TSubscriberPtr.hpp"
 #include "MetaObject/params/buffers/BufferFactory.hpp"
 #include "MetaObject/params/detail/MetaParamImpl.hpp"
 #include "MetaObject/signals/TSignal.hpp"
@@ -32,10 +32,12 @@ struct output_parametered_object : public MetaObject
     void increment()
     {
         // wut, get access token, get ref to data, increment
-        test_output.access()()++;
+        ++output_val;
+        test_output.publish(output_val);
         // old way
         // test_output++;
     }
+    int output_val = 0;
 };
 
 struct input_parametered_object : public MetaObject
@@ -50,43 +52,43 @@ MO_REGISTER_OBJECT(output_parametered_object)
 
 TEST(object, input_parameter_manual)
 {
+    IAsyncStreamPtr_t stream = IAsyncStream::create();
     mo::MetaObjectFactory::instance();
     auto input = input_parametered_object::create();
     auto output = output_parametered_object::create();
     ASSERT_EQ(input->test_input_param.setInput(&output->test_output), true);
-    output->test_output.updateData(10);
+    output->increment();
     ASSERT_NE(input->test_input, nullptr);
-    ASSERT_EQ(*input->test_input, 10);
-
-    ASSERT_EQ(*input->test_input, output->test_output.access()());
+    // ASSERT_EQ(*input->test_input, 10);
+    ASSERT_EQ(*input->test_input, output->output_val);
 }
 
 TEST(object, input_parameter_programatic)
 {
+    IAsyncStreamPtr_t stream = IAsyncStream::create();
     auto input = input_parametered_object::create();
-    auto input_ = input->getParamOptional("test_input");
+    auto input_ = input->getInput("test_input");
 
     auto output = output_parametered_object::create();
-    auto output_ = output->getParamOptional("test_output");
+    auto output_ = output->getOutput("test_output");
 
     ASSERT_NE(input_, nullptr);
     ASSERT_NE(output_, nullptr);
-    auto input_param = dynamic_cast<InputParam*>(input_);
+    auto input_param = dynamic_cast<ISubscriber*>(input_);
     ASSERT_NE(input_param, nullptr);
     ASSERT_EQ(input_param->setInput(output_), true);
-    output->test_output.updateData(10);
+    output->increment();
     ASSERT_NE(input->test_input, nullptr);
-    ASSERT_EQ(*input->test_input, 10);
-    ASSERT_EQ(*input->test_input, output->test_output.access()());
+    ASSERT_EQ(*input->test_input, output->output_val);
 }
 
 /*BOOST_AUTO_TEST_CASE(buffered_input)
 {
     rcc::shared_ptr<input_parametered_object> input = input_parametered_object::create();
-    auto input_ = input->getParamOptional("test_input");
+    auto input_ = input->getParam("test_input");
 
     auto output = output_parametered_object::create();
-    auto output_ = output->getParamOptional("test_output");
+    auto output_ = output->getParam("test_output");
 
     ASSERT_TRUE(input_);
     ASSERT_TRUE(output_);
@@ -108,10 +110,10 @@ TEST(object, input_parameter_programatic)
 BOOST_AUTO_TEST_CASE(threaded_buffered_input)
 {
     auto input = input_parametered_object::create();
-    auto input_ = input->getParamOptional("test_input");
+    auto input_ = input->getParam("test_input");
 
     auto output = output_parametered_object::create();
-    auto output_ = output->getParamOptional("test_output");
+    auto output_ = output->getParam("test_output");
 
     ASSERT_TRUE(input_);
     ASSERT_TRUE(output_);
@@ -153,38 +155,42 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
 
 TEST(object, threaded_stream_buffer)
 {
+    IAsyncStreamPtr_t stream = IAsyncStream::create();
     auto input = input_parametered_object::create();
-    auto input_ = input->getParamOptional("test_input");
+    auto input_param = input->getInput("test_input");
 
     auto output = output_parametered_object::create();
-    auto output_ = output->getParamOptional("test_output");
+    auto output_ = output->getOutput("test_output");
 
-    ASSERT_NE(input_, nullptr);
+    ASSERT_NE(input_param, nullptr);
     ASSERT_NE(output_, nullptr);
-    auto input_param = dynamic_cast<InputParam*>(input_);
 
-    auto buffer = buffer::BufferFactory::instance()->createBuffer(output_, mo::BufferFlags::STREAM_BUFFER);
+    auto buffer = buffer::IBuffer::create(mo::BufferFlags::STREAM_BUFFER);
     ASSERT_NE(buffer, nullptr);
-    ASSERT_EQ(input_param->setInput(static_cast<mo::IParam*>(buffer)), true);
-    output->test_output.updateData(0, 0);
+    buffer->setInput(output_);
+    ASSERT_EQ(input_param->setInput(buffer), true);
+    output->test_output.publish(0, mo::Header(0));
 
     std::thread background_thread([&input]() {
         for (int i = 0; i < 1000; ++i)
         {
-            auto container = input->test_input_param.getTypedData<int>(i);
+            mo::Header header(i);
+            auto container = input->test_input_param.getData(&header);
 
             while (!container)
             {
-                container = input->test_input_param.getTypedData<int>(i);
+                container = input->test_input_param.getData(&header);
             }
-            ASSERT_EQ(container->data, i * 10);
+            auto typed = std::dynamic_pointer_cast<const TDataContainer<int>>(container);
+            ASSERT_TRUE(typed);
+            ASSERT_EQ(typed->data, i * 10);
             boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
         }
     });
 
     for (int i = 1; i < 1000; ++i)
     {
-        output->test_output.updateData(i * 10, i);
+        output->test_output.publish(i * 10, mo::Header(i));
     }
     background_thread.join();
 }

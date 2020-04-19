@@ -1,7 +1,7 @@
-#include <MetaObject/params/TMultiInput-inl.hpp>
-#include <MetaObject/params/TMultiOutput.hpp>
-#include <MetaObject/params/TParamOutput.hpp>
+#include <MetaObject/params/TMultiPublisher.hpp>
+#include <MetaObject/params/TMultiSubscriber-inl.hpp>
 #include <MetaObject/params/TParamPtr.hpp>
+#include <MetaObject/params/TPublisher.hpp>
 #include <MetaObject/thread/Mutex.hpp>
 
 #include <gtest/gtest.h>
@@ -17,12 +17,12 @@ bool printInputs(const std::tuple<const int*, const float*, const double*>& inpu
     }
     if (std::get<1>(inputs))
     {
-        std::cout << "[float] " << *std::get<0>(inputs) << std::endl;
+        std::cout << "[float] " << *std::get<1>(inputs) << std::endl;
         return true;
     }
     if (std::get<2>(inputs))
     {
-        std::cout << "[double] " << *std::get<0>(inputs) << std::endl;
+        std::cout << "[double] " << *std::get<2>(inputs) << std::endl;
         return true;
     }
     std::cout << "No input set" << std::endl;
@@ -38,84 +38,108 @@ void clearInputs(std::tuple<const int*, const float*, const double*>& inputs)
 
 namespace
 {
-    struct Fixture : ::testing::Test
+    struct multi_type_subscriber : ::testing::Test
     {
-        Fixture()
+        multi_type_subscriber()
+            : m_publishers{int_out, float_out, double_out}
         {
-            multi_input.setMtx(&mtx);
+            multi_input.setMtx(mtx);
             multi_input.setUserDataPtr(&inputs);
         }
 
         void checkInit()
         {
-            ASSERT_EQ(multi_input.getInputParam(), nullptr);
+            ASSERT_EQ(multi_input.getPublisher(), nullptr);
         }
 
-        void testInput(int val)
+        template <class T>
+        void testInput(T val)
         {
+            mo::TPublisher<T>& pub = std::get<mo::TPublisher<T>&>(m_publishers);
+            ASSERT_EQ(mo::get<const T*>(inputs), static_cast<void*>(nullptr));
+            ASSERT_TRUE(multi_input.setInput(&pub));
 
-            ASSERT_EQ(mo::get<const int*>(inputs), static_cast<void*>(nullptr));
-            ASSERT_EQ(multi_input.setInput(&int_out), true);
+            ASSERT_NE(multi_input.getPublisher(), nullptr);
 
-            ASSERT_NE(multi_input.getInputParam(), nullptr);
+            ASSERT_EQ(multi_input.getPublisher(), &pub);
+            pub.publish(val);
 
-            ASSERT_EQ(multi_input.getInputParam(), &int_out);
-            int_out.updateData(val);
-
-            ASSERT_NE(mo::get<const int*>(inputs), static_cast<void*>(nullptr));
-            ASSERT_EQ(*mo::get<const int*>(inputs), 6);
+            ASSERT_NE(mo::get<const T*>(inputs), static_cast<void*>(nullptr));
+            ASSERT_EQ(*mo::get<const T*>(inputs), 6);
             ASSERT_EQ(printInputs(inputs), true);
 
-            int_out.updateData(5);
+            pub.publish(5);
 
-            ASSERT_NE(mo::get<const int*>(inputs), static_cast<void*>(nullptr));
-            ASSERT_EQ(*mo::get<const int*>(inputs), 5);
-
-            auto data = multi_input.getData(mo::Header());
+            ASSERT_NE(mo::get<const T*>(inputs), static_cast<void*>(nullptr));
+            ASSERT_EQ(*mo::get<const T*>(inputs), 5);
+            mo::Header header;
+            auto data = multi_input.getData();
             ASSERT_EQ(printInputs(inputs), true);
 
             ASSERT_NE(data, nullptr);
-            ASSERT_EQ(data->getType(), mo::TypeInfo(typeid(int)));
+            ASSERT_EQ(data->getType(), mo::TypeInfo::create<T>());
         }
 
+        template <class T>
         void testCallbacks()
         {
             int callback_called = 0;
-            mo::TParam<int>::TUpdateSlot_t int_callback([&callback_called](mo::TParam<int>::TContainerPtr_t,
-                                                                           mo::IParam*,
-                                                                           mo::UpdateFlags) { ++callback_called; });
-            auto connection = multi_input.registerUpdateNotifier(&int_callback);
+            auto cb = [&callback_called](
+                          const mo::IDataContainerConstPtr_t&, const mo::IParam&, mo::UpdateFlags, mo::IAsyncStream&) {
+                ++callback_called;
+            };
+            mo::TSlot<mo::DataUpdate_s> callback(std::move(cb));
+
+            auto connection = multi_input.registerUpdateNotifier(callback);
 
             ASSERT_NE(connection, nullptr);
-            int_out.updateData(10);
+            std::get<mo::TPublisher<T>&>(m_publishers).publish(static_cast<T>(10));
             ASSERT_EQ(callback_called, 1);
         }
 
         std::tuple<const int*, const float*, const double*> inputs;
         int int_val;
-        mo::TParamOutput<int> int_out;
+        mo::TPublisher<int> int_out;
 
         float float_val;
-        mo::TParamOutput<float> float_out;
+        mo::TPublisher<float> float_out;
 
         double double_val;
-        mo::TParamOutput<double> double_out;
+        mo::TPublisher<double> double_out;
 
-        mo::TMultiInput<int, float, double> multi_input;
+        std::tuple<mo::TPublisher<int>&, mo::TPublisher<float>&, mo::TPublisher<double>&> m_publishers;
+
+        mo::TMultiSubscriber<int, float, double> multi_input;
 
         mo::Mutex_t mtx;
 
         mo::TMultiOutput<int, float, double> multi_output;
     };
 } // namespace
-TEST_F(Fixture, init)
+
+TEST_F(multi_type_subscriber, initialization)
 {
     checkInit();
     ASSERT_NE(printInputs(inputs), true);
 }
 
-TEST_F(Fixture, int_subscribe)
+TEST_F(multi_type_subscriber, int_subscribe)
 {
-    testInput(6);
-    testCallbacks();
+    auto stream = mo::IAsyncStream::create();
+    testInput<int>(6);
+    testCallbacks<int>();
+}
+
+TEST_F(multi_type_subscriber, float_subscribe)
+{
+    auto stream = mo::IAsyncStream::create();
+    testInput<float>(6);
+    testCallbacks<float>();
+}
+
+TEST_F(multi_type_subscriber, double_subscribe)
+{
+    auto stream = mo::IAsyncStream::create();
+    testInput<double>(6);
+    testCallbacks<double>();
 }

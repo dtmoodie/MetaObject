@@ -26,13 +26,11 @@ namespace mo
         using Ptr_t = std::shared_ptr<TSignalRelay<void(T...)>>;
         using ConstPtr_t = std::shared_ptr<const TSignalRelay<void(T...)>>;
 
-        void operator()(IAsyncStream& src_stream, T&&... args);
+        template <class... U>
+        void operator()(IAsyncStream& src_stream, U&&... args);
         TypeInfo getSignature() const override;
         bool hasSlots() const override;
-
-      protected:
-        friend TSignal<void(T...)>;
-        friend TSlot<void(T...)>;
+        uint32_t numSlots() const override;
 
         bool connect(ISlot& slot) override;
         bool connect(ISignal& signal) override;
@@ -57,14 +55,13 @@ namespace mo
         using ConstPtr_t = std::shared_ptr<const TSignalRelay<R(T...)>>;
 
         TSignalRelay();
-        R operator()(IAsyncStream& src_stream, T&&... args);
+
+        template <class... U>
+        R operator()(IAsyncStream& src_stream, U&&... args);
 
         TypeInfo getSignature() const override;
         bool hasSlots() const override;
-
-      protected:
-        friend TSignal<R(T...)>;
-        friend TSlot<R(T...)>;
+        uint32_t numSlots() const override;
 
         bool connect(ISlot& slot) override;
         bool connect(ISignal& signal) override;
@@ -85,7 +82,8 @@ namespace mo
     //////////////////////////////////////////////////////////////////
 
     template <class... T, class Mutex>
-    void TSignalRelay<void(T...), Mutex>::operator()(IAsyncStream& src, T&&... args)
+    template <class... U>
+    void TSignalRelay<void(T...), Mutex>::operator()(IAsyncStream& src, U&&... args)
     {
         std::unique_lock<Mutex> lock(m_mtx);
         auto slots = m_slots;
@@ -100,9 +98,10 @@ namespace mo
                     if (dst_stream->threadId() != src.threadId())
                     {
                         // push as a task to the slot stream
-                        auto arg_pack =
+                        // TODO argpack?
+                        /*auto arg_pack =
                             std::make_shared<ArgumentPack<T...>>(src, *dst_stream, std::forward<T>(args)...);
-                        dst_stream->pushWork([arg_pack, slot]() { slot->invokeArgpack(*arg_pack); });
+                        dst_stream->pushWork([arg_pack, slot]() { slot->invokeArgpack(*arg_pack); });*/
                     }
                 }
                 else
@@ -113,7 +112,10 @@ namespace mo
             else
             {
                 // slot_stream == nullptr
-                (*slot)(args...);
+                if (*slot)
+                {
+                    (*slot)(std::forward<U>(args)...);
+                }
             }
         }
     }
@@ -180,10 +182,19 @@ namespace mo
     {
         return TypeInfo::create<void(T...)>();
     }
+
     template <class... T, class Mutex>
     bool TSignalRelay<void(T...), Mutex>::hasSlots() const
     {
+        std::lock_guard<Mutex> lock(m_mtx);
         return m_slots.size() != 0;
+    }
+
+    template <class... T, class Mutex>
+    uint32_t TSignalRelay<void(T...), Mutex>::numSlots() const
+    {
+        std::lock_guard<Mutex> lock(m_mtx);
+        return m_slots.size();
     }
 
     // ------------------------------------------------------------------
@@ -197,14 +208,15 @@ namespace mo
 
     // TODO the stream thing
     template <class R, class... T, class Mutex>
-    R TSignalRelay<R(T...), Mutex>::operator()(IAsyncStream&, T&&... args)
+    template <class... U>
+    R TSignalRelay<R(T...), Mutex>::operator()(IAsyncStream&, U&&... args)
     {
         std::unique_lock<Mutex> lock(m_mtx);
         auto slot = m_slot;
         lock.unlock();
         if (slot && *slot)
         {
-            return (*slot)(std::forward<T>(args)...);
+            return (*slot)(std::forward<U>(args)...);
         }
         THROW(debug, "Slot not connected");
         return R();
@@ -274,6 +286,13 @@ namespace mo
         if (m_slot == nullptr)
             return false;
         return *m_slot;
+    }
+
+    template <class R, class... T, class Mutex>
+    uint32_t TSignalRelay<R(T...), Mutex>::numSlots() const
+    {
+        std::lock_guard<Mutex> lock(m_mtx);
+        return (m_slot != nullptr) ? 1 : 0;
     }
 } // namespace mo
 

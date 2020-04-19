@@ -97,7 +97,7 @@ TEST(cuda_stream, async_copy)
 
     mo::TDynArray<float, mo::DeviceAllocator> d_data(d_alloc, num_elems);
     ASSERT_NE(d_data.view().data(), nullptr);
-    cuda_tests::set(d_data.view().data(), 1.0F, num_elems, typed->getStream());
+    cuda_tests::set(d_data.mutableView().data(), 1.0F, num_elems, typed->getStream());
     stream->synchronize();
 
     auto h_alloc = stream->hostAllocator();
@@ -105,22 +105,22 @@ TEST(cuda_stream, async_copy)
     mo::TDynArray<float, mo::Allocator> h_data(h_alloc, num_elems);
     ASSERT_NE(h_data.view().data(), nullptr);
 
-    cuda_tests::set(d_data.view().data(), 2.0F, num_elems, typed->getStream());
-    stream->deviceToHost(h_data.view(), d_data.view());
+    cuda_tests::set(d_data.mutableView().data(), 2.0F, num_elems, typed->getStream());
+    stream->deviceToHost(h_data.mutableView(), d_data.view());
     stream->synchronize();
     for (size_t i = 0; i < h_data.size(); ++i)
     {
         ASSERT_EQ(h_data.view()[i], 2.0F);
     }
 
-    auto view = h_data.view();
+    auto view = h_data.mutableView();
     for (auto& val : view)
     {
         val = 10.0F;
     }
-    stream->hostToDevice(d_data.view(), h_data.view());
-    cuda_tests::square(d_data.view().data(), d_data.size(), typed->getStream());
-    stream->deviceToHost(h_data.view(), d_data.view());
+    stream->hostToDevice(d_data.mutableView(), h_data.view());
+    cuda_tests::square(d_data.mutableView().data(), d_data.size(), typed->getStream());
+    stream->deviceToHost(h_data.mutableView(), d_data.view());
     stream->synchronize();
     for (size_t i = 0; i < h_data.size(); ++i)
     {

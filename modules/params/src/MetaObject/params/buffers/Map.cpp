@@ -1,5 +1,6 @@
 #include "Map.hpp"
-#include <MetaObject/thread/fiber_include.hpp>
+#include <MetaObject/params/IPublisher.hpp>
+
 #include <boost/thread/locks.hpp>
 #include <ct/bind.hpp>
 
@@ -8,13 +9,12 @@ namespace mo
     namespace buffer
     {
         Map::Map(const std::string& name, PushPolicy push_policy, SearchPolicy search_policy)
-            : IParam(name)
-            , m_push_policy(push_policy)
+            : m_push_policy(push_policy)
             , m_search_policy(search_policy)
         {
-            m_update_slot = ct::variadicBind(&Map::onInputUpdate, this);
-            IParam::setMtx(&m_mtx);
-            appendFlags(mo::ParamFlags::kBUFFER);
+
+            this->appendFlags(mo::ParamFlags::kBUFFER);
+            m_update_slot.bind(&Map::onInputUpdate, this);
         }
 
         Map::~Map()
@@ -62,7 +62,7 @@ namespace mo
             Lock_t lock(m_mtx);
             if (!m_data_buffer.empty())
             {
-                Lock_t lock(IParam::mtx());
+                Lock_t lock(this->mtx());
                 start = m_data_buffer.begin()->first.timestamp;
                 end = m_data_buffer.rbegin()->first.timestamp;
                 return true;
@@ -75,7 +75,7 @@ namespace mo
             Lock_t lock(m_mtx);
             if (!m_data_buffer.empty())
             {
-                Lock_t lock(IParam::mtx());
+                Lock_t lock(this->mtx());
                 start = m_data_buffer.begin()->first.frame_number;
                 end = m_data_buffer.rbegin()->first.frame_number;
                 return true;
@@ -88,31 +88,134 @@ namespace mo
             return BufferFlags::MAP_BUFFER;
         }
 
-        bool Map::setInput(const std::shared_ptr<IParam>& param)
+        bool Map::setInput(std::shared_ptr<IPublisher> param)
         {
-            return IBuffer::setInput(param);
+            if (setInput(param.get()))
+            {
+                m_shared_publisher = std::move(param);
+                return true;
+            }
+            return false;
         }
 
-        bool Map::setInput(IParam* param)
+        bool Map::setInput(IPublisher* param)
         {
-            if (IBuffer::setInput(param))
+            if (param == nullptr)
+            {
+                m_update_slot.clear();
+                m_publisher = nullptr;
+                m_shared_publisher.reset();
+                m_delete_slot.clear();
+                return true;
+            }
+            m_update_connection = param->registerUpdateNotifier(m_update_slot);
+            m_delete_connection = param->registerDeleteNotifier(m_delete_slot);
+
+            if (m_update_connection && m_delete_connection)
             {
                 auto stream = param->getStream();
                 if (!stream)
                 {
                     stream = IAsyncStream::current().get();
                 }
-                auto data = IBuffer::getData();
+                auto data = param->getData();
                 if (data)
                 {
                     pushData(data, *stream);
                 }
+                m_publisher = param;
                 return true;
+            }
+            else
+            {
+                m_update_connection.reset();
+                m_delete_connection.reset();
             }
             return false;
         }
 
-        void Map::onInputUpdate(const IDataContainerPtr_t& data, IParam* param, UpdateFlags flags, IAsyncStream& stream)
+        bool Map::isInputSet() const
+        {
+            Mutex_t::Lock_t lock(m_mtx);
+            return m_publisher != nullptr;
+        }
+
+        bool Map::acceptsPublisher(const IPublisher&) const
+        {
+            return true;
+        }
+
+        bool Map::acceptsType(const TypeInfo&) const
+        {
+            return true;
+        }
+
+        void Map::setAllocator(Allocator::Ptr_t)
+        {
+            // do we need to set an allocator?
+        }
+
+        std::vector<Header> Map::getAvailableHeaders() const
+        {
+            std::vector<Header> output;
+            Mutex_t::Lock_t lock(m_mtx);
+            for (const auto& itr : m_data_buffer)
+            {
+                output.push_back(itr.first);
+            }
+
+            return output;
+        }
+
+        boost::optional<Header> Map::getNewestHeader() const
+        {
+            if (!m_data_buffer.empty())
+            {
+                return m_data_buffer.end()->first;
+            }
+            return {};
+        }
+
+        bool Map::providesOutput(TypeInfo) const
+        {
+            return true;
+        }
+
+        uint32_t Map::getNumSubscribers() const
+        {
+            Mutex_t::Lock_t lock(m_mtx);
+            if (m_publisher)
+            {
+                return m_publisher->getNumSubscribers();
+            }
+            return 0;
+        }
+
+        std::vector<TypeInfo> Map::getOutputTypes() const
+        {
+            Mutex_t::Lock_t lock(m_mtx);
+            if (m_publisher)
+            {
+                return m_publisher->getOutputTypes();
+            }
+            return {};
+        }
+
+        std::vector<TypeInfo> Map::getInputTypes() const
+        {
+            return {};
+        }
+
+        IPublisher* Map::getPublisher() const
+        {
+            Mutex_t::Lock_t lock(m_mtx);
+            return m_publisher;
+        }
+
+        void Map::onInputUpdate(const IDataContainerConstPtr_t& data,
+                                const IParam& param,
+                                UpdateFlags flags,
+                                IAsyncStream& stream)
         {
             (void)param;
             (void)flags;
@@ -122,15 +225,15 @@ namespace mo
             }
         }
 
-        void Map::pushData(const IDataContainerPtr_t& data, IAsyncStream& stream)
+        void Map::pushData(const IDataContainerConstPtr_t& data, IAsyncStream& stream)
         {
             if ((m_push_policy == GROW) || (m_push_policy == PRUNE))
             {
                 {
-                    Lock_t lock(IParam::mtx());
+                    Lock_t lock(this->mtx());
                     m_data_buffer[data->getHeader()] = data;
                 }
-                emitUpdate(data, UpdateFlags::kBUFFER_UPDATED, stream);
+                m_update_signal(data, *this, ct::value(UpdateFlags::kBUFFER_UPDATED), stream);
             }
             else
             {
@@ -145,10 +248,10 @@ namespace mo
             }
         }
 
-        void Map::pushOrDrop(const IDataContainerPtr_t& data, IAsyncStream& stream)
+        void Map::pushOrDrop(const IDataContainerConstPtr_t& data, IAsyncStream& stream)
         {
             {
-                Lock_t lock(IParam::mtx());
+                Lock_t lock(this->mtx());
                 if (m_frame_padding)
                 {
                     if (m_data_buffer.size() > (*m_frame_padding + 1))
@@ -158,13 +261,13 @@ namespace mo
                 }
                 m_data_buffer[data->getHeader()] = data;
             }
-            emitUpdate(data, mo::UpdateFlags::kBUFFER_UPDATED, stream);
+            m_update_signal(data, *this, ct::value(UpdateFlags::kBUFFER_UPDATED), stream);
         }
 
-        void Map::pushAndWait(const IDataContainerPtr_t& data, IAsyncStream& stream)
+        void Map::pushAndWait(const IDataContainerConstPtr_t& data, IAsyncStream& stream)
         {
             {
-                Lock_t lock(IParam::mtx());
+                Lock_t lock(this->mtx());
                 if (m_frame_padding)
                 {
                     while (m_data_buffer.size() > (*m_frame_padding + 1))
@@ -179,15 +282,35 @@ namespace mo
 
                 m_data_buffer[data->getHeader()] = data;
             }
-            emitUpdate(data, mo::UpdateFlags::kBUFFER_UPDATED, stream);
+            m_update_signal(data, *this, ct::value(UpdateFlags::kBUFFER_UPDATED), stream);
         }
 
-        Map::IContainerPtr_t Map::getData(const Header& desired)
+        IDataContainerConstPtr_t Map::getCurrentData(IAsyncStream* stream) const
         {
             Lock_t lock(m_mtx);
-            m_current_data = search(desired);
-            if (m_current_data)
+            return m_current_data;
+        }
+
+        IDataContainerConstPtr_t Map::getData(const Header* desired, IAsyncStream* stream)
+        {
+            IDataContainerConstPtr_t data;
+            if (desired)
             {
+                data = search(*desired);
+            }
+            else
+            {
+                // Just get the newest
+                if (!m_data_buffer.empty())
+                {
+                    data = m_data_buffer.rbegin()->second;
+                }
+            }
+
+            if (data)
+            {
+                Lock_t lock(m_mtx);
+                m_current_data = data;
                 m_current_timestamp = m_current_data->getHeader().timestamp;
                 m_current_frame_number = m_current_data->getHeader().frame_number;
                 if (m_push_policy != GROW)
@@ -195,26 +318,14 @@ namespace mo
                     prune();
                 }
             }
-
-            return m_current_data;
+            return data;
         }
 
-        Map::IContainerConstPtr_t Map::getData(const Header& desired) const
-        {
-            Lock_t lock(m_mtx);
-            auto result = search(desired);
-            if (result)
-            {
-                return result;
-            }
-            return m_current_data;
-        }
-
-        void Map::setMtx(Mutex_t*)
+        void Map::setMtx(Mutex_t&)
         {
         }
 
-        IDataContainerPtr_t Map::search(const Header& hdr) const
+        IDataContainerConstPtr_t Map::search(const Header& hdr) const
         {
             if (m_search_policy == EXACT)
             {
@@ -223,7 +334,7 @@ namespace mo
             return searchNearest(hdr);
         }
 
-        IDataContainerPtr_t Map::searchExact(const Header& hdr) const
+        IDataContainerConstPtr_t Map::searchExact(const Header& hdr) const
         {
             if (m_data_buffer.empty())
             {
@@ -232,14 +343,14 @@ namespace mo
 
             if (!hdr.timestamp && !hdr.frame_number.valid())
             {
-                return (--this->m_data_buffer.end())->second;
+                return (--this->m_data_buffer.end())->second.getData();
             }
             else
             {
                 auto itr = m_data_buffer.find(hdr);
                 if (itr != m_data_buffer.end())
                 {
-                    return itr->second;
+                    return itr->second.getData();
                 }
             }
 
@@ -290,13 +401,13 @@ namespace mo
             return remove_count;
         }
 
-        IDataContainerPtr_t Map::searchNearest(const Header& hdr) const
+        IDataContainerConstPtr_t Map::searchNearest(const Header& hdr) const
         {
             if (!hdr.timestamp && !hdr.frame_number.valid())
             {
                 if (!m_data_buffer.empty())
                 {
-                    return (--m_data_buffer.end())->second;
+                    return (--m_data_buffer.end())->second.getData();
                 }
                 return {};
             }
@@ -321,7 +432,7 @@ namespace mo
                 {
                     if (ts_lower == hdr.timestamp)
                     {
-                        return lower->second;
+                        return lower->second.getData();
                     }
 
                     if (lower != m_data_buffer.begin())
@@ -333,14 +444,14 @@ namespace mo
                     const auto lowerdelta = std::chrono::abs(*ts_lower - *hdr.timestamp);
                     if (upperdelta < lowerdelta)
                     {
-                        return upper->second;
+                        return upper->second.getData();
                     }
-                    return lower->second;
+                    return lower->second.getData();
                 }
                 // frame number based search
                 if (fn_lower == hdr.frame_number)
                 {
-                    return lower->second;
+                    return lower->second.getData();
                 }
 
                 if (lower != m_data_buffer.begin())
@@ -352,68 +463,66 @@ namespace mo
                 const auto lowerdelta = fn_lower - hdr.frame_number;
                 if (upperdelta < lowerdelta)
                 {
-                    return upper->second;
+                    return upper->second.getData();
                 }
-                return lower->second;
+                return lower->second.getData();
             }
             if (lower != m_data_buffer.end())
             {
-                return lower->second;
+                return lower->second.getData();
             }
 
             if (upper != m_data_buffer.end())
             {
-                return upper->second;
+                return upper->second.getData();
             }
             if (!m_data_buffer.empty())
             {
-                return (--m_data_buffer.end())->second;
+                return (--m_data_buffer.end())->second.getData();
             }
             return {};
         }
 
-        OptionalTime Map::getTimestamp() const
+        ConnectionPtr_t Map::registerUpdateNotifier(ISlot& f)
         {
-            return m_current_timestamp;
-        }
-
-        FrameNumber Map::getFrameNumber() const
-        {
-            return m_current_frame_number;
-        }
-
-        template <Map::PushPolicy PUSH_POLICY, Map::SearchPolicy SEARCH_POLICY, BufferFlags::EnumValueType TYPE>
-        struct MapConstructor
-        {
-            MapConstructor()
+            auto connection = TParam<IBuffer>::registerUpdateNotifier(f);
+            if (!connection)
             {
-                buffer::BufferFactory::registerConstructor([]() { return new Map("", PUSH_POLICY, SEARCH_POLICY); },
-                                                           TYPE);
+                connection = m_update_signal.connect(f);
             }
-        };
-
-        IBuffer* IBuffer::create(BufferFlags type)
-        {
-            switch (type)
-            {
-            case BufferFlags::MAP_BUFFER:
-                return new Map("", Map::GROW, Map::EXACT);
-            case BufferFlags::STREAM_BUFFER:
-                return new Map("", Map::PRUNE, Map::EXACT);
-            case BufferFlags::BLOCKING_STREAM_BUFFER:
-                return new Map("", Map::BLOCK, Map::EXACT);
-            case BufferFlags::DROPPING_STREAM_BUFFER:
-                return new Map("", Map::DROP, Map::EXACT);
-            case BufferFlags::NEAREST_NEIGHBOR_BUFFER:
-                return new Map("", Map::BLOCK, Map::NEAREST);
-            default:
-                return nullptr;
-            }
+            return connection;
         }
-        static MapConstructor<Map::GROW, Map::EXACT, BufferFlags::MAP_BUFFER> g_map_ctr;
-        static MapConstructor<Map::PRUNE, Map::EXACT, BufferFlags::STREAM_BUFFER> g_stream_ctr;
-        static MapConstructor<Map::BLOCK, Map::EXACT, BufferFlags::BLOCKING_STREAM_BUFFER> g_blocking_ctr;
-        static MapConstructor<Map::DROP, Map::EXACT, BufferFlags::DROPPING_STREAM_BUFFER> g_dropping_ctr;
-        static MapConstructor<Map::BLOCK, Map::NEAREST, BufferFlags::NEAREST_NEIGHBOR_BUFFER> g_nn_ctr;
+
+        ConnectionPtr_t Map::registerUpdateNotifier(const ISignalRelay::Ptr_t& relay)
+        {
+            MO_ASSERT_LOGGER(this->getLogger(), relay != nullptr);
+            auto connection = TParam<IBuffer>::registerUpdateNotifier(relay);
+            if (!connection)
+            {
+                auto tmp = relay;
+                connection = m_update_signal.connect(tmp);
+            }
+            return connection;
+        }
+
+        bool Map::hasNewData() const
+        {
+            for (const auto& itr : m_data_buffer)
+            {
+                if (itr.second.hasBeenRetrieved() == false)
+                {
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        std::ostream& Map::print(std::ostream& os) const
+        {
+            // TODO
+
+            return os;
+        }
+
     } // namespace buffer
 } // namespace mo

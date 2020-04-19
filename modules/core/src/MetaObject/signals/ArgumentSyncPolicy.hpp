@@ -15,6 +15,9 @@ namespace mo
         }
     };
 
+    template <class T>
+    using ArgumentSyncPolicy_t = typename ArgumentSyncPolicy<T>::type;
+
 } // namespace mo
 
 #endif // MO_SIGNALS_ARGUMENTSYNCPOLICY_HPP

@@ -17,7 +17,7 @@ target_include_directories(metaobject_params
 if(BUILD_TESTS)
     file(GLOB_RECURSE tests "tests/*.cpp")
     add_executable(test_mo_params ${tests})
-    target_link_libraries(test_mo_params metaobject_params gtest gtest_main)
+    target_link_libraries(test_mo_params metaobject_params metaobject_serialization gtest gtest_main)
     add_test(NAME test_mo_cuda COMMAND test_mo_params)
 
     

@@ -5,8 +5,8 @@
 #include <MetaObject/core/SystemTable.hpp>
 
 #include <MetaObject/thread/FiberScheduler.hpp>
+#include <MetaObject/thread/Thread.hpp>
 #include <MetaObject/thread/ThreadPool.hpp>
-
 int main()
 {
 
@@ -14,7 +14,7 @@ int main()
     auto module = PerModuleInterface::GetInstance();
     module->SetSystemTable(table.get());
     std::shared_ptr<mo::ThreadPool> pool = table->getSingleton<mo::ThreadPool>();
-    boost::fibers::use_scheduling_algorithm<mo::PriorityScheduler>(pool);
+    mo::initThread(*table);
 
     auto stream = mo::AsyncStreamFactory::instance(table.get())->create();
 
@@ -26,5 +26,5 @@ int main()
         });
     }
 
-    boost::this_fiber::yield();
+    mo::yield();
 }

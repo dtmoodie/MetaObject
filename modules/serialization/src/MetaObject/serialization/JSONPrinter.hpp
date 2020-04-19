@@ -40,11 +40,21 @@ namespace mo
 
         VisitorTraits traits() const override;
 
+        template <class T>
+        ISaveVisitor& operator()(T* val, const std::string& name = "", size_t cnt = 1)
+        {
+            return ISaveVisitor::operator()(val, name, cnt);
+        }
+
+        std::shared_ptr<Allocator> getAllocator() const override;
+        void setAllocator(std::shared_ptr<Allocator>) override;
+
       private:
         template <class T>
         ISaveVisitor& writePod(const T* ptr, const std::string& name, const size_t cnt);
 
         cereal::JSONOutputArchive m_ar;
+        std::shared_ptr<Allocator> m_allocator;
     };
 
     struct MO_EXPORTS JSONLoader : public LoadCache
@@ -76,10 +86,19 @@ namespace mo
         ILoadVisitor&
         operator()(IContainerTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
 
+        template <class T>
+        ILoadVisitor& operator()(T* val, const std::string& name = "", size_t cnt = 1)
+        {
+            return ILoadVisitor::operator()(val, name, cnt);
+        }
+
         VisitorTraits traits() const override;
 
         std::string getCurrentElementName() const override;
         size_t getCurrentContainerSize() const override;
+
+        std::shared_ptr<Allocator> getAllocator() const override;
+        void setAllocator(std::shared_ptr<Allocator>) override;
 
       private:
         template <class T>
@@ -88,5 +107,6 @@ namespace mo
         cereal::JSONInputArchive m_ar;
         std::string m_last_read_name;
         size_t m_current_size;
+        std::shared_ptr<Allocator> m_allocator;
     };
 } // namespace mo

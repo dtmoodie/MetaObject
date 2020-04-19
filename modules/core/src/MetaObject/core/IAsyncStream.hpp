@@ -15,6 +15,7 @@ namespace mo
         using Ptr_t = std::shared_ptr<IAsyncStream>;
 
         static Ptr_t current();
+        static IAsyncStream& currentRef();
         static void setCurrent(Ptr_t);
 
         static Ptr_t create(const std::string& name = "",

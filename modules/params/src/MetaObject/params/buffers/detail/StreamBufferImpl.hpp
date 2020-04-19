@@ -159,7 +159,7 @@ namespace mo
                 {
                     lock.unlock();
                 }
-                IParam::_update_signal(this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
+                IParam::_update_signal(this, ctx, ts, fn, cs, ct::value(UpdateFlags::kBUFFER_UPDATED));
                 if (!lock)
                 {
                     lock.lock();
@@ -382,5 +382,5 @@ namespace mo
             IParam::emitUpdate(ts, ctx, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
             TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
         }
-    }
-}
+    } // namespace Buffer
+} // namespace mo

@@ -25,14 +25,14 @@ namespace mo
     {
       public:
         TSlot();
-        TSlot(const std::function<R(T...)>& other);
-        TSlot(std::function<R(T...)>&& other);
+        template <class... ARGS>
+        TSlot(ARGS&&... args);
         ~TSlot() override;
 
         TSlot& operator=(const std::function<R(T...)>& other);
         TSlot& operator=(const TSlot& other);
 
-        R invokeArgpack(const ArgumentPack<T...>&);
+        // R invokeArgpack(const ArgumentPack<T...>&);
 
         std::shared_ptr<Connection> connect(ISignal& sig) override;
         std::shared_ptr<Connection> connect(TSignal<R(T...)>& signal);
@@ -43,9 +43,15 @@ namespace mo
         const TypeInfo& getSignature() const override;
         operator bool() const;
 
+        template <class U, class V>
+        void bind(R (U::*fptr)(T...), V* ptr)
+        {
+            (*this) = ct::variadicBind(fptr, ptr);
+        }
+
       private:
-        template <int... Is>
-        R invokeArgpack(const ArgumentPack<T...>& arg_pack, ct::int_sequence<Is...>);
+        // template <int... Is>
+        // R invokeArgpack(const ArgumentPack<T...>& arg_pack, ct::int_sequence<Is...>);
         std::vector<std::shared_ptr<TSignalRelay<R(T...)>>> _relays;
     };
 
@@ -59,14 +65,9 @@ namespace mo
     }
 
     template <class R, class... T>
-    TSlot<R(T...)>::TSlot(const std::function<R(T...)>& other)
-        : std::function<R(T...)>(other)
-    {
-    }
-
-    template <class R, class... T>
-    TSlot<R(T...)>::TSlot(std::function<R(T...)>&& other)
-        : std::function<R(T...)>(other)
+    template <class... ARGS>
+    TSlot<R(T...)>::TSlot(ARGS&&... args)
+        : std::function<R(T...)>(std::forward<ARGS>(args)...)
     {
     }
 
@@ -90,7 +91,7 @@ namespace mo
         return *this;
     }
 
-    template <class R, class... T>
+    /*template <class R, class... T>
     R TSlot<R(T...)>::invokeArgpack(const ArgumentPack<T...>& arg_pack)
     {
         return invokeArgpack(arg_pack, ct::make_int_sequence<sizeof...(T)>{});
@@ -101,7 +102,7 @@ namespace mo
     R TSlot<R(T...)>::invokeArgpack(const ArgumentPack<T...>& arg_pack, ct::int_sequence<Is...>)
     {
         return (*this)(std::get<Is>(arg_pack.data)...);
-    }
+    }*/
 
     template <class R, class... T>
     std::shared_ptr<Connection> TSlot<R(T...)>::connect(ISignal& sig)
@@ -127,7 +128,7 @@ namespace mo
     template <class R, class... T>
     std::shared_ptr<Connection> TSlot<R(T...)>::connect(std::shared_ptr<TSignalRelay<R(T...)>>& relay)
     {
-        relay->connect(this);
+        relay->connect(*this);
         _relays.push_back(relay);
         return std::shared_ptr<Connection>(new SlotConnection(this, std::dynamic_pointer_cast<ISignalRelay>(relay)));
     }

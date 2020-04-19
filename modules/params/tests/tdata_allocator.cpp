@@ -3,5 +3,5 @@
 
 TEST(param_allocator, create)
 {
-    std::vector<float, mo::TVectorAllocator<float>> vector;
+    std::vector<float, mo::TStlAllocator<float>> vector;
 }

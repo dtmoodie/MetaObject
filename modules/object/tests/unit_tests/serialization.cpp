@@ -21,6 +21,7 @@ using namespace test;
 
 TEST(serialization, params)
 {
+    auto stream = IAsyncStream::create();
     auto inst1 = SerializableObject::create();
 
     inst1->test = 10;
@@ -41,6 +42,7 @@ TEST(serialization, params)
 
 TEST(serialization, static_json)
 {
+    auto stream = IAsyncStream::create();
     auto inst = SerializableObject::create();
     inst->test = 100;
     inst->test2 = 200;
@@ -65,6 +67,7 @@ TEST(serialization, static_json)
 
 TEST(serialization, static_binary)
 {
+    auto stream = IAsyncStream::create();
     auto inst = SerializableObject::create();
     std::stringstream ss;
     {

@@ -51,7 +51,6 @@ TEST(enums, enum_bitset)
     EXPECT_FALSE(flags.test(mo::ParamFlags::kREQUIRE_BUFFERED));
     EXPECT_FALSE(flags.test(mo::ParamFlags::kSOURCE));
     EXPECT_FALSE(flags.test(mo::ParamFlags::kDYNAMIC));
-    EXPECT_FALSE(flags.test(mo::ParamFlags::kOWNS_MUTEX));
 
     testFlags(mo::ParamFlags::kINPUT);
     testFlags(mo::ParamFlags::kOUTPUT);
@@ -65,7 +64,6 @@ TEST(enums, enum_bitset)
     testFlags(mo::ParamFlags::kREQUIRE_BUFFERED);
     testFlags(mo::ParamFlags::kSOURCE);
     testFlags(mo::ParamFlags::kDYNAMIC);
-    testFlags(mo::ParamFlags::kOWNS_MUTEX);
 
     flags.set(mo::ParamFlags::kOUTPUT);
     flags.set(mo::ParamFlags::kCONTROL);

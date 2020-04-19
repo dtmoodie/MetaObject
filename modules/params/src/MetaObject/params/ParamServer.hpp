@@ -10,28 +10,29 @@
 namespace mo
 {
     class IParam;
+
     class MO_EXPORTS ParamServer : public IParamServer
     {
       public:
         ParamServer();
         ~ParamServer() override;
-        void addParam(IMetaObject* obj, IParam* param) override;
-        void removeParam(IMetaObject* obj, IParam* param) override;
-        void removeParam(const IMetaObject* obj) override;
+        void addParam(IMetaObject& obj, IParam& param) override;
+        void removeParam(const IParam& param) override;
+        void removeParams(const IMetaObject& obj) override;
 
-        std::vector<IParam*> getOutputParams(TypeInfo type) override;
+        std::vector<IPublisher*> getPublishers(TypeInfo type = TypeInfo::Void()) override;
         std::vector<IParam*> getAllParms() override;
-        std::vector<IParam*> getAllOutputParams() override;
 
-        IParam* getOutputParam(std::string name) override;
+        IPublisher* getPublisher(std::string name) override;
         IParam* getParam(std::string name) override;
-        void linkParams(IParam* output, IParam* input) override;
+        void linkParams(IPublisher& output, ISubscriber& input) override;
 
       private:
-        std::map<std::string, IParam*> _params;
-        TSlot<void(IMetaObject*, IParam*)> delete_slot;
-        std::map<const IMetaObject*, std::vector<std::string>> _obj_params;
+        std::map<std::string, IParam*> m_params;
+        TSlot<void(const IParam&)> m_delete_slot;
+        TSlot<void(const IMetaObject&)> m_obj_delete_slot;
+        std::map<const IMetaObject*, std::vector<std::string>> m_obj_params;
     };
-}
+} // namespace mo
 
 #endif // MO_PARAMS_PARAM_SERVER_HPP

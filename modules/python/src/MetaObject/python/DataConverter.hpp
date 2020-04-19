@@ -1,12 +1,13 @@
-#pragma once
+#ifndef MO_PYTHON_DATACONVERTER_HPP
+#define MO_PYTHON_DATACONVERTER_HPP
 #include "converters.hpp"
 
 #include <MetaObject/core/TypeTable.hpp>
 #include <MetaObject/detail/Export.hpp>
 #include <MetaObject/params/AccessToken.hpp>
-#include <MetaObject/params/IParam.hpp>
-#include <MetaObject/params/ITAccessibleParam.hpp>
-#include <MetaObject/params/OutputParam.hpp>
+#include <MetaObject/params/IControlParam.hpp>
+#include <MetaObject/params/IPublisher.hpp>
+#include <MetaObject/params/ITControlParam.hpp>
 #include <MetaObject/python/PythonSetup.hpp>
 
 #include <boost/python.hpp>
@@ -22,8 +23,8 @@ namespace mo
     {
         struct MO_EXPORTS DataConverterRegistry
         {
-            typedef std::function<bool(mo::ParamBase*, const boost::python::object&)> Set_t;
-            typedef std::function<boost::python::object(const mo::ParamBase*)> Get_t;
+            using Set_t = std::function<bool(mo::IControlParam*, const boost::python::object&)>;
+            using Get_t = std::function<boost::python::object(const mo::IControlParam*)>;
 
             static DataConverterRegistry* instance();
             static DataConverterRegistry* instance(SystemTable* table);
@@ -47,56 +48,68 @@ namespace mo
                     std::bind(&ParamConverter<T>::get, std::placeholders::_1));
             }
 
-            static bool set(mo::ParamBase* param, const boost::python::object& obj)
+            static bool set(mo::IParam* param, const boost::python::object& obj)
             {
-                if (param->getTypeInfo() == TypeInfo(typeid(T)))
+                if (param->checkFlags(mo::ParamFlags::kCONTROL))
                 {
-                    if (auto typed = dynamic_cast<TParam<T>*>(param))
+                    auto control = dynamic_cast<IControlParam*>(param);
+                    if (control->getTypeInfo() == TypeInfo(typeid(T)))
                     {
-                        auto token = typed->access();
-                        return ct::convertFromPython(obj, token());
+                        if (auto typed = dynamic_cast<ITControlParam<T>*>(control))
+                        {
+                            T value = typed->getValue();
+                            if (ct::convertFromPython(obj, value))
+                            {
+                                typed->setValue(std::move(value));
+                            }
+                        }
                     }
                 }
+
                 return false;
             }
 
-            static boost::python::object get(const ParamBase* param)
+            static boost::python::object get(const IParam* param)
             {
-                if (param->getTypeInfo() == mo::TypeInfo(typeid(T)))
+                static const mo::TypeInfo type = mo::TypeInfo::create<T>();
+                if (param->checkFlags(mo::ParamFlags::kCONTROL))
                 {
-                    if (param->checkFlags(ParamFlags::kOUTPUT))
+                    auto typed = dynamic_cast<const ITControlParam<T>*>(param);
+                    if (typed)
                     {
-                        if (auto output_param = dynamic_cast<const OutputParam*>(param))
-                        {
-                            param = output_param->getOutputParam();
-                        }
+                        return ct::convertToPython(typed->getValue());
                     }
-                    if (auto typed = dynamic_cast<const TParam<T>*>(param))
-                    {
-                        if (typed->isValid())
-                        {
-                            auto token = typed->read();
-                            return ct::convertToPython(token());
-                        }
-                    }
-                    else
-                    {
+                }
 
-                        MO_LOG(debug,
-                               "Failed to cast parameter ({}) to the correct type for {}",
-                               mo::TypeTable::instance()->typeToName(param->getTypeInfo()),
-                               mo::TypeTable::instance()->typeToName(TypeInfo(typeid(T))));
+                /*if (param->checkFlags(ParamFlags::kOUTPUT))
+                {
+                    if (auto output_param = dynamic_cast<const IPublisher*>(param))
+                    {
+                        param = output_param->getPublisher();
+                    }
+                }*/
+
+                /*if (auto typed = dynamic_cast<const TParam<T>*>(param))
+                {
+                    if (typed->isValid())
+                    {
+                        auto token = typed->read();
+                        return ct::convertToPython(token());
                     }
                 }
                 else
                 {
-                    MO_LOG(trace,
-                           "Incorrect datatype input {} expcted {}",
+
+                    MO_LOG(debug,
+                           "Failed to cast parameter ({}) to the correct type for {}",
                            mo::TypeTable::instance()->typeToName(param->getTypeInfo()),
-                           mo::TypeTable::instance()->typeToName(mo::TypeInfo(typeid(T))));
-                }
+                           mo::TypeTable::instance()->typeToName(TypeInfo(typeid(T))));
+                }*/
+
                 return {};
             }
         };
-    }
-}
+    } // namespace python
+} // namespace mo
+
+#endif // MO_PYTHON_DATACONVERTER_HPP

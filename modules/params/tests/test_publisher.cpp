@@ -1,8 +1,9 @@
 
 #include "MetaObject/core.hpp"
 #include "MetaObject/params/ParamMacros.hpp"
-#include "MetaObject/params/TInputParam.hpp"
 #include "MetaObject/params/TParamPtr.hpp"
+#include "MetaObject/params/TPublisher.hpp"
+#include "MetaObject/params/TSubscriberPtr.hpp"
 #include "MetaObject/runtime_reflection.hpp"
 #include "MetaObject/signals/TSignal.hpp"
 #include "MetaObject/signals/detail/SignalMacros.hpp"
@@ -23,17 +24,20 @@
 using namespace mo;
 
 template <class T>
-struct WrappedParam_ : public ::testing::Test
+struct publisher_ : public ::testing::Test
 {
     T value = 10;
-    TParamPtr<T> param;
-    WrappedParam_()
-        : param("test", &value)
+    TPublisher<T> param;
+    IAsyncStreamPtr_t m_stream;
+    publisher_()
     {
+        m_stream = IAsyncStream::create();
+        param.setStream(*m_stream);
+        param.setName("test");
     }
 };
 
-using WrappedParam = WrappedParam_<int>;
+using publisher = publisher_<int>;
 
 struct TestReadVisitor : public LoadCache
 {
@@ -151,119 +155,100 @@ struct TestReadVisitor : public LoadCache
     int count = 0;
 };
 
-TEST_F(WrappedParam, set_value)
+TEST_F(publisher, set_value)
 {
-    param.updateData(100);
-    ASSERT_EQ(value, 100);
+    param.publish(100);
 }
 
-TEST_F(WrappedParam, param_timestamping)
+TEST_F(publisher, publish_timestamping)
 {
-    param.updateData(100, timestamp = 1 * ms);
-    ASSERT_NE(param.getTimestamp(), boost::none);
-    ASSERT_EQ(param.getTimestamp()->time_since_epoch(), 1 * ms);
-    ASSERT_EQ(param.getFrameNumber(), 0);
+    param.publish(100, tags::timestamp = 1 * ms);
+    auto data = param.getData();
+    ASSERT_NE(data->getHeader().timestamp, boost::none);
+    ASSERT_EQ(data->getHeader().timestamp->time_since_epoch(), 1 * ms);
+    ASSERT_EQ(data->getHeader().frame_number, 0);
 
-    param.updateData(101, timestamp = 2 * ms);
-    ASSERT_NE(param.getTimestamp(), boost::none);
-    ASSERT_EQ(param.getTimestamp()->time_since_epoch(), 2 * ms);
-    ASSERT_EQ(param.getFrameNumber(), 1);
+    param.publish(101, tags::timestamp = 2 * ms);
+    data = param.getData();
+    ASSERT_NE(data->getHeader().timestamp, boost::none);
+    ASSERT_EQ(data->getHeader().timestamp->time_since_epoch(), 2 * ms);
+    ASSERT_EQ(data->getHeader().frame_number, 1);
 }
 
-TEST_F(WrappedParam, read_from_param)
+TEST_F(publisher, get_data)
 {
-    param.updateData(100);
-    ASSERT_NE(param.getData(), nullptr);
+    param.publish(100);
+    auto data = param.getData();
+    ASSERT_NE(data, nullptr);
+    auto typed = std::dynamic_pointer_cast<const mo::TDataContainer<int>>(data);
+    ASSERT_NE(typed, nullptr);
 
-    int val;
-    ASSERT_EQ(param.getTypedData(&val), true);
-    ASSERT_EQ(val, 100);
-
-    auto container = param.template getTypedData<int>(Header());
-    ASSERT_NE(container, nullptr);
-    ASSERT_EQ(container->data, 100);
+    ASSERT_EQ(typed->data, 100);
 }
 
-TEST_F(WrappedParam, read_async_param)
+TEST_F(publisher, get_data_timestamped)
 {
-    param.updateData(100, Header(mo::Time(mo::ms * 33)));
-    ASSERT_NE(param.getData(), nullptr);
+    Header header(mo::Time(mo::ms * 33));
+    param.publish(100, header);
+    auto data = param.getData(&header);
+    ASSERT_NE(data, nullptr) << "We expect to be able to get data based on this header, since it was used to publish";
+
+    header = Header(mo::Time(mo::ms * 34));
+    data = param.getData(&header);
+    ASSERT_EQ(data, nullptr) << "We've not published data at this timestamp, we should not be getting data";
+
+    param.publish(100);
+    data = param.getData();
+    ASSERT_NE(data, nullptr)
+        << "We've published data with an empty header, so we should be able to fetch it without providing a header";
+    data = param.getData(&header);
+    ASSERT_EQ(data, nullptr) << "We've published data without a header, so we should not expect to get data when "
+                                "providing a specific timestamp";
 }
 
-TEST_F(WrappedParam, read_sync_param)
+/*TEST_F(publisher, visit_param)
 {
-    param.updateData(100, Header(mo::Time(mo::ms * 33)));
-    ASSERT_NE(param.getData(Header(mo::Time(mo::ms * 33))).get(), (void*)nullptr);
-    auto container = param.getData(Header(mo::Time(mo::ms * 34)));
-    ASSERT_EQ(container, nullptr);
-
-    param.updateData(100);
-    int data;
-    ASSERT_EQ(param.getTypedData(&data), true);
-    ASSERT_EQ(param.getTypedData(&data, Header(mo::Time(mo::ms * 33))), false);
-
-    param.updateData(10, mo::timestamp = 1 * mo::second);
-    ASSERT_EQ(param.getTypedData(&data), true);
-    ASSERT_EQ(param.getTypedData(&data, Header(mo::Time(mo::ms * 33))), false);
-    ASSERT_EQ(param.getTypedData(&data, Header(mo::Time(mo::second * 1))), true);
-}
-
-TEST_F(WrappedParam, read_visit_param)
-{
-    param.updateData(100);
+    param.publish(100);
     TestReadVisitor visitor;
     ASSERT_EQ(visitor.count, 0);
     param.load(visitor);
-    // visit header.frame_number, header.timestamp, and param.data
-    ASSERT_EQ(visitor.count, 3);
-}
+    ASSERT_EQ(visitor.count, 4);
+}*/
 
-TEST_F(WrappedParam, param_update)
+TEST_F(publisher, publish_callback)
 {
-    bool update_handler_called = false;
-    TSlot<void(IParam*, Header, UpdateFlags)> slot(
-        [this, &update_handler_called](IParam* param_in, Header, UpdateFlags fg) {
-            update_handler_called = param_in == &param;
-            ASSERT_EQ(fg, ct::value(UpdateFlags::kVALUE_UPDATED));
-        });
+    bool update_callback_invoked = false;
 
-    auto connection = param.registerUpdateNotifier(&slot);
+    auto cb = [this, &update_callback_invoked](const IParam& param_in, Header, UpdateFlags fg, IAsyncStream& stream) {
+        update_callback_invoked = (&param_in == &param);
+        ASSERT_EQ(fg, ct::value(UpdateFlags::kVALUE_UPDATED));
+    };
+
+    TSlot<Update_s> slot(std::move(cb));
+
+    auto connection = param.registerUpdateNotifier(slot);
     ASSERT_NE(connection, nullptr);
 
-    param.updateData(100);
+    param.publish(100);
 
-    ASSERT_EQ(update_handler_called, true);
+    ASSERT_EQ(update_callback_invoked, true);
 }
 
-TEST_F(WrappedParam, param_data_update)
+TEST_F(publisher, publish_callback_data)
 {
-    bool update_handler_called = false;
-    TSlot<void(const std::shared_ptr<IDataContainer>&, IParam*, UpdateFlags)> slot(
-        [this, &update_handler_called](const std::shared_ptr<IDataContainer>&, IParam* param_in, UpdateFlags fg) {
-            update_handler_called = param_in == &param;
-            ASSERT_EQ(fg, ct::value(UpdateFlags::kVALUE_UPDATED));
-        });
+    bool update_callback_invoked = false;
+    auto callback = [this, &update_callback_invoked](
+                        const IDataContainerConstPtr_t&, const IParam& param_in, UpdateFlags fg, IAsyncStream& stream) {
+        update_callback_invoked = (&param_in == &param);
+        ASSERT_EQ(fg, ct::value(UpdateFlags::kVALUE_UPDATED));
+    };
 
-    auto connection = param.registerUpdateNotifier(&slot);
+    TSlot<DataUpdate_s> slot(std::move(callback));
+
+    auto connection = param.registerUpdateNotifier(slot);
     ASSERT_NE(connection, nullptr);
 
-    param.updateData(100);
+    param.publish(100);
 
-    ASSERT_EQ(update_handler_called, true);
-}
-
-TEST_F(WrappedParam, param_typed_data_update)
-{
-    bool update_handler_called = false;
-    TSlot<void(mo::TParam<int>::TContainerPtr_t, IParam*, UpdateFlags)> slot(
-        [this, &update_handler_called](TParam<int>::TContainerPtr_t, IParam* param_in, UpdateFlags fg) {
-            update_handler_called = param_in == &param;
-            ASSERT_EQ(fg, ct::value(UpdateFlags::kVALUE_UPDATED));
-        });
-
-    auto connection = param.registerUpdateNotifier(&slot);
-    ASSERT_NE(connection, nullptr);
-
-    param.updateData(100);
-    ASSERT_EQ(update_handler_called, true);
+    ASSERT_EQ(update_callback_invoked, true);
 }

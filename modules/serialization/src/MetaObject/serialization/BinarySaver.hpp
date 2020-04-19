@@ -39,11 +39,20 @@ namespace mo
         ISaveVisitor&
         operator()(IContainerTraits* val, const void* inst, const std::string& name = "", size_t cnt = 1) override;
 
+        template <class T>
+        ISaveVisitor& operator()(const T* val, const std::string& name = "", size_t cnt = 1)
+        {
+            return ISaveVisitor::operator()(val, name, cnt);
+        }
+
         VisitorTraits traits() const override;
+        std::shared_ptr<Allocator> getAllocator() const override;
+        void setAllocator(std::shared_ptr<Allocator>) override;
 
       private:
         template <class T>
         ISaveVisitor& saveBinary(const T* ptr, const std::string& name = "", const size_t cnt = 1);
         std::ostream& m_os;
+        std::shared_ptr<Allocator> m_allocator;
     };
 } // namespace mo

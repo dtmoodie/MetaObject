@@ -8,6 +8,18 @@
 
 namespace mo
 {
+    template <class T>
+    struct SizeOf
+    {
+        static constexpr size_t value = sizeof(T);
+    };
+
+    template <>
+    struct SizeOf<void>
+    {
+        static constexpr size_t value = sizeof(uint8_t);
+    };
+
     struct MO_EXPORTS Allocator
     {
         using Ptr_t = std::shared_ptr<Allocator>;
@@ -35,14 +47,14 @@ namespace mo
         template <class T>
         T* allocate(size_t num_elems)
         {
-            return ct::ptrCast<T>(allocate(num_elems * sizeof(T), sizeof(T)));
+            return ct::ptrCast<T>(allocate(num_elems * SizeOf<T>::value, SizeOf<T>::value));
         }
 
         void deallocate(void* ptr, size_t size);
         template <class T>
         void deallocate(T* ptr, size_t num_elems)
         {
-            deallocate(ct::ptrCast(ptr), num_elems * sizeof(T));
+            deallocate(ct::ptrCast(ptr), num_elems * SizeOf<T>::value);
         }
 
       private:
@@ -76,13 +88,13 @@ namespace mo
         template <class T>
         T* allocate(size_t num_elems)
         {
-            return ct::ptrCast<T>(allocate(num_elems * sizeof(T), sizeof(T)));
+            return ct::ptrCast<T>(allocate(num_elems * SizeOf<T>::value, SizeOf<T>::value));
         }
 
         template <class T>
         void deallocate(T* ptr, size_t num_elems)
         {
-            deallocate(ct::ptrCast(ptr), num_elems * sizeof(T));
+            deallocate(ct::ptrCast(ptr), num_elems * SizeOf<T>::value);
         }
 
       private:

@@ -1,3 +1,5 @@
+#ifndef MO_PARAMS_PARAMALLOCATOR_HPP
+#define MO_PARAMS_PARAMALLOCATOR_HPP
 #include <MetaObject/core/detail/Allocator.hpp>
 #include <MetaObject/detail/Export.hpp>
 #include <MetaObject/thread/Mutex.hpp>
@@ -86,3 +88,4 @@ namespace mo
         std::list<CurrentAllocations> m_allocations;
     };
 } // namespace mo
+#endif // MO_PARAMS_PARAMALLOCATOR_HPP

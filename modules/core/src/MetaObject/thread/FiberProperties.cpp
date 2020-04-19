@@ -83,12 +83,12 @@ namespace mo
 
     std::shared_ptr<IAsyncStream> FiberProperty::stream() const
     {
-        return m_stream;
+        return m_stream.lock();
     }
 
     std::shared_ptr<IDeviceStream> FiberProperty::deviceStream() const
     {
-        return m_device_stream;
+        return m_device_stream.lock();
     }
 
     void FiberProperty::setStream(std::shared_ptr<IAsyncStream> stream)
@@ -100,4 +100,4 @@ namespace mo
     {
         m_device_stream = std::move(stream);
     }
-}
+} // namespace mo

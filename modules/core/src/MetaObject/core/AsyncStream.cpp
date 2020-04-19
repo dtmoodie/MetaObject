@@ -13,7 +13,9 @@
 #include "AsyncStreamConstructor.hpp"
 #include "AsyncStreamFactory.hpp"
 
-#include "boost/lexical_cast.hpp"
+#include <boost/fiber/fiber.hpp>
+#include <boost/fiber/operations.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/thread/tss.hpp>
 
 namespace mo

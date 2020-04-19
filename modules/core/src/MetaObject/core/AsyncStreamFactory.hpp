@@ -26,12 +26,8 @@ namespace mo
                      PriorityLevels device_priority = MEDIUM,
                      PriorityLevels thread_priority = MEDIUM);
 
-        void onStreamDestroy(const IAsyncStream* stream);
-
       private:
-        std::vector<IAsyncStream*> m_streams;
         std::vector<AsyncStreamConstructor*> m_ctrs;
     }; // struct mo::AsyncStreamFactory
-}
+} // namespace mo
 #endif // MO_CORE_ASYNC_STREAM_FACTORY_HPP
-

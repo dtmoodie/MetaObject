@@ -17,7 +17,7 @@ int main(int argc, char** argv)
     return result;
 }
 
-TEST(params, initialization)
+TEST(param_tests, initialization)
 {
     auto table = SystemTable::instance();
     ASSERT_NE(table, nullptr);

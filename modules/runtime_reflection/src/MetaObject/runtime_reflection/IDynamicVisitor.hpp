@@ -15,6 +15,7 @@
 
 namespace mo
 {
+    class Allocator;
     struct MO_EXPORTS CacheDataContainer
     {
         CacheDataContainer() = default;
@@ -88,6 +89,9 @@ namespace mo
         template <class T>
         T popCache(const std::string& name, uint64_t id = 0);
 
+        virtual std::shared_ptr<Allocator> getAllocator() const = 0;
+        virtual void setAllocator(std::shared_ptr<Allocator>) = 0;
+
       protected:
         virtual std::unique_ptr<CacheDataContainer>& accessCache(const std::string& name, uint64_t id = 0) = 0;
     };
@@ -130,6 +134,9 @@ namespace mo
 
         virtual std::string getCurrentElementName() const = 0;
         virtual size_t getCurrentContainerSize() const = 0;
+
+        virtual std::shared_ptr<Allocator> getAllocator() const = 0;
+        virtual void setAllocator(std::shared_ptr<Allocator>) = 0;
 
       protected:
         virtual ILoadVisitor&
@@ -227,10 +234,12 @@ namespace mo
         }
 
         template <class T>
-        auto impl(const std::string& name, const size_t cnt, const T*) -> ct::EnableIf<!IsPrimitive<T>::value && !is_complete<TTraits<T>>::value>;
+        auto impl(const std::string& name, const size_t cnt, const T*)
+            -> ct::EnableIf<!IsPrimitive<T>::value && !is_complete<TTraits<T>>::value>;
 
         template <class T>
-        auto impl(const std::string& name, const size_t cnt, const T*) -> ct::EnableIf<!IsPrimitive<T>::value && is_complete<TTraits<T>>::value>;
+        auto impl(const std::string& name, const size_t cnt, const T*)
+            -> ct::EnableIf<!IsPrimitive<T>::value && is_complete<TTraits<T>>::value>;
     };
 
     ///////////////////////////////////////////////////////////////////////////////

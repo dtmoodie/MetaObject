@@ -1,8 +1,8 @@
 #pragma once
 #include "../IMetaObjectInfo.hpp"
 #include <MetaObject/params/ParamInfo.hpp>
-#include <MetaObject/params/TInputParam.hpp>
-#include <MetaObject/params/TParamOutput.hpp>
+#include <MetaObject/params/TPublisher.hpp>
+#include <MetaObject/params/TSubscriberPtr.hpp>
 #include <MetaObject/signals/TSignal.hpp>
 #include <MetaObject/signals/TSlot.hpp>
 
@@ -31,15 +31,40 @@ namespace mo
     }
 
     template <class T, class U, class D, ct::Flag_t FLAGS, class MDATA>
-    void testDynamicReflection(T& inst, ct::MemberObjectPointer<mo::TParamPtr<D> U::*, FLAGS, MDATA> ptr)
+    void testDynamicReflection(T& inst, ct::MemberObjectPointer<mo::TControlParam<D> U::*, FLAGS, MDATA> ptr)
     {
         auto name = ptr.getName().slice(0, -6).toString();
         auto param = inst.getParam(name);
         ASSERT_EQ(&ptr.get(inst), param);
         ASSERT_EQ(param->getTypeInfo(), mo::TypeInfo::create<D>());
 
-        auto tdata = param->template getTypedData<D>();
-        ASSERT_NE(tdata, nullptr);
+        auto tdata = ptr.get(inst).getValue();
+        // TODO what is the appropriate new test?  Test against expected initial value
+        auto initalizer = ct::metadata<ct::Initializer<D>>(ptr);
+        if (initalizer)
+        {
+            auto initial_val = initalizer->getInitialValue();
+            ASSERT_EQ(tdata, initial_val);
+        }
+    }
+
+    template <class T, class U, class D, ct::Flag_t FLAGS, class MDATA>
+    void testDynamicReflection(T& inst, ct::MemberObjectPointer<mo::TControlParam<D*> U::*, FLAGS, MDATA> ptr)
+    {
+        auto name = ptr.getName().slice(0, -6).toString();
+        auto param = inst.getParam(name);
+        ASSERT_EQ(&ptr.get(inst), param);
+        ASSERT_EQ(param->getTypeInfo(), mo::TypeInfo::create<D>());
+
+        auto tdata = ptr.get(inst).getValue();
+        auto initalizer = ct::metadata<ct::Initializer<D>>(ptr);
+        if (initalizer)
+        {
+            auto initial_val = initalizer->getInitialValue();
+            ASSERT_EQ(tdata, initial_val);
+        }
+        // TODO what is the appropriate new test?  Test against expected initial value
+        // ASSERT_NE(tdata, nullptr);
     }
 
     template <class T, class U, class D, ct::Flag_t FLAGS, class MDATA>
@@ -51,16 +76,28 @@ namespace mo
     }
 
     template <class T, class U, class D, ct::Flag_t FLAGS, class MDATA>
-    void testDynamicReflection(T& inst, ct::MemberObjectPointer<mo::TInputParamPtr<D> U::*, FLAGS, MDATA> ptr)
+    void testDynamicReflection(T& inst, ct::MemberObjectPointer<mo::TSubscriberPtr<D> U::*, FLAGS, MDATA> ptr)
     {
         auto name = ptr.getName().slice(0, -6).toString();
         auto input = inst.getInput(name);
         ASSERT_EQ(input, &ptr.get(inst));
     }
 
+    template <class T, class U, class D, ct::Flag_t FLAGS, class MDATA>
+    void testDynamicReflection(T& inst, ct::MemberObjectPointer<mo::TPublisher<D> U::*, FLAGS, MDATA> ptr)
+    {
+        auto name = ptr.getName().toString();
+        auto output = inst.getOutput(name);
+        if (!output)
+        {
+            std::cout << "Unable to retrieve output '" << name << "' with flags: " << ptr.get(inst).getFlags()
+                      << std::endl;
+        }
+        ASSERT_EQ(output, &ptr.get(inst));
+    }
+
     template <class T, class U, class D, uint64_t PARAM_FLAGS, ct::Flag_t FLAGS, class MDATA>
-    void testDynamicReflection(T& inst,
-                               ct::MemberObjectPointer<mo::TParamOutput<D, PARAM_FLAGS> U::*, FLAGS, MDATA> ptr)
+    void testDynamicReflection(T& inst, ct::MemberObjectPointer<mo::TFPublisher<D, PARAM_FLAGS> U::*, FLAGS, MDATA> ptr)
     {
         auto name = ptr.getName().toString();
         auto output = inst.getOutput(name);
@@ -121,7 +158,7 @@ namespace mo
 
     template <class T, class U, class D, ct::Flag_t FLAGS, class MDATA>
     void testStaticReflection(const IMetaObjectInfo& info,
-                              ct::MemberObjectPointer<mo::TParamPtr<D> U::*, FLAGS, MDATA> ptr)
+                              ct::MemberObjectPointer<mo::TControlParam<D> U::*, FLAGS, MDATA> ptr)
     {
     }
 
@@ -155,13 +192,19 @@ namespace mo
 
     template <class T, class U, class D, ct::Flag_t FLAGS, class MDATA>
     void testStaticReflection(const IMetaObjectInfo& info,
-                              ct::MemberObjectPointer<mo::TInputParamPtr<D> U::*, FLAGS, MDATA> ptr)
+                              ct::MemberObjectPointer<mo::TSubscriberPtr<D> U::*, FLAGS, MDATA> ptr)
     {
     }
 
     template <class T, class U, class D, uint64_t PARAM_FLAGS, ct::Flag_t FLAGS, class MDATA>
     void testStaticReflection(const IMetaObjectInfo& info,
-                              ct::MemberObjectPointer<mo::TParamOutput<D, PARAM_FLAGS> U::*, FLAGS, MDATA> ptr)
+                              ct::MemberObjectPointer<mo::TFPublisher<D, PARAM_FLAGS> U::*, FLAGS, MDATA> ptr)
+    {
+    }
+
+    template <class T, class U, class D, ct::Flag_t FLAGS, class MDATA>
+    void testStaticReflection(const IMetaObjectInfo& info,
+                              ct::MemberObjectPointer<mo::TPublisher<D> U::*, FLAGS, MDATA> ptr)
     {
     }
 

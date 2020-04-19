@@ -5,6 +5,9 @@
 #include <MetaObject/thread/Thread.hpp>
 #include <MetaObject/thread/ThreadPool.hpp>
 
+#include <boost/fiber/fiber.hpp>
+#include <boost/fiber/operations.hpp>
+
 #include "gtest/gtest.h"
 
 #include <iostream>
@@ -13,7 +16,7 @@ using namespace mo;
 
 namespace
 {
-    struct RawFiberFixture: ::testing::Test
+    struct RawFiberFixture : ::testing::Test
     {
         volatile int count = 0;
         RawFiberFixture()
@@ -97,7 +100,7 @@ namespace
         }
     };
 
-    struct StreamFixture: ::testing::Test
+    struct StreamFixture : ::testing::Test
     {
         IAsyncStreamPtr_t m_stream;
 
@@ -208,7 +211,7 @@ namespace
             ASSERT_EQ(count, 1000);
         }
     };
-}
+} // namespace
 
 TEST_F(RawFiberFixture, work)
 {
@@ -250,4 +253,3 @@ TEST_F(StreamFixture, spawn_assistant)
     schedulers = pool->getSchedulers();
     ASSERT_EQ(schedulers.size(), 1);
 }
-

@@ -16,6 +16,7 @@ namespace mo
         virtual ~ISignalRelay();
         virtual TypeInfo getSignature() const = 0;
         virtual bool hasSlots() const = 0;
+        virtual uint32_t numSlots() const = 0;
 
       protected:
         friend class ISlot;

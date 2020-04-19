@@ -3,9 +3,10 @@
 #include <MetaObject/core/detail/allocator_policies/Pool.hpp>
 #include <MetaObject/core/detail/allocator_policies/Stack.hpp>
 #include <MetaObject/params/TDataContainer.hpp>
-#include <MetaObject/params/TParam.hpp>
+#include <MetaObject/params/TPublisher.hpp>
 #include <MetaObject/thread/Mutex.hpp>
 
+#include <ct/static_asserts.hpp>
 #include <ct/types/TArrayView.hpp>
 
 #include <cereal/types/vector.hpp>
@@ -129,15 +130,47 @@ uint32_t serializedSize(const boost::optional<T>& data)
 }
 
 template <class T>
-uint32_t serializedSize(const T&)
+ct::DisableIfReflected<T, uint32_t> serializedSize(const T&)
 {
     static_assert(std::is_trivially_copyable<T>::value, "Must be trivially copyable");
     return sizeof(T);
 }
 
-uint32_t serializedSize(const mo::Header& data)
+template <class T>
+ct::EnableIfReflected<T, uint32_t> serializedSize(const T& data);
+
+template <class T, class U>
+uint32_t serializedSizeOfField(U, const T&)
 {
-    return serializedSize(data.frame_number) + serializedSize(data.timestamp);
+    return 0;
+}
+
+template <class T, class PTR, ct::Flag_t FLAGS, class METADATA>
+uint32_t serializedSizeOfField(ct::MemberObjectPointer<PTR, FLAGS, METADATA> ptr, const T& data)
+{
+    return serializedSize(ptr.get(data));
+}
+
+template <class T>
+uint32_t serializedSize(const T& data, uint32_t sz, ct::Indexer<0> idx)
+{
+    auto ptr = ct::Reflect<T>::getPtr(idx);
+    sz += serializedSizeOfField(ptr, data);
+    return sz;
+}
+
+template <class T, ct::index_t I>
+uint32_t serializedSize(const T& data, uint32_t sz, ct::Indexer<I> idx)
+{
+    auto ptr = ct::Reflect<T>::getPtr(idx);
+    sz += serializedSizeOfField(ptr, data);
+    return serializedSize(data, sz, --idx);
+}
+
+template <class T>
+ct::EnableIfReflected<T, uint32_t> serializedSize(const T& data)
+{
+    return serializedSize(data, 0, ct::Reflect<T>::end());
 }
 
 template <class T>
@@ -253,9 +286,7 @@ void load(TDataContainer<ct::TArrayView<const T>>& container,
     container.owning = buf;
 }
 
-bool serializeWithHeader(const void* header,
-                         size_t header_size,
-                         const std::vector<float, TVectorAllocator<float>>& data)
+bool serializeWithHeader(const void* header, size_t header_size, const std::vector<float, TStlAllocator<float>>& data)
 {
     auto allocator = data.get_allocator().getAllocator();
     auto serialization_buffer = allocator->allocateSerialization(header_size, 0, data.data());
@@ -283,6 +314,8 @@ TEST(serialization_aware_allocator, no_header)
         container.data.push_back(static_cast<float>(i));
     }
 
+    ct::StaticEqualTypes<decltype(container.data), std::vector<float, mo::TStlAllocator<float>>>{};
+
     auto allocator = container.data.get_allocator().getAllocator();
     auto serialization_buffer = allocator->allocateSerialization(0, 0, container.data.data());
 
@@ -297,6 +330,8 @@ TEST(serialization_aware_allocator, predefined_pad)
     auto alloc = ParamAllocator::create();
     TDataContainer<std::vector<float>> container(alloc);
     container.getAllocator()->setPadding(sizeof(uint32_t));
+    auto alloc2 = container.data.get_allocator();
+    ASSERT_EQ(alloc2.getAllocator().get(), alloc.get());
     container.data.reserve(static_cast<size_t>(1e4));
     ASSERT_EQ(container.data.capacity(), 1e4);
     for (int i = 0; i < 1e4; ++i)
@@ -413,7 +448,7 @@ TEST(serialization_aware_allocator, container_created_from_param_stack_allocator
 
 void serializeAndDeserializeFromParam(Allocator::Ptr_t allocator)
 {
-    TParam<std::vector<float>> param;
+    TPublisher<std::vector<float>> param;
     param.setAllocator(allocator);
 
     for (size_t sz = 100; sz <= 10000; sz += 100)
@@ -484,7 +519,7 @@ TEST(serialization_aware_allocator, container_from_param_stack_allocator)
 TEST(serialization_aware_allocator, load_wrap)
 {
     auto allocator = mo::Allocator::getDefault();
-    TParam<std::vector<float>> param;
+    TPublisher<std::vector<float>> param;
     param.setAllocator(allocator);
 
     for (size_t sz = 100; sz <= 10000; sz += 100)
@@ -544,7 +579,7 @@ TEST(serialization_aware_allocator, load_wrap)
 
 TEST(serialization_aware_allocator, vector_of_reflected)
 {
-    TParam<std::vector<TestPodStruct>> param;
+    TPublisher<std::vector<TestPodStruct>> param;
     {
         auto container = param.create(100);
         container->data.resize(100);
@@ -607,7 +642,7 @@ namespace
 
 TEST(serialization_aware_allocator, vector_alignment)
 {
-    TParam<std::vector<AlignedVector>> param;
+    TPublisher<std::vector<AlignedVector>> param;
     {
         {
             auto container = param.create(100);

@@ -1,7 +1,7 @@
 #ifndef MO_SIGNALS_ARGUMENTPACK_HPP
 #define MO_SIGNALS_ARGUMENTPACK_HPP
 #include <MetaObject/signals/ArgumentSyncPolicy.hpp>
-
+#include <ct/type_traits.hpp>
 #include <tuple>
 namespace mo
 {
@@ -13,7 +13,7 @@ namespace mo
         {
         }
 
-        std::tuple<typename std::decay<ARGS>::type...> data;
+        std::tuple<ArgumentSyncPolicy_t<ct::decay_t<ARGS>>...> data;
     };
 } // namespace mo
 
