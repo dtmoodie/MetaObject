@@ -9,7 +9,9 @@ namespace mo
         template <class T>
         void registerTrait()
         {
+            // TODO finish
             mo::TTraits<T> trait;
+            (void)trait;
         }
     } // namespace metaparams
 } // namespace mo
