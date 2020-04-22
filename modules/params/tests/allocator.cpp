@@ -4,6 +4,7 @@
 #include <MetaObject/core/detail/allocator_policies/Stack.hpp>
 #include <MetaObject/params/TDataContainer.hpp>
 #include <MetaObject/params/TPublisher.hpp>
+#include <MetaObject/runtime_reflection/type_traits.hpp>
 #include <MetaObject/thread/Mutex.hpp>
 
 #include <ct/static_asserts.hpp>
