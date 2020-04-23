@@ -4,6 +4,8 @@
 #include <MetaObject/params/TPublisher.hpp>
 #include <MetaObject/thread/Mutex.hpp>
 
+#include <ct/variadic_indexing.hpp>
+
 #include <gtest/gtest.h>
 
 #include <iostream>
@@ -55,7 +57,7 @@ namespace
         template <class T>
         void testInput(T val)
         {
-            mo::TPublisher<T>& pub = std::get<mo::TPublisher<T>&>(m_publishers);
+            mo::TPublisher<T>& pub = ct::get<mo::TPublisher<T>&>(m_publishers);
             ASSERT_EQ(mo::get<const T*>(inputs), static_cast<void*>(nullptr));
             ASSERT_TRUE(multi_input.setInput(&pub));
 
