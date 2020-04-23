@@ -95,7 +95,7 @@ namespace
             auto connection = multi_input.registerUpdateNotifier(callback);
 
             ASSERT_NE(connection, nullptr);
-            std::get<mo::TPublisher<T>&>(m_publishers).publish(static_cast<T>(10));
+            ct::get<mo::TPublisher<T>&>(m_publishers).publish(static_cast<T>(10));
             ASSERT_EQ(callback_called, 1);
         }
 
