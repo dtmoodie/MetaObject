@@ -4,8 +4,12 @@
 
     #if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined(MetaObject_EXPORTS)
         #define MO_EXPORTS __declspec(dllexport)
+        #define MO_TEMPLATE_EXTERN
     #elif defined __GNUC__ && __GNUC__ >= 4
         #define MO_EXPORTS __attribute__((visibility("default")))
+        #if defined __GNUC__ > 4
+        #define MO_TEMPLATE_EXTERN
+        #endif
     #else
         #define MO_EXPORTS
     #endif

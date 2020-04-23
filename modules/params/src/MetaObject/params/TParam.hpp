@@ -80,9 +80,10 @@ namespace mo
 
         mutable std::unique_ptr<Mutex_t> m_mtx_ptr;
     };
-
+#ifdef MO_TEMPLATE_EXTERN
     extern template struct TParam<ISubscriber>;
     extern template struct TParam<IPublisher>;
+#endif // MO_TEMPLATE_EXTERN
     // extern template struct TParam<IControlParam>;
 
     /////////////////////////////////////////////////////////////////////////
