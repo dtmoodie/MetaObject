@@ -180,7 +180,7 @@ namespace mo
     template <class R, class... T>
     const TypeInfo& TSlot<R(T...)>::getSignature() const
     {
-        static TypeInfo type(typeid(R(T...)));
+        static TypeInfo type = TypeInfo::create<R(T...)>();
         return type;
     }
 

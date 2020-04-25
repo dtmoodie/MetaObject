@@ -4,6 +4,7 @@
 
 #include <ct/reflect.hpp>
 #include <ct/reflect_macros.hpp>
+#include <ct/typename.hpp>
 
 #include <ostream>
 #include <string>
@@ -14,13 +15,9 @@ namespace mo
     {
       public:
         template <class T>
-        static TypeInfo create()
-        {
-            return TypeInfo(typeid(T));
-        }
+        static TypeInfo create();
 
         TypeInfo();
-        TypeInfo(const std::type_info&);
 
         static const TypeInfo& Void();
 
@@ -37,7 +34,9 @@ namespace mo
         const std::type_info* ptr() const;
 
       private:
-        const std::type_info* pInfo_;
+        TypeInfo(const std::type_info&, ct::StringView name);
+        const std::type_info* m_info;
+        ct::StringView m_name;
     };
 
     MO_EXPORTS bool operator==(const TypeInfo& lhs, const TypeInfo& rhs);
@@ -53,9 +52,15 @@ namespace mo
     MO_EXPORTS bool operator>=(const TypeInfo& lhs, const TypeInfo& rhs);
 
     template <class T>
+    TypeInfo TypeInfo::create()
+    {
+        return TypeInfo(typeid(T), ct::GetName<T>::getName());
+    }
+
+    template <class T>
     bool TypeInfo::isType() const
     {
-        return *this == TypeInfo(typeid(T));
+        return *this == TypeInfo::create<T>();
     }
 
     MO_EXPORTS std::ostream& operator<<(std::ostream& os, const TypeInfo& type);

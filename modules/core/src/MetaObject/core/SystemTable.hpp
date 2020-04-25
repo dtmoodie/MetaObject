@@ -200,5 +200,5 @@ void SystemTable::setSingleton(PTR&& singleton)
 template <typename T>
 void SystemTable::deleteSingleton()
 {
-    deleteSingleton(typeid(T));
+    deleteSingleton(mo::TypeInfo::create<T>());
 }

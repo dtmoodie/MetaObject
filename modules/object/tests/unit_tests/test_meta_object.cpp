@@ -148,7 +148,7 @@ TEST(object, inter_object)
     slot_object->Init(true);
 
     ASSERT_TRUE(
-        IMetaObject::connect(*signal_object, "test_void", *slot_object, "test_void", TypeInfo(typeid(void(void)))));
+        IMetaObject::connect(*signal_object, "test_void", *slot_object, "test_void", TypeInfo::create<void(void)>()));
     signal_object->sig_test_void();
     ASSERT_EQ(slot_object->slot_called_count, 1);
 }
@@ -189,7 +189,7 @@ TEST(object, rest)
         meta_obj->Init(true);
         meta_obj->setupSignals(mgr);
         TSignal<int(void)> signal;
-        auto slot = meta_obj->getSlot("test_int", TypeInfo(typeid(int(void))));
+        auto slot = meta_obj->getSlot("test_int", TypeInfo::create<int(void)>());
         ASSERT_NE(slot, nullptr);
         auto connection = slot->connect(signal);
         ASSERT_NE(connection, nullptr);

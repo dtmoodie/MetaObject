@@ -291,7 +291,7 @@ namespace mo
         std::vector<SlotInfo*> slot_infos = minfo->getSlotInfo();
         for (SlotInfo* slot_info : slot_infos)
         {
-            if (slot_info->signature == TypeInfo(typeid(R(Args...))))
+            if (slot_info->signature == TypeInfo::create<R(Args...)>())
             {
                 bpobj.def(slot_info->name.c_str(),
                           std::function<R(T&, const Args&...)>(slotBind(&mo::python::SlotInvoker<T, R(Args...)>::invoke,
@@ -317,7 +317,7 @@ namespace mo
             auto static_slots = minfo->getStaticSlots();
             for (const auto& slot : static_slots)
             {
-                if (slot.first->getSignature() == TypeInfo(typeid(R(Args...))))
+                if (slot.first->getSignature() == TypeInfo::create<R(Args...)>())
                 {
                     auto tslot = dynamic_cast<TSlot<R(Args...)>*>(slot.first);
                     bpobj.def(slot.second.c_str(),

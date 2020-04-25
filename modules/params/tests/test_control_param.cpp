@@ -32,8 +32,8 @@ TEST_F(control_param, visit_static)
     mo::PrintVisitor visitor(ss);
     param.visit(visitor);
     ASSERT_EQ(ss.str(),
-              "name: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >\n    name: "
-              "char\nroot_name: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >\n    "
+              "name: std::string\n    name: "
+              "char\nroot_name: std::string\n    "
               "root_name: char\nflags: mo::ParamFlags\n  data: float\n");
 }
 
@@ -106,8 +106,8 @@ TEST_F(control_param_ptr, visit_static)
     mo::PrintVisitor visitor(ss);
     param.visit(visitor);
     ASSERT_EQ(ss.str(),
-              "name: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >\n    name: "
-              "char\nroot_name: std::__cxx11::basic_string<char, std::char_traits<char>, std::allocator<char> >\n    "
+              "name: std::string\n    name: "
+              "char\nroot_name: std::string\n    "
               "root_name: char\nflags: mo::ParamFlags\n  data: float\n");
 }
 

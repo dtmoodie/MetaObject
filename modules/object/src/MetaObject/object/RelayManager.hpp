@@ -58,13 +58,13 @@ namespace mo
         template <class Sig>
         std::shared_ptr<TSignalRelay<Sig>> getRelay(const std::string& name)
         {
-            return std::dynamic_pointer_cast<TSignalRelay<Sig>>(getRelay(TypeInfo(typeid(Sig)), name));
+            return std::dynamic_pointer_cast<TSignalRelay<Sig>>(getRelay(TypeInfo::create<Sig>(), name));
         }
 
         template <class Sig>
         TSignalRelay<Sig>* getRelayOptional(const std::string& name) const
         {
-            return dynamic_cast<TSignalRelay<Sig>*>(getRelayOptional(TypeInfo(typeid(Sig)), name));
+            return dynamic_cast<TSignalRelay<Sig>*>(getRelayOptional(TypeInfo::create<Sig>(), name));
         }
         ISignalRelay* getRelayOptional(const TypeInfo& type, const std::string& name) const;
 

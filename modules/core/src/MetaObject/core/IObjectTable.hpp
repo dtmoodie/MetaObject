@@ -86,7 +86,7 @@ namespace mo
     SharedPtrType<T> IObjectTable::getObject()
     {
         SharedPtrType<T> output;
-        mo::TypeInfo tinfo(typeid(T));
+        mo::TypeInfo tinfo = mo::TypeInfo::create<T>();
         auto container = getObjectContainer(tinfo);
         if (!container)
         {
@@ -116,7 +116,7 @@ namespace mo
     SharedPtrType<T> IObjectTable::getObjectOptional()
     {
         SharedPtrType<T> output;
-        mo::TypeInfo tinfo(typeid(T));
+        mo::TypeInfo tinfo = mo::TypeInfo::create<T>();
         auto container = getObjectContainer(tinfo);
         if (container)
         {
@@ -140,7 +140,7 @@ namespace mo
     {
         using T = typename TypeFromSharedPtr<PTR>::type;
         std::unique_ptr<IObjectContainer> container(new TObjectContainer<T>(std::move(obj)));
-        setObjectContainer(mo::TypeInfo(typeid(T)), std::move(container));
+        setObjectContainer(mo::TypeInfo::create<T>(), std::move(container));
     }
 } // namespace mo
 

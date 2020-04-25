@@ -16,7 +16,7 @@ namespace mo
         {
             static R invoke(const std::string& slot_name, T& obj)
             {
-                ISlot* slot = obj.getSlot(slot_name, mo::TypeInfo(typeid(R())));
+                ISlot* slot = obj.getSlot(slot_name, mo::TypeInfo::create<R()>());
                 if (slot)
                 {
                     auto tslot = dynamic_cast<mo::TSlot<R()>*>(slot);
@@ -33,7 +33,7 @@ namespace mo
         {
             static R invoke(const std::string& slot_name, T& obj, const Args&... args)
             {
-                ISlot* slot = obj.getSlot(slot_name, mo::TypeInfo(typeid(R(Args...))));
+                ISlot* slot = obj.getSlot(slot_name, mo::TypeInfo::create<R(Args...)>());
                 if (slot)
                 {
                     auto tslot = dynamic_cast<mo::TSlot<R(Args...)>*>(slot);
@@ -51,8 +51,11 @@ namespace mo
         template <class R, class... Args>
         struct StaticSlotInvoker<R(Args...)>
         {
-            static R invoke(mo::TSlot<R(Args...)>* slot, const Args&... args) { return (*slot)(args...); }
+            static R invoke(mo::TSlot<R(Args...)>* slot, const Args&... args)
+            {
+                return (*slot)(args...);
+            }
         };
 
-    } // namespace mo::python
+    } // namespace python
 } // namespace mo

@@ -667,7 +667,7 @@ template <class T>
 void testBinarySpeed(size_t count)
 {
     std::vector<T> vec(count);
-    std::cout << "------ " << mo::TypeInfo(typeid(T)).name() << " ------ " << std::endl;
+    std::cout << "------ " << mo::TypeInfo::create<T>().name() << " ------ " << std::endl;
     {
         mo::Time start = mo::Time::now();
         std::ofstream ofs("test.bin", std::ios::binary | std::ios::out);

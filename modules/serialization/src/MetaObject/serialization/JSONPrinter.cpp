@@ -147,9 +147,10 @@ namespace mo
 
     ISaveVisitor& JSONSaver::operator()(IContainerTraits* val, const void* inst, const std::string& name, size_t cnt)
     {
-        const bool saving_string = val->type() == TypeInfo(typeid(std::string));
+        auto str_type = TypeInfo::create<std::string>();
+        const bool saving_string = val->type() == str_type;
         const bool saving_binary = val->valueType() == TypeInfo::Void();
-        const bool saving_string_dictionary = val->keyType() == TypeInfo(typeid(std::string));
+        const bool saving_string_dictionary = val->keyType() == str_type;
 
         if (!name.empty())
         {

@@ -30,7 +30,7 @@ namespace mo
 
         TypeInfo type() const override
         {
-            return TypeInfo(typeid(T));
+            return TypeInfo::create<T>();
         }
 
         T* ptr(void* inst) const
