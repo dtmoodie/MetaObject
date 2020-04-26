@@ -122,9 +122,10 @@ namespace mo
 
         void save(ISaveVisitor& visitor, const void* val, const std::string&, size_t) const override
         {
-            auto ptr = this->ptr(val);
-            auto sz = ptr->size();
-            visitor(ptr->data(), "", ptr->size());
+            auto obj = this->ptr(val);
+            auto sz = obj->size();
+            auto ptr = obj->data();
+            visitor(ptr, "", sz);
         }
 
         void visit(StaticVisitor& visitor, const std::string&) const override

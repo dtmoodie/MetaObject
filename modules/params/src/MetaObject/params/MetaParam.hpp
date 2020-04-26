@@ -21,8 +21,8 @@ namespace mo
         {
             if (name)
             {
-                mo::TypeTable::instance(table)->registerType(mo::TypeInfo(typeid(T)), name);
+                mo::TypeTable::instance(table)->registerType(mo::TypeInfo::create<T>(), name);
             }
         }
     };
-}
+} // namespace mo

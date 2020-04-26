@@ -9,7 +9,7 @@ using namespace test;
 template <class SIG>
 void testGetSlot(const std::string& name, IMetaObject* obj)
 {
-    auto slot = obj->getSlot(name, TypeInfo(typeid(SIG)));
+    auto slot = obj->getSlot(name, TypeInfo::create<SIG>());
     ASSERT_NE(slot, nullptr);
     ASSERT_NE(dynamic_cast<TSlot<SIG>*>(slot), nullptr);
     auto tslot = obj->template getSlot<SIG>(name);

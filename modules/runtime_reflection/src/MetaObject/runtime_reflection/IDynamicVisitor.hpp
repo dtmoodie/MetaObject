@@ -252,20 +252,20 @@ namespace mo
     template <class T>
     T* ILoadVisitor::getPointer(const uint32_t id)
     {
-        void* ptr = getPointer(TypeInfo(typeid(T)), id);
+        void* ptr = getPointer(TypeInfo::create<T>(), id);
         return static_cast<T*>(ptr);
     }
 
     template <class T>
     void ILoadVisitor::setSerializedPointer(T* ptr, const uint32_t id)
     {
-        setSerializedPointer(TypeInfo(typeid(T)), id, ptr);
+        setSerializedPointer(TypeInfo::create<T>(), id, ptr);
     }
 
     template <class T>
     const T* ISaveVisitor::getPointer(const uint32_t id)
     {
-        const void* ptr = getPointer(TypeInfo(typeid(T)), id);
+        const void* ptr = getPointer(TypeInfo::create<T>(), id);
         return static_cast<const T*>(ptr);
     }
 
@@ -278,7 +278,7 @@ namespace mo
     template <class T>
     void ISaveVisitor::setSerializedPointer(const T* ptr, const uint32_t id)
     {
-        setSerializedPointer(TypeInfo(typeid(T)), id, ptr);
+        setSerializedPointer(TypeInfo::create<T>(), id, ptr);
     }
 
     template <class T>
@@ -342,14 +342,14 @@ namespace mo
     template <class T>
     auto StaticVisitor::impl(const std::string& name, const size_t cnt, const T*) -> ct::EnableIf<IsPrimitive<T>::value>
     {
-        implDyn(TypeInfo(typeid(T)), name, cnt);
+        implDyn(TypeInfo::create<T>(), name, cnt);
     }
 
     template <class T>
     auto StaticVisitor::impl(const std::string& name, const size_t cnt, const T*)
         -> ct::EnableIf<!IsPrimitive<T>::value && !is_complete<TTraits<T>>::value>
     {
-        implDyn(TypeInfo(typeid(T)), name, cnt);
+        implDyn(TypeInfo::create<T>(), name, cnt);
         Visit<T>::visit(*this, name, cnt);
     }
 

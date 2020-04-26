@@ -1,7 +1,7 @@
 #ifndef MO_PARAMS_TRAITS_CONTAINERS_HPP
 #define MO_PARAMS_TRAITS_CONTAINERS_HPP
 #include <MetaObject/params/TStlAllocator.hpp>
-
+#include <MetaObject/runtime_reflection/type_traits.hpp>
 namespace mo
 {
     template <class T, class E>

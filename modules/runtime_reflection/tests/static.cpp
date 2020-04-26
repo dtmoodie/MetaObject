@@ -10,7 +10,7 @@ namespace
 {
     struct Tester
     {
-        template<class T>
+        template <class T>
         typename std::enable_if<!std::is_arithmetic<T>::value>::type test(const T&)
         {
             mo::HashVisitor hasher;
@@ -19,16 +19,15 @@ namespace
             using base = typename decltype(trait)::base;
             const auto hash = hasher.generateObjecthash(static_cast<base*>(&trait));
 
-            m_hashes[mo::TypeInfo(typeid(T)).name()] = hash;
+            m_hashes[mo::TypeInfo::create<T>().name()] = hash;
 
-            ASSERT_EQ(std::count(m_hash_list.begin(),m_hash_list.end(), hash), 0);
+            ASSERT_EQ(std::count(m_hash_list.begin(), m_hash_list.end(), hash), 0);
             m_hash_list.push_back(hash);
         }
 
-        template<class T>
+        template <class T>
         typename std::enable_if<std::is_arithmetic<T>::value>::type test(const T&)
         {
-
         }
 
         std::map<std::string, size_t> m_hashes;
@@ -38,40 +37,37 @@ namespace
     struct TrivialSerializableTester
     {
 
-        template<class T>
+        template <class T>
         typename std::enable_if<std::is_base_of<mo::IStructTraits, mo::TTraits<T>>::value>::type testImpl(const T& data)
         {
             auto trait = mo::makeTraits(&data);
-            if(trait.triviallySerializable())
+            if (trait.triviallySerializable())
             {
                 T tmp;
                 std::memcpy(&tmp, &data, sizeof(T));
                 if (!ct::compare(tmp, data, DebugEqual()))
                 {
-
                 }
             }
         }
 
-        template<class T>
-        typename std::enable_if<!std::is_base_of<mo::IStructTraits, mo::TTraits<T>>::value>::type testImpl(const T& )
+        template <class T>
+        typename std::enable_if<!std::is_base_of<mo::IStructTraits, mo::TTraits<T>>::value>::type testImpl(const T&)
         {
-
         }
 
-        template<class T>
+        template <class T>
         typename std::enable_if<!std::is_arithmetic<T>::value>::type test(const T& data)
         {
             testImpl(data);
         }
 
-        template<class T>
+        template <class T>
         typename std::enable_if<std::is_arithmetic<T>::value>::type test(const T&)
         {
-
         }
     };
-}
+} // namespace
 
 TEST(static_reflection, hash)
 {
@@ -81,17 +77,17 @@ TEST(static_reflection, hash)
 
 struct VecA
 {
-    float x,y,z;
+    float x, y, z;
 };
 
 struct VecB
 {
-    float x,y,z;
+    float x, y, z;
 };
 
 struct VecC
 {
-    float a,b,c;
+    float a, b, c;
 };
 
 struct Quat
@@ -127,7 +123,7 @@ namespace ct
         PUBLIC_ACCESS(w)
     REFLECT_END;
 
-}
+} // namespace ct
 
 TEST(static_reflection, DetectSimilarity)
 {

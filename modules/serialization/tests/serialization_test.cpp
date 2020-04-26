@@ -561,11 +561,17 @@ INSTANTIATE_TYPED_TEST_SUITE_P(serialization_json, SerializationJson, RuntimeRef
 
 struct RawPointerTestStruct
 {
-    REFLECT_INTERNAL_BEGIN(RawPointerTestStruct)
-        REFLECT_INTERNAL_MEMBER(std::vector<std::shared_ptr<Vec>>, owning, {})
-        REFLECT_INTERNAL_MEMBER(std::vector<Vec*>, raw, {})
-    REFLECT_INTERNAL_END;
+    std::vector<std::shared_ptr<Vec>> owning;
+    std::vector<Vec*> raw;
 };
+
+namespace ct
+{
+    REFLECT_BEGIN(RawPointerTestStruct)
+        PUBLIC_ACCESS(owning)
+        PUBLIC_ACCESS(raw)
+    REFLECT_END;
+} // namespace ct
 
 template <>
 struct TestData<RawPointerTestStruct>
@@ -661,7 +667,7 @@ template <class T>
 void testBinarySpeed(size_t count)
 {
     std::vector<T> vec(count);
-    std::cout << "------ " << mo::TypeInfo(typeid(T)).name() << " ------ " << std::endl;
+    std::cout << "------ " << mo::TypeInfo::create<T>().name() << " ------ " << std::endl;
     {
         mo::Time start = mo::Time::now();
         std::ofstream ofs("test.bin", std::ios::binary | std::ios::out);

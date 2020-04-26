@@ -8,7 +8,7 @@ using namespace test;
 template <class SIG>
 void testGetSignal(const std::string& name, IMetaObject* obj)
 {
-    auto signal = obj->getSignal(name, TypeInfo(typeid(SIG)));
+    auto signal = obj->getSignal(name, TypeInfo::create<SIG>());
     ASSERT_NE(signal, nullptr) << "Unable to retrieve signal with name '" << name << "' and signature ["
                                << TypeInfo::create<SIG>().name() << "] from object of type " << obj->GetTypeName()
                                << "Available signals:\n"

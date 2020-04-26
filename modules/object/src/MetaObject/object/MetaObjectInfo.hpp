@@ -286,7 +286,7 @@ namespace mo
                               ct::Indexer<I>)
         {
             static mo::ParamInfo param_info(
-                mo::TypeInfo(typeid(DTYPE)), ptr.m_name.slice(0, -6).toString(), "", "", mo::ParamFlags::kINPUT, "");
+                mo::TypeInfo::create<DTYPE>(), ptr.m_name.slice(0, -6).toString(), "", "", mo::ParamFlags::kINPUT, "");
             vec.push_back(&param_info);
         }
 
@@ -295,8 +295,12 @@ namespace mo
                               ct::MemberObjectPointer<mo::TControlParam<DTYPE*> CTYPE::*, FLAGS, METADATA> ptr,
                               ct::Indexer<I>)
         {
-            static mo::ParamInfo param_info(
-                mo::TypeInfo(typeid(DTYPE)), ptr.m_name.slice(0, -6).toString(), "", "", mo::ParamFlags::kCONTROL, "");
+            static mo::ParamInfo param_info(mo::TypeInfo::create<DTYPE>(),
+                                            ptr.m_name.slice(0, -6).toString(),
+                                            "",
+                                            "",
+                                            mo::ParamFlags::kCONTROL,
+                                            "");
             vec.push_back(&param_info);
         }
 
@@ -412,7 +416,7 @@ namespace mo
                                ct::Indexer<I>)
         {
             // ignore for now, added in the above initParam for TParamPtr
-            static SignalInfo info{mo::TypeInfo(typeid(SIG)), ptr.m_name, "", ""};
+            static SignalInfo info{mo::TypeInfo::create<SIG>(), ptr.m_name, "", ""};
             vec.push_back(&info);
         }
 
@@ -520,7 +524,7 @@ namespace mo
                              ct::Indexer<0>)
         {
             using BoundSig_t = typename std::decay<decltype(std::get<0>(ptrs.m_ptrs))>::type::BoundSig_t;
-            static SlotInfo info{TypeInfo(typeid(BoundSig_t)), ptrs.m_name, "", "", false};
+            static SlotInfo info{TypeInfo::create<BoundSig_t>(), ptrs.m_name, "", "", false};
             vec.push_back(&info);
         }
 
@@ -644,7 +648,7 @@ namespace mo
 
         static TypeInfo getTypeInfoStatic()
         {
-            return TypeInfo(typeid(typename T::BASE_CLASS));
+            return TypeInfo::create<typename T::BASE_CLASS>();
         }
 
         std::vector<std::pair<ISlot*, std::string>> getStaticSlots() const override

@@ -65,7 +65,7 @@ namespace mo
 
         TypeInfo type() const override
         {
-            return TypeInfo(typeid(T));
+            return TypeInfo::create<T>();
         }
 
         T* ptr(void* inst) const
@@ -90,12 +90,12 @@ namespace mo
 
         TypeInfo keyType() const override
         {
-            return TypeInfo(typeid(K));
+            return TypeInfo::create<K>();
         }
 
         TypeInfo valueType() const override
         {
-            return TypeInfo(typeid(typename std::remove_const<V>::type));
+            return TypeInfo::create<typename std::remove_const<V>::type>();
         }
 
         bool isContinuous() const override

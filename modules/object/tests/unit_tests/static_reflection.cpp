@@ -58,13 +58,13 @@ TEST(object_reflection, signals_static)
     auto itr = std::find_if(
         signal_info.begin(), signal_info.end(), [](SignalInfo* info) { return info->name == "base_signal"; });
     ASSERT_NE(itr, signal_info.end());
-    ASSERT_EQ((*itr)->signature, TypeInfo(typeid(void(int))));
+    ASSERT_EQ((*itr)->signature, TypeInfo::create<void(int)>());
 
     itr = std::find_if(
         signal_info.begin(), signal_info.end(), [](SignalInfo* info) { return info->name == "base_signal"; });
 
     ASSERT_NE(itr, signal_info.end());
-    ASSERT_EQ((*itr)->signature, TypeInfo(typeid(void(int))));
+    ASSERT_EQ((*itr)->signature, TypeInfo::create<void(int)>());
 }
 
 TEST(object_reflection, slots_static)
@@ -75,15 +75,15 @@ TEST(object_reflection, slots_static)
     auto itr =
         std::find_if(slot_info.begin(), slot_info.end(), [](SlotInfo* info) { return info->name == "override_slot"; });
     ASSERT_NE(itr, slot_info.end());
-    ASSERT_EQ((*itr)->signature, TypeInfo(typeid(void(int))));
+    ASSERT_EQ((*itr)->signature, TypeInfo::create<void(int)>());
 
     itr = std::find_if(slot_info.begin(), slot_info.end(), [](SlotInfo* info) { return info->name == "base_slot"; });
     ASSERT_NE(itr, slot_info.end());
-    ASSERT_EQ((*itr)->signature, TypeInfo(typeid(void(int))));
+    ASSERT_EQ((*itr)->signature, TypeInfo::create<void(int)>());
 
     itr = std::find_if(slot_info.begin(), slot_info.end(), [](SlotInfo* info) { return info->name == "derived_slot"; });
     ASSERT_NE(itr, slot_info.end());
-    ASSERT_EQ((*itr)->signature, TypeInfo(typeid(void(int))));
+    ASSERT_EQ((*itr)->signature, TypeInfo::create<void(int)>());
 }
 
 TEST(object, diamond_inheritance)
