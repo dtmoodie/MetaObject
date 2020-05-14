@@ -202,6 +202,13 @@ namespace mo
         {
         }
 
+        template <class SERIALIZER, class... DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
+        void serializeParam(SERIALIZER&,
+                            ct::MemberObjectPointer<mo::TMultiSubscriber<DTYPE...> CTYPE::*, FLAGS, METADATA>,
+                            ct::Indexer<I>) const
+        {
+        }
+
         template <class SERIALIZER, class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
         void serializeParam(SERIALIZER&,
                             ct::MemberObjectPointer<mo::TPublisher<DTYPE> CTYPE::*, FLAGS, METADATA>,
@@ -330,18 +337,6 @@ namespace mo
             return vec;
         }
 
-        template <class R, class... Args>
-        inline void operator()(const mo::Signal<mo::TSignal<R(Args...)>>& data,
-                               const mo::Name& name,
-                               const int,
-                               const bool,
-                               int32_t* counter)
-        {
-            // TODO finish signal initialization
-            this->addSignal(data.get(), name.get());
-            *counter += 1;
-        }
-
         template <class PTR, ct::index_t I>
         int initSignal(PTR, const ct::Indexer<I>, const bool)
         {
@@ -379,9 +374,9 @@ namespace mo
         struct SignalInfoVisitor
         {
             template <ct::index_t N>
-            inline void operator()(const mo::Type& type, const mo::Name& name, const ct::Indexer<N>)
+            inline void operator()(const mo::TypeInfo& type, const std::string& name, const ct::Indexer<N>)
             {
-                static mo::SignalInfo info{type.get(), std::string(name.get()), "", ""};
+                static mo::SignalInfo info{type, std::string(name), "", ""};
                 vec.push_back(&info);
             }
 
@@ -446,17 +441,17 @@ namespace mo
             return vec;
         }
 
-        template <class Sig, class R, class T1, class... Args>
+        /*template <class Sig, class R, class T1, class... Args>
         inline void operator()(const mo::Slot<Sig>& data,
                                const mo::NamedType<R (T1::*)(Args...), Function>& fptr,
                                const mo::Name& name,
-                               int /*N*/,
-                               bool /*first_init*/)
+                               int N,
+                               bool first_init)
         {
             (*data.get()) =
                 ct::variadicBind(fptr.get(), static_cast<T*>(this), ct::make_int_sequence<sizeof...(Args)>{});
             this->addSlot(data.get(), name.get());
-        }
+        }*/
 
         template <index_t I, class U, ct::Flag_t FLAGS, class METADATA, class... PTRS>
         void bindSlot(Indexer<I>, ct::MemberFunctionPointers<U, FLAGS, METADATA, PTRS...> ptrs)
