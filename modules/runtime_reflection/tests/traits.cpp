@@ -63,7 +63,7 @@ namespace
                         return name == data.first;
                     });
                 ASSERT_NE(itr, data.end())
-                    << "Unable to find trait by name " << name << " for type " << ct::Reflect<T>::getName();
+                    << "Unable to find trait by name " << name << " for type " << ct::Reflect<T>::getTypeName();
                 EXPECT_EQ(itr->second, mo::TypeInfo::template create<type>());
             }
         }
