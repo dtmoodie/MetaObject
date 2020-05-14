@@ -68,7 +68,7 @@ struct TObjectControlBlockImpl<T, ct::VariadicTypedef<U...>, void> : virtual TOb
 template <typename TInferior, typename TSuper, size_t Version = 0>
 struct TInterface : public TSuper
 {
-    using ParentClass = ct::VariadicTypedef<TSuper>;
+    using BaseTypes = ct::VariadicTypedef<TSuper>;
 
     TInterface()
     {
