@@ -121,11 +121,10 @@ namespace mo
             m_user_var = user_var_;
         }
 
-        IDataContainerPtr_t getData(const Header& desired = Header(),
-                                    IAsyncStream& = IAsyncStream::currentRef()) override
+        IDataContainerConstPtr_t getData(const Header* desired = nullptr, IAsyncStream* stream = nullptr) override
         {
-            auto data = TSubscriber<std::vector<T, A>>::getData(desired);
-            if (data->getType() == TSubscriber<std::vector<T, A>>::getTypeInfo())
+            auto data = TSubscriber<std::vector<T, A>>::getData(desired, stream);
+            if (data->getType().template isType<std::vector<T, A>>())
             {
                 auto typed = std::static_pointer_cast<TDataContainer<std::vector<T, A>>>(data);
                 if (typed && m_user_var)
@@ -136,15 +135,8 @@ namespace mo
             return data;
         }
 
-        IDataContainerConstPtr_t getData(const Header& desired = Header(),
-                                         IAsyncStream& = IAsyncStream::currentRef()) const override
-        {
-            return TSubscriber<T>::getData(desired);
-        }
-
       protected:
-        void updateDataImpl(const TDataContainerPtr_t<std::vector<T, A>>& data,
-                            mo::UpdateFlags fg = UpdateFlags::kINPUT_UPDATED) override
+        virtual void onData(TDataContainerConstPtr_t<T> data, const IParam&, UpdateFlags fg, IAsyncStream& stream)
         {
             Lock_t lock(this->mtx());
             TSubscriber<std::vector<T, A>>::updateDataImpl(data, fg);
@@ -154,7 +146,7 @@ namespace mo
             }
         }
 
-        const std::vector<T, A>* m_user_var; // Pointer to the user space pointer variable of type T
+        const std::vector<T, A>** m_user_var; // Pointer to the user space pointer variable of type T
     };
 
     template <typename T>
