@@ -34,7 +34,7 @@ namespace test
     {
     }
 
-    void Base::on_base_param_modified(mo::IParam*, mo::Header, mo::UpdateFlags)
+    void Base::on_base_param_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream&)
     {
     }
 
