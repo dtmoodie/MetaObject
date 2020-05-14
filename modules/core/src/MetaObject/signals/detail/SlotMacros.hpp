@@ -124,6 +124,7 @@
 #define MO_STATIC_SLOT(RET, ...)
 #define DESCRIBE_SLOT(NAME, DESCRIPTION)
 #endif
-#define PARAM_UPDATE_SLOT(NAME) MO_SLOT(void, on_##NAME##_modified, mo::IParam*, mo::Header, mo::UpdateFlags)
+#define PARAM_UPDATE_SLOT(NAME)                                                                                        \
+    MO_SLOT(void, on_##NAME##_modified, const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream&)
 
 #define SLOT_TOOLTIP(name, tooltip) SLOT_TOOLTIP_(name, tooltip, __COUNTER__)
