@@ -208,6 +208,12 @@ namespace mo
     {
     }
 
+    template <class T, class GET_PTR, class SET_PTR, ct::Flag_t FLAGS, class MDATA>
+    void testStaticReflection(const IMetaObjectInfo& info,
+                              ct::MemberPropertyPointer<GET_PTR, SET_PTR, FLAGS, MDATA> ptr)
+    {
+    }
+
     template <class T, class BASE, ct::Flag_t FLAGS, class MDATA, class... PTRS>
     void testStaticReflection(const IMetaObjectInfo&, ct::MemberFunctionPointers<BASE, FLAGS, MDATA, PTRS...>)
     {
