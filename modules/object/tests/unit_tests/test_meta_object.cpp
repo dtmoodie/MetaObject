@@ -29,7 +29,7 @@ using namespace test;
 
 TEST(object, param_access)
 {
-    static_assert(std::is_same<typename ParamedObject::ParentClass, ct::VariadicTypedef<MetaObject>>::value, "");
+    static_assert(std::is_same<typename ParamedObject::BaseTypes, ct::VariadicTypedef<MetaObject>>::value, "");
     auto stream = IAsyncStream::create();
     auto obj = rcc::shared_ptr<ParamedObject>::create();
     ASSERT_TRUE(obj->getParam("int_value"));
