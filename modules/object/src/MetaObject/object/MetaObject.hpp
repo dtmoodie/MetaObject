@@ -10,9 +10,7 @@ namespace mo
     class MO_EXPORTS MetaObject : virtual public IMetaObject
     {
       public:
-        using ParentClass = ct::VariadicTypedef<IMetaObject>;
-
-        MO_BASE(MetaObject)
+        MO_DERIVE(MetaObject, IMetaObject)
         PROPERTY(stream, &IMetaObject::getStream, &IMetaObject::setStream)
         MO_END;
 

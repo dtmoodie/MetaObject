@@ -6,6 +6,7 @@
 #include <MetaObject/core/detail/Time.hpp>
 #include <MetaObject/core/detail/forward.hpp>
 #include <MetaObject/detail/Export.hpp>
+#include <MetaObject/object/detail/MetaObjectMacros.hpp>
 #include <MetaObject/params/ITControlParam.hpp>
 #include <MetaObject/params/TControlParam.hpp>
 #include <MetaObject/params/detail/forward.hpp>
@@ -24,6 +25,9 @@ namespace mo
     class MO_EXPORTS IMetaObject : virtual public TInterface<IMetaObject, IObject>
     {
       public:
+        MO_DERIVE(IMetaObject, IObject)
+        MO_END;
+
         using Interface = IMetaObject;
         using InterfaceInfo = IMetaObjectInfo;
 
@@ -314,4 +318,10 @@ namespace mo
     }
 
 } // namespace mo
+
+namespace ct
+{
+    REFLECT_BEGIN(IObject)
+    REFLECT_END;
+} // namespace ct
 #endif // MO_OBJECT_IMETAOBJECT_HPP
