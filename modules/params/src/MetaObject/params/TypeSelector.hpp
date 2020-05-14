@@ -60,15 +60,16 @@ namespace mo
         template <class... Args>
         bool apply(const mo::TypeInfo& type, Args&&... args)
         {
-            return applyImpl(ct::Indexer<static_cast<int>(sizeof...(T)) - 1>{}, type, std::forward<Args>(args)...);
+            const ct::Indexer<static_cast<ct::index_t>(sizeof...(T)) - 1> start_index;
+            return applyImpl(start_index, type, std::forward<Args>(args)...);
         }
 
       private:
         template <class... Args>
-        bool applyImpl(const ct::Indexer<0>, const mo::TypeInfo& type, Args&&... args)
+        bool applyImpl(ct::Indexer<0>, const mo::TypeInfo& type, Args&&... args)
         {
             using Type = typename std::tuple_element<0, std::tuple<T...>>::type;
-            if (mo::TypeInfo(typeid(Type)) == type)
+            if (type.template isType<Type>())
             {
                 m_func.template apply<Type>(std::forward<Args>(args)...);
                 return true;
@@ -76,18 +77,17 @@ namespace mo
             return false;
         }
 
-        template <int I, class... Args>
-        bool applyImpl(const ct::Indexer<I> cnt,
-                       const typename std::enable_if<I != 0, mo::TypeInfo>::type& type,
-                       Args&&... args)
+        template <ct::index_t I, class... Args>
+        bool applyImpl(ct::Indexer<I> index, const ct::EnableIf<I != 0, mo::TypeInfo>& type, Args&&... args)
         {
             using Type = typename std::tuple_element<I, std::tuple<T...>>::type;
-            if (mo::TypeInfo(typeid(Type)) == type)
+            if (type.template isType<Type>())
             {
                 m_func.template apply<Type>(std::forward<Args>(args)...);
                 return true;
             }
-            return applyImpl(--cnt, type, std::forward<Args>(args)...);
+            const auto next_index = --index;
+            return applyImpl(next_index, type, std::forward<Args>(args)...);
         }
 
         F& m_func;
@@ -103,7 +103,7 @@ namespace mo
         template <class... Args>
         void apply(Args&&... args)
         {
-            applyImpl(std::integral_constant<int, sizeof...(T)-1>(), std::forward<Args>(args)...);
+            applyImpl(std::integral_constant<int, sizeof...(T) - 1>(), std::forward<Args>(args)...);
         }
 
       private:
@@ -137,4 +137,4 @@ namespace mo
         TypeLoop<F, Types...> loop(func);
         loop.apply(std::forward<Args>(args)...);
     }
-}
+} // namespace mo
