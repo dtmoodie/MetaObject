@@ -9,7 +9,8 @@ TEST(object_initialization, SerializableObject)
     auto stream = IAsyncStream::create();
     {
         auto inst = mo::MetaObjectFactory::instance()->create("SerializableObject");
-        ASSERT_NE(inst, nullptr);
+        ASSERT_NE(inst, nullptr) << "Unable to create a SerializableObject, available objects: "
+                                 << mo::MetaObjectFactory::instance()->listConstructableObjects();
         rcc::shared_ptr<SerializableObject> casted(inst);
         ASSERT_NE(casted, nullptr);
     }
