@@ -352,7 +352,7 @@ struct Serialization<std::shared_ptr<T>> : ::testing::Test
             visitor(&tmp2, "value1");
             if (!ct::compare(*tmp, *data, DebugEqual()))
             {
-                std::cout << "Failed to serialize " << ct::Reflect<T>::getName() << " correctly";
+                std::cout << "Failed to serialize " << ct::Reflect<T>::getTypeName() << " correctly";
                 throw std::runtime_error("Serialization failed");
             }
             if (tmp.get() != tmp2.get())
