@@ -65,13 +65,17 @@ namespace mo
         void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t) const override
         {
             auto ptr = this->ptr(inst);
-            visitor(ptr->data(), "", ptr->size());
+            auto data = ptr->data();
+            const auto size = ptr->size();
+            visitor(data, "", size);
         }
 
         void save(ISaveVisitor& visitor, const void* val, const std::string&, size_t) const override
         {
             auto ptr = this->ptr(val);
-            visitor(ptr->data(), "", ptr->size());
+            auto data = ptr->data();
+            const auto size = ptr->size();
+            visitor(data, "", size);
         }
 
         void visit(StaticVisitor& visitor, const std::string&) const override
@@ -98,17 +102,20 @@ namespace mo
         void setContainerSize(size_t size, void* inst) const override
         {
             auto ptr = this->ptr(inst);
-            MO_ASSERT_EQ(ptr->size(), size);
+            auto current_size = ptr->size();
+            MO_ASSERT_EQ(current_size, size);
         }
 
         void* valuePointer(void* inst) const override
         {
-            return this->ptr(inst)->data();
+            auto ptr = this->ptr(inst);
+            return ptr->data();
         }
 
         const void* valuePointer(const void* inst) const override
         {
-            return this->ptr(inst)->data();
+            auto ptr = this->ptr(inst);
+            return ptr->data();
         }
     };
 
@@ -152,7 +159,8 @@ namespace mo
         void setContainerSize(size_t size, void* inst) const override
         {
             auto ptr = this->ptr(inst);
-            MO_ASSERT_EQ(ptr->size(), size);
+            const auto container_size = ptr->size();
+            MO_ASSERT_EQ(container_size, size);
         }
 
         void* valuePointer(void*) const override
@@ -162,7 +170,8 @@ namespace mo
 
         const void* valuePointer(const void* inst) const override
         {
-            return this->ptr(inst)->data();
+            auto ptr = this->ptr(inst);
+            return ptr->data();
         }
     };
 

@@ -382,7 +382,7 @@ struct TestData<std::vector<std::shared_ptr<Vec>>>
         return testing::AssertionSuccess();
     }
 };
-#ifdef HAVE_OPENCV
+#ifdef MO_HAVE_OPENCV
 #include <opencv2/core/types.hpp>
 TEST_DATA(cv::Rect2f, {0.1f, 0.2f, 0.3f, 0.4f});
 TEST_DATA(cv::Rect, {0, 2, 4, 5});
@@ -398,7 +398,7 @@ TEST_DATA(cv::Vec2i, {0, 3});
 using RuntimeReflectionTypeTest = ::testing::Types<int,
                                                    float,
                                                    double,
-#ifdef HAVE_OPENCV
+#ifdef MO_HAVE_OPENCV
                                                    cv::Rect2f,
                                                    cv::Rect,
                                                    cv::Point2f,

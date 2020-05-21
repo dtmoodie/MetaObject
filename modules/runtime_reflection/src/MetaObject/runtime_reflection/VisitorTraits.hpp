@@ -25,7 +25,8 @@ namespace mo
         using Ret_t = decltype(accessor.set(obj));
         Ret_t tmp = accessor.set(obj);
         auto ptr = &tmp;
-        visitor(ptr, ct::getName<I, T>());
+        const auto name = ct::getName<I, T>();
+        visitor(ptr, name);
     }
 
     template <class T, index_t I>
@@ -42,7 +43,8 @@ namespace mo
     template <class T, index_t I>
     void visitHelper(ILoadVisitor& visitor, T& obj, const Indexer<I> idx)
     {
-        visitHelper(visitor, obj, --idx);
+        const auto next_index = --idx;
+        visitHelper(visitor, obj, next_index);
         visitValue(visitor, obj, idx);
     }
 
@@ -92,7 +94,8 @@ namespace mo
     auto visitValue(StaticVisitor& visitor, const Indexer<I> idx) -> EnableVisitation<T, I>
     {
         using Type = typename ct::GetType<decltype(ct::Reflect<T>::getPtr(idx))>::type;
-        visitor.visit<typename std::decay<Type>::type>(ct::getName<I, T>());
+        const auto name = ct::getName<I, T>();
+        visitor.visit<typename std::decay<Type>::type>(name);
     }
 
     template <class T, index_t I>
@@ -109,7 +112,8 @@ namespace mo
     template <class T, index_t I>
     void visitHelper(StaticVisitor& visitor, const Indexer<I> idx)
     {
-        visitHelper<T>(visitor, --idx);
+        const auto next_idx = --idx;
+        visitHelper<T>(visitor, next_idx);
         visitValue<T>(visitor, idx);
     }
 
@@ -170,7 +174,8 @@ namespace mo
 
         void visit(StaticVisitor& visitor, const std::string&) const override
         {
-            visitHelper<T>(visitor, ct::Reflect<T>::end());
+            const auto idx = ct::Reflect<T>::end();
+            visitHelper<T>(visitor, idx);
         }
 
         std::string name() const override
