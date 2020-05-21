@@ -43,7 +43,7 @@ struct Serialization : ::testing::Test
     static void saveBinaryRuntime(std::string path)
     {
         std::ofstream ofs(path, std::ios::binary | std::ios::out);
-        mo::BinarySaver bar(ofs);
+        mo::BinarySaver bar(ofs, true);
         mo::ISaveVisitor& visitor = bar;
         auto data = TestData<T>::init();
         visitor(&data, "value0");
@@ -76,7 +76,7 @@ struct Serialization : ::testing::Test
     static void loadBinaryRuntime(std::string path)
     {
         std::ifstream ifs(path, std::ios::binary | std::ios::in);
-        mo::BinaryLoader bar(ifs);
+        mo::BinaryLoader bar(ifs, true);
         mo::ILoadVisitor& visitor = bar;
 
         T tmp;
