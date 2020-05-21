@@ -4,8 +4,9 @@
 namespace mo
 {
 
-    BinaryLoader::BinaryLoader(std::istream& in)
+    BinaryLoader::BinaryLoader(std::istream& in, bool cereal_compat)
         : m_is(in)
+        , m_cereal_compat(cereal_compat)
     {
     }
 
@@ -111,7 +112,7 @@ namespace mo
 
     ILoadVisitor& BinaryLoader::operator()(IStructTraits* val, void* inst, const std::string& name, size_t cnt)
     {
-        if (val->triviallySerializable())
+        if (val->triviallySerializable() && !m_cereal_compat)
         {
             auto ptr = inst;
             const auto sz = val->size() * cnt;

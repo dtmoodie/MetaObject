@@ -8,7 +8,7 @@ namespace mo
     class MO_EXPORTS BinaryLoader : public LoadCache
     {
       public:
-        BinaryLoader(std::istream& in);
+        BinaryLoader(std::istream& in, bool cereal_compat = false);
 
         ILoadVisitor& operator()(bool* ptr, const std::string& name, const size_t cnt) override;
         ILoadVisitor& operator()(char* ptr, const std::string& name, const size_t cnt) override;
@@ -56,5 +56,6 @@ namespace mo
         std::istream& m_is;
         size_t m_current_size = 0;
         std::shared_ptr<Allocator> m_allocator;
+        const bool m_cereal_compat;
     };
 } // namespace mo

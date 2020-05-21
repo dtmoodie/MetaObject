@@ -8,7 +8,7 @@ namespace mo
     class MO_EXPORTS BinarySaver : public SaveCache
     {
       public:
-        BinarySaver(std::ostream& in);
+        BinarySaver(std::ostream& in, bool cereal_compat = false);
 
         ISaveVisitor& operator()(const bool* ptr, const std::string& name, const size_t cnt) override;
         ISaveVisitor& operator()(const char* ptr, const std::string& name, const size_t cnt) override;
@@ -54,5 +54,6 @@ namespace mo
         ISaveVisitor& saveBinary(const T* ptr, const std::string& name = "", const size_t cnt = 1);
         std::ostream& m_os;
         std::shared_ptr<Allocator> m_allocator;
+        bool m_cereal_compat;
     };
 } // namespace mo

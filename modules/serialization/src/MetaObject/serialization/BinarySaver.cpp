@@ -3,8 +3,9 @@
 namespace mo
 {
 
-    BinarySaver::BinarySaver(std::ostream& in)
+    BinarySaver::BinarySaver(std::ostream& in, bool cereal_compat)
         : m_os(in)
+        , m_cereal_compat(cereal_compat)
     {
     }
 
@@ -109,7 +110,7 @@ namespace mo
 
     ISaveVisitor& BinarySaver::operator()(IStructTraits* trait, const void* val, const std::string& name, size_t cnt)
     {
-        if (trait->triviallySerializable())
+        if (trait->triviallySerializable() && !m_cereal_compat)
         {
             auto ptr = val;
             const auto sz = trait->size() * cnt;
