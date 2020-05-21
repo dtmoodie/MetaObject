@@ -40,10 +40,10 @@ struct Serialization : ::testing::Test
         bar2(data);
     }
 
-    static void saveBinaryRuntime(std::string path)
+    static void saveBinaryRuntime(std::string path, bool cereal_compat = true)
     {
         std::ofstream ofs(path, std::ios::binary | std::ios::out);
-        mo::BinarySaver bar(ofs, true);
+        mo::BinarySaver bar(ofs, cereal_compat);
         mo::ISaveVisitor& visitor = bar;
         auto data = TestData<T>::init();
         visitor(&data, "value0");
@@ -73,10 +73,10 @@ struct Serialization : ::testing::Test
             << binaryCerealStr();
     }
 
-    static void loadBinaryRuntime(std::string path)
+    static void loadBinaryRuntime(std::string path, bool cereal_compat = true)
     {
         std::ifstream ifs(path, std::ios::binary | std::ios::in);
-        mo::BinaryLoader bar(ifs, true);
+        mo::BinaryLoader bar(ifs, cereal_compat);
         mo::ILoadVisitor& visitor = bar;
 
         T tmp;
@@ -236,10 +236,10 @@ struct Serialization<std::shared_ptr<T>> : ::testing::Test
         bar(data);
     }
 
-    void saveBinaryRuntime(std::string path)
+    void saveBinaryRuntime(std::string path, bool cereal_compat = true)
     {
         std::ofstream ofs(path, std::ios::binary | std::ios::out);
-        mo::BinarySaver bar(ofs);
+        mo::BinarySaver bar(ofs, cereal_compat);
         mo::ISaveVisitor& visitor = bar;
         auto data = TestData<std::shared_ptr<T>>::init();
         visitor(&data, "value0");
@@ -269,10 +269,10 @@ struct Serialization<std::shared_ptr<T>> : ::testing::Test
             << binaryCerealStr();
     }
 
-    void loadBinaryRuntime(std::string path)
+    void loadBinaryRuntime(std::string path, bool cereal_compat = true)
     {
         std::ifstream ifs(path, std::ios::binary | std::ios::in);
-        mo::BinaryLoader bar(ifs);
+        mo::BinaryLoader bar(ifs, cereal_compat);
         mo::ILoadVisitor& visitor = bar;
 
         std::shared_ptr<T> tmp;
@@ -446,13 +446,20 @@ TYPED_TEST_P(SerializationBinary, CerealSaveRuntimeLoad)
     this->loadBinaryRuntime("cereal_test.bin");
 }
 
+TYPED_TEST_P(SerializationBinary, RuntimeSaveRuntimeLoadNonCerealCompat)
+{
+    this->saveBinaryRuntime("runtime_test.bin", false);
+    this->loadBinaryRuntime("runtime_test.bin", false);
+}
+
 REGISTER_TYPED_TEST_SUITE_P(SerializationBinary,
                             CerealSave,
                             RuntimeSave,
                             CerealSaveCerealLoad,
                             RuntimeSaveRuntimeLoad,
                             RuntimeSaveCerealLoad,
-                            CerealSaveRuntimeLoad);
+                            CerealSaveRuntimeLoad,
+                            RuntimeSaveRuntimeLoadNonCerealCompat);
 
 INSTANTIATE_TYPED_TEST_SUITE_P(serialization_binary, SerializationBinary, RuntimeReflectionTypeTest);
 
@@ -580,14 +587,14 @@ struct TestData<RawPointerTestStruct>
 };
 
 template <class T>
-void testBinarySpeed(size_t count)
+void testBinarySpeed(size_t count, bool cereal_compat = true)
 {
     std::vector<T> vec(count);
     std::cout << "------ " << mo::TypeInfo::create<T>().name() << " ------ " << std::endl;
     {
         mo::Time start = mo::Time::now();
         std::ofstream ofs("test.bin", std::ios::binary | std::ios::out);
-        mo::BinarySaver bar(ofs);
+        mo::BinarySaver bar(ofs, cereal_compat);
         mo::ISaveVisitor& visitor = bar;
         visitor(&vec);
         mo::Time end = mo::Time::now();
@@ -599,7 +606,7 @@ void testBinarySpeed(size_t count)
     {
         mo::Time start = mo::Time::now();
         std::ifstream ifs("test.bin", std::ios::binary | std::ios::in);
-        mo::BinaryLoader bar(ifs);
+        mo::BinaryLoader bar(ifs, cereal_compat);
         mo::ILoadVisitor& visitor = bar;
         std::vector<T> readin;
         visitor(&readin);
