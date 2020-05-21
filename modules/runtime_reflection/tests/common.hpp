@@ -383,10 +383,11 @@ struct TestData<std::vector<std::shared_ptr<Vec>>>
     }
 };
 #ifdef HAVE_OPENCV
+#include <opencv2/core/types.hpp>
 TEST_DATA(cv::Rect2f, {0.1f, 0.2f, 0.3f, 0.4f});
 TEST_DATA(cv::Rect, {0, 2, 4, 5});
 TEST_DATA(cv::Point2f, {0, 1});
-TEST_DATA(cv::Matx33f, {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f})
+TEST_DATA(cv::Matx33f, {0.0f, 1.0f, 2.0f, 3.0f, 4.0f, 5.0f, 6.0f, 7.0f, 8.0f});
 TEST_DATA(cv::Matx22f, {0.0f, 1.0f, 2.0f, 3.0f});
 TEST_DATA(cv::Matx44f,
           {0.0F, 1.0F, 2.0F, 3.0F, 4.0F, 5.0F, 6.0F, 7.0F, 8.0F, 9.0F, 10.0F, 11.0F, 12.0F, 13.0F, 14.0F, 15.0F});
