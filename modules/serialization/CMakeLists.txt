@@ -12,12 +12,14 @@ if(BUILD_TESTS)
         PRIVATE
             "${CMAKE_CURRENT_LIST_DIR}/../runtime_reflection/tests"
     )
-
-    if(OpenCV_FOUND)
-        target_compile_definitions(test_mo_serialization
-            PRIVATE MO_HAVE_OPENCV
-        )
-        target_link_libraries(test_mo_serialization ${OpenCV_LIBRARIES})
+    if(WITH_OPENCV)
+        find_package(OpenCV QUIET)
+        if(OpenCV_FOUND)
+            target_compile_definitions(test_mo_serialization
+                PRIVATE MO_HAVE_OPENCV
+            )
+            target_link_libraries(test_mo_serialization ${OpenCV_LIBRARIES})
+        endif()
     endif()
     target_link_libraries(test_mo_serialization metaobject_serialization gtest gtest_main)
     set_target_properties(test_mo_serialization PROPERTIES FOLDER Tests/MetaObject/serialization)

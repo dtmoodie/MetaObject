@@ -12,7 +12,7 @@
 #include "gtest/gtest.h"
 
 using namespace mo;
-#ifdef HAVE_OPENCV
+#ifdef MO_HAVE_OPENCV
 #include <MetaObject/core/detail/allocator_policies/opencv.hpp>
 
 TEST(allocation, cpu_pooled)
