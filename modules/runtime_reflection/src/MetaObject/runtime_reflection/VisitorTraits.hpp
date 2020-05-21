@@ -53,7 +53,8 @@ namespace mo
         auto accessor = ct::Reflect<T>::getPtr(idx);
         using RefType = typename ct::ReferenceType<typename ct::GetType<decltype(accessor)>::type>::ConstType;
         RefType ref = static_cast<RefType>(accessor.get(obj));
-        visitor(&ref, ct::getName<I, T>());
+        auto name = ct::getName<I, T>();
+        visitor(&ref, name);
     }
 
     template <class T, index_t I>
@@ -70,7 +71,8 @@ namespace mo
     template <class T, index_t I>
     void visitHelper(ISaveVisitor& visitor, const T& obj, const Indexer<I> idx)
     {
-        visitHelper(visitor, obj, --idx);
+        auto next_index = --idx;
+        visitHelper(visitor, obj, next_index);
         visitValue(visitor, obj, idx);
     }
 
@@ -121,18 +123,21 @@ namespace mo
         void load(ILoadVisitor& visitor, void* instance, const std::string&, size_t) const override
         {
             auto ptr = static_cast<T*>(instance);
-            visitHelper(visitor, *ptr, ct::Reflect<T>::end());
+            const auto idx = ct::Reflect<T>::end();
+            visitHelper(visitor, *ptr, idx);
         }
 
         void save(ISaveVisitor& visitor, const void* instance, const std::string&, size_t) const override
         {
             auto ptr = static_cast<const T*>(instance);
-            visitHelper(visitor, *ptr, ct::Reflect<T>::end());
+            const auto idx = ct::Reflect<T>::end();
+            visitHelper(visitor, *ptr, idx);
         }
 
         void visit(StaticVisitor& visitor, const std::string&) const override
         {
-            visitHelper<T>(visitor, ct::Reflect<T>::end());
+            const auto idx = ct::Reflect<T>::end();
+            visitHelper<T>(visitor, idx);
         }
 
         std::string name() const override

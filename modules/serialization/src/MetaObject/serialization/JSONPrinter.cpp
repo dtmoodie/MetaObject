@@ -138,7 +138,8 @@ namespace mo
         for (size_t i = 0; i < cnt; ++i)
         {
             m_ar.startNode();
-            SaveCache::operator()(val, ct::ptrCast<const void>(ptr), name, 1);
+            auto tptr = ct::ptrCast<const void>(ptr);
+            SaveCache::operator()(val, tptr, name, 1);
             ptr += val->size();
             m_ar.finishNode();
         }
