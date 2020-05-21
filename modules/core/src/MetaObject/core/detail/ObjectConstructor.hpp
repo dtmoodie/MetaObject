@@ -10,9 +10,14 @@ namespace mo
         using SharedPtr_t = std::shared_ptr<T>;
         using UniquePtr_t = std::unique_ptr<T>;
 
-        SharedPtr_t createShared() const
+        SharedPtr_t makeShared() const
         {
             return SharedPtr_t(create());
+        }
+
+        SharedPtr_t createShared() const
+        {
+            return makeShared();
         }
 
         UniquePtr_t createUnique() const
@@ -25,6 +30,6 @@ namespace mo
             return new T();
         }
     };
-}
+} // namespace mo
 
 #endif // MO_CORE_OBJECT_CONSTRUCTOR_HPP
