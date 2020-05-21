@@ -2,9 +2,9 @@
 #include "../DynamicVisitor.hpp"
 #include "../StructTraits.hpp"
 
+#include <MetaObject/core/detail/ObjectConstructor.hpp>
 #include <MetaObject/logging/logging.hpp>
 
-//#include <ce/shared_ptr.hpp>
 #include <memory>
 
 namespace mo
@@ -39,6 +39,7 @@ namespace mo
         }
         std::shared_ptr<T> ptr;
     };
+
     template <class T>
     bool isWrapper(const T&)
     {
@@ -49,6 +50,21 @@ namespace mo
     {
         return true;
     }
+
+    template <class T>
+    struct PolymorphicSerializationHelper
+    {
+        template <class Ptr_t>
+        static void load(ILoadVisitor&, Ptr_t& ptr)
+        {
+            ObjectConstructor<T> ctr;
+            ptr = ctr.makeShared();
+        }
+        template <class Ptr_t>
+        static void save(ISaveVisitor&, const Ptr_t&)
+        {
+        }
+    };
 
     template <class Ptr_t>
     void loadPointer(ILoadVisitor& visitor, Ptr_t& val)
@@ -73,7 +89,8 @@ namespace mo
                 auto ptr = visitor.getPointer<T>(id);
                 if (!ptr)
                 {
-                    val = std::make_shared<T>();
+                    PolymorphicSerializationHelper<T>::load(visitor, val);
+                    // val = std::make_shared<T>();
                     visitor(val.get(), "data");
                     visitor.setSerializedPointer(val.get(), id);
                     std::shared_ptr<T> cache_ptr = val;
@@ -107,11 +124,11 @@ namespace mo
         else
         {
             uint32_t id = visitor.getPointerId(TypeInfo::create<typename std::remove_const<T>::type>(), val.get());
-
             auto ptr = visitor.getPointer<typename std::remove_const<T>::type>(id);
             visitor(&id, "id");
             if (val && ptr == nullptr)
             {
+                PolymorphicSerializationHelper<T>::save(visitor, val);
                 visitor(val.get(), "data");
                 visitor.setSerializedPointer(val.get(), id);
             }
