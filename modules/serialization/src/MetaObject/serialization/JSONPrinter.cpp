@@ -18,7 +18,7 @@ namespace mo
         }
         if (cnt > 1)
         {
-            m_ar.startNode();
+            // m_ar.startNode();
             m_ar.makeArray();
             for (size_t i = 0; i < cnt; ++i)
             {
@@ -227,7 +227,7 @@ namespace mo
         auto node_name = m_ar.getNodeName();
         if (cnt > 1)
         {
-            m_ar.startNode();
+            // m_ar.startNode();
             cereal::size_type size;
             m_ar.loadSize(size);
             MO_ASSERT_EQ(size, cnt);
@@ -352,8 +352,8 @@ namespace mo
         {
             auto name_ptr = m_ar.getNodeName();
             m_ar.startNode();
-
-            LoadCache::operator()(val, ct::ptrCast<void>(ptr), name, 1);
+            auto tptr = ct::ptrCast<void>(ptr);
+            LoadCache::operator()(val, tptr, name, 1);
             if (name_ptr)
             {
                 m_last_read_name = name_ptr;
@@ -377,13 +377,15 @@ namespace mo
             *static_cast<std::string*>(inst) = val;
             return *this;
         }
-        if (!name.empty())
-        {
-            m_ar.setNextName(name.c_str());
-        }
+        const bool already_in_node = container_name != node_name;
         const bool loading_string = val->type() == TypeInfo::create<std::string>();
         const bool loading_binary = val->valueType() == TypeInfo::Void();
         const bool loading_string_dict = val->keyType() == TypeInfo::create<std::string>();
+
+        if (!name.empty() && already_in_node)
+        {
+            m_ar.setNextName(name.c_str());
+        }
 
         if (!loading_string)
         {
