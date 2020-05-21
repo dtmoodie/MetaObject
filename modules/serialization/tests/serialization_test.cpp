@@ -86,51 +86,6 @@ struct Serialization : ::testing::Test
             << "Failed to use runtime reflection for binary serialization";
     }
 
-    /*void testBinary()
-    {
-        auto data = TestData<T>::init();
-        {
-            std::ofstream ofs("test.bin", std::ios::binary | std::ios::out);
-            std::ofstream ofs2("test_cereal.bin", std::ios::binary | std::ios::out);
-            cereal::BinaryOutputArchive bar2(ofs2);
-            mo::BinarySaver bar(ofs);
-            mo::ISaveVisitor& visitor = bar;
-            T tmp = data;
-            visitor(&tmp, "value0");
-            bar2(tmp);
-        }
-        {
-            std::ifstream ifs("test.bin", std::ios::binary | std::ios::in);
-            mo::BinaryLoader bar(ifs);
-            mo::ILoadVisitor& visitor = bar;
-
-            T tmp;
-            visitor(&tmp, "value0");
-            EXPECT_PRED_FORMAT2(TestData<T>::Compare, data, tmp)
-                << "Failed to use runtime reflection for binary serialization";
-        }
-
-        {
-            std::ifstream ifs("test_cereal.bin", std::ios::binary | std::ios::in);
-            mo::BinaryLoader bar(ifs);
-            mo::ILoadVisitor& visitor = bar;
-
-            T tmp;
-            visitor(&tmp, "value0");
-            EXPECT_PRED_FORMAT2(TestData<T>::Compare, data, tmp) << "Failed to use cereal for binary serialization";
-        }
-
-        {
-            std::ifstream ifs("test.bin", std::ios::binary | std::ios::in);
-            cereal::BinaryInputArchive bar(ifs);
-
-            T tmp;
-            bar(tmp);
-            EXPECT_PRED_FORMAT2(TestData<T>::Compare, data, tmp)
-                << "Failed to use cereal to deserialize a binary blob from runtime reflection serialization";
-        }
-    }*/
-
     void testJsonCerealSaveCerealLoad()
     {
         T data = TestData<T>::init();
@@ -328,39 +283,6 @@ struct Serialization<std::shared_ptr<T>> : ::testing::Test
         EXPECT_PRED_FORMAT2(TestData<std::shared_ptr<T>>::Compare, *data, *tmp)
             << "Failed to use runtime reflection to deserialize a binary blob.\n"
             << ifs.rdbuf();
-    }
-
-    void testBinary()
-    {
-        std::shared_ptr<T> data = TestData<std::shared_ptr<T>>::init();
-        {
-            std::ofstream ofs("test.bin", std::ios::binary | std::ios::out);
-            mo::BinarySaver bar(ofs);
-            mo::ISaveVisitor& visitor = bar;
-            std::shared_ptr<T> tmp = data;
-            visitor(&tmp, "value0");
-            visitor(&tmp, "value1");
-        }
-        {
-            std::ifstream ifs("test.bin", std::ios::binary | std::ios::in);
-            mo::BinaryLoader bar(ifs);
-            mo::ILoadVisitor& visitor = bar;
-
-            std::shared_ptr<T> tmp;
-            std::shared_ptr<T> tmp2;
-            visitor(&tmp, "value0");
-            visitor(&tmp2, "value1");
-            if (!ct::compare(*tmp, *data, DebugEqual()))
-            {
-                std::cout << "Failed to serialize " << ct::Reflect<T>::getTypeName() << " correctly";
-                throw std::runtime_error("Serialization failed");
-            }
-            if (tmp.get() != tmp2.get())
-            {
-                std::cout << "Failed to reshare ownership of two smart pointers" << std::endl;
-                throw std::runtime_error("Serialization failed");
-            }
-        }
     }
 
     void testJsonCerealSaveCerealLoad()
@@ -656,12 +578,6 @@ struct TestData<RawPointerTestStruct>
         return testing::AssertionSuccess();
     }
 };
-
-/*TEST(serialization, rawPointerUpdate)
-{
-    Serialization<RawPointerTestStruct>::saveBinaryRuntime("test.bin");
-    Serialization<RawPointerTestStruct>::loadBinaryRuntime("test.bin");
-}*/
 
 template <class T>
 void testBinarySpeed(size_t count)
