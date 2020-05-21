@@ -180,7 +180,7 @@ struct Serialization : ::testing::Test
             success = false;
         }
         EXPECT_TRUE(success) << "Unable to use runtime reflection to load from a json created with cereal due to "
-                             << error << "\n"
+                             << error << "\nCereal generated json:\n"
                              << stat.str();
     }
 
