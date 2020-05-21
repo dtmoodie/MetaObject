@@ -10,6 +10,7 @@ if(BUILD_TESTS)
     target_link_libraries(test_mo_runtime_reflection metaobject_runtime_reflection gtest gtest_main)
     set_target_properties(test_mo_runtime_reflection PROPERTIES FOLDER Tests/MetaObject/runtime_reflection)
 
+    find_package(OpenCV QUIET)
     if(OpenCV_FOUND)
         target_compile_definitions(test_mo_runtime_reflection
             PRIVATE MO_HAVE_OPENCV
