@@ -12,8 +12,43 @@ namespace mo
     template <class T>
     struct PointerWrapper
     {
+        using element_type = T;
+        PointerWrapper& operator=(const std::shared_ptr<T>& v)
+        {
+            ptr = v;
+            return *this;
+        }
+        T* get()
+        {
+            return ptr.get();
+        }
+
+        const T* get() const
+        {
+            return ptr.get();
+        }
+
+        operator bool() const
+        {
+            return ptr.operator bool();
+        }
+
+        operator std::shared_ptr<T>() const
+        {
+            return ptr;
+        }
         std::shared_ptr<T> ptr;
     };
+    template <class T>
+    bool isWrapper(const T&)
+    {
+        return false;
+    }
+    template <class T>
+    bool isWrapper(const PointerWrapper<T>&)
+    {
+        return true;
+    }
 
     template <class Ptr_t>
     void loadPointer(ILoadVisitor& visitor, Ptr_t& val)
@@ -22,7 +57,7 @@ namespace mo
 
         const auto traits = visitor.traits();
         // This is effectively just checking if we are serializing to a cereal json archive or a binary archive
-        if (traits.supports_named_access)
+        if (traits.supports_named_access && !isWrapper(val))
         {
             PointerWrapper<T> pointer_wrapper;
             visitor(&pointer_wrapper, "ptr_wrapper");
@@ -64,7 +99,7 @@ namespace mo
         using T = typename Ptr_t::element_type;
 
         const auto traits = visitor.traits();
-        if (traits.supports_named_access)
+        if (traits.supports_named_access && !isWrapper(val))
         {
             PointerWrapper<T> wrapper{val};
             visitor(&wrapper, "ptr_wrapper");
@@ -85,11 +120,13 @@ namespace mo
     template <class T>
     struct SharedPointerHelper
     {
-        static void load(ILoadVisitor& visitor, std::shared_ptr<T>& val)
+        template <class Ptr_t>
+        static void load(ILoadVisitor& visitor, Ptr_t& val)
         {
             loadPointer(visitor, val);
         }
-        static void save(ISaveVisitor& visitor, const std::shared_ptr<T>& val)
+        template <class Ptr_t>
+        static void save(ISaveVisitor& visitor, const Ptr_t& val)
         {
             savePointer(visitor, val);
         }
@@ -98,90 +135,32 @@ namespace mo
     template <class T>
     struct SharedPointerHelper<const T>
     {
-        static void load(ILoadVisitor& visitor, std::shared_ptr<T>& val)
+        template <class Ptr_t>
+        static void load(ILoadVisitor& visitor, Ptr_t& val)
         {
         }
-        static void save(ISaveVisitor& visitor, const std::shared_ptr<T>& val)
+        template <class Ptr_t>
+        static void save(ISaveVisitor& visitor, const Ptr_t& val)
         {
             savePointer(visitor, val);
         }
     };
-
-    template <class T>
-    void loadPointer(ILoadVisitor& visitor, PointerWrapper<T>* val)
-    {
-        uint32_t id = 0;
-        visitor(&id, "id");
-        id = id & (~0x80000000);
-        if (id != 0)
-        {
-            auto ptr = visitor.getPointer<T>(id);
-            if (!ptr)
-            {
-                val->ptr = std::make_shared<T>();
-                visitor(val->ptr.get(), "data");
-                visitor.setSerializedPointer(val->ptr.get(), id);
-                std::shared_ptr<T> cache_ptr = val->ptr;
-                visitor.pushCach(std::move(cache_ptr), std::string("shared_ptr ") + typeid(T).name(), id);
-            }
-            else
-            {
-                auto cache_ptr =
-                    visitor.popCache<std::shared_ptr<T>>(std::string("shared_ptr ") + typeid(T).name(), id);
-                if (cache_ptr)
-                {
-                    val->ptr = cache_ptr;
-                }
-            }
-        }
-    }
-
-    template <class T>
-    void savePointer(ISaveVisitor& visitor, const PointerWrapper<T>* val)
-    {
-        uint32_t id = visitor.getPointerId(TypeInfo::create<std::shared_ptr<T>>(), ct::ptrCast<void>(val));
-        auto ptr = visitor.getPointer<T>(id);
-        visitor(&id, "id");
-        if (val->ptr && ptr == nullptr)
-        {
-            visitor(val->ptr.get(), "data");
-        }
-    }
 
     template <class T>
     struct TTraits<PointerWrapper<T>, 4> : virtual StructBase<PointerWrapper<T>>
     {
-        void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t) const override
+        void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t cnt) const override
         {
-            loadPointer(visitor, this->ptr(inst));
+            MO_ASSERT_EQ(cnt, 1);
+            auto& ref = this->ref(inst);
+            SharedPointerHelper<T>::load(visitor, ref);
         }
 
         void save(ISaveVisitor& visitor, const void* inst, const std::string&, size_t cnt) const override
         {
             MO_ASSERT_EQ(cnt, 1);
-            auto val = this->ptr(inst);
-            savePointer(visitor, val);
-        }
-
-        void visit(StaticVisitor& visitor, const std::string&) const override
-        {
-            visitor.template visit<size_t>("id");
-            visitor.template visit<T>("ptr");
-        }
-    };
-
-    template <class T>
-    struct TTraits<PointerWrapper<const T>, 4> : virtual StructBase<PointerWrapper<T>>
-    {
-        void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t) const override
-        {
-        }
-
-        void save(ISaveVisitor& visitor, const void* inst, const std::string&, size_t cnt) const override
-        {
-            MO_ASSERT_EQ(cnt, 1);
-            auto val = this->ptr(inst);
-            savePointer(visitor, val);
+            auto& ref = this->ref(inst);
+            SharedPointerHelper<T>::save(visitor, ref);
         }
 
         void visit(StaticVisitor& visitor, const std::string&) const override
