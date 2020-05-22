@@ -184,6 +184,58 @@ namespace mo
         }
     };
 
+    template <class T, class E = void>
+    struct HasMemberLoad : std::false_type
+    {
+    };
+    template <class T>
+    struct HasMemberLoad<
+        T,
+        ct::Valid<decltype(std::declval<T>().load(std::declval<ILoadVisitor>(), std::declval<std::string>()))>>
+        : std::true_type
+    {
+    };
+
+    template <class T, class E = void>
+    struct HasMemberSave : std::false_type
+    {
+    };
+
+    template <class T>
+    struct HasMemberSave<
+        T,
+        ct::Valid<decltype(std::declval<const T>().save(std::declval<ISaveVisitor>(), std::declval<std::string>()))>>
+        : std::true_type
+    {
+    };
+
+    template <class T>
+    struct TTraits<T, 7, ct::EnableIf<HasMemberLoad<T>::value && HasMemberSave<T>::value>> : StructBase<T>
+    {
+        void load(ILoadVisitor& visitor, void* instance, const std::string&, size_t) const override
+        {
+            auto ref = this->ref(instance);
+            ref.load(visitor);
+        }
+
+        void save(ISaveVisitor& visitor, const void* instance, const std::string&, size_t) const override
+        {
+            auto ref = this->ref(instance);
+            ref.save(visitor);
+        }
+
+        void visit(StaticVisitor& visitor, const std::string&) const override
+        {
+            const auto idx = ct::Reflect<T>::end();
+            visitHelper<T>(visitor, idx);
+        }
+
+        std::string name() const override
+        {
+            return ct::Reflect<T>::getTypeName();
+        }
+    };
+
 } // namespace mo
 
 #endif // MO_VISITATION_VISITORTRAITS_HPP
