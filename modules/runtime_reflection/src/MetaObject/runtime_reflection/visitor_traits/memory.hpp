@@ -28,6 +28,16 @@ namespace mo
             return ptr.get();
         }
 
+        T* operator->()
+        {
+            return ptr.get();
+        }
+
+        const T* operator->() const
+        {
+            return ptr.get();
+        }
+
         operator bool() const
         {
             return ptr.operator bool();
@@ -38,6 +48,47 @@ namespace mo
             return ptr;
         }
         std::shared_ptr<T> ptr;
+    };
+
+    template <class T>
+    struct PointerWrapper<const T>
+    {
+        PointerWrapper(const PointerWrapper<T>& other)
+            : ptr(other.ptr)
+        {
+        }
+
+        PointerWrapper(const std::shared_ptr<const T>& ptr)
+            : ptr(ptr)
+        {
+        }
+        using element_type = T;
+        PointerWrapper& operator=(const std::shared_ptr<const T>& v)
+        {
+            ptr = v;
+            return *this;
+        }
+
+        const T* get() const
+        {
+            return ptr.get();
+        }
+
+        const T* operator->() const
+        {
+            return ptr.get();
+        }
+
+        operator bool() const
+        {
+            return ptr.operator bool();
+        }
+
+        operator std::shared_ptr<const T>() const
+        {
+            return ptr;
+        }
+        std::shared_ptr<const T> ptr;
     };
 
     template <class T>
@@ -118,7 +169,7 @@ namespace mo
         const auto traits = visitor.traits();
         if (traits.supports_named_access && !isWrapper(val))
         {
-            PointerWrapper<T> wrapper{val};
+            PointerWrapper<const T> wrapper{val};
             visitor(&wrapper, "ptr_wrapper");
         }
         else
