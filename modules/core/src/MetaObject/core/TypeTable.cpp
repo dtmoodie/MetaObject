@@ -14,7 +14,7 @@ namespace mo
 
     class TypeTableImpl : public TypeTable
     {
-        std::string typeToName(const TypeInfo& type) const override;
+        std::string typeToName(const TypeInfo& type) override;
         const TypeInfo nameToType(const std::string& name) const override;
 
         void registerType(const TypeInfo& info, const char* name) override;
@@ -22,6 +22,7 @@ namespace mo
         std::vector<TypeInfo> listKnownTypes() const override;
 
       private:
+        std::mutex m_mtx;
         std::unordered_map<TypeInfo, std::string> m_types;
     };
 
@@ -37,11 +38,12 @@ namespace mo
         return inst;
     }
 
-    std::string TypeTableImpl::typeToName(const TypeInfo& type) const
+    std::string TypeTableImpl::typeToName(const TypeInfo& type)
     {
         auto itr = m_types.find(type);
         if (itr == m_types.end())
         {
+            m_types[type] = type.name();
             return type.name();
         }
         return itr->second;
@@ -74,4 +76,4 @@ namespace mo
         }
         return types;
     }
-}
+} // namespace mo

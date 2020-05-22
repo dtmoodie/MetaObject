@@ -15,7 +15,7 @@ namespace mo
         static std::shared_ptr<TypeTable> instance(SystemTable* table);
 
         virtual ~TypeTable();
-        virtual std::string typeToName(const TypeInfo& type) const = 0;
+        virtual std::string typeToName(const TypeInfo& type) = 0;
         virtual const TypeInfo nameToType(const std::string& name) const = 0;
         virtual void registerType(const TypeInfo& info, const char* name) = 0;
         virtual std::vector<TypeInfo> listKnownTypes() const = 0;
