@@ -184,44 +184,22 @@ namespace mo
         }
     };
 
-    template <class T, class E = void>
-    struct HasMemberLoad : std::false_type
-    {
-    };
-    template <class T>
-    struct HasMemberLoad<
-        T,
-        ct::Valid<decltype(std::declval<T>().load(std::declval<ILoadVisitor>(), std::declval<std::string>()))>>
-        : std::true_type
-    {
-    };
-
-    template <class T, class E = void>
-    struct HasMemberSave : std::false_type
-    {
-    };
-
-    template <class T>
-    struct HasMemberSave<
-        T,
-        ct::Valid<decltype(std::declval<const T>().save(std::declval<ISaveVisitor>(), std::declval<std::string>()))>>
-        : std::true_type
-    {
-    };
+    DEFINE_HAS_MEMBER_FUNCTION(HasMemberLoad, load, void, ILoadVisitor&, const std::string&);
+    DEFINE_HAS_MEMBER_FUNCTION(HasMemberSave, save, void, ISaveVisitor&, const std::string&);
 
     template <class T>
     struct TTraits<T, 7, ct::EnableIf<HasMemberLoad<T>::value && HasMemberSave<T>::value>> : StructBase<T>
     {
-        void load(ILoadVisitor& visitor, void* instance, const std::string&, size_t) const override
+        void load(ILoadVisitor& visitor, void* instance, const std::string& name, size_t) const override
         {
-            auto ref = this->ref(instance);
-            ref.load(visitor);
+            auto& ref = this->ref(instance);
+            ref.load(visitor, name);
         }
 
-        void save(ISaveVisitor& visitor, const void* instance, const std::string&, size_t) const override
+        void save(ISaveVisitor& visitor, const void* instance, const std::string& name, size_t) const override
         {
-            auto ref = this->ref(instance);
-            ref.save(visitor);
+            const auto& ref = this->ref(instance);
+            ref.save(visitor, name);
         }
 
         void visit(StaticVisitor& visitor, const std::string&) const override
