@@ -19,12 +19,12 @@ namespace mo
         if (cnt > 1)
         {
             // m_ar.startNode();
-            m_ar.makeArray();
+            // m_ar.makeArray();
             for (size_t i = 0; i < cnt; ++i)
             {
                 m_ar(ptr[i]);
             }
-            m_ar.finishNode();
+            // m_ar.finishNode();
         }
         else
         {
@@ -220,31 +220,43 @@ namespace mo
     template <class T>
     ILoadVisitor& JSONLoader::readPod(T* ptr, const std::string& name, const size_t cnt)
     {
-        if (!name.empty())
+        try
         {
-            m_ar.setNextName(name.c_str());
-        }
-        auto node_name = m_ar.getNodeName();
-        if (cnt > 1)
-        {
-            // m_ar.startNode();
-            cereal::size_type size;
-            m_ar.loadSize(size);
-            MO_ASSERT_EQ(size, cnt);
-        }
-        for (size_t i = 0; i < cnt; ++i)
-        {
-            node_name = m_ar.getNodeName();
-            m_ar(ptr[i]);
-            if (node_name)
+            if (!name.empty())
             {
-                m_last_read_name = name;
+                m_ar.setNextName(name.c_str());
+            }
+            auto node_name = m_ar.getNodeName();
+            if (cnt > 1)
+            {
+                // m_ar.startNode();
+                cereal::size_type size;
+                m_ar.loadSize(size);
+                MO_ASSERT_EQ(size, cnt);
+            }
+            for (size_t i = 0; i < cnt; ++i)
+            {
+                node_name = m_ar.getNodeName();
+                m_ar(ptr[i]);
+                if (node_name)
+                {
+                    m_last_read_name = name;
+                }
+            }
+            if (cnt > 1)
+            {
+                // m_ar.finishNode();
             }
         }
-        if (cnt > 1)
+        catch (cereal::Exception& e)
         {
-            m_ar.finishNode();
+            MO_LOG(info,
+                   "Failure to deserialize {} from json due to {}\n{}",
+                   name,
+                   e.what(),
+                   boost::stacktrace::stacktrace());
         }
+
         return *this;
     }
 
