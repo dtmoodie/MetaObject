@@ -15,12 +15,16 @@ namespace mo
     {
         void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t) const override
         {
-            visitor(this->ptr(inst)->data(), "data", N);
+            auto& ref = this->ref(inst);
+            auto data = ref.data();
+            visitor(data, "", N);
         }
 
-        void save(ISaveVisitor& visitor, const void* val, const std::string&, size_t) const override
+        void save(ISaveVisitor& visitor, const void* inst, const std::string&, size_t) const override
         {
-            visitor(this->ptr(val)->data(), "data", N);
+            const auto& ref = this->ref(inst);
+            auto data = ref.data();
+            visitor(data, "", N);
         }
 
         void visit(StaticVisitor& visitor, const std::string&) const override
@@ -127,12 +131,12 @@ namespace mo
             THROW(warn, "Unable to load to a const array view");
         }
 
-        void save(ISaveVisitor& visitor, const void* val, const std::string&, size_t) const override
+        void save(ISaveVisitor& visitor, const void* val, const std::string& name, size_t) const override
         {
             auto obj = this->ptr(val);
             auto sz = obj->size();
             auto ptr = obj->data();
-            visitor(ptr, "", sz);
+            visitor(ptr, name, sz);
         }
 
         void visit(StaticVisitor& visitor, const std::string&) const override
