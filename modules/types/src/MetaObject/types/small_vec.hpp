@@ -1,6 +1,11 @@
 #pragma once
 #include "MetaObject/types.hpp"
 #include "small_vec_storage.hpp"
+
+#include <ct/reflect.hpp>
+#include <ct/reflect_macros.hpp>
+#include <ct/types/TArrayView.hpp>
+
 #include <vector>
 
 namespace mo
@@ -8,11 +13,19 @@ namespace mo
     template <class T, int N>
     struct MO_EXPORTS SmallVec
     {
-        SmallVec() {}
+        SmallVec()
+        {
+        }
 
-        SmallVec(const T& obj) { assign(&obj, &obj + 1); }
+        SmallVec(const T& obj)
+        {
+            assign(&obj, &obj + 1);
+        }
 
-        SmallVec(const SmallVec& other) { assign(other.begin(), other.end()); }
+        SmallVec(const SmallVec& other)
+        {
+            assign(other.begin(), other.end());
+        }
 
         template <int N1>
         SmallVec(const SmallVec<T, N1>& other)
@@ -37,7 +50,10 @@ namespace mo
             m_owns_data = true;
         }
 
-        SmallVec(const std::vector<T>& vec) { assign(vec.begin(), vec.end()); }
+        SmallVec(const std::vector<T>& vec)
+        {
+            assign(vec.begin(), vec.end());
+        }
 
         ~SmallVec()
         {
@@ -179,21 +195,38 @@ namespace mo
 
         void pop_back()
         {
-           --m_size;
+            --m_size;
         }
 
-        void erase(int i){
-            for(i = i + 1; i < m_size; ++i){
-                m_ptr[i-1] = m_ptr[i];
+        void erase(int i)
+        {
+            for (i = i + 1; i < m_size; ++i)
+            {
+                m_ptr[i - 1] = m_ptr[i];
             }
             m_size--;
         }
 
-        T* begin() { return m_ptr; }
-        T* end() { return m_ptr + m_size; }
-        const T* begin() const { return m_ptr; }
-        const T* end() const { return m_ptr + m_size; }
-        unsigned char size() const { return m_size; }
+        T* begin()
+        {
+            return m_ptr;
+        }
+        T* end()
+        {
+            return m_ptr + m_size;
+        }
+        const T* begin() const
+        {
+            return m_ptr;
+        }
+        const T* end() const
+        {
+            return m_ptr + m_size;
+        }
+        unsigned char size() const
+        {
+            return m_size;
+        }
         const T& operator[](int i) const
         {
             if (i >= 0)
@@ -266,4 +299,39 @@ namespace mo
         }
         return os;
     }
-}
+} // namespace mo
+
+namespace ct
+{
+    template <class T, int N>
+    struct ReflectImpl<mo::SmallVec<T, N>>
+    {
+        using DataType = mo::SmallVec<T, N>;
+        using this_t = ReflectImpl<DataType, void>;
+
+        static constexpr StringView getTypeName()
+        {
+            return GetName<DataType>::getName();
+        }
+
+        static TArrayView<const T> getData(const DataType& arr)
+        {
+            return {arr.begin(), static_cast<size_t>(arr.size())};
+        }
+
+        static TArrayView<T> getDataMutable(DataType& arr)
+        {
+            return {arr.begin(), static_cast<size_t>(arr.size())};
+        }
+
+        REFLECT_STUB
+            PROPERTY(size, &DataType::size, &DataType::resize)
+            PROPERTY(data, &this_t::getData, &this_t::getDataMutable)
+        REFLECT_INTERNAL_END;
+
+        static constexpr Indexer<NUM_FIELDS - 1> end()
+        {
+            return Indexer<NUM_FIELDS - 1>();
+        }
+    };
+} // namespace ct
