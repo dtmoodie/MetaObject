@@ -4,7 +4,7 @@
 
 #include <MetaObject/core/detail/ObjectConstructor.hpp>
 #include <MetaObject/logging/logging.hpp>
-
+#include <MetaObject/logging/logging_macros.hpp>
 #include <memory>
 
 namespace mo
@@ -284,6 +284,35 @@ namespace mo
                     *m_ptr = ptr;
                 }
             }
+        }
+
+        void save(ISaveVisitor& visitor, const void* inst, const std::string&, size_t cnt) const override
+        {
+            MO_ASSERT_EQ(cnt, 1);
+            size_t id = 0;
+            // auto visitor_trait = visitor->traits();
+            auto m_ptr = this->ptr(inst);
+            id = size_t(*m_ptr);
+            auto ptr = visitor.getPointer<T>(id);
+            visitor(&id, "id");
+            if (*m_ptr && ptr == nullptr)
+            {
+                visitor(*m_ptr, "data");
+            }
+        }
+
+        void visit(StaticVisitor& visitor, const std::string&) const override
+        {
+            visitor.template visit<T>("ptr");
+        }
+    };
+
+    template <class T>
+    struct TTraits<const T*, 3> : virtual StructBase<const T*>
+    {
+        void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t cnt) const override
+        {
+            THROW(error, "Unable to load a const ptr");
         }
 
         void save(ISaveVisitor& visitor, const void* inst, const std::string&, size_t cnt) const override
