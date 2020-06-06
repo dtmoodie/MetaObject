@@ -5,7 +5,7 @@
 namespace mo
 {
     template <class T, class A>
-    struct TTraits<std::vector<T, A>, 4, void> : virtual ContainerBase<std::vector<T, A>, T>
+    struct TTraits<std::vector<T, A>, 5, void> : virtual ContainerBase<std::vector<T, A>, T>
     {
         void load(ILoadVisitor& visitor, void* inst, const std::string& name, const size_t) const override
         {
