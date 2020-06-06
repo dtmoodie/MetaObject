@@ -5,6 +5,9 @@
 #include "MetaObject/core/detail/forward.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
 
+#include <ct/reflect.hpp>
+#include <ct/reflect_macros.hpp>
+
 #include <memory>
 
 namespace mo
@@ -42,5 +45,15 @@ namespace mo
         IAsyncStream* m_stream = nullptr;
     };
 } // namespace mo
+
+namespace ct
+{
+    REFLECT_BEGIN(mo::ISignal)
+        PROPERTY(getSignature)
+        PROPERTY(stream, &DataType::getStream, &DataType::setStream);
+        MEMBER_FUNCTION(isConnected)
+        MEMBER_FUNCTION(numSlots)
+    REFLECT_END;
+} // namespace ct
 
 #endif // MO_SIGNALS_ISIGNAL_HPP

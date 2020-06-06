@@ -435,4 +435,12 @@ namespace mo
         return slots;
     }
 } // namespace mo
+
+namespace ct
+{
+    REFLECT_TEMPLATED_DERIVED(mo::TSignal, mo::ISignal)
+
+    REFLECT_END;
+} // namespace ct
+
 #endif // MO_SIGNALS_TSIGNAL_HPP
