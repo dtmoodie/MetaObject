@@ -7,24 +7,9 @@
 
 namespace mo
 {
-    // this is a spot where specializations can be inserted into the TPublisher
-    template <class T>
-    struct MO_EXPORTS TPublisherDataPolicy : TParam<IPublisher>
-    {
-
-        using TContainerPtr_t = std::shared_ptr<TDataContainer<T>>;
-        using TContainerConstPtr_t = std::shared_ptr<const TDataContainer<T>>;
-
-      protected:
-        TContainerConstPtr_t getCurrentData() const;
-        void setCurrentData(TContainerConstPtr_t);
-
-      private:
-        TContainerConstPtr_t m_data;
-    };
 
     template <typename T>
-    struct MO_EXPORTS TPublisher : TPublisherDataPolicy<T>
+    struct MO_EXPORTS TPublisher : TParam<IPublisher>
     {
         using TContainerPtr_t = std::shared_ptr<TDataContainer<T>>;
         using TContainerConstPtr_t = std::shared_ptr<const TDataContainer<T>>;
@@ -62,7 +47,7 @@ namespace mo
         ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr_t& relay_);
 
       private:
-        // TContainerConstPtr_t m_data;
+        TContainerConstPtr_t m_data;
         uint32_t m_num_subscribers = 0;
         ParamAllocator::Ptr_t m_allocator;
 
@@ -92,7 +77,7 @@ namespace mo
     template <typename T>
     bool TPublisher<T>::providesOutput(const TypeInfo type) const
     {
-        return type.template isType<T>();
+        return type == TypeInfo::create<T>();
     }
 
     template <typename T>
@@ -106,10 +91,9 @@ namespace mo
     {
         std::vector<Header> out;
         Mutex_t::Lock_t lock(this->mtx());
-        auto data = this->getCurrentData();
-        if (data)
+        if (m_data)
         {
-            out.push_back(data->getHeader());
+            out.push_back(m_data->getHeader());
         }
         return out;
     }
@@ -117,10 +101,10 @@ namespace mo
     template <typename T>
     boost::optional<Header> TPublisher<T>::getNewestHeader() const
     {
-        auto data = this->getCurrentData();
-        if (data)
+        Mutex_t::Lock_t lock(this->mtx());
+        if (m_data)
         {
-            return data->getHeader();
+            return m_data->getHeader();
         }
         return {};
     }
@@ -132,19 +116,19 @@ namespace mo
         IDataContainerConstPtr_t out;
         if (desired)
         {
-            auto data = TPublisherDataPolicy<T>::getCurrentData();
-            if (data)
+            Mutex_t::Lock_t lock(this->mtx());
+            if (m_data)
             {
-                if (data->getHeader() == *desired)
+                if (m_data->getHeader() == *desired)
                 {
-                    out = data;
+                    out = m_data;
                 }
             }
         }
         else
         {
-            auto data = TPublisherDataPolicy<T>::getCurrentData();
-            out = data;
+            Mutex_t::Lock_t lock(this->mtx());
+            out = m_data;
         }
         return out;
     }
@@ -160,11 +144,11 @@ namespace mo
         {
             stream = &IAsyncStream::currentRef();
         }
-        TPublisherDataPolicy<T>::setCurrentData(data);
+        m_data = data;
         MO_ASSERT_LOGGER(getLogger(), stream != nullptr);
         // TODO finish
         m_update_signal(data, *this, ct::value(UpdateFlags::kVALUE_UPDATED), *stream);
-        this->emitUpdate(data->header, ct::value(UpdateFlags::kVALUE_UPDATED), *stream);
+        emitUpdate(data->header, ct::value(UpdateFlags::kVALUE_UPDATED), *stream);
     }
 
     template <typename T>
@@ -223,20 +207,6 @@ namespace mo
         }
         out->header = std::move(header);
         publish(TContainerConstPtr_t(std::move(out)), stream);
-    }
-
-    template <class T>
-    auto TPublisherDataPolicy<T>::getCurrentData() const -> TContainerConstPtr_t
-    {
-        Mutex_t::Lock_t lock(this->mtx());
-        return this->m_data;
-    }
-
-    template <class T>
-    void TPublisherDataPolicy<T>::setCurrentData(TContainerConstPtr_t data)
-    {
-        Mutex_t::Lock_t lock(this->mtx());
-        this->m_data = std::move(data);
     }
 
     template <typename T>
