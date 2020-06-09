@@ -9,12 +9,12 @@ namespace mo
 {
 
     template <typename T>
-    struct MO_EXPORTS TPublisher : TParam<IPublisher>
+    struct MO_EXPORTS TPublisherImpl : TParam<IPublisher>
     {
         using TContainerPtr_t = std::shared_ptr<TDataContainer<T>>;
         using TContainerConstPtr_t = std::shared_ptr<const TDataContainer<T>>;
 
-        TPublisher();
+        TPublisherImpl();
 
         bool providesOutput(TypeInfo type) const override;
         std::vector<TypeInfo> getOutputTypes() const override;
@@ -46,6 +46,10 @@ namespace mo
 
         ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr_t& relay_);
 
+      protected:
+        TContainerConstPtr_t getCurrentData() const;
+        void setCurrentData(const TContainerConstPtr_t);
+
       private:
         TContainerConstPtr_t m_data;
         uint32_t m_num_subscribers = 0;
@@ -53,6 +57,11 @@ namespace mo
 
         TSignal<DataUpdate_s> m_update_signal;
         FrameNumber m_update_counter = 0;
+    };
+
+    template <class T>
+    struct TPublisher : TPublisherImpl<T>
+    {
     };
 
     template <class T, uint64_t FLAG = ParamFlags::kOUTPUT>
@@ -68,26 +77,26 @@ namespace mo
     ////////////////////////////////////////////////
 
     template <typename T>
-    TPublisher<T>::TPublisher()
+    TPublisherImpl<T>::TPublisherImpl()
     {
         this->setFlags(ParamFlags(ParamFlags::kOUTPUT));
         setAllocator(Allocator::getDefault());
     }
 
     template <typename T>
-    bool TPublisher<T>::providesOutput(const TypeInfo type) const
+    bool TPublisherImpl<T>::providesOutput(const TypeInfo type) const
     {
         return type == TypeInfo::create<T>();
     }
 
     template <typename T>
-    std::vector<TypeInfo> TPublisher<T>::getOutputTypes() const
+    std::vector<TypeInfo> TPublisherImpl<T>::getOutputTypes() const
     {
         return {TypeInfo::create<T>()};
     }
 
     template <typename T>
-    std::vector<Header> TPublisher<T>::getAvailableHeaders() const
+    std::vector<Header> TPublisherImpl<T>::getAvailableHeaders() const
     {
         std::vector<Header> out;
         Mutex_t::Lock_t lock(this->mtx());
@@ -99,7 +108,7 @@ namespace mo
     }
 
     template <typename T>
-    boost::optional<Header> TPublisher<T>::getNewestHeader() const
+    boost::optional<Header> TPublisherImpl<T>::getNewestHeader() const
     {
         Mutex_t::Lock_t lock(this->mtx());
         if (m_data)
@@ -110,7 +119,7 @@ namespace mo
     }
 
     template <typename T>
-    IDataContainerConstPtr_t TPublisher<T>::getData(const Header* desired, IAsyncStream* stream)
+    IDataContainerConstPtr_t TPublisherImpl<T>::getData(const Header* desired, IAsyncStream* stream)
     {
         // TODO stream synchronization
         IDataContainerConstPtr_t out;
@@ -134,7 +143,7 @@ namespace mo
     }
 
     template <typename T>
-    void TPublisher<T>::publish(TContainerConstPtr_t data, IAsyncStream* stream)
+    void TPublisherImpl<T>::publish(TContainerConstPtr_t data, IAsyncStream* stream)
     {
         if (stream == nullptr)
         {
@@ -152,7 +161,7 @@ namespace mo
     }
 
     template <typename T>
-    void TPublisher<T>::publish(const T& data, Header hdr, IAsyncStream* stream)
+    void TPublisherImpl<T>::publish(const T& data, Header hdr, IAsyncStream* stream)
     {
         auto out = std::make_shared<TDataContainer<T>>(m_allocator, data);
         if (!hdr.frame_number.valid())
@@ -165,7 +174,7 @@ namespace mo
     }
 
     template <typename T>
-    void TPublisher<T>::publish(T&& data, Header hdr, IAsyncStream* stream)
+    void TPublisherImpl<T>::publish(T&& data, Header hdr, IAsyncStream* stream)
     {
         auto out = std::make_shared<TDataContainer<T>>(m_allocator, std::move(data));
         if (!hdr.frame_number.valid())
@@ -179,7 +188,7 @@ namespace mo
 
     template <typename T>
     template <class U, class... Ts>
-    void TPublisher<T>::publish(U&& data, Ts&&... args)
+    void TPublisherImpl<T>::publish(U&& data, Ts&&... args)
     {
         auto stream = getKeywordInputDefault<tags::Stream>(nullptr, std::forward<Ts>(args)...);
 
@@ -211,27 +220,27 @@ namespace mo
 
     template <typename T>
     template <class... Args>
-    typename TPublisher<T>::TContainerPtr_t TPublisher<T>::create(Args&&... args)
+    typename TPublisherImpl<T>::TContainerPtr_t TPublisherImpl<T>::create(Args&&... args)
     {
         return std::make_shared<TDataContainer<T>>(m_allocator, std::forward<Args>(args)...);
     }
 
     template <typename T>
-    uint32_t TPublisher<T>::getNumSubscribers() const
+    uint32_t TPublisherImpl<T>::getNumSubscribers() const
     {
         Mutex_t::Lock_t lock(this->mtx());
         return m_update_signal.numSlots();
     }
 
     template <typename T>
-    void TPublisher<T>::setAllocator(typename Allocator::Ptr_t alloc)
+    void TPublisherImpl<T>::setAllocator(typename Allocator::Ptr_t alloc)
     {
         Mutex_t::Lock_t lock(this->mtx());
         m_allocator = ParamAllocator::create(std::move(alloc));
     }
 
     template <typename T>
-    std::ostream& TPublisher<T>::print(std::ostream& os) const
+    std::ostream& TPublisherImpl<T>::print(std::ostream& os) const
     {
         Mutex_t::Lock_t lock(this->mtx());
         os << this->getTreeName();
@@ -239,7 +248,7 @@ namespace mo
     }
 
     template <typename T>
-    ConnectionPtr_t TPublisher<T>::registerUpdateNotifier(ISlot& f)
+    ConnectionPtr_t TPublisherImpl<T>::registerUpdateNotifier(ISlot& f)
     {
         if (f.getSignature() == m_update_signal.getSignature())
         {
@@ -249,7 +258,7 @@ namespace mo
     }
 
     template <typename T>
-    ConnectionPtr_t TPublisher<T>::registerUpdateNotifier(const ISignalRelay::Ptr_t& relay_)
+    ConnectionPtr_t TPublisherImpl<T>::registerUpdateNotifier(const ISignalRelay::Ptr_t& relay_)
     {
         if (relay_->getSignature() == m_update_signal.getSignature())
         {
@@ -257,6 +266,20 @@ namespace mo
             return m_update_signal.connect(tmp);
         }
         return TParam<IPublisher>::registerUpdateNotifier(relay_);
+    }
+
+    template <typename T>
+    typename TPublisherImpl<T>::TContainerConstPtr_t TPublisherImpl<T>::getCurrentData() const
+    {
+        Mutex_t::Lock_t lock(this->mtx());
+        return m_data;
+    }
+
+    template <typename T>
+    void TPublisherImpl<T>::setCurrentData(const TContainerConstPtr_t data)
+    {
+        Mutex_t::Lock_t lock(this->mtx());
+        m_data = std::move(data);
     }
 
 } // namespace mo
