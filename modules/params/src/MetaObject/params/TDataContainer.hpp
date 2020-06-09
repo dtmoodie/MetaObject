@@ -11,9 +11,6 @@
 
 #include <ct/reflect/cerealize.hpp>
 
-#include <cereal/archives/binary.hpp>
-#include <cereal/cereal.hpp>
-
 #include <boost/optional.hpp>
 #include <list>
 namespace mo
@@ -46,7 +43,6 @@ namespace mo
 
         TypeInfo getType() const override;
         void save(ISaveVisitor&) const override;
-        void save(BinaryOutputVisitor& ar) const override;
         static void visitStatic(StaticVisitor&);
         void visit(StaticVisitor&) const override;
 
@@ -80,7 +76,7 @@ namespace mo
         ~TDataContainerNonConstBase() override = default;
 
         void load(ILoadVisitor&) override;
-        void load(BinaryInputVisitor& ar) override;
+        // void load(BinaryInputVisitor& ar) override;
         operator std::shared_ptr<T>();
         operator T*();
         T* ptr();
@@ -122,9 +118,6 @@ namespace mo
         }
 
         void load(ILoadVisitor&) override
-        {
-        }
-        void load(BinaryInputVisitor& ar) override
         {
         }
     };
@@ -172,13 +165,6 @@ namespace mo
     }
 
     template <class T>
-    void TDataContainerConstBase<T>::save(BinaryOutputVisitor& ar) const
-    {
-        ar(CEREAL_NVP(header));
-        ar(CEREAL_NVP(data));
-    }
-
-    template <class T>
     void TDataContainerConstBase<T>::visitStatic(StaticVisitor& visitor)
     {
         visitor.template visit<Header>("header");
@@ -189,13 +175,6 @@ namespace mo
     void TDataContainerConstBase<T>::visit(StaticVisitor& visitor) const
     {
         visitStatic(visitor);
-    }
-
-    template <class T>
-    void TDataContainerNonConstBase<T>::load(BinaryInputVisitor& ar)
-    {
-        ar(CEREAL_NVP(this->header));
-        ar(CEREAL_NVP(this->data));
     }
 
     template <class T>
@@ -281,7 +260,7 @@ namespace mo
         return m_traits.getAllocator();
     }
 
-template <class T>
+    template <class T>
     void TDataContainer<T>::record(IAsyncStream& src) const
     {
         m_traits.record(src);
@@ -322,41 +301,4 @@ template <class T>
     }
 } // namespace mo
 
-namespace cereal
-{
-    //! Saving for boost::optional
-    template <class Archive, class Optioned>
-    inline void save(Archive& ar, ::boost::optional<Optioned> const& optional)
-    {
-        bool init_flag(optional);
-        if (init_flag)
-        {
-            ar(cereal::make_nvp("initialized", true));
-            ar(cereal::make_nvp("value", optional.get()));
-        }
-        else
-        {
-            ar(cereal::make_nvp("initialized", false));
-        }
-    }
-
-    //! Loading for boost::optional
-    template <class Archive, class Optioned>
-    inline void load(Archive& ar, ::boost::optional<Optioned>& optional)
-    {
-
-        bool init_flag;
-        ar(cereal::make_nvp("initialized", init_flag));
-        if (init_flag)
-        {
-            Optioned val;
-            ar(cereal::make_nvp("value", val));
-            optional = val;
-        }
-        else
-        {
-            optional = ::boost::none; // this is all we need to do to reset the internal flag and value
-        }
-    }
-} // namespace cereal
 #endif // MO_PARAMS_TDATACONTAINER_HPP

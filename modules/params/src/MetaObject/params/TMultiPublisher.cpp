@@ -121,24 +121,6 @@ namespace mo
         }
     }
 
-    void IMultiPublisher::load(BinaryInputVisitor& ar)
-    {
-        auto out = getPublisher();
-        if (out)
-        {
-            out->load(ar);
-        }
-    }
-
-    void IMultiPublisher::save(BinaryOutputVisitor& ar) const
-    {
-        auto out = getPublisher();
-        if (out)
-        {
-            out->save(ar);
-        }
-    }
-
     void IMultiPublisher::visit(StaticVisitor& ar) const
     {
         auto out = getPublisher();

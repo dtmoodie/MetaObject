@@ -29,8 +29,6 @@ namespace mo
 
         void load(ILoadVisitor&) override;
         void save(ISaveVisitor&) const override;
-        void load(BinaryInputVisitor& ar) override;
-        void save(BinaryOutputVisitor& ar) const override;
         void visit(StaticVisitor&) const override;
 
         // IDataContainerConstPtr_t getInputData(IAsyncStream* = nullptr) const override;
@@ -164,18 +162,6 @@ namespace mo
     void TSubscriberImpl<T>::save(ISaveVisitor& visitor) const
     {
         Super_t::save(visitor);
-    }
-
-    template <class T>
-    void TSubscriberImpl<T>::load(BinaryInputVisitor& ar)
-    {
-        Super_t::load(ar);
-    }
-
-    template <class T>
-    void TSubscriberImpl<T>::save(BinaryOutputVisitor& ar) const
-    {
-        Super_t::save(ar);
     }
 
     template <class T>

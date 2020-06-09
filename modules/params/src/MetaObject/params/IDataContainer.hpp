@@ -35,8 +35,6 @@ namespace mo
 
         virtual void load(ILoadVisitor&) = 0;
         virtual void save(ISaveVisitor&) const = 0;
-        virtual void load(BinaryInputVisitor& ar) = 0;
-        virtual void save(BinaryOutputVisitor& ar) const = 0;
         virtual void visit(StaticVisitor&) const = 0;
 
         virtual const Header& getHeader() const = 0;

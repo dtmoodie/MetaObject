@@ -18,8 +18,6 @@ namespace mo
 
         void load(ILoadVisitor&) override;
         void save(ISaveVisitor&) const override;
-        void load(BinaryInputVisitor& ar) override;
-        void save(BinaryOutputVisitor& ar) const override;
         void visit(StaticVisitor&) const override;
 
       private:
@@ -44,8 +42,6 @@ namespace mo
 
         void load(ILoadVisitor&) override;
         void save(ISaveVisitor&) const override;
-        void load(BinaryInputVisitor& ar) override;
-        void save(BinaryOutputVisitor& ar) const override;
         void visit(StaticVisitor&) const override;
 
       private:
@@ -110,19 +106,6 @@ namespace mo
         visitor(&m_data, "data");
     }
 
-    template <class T>
-    void TControlParam<T>::load(BinaryInputVisitor& ar)
-    {
-        ITControlParam<T>::load(ar);
-        ar(m_data);
-    }
-
-    template <class T>
-    void TControlParam<T>::save(BinaryOutputVisitor& ar) const
-    {
-        ITControlParam<T>::save(ar);
-        ar(m_data);
-    }
     template <class T>
     void TControlParam<T>::visit(StaticVisitor& visitor) const
     {
@@ -209,26 +192,6 @@ namespace mo
         if (m_ptr)
         {
             visitor(m_ptr, "data");
-        }
-    }
-
-    template <class T>
-    void TControlParam<T*>::load(BinaryInputVisitor& ar)
-    {
-        ITControlParam<T>::load(ar);
-        if (m_ptr)
-        {
-            ar(*m_ptr);
-        }
-    }
-
-    template <class T>
-    void TControlParam<T*>::save(BinaryOutputVisitor& ar) const
-    {
-        ITControlParam<T>::save(ar);
-        if (m_ptr)
-        {
-            ar(*m_ptr);
         }
     }
 

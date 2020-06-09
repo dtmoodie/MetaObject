@@ -55,8 +55,6 @@ namespace mo
 
         void load(ILoadVisitor&) override;
         void save(ISaveVisitor&) const override;
-        void load(BinaryInputVisitor& ar) override;
-        void save(BinaryOutputVisitor& ar) const override;
         void visit(StaticVisitor&) const override;
 
       protected:
@@ -254,22 +252,6 @@ namespace mo
         visitor(&m_name, "name");
         visitor(&m_root_name, "root_name");
         visitor(&m_flags, "flags");
-    }
-
-    template <class BASE>
-    void TParam<BASE>::load(BinaryInputVisitor& ar)
-    {
-        ar(m_name);
-        ar(m_root_name);
-        ar(m_flags);
-    }
-
-    template <class BASE>
-    void TParam<BASE>::save(BinaryOutputVisitor& ar) const
-    {
-        ar(m_name);
-        ar(m_root_name);
-        ar(m_flags);
     }
 
     template <class BASE>

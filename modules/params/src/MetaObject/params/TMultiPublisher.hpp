@@ -24,8 +24,6 @@ namespace mo
 
         void load(ILoadVisitor&) override;
         void save(ISaveVisitor&) const override;
-        void load(BinaryInputVisitor& ar) override;
-        void save(BinaryOutputVisitor& ar) const override;
         void visit(StaticVisitor&) const override;
 
         IDataContainerConstPtr_t getData(const Header* desired = nullptr, IAsyncStream* = nullptr) override;

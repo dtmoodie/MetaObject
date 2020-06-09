@@ -70,10 +70,10 @@ TEST_F(control_param, load_save_binary)
     std::stringstream ss;
 
     {
-        mo::BinaryOutputVisitor saver(ss);
+        mo::BinarySaver saver(ss);
         param.save(saver);
     }
-    mo::BinaryInputVisitor loader(ss);
+    mo::BinaryLoader loader(ss);
     param.setValue(10.0F);
     ASSERT_EQ(param.getValue(), 10.0F);
     param.load(loader);
@@ -146,10 +146,10 @@ TEST_F(control_param_ptr, load_save_binary)
     std::stringstream ss;
 
     {
-        mo::BinaryOutputVisitor saver(ss);
+        mo::BinarySaver saver(ss);
         param.save(saver);
     }
-    mo::BinaryInputVisitor loader(ss);
+    mo::BinaryLoader loader(ss);
     param.setValue(10.0F);
     ASSERT_EQ(param.getValue(), 10.0F);
     ASSERT_EQ(val, 10.0F);
