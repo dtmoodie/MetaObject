@@ -13,12 +13,12 @@
 namespace mo
 {
     template <class T>
-    struct TSubscriber : TParam<ISubscriber>
+    struct TSubscriberImpl : TParam<ISubscriber>
     {
         using type = typename ContainerTraits<T>::type;
         using Super_t = TParam<ISubscriber>;
-        TSubscriber();
-        ~TSubscriber() override = default;
+        TSubscriberImpl();
+        ~TSubscriberImpl() override = default;
 
         bool setInput(std::shared_ptr<IPublisher> input) override;
         bool setInput(IPublisher* input = nullptr) override;
@@ -74,19 +74,24 @@ namespace mo
         bool m_new_data_available = false;
     };
 
+    template <class T>
+    struct TSubscriber : TSubscriberImpl<T>
+    {
+    };
+
     //////////////////////////////////////////////////////////
     // Implementation
     //////////////////////////////////////////////////////////
 
     template <class T>
-    TSubscriber<T>::TSubscriber()
+    TSubscriberImpl<T>::TSubscriberImpl()
     {
         this->setFlags(ParamFlags::kINPUT);
-        m_update_slot.bind(&TSubscriber<T>::onInputUpdate, this);
+        m_update_slot.bind(&TSubscriberImpl<T>::onInputUpdate, this);
     }
 
     template <class T>
-    bool TSubscriber<T>::setInput(std::shared_ptr<IPublisher> publisher)
+    bool TSubscriberImpl<T>::setInput(std::shared_ptr<IPublisher> publisher)
     {
         if (setInput(publisher.get()))
         {
@@ -97,7 +102,7 @@ namespace mo
     }
 
     template <class T>
-    bool TSubscriber<T>::setInput(IPublisher* publisher)
+    bool TSubscriberImpl<T>::setInput(IPublisher* publisher)
     {
         Lock_t lock(this->mtx());
         const auto my_type = TypeInfo::create<T>();
@@ -132,55 +137,55 @@ namespace mo
     }
 
     template <class T>
-    bool TSubscriber<T>::acceptsPublisher(const IPublisher& param) const
+    bool TSubscriberImpl<T>::acceptsPublisher(const IPublisher& param) const
     {
         return param.providesOutput(TypeInfo::create<T>());
     }
 
     template <class T>
-    bool TSubscriber<T>::acceptsType(const TypeInfo& type) const
+    bool TSubscriberImpl<T>::acceptsType(const TypeInfo& type) const
     {
         return type == TypeInfo::create<T>();
     }
 
     template <class T>
-    std::vector<TypeInfo> TSubscriber<T>::getInputTypes() const
+    std::vector<TypeInfo> TSubscriberImpl<T>::getInputTypes() const
     {
         return {TypeInfo::create<T>()};
     }
 
     template <class T>
-    void TSubscriber<T>::load(ILoadVisitor& visitor)
+    void TSubscriberImpl<T>::load(ILoadVisitor& visitor)
     {
         Super_t::load(visitor);
     }
 
     template <class T>
-    void TSubscriber<T>::save(ISaveVisitor& visitor) const
+    void TSubscriberImpl<T>::save(ISaveVisitor& visitor) const
     {
         Super_t::save(visitor);
     }
 
     template <class T>
-    void TSubscriber<T>::load(BinaryInputVisitor& ar)
+    void TSubscriberImpl<T>::load(BinaryInputVisitor& ar)
     {
         Super_t::load(ar);
     }
 
     template <class T>
-    void TSubscriber<T>::save(BinaryOutputVisitor& ar) const
+    void TSubscriberImpl<T>::save(BinaryOutputVisitor& ar) const
     {
         Super_t::save(ar);
     }
 
     template <class T>
-    void TSubscriber<T>::visit(StaticVisitor& ar) const
+    void TSubscriberImpl<T>::visit(StaticVisitor& ar) const
     {
         Super_t::visit(ar);
     }
 
     template <class T>
-    IDataContainerConstPtr_t TSubscriber<T>::getCurrentData(IAsyncStream* stream) const
+    IDataContainerConstPtr_t TSubscriberImpl<T>::getCurrentData(IAsyncStream* stream) const
     {
         // TODO use stream
         Mutex_t::Lock_t lock(this->mtx());
@@ -188,7 +193,7 @@ namespace mo
     }
 
     template <class T>
-    bool TSubscriber<T>::getCurrentData(T& out, IAsyncStream* stream) const
+    bool TSubscriberImpl<T>::getCurrentData(T& out, IAsyncStream* stream) const
     {
         auto container = getCurrentData(stream);
         if (container)
@@ -204,7 +209,7 @@ namespace mo
     }
 
     template <class T>
-    IDataContainerConstPtr_t TSubscriber<T>::getData(const Header* desired, IAsyncStream* stream)
+    IDataContainerConstPtr_t TSubscriberImpl<T>::getData(const Header* desired, IAsyncStream* stream)
     {
         Mutex_t::Lock_t lock(this->mtx());
         if (m_publisher)
@@ -219,7 +224,7 @@ namespace mo
     }
 
     template <class T>
-    TDataContainerConstPtr_t<T> TSubscriber<T>::getTypedData(const Header* desired, IAsyncStream* stream)
+    TDataContainerConstPtr_t<T> TSubscriberImpl<T>::getTypedData(const Header* desired, IAsyncStream* stream)
     {
         auto data = getData(desired, stream);
         if (data)
@@ -230,7 +235,7 @@ namespace mo
     }
 
     template <class T>
-    bool TSubscriber<T>::getData(T& out, const Header* desired, IAsyncStream* stream)
+    bool TSubscriberImpl<T>::getData(T& out, const Header* desired, IAsyncStream* stream)
     {
         auto typed = getTypedData(desired, stream);
         if (typed)
@@ -242,13 +247,13 @@ namespace mo
     }
 
     template <class T>
-    bool TSubscriber<T>::hasNewData() const
+    bool TSubscriberImpl<T>::hasNewData() const
     {
         return m_new_data_available;
     }
 
     template <class T>
-    ConnectionPtr_t TSubscriber<T>::registerUpdateNotifier(ISlot& f)
+    ConnectionPtr_t TSubscriberImpl<T>::registerUpdateNotifier(ISlot& f)
     {
         auto connection = TParam<ISubscriber>::registerUpdateNotifier(f);
         if (!connection && m_update_signal.getSignature() == f.getSignature())
@@ -259,7 +264,7 @@ namespace mo
     }
 
     template <class T>
-    ConnectionPtr_t TSubscriber<T>::registerUpdateNotifier(const ISignalRelay::Ptr_t& relay)
+    ConnectionPtr_t TSubscriberImpl<T>::registerUpdateNotifier(const ISignalRelay::Ptr_t& relay)
     {
         auto connection = TParam<ISubscriber>::registerUpdateNotifier(relay);
         if (!connection && m_update_signal.getSignature() == relay->getSignature())
@@ -271,10 +276,10 @@ namespace mo
     }
 
     template <class T>
-    void TSubscriber<T>::onInputUpdate(const IDataContainerConstPtr_t& data,
-                                       const IParam& param,
-                                       UpdateFlags fgs,
-                                       IAsyncStream& stream)
+    void TSubscriberImpl<T>::onInputUpdate(const IDataContainerConstPtr_t& data,
+                                           const IParam& param,
+                                           UpdateFlags fgs,
+                                           IAsyncStream& stream)
     {
         if (data == nullptr)
         {
@@ -298,21 +303,21 @@ namespace mo
     }
 
     template <class T>
-    IPublisher* TSubscriber<T>::getPublisher() const
+    IPublisher* TSubscriberImpl<T>::getPublisher() const
     {
         Mutex_t::Lock_t lock(this->mtx());
         return m_publisher;
     }
 
     template <class T>
-    bool TSubscriber<T>::isInputSet() const
+    bool TSubscriberImpl<T>::isInputSet() const
     {
         Mutex_t::Lock_t lock(this->mtx());
         return m_publisher != nullptr;
     }
 
     template <class T>
-    std::vector<Header> TSubscriber<T>::getAvailableHeaders() const
+    std::vector<Header> TSubscriberImpl<T>::getAvailableHeaders() const
     {
         std::vector<Header> output;
         Mutex_t::Lock_t lock(this->mtx());
@@ -324,7 +329,7 @@ namespace mo
     }
 
     template <class T>
-    boost::optional<Header> TSubscriber<T>::getNewestHeader() const
+    boost::optional<Header> TSubscriberImpl<T>::getNewestHeader() const
     {
         Mutex_t::Lock_t lock(this->mtx());
         if (m_data)
@@ -339,7 +344,7 @@ namespace mo
     }
 
     template <class T>
-    void TSubscriber<T>::onInputDelete(const IParam& param)
+    void TSubscriberImpl<T>::onInputDelete(const IParam& param)
     {
         if (m_publisher == &param)
         {
@@ -349,10 +354,10 @@ namespace mo
     }
 
     template <class T>
-    void TSubscriber<T>::onData(TDataContainerConstPtr_t<T> data,
-                                const IParam& update_source,
-                                UpdateFlags fg,
-                                IAsyncStream& stream)
+    void TSubscriberImpl<T>::onData(TDataContainerConstPtr_t<T> data,
+                                    const IParam& update_source,
+                                    UpdateFlags fg,
+                                    IAsyncStream& stream)
     {
         const auto header = data->getHeader();
         if (fg & ct::value(UpdateFlags::kBUFFER_UPDATED) && update_source.checkFlags(mo::ParamFlags::kBUFFER))
@@ -380,7 +385,7 @@ namespace mo
         }
     }
     template <class T>
-    std::ostream& TSubscriber<T>::print(std::ostream& os) const
+    std::ostream& TSubscriberImpl<T>::print(std::ostream& os) const
     {
         os << this->getTreeName();
         os << ' ';
