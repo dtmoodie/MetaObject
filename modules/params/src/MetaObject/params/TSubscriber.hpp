@@ -51,9 +51,9 @@ namespace mo
         boost::optional<Header> getNewestHeader() const override;
 
         std::ostream& print(std::ostream&) const override;
+        TDataContainerConstPtr_t<T> getTypedData(const Header* desired = nullptr, IAsyncStream* stream = nullptr);
 
       protected:
-        TDataContainerConstPtr_t<T> getTypedData(const Header* desired = nullptr, IAsyncStream* stream = nullptr);
         void onInputUpdate(const IDataContainerConstPtr_t& data, const IParam& param, UpdateFlags, IAsyncStream&);
         void onInputDelete(const IParam&);
 
