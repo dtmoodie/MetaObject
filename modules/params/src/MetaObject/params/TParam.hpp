@@ -60,7 +60,7 @@ namespace mo
         void visit(StaticVisitor&) const override;
 
       protected:
-        spdlog::logger& getLogger();
+        spdlog::logger& getLogger() const;
 
         void emitUpdate(Header, UpdateFlags, IAsyncStream&) const;
 
@@ -281,9 +281,13 @@ namespace mo
     }
 
     template <class BASE>
-    spdlog::logger& TParam<BASE>::getLogger()
+    spdlog::logger& TParam<BASE>::getLogger() const
     {
         Mutex_t::Lock_t lock(mtx());
+        if (!m_logger)
+        {
+            return getDefaultLogger();
+        }
         MO_ASSERT(m_logger != nullptr);
         return *m_logger;
     }
