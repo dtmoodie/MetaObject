@@ -14,15 +14,14 @@ namespace mo
     {
         typedef U type;
     };
-}
-
+} // namespace mo
 
 #define ENUM_PARAM_(N, NAME, ...)                                                                                      \
     template <class V, class... Args, mo::VisitationType FILTER>                                                       \
     inline void reflectHelper(V& visitor,                                                                              \
                               mo::VisitationFilter<FILTER> filter,                                                     \
                               mo::MemberFilter<mo::CONTROL> param,                                                     \
-                              const ct::Indexer<__COUNTER__> cnt,                                                          \
+                              const ct::Indexer<__COUNTER__> cnt,                                                      \
                               Args&&... args)                                                                          \
     {                                                                                                                  \
         visitor(mo::tagData(&NAME), mo::Name(#NAME), mo::tagParam(NAME##_param), cnt, std::forward<Args>(args)...);    \
@@ -36,11 +35,11 @@ namespace mo
     static inline void reflectHelperStatic(V& visitor,                                                                 \
                                            mo::VisitationFilter<FILTER> filter,                                        \
                                            mo::MemberFilter<mo::CONTROL> param,                                        \
-                                           const ct::Indexer<__COUNTER__> cnt,                                             \
+                                           const ct::Indexer<__COUNTER__> cnt,                                         \
                                            Args&&... args)                                                             \
     {                                                                                                                  \
         visitor(mo::Name(#NAME),                                                                                       \
-                mo::tagType<typename std::decay<decltype(THIS_CLASS::NAME)>::type>(),                                  \
+                mo::tagType<typename std::decay<decltype(DType::NAME)>::type>(),                                       \
                 cnt,                                                                                                   \
                 std::forward<Args>(args)...);                                                                          \
         reflectHelperStatic(visitor, filter, param, --cnt, std::forward<Args>(args)...);                               \
@@ -49,7 +48,7 @@ namespace mo
 #define TOOLTIP_(NAME, TOOLTIP_, N)                                                                                    \
     template <class C, class V, class... Args>                                                                         \
     static inline void reflectHelper(                                                                                  \
-        C* , V& visitor, mo::VisitationFilter<mo::TOOLTIP> filter, const ct::Indexer<__COUNTER__> cnt, Args&&... args)  \
+        C*, V& visitor, mo::VisitationFilter<mo::TOOLTIP> filter, const ct::Indexer<__COUNTER__> cnt, Args&&... args)  \
     {                                                                                                                  \
         visitor(mo::Name(#NAME), mo::Tooltip(TOOLTIP_), cnt, std::forward<Args>(args)...);                             \
         reflectHelper(visitor, filter, --cnt, std::forward<Args>(args)...);                                            \
