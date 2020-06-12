@@ -23,14 +23,22 @@
     MEMBER_FUNCTION_WITH_FLAG(                                                                                         \
         mo::ParamReflectionFlags::kSLOT, NAME, ct::selectMemberFunctionPointer<DataType, RETURN>(&DataType::NAME))
 
+// TODO disambiguate function pointer
 #define STATIC_SLOT_N(NAME, RETURN, ...)                                                                               \
     static RETURN NAME(__VA_ARGS__);                                                                                   \
-    MEMBER_FUNCTION_WITH_FLAG(                                                                                         \
-        mo::ParamReflectionFlags::kSLOT, NAME, ct::selectFunctionPointer<RETURN, __VA_ARGS__>(&DataType::NAME))
+    constexpr static auto getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_BEGIN>)                                 \
+    {                                                                                                                  \
+        return ct::makeStaticFunctionPointers<DataType, mo::ParamReflectionFlags::kSLOT>(                              \
+            #NAME, ct::selectFunctionPointer<RETURN, __VA_ARGS__>(&DataType::NAME));                                   \
+    }
 
 #define STATIC_SLOT_1(RETURN, NAME)                                                                                    \
     static RETURN NAME();                                                                                              \
-    MEMBER_FUNCTION_WITH_FLAG(mo::ParamReflectionFlags::kSLOT, NAME, ct::selectFunctionPointer<RETURN>(&DataType::NAME))
+    constexpr static auto getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_BEGIN>)                                 \
+    {                                                                                                                  \
+        return ct::makeStaticFunctionPointers<DataType, mo::ParamReflectionFlags::kSLOT>(                              \
+            #NAME, ct::selectFunctionPointer<RETURN>(&DataType::NAME));                                                \
+    }
 
 #define STATIC_SLOT_2(RETURN, NAME, ...) STATIC_SLOT_N(NAME, RETURN, __VA_ARGS__)
 #define STATIC_SLOT_3(RETURN, NAME, ...) STATIC_SLOT_N(NAME, RETURN, __VA_ARGS__)
