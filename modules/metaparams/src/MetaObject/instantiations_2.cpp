@@ -1,7 +1,5 @@
 #include "common.hpp"
 
-#include "ct/reflect/cerealize.hpp"
-
 #include <MetaObject/runtime_reflection/visitor_traits/string.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
 

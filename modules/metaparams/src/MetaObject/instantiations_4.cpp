@@ -4,7 +4,6 @@
 
 #include <MetaObject/params/MetaParam.hpp>
 #include <MetaObject/types/opencv.hpp>
-#include <ct/reflect/cerealize.hpp>
 
 #include <MetaObject/core/metaobject_config.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/array_adapter.hpp>

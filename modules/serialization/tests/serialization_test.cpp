@@ -12,6 +12,8 @@
 
 #include <cereal/archives/binary.hpp>
 
+#include <ct/reflect/cerealize.hpp>
+
 #include <MetaObject/serialization/JSONPrinter.hpp>
 
 #include <fstream>

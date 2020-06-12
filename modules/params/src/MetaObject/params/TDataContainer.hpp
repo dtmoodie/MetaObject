@@ -9,8 +9,6 @@
 #include <MetaObject/runtime_reflection/type_traits.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/time.hpp>
 
-#include <ct/reflect/cerealize.hpp>
-
 #include <boost/optional.hpp>
 #include <list>
 namespace mo

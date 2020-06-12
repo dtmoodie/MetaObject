@@ -5,8 +5,6 @@
 #include <MetaObject/runtime_reflection/StructTraits.hpp>
 #include <MetaObject/types/opencv.hpp>
 
-#include <ct/reflect/cerealize.hpp>
-
 #include <opencv2/core/types.hpp>
 
 #ifdef MO_EXPORTS

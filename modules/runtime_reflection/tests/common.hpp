@@ -13,7 +13,6 @@
 #include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
 
 #include <ct/reflect.hpp>
-#include <ct/reflect/cerealize.hpp>
 #include <ct/reflect/compare.hpp>
 #include <ct/reflect/print-container-inl.hpp>
 
