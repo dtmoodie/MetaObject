@@ -1,7 +1,6 @@
 #ifndef TMULTIOUTPUT_HPP
 #define TMULTIOUTPUT_HPP
 #include "IPublisher.hpp"
-#include "TMultiSubscriber-inl.hpp"
 #include "TMultiSubscriber.hpp"
 
 #include <MetaObject/params/IParam.hpp>
