@@ -28,7 +28,11 @@ namespace mo
         double seconds() const;
         void fromSeconds(double);
 
-        std::string print() const;
+        std::string print(bool print_days = false,
+                          bool print_hours = false,
+                          bool print_minutes = true,
+                          bool print_seconds = true,
+                          bool print_nanoseconds = false) const;
         void print(std::ostream& os,
                    bool print_days = false,
                    bool print_hours = false,

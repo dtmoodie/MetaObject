@@ -34,11 +34,12 @@ namespace mo
         fromSeconds(sec);
     }
 
-    std::string Time::print() const
+    std::string
+    Time::print(bool print_days, bool print_hours, bool print_minutes, bool print_seconds, bool print_nanoseconds) const
     {
         std::stringstream ss;
-        print(ss);
-        return ss.str();
+        print(ss, print_days, print_hours, print_minutes, print_seconds, print_nanoseconds);
+        return std::move(ss).str();
     }
 
     using Days = std::chrono::duration<int, std::ratio<86400>>;
@@ -160,7 +161,7 @@ namespace mo
     {
         return val == v;
     }*/
-}
+} // namespace mo
 
 namespace std
 {
@@ -169,4 +170,4 @@ namespace std
         rhs.print(lhs, false, false, true, true, true);
         return lhs;
     }
-}
+} // namespace std
