@@ -12,6 +12,10 @@ namespace mo
     template <class T>
     ISaveVisitor& JSONSaver::writePod(const T* ptr, const std::string& name, const size_t cnt)
     {
+        if (cnt == 0)
+        {
+            return *this;
+        }
         if (!name.empty())
         {
             m_ar.setNextName(name.c_str());
@@ -26,7 +30,7 @@ namespace mo
             }
             // m_ar.finishNode();
         }
-        else
+        if (cnt == 1)
         {
             m_ar(ptr[0]);
         }
@@ -220,6 +224,10 @@ namespace mo
     template <class T>
     ILoadVisitor& JSONLoader::readPod(T* ptr, const std::string& name, const size_t cnt)
     {
+        if (cnt == 0)
+        {
+            return *this;
+        }
         try
         {
             if (!name.empty())
