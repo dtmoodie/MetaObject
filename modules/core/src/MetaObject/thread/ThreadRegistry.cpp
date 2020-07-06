@@ -10,7 +10,7 @@ using namespace mo;
 
 struct ThreadRegistry::impl
 {
-    std::map<int, std::vector<size_t>> _thread_map;
+    std::map<int, std::vector<IAsyncStreamPtr_t>> _thread_map;
     std::mutex mtx;
 };
 
@@ -41,19 +41,21 @@ ThreadRegistry::~ThreadRegistry()
     delete _pimpl;
 }
 
-void ThreadRegistry::registerThread(ThreadType type, size_t id)
+void ThreadRegistry::registerThread(ThreadType type, mo::IAsyncStreamPtr_t stream)
 {
     std::lock_guard<std::mutex> lock(_pimpl->mtx);
     auto& threads = _pimpl->_thread_map[type];
-    if (std::count(threads.begin(), threads.end(), id) == 0)
-        threads.push_back(id);
+    if (std::count(threads.begin(), threads.end(), stream) == 0)
+    {
+        threads.push_back(stream);
+    }
 }
 
-size_t ThreadRegistry::getThread(int type)
+mo::IAsyncStreamPtr_t ThreadRegistry::getThread(int type)
 {
     std::lock_guard<std::mutex> lock(_pimpl->mtx);
     // TODO some kind of load balancing for multiple threads of a specific type
-    auto current_thread = getThisThread();
+    IAsyncStreamPtr_t current_thread = IAsyncStream::current();
     auto itr = _pimpl->_thread_map.find(type);
     if (itr != _pimpl->_thread_map.end())
     {
@@ -67,7 +69,7 @@ size_t ThreadRegistry::getThread(int type)
             return current_thread;
         }
     }
-    return 0;
+    return {};
 }
 
 ThreadRegistry* ThreadRegistry::instance()
