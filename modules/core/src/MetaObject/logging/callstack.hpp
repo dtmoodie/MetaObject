@@ -15,7 +15,7 @@ namespace mo
     };
 
     template <class T>
-    struct TExceptionWithCallstack : public IExceptionWithCallstack
+    struct TExceptionWithCallstack : IExceptionWithCallstack
     {
         TExceptionWithCallstack(T&& msg)
             : m_msg(std::move(msg))
@@ -25,6 +25,11 @@ namespace mo
         const boost::stacktrace::stacktrace& getCallstack() const override
         {
             return m_callstack;
+        }
+
+        const T& getException() const
+        {
+            return m_msg;
         }
 
       private:
