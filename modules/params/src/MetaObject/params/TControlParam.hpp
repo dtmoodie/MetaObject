@@ -49,6 +49,15 @@ namespace mo
         T* m_ptr = nullptr;
     };
 
+    template <class T>
+    struct TStateParam : TControlParam<T*>
+    {
+        TStateParam()
+        {
+            this->setFlags(ParamFlags::kSTATE);
+        }
+    };
+
     /////////////////////////////////////////////////////////////
     // TControlParam<T>
     /////////////////////////////////////////////////////////////
