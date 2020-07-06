@@ -102,20 +102,18 @@ namespace mo
 
     // Deprecated in favor of ct::TArrayView
     template <typename T, class A>
-    class MO_DEPRECATED TSubscriberPtr<std::vector<T, A>> : virtual public TSubscriber<std::vector<T, A>>
+    class MO_DEPRECATED TSubscriberPtr<std::vector<T, A>> : public TSubscriber<std::vector<T, A>>
     {
       public:
         using Input_t = const std::vector<T, A>*;
 
         TSubscriberPtr(const std::string& name = "", const std::vector<T, A>** user_var_ = nullptr)
-            : TSubscriber<std::vector<T, A>>(name)
-            , TParam<ISubscriber>(name, ParamFlags::kINPUT)
-            , IParam(name, ParamFlags::kINPUT)
-            , m_user_var(user_var_)
+            : m_user_var(user_var_)
         {
+            this->setName(name);
         }
 
-        void setUserDataPtr(const std::vector<T, A>* user_var_)
+        void setUserDataPtr(const std::vector<T, A>** user_var_)
         {
             Lock_t lock(this->mtx());
             m_user_var = user_var_;
@@ -126,7 +124,7 @@ namespace mo
             auto data = TSubscriber<std::vector<T, A>>::getData(desired, stream);
             if (data->getType().template isType<std::vector<T, A>>())
             {
-                auto typed = std::static_pointer_cast<TDataContainer<std::vector<T, A>>>(data);
+                auto typed = std::static_pointer_cast<const TDataContainer<std::vector<T, A>>>(data);
                 if (typed && m_user_var)
                 {
                     *m_user_var = typed->ptr();
@@ -136,10 +134,13 @@ namespace mo
         }
 
       protected:
-        virtual void onData(TDataContainerConstPtr_t<T> data, const IParam&, UpdateFlags fg, IAsyncStream& stream)
+        virtual void onData(TDataContainerConstPtr_t<std::vector<T, A>> data,
+                            const IParam& param,
+                            UpdateFlags fg,
+                            IAsyncStream& stream)
         {
             Lock_t lock(this->mtx());
-            TSubscriber<std::vector<T, A>>::updateDataImpl(data, fg);
+            TSubscriber<std::vector<T, A>>::onData(data, param, fg, stream);
             if (m_user_var)
             {
                 *m_user_var = &data->data;
