@@ -19,18 +19,17 @@ macro(metaobject_declare_plugin tgt)
     set_property(TARGET ${tgt} APPEND PROPERTY RCC_MODULE)
     set_target_properties(${tgt}
         PROPERTIES
-            CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/plugins
-            CMAKE_LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/plugins
-            CMAKE_ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/plugins
-            LIBRARY_OUTPUT_PATH ${CMAKE_BINARY_DIR}/bin/plugins
+            RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/plugins
+            LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/plugins
+            ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin/plugins
             FOLDER plugins
             RCC_MODULE ON
     )
 
-    TARGET_INCLUDE_DIRECTORIES(${tgt} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/src)
     target_include_directories(${tgt}
         PUBLIC
             $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src/>
+            $<INSTALL_INTERFACE:include>
     )
     target_include_directories(${tgt}
         PUBLIC
