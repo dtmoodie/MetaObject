@@ -30,8 +30,26 @@ namespace @PLUGIN_NAME@
 {
     void initPlugin(mo::MetaObjectFactory* factory)
     {
-        factory->setupObjectConstructors(PerModuleInterface::GetInstance());
+        static bool initialized = false;
+        if(!initialized)
+        {
+            factory->setupObjectConstructors(PerModuleInterface::GetInstance());
+            initialized = true;
+        }
     }
+
+    struct StaticInit
+    {
+        static StaticInit g_init;
+        StaticInit()
+        {
+            (void)&g_init;
+            mo::MetaObjectFactory::Ptr_t instance = mo::MetaObjectFactory::instance();
+            initPlugin(instance.get());
+        }
+    };
+
+    StaticInit StaticInit::g_init;
 }
 
 // clang-format on
