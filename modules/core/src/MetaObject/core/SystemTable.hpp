@@ -26,11 +26,6 @@ struct SystemInfo
     bool have_cuda = false;
 };
 
-namespace mo
-{
-    class MetaObjectFactory;
-}
-
 struct MO_EXPORTS SystemTable : virtual private mo::IObjectTable
 {
   public:
