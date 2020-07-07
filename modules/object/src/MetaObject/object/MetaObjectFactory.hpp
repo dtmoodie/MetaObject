@@ -67,6 +67,8 @@ namespace mo
         MO_INLINE static Ptr_t instance();
         static Ptr_t instance(SystemTable* table);
 
+        static uint32_t loadStandardPlugins();
+
         MetaObjectFactory() = default;
         virtual ~MetaObjectFactory();
 

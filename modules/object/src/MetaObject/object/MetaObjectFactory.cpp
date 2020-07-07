@@ -133,6 +133,19 @@ std::shared_ptr<MetaObjectFactory> MetaObjectFactory::instance(SystemTable* tabl
     return table->getSingleton<MetaObjectFactory, MetaObjectFactoryImpl>();
 }
 
+uint32_t MetaObjectFactory::loadStandardPlugins()
+{
+    std::string postfix;
+#ifdef _DEBUG
+    postfix = "d";
+#endif
+#ifdef _MSC_VER
+    return mo::MetaObjectFactory::instance()->loadPlugin("./bin/plugins");
+#else
+    return mo::MetaObjectFactory::instance()->loadPlugins("./bin/plugins");
+#endif
+}
+
 MetaObjectFactory::~MetaObjectFactory()
 {
 }
