@@ -25,8 +25,8 @@ using Allocator_t =
 
 std::shared_ptr<SystemTable> SystemTable::instanceImpl()
 {
-    static std::weak_ptr<SystemTable> inst;
-    std::shared_ptr<SystemTable> output = inst.lock();
+    static std::shared_ptr<SystemTable> inst;
+    std::shared_ptr<SystemTable> output = inst;
     if (!output)
     {
         output.reset(new SystemTable());
