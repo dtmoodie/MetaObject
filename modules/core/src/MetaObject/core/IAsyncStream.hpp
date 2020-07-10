@@ -39,6 +39,7 @@ namespace mo
 
         virtual void setName(const std::string& name) = 0;
         virtual void setHostPriority(PriorityLevels p) = 0;
+        virtual void hostToHost(ct::TArrayView<void> dst, ct::TArrayView<const void> src) = 0;
 
         virtual std::string name() const = 0;
         virtual uint64_t threadId() const = 0;
@@ -63,7 +64,6 @@ namespace mo
         virtual void hostToDevice(ct::TArrayView<void> dst, ct::TArrayView<const void> src) = 0;
         virtual void deviceToHost(ct::TArrayView<void> dst, ct::TArrayView<const void> src) = 0;
         virtual void deviceToDevice(ct::TArrayView<void> dst, ct::TArrayView<const void> src) = 0;
-        virtual void hostToHost(ct::TArrayView<void> dst, ct::TArrayView<const void> src) = 0;
 
         virtual void synchronize() override = 0;
         virtual void synchronize(IDeviceStream* other) = 0;

@@ -85,6 +85,20 @@ namespace mo
         }
     }
 
+    void AsyncStream::hostToHost(ct::TArrayView<void> dst, ct::TArrayView<const void> src)
+    {
+        const size_t src_size = src.size();
+        const size_t dst_size = dst.size();
+        MO_ASSERT(src_size == dst_size);
+        if (src_size == 0)
+        {
+            return;
+        }
+        void* dst_data = dst.data();
+        const void* src_data = src.data();
+        std::memcpy(dst_data, src_data, src_size);
+    }
+
     std::string AsyncStream::name() const
     {
         return m_name;

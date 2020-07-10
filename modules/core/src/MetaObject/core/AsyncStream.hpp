@@ -35,6 +35,7 @@ namespace mo
         void setHostPriority(PriorityLevels p) override;
         PriorityLevels hostPriority() const;
         void synchronize() override;
+        void hostToHost(ct::TArrayView<void> dst, ct::TArrayView<const void> src) override;
 
         std::string name() const override;
         uint64_t threadId() const override;
