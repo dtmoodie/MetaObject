@@ -49,10 +49,13 @@ int main(int argc, char** argv)
         table->getDefaultLogger()->set_level(spdlog::level::debug);
     }
 
+    mo::MetaObjectFactory::loadStandardPlugins();
 #ifdef _MSC_VER
-    const bool loaded = mo::MetaObjectFactory::instance()->loadPlugin("./mo_objectplugin" + postfix + ".dll");
+    const bool loaded =
+        mo::MetaObjectFactory::instance()->loadPlugin("./bin/plugins/mo_objectplugin" + postfix + ".dll");
 #else
-    const bool loaded = mo::MetaObjectFactory::instance()->loadPlugin("./libmo_objectplugin" + postfix + ".so");
+    const bool loaded =
+        mo::MetaObjectFactory::instance()->loadPlugin("./bin/plugins/libmo_objectplugin" + postfix + ".so");
 #endif
     if (!quiet)
     {
