@@ -49,6 +49,24 @@ std::string PluginInfo::getPluginName() const
     return path.replace_extension("").filename().string();
 }
 
+namespace std
+{
+    ostream& operator<<(ostream& os, const vector<IObjectConstructor*>& ctrs)
+    {
+        os << '[';
+        for (size_t i = 0; i < ctrs.size(); ++i)
+        {
+            if (i != 0)
+            {
+                os << ' ';
+            }
+            os << ctrs[i]->GetName();
+        }
+        os << ']';
+        return os;
+    }
+} // namespace std
+
 class MetaObjectFactoryImpl : public MetaObjectFactory
 {
   public:
@@ -175,6 +193,8 @@ rcc::shared_ptr<IMetaObject> MetaObjectFactoryImpl::create(const char* type_name
             return mobj;
         }
     }
+    auto ctrs = this->getConstructors(interface_id);
+    m_logger.warn("No constructor found for {}.  Available constructors: \n{}", type_name, ctrs);
     return {};
 }
 
