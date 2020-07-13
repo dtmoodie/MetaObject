@@ -17,6 +17,12 @@ namespace mo
     template <class T>
     struct TExceptionWithCallstack : IExceptionWithCallstack
     {
+        TExceptionWithCallstack(boost::stacktrace::stacktrace&& callstack, T&& msg)
+            : m_msg(std::move(msg))
+            , m_callstack(std::move(callstack))
+        {
+        }
+
         TExceptionWithCallstack(T&& msg)
             : m_msg(std::move(msg))
         {
@@ -41,6 +47,12 @@ namespace mo
     void throwWithCallstack(T&& msg)
     {
         throw TExceptionWithCallstack<T>(std::forward<T>(msg));
+    }
+
+    template <class T>
+    void throwWithCallstack(boost::stacktrace::stacktrace&& callstack, T&& msg)
+    {
+        throw TExceptionWithCallstack<T>(std::move(callstack), std::forward<T>(msg));
     }
 } // namespace mo
 
