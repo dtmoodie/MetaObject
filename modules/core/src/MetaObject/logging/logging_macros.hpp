@@ -38,9 +38,10 @@
 #define LOG_THEN_THROW(level, LOGGER, ...)                                                                             \
     do                                                                                                                 \
     {                                                                                                                  \
-        std::string msg = fmt::format(__VA_ARGS__);                                                                    \
+        boost::stacktrace::stacktrace callstack;                                                                       \
+        std::string msg = fmt::format(__VA_ARGS__) + fmt::format("\n{}", callstack);                                   \
         LOGGER.level(msg);                                                                                             \
-        mo::throwWithCallstack(std::runtime_error(std::move(msg)));                                                    \
+        mo::throwWithCallstack(std::move(callstack), std::runtime_error(std::move(msg)));                              \
     } while (0)
 
 #define THROW(level, ...) LOG_THEN_THROW(level, mo::getDefaultLogger(), __VA_ARGS__)
