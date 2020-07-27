@@ -8,16 +8,16 @@
 #include <MetaObject/params/TSubscriberPtr.hpp>
 #include <MetaObject/params/detail/ParamMacrosImpl.hpp>
 
-#define REFLECT_INTERNAL_WITH_FLAG(FLAGS, TYPE, NAME, INIT)                                                            \
-    TYPE NAME = INIT;                                                                                                  \
+#define REFLECT_INTERNAL_WITH_FLAG(FLAGS, TYPE, NAME, ...)                                                             \
+    TYPE NAME = __VA_ARGS__;                                                                                           \
     static inline TYPE initializer_##NAME()                                                                            \
     {                                                                                                                  \
-        return INIT;                                                                                                   \
+        return __VA_ARGS__;                                                                                            \
     }                                                                                                                  \
     constexpr static auto getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_BEGIN>)                                 \
     {                                                                                                                  \
         return ct::makeMemberObjectPointer<FLAGS>(                                                                     \
-            #NAME, &DataType::NAME, ct::makeInitializer(&DataType::initializer_##NAME, #INIT));                        \
+            #NAME, &DataType::NAME, ct::makeInitializer(&DataType::initializer_##NAME, ""));                           \
     }
 
 #define PARAM(TYPE, NAME, ...)                                                                                         \
@@ -26,12 +26,16 @@
 
 #define ENUM_PARAM(name, ...)                                                                                          \
     mo::TParamPtr<mo::EnumParam> name##_param;                                                                         \
-    mo::EnumParam name;                                                                                                \
-    ENUM_PARAM_(__COUNTER__, name, __VA_ARGS__)
+    mo::EnumParam name = mo::EnumParam(ENUM_EXPAND(__VA_ARGS__));                                                      \
+    PUBLIC_ACCESS(name);
 
 #define INPUT(TYPE, NAME)                                                                                              \
     REFLECT_INTERNAL_WITH_FLAG(mo::ParamReflectionFlags::kINPUT, mo::TSubscriberPtr<TYPE>::Input_t, NAME, nullptr)     \
     REFLECT_INTERNAL_MEMBER(mo::TSubscriberPtr<TYPE>, NAME##_param)
+
+#define FLAGGED_INPUT(FLAG, TYPE, NAME)                                                                                \
+    REFLECT_INTERNAL_WITH_FLAG(mo::ParamReflectionFlags::kINPUT, mo::TSubscriberPtr<TYPE>::Input_t, NAME, nullptr)     \
+    REFLECT_INTERNAL_MEMBER(mo::TSubscriberPtr<TYPE>, NAME##_param, mo::TSubscriberPtr<TYPE>(#NAME, nullptr, FLAG))
 
 #define OPTIONAL_INPUT(type, name)                                                                                     \
     REFLECT_INTERNAL_WITH_FLAG(mo::ParamReflectionFlags::kOUTPUT | mo::ParamReflectionFlags::kOPTIONAL,                \
@@ -76,7 +80,7 @@
 #endif
 
 #define OUTPUT_WITH_FLAG_1(TYPE, FLAG, NAME)                                                                           \
-    mo::TPublisher<TYPE, mo::ParamFlags::kOUTPUT | FLAG> NAME;                                                         \
+    mo::TFPublisher<TYPE, mo::ParamFlags::kOUTPUT | FLAG> NAME;                                                        \
     constexpr static auto getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_BEGIN>)                                 \
     {                                                                                                                  \
         return ct::makeMemberObjectPointer<mo::ParamReflectionFlags::kSOURCE>(#NAME, &DataType::NAME);                 \
