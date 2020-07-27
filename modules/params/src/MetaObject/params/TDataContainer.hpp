@@ -40,7 +40,7 @@ namespace mo
         ~TDataContainerConstBase() override = default;
 
         TypeInfo getType() const override;
-        void save(ISaveVisitor&) const override;
+        void save(ISaveVisitor&, const std::string& name) const override;
         static void visitStatic(StaticVisitor&);
         void visit(StaticVisitor&) const override;
 
@@ -73,8 +73,7 @@ namespace mo
 
         ~TDataContainerNonConstBase() override = default;
 
-        void load(ILoadVisitor&) override;
-        // void load(BinaryInputVisitor& ar) override;
+        void load(ILoadVisitor&, const std::string& name) override;
         operator std::shared_ptr<T>();
         operator T*();
         T* ptr();
@@ -115,7 +114,7 @@ namespace mo
         {
         }
 
-        void load(ILoadVisitor&) override
+        void load(ILoadVisitor&, const std::string& name) override
         {
         }
     };
@@ -156,7 +155,7 @@ namespace mo
     }
 
     template <class T>
-    void TDataContainerConstBase<T>::save(ISaveVisitor& visitor) const
+    void TDataContainerConstBase<T>::save(ISaveVisitor& visitor, const std::string&) const
     {
         visitor(&header, "header");
         visitor(&data, "data");
@@ -208,7 +207,7 @@ namespace mo
     }
 
     template <class T>
-    void TDataContainerNonConstBase<T>::load(ILoadVisitor& visitor)
+    void TDataContainerNonConstBase<T>::load(ILoadVisitor& visitor, const std::string& name)
     {
         visitor(&this->header, "header");
         visitor(&this->data, "data");
