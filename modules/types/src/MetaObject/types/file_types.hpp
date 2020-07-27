@@ -49,6 +49,7 @@ namespace mo
     {
         EnumParam(const EnumParam&) = default;
         EnumParam(const std::initializer_list<std::pair<const char*, int>>& values);
+        EnumParam(const std::initializer_list<const char*>& string, const std::initializer_list<int>& values);
         EnumParam();
 
         void setValue(const std::initializer_list<const char*>& string, const std::initializer_list<int>& values);

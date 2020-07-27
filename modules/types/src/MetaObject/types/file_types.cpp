@@ -2,19 +2,23 @@
 
 namespace mo
 {
-    ReadFile::ReadFile(const std::string& str) : boost::filesystem::path(str)
+    ReadFile::ReadFile(const std::string& str)
+        : boost::filesystem::path(str)
     {
     }
 
-    WriteFile::WriteFile(const std::string& file) : boost::filesystem::path(file)
+    WriteFile::WriteFile(const std::string& file)
+        : boost::filesystem::path(file)
     {
     }
 
-    ReadDirectory::ReadDirectory(const std::string& path) : boost::filesystem::path(path)
+    ReadDirectory::ReadDirectory(const std::string& path)
+        : boost::filesystem::path(path)
     {
     }
 
-    WriteDirectory::WriteDirectory(const std::string& str) : boost::filesystem::path(str)
+    WriteDirectory::WriteDirectory(const std::string& str)
+        : boost::filesystem::path(str)
     {
     }
 
@@ -27,6 +31,11 @@ namespace mo
             enumerations.emplace_back(itr->first);
             this->values.emplace_back(itr->second);
         }
+    }
+
+    EnumParam::EnumParam(const std::initializer_list<const char*>& string, const std::initializer_list<int>& values)
+    {
+        setValue(string, values);
     }
 
     EnumParam::EnumParam()
