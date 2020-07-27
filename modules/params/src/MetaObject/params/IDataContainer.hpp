@@ -33,8 +33,8 @@ namespace mo
 
         virtual TypeInfo getType() const = 0;
 
-        virtual void load(ILoadVisitor&) = 0;
-        virtual void save(ISaveVisitor&) const = 0;
+        virtual void load(ILoadVisitor&, const std::string& name) = 0;
+        virtual void save(ISaveVisitor&, const std::string& name) const = 0;
         virtual void visit(StaticVisitor&) const = 0;
 
         virtual const Header& getHeader() const = 0;
@@ -48,3 +48,13 @@ namespace mo
         const T* ptr() const;
     };
 } // namespace mo
+
+namespace ct
+{
+    REFLECT_BEGIN(mo::IDataContainer)
+        MEMBER_FUNCTION(save)
+        MEMBER_FUNCTION(load)
+        MEMBER_FUNCTION(record)
+        MEMBER_FUNCTION(sync)
+    REFLECT_END;
+} // namespace ct
