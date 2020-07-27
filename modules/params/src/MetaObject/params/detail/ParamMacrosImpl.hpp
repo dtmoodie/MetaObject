@@ -16,35 +16,6 @@ namespace mo
     };
 } // namespace mo
 
-#define ENUM_PARAM_(N, NAME, ...)                                                                                      \
-    template <class V, class... Args, mo::VisitationType FILTER>                                                       \
-    inline void reflectHelper(V& visitor,                                                                              \
-                              mo::VisitationFilter<FILTER> filter,                                                     \
-                              mo::MemberFilter<mo::CONTROL> param,                                                     \
-                              const ct::Indexer<__COUNTER__> cnt,                                                      \
-                              Args&&... args)                                                                          \
-    {                                                                                                                  \
-        visitor(mo::tagData(&NAME), mo::Name(#NAME), mo::tagParam(NAME##_param), cnt, std::forward<Args>(args)...);    \
-        if (FILTER == mo::INIT)                                                                                        \
-        {                                                                                                              \
-            NAME.setValue(ENUM_EXPAND(__VA_ARGS__));                                                                   \
-        }                                                                                                              \
-        reflectHelper(visitor, filter, param, --cnt, std::forward<Args>(args)...);                                     \
-    }                                                                                                                  \
-    template <class V, class... Args, mo::VisitationType FILTER>                                                       \
-    static inline void reflectHelperStatic(V& visitor,                                                                 \
-                                           mo::VisitationFilter<FILTER> filter,                                        \
-                                           mo::MemberFilter<mo::CONTROL> param,                                        \
-                                           const ct::Indexer<__COUNTER__> cnt,                                         \
-                                           Args&&... args)                                                             \
-    {                                                                                                                  \
-        visitor(mo::Name(#NAME),                                                                                       \
-                mo::tagType<typename std::decay<decltype(DType::NAME)>::type>(),                                       \
-                cnt,                                                                                                   \
-                std::forward<Args>(args)...);                                                                          \
-        reflectHelperStatic(visitor, filter, param, --cnt, std::forward<Args>(args)...);                               \
-    }
-
 #define TOOLTIP_(NAME, TOOLTIP_, N)                                                                                    \
     template <class C, class V, class... Args>                                                                         \
     static inline void reflectHelper(                                                                                  \
