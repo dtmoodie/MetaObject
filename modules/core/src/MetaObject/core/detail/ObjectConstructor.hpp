@@ -1,10 +1,12 @@
 #ifndef MO_CORE_OBJECT_CONSTRUCTOR_HPP
 #define MO_CORE_OBJECT_CONSTRUCTOR_HPP
+#include <ct/type_traits.hpp>
+
 #include <memory>
 
 namespace mo
 {
-    template <class T>
+    template <class T, class E = void>
     struct ObjectConstructor
     {
         using SharedPtr_t = std::shared_ptr<T>;
@@ -30,6 +32,7 @@ namespace mo
             return new T();
         }
     };
+
 } // namespace mo
 
 #endif // MO_CORE_OBJECT_CONSTRUCTOR_HPP
