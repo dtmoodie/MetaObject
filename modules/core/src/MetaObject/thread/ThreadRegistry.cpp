@@ -51,8 +51,9 @@ void ThreadRegistry::registerThread(ThreadType type, mo::IAsyncStreamPtr_t strea
     }
 }
 
-mo::IAsyncStreamPtr_t ThreadRegistry::getThread(int type)
+mo::IAsyncStreamPtr_t ThreadRegistry::getThread(ThreadType type_)
 {
+    const int type = type_;
     std::lock_guard<std::mutex> lock(_pimpl->mtx);
     // TODO some kind of load balancing for multiple threads of a specific type
     IAsyncStreamPtr_t current_thread = IAsyncStream::current();
