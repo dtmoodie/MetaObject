@@ -5,6 +5,7 @@
 #include "MetaObject/logging/logging.hpp"
 
 #include "MetaObject/core/SystemTable.hpp"
+#include <MetaObject/core/detail/ObjectConstructor.hpp>
 
 #include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 
@@ -118,6 +119,36 @@ namespace mo
 
         template <class T, class TINFO, class SCORING_FUNCTOR>
         rcc::shared_ptr<T> createBestObject(int64_t interface_id, SCORING_FUNCTOR&& scorer) const;
+    };
+
+    template <class T>
+    struct ObjectConstructor<T, ct::EnableIf<ct::IsBase<ct::Base<IObject>, ct::Derived<T>>::value>>
+    {
+        using SharedPtr_t = rcc::shared_ptr<T>;
+        using UniquePtr_t = std::unique_ptr<T>;
+
+        SharedPtr_t makeShared() const
+        {
+            std::shared_ptr<MetaObjectFactory> inst = MetaObjectFactory::instance();
+            const char* name = TActual<T>::GetTypeNameStatic();
+            rcc::shared_ptr<T> ptr = inst->create(name);
+            return ptr;
+        }
+
+        SharedPtr_t createShared() const
+        {
+            return makeShared();
+        }
+
+        UniquePtr_t createUnique() const
+        {
+            return {};
+        }
+
+        T* create() const
+        {
+            return nullptr;
+        }
     };
 
     MO_INLINE std::shared_ptr<MetaObjectFactory> MetaObjectFactory::instance()
