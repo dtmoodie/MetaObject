@@ -13,7 +13,6 @@ namespace mo
 
     // concrete types
     struct AccessTokenLock;
-    class InputParamAny;
     class ISubscriber;
 
     class ParamFactory;
