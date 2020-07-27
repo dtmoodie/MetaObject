@@ -34,10 +34,13 @@ namespace mo
       public:
         using Input_t = const T*;
 
-        TSubscriberPtr(const std::string& name = "", const T** user_var_ = nullptr)
+        TSubscriberPtr(const std::string& name = "",
+                       const T** user_var_ = nullptr,
+                       mo::ParamFlags flags = mo::ParamFlags::kINPUT)
             : m_user_var(user_var_)
         {
             this->setName(name);
+            this->appendFlags(flags);
         }
 
         void setUserDataPtr(const T** user_var_)
