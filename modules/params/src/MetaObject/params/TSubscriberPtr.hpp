@@ -86,7 +86,7 @@ namespace mo
             return os;
         }
 
-        void onData(TDataContainerConstPtr_t<T> data,
+        void onData(TDataContainerConstPtr_t<typename TSubscriber<T>::type> data,
                     const IParam& update_source,
                     UpdateFlags fg,
                     IAsyncStream& stream) override
