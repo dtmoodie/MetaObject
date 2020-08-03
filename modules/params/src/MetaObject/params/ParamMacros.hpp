@@ -2,11 +2,13 @@
 
 #include <MetaObject/core/detail/Enums.hpp>
 #include <MetaObject/core/detail/HelperMacros.hpp>
+
 #include <MetaObject/params/IParam.hpp>
-#include <MetaObject/params/TParamPtr.hpp>
 #include <MetaObject/params/TPublisher.hpp>
 #include <MetaObject/params/TSubscriberPtr.hpp>
 #include <MetaObject/params/detail/ParamMacrosImpl.hpp>
+
+#include <MetaObject/types/file_types.hpp>
 
 #define REFLECT_INTERNAL_WITH_FLAG(FLAGS, TYPE, NAME, ...)                                                             \
     TYPE NAME = __VA_ARGS__;                                                                                           \
@@ -25,7 +27,7 @@
     REFLECT_INTERNAL_WITH_FLAG(mo::ParamReflectionFlags::kCONTROL, TYPE, NAME, __VA_ARGS__)
 
 #define ENUM_PARAM(name, ...)                                                                                          \
-    mo::TParamPtr<mo::EnumParam> name##_param;                                                                         \
+    mo::TControlParam<mo::EnumParam*> name##_param;                                                                    \
     mo::EnumParam name = mo::EnumParam(ENUM_EXPAND(__VA_ARGS__));                                                      \
     PUBLIC_ACCESS(name);
 
@@ -45,11 +47,11 @@
     REFLECT_INTERNAL_MEMBER(mo::TSubscriberPtr<type>, name##_param)
 
 #define STATE(TYPE, NAME, ...)                                                                                         \
-    REFLECT_INTERNAL_MEMBER(mo::TParamPtr<TYPE>, NAME##_param)                                                         \
+    REFLECT_INTERNAL_MEMBER(mo::TControlParam<TYPE*>, NAME##_param)                                                    \
     REFLECT_INTERNAL_WITH_FLAG(mo::ParamReflectionFlags::kSTATE, TYPE, NAME, __VA_ARGS__)
 
 #define STATUS(TYPE, NAME, ...)                                                                                        \
-    REFLECT_INTERNAL_MEMBER(mo::TParamPtr<TYPE>, NAME##_param)                                                         \
+    REFLECT_INTERNAL_MEMBER(mo::TControlParam<TYPE*>, NAME##_param)                                                    \
     REFLECT_INTERNAL_WITH_FLAG(mo::ParamReflectionFlags::kSTATUS, TYPE, NAME, __VA_ARGS__)
 
 // These don't use CT's REFLECT_INTERNAL... macros because we want init##NAME to return
