@@ -1,5 +1,4 @@
 #pragma once
-#include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/TSubscriberPtr.hpp"
 #include <MetaObject/params/detail/ParamMacrosImpl.hpp>
 
