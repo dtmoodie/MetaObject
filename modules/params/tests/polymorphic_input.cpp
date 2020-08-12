@@ -1,5 +1,4 @@
 #include <MetaObject/params/TMultiPublisher.hpp>
-#include <MetaObject/params/TParamPtr.hpp>
 #include <MetaObject/params/TPublisher.hpp>
 #include <MetaObject/thread/Mutex.hpp>
 

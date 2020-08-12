@@ -1,7 +1,6 @@
 #include "MetaObject/core.hpp"
 #include "MetaObject/core/SystemTable.hpp"
 
-#include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/detail/print_data.hpp"
 
 #include <MetaObject/thread/fiber_include.hpp>

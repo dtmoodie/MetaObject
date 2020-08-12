@@ -6,7 +6,6 @@
 #include "MetaObject/object/detail/IMetaObjectImpl.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
 #include "MetaObject/params//ParamMacros.hpp"
-#include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/TSubscriberPtr.hpp"
 #include <MetaObject/params/buffers/IBuffer.hpp>
 

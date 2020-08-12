@@ -1,7 +1,6 @@
 
 #include "MetaObject/core.hpp"
 #include "MetaObject/params/ParamMacros.hpp"
-#include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/TPublisher.hpp"
 #include "MetaObject/params/TSubscriberPtr.hpp"
 #include "MetaObject/runtime_reflection.hpp"

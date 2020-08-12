@@ -1,4 +1,3 @@
-#include <MetaObject/params/TParamPtr.hpp>
 #include <MetaObject/params/TPublisher.hpp>
 #include <MetaObject/params/TSubscriber.hpp>
 #include <MetaObject/params/TSubscriberPtr.hpp>

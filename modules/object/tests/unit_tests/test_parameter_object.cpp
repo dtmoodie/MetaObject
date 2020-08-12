@@ -3,7 +3,6 @@
 #include "MetaObject/object/MetaObject.hpp"
 #include "MetaObject/object/detail/MetaObjectMacros.hpp"
 #include "MetaObject/params/ParamMacros.hpp"
-#include "MetaObject/params/TParamPtr.hpp"
 #include "MetaObject/params/TSubscriberPtr.hpp"
 #include "MetaObject/params/buffers/BufferFactory.hpp"
 #include "MetaObject/params/detail/MetaParamImpl.hpp"

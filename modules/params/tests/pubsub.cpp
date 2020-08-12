@@ -1,4 +1,3 @@
-#include <MetaObject/params/TParamPtr.hpp>
 #include <MetaObject/params/TPublisher.hpp>
 #include <MetaObject/params/TSubscriberPtr.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/array_adapter.hpp>
