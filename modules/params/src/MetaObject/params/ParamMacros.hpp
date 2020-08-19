@@ -37,7 +37,8 @@
 
 #define FLAGGED_INPUT(FLAG, TYPE, NAME)                                                                                \
     REFLECT_INTERNAL_WITH_FLAG(mo::ParamReflectionFlags::kINPUT, mo::TSubscriberPtr<TYPE>::Input_t, NAME, nullptr)     \
-    REFLECT_INTERNAL_MEMBER(mo::TSubscriberPtr<TYPE>, NAME##_param, mo::TSubscriberPtr<TYPE>(#NAME, nullptr, FLAG))
+    using NAME##_Subscriber_t = mo::TFSubscriberPtr<TYPE, FLAG>;                                                       \
+    REFLECT_INTERNAL_MEMBER(NAME##_Subscriber_t, NAME##_param)
 
 #define OPTIONAL_INPUT(type, name)                                                                                     \
     REFLECT_INTERNAL_WITH_FLAG(mo::ParamReflectionFlags::kOUTPUT | mo::ParamReflectionFlags::kOPTIONAL,                \
