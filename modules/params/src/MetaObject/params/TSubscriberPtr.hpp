@@ -95,12 +95,12 @@ namespace mo
             Lock_t lock(this->mtx());
             if (m_user_var)
             {
-                *m_user_var = data->ptr();
+                *m_user_var = dynamic_cast<Input_t>(data->ptr());
             }
         }
 
       private:
-        const T** m_user_var; // Pointer to the user space pointer variable of type T
+        Input_t* m_user_var; // Pointer to the user space pointer variable of type T
     };
 
     // Deprecated in favor of ct::TArrayView
@@ -146,11 +146,11 @@ namespace mo
             TSubscriber<std::vector<T, A>>::onData(data, param, fg, stream);
             if (m_user_var)
             {
-                *m_user_var = &data->data;
+                *m_user_var = data->ptr();
             }
         }
 
-        const std::vector<T, A>** m_user_var; // Pointer to the user space pointer variable of type T
+        Input_t* m_user_var; // Pointer to the user space pointer variable of type T
     };
 
     template <typename T>
@@ -206,7 +206,7 @@ namespace mo
             }
         }
 
-        ct::TArrayView<const T>* m_user_var; // Pointer to the user space pointer variable of type T
+        Input_t* m_user_var; // Pointer to the user space pointer variable of type T
     };
 
     template <typename T>
@@ -216,9 +216,9 @@ namespace mo
         using Input_t = std::shared_ptr<const T>;
 
         TSubscriberPtr(const std::string& name = "", std::shared_ptr<const T>* user_var_ = nullptr)
-            : TSubscriber<T>(name)
-            , m_user_var(user_var_)
+            : m_user_var(user_var_)
         {
+            this->setName(name);
         }
 
         void setUserDataPtr(std::shared_ptr<const T>* user_var_)
@@ -227,32 +227,26 @@ namespace mo
             m_user_var = user_var_;
         }
 
-        virtual void updateDataImpl(const TDataContainerPtr_t<T>& data)
+        void
+        onData(TDataContainerConstPtr_t<T> data, const IParam& param, UpdateFlags flags, IAsyncStream& stream) override
         {
             Lock_t lock(this->mtx());
-            TSubscriber<T>::updateDataImpl(data);
+            TSubscriber<T>::onData(data, param, flags, stream);
             if (m_user_var)
             {
-                *m_user_var = data;
+                *m_user_var = data->sharedPtr();
             }
         }
 
-        IDataContainerPtr_t getData(const Header& desired = Header(),
-                                    IAsyncStream& = IAsyncStream::currentRef()) override
+        IDataContainerConstPtr_t getData(const Header* desired = nullptr, IAsyncStream* stream = nullptr) override
         {
-            auto data = TSubscriber<T>::getData(desired);
-            auto typed = std::static_pointer_cast<TDataContainer<T>>(data);
+            auto data = TSubscriber<T>::getData(desired, stream);
+            auto typed = std::static_pointer_cast<const TDataContainer<T>>(data);
             if (typed && m_user_var)
             {
                 *m_user_var = typed->sharedPtr();
             }
             return data;
-        }
-
-        IDataContainerConstPtr_t getData(const Header& desired = Header(),
-                                         IAsyncStream& = IAsyncStream::currentRef()) const override
-        {
-            return TSubscriber<T>::getData(desired);
         }
 
         std::ostream& print(std::ostream& os) const override
@@ -276,6 +270,16 @@ namespace mo
         }
 
       protected:
-        std::shared_ptr<const T>* m_user_var; // Pointer to the user space pointer variable of type T
+        Input_t* m_user_var; // Pointer to the user space pointer variable of type T
+    };
+
+    template <class T, uint32_t F>
+    class TFSubscriberPtr : public TSubscriberPtr<T>
+    {
+      public:
+        TFSubscriberPtr()
+        {
+            this->appendFlags(F);
+        }
     };
 } // namespace mo
