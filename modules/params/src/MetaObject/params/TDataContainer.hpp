@@ -75,10 +75,13 @@ namespace mo
 
         void load(ILoadVisitor&, const std::string& name) override;
         operator std::shared_ptr<T>();
+        operator std::shared_ptr<const T>() const;
         operator T*();
+        operator const T*() const;
         T* ptr();
         using Super_t::ptr;
         std::shared_ptr<T> sharedPtr();
+        using Super_t::sharedPtr;
     };
 
     template <class T, bool Const = false>
@@ -203,7 +206,7 @@ namespace mo
     std::shared_ptr<const T> TDataContainerConstBase<T>::sharedPtr() const
     {
         auto owning_ptr = shared_from_this();
-        return std::shared_ptr<const T>(&data, [owning_ptr](T*) {});
+        return std::shared_ptr<const T>(&data, [owning_ptr](const T*) {});
     }
 
     template <class T>
@@ -220,7 +223,19 @@ namespace mo
     }
 
     template <class T>
+    TDataContainerNonConstBase<T>::operator std::shared_ptr<const T>() const
+    {
+        return sharedPtr();
+    }
+
+    template <class T>
     TDataContainerNonConstBase<T>::operator T*()
+    {
+        return &this->data;
+    }
+
+    template <class T>
+    TDataContainerNonConstBase<T>::operator const T*() const
     {
         return &this->data;
     }
