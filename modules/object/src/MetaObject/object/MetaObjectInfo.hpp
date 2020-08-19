@@ -76,7 +76,10 @@ namespace mo
         template <class PTR>
         void serialize(const PTR ptr)
         {
-            m_serializer->SerializeProperty(ptr.getName().cStr(), ptr.set(*m_this));
+            ct::StringView name_ = ptr.getName();
+            const char* name = name_.cStr();
+            auto& ref = ptr.set(*m_this);
+            m_serializer->SerializeProperty(name, ref);
         }
 
         ISimpleSerializer* m_serializer;
@@ -197,6 +200,19 @@ namespace mo
         template <class SERIALIZER, class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
         void serializeParam(SERIALIZER&,
                             ct::MemberObjectPointer<mo::TSubscriberPtr<DTYPE> CTYPE::*, FLAGS, METADATA>,
+                            ct::Indexer<I>) const
+        {
+        }
+
+        template <class SERIALIZER,
+                  class DTYPE,
+                  class CTYPE,
+                  uint32_t PFLAGS,
+                  ct::Flag_t FLAGS,
+                  class METADATA,
+                  ct::index_t I>
+        void serializeParam(SERIALIZER&,
+                            ct::MemberObjectPointer<mo::TFSubscriberPtr<DTYPE, PFLAGS> CTYPE::*, FLAGS, METADATA>,
                             ct::Indexer<I>) const
         {
         }
