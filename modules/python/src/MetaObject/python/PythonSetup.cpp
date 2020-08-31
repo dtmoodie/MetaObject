@@ -132,23 +132,30 @@ namespace mo
 
         void setLogLevel(const std::string& level)
         {
+            spdlog::logger& logger = mo::getDefaultLogger();
             if (level == "trace")
             {
+                logger.set_level(spdlog::level::trace);
             }
             else if (level == "debug")
             {
+                logger.set_level(spdlog::level::debug);
             }
             else if (level == "info")
             {
+                logger.set_level(spdlog::level::info);
             }
-            else if (level == "warning")
+            else if (level == "warning" || level == "warn")
             {
+                logger.set_level(spdlog::level::warn);
             }
             else if (level == "error")
             {
+                logger.set_level(spdlog::level::err);
             }
             else if (level == "fatal")
             {
+                logger.set_level(spdlog::level::critical);
             }
         }
         struct PythonSetup
