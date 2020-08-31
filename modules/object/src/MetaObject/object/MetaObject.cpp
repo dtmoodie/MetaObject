@@ -1100,9 +1100,12 @@ namespace mo
 
     void MetaObject::addParam(IParam& param)
     {
-        MO_ASSERT(m_stream);
         param.setMtx(getMutex());
-        param.setStream(*m_stream);
+        if (m_stream)
+        {
+            param.setStream(*m_stream);
+        }
+
 #ifdef _DEBUG
         for (auto& param_ : m_params)
         {
