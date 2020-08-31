@@ -14,7 +14,7 @@
 #include <cereal/types/map.hpp>
 #include <cereal/types/string.hpp>
 
-#ifdef MO_HAVE_PYTHON
+#ifdef MO_HAVE_PYTHON2
 #include <boost/python/object.hpp>
 #endif
 
@@ -59,7 +59,7 @@ namespace ct
 #include <boost/lexical_cast.hpp>
 #include <cereal/types/vector.hpp>
 
-#ifdef MO_HAVE_PYTHON
+#ifdef MO_HAVE_PYTHON2
 namespace ct
 {
     template <class T, ssize_t N>

@@ -21,6 +21,6 @@ if(TARGET metaobject_wtgui)
   TARGET_LINK_LIBRARIES(metaobject_metaparams PUBLIC metaobject_wtgui)
 endif()
 
-if(MO_HAVE_PYTHON)
+if(MO_HAVE_PYTHON2)
     TARGET_LINK_LIBRARIES(metaobject_metaparams PUBLIC metaobject_python)
 endif()

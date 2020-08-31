@@ -28,7 +28,7 @@
 
 using namespace mo;
 
-#ifdef MO_HAVE_PYTHON
+#ifdef MO_HAVE_PYTHON2
 #include <boost/python.hpp>
 namespace ct
 {

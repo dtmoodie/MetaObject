@@ -1,5 +1,5 @@
 #pragma once
-#define MO_HAVE_PYTHON 1
+#define MO_HAVE_PYTHON2 1
 #include "DataConverter.hpp"
 #include "PythonSetup.hpp"
 #include "converters.hpp"
@@ -33,4 +33,4 @@ namespace mo
     };
 
     MO_METAPARAM_PYTHON_(__COUNTER__);
-}
+} // namespace mo
