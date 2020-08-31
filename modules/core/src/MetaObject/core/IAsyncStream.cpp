@@ -32,12 +32,17 @@ namespace mo
 
     auto IAsyncStream::current() -> Ptr_t
     {
-        auto props = boost::fibers::context::active()->get_properties();
-        if (!props)
+        boost::fibers::context* ctx = boost::fibers::context::active();
+        if (ctx)
         {
-            initThread();
+            auto props = ctx->get_properties();
+            if (!props)
+            {
+                initThread();
+            }
+            return boost::this_fiber::properties<FiberProperty>().stream();
         }
-        return boost::this_fiber::properties<FiberProperty>().stream();
+        return {};
     }
 
     IAsyncStream& IAsyncStream::currentRef()
