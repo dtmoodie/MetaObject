@@ -137,6 +137,12 @@ namespace mo
     }
 
     template <class T>
+    Duration operator*(const TimePrefix<T>& /*lhs*/, const uint64_t rhs)
+    {
+        return TimePrefix<T>::convert(int64_t(rhs));
+    }
+
+    template <class T>
     Duration operator*(int64_t rhs, const TimePrefix<T>& /*lhs*/)
     {
         return TimePrefix<T>::convert(rhs);
