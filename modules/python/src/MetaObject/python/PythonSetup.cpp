@@ -6,6 +6,8 @@
 #include "PythonPolicy.hpp"
 
 #include "ct/reflect.hpp"
+#include <ct/interop/boost_python/ReflectedConverter.hpp>
+
 #include <opencv2/core/types.hpp>
 
 #include <MetaObject/core.hpp>
@@ -15,6 +17,8 @@
 #include <MetaObject/object/IMetaObject.hpp>
 #include <MetaObject/object/MetaObjectFactory.hpp>
 #include <MetaObject/params/ParamFactory.hpp>
+#include <MetaObject/thread/Thread.hpp>
+#include <MetaObject/thread/ThreadPool.hpp>
 
 #include <MetaObject/core/detail/allocator_policies/Combined.hpp>
 #include <MetaObject/core/detail/allocator_policies/Pool.hpp>
@@ -453,6 +457,20 @@ namespace mo
             std::shared_ptr<python::ParamCallbackContainer::Registry_t> m_callback_registry;
         };
 
+        std::shared_ptr<mo::Thread> createThread()
+        {
+            auto pool = SystemTable::instance()->getSingleton<mo::ThreadPool>();
+            return pool->requestThread();
+        };
+
+        void eventLoop(int milliseconds)
+        {
+            static mo::ConditionVariable cv;
+            static mo::Mutex_t mtx;
+            mo::Mutex_t::Lock_t lock(mtx);
+            cv.wait_for(lock, std::chrono::milliseconds(milliseconds));
+        }
+
         std::shared_ptr<SystemTable> pythonSetup(const char* module_name_)
         {
             std::string module_name(module_name_);
@@ -468,6 +486,40 @@ namespace mo
             boost::python::def("listConstructableObjects", &listConstructableObjects);
             boost::python::def("listObjectInfos", &listObjectInfos);
             boost::python::def("log", &setLogLevel);
+
+            static_assert(ct::ReflectImpl<mo::Thread>::NUM_FIELDS > 0, "");
+            static_assert(ct::IsReflected<mo::Thread>::value, "");
+
+            boost::python::class_<mo::Thread, std::shared_ptr<mo::Thread>, boost::noncopyable> thread(
+                "Thread", boost::python::no_init);
+            ct::detail::addProperties<mo::Thread>(thread);
+            thread.def("__getitem__", &ct::detail::getItem<mo::Thread>);
+            thread.def("__setitem__", &ct::detail::setItem<mo::Thread>);
+            thread.def("__repr__", &ct::detail::repr<mo::Thread>);
+            thread.def("__len__", &ct::detail::len<mo::Thread>);
+
+            boost::python::def("createThread", &createThread);
+
+            boost::python::class_<mo::IAsyncStream, std::shared_ptr<mo::IAsyncStream>, boost::noncopyable> stream(
+                "Stream", boost::python::no_init);
+            ct::detail::addProperties<mo::IAsyncStream>(stream);
+
+            boost::python::enum_<mo::PriorityLevels>("PriorityLevels")
+                .value("NONE", mo::PriorityLevels::NONE)
+                .value("LOWEST", mo::PriorityLevels::LOWEST)
+                .value("LOW", mo::PriorityLevels::LOWEST)
+                .value("MEDIUM", mo::PriorityLevels::MEDIUM)
+                .value("HIGH", mo::PriorityLevels::HIGH)
+                .value("HIGHEST", mo::PriorityLevels::HIGHEST);
+
+            boost::python::def("createStream",
+                               &mo::IAsyncStream::create,
+                               (boost::python::arg("name") = "",
+                                boost::python::arg("device_id") = 0,
+                                boost::python::arg("device_priority") = mo::MEDIUM,
+                                boost::python::arg("thread_priority") = mo::MEDIUM));
+
+            boost::python::def("eventLoop", &eventLoop);
 
             loadMetaParams(lib_guard->m_system_table.get());
 

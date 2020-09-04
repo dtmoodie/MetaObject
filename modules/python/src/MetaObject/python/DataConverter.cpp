@@ -21,7 +21,7 @@ namespace mo
             m_registered_converters[type] = std::make_pair(setter, getter);
         }
 
-        DataConverterRegistry::Set_t DataConverterRegistry::getSetter(const mo::TypeInfo& type)
+        DataConverterRegistry::Set_t DataConverterRegistry::getSetter(const mo::TypeInfo& type) const
         {
             auto itr = m_registered_converters.find(type);
             if (itr != m_registered_converters.end())
@@ -31,7 +31,7 @@ namespace mo
             return {};
         }
 
-        DataConverterRegistry::Get_t DataConverterRegistry::getGetter(const mo::TypeInfo& type)
+        DataConverterRegistry::Get_t DataConverterRegistry::getGetter(const mo::TypeInfo& type) const
         {
             auto itr = m_registered_converters.find(type);
             if (itr != m_registered_converters.end())
@@ -51,5 +51,5 @@ namespace mo
             return types;
         }
 
-    } // namespace mo::python
+    } // namespace python
 } // namespace mo

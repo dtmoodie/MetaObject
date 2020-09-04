@@ -29,8 +29,8 @@ namespace mo
             static DataConverterRegistry* instance();
             static DataConverterRegistry* instance(SystemTable* table);
             void registerConverters(const mo::TypeInfo& type, const Set_t& setter, const Get_t& getter);
-            Set_t getSetter(const mo::TypeInfo& type);
-            Get_t getGetter(const mo::TypeInfo& type);
+            Set_t getSetter(const mo::TypeInfo& type) const;
+            Get_t getGetter(const mo::TypeInfo& type) const;
             std::vector<mo::TypeInfo> listConverters();
 
           private:

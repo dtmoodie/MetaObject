@@ -1,5 +1,5 @@
 #pragma once
-#define NPY_NO_DEPRECATED_API  NPY_1_7_API_VERSION
+#define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 
 #include "converters.hpp"
 #include "numpy/ndarraytypes.h"
@@ -30,14 +30,14 @@ namespace ct
       private:
         PyGILState_STATE _state;
     };
-}
+} // namespace ct
 namespace mo
 {
     void setupAllocator();
     class MO_EXPORTS NumpyAllocator : virtual public cv::MatAllocator
     {
       public:
-        NumpyAllocator(cv::MatAllocator* default_allocator_ = nullptr);
+        NumpyAllocator(cv::MatAllocator* default_allocator_ = cv::Mat::getDefaultAllocator());
         ~NumpyAllocator() override;
 
         cv::Mat fromPython(PyObject* arr) const;
@@ -58,4 +58,4 @@ namespace mo
 
         cv::MatAllocator* default_allocator;
     };
-}
+} // namespace mo
