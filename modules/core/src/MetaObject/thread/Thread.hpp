@@ -9,6 +9,9 @@
 #include <MetaObject/thread/ConditionVariable.hpp>
 #include <MetaObject/thread/Mutex.hpp>
 
+#include <ct/reflect.hpp>
+#include <ct/reflect_macros.hpp>
+
 #include <boost/thread.hpp>
 
 #include <chrono>
@@ -65,4 +68,16 @@ namespace mo
         std::condition_variable* m_scheduler_wakeup_cv = nullptr;
     };
 } // namespace mo
+
+namespace ct
+{
+    REFLECT_BEGIN(mo::Thread)
+        static mo::IAsyncStreamPtr_t getStream(const mo::Thread& thread)
+        {
+            return thread.asyncStream();
+        }
+        MEMBER_FUNCTION(stream, &getStream)
+        PROPERTY(name, &mo::Thread::threadName, &mo::Thread::setName)
+    REFLECT_END;
+} // namespace ct
 #endif // MO_THREAD_HPP

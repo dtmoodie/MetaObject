@@ -1,7 +1,11 @@
 #ifndef MO_CORE_IASYNC_STREAM_HPP
 #define MO_CORE_IASYNC_STREAM_HPP
 #include <MetaObject/thread/PriorityLevels.hpp>
+
+#include <ct/reflect.hpp>
+#include <ct/reflect_macros.hpp>
 #include <ct/types/TArrayView.hpp>
+
 #include <functional>
 
 namespace mo
@@ -49,7 +53,7 @@ namespace mo
         virtual uint64_t processId() const = 0;
         virtual uint64_t streamId() const = 0;
         virtual AllocatorPtr_t hostAllocator() const = 0;
-    }; // class mo::IContext
+    }; // class mo::IAsyncStream
 
     struct MO_EXPORTS IDeviceStream : virtual public IAsyncStream
     {
@@ -74,4 +78,14 @@ namespace mo
         virtual std::shared_ptr<DeviceAllocator> deviceAllocator() const = 0;
     };
 } // namespace mo
+namespace ct
+{
+    REFLECT_BEGIN(mo::IAsyncStream)
+        PROPERTY(name, &mo::IAsyncStream::name, &mo::IAsyncStream::setName)
+        PROPERTY(processId)
+        PROPERTY(streamId)
+        PROPERTY(isDeviceStream)
+        MEMBER_FUNCTION(synchronize)
+    REFLECT_END;
+} // namespace ct
 #endif // MO_CORE_IASYNC_STREAM_HPP
