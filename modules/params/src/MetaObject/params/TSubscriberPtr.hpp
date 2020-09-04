@@ -80,7 +80,7 @@ namespace mo
                 }
                 else
                 {
-                    os << " unset";
+                    os << " no data recevied yet";
                 }
             }
             return os;

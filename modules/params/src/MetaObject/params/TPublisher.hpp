@@ -244,6 +244,7 @@ namespace mo
     {
         Mutex_t::Lock_t lock(this->mtx());
         os << this->getTreeName();
+        os << " type: " << this->getOutputTypes();
         return os;
     }
 
