@@ -20,6 +20,21 @@
 
 namespace mo
 {
+
+    boost::python::object getParam(const mo::IControlParam* param)
+    {
+        python::ControlParamGetter getter;
+        param->save(getter);
+        return getter.getObject();
+    }
+
+    bool setParam(mo::IControlParam* param, const boost::python::object& python_obj)
+    {
+        python::ControlParamSetter setter(python_obj);
+        param->load(setter);
+        return setter.success();
+    }
+    
     namespace python
     {
         namespace detail

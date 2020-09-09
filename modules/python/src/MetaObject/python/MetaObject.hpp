@@ -1,4 +1,5 @@
-#pragma once
+#ifndef MO_PYTHON_METAOBJECT_HPP
+#define MO_PYTHON_METAOBJECT_HPP
 
 #include <boost/mpl/vector.hpp>
 #include <functional>
@@ -10,14 +11,22 @@ namespace boost
         namespace detail
         {
 
+            template <class T, class... Args, class... OTHER>
+            inline boost::mpl::vector<T, Args...> get_signature(const std::function<T(Args...)>&, OTHER&&...)
+            {
+                return boost::mpl::vector<T, Args...>();
+            }
+
             template <class T, class... Args>
-            inline boost::mpl::vector<T, Args...> get_signature(std::function<T(Args...)>, void* = nullptr)
+            inline boost::mpl::vector<T, Args...> get_signature(const std::function<T(Args...)>&)
             {
                 return boost::mpl::vector<T, Args...>();
             }
         } // namespace detail
     }     // namespace python
 } // namespace boost
+
+#include "PythonConversionVisitation.hpp"
 
 #include <MetaObject/object/IMetaObjectInfo.hpp>
 #include <MetaObject/params/ParamInfo.hpp>
@@ -80,7 +89,7 @@ namespace mo
                         MO_LOG(warn, "Setting of input parameters not implemented yet");
                         continue;
                     }
-                    auto setter = python::DataConverterRegistry::instance()->getSetter(param->getTypeInfo());
+                    /*auto setter = python::DataConverterRegistry::instance()->getSetter(param->getTypeInfo());
                     if (setter)
                     {
                         if (!setter(param, args[i]))
@@ -90,10 +99,11 @@ namespace mo
                     }
                     else
                     {
-                        MO_LOG(debug,
-                               "No converter available for {}",
-                               mo::TypeTable::instance()->typeToName(param->getTypeInfo()));
-                    }
+                    }*/
+
+                    MO_LOG(debug,
+                           "No converter available for {}",
+                           mo::TypeTable::instance()->typeToName(param->getTypeInfo()));
                 }
                 else
                 {
@@ -216,27 +226,28 @@ namespace mo
         return output;
     }
 
+    bool setParam(mo::IControlParam* param, const boost::python::object& python_obj);
+
     template <class T>
-    bool setParamHelper(python::DataConverterRegistry::Set_t setter,
-                        std::string name,
-                        T& obj,
-                        const boost::python::object& python_obj)
+    bool setParamHelper(std::string name, T& obj, const boost::python::object& python_obj)
     {
-        auto param = obj.getParam(name);
+        mo::IControlParam* param = obj.getParam(name);
         if (param)
         {
-            return setter(param, python_obj);
+            return setParam(param, python_obj);
         }
         return false;
     }
 
+    boost::python::object getParam(const mo::IControlParam* param);
+
     template <class T>
-    boost::python::object getParamHelper(python::DataConverterRegistry::Get_t getter, std::string name, const T& obj)
+    boost::python::object getParamHelper(std::string name, const T& obj)
     {
-        auto param = obj.getParam(name);
+        const mo::IControlParam* param = obj.getParam(name);
         if (param)
         {
-            return getter(param);
+            return getParam(param);
         }
         return {};
     }
@@ -247,20 +258,13 @@ namespace mo
         std::vector<ParamInfo*> param_infos = minfo->getParamInfo();
         for (auto param_info : param_infos)
         {
-            auto setter = python::DataConverterRegistry::instance()->getSetter(param_info->getDataType());
-            auto getter = python::DataConverterRegistry::instance()->getGetter(param_info->getDataType());
-            if (setter && getter)
-            {
-                std::function<boost::python::object(const T&)> getter_func(
-                    std::bind(getParamHelper<T>, getter, param_info->getName(), std::placeholders::_1));
-                std::function<bool(T&, const boost::python::object&)> setter_func(std::bind(
-                    setParamHelper<T>, setter, param_info->getName(), std::placeholders::_1, std::placeholders::_2));
-                bpobj.add_property(param_info->getName().c_str(), getter_func, setter_func);
-                /*bpobj.def(("get_" + param_info->getName()).c_str(),
-                          );
-                bpobj.def(("set_" + param_info->getName()).c_str(),
-                          );*/
-            }
+            std::function<boost::python::object(const T&)> getter_func(
+                std::bind(getParamHelper<T>, param_info->getName(), std::placeholders::_1));
+
+            std::function<bool(T&, const boost::python::object&)> setter_func(
+                std::bind(setParamHelper<T>, param_info->getName(), std::placeholders::_1, std::placeholders::_2));
+
+            bpobj.add_property(param_info->getName().c_str(), getter_func, setter_func);
         }
     }
 
@@ -434,3 +438,4 @@ namespace boost
         } // namespace detail
     }     // namespace python
 } // namespace boost
+#endif // MO_PYTHON_METAOBJECT_HPP

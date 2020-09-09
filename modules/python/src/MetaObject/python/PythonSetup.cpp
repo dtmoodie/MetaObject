@@ -471,6 +471,28 @@ namespace mo
             cv.wait_for(lock, std::chrono::milliseconds(milliseconds));
         }
 
+        boost::python::object stringConverterToPython(const void* inst, mo::ITraits* trait_)
+        {
+            mo::IContainerTraits* trait = dynamic_cast<mo::IContainerTraits*>(trait_);
+            MO_ASSERT(trait);
+            const char* char_ptr = static_cast<const char*>(trait->valuePointer(inst));
+            const size_t size = trait->getContainerSize(inst);
+            return boost::python::str(char_ptr, size);
+        }
+
+        bool stringConverterFromPython(void* str_inst, ITraits* trait_, const boost::python::object& obj)
+        {
+            mo::IContainerTraits* trait = dynamic_cast<mo::IContainerTraits*>(trait_);
+            MO_ASSERT(trait);
+            boost::python::extract<std::string> ext(obj);
+            MO_ASSERT(ext.check());
+            std::string str = ext();
+            const size_t sz = str.size();
+            trait->setContainerSize(sz, str_inst);
+            char* ptr = static_cast<char*>(trait->valuePointer(str_inst));
+            memcpy(ptr, str.data(), sz);
+        }
+
         std::shared_ptr<SystemTable> pythonSetup(const char* module_name_)
         {
             std::string module_name(module_name_);
@@ -520,6 +542,9 @@ namespace mo
                                 boost::python::arg("thread_priority") = mo::MEDIUM));
 
             boost::python::def("eventLoop", &eventLoop);
+
+            DataConversionTable::instance()->registerConverters<std::string>(&stringConverterFromPython,
+                                                                             &stringConverterToPython);
 
             loadMetaParams(lib_guard->m_system_table.get());
 

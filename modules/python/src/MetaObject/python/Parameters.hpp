@@ -28,7 +28,7 @@ namespace mo
           private:
             mo::IControlParam* m_ptr = nullptr;
             boost::python::object m_callback;
-            mo::python::DataConverterRegistry::Get_t m_getter;
+            // mo::python::DataConverterRegistry::Get_t m_getter;
             UpdateSlot_t m_slot;
             DeleteSlot_t m_delete_slot;
             std::shared_ptr<Connection> del_connection;
