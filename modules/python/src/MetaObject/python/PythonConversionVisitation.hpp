@@ -100,6 +100,12 @@ namespace mo
             ILoadVisitor&
             operator()(IContainerTraits* trait, void* inst, const std::string& name = "", size_t cnt = 1) override;
 
+          protected:
+            const boost::python::object& getObject() const;
+
+            template <class T>
+            void extract(T* val, const std::string& name = "", size_t cnt = 1);
+
           private:
             const boost::python::object& m_object;
             std::vector<boost::python::object> m_sub_object_stack;
@@ -114,6 +120,9 @@ namespace mo
             {
                 return true;
             }
+
+            ILoadVisitor&
+            operator()(IStructTraits* trait, void* inst, const std::string& name = "", size_t cnt = 1) override;
         };
 
     } // namespace python

@@ -1,5 +1,16 @@
 #include "PythonConversionVisitation.hpp"
 #include "DataConverter.hpp"
+namespace boost
+{
+    namespace python
+    {
+        bool hasattr(const object& o, const char* name)
+        {
+            return PyObject_HasAttrString(o.ptr(), name);
+        }
+    } // namespace python
+} // namespace boost
+
 namespace mo
 {
     namespace python
@@ -373,85 +384,111 @@ namespace mo
             return {};
         }
 
+        template <class T>
+        void FromPythonVisitor::extract(T* val, const std::string& name, size_t cnt)
+        {
+            boost::python::extract<T> ext(m_object);
+            if (ext.check())
+            {
+                *val = ext();
+            }
+        }
+
         ILoadVisitor& FromPythonVisitor::operator()(bool* val, const std::string& name, size_t cnt)
         {
+            extract(val, name, cnt);
             return *this;
         }
 
         ILoadVisitor& FromPythonVisitor::operator()(char* val, const std::string& name, size_t cnt)
         {
+            extract(val, name, cnt);
             return *this;
         }
 
         ILoadVisitor& FromPythonVisitor::operator()(int8_t* val, const std::string& name, size_t cnt)
         {
+            extract(val, name, cnt);
             return *this;
         }
 
         ILoadVisitor& FromPythonVisitor::operator()(uint8_t* val, const std::string& name, size_t cnt)
         {
+            extract(val, name, cnt);
             return *this;
         }
 
         ILoadVisitor& FromPythonVisitor::operator()(int16_t* val, const std::string& name, size_t cnt)
         {
+            extract(val, name, cnt);
             return *this;
         }
 
         ILoadVisitor& FromPythonVisitor::operator()(uint16_t* val, const std::string& name, size_t cnt)
         {
+            extract(val, name, cnt);
             return *this;
         }
 
         ILoadVisitor& FromPythonVisitor::operator()(int32_t* val, const std::string& name, size_t cnt)
         {
+            extract(val, name, cnt);
             return *this;
         }
 
         ILoadVisitor& FromPythonVisitor::operator()(uint32_t* val, const std::string& name, size_t cnt)
         {
+            extract(val, name, cnt);
             return *this;
         }
 
         ILoadVisitor& FromPythonVisitor::operator()(int64_t* val, const std::string& name, size_t cnt)
         {
+            extract(val, name, cnt);
             return *this;
         }
 
         ILoadVisitor& FromPythonVisitor::operator()(uint64_t* val, const std::string& name, size_t cnt)
         {
+            extract(val, name, cnt);
             return *this;
         }
 #ifdef ENVIRONMENT64
 #ifndef _MSC_VER
         ILoadVisitor& FromPythonVisitor::operator()(long long* val, const std::string& name, size_t cnt)
         {
+            extract(val, name, cnt);
             return *this;
         }
 
         ILoadVisitor& FromPythonVisitor::operator()(unsigned long long* val, const std::string& name, size_t cnt)
         {
+            extract(val, name, cnt);
             return *this;
         }
 #endif
 #else
         ILoadVisitor& FromPythonVisitor::operator()(long int* val, const std::string& name, size_t cnt)
         {
+            extract(val, name, cnt);
             return *this;
         }
 
         ILoadVisitor& FromPythonVisitor::operator()(unsigned long int* val, const std::string& name, size_t cnt)
         {
+            extract(val, name, cnt);
             return *this;
         }
 #endif
         ILoadVisitor& FromPythonVisitor::operator()(float* val, const std::string& name, size_t cnt)
         {
+            extract(val, name, cnt);
             return *this;
         }
 
         ILoadVisitor& FromPythonVisitor::operator()(double* val, const std::string& name, size_t cnt)
         {
+            extract(val, name, cnt);
             return *this;
         }
 
@@ -483,9 +520,38 @@ namespace mo
             return 0;
         }
 
+        const boost::python::object& FromPythonVisitor::getObject() const
+        {
+            return m_object;
+        }
+
         ControlParamSetter::ControlParamSetter(const boost::python::object& obj)
             : FromPythonVisitor(obj)
         {
+        }
+
+        ILoadVisitor& ControlParamSetter::
+        operator()(IStructTraits* trait, void* inst, const std::string& name, size_t cnt)
+        {
+            // Either this is some kind of object that has a data field which we should use for populating the data of
+            // the parameter
+            const boost::python::object& obj = this->getObject();
+            if (boost::python::hasattr(obj, "data"))
+            {
+                if (name == "data")
+                {
+                    FromPythonVisitor::operator()(trait, inst, name, cnt);
+                }
+            }
+            else
+            {
+                // or we are directly populating the data field of the parameter with whatever this python object is
+                if (name == "data")
+                {
+                    FromPythonVisitor::operator()(trait, inst, name, cnt);
+                }
+                trait->load(*this, inst, name);
+            }
         }
 
     } // namespace python
