@@ -1,9 +1,11 @@
 #include "common.hpp"
 
-#include <MetaObject/runtime_reflection/StructTraits.hpp>
-#include <MetaObject/runtime_reflection/visitor_traits/filesystem.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/string.hpp>
+
+#include <MetaObject/runtime_reflection/visitor_traits/filesystem.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
+
+#include <MetaObject/runtime_reflection/StructTraits.hpp>
 
 #include "MetaObject/core/metaobject_config.hpp"
 

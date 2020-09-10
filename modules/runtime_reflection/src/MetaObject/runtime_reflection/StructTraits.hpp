@@ -80,40 +80,375 @@ namespace mo
         }
     };
 
-    struct RuntimeReflectionVisitor : ct::VisitorBase<RuntimeReflectionVisitor, RuntimeVisitorParams>
-    {
-        template <class T>
-        void visit(const T& obj, const std::string& name, ISaveVisitor& visitor)
-        {
-            visitor(&obj, name);
-        }
+    using index_t = ct::index_t;
+    template <index_t N>
+    using Indexer = ct::Indexer<N>;
 
-        template <class T>
-        void visit(T& obj, const std::string& name, ILoadVisitor& visitor)
-        {
-            visitor(&obj, name);
-        }
-    };
+    template <class T, index_t I>
+    auto visitValue(ILoadVisitor& visitor, T& obj, const Indexer<I> idx) -> ct::EnableIf<ct::IsWritable<T, I>::value>
+    {
+        auto accessor = ct::Reflect<T>::getPtr(idx);
+        using Ret_t = decltype(accessor.set(obj));
+        Ret_t tmp = accessor.set(obj);
+        auto ptr = &tmp;
+        const auto name = ct::getName<I, T>();
+        visitor(ptr, name);
+    }
+
+    template <class T, index_t I>
+    auto visitValue(ILoadVisitor&, T&, const Indexer<I>) -> ct::EnableIf<!ct::IsWritable<T, I>::value>
+    {
+    }
 
     template <class T>
-    struct TTraits<T, 3, ct::EnableIfReflected<T>> : virtual StructBase<T>
+    void visitHelper(ILoadVisitor& visitor, T& obj, const Indexer<0> idx)
     {
+        visitValue(visitor, obj, idx);
+    }
+
+    template <class T, index_t I>
+    void visitHelper(ILoadVisitor& visitor, T& obj, const Indexer<I> idx)
+    {
+        const auto next_index = --idx;
+        visitHelper(visitor, obj, next_index);
+        visitValue(visitor, obj, idx);
+    }
+
+    template <class T, index_t I>
+    auto visitValue(ISaveVisitor& visitor, const T& obj, const ct::Indexer<I> idx)
+        -> ct::EnableIf<ct::IsWritable<T, I>::value>
+    {
+        auto accessor = ct::Reflect<T>::getPtr(idx);
+        using RefType = typename ct::ReferenceType<typename ct::GetType<decltype(accessor)>::type>::ConstType;
+        RefType ref = static_cast<RefType>(accessor.get(obj));
+        auto name = ct::getName<I, T>();
+        visitor(&ref, name);
+    }
+
+    template <class T, index_t I>
+    auto visitValue(ISaveVisitor&, const T&, const ct::Indexer<I>) -> ct::EnableIf<!ct::IsWritable<T, I>::value>
+    {
+    }
+
+    template <class T>
+    void visitHelper(ISaveVisitor& visitor, const T& obj, const Indexer<0> idx)
+    {
+        visitValue(visitor, obj, idx);
+    }
+
+    template <class T, index_t I>
+    void visitHelper(ISaveVisitor& visitor, const T& obj, const Indexer<I> idx)
+    {
+        auto next_index = --idx;
+        visitHelper(visitor, obj, next_index);
+        visitValue(visitor, obj, idx);
+    }
+
+    template <class T, index_t I, class U = void>
+    using EnableVisitation =
+        ct::EnableIf<!ct::IsMemberFunction<T, I>::value &&
+                         !ct::IsEnumField<decltype(ct::Reflect<T>::getPtr(ct::Indexer<I>{}))>::value,
+                     U>;
+
+    template <class T, index_t I, class U = void>
+    using DisableVisitation =
+        ct::EnableIf<ct::IsMemberFunction<T, I>::value ||
+                         ct::IsEnumField<decltype(ct::Reflect<T>::getPtr(ct::Indexer<I>{}))>::value,
+                     U>;
+
+    template <class T, index_t I>
+    auto visitValue(StaticVisitor& visitor, const Indexer<I> idx) -> EnableVisitation<T, I>
+    {
+        using Type = typename ct::GetType<decltype(ct::Reflect<T>::getPtr(idx))>::type;
+        const auto name = ct::getName<I, T>();
+        visitor.visit<typename std::decay<Type>::type>(name);
+    }
+
+    template <class T, index_t I>
+    auto visitValue(StaticVisitor&, const Indexer<I>) -> DisableVisitation<T, I>
+    {
+    }
+
+    template <class T>
+    void visitHelper(StaticVisitor& visitor, const Indexer<0> idx)
+    {
+        visitValue<T>(visitor, idx);
+    }
+
+    template <class T, index_t I>
+    void visitHelper(StaticVisitor& visitor, const Indexer<I> idx)
+    {
+        const auto next_idx = --idx;
+        visitHelper<T>(visitor, next_idx);
+        visitValue<T>(visitor, idx);
+    }
+
+    template <class T>
+    ct::EnableIf<ct::IsMemberObject<T, 0>::value, bool> getMemberHelper(T& inst,
+                                                                        void** member,
+                                                                        const IStructTraits** trait,
+                                                                        uint32_t idx,
+                                                                        ct::Indexer<0> itr,
+                                                                        std::string* name = nullptr)
+    {
+        if (idx == itr)
+        {
+            auto ptr = ct::Reflect<T>::getPtr(itr);
+            using DType = ct::decay_t<typename decltype(ptr)::Data_t>;
+            static const TTraits<DType> member_trait;
+            *trait = &member_trait;
+            *member = static_cast<void*>(&ptr.set(inst));
+            if (name)
+            {
+                *name = ptr.getName();
+            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    template <class T>
+    ct::EnableIf<!ct::IsMemberObject<T, 0>::value, bool> getMemberHelper(T& inst,
+                                                                         void** member,
+                                                                         const IStructTraits** trait,
+                                                                         uint32_t idx,
+                                                                         ct::Indexer<0> itr,
+                                                                         std::string* name = nullptr)
+    {
+        return false;
+    }
+
+    template <class T, ct::index_t I>
+    ct::EnableIf<ct::IsMemberObject<T, I>::value, bool> getMemberHelper(T& inst,
+                                                                        void** member,
+                                                                        const IStructTraits** trait,
+                                                                        uint32_t idx,
+                                                                        ct::Indexer<I> itr,
+                                                                        std::string* name = nullptr)
+    {
+        if (idx == itr)
+        {
+            auto ptr = ct::Reflect<T>::getPtr(itr);
+            using DType = ct::decay_t<typename decltype(ptr)::Data_t>;
+            static const TTraits<DType> member_trait;
+            *trait = &member_trait;
+            *member = static_cast<void*>(&ptr.set(inst));
+
+            if (name)
+            {
+                *name = ptr.getName();
+            }
+            return true;
+        }
+        else
+        {
+            const ct::Indexer<I - 1> next_itr;
+            return getMemberHelper(inst, member, trait, idx, next_itr, name);
+        }
+    }
+
+    template <class T, ct::index_t I>
+    ct::EnableIf<!ct::IsMemberObject<T, I>::value, bool> getMemberHelper(T& inst,
+                                                                         void** member,
+                                                                         const IStructTraits** trait,
+                                                                         uint32_t idx,
+                                                                         ct::Indexer<I> itr,
+                                                                         std::string* name = nullptr)
+    {
+        if (idx == itr)
+        {
+            return false;
+        }
+        else
+        {
+            const ct::Indexer<I - 1> next_itr;
+            return getMemberHelper(inst, member, trait, idx, next_itr, name);
+        }
+    }
+
+    template <class T>
+    ct::EnableIf<ct::IsMemberObject<T, 0>::value, bool> getMemberHelper(const T& inst,
+                                                                        const void** member,
+                                                                        const IStructTraits** trait,
+                                                                        uint32_t idx,
+                                                                        ct::Indexer<0> itr,
+                                                                        std::string* name = nullptr)
+    {
+        if (idx == itr)
+        {
+            auto ptr = ct::Reflect<T>::getPtr(itr);
+            using DType = ct::decay_t<typename decltype(ptr)::Data_t>;
+            static const TTraits<DType> member_trait;
+            *trait = &member_trait;
+            *member = static_cast<const void*>(&ptr.get(inst));
+            if (name)
+            {
+                *name = ptr.getName();
+            }
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    template <class T>
+    ct::EnableIf<!ct::IsMemberObject<T, 0>::value, bool> getMemberHelper(const T& inst,
+                                                                         const void** member,
+                                                                         const IStructTraits** trait,
+                                                                         uint32_t idx,
+                                                                         ct::Indexer<0> itr,
+                                                                         std::string* name = nullptr)
+    {
+        return false;
+    }
+
+    template <class T, ct::index_t I>
+    ct::EnableIf<ct::IsMemberObject<T, I>::value, bool> getMemberHelper(const T& inst,
+                                                                        const void** member,
+                                                                        const IStructTraits** trait,
+                                                                        uint32_t idx,
+                                                                        ct::Indexer<I> itr,
+                                                                        std::string* name = nullptr)
+    {
+        if (idx == itr)
+        {
+            auto ptr = ct::Reflect<T>::getPtr(itr);
+            using DType = ct::decay_t<typename decltype(ptr)::Data_t>;
+            static const TTraits<DType> member_trait;
+            *trait = &member_trait;
+            *member = static_cast<const void*>(&ptr.get(inst));
+            if (name)
+            {
+                *name = ptr.getName();
+            }
+            return true;
+        }
+        else
+        {
+            const ct::Indexer<I - 1> next_itr;
+            return getMemberHelper(inst, member, trait, idx, next_itr, name);
+        }
+    }
+
+    template <class T, ct::index_t I>
+    ct::EnableIf<!ct::IsMemberObject<T, I>::value, bool> getMemberHelper(const T& inst,
+                                                                         const void** member,
+                                                                         const IStructTraits** trait,
+                                                                         uint32_t idx,
+                                                                         ct::Indexer<I> itr,
+                                                                         std::string* name = nullptr)
+    {
+        if (idx == itr)
+        {
+            return false;
+        }
+        else
+        {
+            const ct::Indexer<I - 1> next_itr;
+            return getMemberHelper(inst, member, trait, idx, next_itr, name);
+        }
+    }
+
+    template <class T>
+    struct TTraits<T, 4, ct::EnableIfReflected<T>> : virtual StructBase<T>
+    {
+        using MemberObjectTypes = typename ct::GlobMemberObjects<T>::types;
+        static constexpr const uint32_t num_member_objects = ct::GlobMemberObjects<T>::num;
+
         void load(ILoadVisitor& visitor, void* inst, const std::string& name, size_t) const override
         {
-            auto& ref = *static_cast<T*>(inst);
-            RuntimeReflectionVisitor refl_visitor;
-            refl_visitor.visit(ref, name, visitor);
+            auto ptr = static_cast<T*>(inst);
+            const auto idx = ct::Reflect<T>::end();
+            visitHelper(visitor, *ptr, idx);
         }
 
         void save(ISaveVisitor& visitor, const void* inst, const std::string& name, size_t) const override
         {
-            const auto& ref = *static_cast<const T*>(inst);
-            RuntimeReflectionVisitor refl_visitor;
-            refl_visitor.visit(ref, name, visitor);
+            auto ptr = static_cast<const T*>(inst);
+            const auto idx = ct::Reflect<T>::end();
+            visitHelper(visitor, *ptr, idx);
         }
 
         void visit(StaticVisitor& visitor, const std::string& name) const override
         {
+            // TODO
+            const auto idx = ct::Reflect<T>::end();
+            visitHelper<T>(visitor, idx);
+        }
+
+        std::string name() const override
+        {
+            return ct::Reflect<T>::getTypeName();
+        }
+
+        uint32_t getNumMembers() const override
+        {
+            return num_member_objects;
+        }
+
+        bool getMember(
+            void* inst, void** member, const IStructTraits** trait, uint32_t idx, std::string* name) const override
+        {
+            auto& ref = this->ref(inst);
+            const auto itr = ct::Reflect<T>::end();
+            return getMemberHelper(ref, member, trait, idx, itr, name);
+        }
+
+        bool getMember(const void* inst,
+                       const void** member,
+                       const IStructTraits** trait,
+                       uint32_t idx,
+                       std::string* name) const override
+        {
+            auto& ref = this->ref(inst);
+            const auto itr = ct::Reflect<T>::end();
+            return getMemberHelper(ref, member, trait, idx, itr, name);
+        }
+    };
+
+    template <class T>
+    struct TTraits<T, 9, ct::EnableIf<IsPrimitiveRuntimeReflected<T>::value>> : virtual StructBase<T>
+    {
+        void load(ILoadVisitor& visitor, void* inst, const std::string& name, size_t) const override
+        {
+            T* ptr = static_cast<T*>(inst);
+            visitor(ptr, name);
+        }
+
+        void save(ISaveVisitor& visitor, const void* inst, const std::string& name, size_t) const override
+        {
+            const T* ptr = static_cast<const T*>(inst);
+            visitor(ptr, name);
+        }
+
+        void visit(StaticVisitor& visitor, const std::string& name) const override
+        {
+            visitor.template visit<T>("value");
+        }
+
+        uint32_t getNumMembers() const override
+        {
+            return 0;
+        }
+
+        bool getMember(
+            void* inst, void** member, const IStructTraits** trait, uint32_t idx, std::string* name) const override
+        {
+            return false;
+        }
+
+        bool getMember(const void* inst,
+                       const void** member,
+                       const IStructTraits** trait,
+                       uint32_t idx,
+                       std::string* name) const override
+        {
+            return false;
         }
     };
 } // namespace mo

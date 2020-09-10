@@ -153,6 +153,25 @@ namespace mo
         virtual void setSerializedPointer(TypeInfo type, uint32_t id, void* ptr) = 0;
     };
 
+    using PrimiviteRuntimeTypes = ct::VariadicTypedef<char,
+                                                      bool,
+                                                      int8_t,
+                                                      uint8_t,
+                                                      int16_t,
+                                                      uint16_t,
+                                                      int32_t,
+                                                      uint32_t,
+                                                      int64_t,
+                                                      uint64_t,
+                                                      float,
+                                                      double>;
+    template <class T>
+    struct IsPrimitiveRuntimeReflected
+    {
+
+        static constexpr const bool value = PrimiviteRuntimeTypes::contains<T>();
+    };
+
     struct MO_EXPORTS ISaveVisitor : public virtual IDynamicVisitor
     {
         virtual ISaveVisitor& operator()(const bool* val, const std::string& name = "", size_t cnt = 1) = 0;

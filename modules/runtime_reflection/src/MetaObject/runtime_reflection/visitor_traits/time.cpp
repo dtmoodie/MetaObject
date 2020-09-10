@@ -21,4 +21,4 @@ namespace mo
     {
         visitor.template visit<double>("seconds");
     }
-}
+} // namespace mo

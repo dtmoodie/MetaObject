@@ -491,6 +491,7 @@ namespace mo
             trait->setContainerSize(sz, str_inst);
             char* ptr = static_cast<char*>(trait->valuePointer(str_inst));
             memcpy(ptr, str.data(), sz);
+            return true;
         }
 
         std::shared_ptr<SystemTable> pythonSetup(const char* module_name_)

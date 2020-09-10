@@ -1,4 +1,8 @@
-#pragma once
+#ifndef MO_RUNTIME_REFLECTION_VISITOR_TRAITS_MAP_HPP
+#define MO_RUNTIME_REFLECTION_VISITOR_TRAITS_MAP_HPP
+
+#include "../StructTraits.hpp"
+
 #include "../ContainerTraits.hpp"
 #include "../IDynamicVisitor.hpp"
 #include "../type_traits.hpp"
@@ -24,7 +28,18 @@ namespace mo
         K key;
         V value;
     };
+} // namespace mo
 
+namespace ct
+{
+    REFLECT_TEMPLATED_BEGIN(mo::KVP)
+        PUBLIC_ACCESS(key)
+        PUBLIC_ACCESS(value)
+    REFLECT_END;
+} // namespace ct
+
+namespace mo
+{
     template <class T1, class T2>
     struct TTraits<KVP<T1, const T2&>, 6> : StructBase<KVP<T1, const T2&>>
     {
@@ -50,6 +65,47 @@ namespace mo
         {
             return false;
         }
+
+        // TODO another approach?
+        uint32_t getNumMembers() const override
+        {
+            return 2;
+        }
+
+        bool getMember(
+            void* inst, void** member, const IStructTraits** trait, uint32_t idx, std::string* name) const override
+        {
+            auto& ref = this->ref(inst);
+            if (idx == 0)
+            {
+                static const TTraits<T1> member_trait;
+                *trait = &member_trait;
+                *member = &ref.key;
+            }
+            return false;
+        }
+
+        bool getMember(const void* inst,
+                       const void** member,
+                       const IStructTraits** trait,
+                       uint32_t idx,
+                       std::string* name) const override
+        {
+            auto& ref = this->ref(inst);
+            if (idx == 0)
+            {
+                static const TTraits<T1> member_trait;
+                *trait = &member_trait;
+                *member = &ref.key;
+            }
+            else if (idx == 1)
+            {
+                static const TTraits<T2> member_trait;
+                *trait = &member_trait;
+                *member = &ref.value;
+            }
+            return false;
+        }
     };
 
     template <class K, class V>
@@ -60,6 +116,7 @@ namespace mo
             MO_ASSERT_EQ(cnt, 1);
             auto ptr = static_cast<std::map<K, V>*>(inst);
             auto size = visitor.getCurrentContainerSize();
+            static_assert(ct::IsReflected<KVP<K, V>>::value, "");
             for (size_t i = 0; i < size; ++i)
             {
                 KVP<K, V> kvp;
@@ -172,10 +229,4 @@ namespace mo
     };
 } // namespace mo
 
-namespace ct
-{
-    REFLECT_TEMPLATED_BEGIN(mo::KVP)
-        PUBLIC_ACCESS(key)
-        PUBLIC_ACCESS(value)
-    REFLECT_END;
-} // namespace ct
+#endif // MO_RUNTIME_REFLECTION_VISITOR_TRAITS_MAP_HPP

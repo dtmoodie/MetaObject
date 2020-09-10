@@ -36,6 +36,15 @@ namespace mo
 
         // can be serialized via a memcpy(ptr)
         virtual bool triviallySerializable() const = 0;
+
+        virtual uint32_t getNumMembers() const;
+        virtual bool getMember(
+            void* inst, void** member, const IStructTraits** trait, uint32_t idx, std::string* name = nullptr) const;
+        virtual bool getMember(const void* inst,
+                               const void** member,
+                               const IStructTraits** trait,
+                               uint32_t idx,
+                               std::string* name = nullptr) const;
     };
 
     struct MO_EXPORTS IContainerTraits : virtual IStructTraits
@@ -88,7 +97,7 @@ namespace mo
             (void)s_registerer;
             // Traits should only ever be a pointer to a vftable, thus this check ensures you don't put stuff in them
             // that doesn't belong.
-            //ct::StaticEquality<size_t, sizeof(TTraits<T>), sizeof(void*)>{};
+            // ct::StaticEquality<size_t, sizeof(TTraits<T>), sizeof(void*)>{};
             // msvc puts stuff in there that doesn't belong -_-
         }
     };

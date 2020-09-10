@@ -1,5 +1,7 @@
 #ifndef MO_VISITATION_FILESYSTEM_HPP
 #define MO_VISITATION_FILESYSTEM_HPP
+#include "string.hpp"
+
 #include "../ContainerTraits.hpp"
 
 #include <ct/VariadicTypedef.hpp>

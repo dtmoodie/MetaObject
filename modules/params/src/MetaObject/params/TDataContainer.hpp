@@ -6,6 +6,7 @@
 
 #include <MetaObject/core/detail/Allocator.hpp>
 #include <MetaObject/runtime_reflection.hpp>
+#include <MetaObject/runtime_reflection/StructTraits.hpp>
 #include <MetaObject/runtime_reflection/type_traits.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/time.hpp>
 

@@ -14,141 +14,6 @@
 
 namespace mo
 {
-    using index_t = ct::index_t;
-    template <index_t N>
-    using Indexer = ct::Indexer<N>;
-
-    template <class T, index_t I>
-    auto visitValue(ILoadVisitor& visitor, T& obj, const Indexer<I> idx) -> ct::EnableIf<ct::IsWritable<T, I>::value>
-    {
-        auto accessor = ct::Reflect<T>::getPtr(idx);
-        using Ret_t = decltype(accessor.set(obj));
-        Ret_t tmp = accessor.set(obj);
-        auto ptr = &tmp;
-        const auto name = ct::getName<I, T>();
-        visitor(ptr, name);
-    }
-
-    template <class T, index_t I>
-    auto visitValue(ILoadVisitor&, T&, const Indexer<I>) -> ct::EnableIf<!ct::IsWritable<T, I>::value>
-    {
-    }
-
-    template <class T>
-    void visitHelper(ILoadVisitor& visitor, T& obj, const Indexer<0> idx)
-    {
-        visitValue(visitor, obj, idx);
-    }
-
-    template <class T, index_t I>
-    void visitHelper(ILoadVisitor& visitor, T& obj, const Indexer<I> idx)
-    {
-        const auto next_index = --idx;
-        visitHelper(visitor, obj, next_index);
-        visitValue(visitor, obj, idx);
-    }
-
-    template <class T, index_t I>
-    auto visitValue(ISaveVisitor& visitor, const T& obj, const ct::Indexer<I> idx)
-        -> ct::EnableIf<ct::IsWritable<T, I>::value>
-    {
-        auto accessor = ct::Reflect<T>::getPtr(idx);
-        using RefType = typename ct::ReferenceType<typename ct::GetType<decltype(accessor)>::type>::ConstType;
-        RefType ref = static_cast<RefType>(accessor.get(obj));
-        auto name = ct::getName<I, T>();
-        visitor(&ref, name);
-    }
-
-    template <class T, index_t I>
-    auto visitValue(ISaveVisitor&, const T&, const ct::Indexer<I>) -> ct::EnableIf<!ct::IsWritable<T, I>::value>
-    {
-    }
-
-    template <class T>
-    void visitHelper(ISaveVisitor& visitor, const T& obj, const Indexer<0> idx)
-    {
-        visitValue(visitor, obj, idx);
-    }
-
-    template <class T, index_t I>
-    void visitHelper(ISaveVisitor& visitor, const T& obj, const Indexer<I> idx)
-    {
-        auto next_index = --idx;
-        visitHelper(visitor, obj, next_index);
-        visitValue(visitor, obj, idx);
-    }
-
-    template <class T, index_t I, class U = void>
-    using EnableVisitation =
-        ct::EnableIf<!ct::IsMemberFunction<T, I>::value &&
-                         !ct::IsEnumField<decltype(ct::Reflect<T>::getPtr(ct::Indexer<I>{}))>::value,
-                     U>;
-
-    template <class T, index_t I, class U = void>
-    using DisableVisitation =
-        ct::EnableIf<ct::IsMemberFunction<T, I>::value ||
-                         ct::IsEnumField<decltype(ct::Reflect<T>::getPtr(ct::Indexer<I>{}))>::value,
-                     U>;
-
-    template <class T, index_t I>
-    auto visitValue(StaticVisitor& visitor, const Indexer<I> idx) -> EnableVisitation<T, I>
-    {
-        using Type = typename ct::GetType<decltype(ct::Reflect<T>::getPtr(idx))>::type;
-        const auto name = ct::getName<I, T>();
-        visitor.visit<typename std::decay<Type>::type>(name);
-    }
-
-    template <class T, index_t I>
-    auto visitValue(StaticVisitor&, const Indexer<I>) -> DisableVisitation<T, I>
-    {
-    }
-
-    template <class T>
-    void visitHelper(StaticVisitor& visitor, const Indexer<0> idx)
-    {
-        visitValue<T>(visitor, idx);
-    }
-
-    template <class T, index_t I>
-    void visitHelper(StaticVisitor& visitor, const Indexer<I> idx)
-    {
-        const auto next_idx = --idx;
-        visitHelper<T>(visitor, next_idx);
-        visitValue<T>(visitor, idx);
-    }
-
-    template <class T>
-    struct TTraits<T, 4, ct::EnableIfReflected<T>> : public StructBase<T>
-    {
-        TTraits()
-        {
-        }
-
-        void load(ILoadVisitor& visitor, void* instance, const std::string&, size_t) const override
-        {
-            auto ptr = static_cast<T*>(instance);
-            const auto idx = ct::Reflect<T>::end();
-            visitHelper(visitor, *ptr, idx);
-        }
-
-        void save(ISaveVisitor& visitor, const void* instance, const std::string&, size_t) const override
-        {
-            auto ptr = static_cast<const T*>(instance);
-            const auto idx = ct::Reflect<T>::end();
-            visitHelper(visitor, *ptr, idx);
-        }
-
-        void visit(StaticVisitor& visitor, const std::string&) const override
-        {
-            const auto idx = ct::Reflect<T>::end();
-            visitHelper<T>(visitor, idx);
-        }
-
-        std::string name() const override
-        {
-            return ct::Reflect<T>::getTypeName();
-        }
-    };
 
     template <class T>
     struct TTraits<T, 5, ct::EnableIfIsEnum<T>> : public StructBase<T>
@@ -182,6 +47,46 @@ namespace mo
         {
             return ct::Reflect<T>::getTypeName();
         }
+
+        uint32_t getNumMembers() const override
+        {
+            return 1;
+        }
+
+        bool getMember(
+            void* inst, void** member, const IStructTraits** trait, uint32_t idx, std::string* name) const override
+        {
+            if (idx == 0)
+            {
+                *member = inst;
+                *trait = this;
+                if (name)
+                {
+                    *name = "value";
+                }
+                return true;
+            }
+            return false;
+        }
+
+        bool getMember(const void* inst,
+                       const void** member,
+                       const IStructTraits** trait,
+                       uint32_t idx,
+                       std::string* name) const override
+        {
+            if (idx == 0)
+            {
+                *member = inst;
+                *trait = this;
+                if (name)
+                {
+                    *name = "value";
+                }
+                return true;
+            }
+            return false;
+        }
     };
 
     DEFINE_HAS_MEMBER_FUNCTION(HasMemberLoad, load, void, ILoadVisitor&, const std::string&);
@@ -190,6 +95,7 @@ namespace mo
     template <class T>
     struct TTraits<T, 7, ct::EnableIf<HasMemberLoad<T>::value && HasMemberSave<T>::value>> : StructBase<T>
     {
+
         void load(ILoadVisitor& visitor, void* instance, const std::string& name, size_t) const override
         {
             auto& ref = this->ref(instance);
@@ -211,6 +117,27 @@ namespace mo
         std::string name() const override
         {
             return ct::Reflect<T>::getTypeName();
+        }
+
+        // TODO another approach?
+        uint32_t getNumMembers() const override
+        {
+            return 0;
+        }
+
+        bool getMember(
+            void* inst, void** member, const IStructTraits** trait, uint32_t idx, std::string* name) const override
+        {
+            return false;
+        }
+
+        bool getMember(const void* inst,
+                       const void** member,
+                       const IStructTraits** trait,
+                       uint32_t idx,
+                       std::string* name) const override
+        {
+            return false;
         }
     };
 

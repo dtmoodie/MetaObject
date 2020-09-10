@@ -112,6 +112,29 @@ namespace mo
         {
             return std::is_trivially_copyable<V>::value;
         }
+
+        uint32_t getNumMembers() const override
+        {
+            return 0;
+        }
+
+        bool getMember(void* inst,
+                       void** member,
+                       const IStructTraits** trait,
+                       uint32_t idx,
+                       std::string* name = nullptr) const override
+        {
+            return false;
+        }
+
+        bool getMember(const void* inst,
+                       const void** member,
+                       const IStructTraits** trait,
+                       uint32_t idx,
+                       std::string* name = nullptr) const override
+        {
+            return false;
+        }
     };
 } // namespace mo
 
