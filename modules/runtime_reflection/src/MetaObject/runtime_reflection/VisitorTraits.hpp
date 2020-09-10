@@ -18,23 +18,23 @@ namespace mo
     template <class T>
     struct TTraits<T, 5, ct::EnableIfIsEnum<T>> : public StructBase<T>
     {
-        void load(ILoadVisitor& visitor, void* instance, const std::string&, size_t) const override
+        void load(ILoadVisitor& visitor, void* instance, const std::string& name, size_t) const override
         {
             auto ptr = static_cast<T*>(instance);
             std::stringstream ss;
             ss << *ptr;
             auto str = ss.str();
-            visitor(&str, "value");
+            visitor(&str, name);
             *ptr = ct::fromString<T>(str);
         }
 
-        void save(ISaveVisitor& visitor, const void* instance, const std::string&, size_t) const override
+        void save(ISaveVisitor& visitor, const void* instance, const std::string& name, size_t) const override
         {
             auto ptr = static_cast<const T*>(instance);
             std::stringstream ss;
             ss << *ptr;
             auto str = ss.str();
-            visitor(&str, "value");
+            visitor(&str, name);
         }
 
         void visit(StaticVisitor& visitor, const std::string&) const override
