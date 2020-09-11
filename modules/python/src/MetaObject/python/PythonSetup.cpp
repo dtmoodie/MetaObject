@@ -3,6 +3,7 @@
 #include "MetaObject.hpp"
 #include "Parameters.hpp"
 #include "PythonAllocator.hpp"
+#include "PythonConversionVisitation.hpp"
 #include "PythonPolicy.hpp"
 
 #include "ct/reflect.hpp"
@@ -543,6 +544,8 @@ namespace mo
                                 boost::python::arg("thread_priority") = mo::MEDIUM));
 
             boost::python::def("eventLoop", &eventLoop);
+
+            boost::python::class_<ParameterPythonWrapper> wrapper("ParameterWrapper");
 
             DataConversionTable::instance()->registerConverters<std::string>(&stringConverterFromPython,
                                                                              &stringConverterToPython);

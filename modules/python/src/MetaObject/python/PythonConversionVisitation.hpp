@@ -7,6 +7,11 @@ namespace mo
 {
     namespace python
     {
+
+        struct ParameterPythonWrapper
+        {
+        };
+
         struct DataConversionTable;
         struct ToPythonVisitor : SaveCache
         {
@@ -50,6 +55,8 @@ namespace mo
             boost::python::object getObject();
 
           private:
+            template <class T>
+            void save(const T* val, const std::string& name, size_t cnt);
             boost::python::object m_object;
             boost::python::list m_list;
             std::vector<boost::python::object> m_sub_object_stack;

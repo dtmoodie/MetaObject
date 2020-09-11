@@ -19,7 +19,7 @@ namespace mo
             : m_conversion_table(python::DataConversionTable::instance())
         {
             MO_ASSERT(m_conversion_table != nullptr);
-            m_object = boost::python::dict();
+            m_object = boost::python::object(ParameterPythonWrapper{});
         }
 
         VisitorTraits ToPythonVisitor::traits() const
@@ -36,11 +36,12 @@ namespace mo
         {
         }
 
-        ISaveVisitor& ToPythonVisitor::operator()(const bool* val, const std::string& name, size_t cnt)
+        template <class T>
+        void ToPythonVisitor::save(const T* val, const std::string& name, size_t cnt)
         {
             if (cnt == 1)
             {
-                m_object[name] = *val;
+                m_object.attr(name.c_str()) = *val;
             }
             else
             {
@@ -49,150 +50,65 @@ namespace mo
                     m_list.append(val[i]);
                 }
             }
+        }
+
+        ISaveVisitor& ToPythonVisitor::operator()(const bool* val, const std::string& name, size_t cnt)
+        {
+            this->save(val, name, cnt);
             return *this;
         }
 
         ISaveVisitor& ToPythonVisitor::operator()(const char* val, const std::string& name, size_t cnt)
         {
-            if (cnt == 1)
-            {
-                m_object[name] = *val;
-            }
-            else
-            {
-                for (size_t i = 0; i < cnt; ++i)
-                {
-                    m_list.append(val[i]);
-                }
-            }
+            this->save(val, name, cnt);
             return *this;
         }
 
         ISaveVisitor& ToPythonVisitor::operator()(const int8_t* val, const std::string& name, size_t cnt)
         {
-            if (cnt == 1)
-            {
-                m_object[name] = *val;
-            }
-            else
-            {
-                for (size_t i = 0; i < cnt; ++i)
-                {
-                    m_list.append(val[i]);
-                }
-            }
+            this->save(val, name, cnt);
             return *this;
         }
 
         ISaveVisitor& ToPythonVisitor::operator()(const uint8_t* val, const std::string& name, size_t cnt)
         {
-            if (cnt == 1)
-            {
-                m_object[name] = *val;
-            }
-            else
-            {
-                for (size_t i = 0; i < cnt; ++i)
-                {
-                    m_list.append(val[i]);
-                }
-            }
+            this->save(val, name, cnt);
             return *this;
         }
 
         ISaveVisitor& ToPythonVisitor::operator()(const int16_t* val, const std::string& name, size_t cnt)
         {
-            if (cnt == 1)
-            {
-                m_object[name] = *val;
-            }
-            else
-            {
-                for (size_t i = 0; i < cnt; ++i)
-                {
-                    m_list.append(val[i]);
-                }
-            }
+            this->save(val, name, cnt);
             return *this;
         }
 
         ISaveVisitor& ToPythonVisitor::operator()(const uint16_t* val, const std::string& name, size_t cnt)
         {
-            if (cnt == 1)
-            {
-                m_object[name] = *val;
-            }
-            else
-            {
-                for (size_t i = 0; i < cnt; ++i)
-                {
-                    m_list.append(val[i]);
-                }
-            }
+            this->save(val, name, cnt);
             return *this;
         }
 
         ISaveVisitor& ToPythonVisitor::operator()(const int32_t* val, const std::string& name, size_t cnt)
         {
-            if (cnt == 1)
-            {
-                m_object[name] = *val;
-            }
-            else
-            {
-                for (size_t i = 0; i < cnt; ++i)
-                {
-                    m_list.append(val[i]);
-                }
-            }
+            this->save(val, name, cnt);
             return *this;
         }
 
         ISaveVisitor& ToPythonVisitor::operator()(const uint32_t* val, const std::string& name, size_t cnt)
         {
-            if (cnt == 1)
-            {
-                m_object[name] = *val;
-            }
-            else
-            {
-                for (size_t i = 0; i < cnt; ++i)
-                {
-                    m_list.append(val[i]);
-                }
-            }
+            this->save(val, name, cnt);
             return *this;
         }
 
         ISaveVisitor& ToPythonVisitor::operator()(const int64_t* val, const std::string& name, size_t cnt)
         {
-            if (cnt == 1)
-            {
-                m_object[name] = *val;
-            }
-            else
-            {
-                for (size_t i = 0; i < cnt; ++i)
-                {
-                    m_list.append(val[i]);
-                }
-            }
+            this->save(val, name, cnt);
             return *this;
         }
 
         ISaveVisitor& ToPythonVisitor::operator()(const uint64_t* val, const std::string& name, size_t cnt)
         {
-            if (cnt == 1)
-            {
-                m_object[name] = *val;
-            }
-            else
-            {
-                for (size_t i = 0; i < cnt; ++i)
-                {
-                    m_list.append(val[i]);
-                }
-            }
+            this->save(val, name, cnt);
             return *this;
         }
 
@@ -200,99 +116,39 @@ namespace mo
 #ifndef _MSC_VER
         ISaveVisitor& ToPythonVisitor::operator()(const long long* val, const std::string& name, size_t cnt)
         {
-            if (cnt == 1)
-            {
-                m_object[name] = *val;
-            }
-            else
-            {
-                for (size_t i = 0; i < cnt; ++i)
-                {
-                    m_list.append(val[i]);
-                }
-            }
+            this->save(val, name, cnt);
             return *this;
         }
 
         ISaveVisitor& ToPythonVisitor::operator()(const unsigned long long* val, const std::string& name, size_t cnt)
         {
-            if (cnt == 1)
-            {
-                m_object[name] = *val;
-            }
-            else
-            {
-                for (size_t i = 0; i < cnt; ++i)
-                {
-                    m_list.append(val[i]);
-                }
-            }
+            this->save(val, name, cnt);
             return *this;
         }
 #endif
 #else
         ISaveVisitor& ToPythonVisitor::operator()(const long int* val, const std::string& name, size_t cnt)
         {
-            if (cnt == 1)
-            {
-                m_object[name] = *val;
-            }
-            else
-            {
-                for (size_t i = 0; i < cnt; ++i)
-                {
-                    m_list.append(val[i]);
-                }
-            }
+            this->save(val, name, cnt);
             return *this;
         }
 
         ISaveVisitor& ToPythonVisitor::operator()(const unsigned long int* val, const std::string& name, size_t cnt)
         {
-            if (cnt == 1)
-            {
-                m_object[name] = *val;
-            }
-            else
-            {
-                for (size_t i = 0; i < cnt; ++i)
-                {
-                    m_list.append(val[i]);
-                }
-            }
+            this->save(val, name, cnt);
             return *this;
         }
 #endif
 
         ISaveVisitor& ToPythonVisitor::operator()(const float* val, const std::string& name, size_t cnt)
         {
-            if (cnt == 1)
-            {
-                m_object[name] = *val;
-            }
-            else
-            {
-                for (size_t i = 0; i < cnt; ++i)
-                {
-                    m_list.append(val[i]);
-                }
-            }
+            this->save(val, name, cnt);
             return *this;
         }
 
         ISaveVisitor& ToPythonVisitor::operator()(const double* val, const std::string& name, size_t cnt)
         {
-            if (cnt == 1)
-            {
-                m_object[name] = *val;
-            }
-            else
-            {
-                for (size_t i = 0; i < cnt; ++i)
-                {
-                    m_list.append(val[i]);
-                }
-            }
+            this->save(val, name, cnt);
             return *this;
         }
 
@@ -310,7 +166,7 @@ namespace mo
             if (converter)
             {
                 // If there is a specialized converter for this datatype, use it
-                m_object[name] = converter(inst, trait);
+                m_object.attr(name.c_str()) = converter(inst, trait);
             }
             else
             {
@@ -326,11 +182,11 @@ namespace mo
                     }
                 }
                 m_sub_object_stack.push_back(std::move(m_object));
-                m_object = boost::python::dict();
+                m_object = boost::python::object(ParameterPythonWrapper{});
                 trait->save(*this, inst, name, cnt);
                 boost::python::object old_object = std::move(m_sub_object_stack.back());
                 m_sub_object_stack.pop_back();
-                old_object[name] = std::move(m_object);
+                old_object.attr(name.c_str()) = std::move(m_object);
                 m_object = std::move(old_object);
             }
             return *this;
@@ -343,7 +199,7 @@ namespace mo
             python::DataConversionTable::ToPython_t converter = m_conversion_table->getConverterToPython(type);
             if (converter)
             {
-                m_object[name] = converter(inst, trait);
+                m_object.attr(name.c_str()) = converter(inst, trait);
             }
             else
             {
@@ -353,7 +209,7 @@ namespace mo
                 trait->save(*this, inst, name, cnt);
                 boost::python::object old_object = std::move(m_sub_object_stack.back());
                 m_sub_object_stack.pop_back();
-                old_object[name] = std::move(m_list);
+                old_object.attr(name.c_str()) = std::move(m_list);
                 m_object = std::move(old_object);
             }
             return *this;
