@@ -270,6 +270,9 @@ namespace mo
         boost::python::class_<std::vector<ISubscriber*>> input_param_vec("InputParamVec", boost::python::no_init);
         input_param_vec.def(boost::python::vector_indexing_suite<std::vector<ISubscriber*>>());
 
+        boost::python::class_<std::vector<IPublisher*>> output_param_vec("OutputParamVec", boost::python::no_init);
+        output_param_vec.def(boost::python::vector_indexing_suite<std::vector<IPublisher*>>());
+
         boost::python::class_<IAsyncStream, std::shared_ptr<IAsyncStream>, boost::noncopyable>("AsyncStream",
                                                                                                boost::python::no_init)
             .add_property("name", &IAsyncStream::name)
