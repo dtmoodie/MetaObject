@@ -89,21 +89,13 @@ namespace mo
                         MO_LOG(warn, "Setting of input parameters not implemented yet");
                         continue;
                     }
-                    /*auto setter = python::DataConverterRegistry::instance()->getSetter(param->getTypeInfo());
-                    if (setter)
-                    {
-                        if (!setter(param, args[i]))
-                        {
-                            MO_LOG(debug, "Unable to set {}", param_names[i]);
-                        }
-                    }
-                    else
-                    {
-                    }*/
 
-                    MO_LOG(debug,
-                           "No converter available for {}",
-                           mo::TypeTable::instance()->typeToName(param->getTypeInfo()));
+                    python::ControlParamSetter setter(args[i]);
+                    param->load(setter);
+                    if (!setter.success())
+                    {
+                        MO_LOG(debug, "Unable to set {}", param_names[i]);
+                    }
                 }
                 else
                 {
