@@ -45,6 +45,39 @@ namespace mo
         WriteDirectory(const std::string& str = "");
     };
 
+    MO_EXPORTS int findNextFileIndex(const std::string& dir, std::string extension, const std::string& stem);
+
+    struct MO_EXPORTS AppendDirectory : public WriteDirectory
+    {
+        AppendDirectory(const std::string& path, const std::string& file_prefix, const std::string& ext);
+
+        std::string nextFilename() const;
+        int nextFileIndex() const;
+
+        AppendDirectory& operator=(const std::string&);
+
+        template <class AR>
+        std::string save_minimal(AR&) const
+        {
+            std::string out = string() + "/" + m_file_prefix + "." + m_extension;
+            return out;
+        }
+        template <class AR>
+        void load_minimal(const AR&, const std::string& val)
+        {
+            const auto pos0 = val.find_last_of('/');
+            MO_ASSERT_NE(pos0, std::string::npos);
+            const auto pos1 = val.find_last_of('.');
+            static_cast<WriteDirectory&>(*this) = val.substr(0, pos0);
+            m_file_prefix = val.substr(pos0, pos1 - pos0);
+            m_extension = val.substr(pos1);
+        }
+
+      private:
+        std::string m_file_prefix;
+        std::string m_extension;
+    };
+
     struct MO_EXPORTS EnumParam
     {
         EnumParam(const EnumParam&) = default;
@@ -69,6 +102,11 @@ namespace ct
         PUBLIC_ACCESS(enumerations)
         PUBLIC_ACCESS(values)
         PUBLIC_ACCESS(current_selection)
+    REFLECT_END;
+
+    REFLECT_BEGIN(mo::AppendDirectory)
+        MEMBER_FUNCTION(nextFilename)
+        MEMBER_FUNCTION(nextFileIndex)
     REFLECT_END;
 
     template <class T>
