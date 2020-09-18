@@ -58,6 +58,10 @@
     if ((LHS) != (RHS))                                                                                                \
     THROW(error, #LHS " != " #RHS " [{} != {}]", LHS, RHS)
 
+#define MO_ASSERT_NE(LHS, RHS)                                                                                         \
+    if ((LHS) == (RHS))                                                                                                \
+    THROW(error, #LHS " == " #RHS " [{} == {}]", LHS, RHS)
+
 #define MO_ASSERT_FMT(CHECK, ...)                                                                                      \
     if (!(CHECK))                                                                                                      \
     THROW(error, __VA_ARGS__)
