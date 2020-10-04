@@ -9,6 +9,12 @@ namespace mo
     {
     }
 
+    ReadFile& ReadFile::operator=(const std::string& str)
+    {
+        boost::filesystem::path::operator=(str);
+        return *this;
+    }
+
     WriteFile::WriteFile(const std::string& file)
         : boost::filesystem::path(file)
     {
@@ -25,7 +31,9 @@ namespace mo
     }
 
     AppendDirectory::AppendDirectory(const std::string& path, const std::string& file_prefix, const std::string& ext)
-        : WriteDirectory(path), m_file_prefix(file_prefix), m_extension(ext)
+        : WriteDirectory(path)
+        , m_file_prefix(file_prefix)
+        , m_extension(ext)
     {
     }
 
@@ -64,7 +72,10 @@ namespace mo
         return frame_count;
     }
 
-    int AppendDirectory::nextFileIndex() const { return findNextFileIndex(string(), m_extension, m_file_prefix); }
+    int AppendDirectory::nextFileIndex() const
+    {
+        return findNextFileIndex(string(), m_extension, m_file_prefix);
+    }
 
     std::string AppendDirectory::nextFilename() const
     {

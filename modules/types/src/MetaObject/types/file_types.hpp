@@ -28,6 +28,7 @@ namespace mo
     struct MO_EXPORTS ReadFile : boost::filesystem::path
     {
         ReadFile(const std::string& str = "");
+        ReadFile& operator=(const std::string& str);
     };
 
     struct MO_EXPORTS WriteFile : boost::filesystem::path
