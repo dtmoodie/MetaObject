@@ -147,17 +147,19 @@ namespace mo
                 m_size = size;
             }
         }
-
-        void assign(const T* begin, const T* end)
+        template <class InputIter>
+        void assign(InputIter begin, InputIter end)
         {
             resize(end - begin);
-            std::memcpy(m_ptr, begin, (end - begin) * sizeof(T));
+            std::copy(begin, end, m_ptr);
         }
 
         void wrap(T* begin, T* end)
         {
             if (m_ptr != m_data && m_owns_data)
+            {
                 delete[] m_ptr;
+            }
             m_ptr = begin;
             m_size = end - begin;
             m_owns_data = false;
