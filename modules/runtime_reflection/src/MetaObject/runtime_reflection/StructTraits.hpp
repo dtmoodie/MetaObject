@@ -234,6 +234,7 @@ namespace mo
             auto ptr = ct::Reflect<T>::getPtr(itr);
             using DType = ct::decay_t<typename decltype(ptr)::Data_t>;
             static const TTraits<DType> member_trait;
+            // If you get an error here, it ls likely that there isn't actually a trait for DType
             *trait = &member_trait;
             *member = static_cast<void*>(&ptr.set(inst));
 
