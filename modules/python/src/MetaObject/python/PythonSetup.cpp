@@ -495,6 +495,15 @@ namespace mo
             return true;
         }
 
+        boost::python::object printParamWrapper(const boost::python::object& obj)
+        {
+            if (boost::python::hasattr(obj, "typename"))
+            {
+                return obj.attr("typename");
+            }
+            return {};
+        }
+
         std::shared_ptr<SystemTable> pythonSetup(const char* module_name_)
         {
             std::string module_name(module_name_);
@@ -546,6 +555,7 @@ namespace mo
             boost::python::def("eventLoop", &eventLoop);
 
             boost::python::class_<ParameterPythonWrapper> wrapper("ParameterWrapper");
+            wrapper.def("__repr__", &printParamWrapper);
 
             DataConversionTable::instance()->registerConverters<std::string>(&stringConverterFromPython,
                                                                              &stringConverterToPython);
