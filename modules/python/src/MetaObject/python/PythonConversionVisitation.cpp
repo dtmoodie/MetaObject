@@ -183,6 +183,7 @@ namespace mo
                 }
                 m_sub_object_stack.push_back(std::move(m_object));
                 m_object = boost::python::object(ParameterPythonWrapper{});
+                m_object.attr("typename") = boost::python::object(type.name());
                 trait->save(*this, inst, name, cnt);
                 boost::python::object old_object = std::move(m_sub_object_stack.back());
                 m_sub_object_stack.pop_back();
@@ -203,9 +204,9 @@ namespace mo
             }
             else
             {
-
                 m_sub_object_stack.push_back(std::move(m_object));
                 m_list = boost::python::list();
+                m_list.attr("typename") = boost::python::object(type.name());
                 trait->save(*this, inst, name, cnt);
                 boost::python::object old_object = std::move(m_sub_object_stack.back());
                 m_sub_object_stack.pop_back();
