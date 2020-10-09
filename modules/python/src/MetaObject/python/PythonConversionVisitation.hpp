@@ -3,6 +3,14 @@
 #include <MetaObject/runtime_reflection/DynamicVisitor.hpp>
 #include <boost/python.hpp>
 
+namespace boost
+{
+    namespace python
+    {
+        bool hasattr(const object& o, const char* name);
+    }
+} // namespace boost
+
 namespace mo
 {
     namespace python
