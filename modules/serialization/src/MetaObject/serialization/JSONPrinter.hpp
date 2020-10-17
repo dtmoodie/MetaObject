@@ -34,9 +34,11 @@ namespace mo
         ISaveVisitor& operator()(const double*, const std::string&, const size_t) override;
         ISaveVisitor& operator()(const void*, const std::string&, const size_t) override;
         ISaveVisitor&
-        operator()(IStructTraits* val, const void* inst, const std::string& name = "", size_t cnt = 1) override;
-        ISaveVisitor&
-        operator()(IContainerTraits* val, const void* inst, const std::string& name = "", size_t cnt = 1) override;
+        operator()(const IStructTraits* val, const void* inst, const std::string& name = "", size_t cnt = 1) override;
+        ISaveVisitor& operator()(const IContainerTraits* val,
+                                 const void* inst,
+                                 const std::string& name = "",
+                                 size_t cnt = 1) override;
 
         VisitorTraits traits() const override;
 
@@ -82,9 +84,10 @@ namespace mo
         ILoadVisitor& operator()(float* val, const std::string& name, const size_t cnt) override;
         ILoadVisitor& operator()(double*, const std::string&, const size_t) override;
         ILoadVisitor& operator()(void*, const std::string&, const size_t) override;
-        ILoadVisitor& operator()(IStructTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
         ILoadVisitor&
-        operator()(IContainerTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
+        operator()(const IStructTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
+        ILoadVisitor&
+        operator()(const IContainerTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
 
         template <class T>
         ILoadVisitor& operator()(T* val, const std::string& name = "", size_t cnt = 1)

@@ -110,7 +110,7 @@ namespace mo
         return loadBinary(static_cast<char*>(ptr), cnt);
     }
 
-    ILoadVisitor& BinaryLoader::operator()(IStructTraits* val, void* inst, const std::string& name, size_t cnt)
+    ILoadVisitor& BinaryLoader::operator()(const IStructTraits* val, void* inst, const std::string& name, size_t cnt)
     {
         if (val->triviallySerializable() && !m_cereal_compat)
         {
@@ -131,7 +131,7 @@ namespace mo
         return *this;
     }
 
-    ILoadVisitor& BinaryLoader::operator()(IContainerTraits* val, void* inst, const std::string& name, size_t cnt)
+    ILoadVisitor& BinaryLoader::operator()(const IContainerTraits* val, void* inst, const std::string& name, size_t cnt)
     {
         uint64_t size = 0;
         loadBinary(&size);

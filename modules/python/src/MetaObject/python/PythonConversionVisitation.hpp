@@ -1,6 +1,9 @@
 #ifndef MO_PYTHON_PYTHON_CONVERSION_VISITATION_HPP
 #define MO_PYTHON_PYTHON_CONVERSION_VISITATION_HPP
+#include "DataConverter.hpp"
+
 #include <MetaObject/runtime_reflection/DynamicVisitor.hpp>
+
 #include <boost/python.hpp>
 
 namespace boost
@@ -8,7 +11,9 @@ namespace boost
     namespace python
     {
         bool hasattr(const object& o, const char* name);
-    }
+        bool setattr(object& o, const object& v, const char* name);
+        list dir(const object& o);
+    } // namespace python
 } // namespace boost
 
 namespace mo
@@ -23,7 +28,7 @@ namespace mo
         struct DataConversionTable;
         struct ToPythonVisitor : SaveCache
         {
-            ToPythonVisitor();
+            ToPythonVisitor(const python::DataConversionTable* = python::DataConversionTable::instance());
 
             VisitorTraits traits() const override;
             std::shared_ptr<Allocator> getAllocator() const override;
@@ -53,9 +58,11 @@ namespace mo
             ISaveVisitor& operator()(const double* val, const std::string& name = "", size_t cnt = 1) override;
             ISaveVisitor& operator()(const void* binary, const std::string& name = "", size_t bytes = 1) override;
 
-            ISaveVisitor&
-            operator()(IStructTraits* trait, const void* inst, const std::string& name = "", size_t cnt = 1) override;
-            ISaveVisitor& operator()(IContainerTraits* trait,
+            ISaveVisitor& operator()(const IStructTraits* trait,
+                                     const void* inst,
+                                     const std::string& name = "",
+                                     size_t cnt = 1) override;
+            ISaveVisitor& operator()(const IContainerTraits* trait,
                                      const void* inst,
                                      const std::string& name = "",
                                      size_t cnt = 1) override;
@@ -68,7 +75,7 @@ namespace mo
             boost::python::object m_object;
             boost::python::list m_list;
             std::vector<boost::python::object> m_sub_object_stack;
-            const python::DataConversionTable* m_conversion_table;
+            const python::DataConversionTable* m_conversion_table = nullptr;
         };
 
         struct ControlParamGetter : ToPythonVisitor
@@ -77,7 +84,8 @@ namespace mo
 
         struct FromPythonVisitor : LoadCache
         {
-            FromPythonVisitor(const boost::python::object& obj);
+            FromPythonVisitor(const boost::python::object& obj,
+                              const python::DataConversionTable* = python::DataConversionTable::instance());
 
             VisitorTraits traits() const override;
 
@@ -111,9 +119,11 @@ namespace mo
             size_t getCurrentContainerSize() const override;
 
             ILoadVisitor&
-            operator()(IStructTraits* trait, void* inst, const std::string& name = "", size_t cnt = 1) override;
-            ILoadVisitor&
-            operator()(IContainerTraits* trait, void* inst, const std::string& name = "", size_t cnt = 1) override;
+            operator()(const IStructTraits* trait, void* inst, const std::string& name = "", size_t cnt = 1) override;
+            ILoadVisitor& operator()(const IContainerTraits* trait,
+                                     void* inst,
+                                     const std::string& name = "",
+                                     size_t cnt = 1) override;
 
           protected:
             const boost::python::object& getObject() const;
@@ -122,9 +132,11 @@ namespace mo
             void extract(T* val, const std::string& name = "", size_t cnt = 1);
 
           private:
-            const boost::python::object& m_object;
+            boost::python::object m_object;
+            std::string m_current_object_name;
             std::vector<boost::python::object> m_sub_object_stack;
-            const python::DataConversionTable* m_conversion_table;
+            const python::DataConversionTable* m_conversion_table = nullptr;
+            bool m_loading_data = false;
         };
 
         struct ControlParamSetter : FromPythonVisitor
@@ -137,7 +149,7 @@ namespace mo
             }
 
             ILoadVisitor&
-            operator()(IStructTraits* trait, void* inst, const std::string& name = "", size_t cnt = 1) override;
+            operator()(const IStructTraits* trait, void* inst, const std::string& name = "", size_t cnt = 1) override;
         };
 
     } // namespace python

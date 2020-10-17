@@ -25,7 +25,17 @@ namespace mo
     {
         python::ControlParamGetter getter;
         param->save(getter);
-        return getter.getObject();
+        boost::python::object out = getter.getObject();
+        boost::python::object printer =
+            boost::python::make_function([param](const boost::python::object&) -> std::string {
+                std::stringstream ss;
+                param->print(ss);
+                return std::move(ss).str();
+            });
+
+        MO_ASSERT(boost::python::setattr(out, printer, "__str__"));
+
+        return std::move(out);
     }
 
     bool setParam(mo::IControlParam* param, const boost::python::object& python_obj)
@@ -34,7 +44,7 @@ namespace mo
         param->load(setter);
         return setter.success();
     }
-    
+
     namespace python
     {
         namespace detail

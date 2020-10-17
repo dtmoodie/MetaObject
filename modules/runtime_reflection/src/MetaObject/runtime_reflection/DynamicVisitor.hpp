@@ -16,7 +16,8 @@ namespace mo
             const std::shared_ptr<Cache_t>& cache = std::make_shared<Cache_t>(),
             const std::shared_ptr<SerializedPointerMap_t>& pointer_map = std::make_shared<SerializedPointerMap_t>());
 
-        ILoadVisitor& operator()(IStructTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
+        ILoadVisitor&
+        operator()(const IStructTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
 
         std::shared_ptr<Cache_t> getCache();
         void setCache(const std::shared_ptr<Cache_t>& cache);
@@ -53,7 +54,7 @@ namespace mo
         std::shared_ptr<SerializedPointerMap_t> getSerializedPointers();
 
         ISaveVisitor&
-        operator()(IStructTraits* val, const void* inst, const std::string& name = "", size_t cnt = 1) override;
+        operator()(const IStructTraits* val, const void* inst, const std::string& name = "", size_t cnt = 1) override;
 
         uint32_t getPointerId(TypeInfo type, const void* ptr) override;
 

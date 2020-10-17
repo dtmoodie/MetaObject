@@ -22,7 +22,7 @@ namespace mo
         setCache(cache);
     }
 
-    ILoadVisitor& LoadCache::operator()(IStructTraits* val, void* ptr, const std::string& name, size_t cnt)
+    ILoadVisitor& LoadCache::operator()(const IStructTraits* val, void* ptr, const std::string& name, size_t cnt)
     {
         const auto traits = this->traits();
         // writing data out,
@@ -96,7 +96,7 @@ namespace mo
         setCache(cache);
     }
 
-    ISaveVisitor& SaveCache::operator()(IStructTraits* val, const void* ptr, const std::string& name, size_t cnt)
+    ISaveVisitor& SaveCache::operator()(const IStructTraits* val, const void* ptr, const std::string& name, size_t cnt)
     {
         // const auto traits = this->traits();
         // writing data out,

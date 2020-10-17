@@ -35,9 +35,11 @@ namespace mo
         ISaveVisitor& operator()(const double*, const std::string&, const size_t) override;
         ISaveVisitor& operator()(const void*, const std::string&, const size_t) override;
         ISaveVisitor&
-        operator()(IStructTraits* val, const void* inst, const std::string& name = "", size_t cnt = 1) override;
-        ISaveVisitor&
-        operator()(IContainerTraits* val, const void* inst, const std::string& name = "", size_t cnt = 1) override;
+        operator()(const IStructTraits* val, const void* inst, const std::string& name = "", size_t cnt = 1) override;
+        ISaveVisitor& operator()(const IContainerTraits* val,
+                                 const void* inst,
+                                 const std::string& name = "",
+                                 size_t cnt = 1) override;
 
         template <class T>
         ISaveVisitor& operator()(const T* val, const std::string& name = "", size_t cnt = 1)

@@ -472,18 +472,18 @@ namespace mo
             cv.wait_for(lock, std::chrono::milliseconds(milliseconds));
         }
 
-        boost::python::object stringConverterToPython(const void* inst, mo::ITraits* trait_)
+        boost::python::object stringConverterToPython(const void* inst, const mo::ITraits* trait_)
         {
-            mo::IContainerTraits* trait = dynamic_cast<mo::IContainerTraits*>(trait_);
+            const mo::IContainerTraits* trait = dynamic_cast<const mo::IContainerTraits*>(trait_);
             MO_ASSERT(trait);
             const char* char_ptr = static_cast<const char*>(trait->valuePointer(inst));
             const size_t size = trait->getContainerSize(inst);
             return boost::python::str(char_ptr, size);
         }
 
-        bool stringConverterFromPython(void* str_inst, ITraits* trait_, const boost::python::object& obj)
+        bool stringConverterFromPython(void* str_inst, const ITraits* trait_, const boost::python::object& obj)
         {
-            mo::IContainerTraits* trait = dynamic_cast<mo::IContainerTraits*>(trait_);
+            const mo::IContainerTraits* trait = dynamic_cast<const mo::IContainerTraits*>(trait_);
             MO_ASSERT(trait);
             boost::python::extract<std::string> ext(obj);
             MO_ASSERT(ext.check());
@@ -495,13 +495,22 @@ namespace mo
             return true;
         }
 
-        boost::python::object printParamWrapper(const boost::python::object& obj)
+        std::string printParamWrapper(const boost::python::object& obj)
         {
-            if (boost::python::hasattr(obj, "typename"))
+            boost::python::list attrs = boost::python::dir(obj);
+            const ssize_t size = boost::python::len(attrs);
+            std::stringstream ss;
+            for (ssize_t i = 0; i < size; ++i)
             {
-                return obj.attr("typename");
+                boost::python::extract<std::string> ext(attrs[i]);
+                if (ext.check())
+                {
+                    ss << ext();
+                    ss << '\n';
+                }
             }
-            return {};
+
+            ss.str();
         }
 
         std::shared_ptr<SystemTable> pythonSetup(const char* module_name_)
@@ -555,7 +564,7 @@ namespace mo
             boost::python::def("eventLoop", &eventLoop);
 
             boost::python::class_<ParameterPythonWrapper> wrapper("ParameterWrapper");
-            wrapper.def("__repr__", &printParamWrapper);
+            // wrapper.def("__repr__", &printParamWrapper);
 
             DataConversionTable::instance()->registerConverters<std::string>(&stringConverterFromPython,
                                                                              &stringConverterToPython);

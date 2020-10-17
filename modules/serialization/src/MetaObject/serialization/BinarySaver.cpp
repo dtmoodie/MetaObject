@@ -108,7 +108,8 @@ namespace mo
         return saveBinary(static_cast<const char*>(ptr), name, cnt);
     }
 
-    ISaveVisitor& BinarySaver::operator()(IStructTraits* trait, const void* val, const std::string& name, size_t cnt)
+    ISaveVisitor& BinarySaver::
+    operator()(const IStructTraits* trait, const void* val, const std::string& name, size_t cnt)
     {
         if (trait->triviallySerializable() && !m_cereal_compat)
         {
@@ -129,7 +130,8 @@ namespace mo
         return *this;
     }
 
-    ISaveVisitor& BinarySaver::operator()(IContainerTraits* val, const void* inst, const std::string& name, size_t cnt)
+    ISaveVisitor& BinarySaver::
+    operator()(const IContainerTraits* val, const void* inst, const std::string& name, size_t cnt)
     {
         uint64_t num_vals = val->getContainerSize(inst);
         saveBinary(&num_vals);

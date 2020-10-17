@@ -132,7 +132,7 @@ namespace mo
         return *this;
     }
 
-    ISaveVisitor& JSONSaver::operator()(IStructTraits* val, const void* inst, const std::string& name, size_t cnt)
+    ISaveVisitor& JSONSaver::operator()(const IStructTraits* val, const void* inst, const std::string& name, size_t cnt)
     {
         if (!name.empty())
         {
@@ -150,7 +150,8 @@ namespace mo
         return *this;
     }
 
-    ISaveVisitor& JSONSaver::operator()(IContainerTraits* val, const void* inst, const std::string& name, size_t cnt)
+    ISaveVisitor& JSONSaver::
+    operator()(const IContainerTraits* val, const void* inst, const std::string& name, size_t cnt)
     {
         auto str_type = TypeInfo::create<std::string>();
         const bool saving_string = val->type() == str_type;
@@ -361,7 +362,7 @@ namespace mo
         return *this;
     }
 
-    ILoadVisitor& JSONLoader::operator()(IStructTraits* val, void* inst, const std::string& name, size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(const IStructTraits* val, void* inst, const std::string& name, size_t cnt)
     {
         if (!name.empty())
         {
@@ -385,7 +386,7 @@ namespace mo
         return *this;
     }
 
-    ILoadVisitor& JSONLoader::operator()(IContainerTraits* val, void* inst, const std::string& name, size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(const IContainerTraits* val, void* inst, const std::string& name, size_t cnt)
     {
         MO_ASSERT_EQ(cnt, 1);
         std::string container_name = name;

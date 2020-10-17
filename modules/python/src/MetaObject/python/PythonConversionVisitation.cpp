@@ -8,6 +8,18 @@ namespace boost
         {
             return PyObject_HasAttrString(o.ptr(), name);
         }
+
+        bool setattr(object& o, const object& v, const char* name)
+        {
+            const int ret = PyObject_SetAttrString(o.ptr(), name, v.ptr());
+            return ret != -1;
+        }
+
+        list dir(const object& o)
+        {
+            handle<> handle(PyObject_Dir(o.ptr()));
+            return list(handle);
+        }
     } // namespace python
 } // namespace boost
 
@@ -15,8 +27,8 @@ namespace mo
 {
     namespace python
     {
-        ToPythonVisitor::ToPythonVisitor()
-            : m_conversion_table(python::DataConversionTable::instance())
+        ToPythonVisitor::ToPythonVisitor(const python::DataConversionTable* table)
+            : m_conversion_table(table)
         {
             MO_ASSERT(m_conversion_table != nullptr);
             m_object = boost::python::object(ParameterPythonWrapper{});
@@ -159,7 +171,7 @@ namespace mo
         }
 
         ISaveVisitor& ToPythonVisitor::
-        operator()(IStructTraits* trait, const void* inst, const std::string& name, size_t cnt)
+        operator()(const IStructTraits* trait, const void* inst, const std::string& name, size_t cnt)
         {
             const mo::TypeInfo type = trait->type();
             python::DataConversionTable::ToPython_t converter = m_conversion_table->getConverterToPython(type);
@@ -175,7 +187,8 @@ namespace mo
                 {
                     const void* member = nullptr;
                     const IStructTraits* trait_ptr = nullptr;
-                    if (trait->getMember(inst, &member, &trait_ptr, 0))
+                    const bool retrieved = trait->getMember(inst, &member, &trait_ptr, 0);
+                    if (retrieved && member != nullptr && trait_ptr != nullptr)
                     {
                         trait_ptr->save(*this, member, name, 1);
                         return *this;
@@ -183,7 +196,7 @@ namespace mo
                 }
                 m_sub_object_stack.push_back(std::move(m_object));
                 m_object = boost::python::object(ParameterPythonWrapper{});
-                m_object.attr("typename") = boost::python::object(type.name());
+                // m_object.attr("typename") = boost::python::object(type.name());
                 trait->save(*this, inst, name, cnt);
                 boost::python::object old_object = std::move(m_sub_object_stack.back());
                 m_sub_object_stack.pop_back();
@@ -194,7 +207,7 @@ namespace mo
         }
 
         ISaveVisitor& ToPythonVisitor::
-        operator()(IContainerTraits* trait, const void* inst, const std::string& name, size_t cnt)
+        operator()(const IContainerTraits* trait, const void* inst, const std::string& name, size_t cnt)
         {
             const mo::TypeInfo type = trait->type();
             python::DataConversionTable::ToPython_t converter = m_conversion_table->getConverterToPython(type);
@@ -206,7 +219,7 @@ namespace mo
             {
                 m_sub_object_stack.push_back(std::move(m_object));
                 m_list = boost::python::list();
-                m_list.attr("typename") = boost::python::object(type.name());
+                // boost::python::setattr(m_list, boost::python::object(type.name()), "typename");
                 trait->save(*this, inst, name, cnt);
                 boost::python::object old_object = std::move(m_sub_object_stack.back());
                 m_sub_object_stack.pop_back();
@@ -223,8 +236,9 @@ namespace mo
 
         // From python to C++
 
-        FromPythonVisitor::FromPythonVisitor(const boost::python::object& obj)
+        FromPythonVisitor::FromPythonVisitor(const boost::python::object& obj, const python::DataConversionTable* table)
             : m_object(obj)
+            , m_conversion_table(table)
         {
         }
 
@@ -355,26 +369,105 @@ namespace mo
         }
 
         ILoadVisitor& FromPythonVisitor::
-        operator()(IStructTraits* trait, void* inst, const std::string& name, size_t cnt)
+        operator()(const IStructTraits* trait, void* inst, const std::string& name, size_t cnt)
         {
+            const mo::TypeInfo type = trait->type();
+            python::DataConversionTable::FromPython_t converter = m_conversion_table->getConverterFromPython(type);
+            if (converter)
+            {
+                converter(inst, trait, m_object);
+            }
+            else
+            {
+                if (trait->getNumMembers() == 1)
+                {
+                    const IStructTraits* member_trait = nullptr;
+                    void* member_inst = nullptr;
+                    std::string member_name;
+                    if (trait->getMember(inst, &member_inst, &member_trait, 0, &member_name))
+                    {
+                        // Test if it is a container
+                        const IContainerTraits* container = dynamic_cast<const IContainerTraits*>(member_trait);
+                        if (container)
+                        {
+                            (*this)(container, member_inst, member_name, 1);
+                        }
+                        else
+                        {
+                            (*this)(member_trait, member_inst, member_name, 1);
+                        }
+                        return *this;
+                    }
+                }
+
+                if (boost::python::hasattr(m_object, name.c_str()))
+                {
+                    boost::python::object obj = m_object.attr(name.c_str());
+                    m_sub_object_stack.push_back(std::move(m_object));
+                    std::string prev_object_name = m_current_object_name;
+                    m_current_object_name = name;
+                    m_object = std::move(obj);
+                    trait->load(*this, inst, name, cnt);
+
+                    boost::python::object old_obj = std::move(m_sub_object_stack.back());
+                    m_sub_object_stack.pop_back();
+                    m_object = std::move(old_obj);
+                    m_current_object_name = std::move(prev_object_name);
+                }
+                if (name == "data")
+                {
+                    m_loading_data = true;
+                    trait->load(*this, inst, name, cnt);
+                    m_loading_data = false;
+                }
+
+                // trait->load(*this, inst, name, cnt);
+                /*m_sub_object_stack.push_back(std::move(m_object));
+                m_list = boost::python::list();
+                m_list.attr("typename") = boost::python::object(type.name());
+                trait->save(*this, inst, name, cnt);
+                boost::python::object old_object = std::move(m_sub_object_stack.back());
+                m_sub_object_stack.pop_back();
+                old_object.attr(name.c_str()) = std::move(m_list);
+                m_object = std::move(old_object);*/
+            }
             return *this;
         }
 
         ILoadVisitor& FromPythonVisitor::
-        operator()(IContainerTraits* trait, void* inst, const std::string& name, size_t cnt)
+        operator()(const IContainerTraits* trait, void* inst, const std::string& name, size_t cnt)
         {
+            const mo::TypeInfo type = trait->type();
+            python::DataConversionTable::FromPython_t converter = m_conversion_table->getConverterFromPython(type);
+            if (m_current_object_name == name || name == "data" || m_loading_data)
+            {
+                if (converter)
+                {
+                    converter(inst, trait, m_object);
+                }
+                else
+                {
+                    const size_t current_container_size = trait->getContainerSize(inst);
+                    const size_t object_size = boost::python::len(m_object);
+                    if (current_container_size == object_size)
+                    {
+                        trait->load(*this, inst, name, 1);
+                    }
+                }
+            }
+
             return *this;
         }
 
         std::string FromPythonVisitor::getCurrentElementName() const
         {
 
-            return {};
+            return m_current_object_name;
         }
 
         size_t FromPythonVisitor::getCurrentContainerSize() const
         {
-            return 0;
+            return boost::python::len(m_object);
         }
 
         const boost::python::object& FromPythonVisitor::getObject() const
@@ -388,27 +481,23 @@ namespace mo
         }
 
         ILoadVisitor& ControlParamSetter::
-        operator()(IStructTraits* trait, void* inst, const std::string& name, size_t cnt)
+        operator()(const IStructTraits* trait, void* inst, const std::string& name, size_t cnt)
         {
             // Either this is some kind of object that has a data field which we should use for populating the data of
             // the parameter
             const boost::python::object& obj = this->getObject();
-            if (boost::python::hasattr(obj, "data"))
+            if (boost::python::hasattr(obj, name.c_str()))
             {
-                if (name == "data")
-                {
-                    FromPythonVisitor::operator()(trait, inst, name, cnt);
-                }
+                FromPythonVisitor::operator()(trait, inst, name, cnt);
             }
             else
             {
-                // or we are directly populating the data field of the parameter with whatever this python object is
                 if (name == "data")
                 {
                     FromPythonVisitor::operator()(trait, inst, name, cnt);
                 }
-                trait->load(*this, inst, name);
             }
+            return *this;
         }
 
     } // namespace python

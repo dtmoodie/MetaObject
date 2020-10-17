@@ -32,9 +32,10 @@ namespace mo
         ILoadVisitor& operator()(float* val, const std::string& name, const size_t cnt) override;
         ILoadVisitor& operator()(double*, const std::string&, const size_t cnt) override;
         ILoadVisitor& operator()(void*, const std::string&, const size_t cnt) override;
-        ILoadVisitor& operator()(IStructTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
         ILoadVisitor&
-        operator()(IContainerTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
+        operator()(const IStructTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
+        ILoadVisitor&
+        operator()(const IContainerTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
 
         template <class T>
         ILoadVisitor& operator()(T* val, const std::string& name = "", size_t cnt = 1)

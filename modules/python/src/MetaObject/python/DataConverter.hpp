@@ -23,8 +23,8 @@ namespace mo
     {
         struct MO_EXPORTS DataConversionTable
         {
-            using FromPython_t = std::function<bool(void*, ITraits* trait, const boost::python::object&)>;
-            using ToPython_t = std::function<boost::python::object(const void*, ITraits* trait)>;
+            using FromPython_t = std::function<bool(void*, const ITraits* trait, const boost::python::object&)>;
+            using ToPython_t = std::function<boost::python::object(const void*, const ITraits* trait)>;
 
             static DataConversionTable* instance();
             static DataConversionTable* instance(SystemTable* table);
