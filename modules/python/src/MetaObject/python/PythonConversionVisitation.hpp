@@ -12,8 +12,7 @@ namespace boost
     {
         bool hasattr(const object& o, const char* name);
         bool setattr(object& o, const object& v, const char* name);
-        // object getattr(const object& o, const char* name);
-        // object getattr(const object& o, const object& name);
+        
         object dir(const object& o);
     } // namespace python
 } // namespace boost

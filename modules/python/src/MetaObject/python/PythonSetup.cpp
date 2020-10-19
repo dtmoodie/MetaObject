@@ -510,6 +510,7 @@ namespace mo
                     if (str.find("__") != 0)
                     {
                         boost::python::object attr = boost::python::getattr(obj, attr_name);
+                        ss << str << ": ";
                         ss << boost::python::extract<std::string>(boost::python::str(attr))();
                         ss << '\n';
                     }

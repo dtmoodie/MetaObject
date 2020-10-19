@@ -20,20 +20,6 @@ namespace boost
             handle<> handle(PyObject_Dir(o.ptr()));
             return object(handle);
         }
-
-        /*object getattr(const object& o, const char* name)
-        {
-            PyObject* ptr = PyObject_GetAttrString(o.ptr(), name);
-            handle<> handle(ptr);
-            return object(handle);
-        }
-
-        object getattr(const object& o, const object& name)
-        {
-            PyObject* ptr = PyObject_GetAttr(o.ptr(), name.ptr());
-            handle<> handle(ptr);
-            return object(handle);
-        }*/
     } // namespace python
 } // namespace boost
 
@@ -199,12 +185,10 @@ namespace mo
                 const uint32_t num_members = trait->getNumMembers();
                 if (num_members == 1)
                 {
-                    const void* member = nullptr;
-                    const IStructTraits* trait_ptr = nullptr;
-                    const bool retrieved = trait->getMember(inst, &member, &trait_ptr, 0);
-                    if (retrieved && member != nullptr && trait_ptr != nullptr)
+                    std::string name_;
+                    const bool save_success = trait->saveMember(*this, inst, 0, &name_);
+                    if (save_success)
                     {
-                        trait_ptr->save(*this, member, name, 1);
                         return *this;
                     }
                 }
@@ -409,23 +393,16 @@ namespace mo
             {
                 if (trait->getNumMembers() == 1)
                 {
-                    const IStructTraits* member_trait = nullptr;
-                    void* member_inst = nullptr;
-                    std::string member_name;
-                    const bool retrieve_success = trait->getMember(inst, &member_inst, &member_trait, 0, &member_name);
-                    if (retrieve_success)
+                    if (name == "data")
                     {
-                        // Test if it is a container
-                        const IContainerTraits* container = dynamic_cast<const IContainerTraits*>(member_trait);
-                        if (container)
+                        m_loading_data = true;
+                        std::string member_name;
+                        const bool save_success = trait->loadMember(*this, inst, 0, &member_name);
+                        if (save_success)
                         {
-                            (*this)(container, member_inst, member_name, 1);
+                            m_loading_data = false;
+                            return *this;
                         }
-                        else
-                        {
-                            (*this)(member_trait, member_inst, member_name, 1);
-                        }
-                        return *this;
                     }
                 }
 
