@@ -15,11 +15,25 @@ namespace boost
             return ret != -1;
         }
 
-        list dir(const object& o)
+        object dir(const object& o)
         {
             handle<> handle(PyObject_Dir(o.ptr()));
-            return list(handle);
+            return object(handle);
         }
+
+        /*object getattr(const object& o, const char* name)
+        {
+            PyObject* ptr = PyObject_GetAttrString(o.ptr(), name);
+            handle<> handle(ptr);
+            return object(handle);
+        }
+
+        object getattr(const object& o, const object& name)
+        {
+            PyObject* ptr = PyObject_GetAttr(o.ptr(), name.ptr());
+            handle<> handle(ptr);
+            return object(handle);
+        }*/
     } // namespace python
 } // namespace boost
 
@@ -258,10 +272,24 @@ namespace mo
         template <class T>
         void FromPythonVisitor::extract(T* val, const std::string& name, size_t cnt)
         {
-            boost::python::extract<T> ext(m_object);
-            if (ext.check())
+            if (cnt == 1)
             {
-                *val = ext();
+                boost::python::extract<T> ext(m_object);
+                if (ext.check())
+                {
+                    *val = ext();
+                }
+            }
+            else
+            {
+                for (size_t i = 0; i < cnt; ++i)
+                {
+                    boost::python::extract<T> ext(m_object[i]);
+                    if (ext.check())
+                    {
+                        val[i] = ext();
+                    }
+                }
             }
         }
 
@@ -384,7 +412,8 @@ namespace mo
                     const IStructTraits* member_trait = nullptr;
                     void* member_inst = nullptr;
                     std::string member_name;
-                    if (trait->getMember(inst, &member_inst, &member_trait, 0, &member_name))
+                    const bool retrieve_success = trait->getMember(inst, &member_inst, &member_trait, 0, &member_name);
+                    if (retrieve_success)
                     {
                         // Test if it is a container
                         const IContainerTraits* container = dynamic_cast<const IContainerTraits*>(member_trait);
