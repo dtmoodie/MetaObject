@@ -497,20 +497,26 @@ namespace mo
 
         std::string printParamWrapper(const boost::python::object& obj)
         {
-            boost::python::list attrs = boost::python::dir(obj);
+            boost::python::object attrs = boost::python::dir(obj);
             const ssize_t size = boost::python::len(attrs);
             std::stringstream ss;
             for (ssize_t i = 0; i < size; ++i)
             {
-                boost::python::extract<std::string> ext(attrs[i]);
+                boost::python::object attr_name = attrs[i];
+                boost::python::extract<std::string> ext(attr_name);
                 if (ext.check())
                 {
-                    ss << ext();
-                    ss << '\n';
+                    const std::string str = ext();
+                    if (str.find("__") != 0)
+                    {
+                        boost::python::object attr = boost::python::getattr(obj, attr_name);
+                        ss << boost::python::extract<std::string>(boost::python::str(attr))();
+                        ss << '\n';
+                    }
                 }
             }
 
-            ss.str();
+            return std::move(ss).str();
         }
 
         std::shared_ptr<SystemTable> pythonSetup(const char* module_name_)
@@ -564,7 +570,7 @@ namespace mo
             boost::python::def("eventLoop", &eventLoop);
 
             boost::python::class_<ParameterPythonWrapper> wrapper("ParameterWrapper");
-            // wrapper.def("__repr__", &printParamWrapper);
+            wrapper.def("__repr__", &printParamWrapper);
 
             DataConversionTable::instance()->registerConverters<std::string>(&stringConverterFromPython,
                                                                              &stringConverterToPython);
