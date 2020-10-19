@@ -53,13 +53,14 @@ namespace mo
             return 1;
         }
 
-        bool getMember(
-            void* inst, void** member, const IStructTraits** trait, uint32_t idx, std::string* name) const override
+        bool loadMember(ILoadVisitor& visitor, void* inst, uint32_t idx, std::string* name) const override
         {
             if (idx == 0)
             {
-                *member = inst;
-                *trait = this;
+                std::string str;
+                visitor(&str, "value");
+                T& ref = this->ref(inst);
+                ref = ct::fromString<T>(str);
                 if (name)
                 {
                     *name = "value";
@@ -69,16 +70,15 @@ namespace mo
             return false;
         }
 
-        bool getMember(const void* inst,
-                       const void** member,
-                       const IStructTraits** trait,
-                       uint32_t idx,
-                       std::string* name) const override
+        bool saveMember(ISaveVisitor& visitor, const void* inst, uint32_t idx, std::string* name) const override
         {
             if (idx == 0)
             {
-                *member = inst;
-                *trait = this;
+                const T& ref = this->ref(inst);
+                std::stringstream ss;
+                ss << ref;
+                std::string str = ss.str();
+                visitor(&str, "value");
                 if (name)
                 {
                     *name = "value";
@@ -123,21 +123,6 @@ namespace mo
         uint32_t getNumMembers() const override
         {
             return 0;
-        }
-
-        bool getMember(
-            void* inst, void** member, const IStructTraits** trait, uint32_t idx, std::string* name) const override
-        {
-            return false;
-        }
-
-        bool getMember(const void* inst,
-                       const void** member,
-                       const IStructTraits** trait,
-                       uint32_t idx,
-                       std::string* name) const override
-        {
-            return false;
         }
     };
 

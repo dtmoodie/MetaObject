@@ -16,16 +16,34 @@ namespace mo
         return 0;
     }
 
-    bool IStructTraits::getMember(
-        void* inst, void** member, const IStructTraits** trait, uint32_t idx, std::string* name) const
+    std::string IStructTraits::getMemberName(uint32_t idx) const
+    {
+        return {};
+    }
+
+    int32_t IStructTraits::getMemberIndex(const std::string& name) const
+    {
+        return -1;
+    }
+
+    bool IStructTraits::loadMember(ILoadVisitor&, void*, uint32_t, std::string*) const
     {
         return false;
     }
 
-    bool IStructTraits::getMember(
-        const void* inst, const void** member, const IStructTraits** trait, uint32_t idx, std::string* name) const
+    bool IStructTraits::saveMember(ISaveVisitor&, const void*, uint32_t, std::string*) const
     {
         return false;
     }
 
+    bool IStructTraits::loadMember(ILoadVisitor& visitor, void* inst, const std::string& name, uint32_t* idx) const
+    {
+        return false;
+    }
+
+    bool
+    IStructTraits::saveMember(ISaveVisitor& visitor, const void* inst, const std::string& name, uint32_t* idx) const
+    {
+        return false;
+    }
 } // namespace mo

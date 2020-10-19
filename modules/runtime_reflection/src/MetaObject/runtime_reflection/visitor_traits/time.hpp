@@ -43,8 +43,7 @@ namespace mo
             return 1;
         }
 
-        bool getMember(
-            void* inst, void** member, const IStructTraits** trait, uint32_t idx, std::string* name) const override
+        bool loadMember(ILoadVisitor& visitor, void* inst, uint32_t idx, std::string* name) const override
         {
             if (idx == 0)
             {
@@ -53,19 +52,13 @@ namespace mo
                 {
                     ref = T();
                 }
-                *member = static_cast<void*>(&ref.value());
-                static const TTraits<T> mem_trait;
-                *trait = &mem_trait;
+                visitor(&ref.value(), "value");
                 return true;
             }
             return false;
         }
 
-        bool getMember(const void* inst,
-                       const void** member,
-                       const IStructTraits** trait,
-                       uint32_t idx,
-                       std::string* name) const override
+        bool saveMember(ISaveVisitor& visitor, const void* inst, uint32_t idx, std::string* name) const override
         {
             if (idx == 0)
             {
@@ -74,9 +67,7 @@ namespace mo
                 {
                     return false;
                 }
-                *member = static_cast<const void*>(&ref.value());
-                static const TTraits<T> mem_trait;
-                *trait = &mem_trait;
+                visitor(&ref.value());
                 return true;
             }
             return false;

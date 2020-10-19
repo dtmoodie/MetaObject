@@ -85,7 +85,8 @@ namespace mo
     using Indexer = ct::Indexer<N>;
 
     template <class T, index_t I>
-    auto visitValue(ILoadVisitor& visitor, T& obj, const Indexer<I> idx) -> ct::EnableIf<ct::IsWritable<T, I>::value>
+    auto visitValue(ILoadVisitor& visitor, T& obj, const Indexer<I> idx)
+        -> ct::EnableIf<ct::IsWritable<T, I>::value, bool>
     {
         auto accessor = ct::Reflect<T>::getPtr(idx);
         using Ret_t = decltype(accessor.set(obj));
@@ -93,11 +94,13 @@ namespace mo
         auto ptr = &tmp;
         const auto name = ct::getName<I, T>();
         visitor(ptr, name);
+        return true;
     }
 
     template <class T, index_t I>
-    auto visitValue(ILoadVisitor&, T&, const Indexer<I>) -> ct::EnableIf<!ct::IsWritable<T, I>::value>
+    auto visitValue(ILoadVisitor&, T&, const Indexer<I>) -> ct::EnableIf<!ct::IsWritable<T, I>::value, bool>
     {
+        return false;
     }
 
     template <class T>
@@ -116,18 +119,20 @@ namespace mo
 
     template <class T, index_t I>
     auto visitValue(ISaveVisitor& visitor, const T& obj, const ct::Indexer<I> idx)
-        -> ct::EnableIf<ct::IsWritable<T, I>::value>
+        -> ct::EnableIf<ct::IsWritable<T, I>::value, bool>
     {
         auto accessor = ct::Reflect<T>::getPtr(idx);
         using RefType = typename ct::ReferenceType<typename ct::GetType<decltype(accessor)>::type>::ConstType;
         RefType ref = static_cast<RefType>(accessor.get(obj));
         auto name = ct::getName<I, T>();
         visitor(&ref, name);
+        return true;
     }
 
     template <class T, index_t I>
-    auto visitValue(ISaveVisitor&, const T&, const ct::Indexer<I>) -> ct::EnableIf<!ct::IsWritable<T, I>::value>
+    auto visitValue(ISaveVisitor&, const T&, const ct::Indexer<I>) -> ct::EnableIf<!ct::IsWritable<T, I>::value, bool>
     {
+        return true;
     }
 
     template <class T>
@@ -184,41 +189,36 @@ namespace mo
     }
 
     template <class T, ct::index_t I>
-    ct::EnableIf<ct::IsMemberObject<T, I>::value, bool> getMemberHelper(
-        T& inst, void** member, const IStructTraits** trait, ct::Indexer<I> itr, std::string* name = nullptr)
+    ct::EnableIf<ct::IsWritable<T, I>::value, bool>
+    loadMemberHelper(ILoadVisitor& visitor, T& inst, ct::Indexer<I> itr, std::string* name = nullptr)
     {
-        auto ptr = ct::Reflect<T>::getPtr(itr);
-        using DType = ct::decay_t<typename decltype(ptr)::Data_t>;
-        static const TTraits<DType> member_trait;
-        *trait = &member_trait;
-        *member = static_cast<void*>(&ptr.set(inst));
-        if (name)
+        if (visitValue(visitor, inst, itr))
         {
-            *name = ptr.getName();
+            if (name)
+            {
+                auto ptr = ct::Reflect<T>::getPtr(itr);
+                *name = ptr.getName();
+            }
+            return true;
         }
-        return true;
-    }
-
-    template <class T, ct::index_t I>
-    ct::EnableIf<!ct::IsMemberObject<T, I>::value, bool> getMemberHelper(
-        T& inst, void** member, const IStructTraits** trait, ct::Indexer<I> itr, std::string* name = nullptr)
-    {
 
         return false;
     }
 
+    template <class T, ct::index_t I>
+    ct::EnableIf<!ct::IsWritable<T, I>::value, bool>
+    loadMemberHelper(ILoadVisitor&, T&, ct::Indexer<I>, std::string* = nullptr)
+    {
+        return false;
+    }
+
     template <class T>
-    bool getMemberRecurse(T& inst,
-                          void** member,
-                          const IStructTraits** trait,
-                          uint32_t idx,
-                          ct::Indexer<0> itr,
-                          std::string* name = nullptr)
+    bool
+    loadMemberRecurse(ILoadVisitor& visitor, T& inst, uint32_t idx, ct::Indexer<0> itr, std::string* name = nullptr)
     {
         if (idx == itr)
         {
-            getMemberHelper(inst, member, trait, itr, name);
-            return true;
+            return loadMemberHelper(visitor, inst, itr, name);
         }
         else
         {
@@ -227,67 +227,54 @@ namespace mo
     }
 
     template <class T, ct::index_t I>
-    bool getMemberRecurse(T& inst,
-                          void** member,
-                          const IStructTraits** trait,
-                          uint32_t idx,
-                          ct::Indexer<I> itr,
-                          std::string* name = nullptr)
+    bool
+    loadMemberRecurse(ILoadVisitor& visitor, T& inst, uint32_t idx, ct::Indexer<I> itr, std::string* name = nullptr)
     {
         if (idx == itr)
         {
-            getMemberHelper(inst, member, trait, itr, name);
+            loadMemberHelper(visitor, inst, itr, name);
             return true;
         }
         else
         {
             const ct::Indexer<I - 1> next_itr;
-            return getMemberRecurse(inst, member, trait, idx, next_itr, name);
+            return loadMemberRecurse(visitor, inst, idx, next_itr, name);
         }
     }
 
     // const versions
     template <class T, ct::index_t I>
-    ct::EnableIf<ct::IsMemberObject<T, I>::value, bool> getMemberHelper(const T& inst,
-                                                                        const void** member,
-                                                                        const IStructTraits** trait,
-                                                                        ct::Indexer<I> itr,
-                                                                        std::string* name = nullptr)
+    ct::EnableIf<ct::IsWritable<T, I>::value, bool>
+    saveMemberHelper(ISaveVisitor& visitor, const T& inst, ct::Indexer<I> itr, std::string* name = nullptr)
     {
-        auto ptr = ct::Reflect<T>::getPtr(itr);
-        using DType = ct::decay_t<typename decltype(ptr)::Data_t>;
-        static const TTraits<DType> member_trait;
-        *trait = &member_trait;
-        *member = static_cast<const void*>(&ptr.get(inst));
-        if (name)
+        if (visitValue(visitor, inst, itr))
         {
-            *name = ptr.getName();
+            if (name)
+            {
+                auto ptr = ct::Reflect<T>::getPtr(itr);
+                *name = ptr.getName();
+            }
+            return true;
         }
-        return true;
+
+        return false;
     }
 
     template <class T, ct::index_t I>
-    ct::EnableIf<!ct::IsMemberObject<T, I>::value, bool> getMemberHelper(const T& inst,
-                                                                         const void** member,
-                                                                         const IStructTraits** trait,
-                                                                         ct::Indexer<I> itr,
-                                                                         std::string* name = nullptr)
+    ct::EnableIf<!ct::IsWritable<T, I>::value, bool>
+    saveMemberHelper(ISaveVisitor& visitor, const T& inst, ct::Indexer<I> itr, std::string* name = nullptr)
     {
 
         return false;
     }
 
     template <class T>
-    bool getMemberRecurse(const T& inst,
-                          const void** member,
-                          const IStructTraits** trait,
-                          uint32_t idx,
-                          ct::Indexer<0> itr,
-                          std::string* name = nullptr)
+    bool saveMemberRecurse(
+        ISaveVisitor& visitor, const T& inst, uint32_t idx, ct::Indexer<0> itr, std::string* name = nullptr)
     {
         if (idx == itr)
         {
-            return getMemberHelper(inst, member, trait, itr, name);
+            return saveMemberHelper(visitor, inst, itr, name);
         }
         else
         {
@@ -296,21 +283,48 @@ namespace mo
     }
 
     template <class T, ct::index_t I>
-    bool getMemberRecurse(const T& inst,
-                          const void** member,
-                          const IStructTraits** trait,
-                          uint32_t idx,
-                          ct::Indexer<I> itr,
-                          std::string* name = nullptr)
+    bool saveMemberRecurse(
+        ISaveVisitor& visitor, const T& inst, uint32_t idx, ct::Indexer<I> itr, std::string* name = nullptr)
     {
         if (idx == itr)
         {
-            return getMemberHelper(inst, member, trait, itr, name);
+            return saveMemberHelper(visitor, inst, itr, name);
         }
         else
         {
             const ct::Indexer<I - 1> next_itr;
-            return getMemberRecurse(inst, member, trait, idx, next_itr, name);
+            return saveMemberRecurse(visitor, inst, idx, next_itr, name);
+        }
+    }
+
+    template <class T>
+    bool saveMemberRecurse(
+        ISaveVisitor& visitor, const T& inst, const std::string& name, ct::Indexer<0> itr, uint32_t* idx = nullptr)
+    {
+        auto ptr = ct::Reflect<T>::getPtr(itr);
+        if (ptr.getName() == name)
+        {
+            return visitValue(visitor, inst, itr);
+        }
+        else
+        {
+            return false;
+        }
+    }
+
+    template <class T, ct::index_t I>
+    bool saveMemberRecurse(
+        ISaveVisitor& visitor, const T& inst, const std::string& name, ct::Indexer<I> itr, uint32_t* idx = nullptr)
+    {
+        auto ptr = ct::Reflect<T>::getPtr(itr);
+        if (ptr.getName() == name)
+        {
+            return visitValue(visitor, inst, itr);
+        }
+        else
+        {
+            const ct::Indexer<I - 1> next_itr;
+            return saveMemberRecurse(visitor, inst, name, next_itr, idx);
         }
     }
 
@@ -352,23 +366,19 @@ namespace mo
             return num_member_objects;
         }
 
-        bool getMember(
-            void* inst, void** member, const IStructTraits** trait, uint32_t idx, std::string* name) const override
+        bool loadMember(ILoadVisitor& visitor, void* inst, uint32_t idx, std::string* name = nullptr) const override
         {
-            auto& ref = this->ref(inst);
+            T& ref = this->ref(inst);
             const auto itr = ct::Reflect<T>::end();
-            return getMemberRecurse(ref, member, trait, idx, itr, name);
+            return loadMemberRecurse(visitor, ref, idx, itr, name);
         }
 
-        bool getMember(const void* inst,
-                       const void** member,
-                       const IStructTraits** trait,
-                       uint32_t idx,
-                       std::string* name) const override
+        bool
+        saveMember(ISaveVisitor& visitor, const void* inst, uint32_t idx, std::string* name = nullptr) const override
         {
-            auto& ref = this->ref(inst);
+            const T& ref = this->ref(inst);
             const auto itr = ct::Reflect<T>::end();
-            return getMemberRecurse(ref, member, trait, idx, itr, name);
+            return saveMemberRecurse(visitor, ref, idx, itr, name);
         }
     };
 
@@ -395,21 +405,6 @@ namespace mo
         uint32_t getNumMembers() const override
         {
             return 0;
-        }
-
-        bool getMember(
-            void* inst, void** member, const IStructTraits** trait, uint32_t idx, std::string* name) const override
-        {
-            return false;
-        }
-
-        bool getMember(const void* inst,
-                       const void** member,
-                       const IStructTraits** trait,
-                       uint32_t idx,
-                       std::string* name) const override
-        {
-            return false;
         }
     };
 } // namespace mo

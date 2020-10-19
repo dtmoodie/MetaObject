@@ -38,13 +38,21 @@ namespace mo
         virtual bool triviallySerializable() const = 0;
 
         virtual uint32_t getNumMembers() const;
-        virtual bool getMember(
-            void* inst, void** member, const IStructTraits** trait, uint32_t idx, std::string* name = nullptr) const;
-        virtual bool getMember(const void* inst,
-                               const void** member,
-                               const IStructTraits** trait,
-                               uint32_t idx,
-                               std::string* name = nullptr) const;
+
+        virtual std::string getMemberName(uint32_t idx) const;
+        virtual int32_t getMemberIndex(const std::string& name) const;
+
+        virtual bool loadMember(ILoadVisitor& visitor, void* inst, uint32_t idx, std::string* name = nullptr) const;
+
+        virtual bool
+        saveMember(ISaveVisitor& visitor, const void* inst, uint32_t idx, std::string* name = nullptr) const;
+
+        // Lookup a member by name
+        virtual bool
+        loadMember(ILoadVisitor& visitor, void* inst, const std::string& name, uint32_t* idx = nullptr) const;
+
+        virtual bool
+        saveMember(ISaveVisitor& visitor, const void* inst, const std::string& name, uint32_t* idx = nullptr) const;
     };
 
     struct MO_EXPORTS IContainerTraits : virtual IStructTraits
