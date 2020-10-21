@@ -54,7 +54,7 @@ namespace mo
         {
             m_allocator->deallocate(mat->datastart, mat->dataend - mat->datastart);
         }
-    }
-}
+    } // namespace cuda
+} // namespace mo
 
 #endif // MO_CUDA_CV_ALLOCATOR_HPP
