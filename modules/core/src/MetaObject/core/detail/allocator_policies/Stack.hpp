@@ -41,7 +41,8 @@ namespace mo
         unsigned char* ptr = nullptr;
         for (auto itr = m_deallocate_list.begin(); itr != m_deallocate_list.end(); ++itr)
         {
-            if (itr->size == num_bytes && (alignmentOffset(itr->ptr, elem_size) == 0))
+            const size_t alignment_offset = alignmentOffset(itr->ptr, elem_size);
+            if (itr->size == num_bytes)
             {
                 ptr = itr->ptr;
                 m_deallocate_list.erase(itr);
@@ -88,4 +89,4 @@ namespace mo
             }
         }
     }
-}
+} // namespace mo
