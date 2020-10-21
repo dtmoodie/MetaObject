@@ -41,11 +41,12 @@
     REFLECT_INTERNAL_MEMBER(NAME##_Subscriber_t, NAME##_param)
 
 #define OPTIONAL_INPUT(type, name)                                                                                     \
-    REFLECT_INTERNAL_WITH_FLAG(mo::ParamReflectionFlags::kOUTPUT | mo::ParamReflectionFlags::kOPTIONAL,                \
+    REFLECT_INTERNAL_WITH_FLAG(mo::ParamReflectionFlags::kINPUT | mo::ParamReflectionFlags::kOPTIONAL,                 \
                                mo::TSubscriberPtr<type>::Input_t,                                                      \
                                name,                                                                                   \
                                nullptr)                                                                                \
-    REFLECT_INTERNAL_MEMBER(mo::TSubscriberPtr<type>, name##_param)
+    using name##_Subscriber_t = mo::TFSubscriberPtr<type, mo::ParamFlags::kOPTIONAL>;                                  \
+    REFLECT_INTERNAL_MEMBER(name##_Subscriber_t, name##_param)
 
 #define STATE(TYPE, NAME, ...)                                                                                         \
     REFLECT_INTERNAL_MEMBER(mo::TControlParam<TYPE*>, NAME##_param)                                                    \
