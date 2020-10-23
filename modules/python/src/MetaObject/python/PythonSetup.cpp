@@ -500,6 +500,12 @@ namespace mo
             boost::python::object attrs = boost::python::dir(obj);
             const ssize_t size = boost::python::len(attrs);
             std::stringstream ss;
+            if (boost::python::hasattr(obj, "typename"))
+            {
+                boost::python::object type = boost::python::getattr(obj, "typename");
+                ss << "typename: " << boost::python::extract<std::string>(type)();
+                ss << '\n';
+            }
             for (ssize_t i = 0; i < size; ++i)
             {
                 boost::python::object attr_name = attrs[i];
@@ -507,7 +513,7 @@ namespace mo
                 if (ext.check())
                 {
                     const std::string str = ext();
-                    if (str.find("__") != 0)
+                    if (str.find("__") != 0 && str != "typename")
                     {
                         boost::python::object attr = boost::python::getattr(obj, attr_name);
                         ss << str << ": ";
