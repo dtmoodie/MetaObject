@@ -46,4 +46,14 @@ namespace mo
     {
         return false;
     }
+
+    bool IContainerTraits::isSharedPtr() const
+    {
+        return false;
+    }
+
+    bool ISharedPtrTraits::isSharedPtr() const
+    {
+        return true;
+    }
 } // namespace mo

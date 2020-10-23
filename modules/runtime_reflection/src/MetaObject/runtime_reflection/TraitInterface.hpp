@@ -72,6 +72,15 @@ namespace mo
         virtual const void* valuePointer(const void* inst) const = 0;
         virtual void* keyPointer(void* inst) const = 0;
         virtual const void* keyPointer(const void* inst) const = 0;
+        virtual bool isSharedPtr() const;
+    };
+
+    struct MO_EXPORTS ISharedPtrTraits : virtual IContainerTraits
+    {
+        using base = IContainerTraits;
+
+        virtual std::shared_ptr<const void> getPointer(const void* inst) const = 0;
+        bool isSharedPtr() const override;
     };
 
     template <class T, int P = 10, class E = void>
