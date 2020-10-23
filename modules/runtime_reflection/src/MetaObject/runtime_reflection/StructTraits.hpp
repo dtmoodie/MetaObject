@@ -130,7 +130,8 @@ namespace mo
     }
 
     template <class T, index_t I>
-    auto visitValue(ISaveVisitor&, const T&, const ct::Indexer<I>) -> ct::EnableIf<!ct::IsWritable<T, I>::value, bool>
+    auto visitValue(ISaveVisitor&, const T&, const ct::Indexer<I> idx)
+        -> ct::EnableIf<!ct::IsWritable<T, I>::value, bool>
     {
         return true;
     }
@@ -213,33 +214,55 @@ namespace mo
     }
 
     template <class T>
-    bool
-    loadMemberRecurse(ILoadVisitor& visitor, T& inst, uint32_t idx, ct::Indexer<0> itr, std::string* name = nullptr)
+    bool loadMemberRecurse(ILoadVisitor& visitor,
+                           T& inst,
+                           uint32_t idx,
+                           ct::Indexer<0> itr,
+                           uint32_t& member_counter,
+                           std::string* name = nullptr)
     {
-        if (idx == itr)
+        bool success = false;
+        if (idx == member_counter)
         {
-            return loadMemberHelper(visitor, inst, itr, name);
+            success = loadMemberHelper(visitor, inst, itr, name);
         }
-        else
+        if (!success)
         {
+            if (ct::IsWritable<T, 0>::value)
+            {
+                ++member_counter;
+            }
             return false;
         }
+        return true;
     }
 
     template <class T, ct::index_t I>
-    bool
-    loadMemberRecurse(ILoadVisitor& visitor, T& inst, uint32_t idx, ct::Indexer<I> itr, std::string* name = nullptr)
+    bool loadMemberRecurse(ILoadVisitor& visitor,
+                           T& inst,
+                           uint32_t idx,
+                           ct::Indexer<I> itr,
+                           uint32_t& member_counter,
+                           std::string* name = nullptr)
     {
-        if (idx == itr)
+        const ct::Indexer<I - 1> next_itr;
+        bool success = loadMemberRecurse(visitor, inst, idx, next_itr, member_counter, name);
+        if (!success)
         {
-            loadMemberHelper(visitor, inst, itr, name);
-            return true;
+            if (member_counter == idx)
+            {
+                success = loadMemberHelper(visitor, inst, itr, name);
+            }
         }
-        else
+        if (!success)
         {
-            const ct::Indexer<I - 1> next_itr;
-            return loadMemberRecurse(visitor, inst, idx, next_itr, name);
+            if (ct::IsWritable<T, I>::value)
+            {
+                ++member_counter;
+            }
+            return false;
         }
+        return true;
     }
 
     // const versions
@@ -268,35 +291,63 @@ namespace mo
         return false;
     }
 
+    // Save by index
     template <class T>
-    bool saveMemberRecurse(
-        ISaveVisitor& visitor, const T& inst, uint32_t idx, ct::Indexer<0> itr, std::string* name = nullptr)
+    bool saveMemberRecurse(ISaveVisitor& visitor,
+                           const T& inst,
+                           uint32_t idx,
+                           ct::Indexer<0> itr,
+                           uint32_t& member_counter,
+                           std::string* name = nullptr)
     {
-        if (idx == itr)
+        bool success = false;
+        // desired index matches member counter, see if we can save this member
+        if (idx == member_counter)
         {
-            return saveMemberHelper(visitor, inst, itr, name);
+            success = saveMemberHelper(visitor, inst, itr, name);
         }
-        else
+        // we couldn't save this member, the true desired member must be later?
+        if (!success)
         {
+            if (ct::IsWritable<T, 0>::value)
+            {
+                ++member_counter;
+            }
             return false;
         }
+        return true;
     }
 
     template <class T, ct::index_t I>
-    bool saveMemberRecurse(
-        ISaveVisitor& visitor, const T& inst, uint32_t idx, ct::Indexer<I> itr, std::string* name = nullptr)
+    bool saveMemberRecurse(ISaveVisitor& visitor,
+                           const T& inst,
+                           uint32_t idx,
+                           ct::Indexer<I> itr,
+                           uint32_t& member_counter,
+                           std::string* name = nullptr)
     {
-        if (idx == itr)
+        const ct::Indexer<I - 1> next_itr;
+        bool success = saveMemberRecurse(visitor, inst, idx, next_itr, member_counter, name);
+        // We're now walking forward through the members
+        if (!success)
         {
-            return saveMemberHelper(visitor, inst, itr, name);
+            if (member_counter == idx)
+            {
+                success = saveMemberHelper(visitor, inst, itr, name);
+            }
         }
-        else
+        if (!success)
         {
-            const ct::Indexer<I - 1> next_itr;
-            return saveMemberRecurse(visitor, inst, idx, next_itr, name);
+            if (ct::IsWritable<T, I>::value)
+            {
+                ++member_counter;
+            }
+            return false;
         }
+        return true;
     }
 
+    // Save by name
     template <class T>
     bool saveMemberRecurse(
         ISaveVisitor& visitor, const T& inst, const std::string& name, ct::Indexer<0> itr, uint32_t* idx = nullptr)
@@ -370,7 +421,8 @@ namespace mo
         {
             T& ref = this->ref(inst);
             const auto itr = ct::Reflect<T>::end();
-            return loadMemberRecurse(visitor, ref, idx, itr, name);
+            uint32_t member_counter = 0;
+            return loadMemberRecurse(visitor, ref, idx, itr, member_counter, name);
         }
 
         bool
@@ -378,7 +430,8 @@ namespace mo
         {
             const T& ref = this->ref(inst);
             const auto itr = ct::Reflect<T>::end();
-            return saveMemberRecurse(visitor, ref, idx, itr, name);
+            uint32_t member_counter = 0;
+            return saveMemberRecurse(visitor, ref, idx, itr, member_counter, name);
         }
     };
 
