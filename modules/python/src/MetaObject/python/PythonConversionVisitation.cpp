@@ -192,14 +192,30 @@ namespace mo
                         return *this;
                     }
                 }
-                m_sub_object_stack.push_back(std::move(m_object));
-                m_object = boost::python::object(ParameterPythonWrapper{});
-                // m_object.attr("typename") = boost::python::object(type.name());
-                trait->save(*this, inst, name, cnt);
-                boost::python::object old_object = std::move(m_sub_object_stack.back());
-                m_sub_object_stack.pop_back();
-                old_object.attr(name.c_str()) = std::move(m_object);
-                m_object = std::move(old_object);
+                if (cnt == 1)
+                {
+                    boost::python::object old_object = std::move(m_object);
+                    m_object = boost::python::object(ParameterPythonWrapper{});
+                    m_object.attr("typename") = boost::python::str(trait->name());
+                    trait->save(*this, inst, name, cnt);
+                    old_object.attr(name.c_str()) = std::move(m_object);
+                    m_object = std::move(old_object);
+                }
+                else
+                {
+                    boost::python::object old_object = std::move(m_object);
+                    const size_t sz = trait->size();
+                    for (size_t i = 0; i < cnt; ++i)
+                    {
+                        m_object = boost::python::object(ParameterPythonWrapper{});
+                        m_object.attr("typename") = boost::python::str(trait->name());
+
+                        trait->save(*this, inst, name, 1);
+                        m_list.append(std::move(m_object));
+                        inst += sz;
+                    }
+                    m_object = std::move(old_object);
+                }
             }
             return *this;
         }
@@ -215,14 +231,13 @@ namespace mo
             }
             else
             {
-                m_sub_object_stack.push_back(std::move(m_object));
+                boost::python::object old_object = std::move(m_object);
+                boost::python::list old_list = std::move(m_list);
                 m_list = boost::python::list();
-                // boost::python::setattr(m_list, boost::python::object(type.name()), "typename");
                 trait->save(*this, inst, name, cnt);
-                boost::python::object old_object = std::move(m_sub_object_stack.back());
-                m_sub_object_stack.pop_back();
                 old_object.attr(name.c_str()) = std::move(m_list);
                 m_object = std::move(old_object);
+                m_list = std::move(old_list);
             }
             return *this;
         }
@@ -409,14 +424,12 @@ namespace mo
                 if (boost::python::hasattr(m_object, name.c_str()))
                 {
                     boost::python::object obj = m_object.attr(name.c_str());
-                    m_sub_object_stack.push_back(std::move(m_object));
+                    boost::python::object old_obj = std::move(m_object);
                     std::string prev_object_name = m_current_object_name;
                     m_current_object_name = name;
                     m_object = std::move(obj);
                     trait->load(*this, inst, name, cnt);
 
-                    boost::python::object old_obj = std::move(m_sub_object_stack.back());
-                    m_sub_object_stack.pop_back();
                     m_object = std::move(old_obj);
                     m_current_object_name = std::move(prev_object_name);
                 }
@@ -426,16 +439,6 @@ namespace mo
                     trait->load(*this, inst, name, cnt);
                     m_loading_data = false;
                 }
-
-                // trait->load(*this, inst, name, cnt);
-                /*m_sub_object_stack.push_back(std::move(m_object));
-                m_list = boost::python::list();
-                m_list.attr("typename") = boost::python::object(type.name());
-                trait->save(*this, inst, name, cnt);
-                boost::python::object old_object = std::move(m_sub_object_stack.back());
-                m_sub_object_stack.pop_back();
-                old_object.attr(name.c_str()) = std::move(m_list);
-                m_object = std::move(old_object);*/
             }
             return *this;
         }

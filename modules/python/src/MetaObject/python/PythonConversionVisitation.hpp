@@ -12,7 +12,7 @@ namespace boost
     {
         bool hasattr(const object& o, const char* name);
         bool setattr(object& o, const object& v, const char* name);
-        
+
         object dir(const object& o);
     } // namespace python
 } // namespace boost
@@ -75,7 +75,6 @@ namespace mo
             void save(const T* val, const std::string& name, size_t cnt);
             boost::python::object m_object;
             boost::python::list m_list;
-            std::vector<boost::python::object> m_sub_object_stack;
             const python::DataConversionTable* m_conversion_table = nullptr;
         };
 
@@ -135,7 +134,6 @@ namespace mo
           private:
             boost::python::object m_object;
             std::string m_current_object_name;
-            std::vector<boost::python::object> m_sub_object_stack;
             const python::DataConversionTable* m_conversion_table = nullptr;
             bool m_loading_data = false;
         };
