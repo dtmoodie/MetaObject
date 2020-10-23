@@ -52,4 +52,4 @@ namespace mo
     {
         return data_type;
     }
-}
+} // namespace mo
