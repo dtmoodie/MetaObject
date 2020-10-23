@@ -4,6 +4,9 @@
 #include <MetaObject/params/IPublisher.hpp>
 #include <MetaObject/params/ParamAllocator.hpp>
 #include <MetaObject/params/TParam.hpp>
+#include <MetaObject/runtime_reflection/StructTraits.hpp>
+#include <MetaObject/runtime_reflection/VisitorTraits.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/memory.hpp>
 
 namespace mo
 {
@@ -45,6 +48,10 @@ namespace mo
         ConnectionPtr_t registerUpdateNotifier(ISlot& f);
 
         ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr_t& relay_);
+
+        void load(ILoadVisitor& visitor) override;
+        void save(ISaveVisitor& visitor) const override;
+        void visit(StaticVisitor& visitor) const override;
 
       protected:
         TContainerConstPtr_t getCurrentData() const;
@@ -267,6 +274,26 @@ namespace mo
             return m_update_signal.connect(tmp);
         }
         return TParam<IPublisher>::registerUpdateNotifier(relay_);
+    }
+
+    template <typename T>
+    void TPublisherImpl<T>::load(ILoadVisitor& visitor)
+    {
+    }
+
+    template <typename T>
+    void TPublisherImpl<T>::save(ISaveVisitor& visitor) const
+    {
+        TContainerConstPtr_t data = this->getCurrentData();
+        if (data)
+        {
+            visitor(&data, "data");
+        }
+    }
+
+    template <typename T>
+    void TPublisherImpl<T>::visit(StaticVisitor& visitor) const
+    {
     }
 
     template <typename T>
