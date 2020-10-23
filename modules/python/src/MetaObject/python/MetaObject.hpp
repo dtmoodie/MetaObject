@@ -232,14 +232,20 @@ namespace mo
     }
 
     boost::python::object getParam(const mo::IControlParam* param);
+    boost::python::object getParam(mo::IPublisher* param);
 
     template <class T>
-    boost::python::object getParamHelper(std::string name, const T& obj)
+    boost::python::object getParamHelper(std::string name, T& obj)
     {
         const mo::IControlParam* param = obj.getParam(name);
         if (param)
         {
             return getParam(param);
+        }
+        mo::IPublisher* pub = obj.getOutput(name);
+        if (pub)
+        {
+            return getParam(pub);
         }
         return {};
     }
@@ -250,13 +256,38 @@ namespace mo
         std::vector<ParamInfo*> param_infos = minfo->getParamInfo();
         for (auto param_info : param_infos)
         {
-            std::function<boost::python::object(const T&)> getter_func(
+            std::function<boost::python::object(T&)> getter_func(
                 std::bind(getParamHelper<T>, param_info->getName(), std::placeholders::_1));
 
             std::function<bool(T&, const boost::python::object&)> setter_func(
                 std::bind(setParamHelper<T>, param_info->getName(), std::placeholders::_1, std::placeholders::_2));
 
             bpobj.add_property(param_info->getName().c_str(), getter_func, setter_func);
+        }
+    }
+
+    template <class T>
+    mo::IPublisher* getPublisher(std::string name, T& obj)
+    {
+        return obj.getOutput(name);
+    }
+
+    template <class T, class BP>
+    void addOutputAccessors(BP& bpobj, const IMetaObjectInfo* minfo)
+    {
+        std::vector<ParamInfo*> param_infos = minfo->getParamInfo();
+        for (ParamInfo* param_info : param_infos)
+        {
+            const std::string& name = param_info->getName();
+            ParamFlags flags = param_info->getParamFlags();
+            if (flags == ParamFlags::kOUTPUT)
+            {
+                std::function<mo::IPublisher*(T&)> output_getter(
+                    std::bind(&getPublisher<T>, name, std::placeholders::_1));
+                bpobj.add_property(
+                    param_info->getName().c_str(),
+                    boost::python::make_getter(output_getter, boost::python::return_internal_reference<>()));
+            }
         }
     }
 
