@@ -314,4 +314,13 @@ namespace mo
     }
 } // namespace mo
 
+namespace ct
+{
+    REFLECT_TEMPLATED_DERIVED(mo::TDataContainer, mo::IDataContainer)
+        PUBLIC_ACCESS(data)
+        PUBLIC_ACCESS(header)
+        PUBLIC_ACCESS(data)
+    REFLECT_END;
+} // namespace ct
+
 #endif // MO_PARAMS_TDATACONTAINER_HPP
