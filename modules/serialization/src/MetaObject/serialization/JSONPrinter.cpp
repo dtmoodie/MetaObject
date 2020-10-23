@@ -139,11 +139,21 @@ namespace mo
             m_ar.setNextName(name.c_str());
         }
         const uint8_t* ptr = ct::ptrCast<const uint8_t>(inst);
+        const uint32_t num_members = val->getNumMembers();
         for (size_t i = 0; i < cnt; ++i)
         {
             m_ar.startNode();
             auto tptr = ct::ptrCast<const void>(ptr);
-            SaveCache::operator()(val, tptr, name, 1);
+            bool member_save_success = false;
+            if (num_members == 1)
+            {
+                member_save_success = val->saveMember(*this, tptr, 0);
+            }
+            if (!member_save_success)
+            {
+                SaveCache::operator()(val, tptr, name, 1);
+            }
+
             ptr += val->size();
             m_ar.finishNode();
         }
@@ -369,12 +379,22 @@ namespace mo
             m_ar.setNextName(name.c_str());
         }
         auto ptr = ct::ptrCast<uint8_t>(inst);
+        const uint32_t num_members = val->getNumMembers();
         for (size_t i = 0; i < cnt; ++i)
         {
             auto name_ptr = m_ar.getNodeName();
             m_ar.startNode();
             auto tptr = ct::ptrCast<void>(ptr);
-            LoadCache::operator()(val, tptr, name, 1);
+            bool member_load_success = false;
+            if (num_members == 1)
+            {
+                member_load_success = val->loadMember(*this, tptr, 0);
+            }
+            if (!member_load_success)
+            {
+                LoadCache::operator()(val, tptr, name, 1);
+            }
+
             if (name_ptr)
             {
                 m_last_read_name = name_ptr;
