@@ -31,6 +31,7 @@ namespace mo
         bool enabled() const;
 
         std::shared_ptr<IAsyncStream> stream() const;
+        std::shared_ptr<IAsyncStream> stream();
         std::shared_ptr<IDeviceStream> deviceStream() const;
 
         void setStream(std::shared_ptr<IAsyncStream>);

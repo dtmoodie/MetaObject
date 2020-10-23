@@ -1,5 +1,5 @@
 #include "FiberProperties.hpp"
-
+#include <MetaObject/core/AsyncStreamFactory.hpp>
 namespace mo
 {
 
@@ -83,7 +83,23 @@ namespace mo
 
     std::shared_ptr<IAsyncStream> FiberProperty::stream() const
     {
-        return m_stream.lock();
+        std::shared_ptr<IAsyncStream> stream = m_stream.lock();
+        if (!stream)
+        {
+            stream = mo::AsyncStreamFactory::instance()->create();
+        }
+        return stream;
+    }
+
+    std::shared_ptr<IAsyncStream> FiberProperty::stream()
+    {
+        std::shared_ptr<IAsyncStream> stream = m_stream.lock();
+        if (!stream)
+        {
+            stream = mo::AsyncStreamFactory::instance()->create();
+            m_stream = stream;
+        }
+        return stream;
     }
 
     std::shared_ptr<IDeviceStream> FiberProperty::deviceStream() const
