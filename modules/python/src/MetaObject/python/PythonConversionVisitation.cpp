@@ -186,12 +186,19 @@ namespace mo
                 const uint32_t num_members = trait->getNumMembers();
                 if (num_members == 1)
                 {
+                    // TODO add if we are in a list in here as an additional possibility
+                    boost::python::object old_object = std::move(m_object);
                     std::string name_;
+                    m_object = boost::python::object(ParameterPythonWrapper{});
                     const bool save_success = trait->saveMember(*this, inst, 0, &name_);
+
                     if (save_success)
                     {
+                        old_object.attr(name.c_str()) = std::move(m_object);
+                        m_object = std::move(old_object);
                         return *this;
                     }
+                    m_object = std::move(old_object);
                 }
                 if (m_list)
                 {
