@@ -74,7 +74,7 @@ namespace mo
             template <class T>
             void save(const T* val, const std::string& name, size_t cnt);
             boost::python::object m_object;
-            boost::python::list m_list;
+            std::unique_ptr<boost::python::list> m_list;
             const python::DataConversionTable* m_conversion_table = nullptr;
         };
 

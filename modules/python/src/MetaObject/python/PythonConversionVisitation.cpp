@@ -51,16 +51,16 @@ namespace mo
         template <class T>
         void ToPythonVisitor::save(const T* val, const std::string& name, size_t cnt)
         {
-            if (cnt == 1)
-            {
-                m_object.attr(name.c_str()) = *val;
-            }
-            else
+            if (m_list)
             {
                 for (size_t i = 0; i < cnt; ++i)
                 {
-                    m_list.append(val[i]);
+                    m_list->append(val[i]);
                 }
+            }
+            else
+            {
+                m_object.attr(name.c_str()) = *val;
             }
         }
 
@@ -174,6 +174,7 @@ namespace mo
         operator()(const IStructTraits* trait, const void* inst, const std::string& name, size_t cnt)
         {
             const mo::TypeInfo type = trait->type();
+            const std::string type_name = type.name();
             python::DataConversionTable::ToPython_t converter = m_conversion_table->getConverterToPython(type);
             if (converter)
             {
@@ -192,29 +193,33 @@ namespace mo
                         return *this;
                     }
                 }
-                if (cnt == 1)
-                {
-                    boost::python::object old_object = std::move(m_object);
-                    m_object = boost::python::object(ParameterPythonWrapper{});
-                    m_object.attr("typename") = boost::python::str(trait->name());
-                    trait->save(*this, inst, name, cnt);
-                    old_object.attr(name.c_str()) = std::move(m_object);
-                    m_object = std::move(old_object);
-                }
-                else
+                if (m_list)
                 {
                     boost::python::object old_object = std::move(m_object);
                     const size_t sz = trait->size();
+                    std::unique_ptr<boost::python::list> list = std::move(m_list);
                     for (size_t i = 0; i < cnt; ++i)
                     {
                         m_object = boost::python::object(ParameterPythonWrapper{});
                         m_object.attr("typename") = boost::python::str(trait->name());
 
                         trait->save(*this, inst, name, 1);
-                        m_list.append(std::move(m_object));
+                        list->append(std::move(m_object));
                         inst += sz;
                     }
                     m_object = std::move(old_object);
+                    m_list = std::move(list);
+                }
+                else
+                {
+                    boost::python::object old_object = std::move(m_object);
+                    std::unique_ptr<boost::python::list> old_list = std::move(m_list);
+                    m_object = boost::python::object(ParameterPythonWrapper{});
+                    m_object.attr("typename") = boost::python::str(trait->name());
+                    trait->save(*this, inst, name, cnt);
+                    old_object.attr(name.c_str()) = std::move(m_object);
+                    m_object = std::move(old_object);
+                    m_list = std::move(old_list);
                 }
             }
             return *this;
@@ -224,6 +229,7 @@ namespace mo
         operator()(const IContainerTraits* trait, const void* inst, const std::string& name, size_t cnt)
         {
             const mo::TypeInfo type = trait->type();
+            const std::string type_name = type.name();
             python::DataConversionTable::ToPython_t converter = m_conversion_table->getConverterToPython(type);
             if (converter)
             {
@@ -232,10 +238,14 @@ namespace mo
             else
             {
                 boost::python::object old_object = std::move(m_object);
-                boost::python::list old_list = std::move(m_list);
-                m_list = boost::python::list();
+                std::unique_ptr<boost::python::list> old_list = std::move(m_list);
+
+                m_list.reset(new boost::python::list());
+
                 trait->save(*this, inst, name, cnt);
-                old_object.attr(name.c_str()) = std::move(m_list);
+
+                old_object.attr(name.c_str()) = std::move(*m_list);
+
                 m_object = std::move(old_object);
                 m_list = std::move(old_list);
             }
