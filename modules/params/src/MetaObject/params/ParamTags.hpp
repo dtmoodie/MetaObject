@@ -13,6 +13,7 @@ namespace mo
 {
     struct IAsyncStream;
     class IParam;
+    class ISubscriber;
 
     namespace tags
     {
@@ -53,8 +54,8 @@ namespace mo
 
         struct Param
         {
-            using value_type = IParam;
-            using storage_type = const IParam*;
+            using value_type = ISubscriber;
+            using storage_type = const ISubscriber*;
             using pointer_type = storage_type;
         };
 

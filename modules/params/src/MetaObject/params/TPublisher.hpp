@@ -203,6 +203,15 @@ namespace mo
         auto timestamp = getKeywordInputOptional<tags::Timestamp>(std::forward<Ts>(args)...);
         auto fn = getKeywordInputOptional<tags::FrameNumber>(std::forward<Ts>(args)...);
         auto src = getKeywordInputOptional<tags::Source>(std::forward<Ts>(args)...);
+        auto param = getKeywordInputOptional<tags::Param>(std::forward<Ts>(args)...);
+        if (param)
+        {
+            auto header_ = param->getNewestHeader();
+            if (header_)
+            {
+                header = *header_;
+            }
+        }
         if (timestamp)
         {
             header.timestamp = *timestamp;
