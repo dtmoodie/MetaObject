@@ -70,11 +70,23 @@ namespace mo
 
             boost::python::object getObject();
 
+            struct Shortcut
+            {
+                boost::python::object& obj;
+                const std::string& name;
+                bool used = false;
+            };
+
           private:
             template <class T>
             void save(const T* val, const std::string& name, size_t cnt);
             boost::python::object m_object;
             std::unique_ptr<boost::python::list> m_list;
+            // When copying out a single member, we use this to shortcut part of the serialization process
+            // such that we don't have additional levels of stuff
+
+            Shortcut* m_shortcut = nullptr;
+
             const python::DataConversionTable* m_conversion_table = nullptr;
         };
 

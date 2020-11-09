@@ -170,11 +170,28 @@ namespace mo
             return *this;
         }
 
+        struct ShortcutContextManager
+        {
+            ToPythonVisitor::Shortcut* m_original;
+            ToPythonVisitor::Shortcut** m_dst;
+            ShortcutContextManager(ToPythonVisitor::Shortcut** shortcut)
+            {
+                m_original = *shortcut;
+                m_dst = shortcut;
+                *shortcut = nullptr;
+            }
+            ~ShortcutContextManager()
+            {
+                *m_dst = m_original;
+            }
+        };
+
         ISaveVisitor& ToPythonVisitor::
         operator()(const IStructTraits* trait, const void* inst, const std::string& name, size_t cnt)
         {
             const mo::TypeInfo type = trait->type();
             const std::string type_name = type.name();
+            ShortcutContextManager tmp(&m_shortcut);
             python::DataConversionTable::ToPython_t converter = m_conversion_table->getConverterToPython(type);
             if (converter)
             {
@@ -188,13 +205,18 @@ namespace mo
                 {
                     // TODO add if we are in a list in here as an additional possibility
                     boost::python::object old_object = std::move(m_object);
+                    Shortcut shortcut{old_object, name, false};
+                    m_shortcut = &shortcut;
                     std::string name_;
                     m_object = boost::python::object(ParameterPythonWrapper{});
                     const bool save_success = trait->saveMember(*this, inst, 0, &name_);
 
                     if (save_success)
                     {
-                        old_object.attr(name.c_str()) = std::move(m_object);
+                        if (!shortcut.used)
+                        {
+                            old_object.attr(name.c_str()) = std::move(m_object);
+                        }
                         m_object = std::move(old_object);
                         return *this;
                     }
@@ -244,16 +266,21 @@ namespace mo
             }
             else
             {
-                boost::python::object old_object = std::move(m_object);
                 std::unique_ptr<boost::python::list> old_list = std::move(m_list);
 
                 m_list.reset(new boost::python::list());
 
                 trait->save(*this, inst, name, cnt);
+                if (m_shortcut)
+                {
+                    m_shortcut->obj.attr(m_shortcut->name.c_str()) = std::move(*m_list);
+                    m_shortcut->used = true;
+                }
+                else
+                {
+                    m_object.attr(name.c_str()) = std::move(*m_list);
+                }
 
-                old_object.attr(name.c_str()) = std::move(*m_list);
-
-                m_object = std::move(old_object);
                 m_list = std::move(old_list);
             }
             return *this;
