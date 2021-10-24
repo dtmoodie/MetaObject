@@ -1,7 +1,7 @@
 cmake_minimum_required(VERSION 2.8)
 CMAKE_POLICY(SET CMP0048 NEW)
 PROJECT(MetaObject
-    VERSION 0.1
+    VERSION 1.0.0
     LANGUAGES CXX
 )
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
