@@ -1,6 +1,8 @@
 #ifndef MO_VISITATION_IDYNAMICVISITOR_HPP
 #define MO_VISITATION_IDYNAMICVISITOR_HPP
 
+#include "export.hpp"
+
 #include "TraitInterface.hpp"
 #include "type_traits.hpp"
 
@@ -15,6 +17,7 @@
 
 namespace mo
 {
+    
     class Allocator;
     struct MO_EXPORTS CacheDataContainer
     {
@@ -63,9 +66,7 @@ namespace mo
     {
         // if true, the name field of the () operator is used to search for the provided data
         bool supports_named_access;
-        // If this is true, read data from external source and put into the visited struct
-        // else read data from struct and put into output
-        bool reader;
+        bool human_readable;
     };
 
     struct MO_EXPORTS IDynamicVisitor
@@ -122,6 +123,7 @@ namespace mo
         virtual ILoadVisitor& operator()(float* val, const std::string& name = "", size_t cnt = 1) = 0;
         virtual ILoadVisitor& operator()(double* val, const std::string& name = "", size_t cnt = 1) = 0;
         virtual ILoadVisitor& operator()(void* binary, const std::string& name = "", size_t num_bytes = 1) = 0;
+        virtual ILoadVisitor& operator()(Byte* binary, const std::string& name = "", size_t num_bytes = 1);
 
         template <class T>
         ILoadVisitor& operator()(T* val, const std::string& name = "", size_t cnt = 1);
@@ -154,25 +156,6 @@ namespace mo
         virtual void setSerializedPointer(TypeInfo type, uint32_t id, void* ptr) = 0;
     };
 
-    using PrimiviteRuntimeTypes = ct::VariadicTypedef<char,
-                                                      bool,
-                                                      int8_t,
-                                                      uint8_t,
-                                                      int16_t,
-                                                      uint16_t,
-                                                      int32_t,
-                                                      uint32_t,
-                                                      int64_t,
-                                                      uint64_t,
-                                                      float,
-                                                      double>;
-    template <class T>
-    struct IsPrimitiveRuntimeReflected
-    {
-
-        static constexpr const bool value = PrimiviteRuntimeTypes::contains<T>();
-    };
-
     struct MO_EXPORTS ISaveVisitor : public virtual IDynamicVisitor
     {
         virtual ISaveVisitor& operator()(const bool* val, const std::string& name = "", size_t cnt = 1) = 0;
@@ -199,6 +182,7 @@ namespace mo
         virtual ISaveVisitor& operator()(const float* val, const std::string& name = "", size_t cnt = 1) = 0;
         virtual ISaveVisitor& operator()(const double* val, const std::string& name = "", size_t cnt = 1) = 0;
         virtual ISaveVisitor& operator()(const void* binary, const std::string& name = "", size_t bytes = 1) = 0;
+        virtual ISaveVisitor& operator()(const Byte* binary, const std::string& name = "", size_t bytes = 1);
 
         template <class T>
         ISaveVisitor& operator()(const T* val, const std::string& name = "", size_t cnt = 1);

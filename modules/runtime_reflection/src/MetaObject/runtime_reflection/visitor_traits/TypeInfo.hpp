@@ -1,8 +1,12 @@
 #ifndef MO_RUNTIME_REFLECTION_VISITOR_TRAITS_TYPEINFO_HPP
 #define MO_RUNTIME_REFLECTION_VISITOR_TRAITS_TYPEINFO_HPP
+
+#include "../IDynamicVisitor.hpp"
+
 #include "../StructTraits.hpp"
+
 #include <MetaObject/detail/TypeInfo.hpp>
-#include <MetaObject/runtime_reflection/IDynamicVisitor.hpp>
+
 namespace mo
 {
     template <>

@@ -68,7 +68,7 @@ namespace
             ASSERT_EQ(*mo::get<const T*>(inputs), 6);
             ASSERT_EQ(printInputs(inputs), true);
 
-            pub.publish(5);
+            pub.publish(T(5));
 
             ASSERT_NE(mo::get<const T*>(inputs), static_cast<void*>(nullptr));
             ASSERT_EQ(*mo::get<const T*>(inputs), 5);

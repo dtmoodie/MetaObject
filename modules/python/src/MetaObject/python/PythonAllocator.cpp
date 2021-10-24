@@ -1,8 +1,11 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include "PythonAllocator.hpp"
-#include "MetaObject/logging/logging.hpp"
+
+#include <MetaObject/logging/logging.hpp>
+
 #include <boost/python.hpp>
 #include <numpy/ndarrayobject.h>
+
 #include <opencv2/core.hpp>
 
 namespace ct
@@ -53,7 +56,7 @@ namespace ct
     {
         PyGILState_Release(_state);
     }
-}
+} // namespace ct
 
 namespace mo
 {
@@ -130,7 +133,7 @@ namespace mo
         }
         if (PyTuple_Check(o))
         {
-            int i, sz = (int)PyTuple_Size((PyObject *)o);
+            int i, sz = (int)PyTuple_Size((PyObject*)o);
             m = cv::Mat(sz, 1, CV_64F);
             for (i = 0; i < sz; i++)
             {
@@ -158,19 +161,19 @@ namespace mo
         bool needcopy = false, needcast = false;
         int typenum = PyArray_TYPE(oarr), new_typenum = typenum;
         int type =
-            typenum == NPY_UBYTE ? CV_8U : typenum == NPY_BYTE
-                                               ? CV_8S
-                                               : typenum == NPY_USHORT
-                                                     ? CV_16U
-                                                     : typenum == NPY_SHORT
-                                                           ? CV_16S
-                                                           : typenum == NPY_INT
-                                                                 ? CV_32S
-                                                                 : typenum == NPY_INT32
-                                                                       ? CV_32S
-                                                                       : typenum == NPY_FLOAT
-                                                                             ? CV_32F
-                                                                             : typenum == NPY_DOUBLE ? CV_64F : -1;
+            typenum == NPY_UBYTE
+                ? CV_8U
+                : typenum == NPY_BYTE
+                      ? CV_8S
+                      : typenum == NPY_USHORT
+                            ? CV_16U
+                            : typenum == NPY_SHORT
+                                  ? CV_16S
+                                  : typenum == NPY_INT
+                                        ? CV_32S
+                                        : typenum == NPY_INT32
+                                              ? CV_32S
+                                              : typenum == NPY_FLOAT ? CV_32F : typenum == NPY_DOUBLE ? CV_64F : -1;
 
         if (type < 0)
         {
@@ -294,19 +297,20 @@ namespace mo
         int depth = CV_MAT_DEPTH(type);
         int cn = CV_MAT_CN(type);
         const int f = (int)(sizeof(size_t) / 8);
-        int typenum = depth == CV_8U ? NPY_UBYTE
-                                     : depth == CV_8S ? NPY_BYTE : depth == CV_16U
-                                                                       ? NPY_USHORT
-                                                                       : depth == CV_16S
-                                                                             ? NPY_SHORT
-                                                                             : depth == CV_32S
-                                                                                   ? NPY_INT
-                                                                                   : depth == CV_32F
-                                                                                         ? NPY_FLOAT
-                                                                                         : depth == CV_64F
-                                                                                               ? NPY_DOUBLE
-                                                                                               : f * NPY_ULONGLONG +
-                                                                                                     (f ^ 1) * NPY_UINT;
+        int typenum =
+            depth == CV_8U
+                ? NPY_UBYTE
+                : depth == CV_8S
+                      ? NPY_BYTE
+                      : depth == CV_16U
+                            ? NPY_USHORT
+                            : depth == CV_16S
+                                  ? NPY_SHORT
+                                  : depth == CV_32S
+                                        ? NPY_INT
+                                        : depth == CV_32F
+                                              ? NPY_FLOAT
+                                              : depth == CV_64F ? NPY_DOUBLE : f * NPY_ULONGLONG + (f ^ 1) * NPY_UINT;
         int dims = 0;
         if (mat.rows == 1 || mat.cols == 1)
             dims += 1;
@@ -348,8 +352,13 @@ namespace mo
         return o;
     }
 
-    cv::UMatData* NumpyAllocator::allocate(
-        int dims0, const int* sizes, int type, void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
+    cv::UMatData* NumpyAllocator::allocate(int dims0,
+                                           const int* sizes,
+                                           int type,
+                                           void* data,
+                                           size_t* step,
+                                           AccessFlag flags,
+                                           cv::UMatUsageFlags usageFlags) const
     {
         if (data != 0)
         {
@@ -360,7 +369,7 @@ namespace mo
         return ret;
     }
 
-    bool NumpyAllocator::allocate(cv::UMatData* u, int accessFlags, cv::UMatUsageFlags usageFlags) const
+    bool NumpyAllocator::allocate(cv::UMatData* u, AccessFlag accessFlags, cv::UMatUsageFlags usageFlags) const
     {
         return default_allocator->allocate(u, accessFlags, usageFlags);
     }
@@ -379,4 +388,4 @@ namespace mo
             default_allocator->deallocate(u);
         }
     }
-}
+} // namespace mo

@@ -1,4 +1,5 @@
-#pragma once
+#ifndef @PLUGIN_NAME@_EXPORT_HPP
+#define @PLUGIN_NAME@_EXPORT_HPP
 // clang-format off
 #if (defined WIN32 || defined _WIN32 || defined WINCE || defined __CYGWIN__) && defined @PLUGIN_NAME@_EXPORTS
 #  define @PLUGIN_NAME@_EXPORT __declspec(dllexport)
@@ -13,10 +14,8 @@
 #pragma warning(disable: 4275)
 #endif
 
+#include <RuntimeObjectSystem/RuntimeLinkLibrary.h>
 
-#include "RuntimeObjectSystem/RuntimeLinkLibrary.h"
-
-#ifndef @PLUGIN_NAME@_EXPORTS
 #ifdef WIN32
 #ifdef _DEBUG
   RUNTIME_COMPILER_LINKLIBRARY("@PLUGIN_NAME@d.lib")
@@ -30,27 +29,32 @@
   RUNTIME_COMPILER_LINKLIBRARY("-l@PLUGIN_NAME@d")
 #endif
 #endif
-#endif
 
-extern "C" @PLUGIN_NAME@_EXPORT const char* getPluginBuildInfo();
-extern "C" @PLUGIN_NAME@_EXPORT const char** getPluginIncludes();
-extern "C" @PLUGIN_NAME@_EXPORT const char** getPluginLinkDirsDebug();
-extern "C" @PLUGIN_NAME@_EXPORT const char** getPluginLinkDirsRelease();
-extern "C" @PLUGIN_NAME@_EXPORT const char** getPluginCompileOptions();
-extern "C" @PLUGIN_NAME@_EXPORT const char** getPluginCompileDefinitions();
-extern "C" @PLUGIN_NAME@_EXPORT const char** getPluginLinkLibs();
-extern "C" @PLUGIN_NAME@_EXPORT const char** getPluginLinkLibsDebug();
-extern "C" @PLUGIN_NAME@_EXPORT const char** getPluginLinkLibsRelease();
-extern "C" @PLUGIN_NAME@_EXPORT int getPluginProjectId();
 
 namespace mo
 {
     class MetaObjectFactory;
 }
 
+extern "C" @PLUGIN_NAME@_EXPORT const char* getPluginBuildInfo();
+extern "C" @PLUGIN_NAME@_EXPORT void initPlugin(const int32_t id, mo::MetaObjectFactory* factory);
+
 namespace @PLUGIN_NAME@
 {
-    void @PLUGIN_NAME@_EXPORT initPlugin(mo::MetaObjectFactory* factory);
+    const char** getPluginIncludes();
+    const char** getPluginLinkDirsDebug();
+    const char** getPluginLinkDirsRelease();
+    const char** getPluginCompileOptions();
+    const char** getPluginCompileDefinitions();
+    const char** getPluginLinkLibs();
+    const char** getPluginLinkLibsDebug();
+    const char** getPluginLinkLibsRelease();
+    const char* getCompiler();
+    int @PLUGIN_NAME@_EXPORT getPluginProjectId();
+    
+    void @PLUGIN_NAME@_EXPORT initPlugin(const int32_t id, mo::MetaObjectFactory* factory);
 }
 
 // clang-format on
+
+#endif // @PLUGIN_NAME@_EXPORT_HPP

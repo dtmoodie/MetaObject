@@ -1,7 +1,6 @@
 #pragma once
-#define METAOBJECT_MODULE "core"
-#include <MetaObject/detail/Export.hpp>
-#undef METAOBJECT_MODULE
+#include <MetaObject/core/export.hpp>
+
 #include <MetaObject/core/AsyncStream.hpp>
 #include <MetaObject/core/SystemTable.hpp>
 #include <MetaObject/core/detail/Time.hpp>

@@ -31,10 +31,15 @@ TEST_F(control_param, visit_static)
     std::stringstream ss;
     mo::PrintVisitor visitor(ss);
     param.visit(visitor);
-    ASSERT_EQ(ss.str(),
-              "name: std::string\n    name: "
-              "char\nroot_name: std::string\n    "
-              "root_name: char\nflags: mo::ParamFlags\n  data: float\n");
+    std::string string = ss.str();
+    ASSERT_EQ(string,
+              "name: std::string\n"
+              "    name: char\n"
+              "root_name: std::string\n"
+              "    root_name: char\n"
+              "flags: mo::ParamFlags\n"
+              "    value: uint64_t\n"
+              "  data: float\n");
 }
 
 TEST_F(control_param, save_json)
@@ -106,9 +111,13 @@ TEST_F(control_param_ptr, visit_static)
     mo::PrintVisitor visitor(ss);
     param.visit(visitor);
     ASSERT_EQ(ss.str(),
-              "name: std::string\n    name: "
-              "char\nroot_name: std::string\n    "
-              "root_name: char\nflags: mo::ParamFlags\n  data: float\n");
+              "name: std::string\n"
+              "    name: char\n"
+              "root_name: std::string\n"
+              "    root_name: char\n"
+              "flags: mo::ParamFlags\n"
+              "    value: uint64_t\n"
+              "  data: float\n");
 }
 
 TEST_F(control_param_ptr, save_json)

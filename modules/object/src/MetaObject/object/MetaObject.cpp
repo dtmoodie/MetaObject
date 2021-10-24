@@ -153,8 +153,9 @@ namespace mo
         m_slot_param_updated.bind(&MetaObject::onParamUpdate, this);
         m_signals["param_updated"][m_sig_param_updated.getSignature()] = &m_sig_param_updated;
         m_signals["param_added"][m_sig_param_updated.getSignature()] = &m_sig_param_added;
-
-        setStream(IAsyncStream::current());
+        // TODO
+        //auto stream = IAsyncStream::current();
+        //setStream();
     }
 
     MetaObject::~MetaObject()
@@ -955,6 +956,8 @@ namespace mo
 
         if (input && input->acceptsPublisher(*output))
         {
+            const auto output_types = output->getOutputTypes();
+            const auto input_types = input->getInputTypes();
             // Check contexts to see if a buffer needs to be setup
             auto output_stream = output->getStream();
             auto input_stream = input->getStream();
@@ -962,7 +965,7 @@ namespace mo
             {
                 type_ = getDefaultBufferType(output_stream, input_stream);
             }
-            const bool different_streams = output_stream != input_stream;
+            const bool different_streams = (output_stream != input_stream) && input_stream;
             const bool force = type_ & BufferFlags::FORCE_BUFFERED;
             const bool buffer_input = input->checkFlags(mo::ParamFlags::kREQUIRE_BUFFERED);
             const bool buffer_output = output->checkFlags(mo::ParamFlags::kREQUIRE_BUFFERED);
@@ -991,10 +994,17 @@ namespace mo
                             rcc::weak_ptr<IMetaObject>(*output_object), output->getName(), input->getName(), type_);
                     }
 
+                    MO_LOG(info,
+                           "Successfully created a buffered connection between output {}:{} {} and input {}:{} {}",
+                           output_object->GetTypeName(),
+                           output->getName(),
+                           output_types,
+                           this->GetTypeName(),
+                           input->getName(),
+                           input_types);
                     return true;
                 }
-                const auto output_types = output->getOutputTypes();
-                const auto input_types = input->getInputTypes();
+
                 MO_LOG(debug,
                        "Failed to connect output {} {} to input {} {}",
                        output->getName(),
@@ -1021,6 +1031,15 @@ namespace mo
                                                                  type_);
                             }
 
+                            MO_LOG(info,
+                                   "Successfully created a buffered connection between output {}:{} {} and input {}:{} {}",
+                                   output_object->GetTypeName(),
+                                   output->getName(),
+                                   output_types,
+                                   this->GetTypeName(),
+                                   input->getName(),
+                                   input_types);
+
                             return true;
                         }
 
@@ -1045,6 +1064,15 @@ namespace mo
                                 rcc::weak_ptr<IMetaObject>(*output_object), output->getName(), input->getName(), type_);
                         }
 
+                        MO_LOG(info,
+                               "Successfully created a direct connection between output {}:{} {} and input {}:{} {}",
+                               output_object->GetTypeName(),
+                               output->getName(),
+                               output_types,
+                               this->GetTypeName(),
+                               input->getName(),
+                               input_types);
+
                         return true;
                     }
                     MO_LOG(debug,
@@ -1065,6 +1093,14 @@ namespace mo
                         m_param_connections.emplace_back(
                             rcc::weak_ptr<IMetaObject>(*output_object), output->getName(), input->getName(), type_);
                     }
+                    MO_LOG(info,
+                           "Successfully created a direct connection between output {}:{} {} and input {}:{} {}",
+                           output_object->GetTypeName(),
+                           output->getName(),
+                           output_types,
+                           this->GetTypeName(),
+                           input->getName(),
+                           input_types);
 
                     return true;
                 }

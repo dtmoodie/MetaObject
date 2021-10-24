@@ -8,8 +8,6 @@
 #include "../type_traits.hpp"
 #include "string.hpp"
 
-#include <cereal/cereal.hpp>
-
 #include <map>
 #include <utility>
 

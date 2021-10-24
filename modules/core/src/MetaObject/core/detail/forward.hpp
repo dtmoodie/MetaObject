@@ -15,12 +15,6 @@ namespace std
     class unique_lock;
 } // namespace std
 
-namespace cereal
-{
-    class BinaryInputArchive;
-    class BinaryOutputArchive;
-} // namespace cereal
-
 namespace mo
 {
     struct Allocator;
@@ -114,14 +108,8 @@ namespace mo
 
     using AllocatorPtr_t = std::shared_ptr<Allocator>;
 
-    using BinaryInputVisitor = cereal::BinaryInputArchive;
-    using BinaryOutputVisitor = cereal::BinaryOutputArchive;
-
     template <class T, class Mutex = Mutex_t>
     class TSignalRelay;
 } // namespace mo
-
-#include <cereal/types/string.hpp>
-#include <cereal/types/vector.hpp>
 
 #endif // MO_CORE_FORWARD_HPP

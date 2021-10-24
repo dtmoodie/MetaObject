@@ -18,7 +18,7 @@ namespace mo
             virtual operator cudaStream_t() = 0;
             virtual void setStream(const Stream& stream) = 0;
             virtual void setDevicePriority(PriorityLevels lvl) = 0;
-            virtual void enqueueCallback(std::function<void(void)> cb) = 0;
+            virtual void enqueueCallback(std::function<void(mo::IAsyncStream*)> cb) = 0;
 
         }; // struct mo::cuda::Context
 
@@ -39,13 +39,12 @@ namespace mo
             Stream getStream() const override;
             operator cudaStream_t() override;
 
-            void pushWork(std::function<void(void)>&& work, PriorityLevels priority = NONE) override;
-            void pushEvent(std::function<void(void)>&& event,
-                           uint64_t event_id = 0,
-                           PriorityLevels priority = NONE) override;
+            void pushWork(std::function<void(mo::IAsyncStream*)>&& work) override;
+            void pushEvent(std::function<void(mo::IAsyncStream*)>&& event,
+                           uint64_t event_id = 0) override;
 
             Event createEvent();
-            void enqueueCallback(std::function<void(void)> cb) override;
+            void enqueueCallback(std::function<void(mo::IAsyncStream*)> cb) override;
 
             // This differs from Stream::synchronize in that it uses an event and boost::fibers to allow other fibers to
             // execute while the stream is waiting for completion.  Thus this should be more efficient than just
@@ -63,11 +62,12 @@ namespace mo
             void hostToHost(ct::TArrayView<void> dst, ct::TArrayView<const void> src) override;
 
             std::shared_ptr<DeviceAllocator> deviceAllocator() const override;
+            bool isDeviceStream() const override;
 
           private:
             void init();
             Stream m_stream;
-            ObjectPool<CUevent_st> m_event_pool;
+            std::shared_ptr<ObjectPool<CUevent_st>> m_event_pool;
             int m_device_id = -1;
             std::shared_ptr<DeviceAllocator> m_allocator;
         }; // struct mo::cuda::Context

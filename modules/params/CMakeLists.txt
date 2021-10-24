@@ -6,7 +6,6 @@ metaobject_declare_module(NAME params
         ct
         metaobject_types
         metaobject_runtime_reflection
-        cereal
 )
 
 target_include_directories(metaobject_params

@@ -1,6 +1,8 @@
 #include "common.hpp"
 
-#include "MetaObject/core/metaobject_config.hpp"
+#include <MetaObject/runtime_reflection/IDynamicVisitor.hpp>
+
+#include <MetaObject/core/metaobject_config.hpp>
 #ifdef MO_HAVE_OPENCV
 #include <MetaObject/runtime_reflection/StructTraits.hpp>
 #include <MetaObject/types/opencv.hpp>
@@ -25,7 +27,7 @@ namespace mo
 {
     namespace metaparams
     {
-        void instCV(SystemTable* table)
+        void instCV(SystemTable*)
         {
             registerTrait<Point2f>();
             registerTrait<Point2d>();

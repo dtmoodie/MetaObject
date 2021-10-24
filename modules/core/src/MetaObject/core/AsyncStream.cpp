@@ -25,9 +25,13 @@ namespace mo
         m_thread_id = getThisThreadId();
         m_allocator = std::move(alloc);
         m_device_id = -1;
+        m_work_queue = std::make_shared<WorkQueue>();
     }
 
-    AsyncStream::~AsyncStream() = default;
+    AsyncStream::~AsyncStream()
+    {
+        this->synchronize();
+    }
 
     void AsyncStream::setName(const std::string& name)
     {
@@ -49,39 +53,38 @@ namespace mo
         m_name = name;
     }
 
-    void AsyncStream::pushWork(std::function<void(void)>&& work, const PriorityLevels priority)
+    void AsyncStream::pushWork(std::function<void(IAsyncStream*)>&& work)
     {
-        boost::fibers::fiber fiber(std::move(work));
-        auto& prop = fiber.properties<FiberProperty>();
-        prop.setPriority(priority == NONE ? m_host_priority : priority);
-        prop.setStream(this->shared_from_this());
+        boost::fibers::fiber fiber(std::move(work), this);
+        FiberProperty& prop = fiber.properties<FiberProperty>();
+        prop.setAll(m_host_priority, 0, this->shared_from_this());
         fiber.detach();
     }
 
     void
-    AsyncStream::pushEvent(std::function<void(void)>&& event, const uint64_t event_id, const PriorityLevels priority)
+    AsyncStream::pushEvent(std::function<void(IAsyncStream*)>&& event, const uint64_t event_id)
     {
-        boost::fibers::fiber fiber([event]() {
-            if (boost::this_fiber::properties<FiberProperty>().enabled())
+        boost::fibers::fiber fiber([this, event]() {
+            if (boost::this_fiber::properties<FiberProperty>().isEnabled())
             {
-                event();
+                event(this);
             }
         });
-
-        auto& prop = fiber.properties<FiberProperty>();
-        prop.setAll(priority == NONE ? m_host_priority : priority, event_id, false);
-        prop.setStream(this->shared_from_this());
+        FiberProperty& prop = fiber.properties<FiberProperty>();
+        prop.setAll(m_host_priority, event_id, this->shared_from_this());
         fiber.detach();
     }
 
     void AsyncStream::synchronize()
     {
-        const auto sched = PriorityScheduler::current();
-        auto size = sched->size();
-        while (size != 1)
+        if(m_work_queue)
         {
-            boost::this_fiber::yield();
-            size = sched->size();
+            auto size = m_work_queue->size();
+            while(size > 0)
+            {
+                boost::this_fiber::sleep_for(std::chrono::milliseconds(5));
+                size = m_work_queue->size();
+            }
         }
     }
 
@@ -137,6 +140,20 @@ namespace mo
     uint64_t AsyncStream::streamId() const
     {
         return m_stream_id;
+    }
+
+    std::shared_ptr<WorkQueue> AsyncStream::getWorkQueue() const
+    {
+        return m_work_queue;
+    }
+
+    size_t AsyncStream::size() const
+    {
+        if(m_work_queue)
+        {
+            return m_work_queue->size();
+        }
+        return 0;
     }
 
     namespace

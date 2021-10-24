@@ -5,6 +5,55 @@
 #include <boost/context/detail/prefetch.hpp>
 namespace mo
 {
+
+    void WorkQueue::pushBack(boost::fibers::context& ctx)
+    {
+        boost::fibers::detail::spinlock_lock lk(m_work_spinlock);
+        m_work_queue.push_back(ctx);
+    }
+
+    boost::fibers::context* WorkQueue::front()
+    {
+        boost::fibers::detail::spinlock_lock lk(m_work_spinlock);
+        return &m_work_queue.front();
+    }
+
+    void WorkQueue::popFront()
+    {
+        boost::fibers::detail::spinlock_lock lk(m_work_spinlock);
+        m_work_queue.pop_front();
+    }
+
+    size_t WorkQueue::size() const
+    {
+        boost::fibers::detail::spinlock_lock lk(m_work_spinlock);
+        return m_work_queue.size();
+    }
+
+    bool WorkQueue::empty() const
+    {
+        boost::fibers::detail::spinlock_lock lk(m_work_spinlock);
+        return m_work_queue.empty();
+    }
+
+    void WorkQueue::disable(const uint64_t id)
+    {
+        boost::fibers::detail::spinlock_lock lk(m_work_spinlock);
+        for(auto itr = m_work_queue.begin(); itr != m_work_queue.end(); ++itr)
+        {
+            FiberProperty* prop = dynamic_cast<FiberProperty*>(itr->get_properties());
+            if(prop)
+            {
+                if(prop->getId() == id)
+                {
+                    prop->disable();
+                }
+            }
+
+        }
+    }
+
+
     static thread_local PriorityScheduler* g_current = nullptr;
 
     PriorityScheduler* PriorityScheduler::current()
@@ -29,6 +78,8 @@ namespace mo
         }
 
         MO_LOG(debug, "Instantiating scheduler");
+        m_default_work_queue = std::make_shared<WorkQueue>();
+        m_prioritized_work_queues.push_back(std::make_pair(PriorityLevels::DEFAULT, m_default_work_queue));
     }
 
     PriorityScheduler::PriorityScheduler(std::weak_ptr<ThreadPool> pool, std::condition_variable** wakeup_cv)
@@ -44,6 +95,9 @@ namespace mo
             locked->addScheduler(this);
         }
         MO_LOG(debug, "Instantiating worker scheduler");
+        m_default_work_queue = std::make_shared<WorkQueue>();
+        m_prioritized_work_queues.push_back(std::make_pair(PriorityLevels::DEFAULT, m_default_work_queue));
+
     }
 
     PriorityScheduler::~PriorityScheduler()
@@ -68,138 +122,81 @@ namespace mo
             }
         }
 
-        boost::fibers::detail::spinlock_lock lk{m_work_spinlock};
-        if (id == 0)
+        std::shared_ptr<IAsyncStream> stream = props.getStream();
+        WorkQueue* queue = nullptr;
         {
-            auto itr =
-                std::find_if(m_work_queue.begin(), m_work_queue.end(), [ctx_priority, this](boost::fibers::context& c) {
-                    return properties(&c).getPriority() < ctx_priority;
-                });
-
-            m_work_queue.insert(itr, *ctx);
-        }
-        else
-        {
-            auto itr = std::find_if(
-                m_work_queue.begin(), m_work_queue.end(), [ctx_priority, id, this](boost::fibers::context& c) {
-                    return properties(&c).getPriority() < ctx_priority || properties(&c).getId() == id;
-                });
-            if (itr != m_work_queue.end())
+            boost::fibers::detail::spinlock_lock lk(m_work_queue_spinlock);
+            if(stream)
             {
-                if (properties(&*itr).getId() == id)
+                auto queue_ = stream->getWorkQueue();
+                auto pred = [queue_](const std::pair<PriorityLevels, std::weak_ptr<WorkQueue>>& it) -> bool
                 {
-                    itr = m_work_queue.insert(itr, *ctx);
-                    ++itr;
-                    BOOST_ASSERT(properties(&*itr).getId() == id);
-                    BOOST_ASSERT(&*itr != ctx);
-                    properties(&*itr).disable();
+                    return it.second.lock() == queue_;
+                };
+                if(std::find_if(m_prioritized_work_queues.begin(),
+                                m_prioritized_work_queues.end(),
+                                pred
+                                ) == m_prioritized_work_queues.end())
+                {
+                    // Queue is not in our prioritized list
+                    // Sorted order of work queues
+                    std::pair<PriorityLevels, std::weak_ptr<WorkQueue>> pair = std::make_pair(ctx_priority, queue_);
+                    auto itr = std::find_if(m_prioritized_work_queues.begin(),
+                                 m_prioritized_work_queues.end(),
+                                 [ctx_priority](const std::pair<PriorityLevels, std::weak_ptr<WorkQueue>>& pair)
+                                 {
+                                    return pair.first < ctx_priority;
+                                 });
+                    m_prioritized_work_queues.insert(itr, std::move(pair));
                 }
-            }
-            else
+                queue = queue_.get();
+            }else
             {
-                m_work_queue.insert(itr, *ctx);
+                queue = m_default_work_queue.get();
             }
         }
-
-        const uint64_t size = m_work_queue.size();
-
-        if (size > m_work_threshold && nullptr == m_assistant)
+        MO_ASSERT(queue != nullptr);
+        if(id != 0)
         {
-            auto locked = m_pool.lock();
-            if (locked)
-            {
-                m_assistant = locked->requestThread();
-            }
+            queue->disable(id);
         }
-    }
-
-    boost::fibers::context* PriorityScheduler::steal()
-    {
-        boost::fibers::detail::spinlock_lock lk{m_work_spinlock};
-        if (m_work_queue.empty())
-        {
-            return nullptr;
-        }
-
-        boost::fibers::context* victim = &m_work_queue.back();
-        if (victim->is_context(boost::fibers::type::pinned_context))
-        {
-            return nullptr;
-        }
-        m_work_queue.pop_back();
-        victim->detach();
-        return victim;
+        queue->pushBack(*ctx);
     }
 
     boost::fibers::context* PriorityScheduler::pick_next() noexcept
     {
         boost::fibers::context* victim = nullptr;
         {
-            boost::fibers::detail::spinlock_lock lk{m_work_spinlock};
-            if (!m_work_queue.empty())
+            boost::fibers::detail::spinlock_lock lk{m_work_queue_spinlock};
+            for(auto itr = m_prioritized_work_queues.begin(); itr != m_prioritized_work_queues.end(); ++itr)
             {
-                victim = &m_work_queue.front();
-                m_work_queue.pop_front();
-            }
-        }
-
-        if (nullptr != victim)
-        {
-            if (m_is_worker)
-            {
-                boost::context::detail::prefetch_range(victim, sizeof(boost::fibers::context));
-                if (!victim->is_context(boost::fibers::type::pinned_context))
+                auto queue = itr->second.lock();
+                if(queue && !queue->empty())
                 {
-                    boost::fibers::context::active()->attach(victim);
-                }
-            }
-        }
-        else
-        {
-            std::uint32_t id = 0;
-            auto locked = m_pool.lock();
-            if (locked)
-            {
-                const auto schedulers = locked->getSchedulers();
-                if (schedulers.size() == 1)
-                {
+                    victim = queue->front();
+                    queue->popFront();
+                    // We no longer check for enabled / disable here because we cannot cleanup a context that we dont
+                    // want to run instead events that are disabled just don't execute the functor
                     return victim;
                 }
-                const auto id_ = std::find(schedulers.begin(), schedulers.end(), this) - schedulers.begin();
-                std::size_t count = 0, size = schedulers.size();
-                static thread_local std::minstd_rand generator{std::random_device{}()};
-                std::uniform_int_distribution<std::uint32_t> distribution{0, static_cast<std::uint32_t>(size - 1)};
-                do
-                {
-                    do
-                    {
-                        ++count;
-                        // random selection of one logical cpu
-                        // that belongs to the local NUMA node
-                        id = distribution(generator);
-                        // prevent stealing from own scheduler
-                    } while (id == id_);
-                    // steal context from other scheduler
-                    victim = schedulers[id]->steal();
-                } while (nullptr == victim && count < size);
-            }
-
-            if (nullptr != victim)
-            {
-                boost::context::detail::prefetch_range(victim, sizeof(boost::fibers::context));
-                BOOST_ASSERT(!victim->is_context(boost::fibers::type::pinned_context));
-                boost::fibers::context::active()->attach(victim);
             }
         }
 
-        return victim;
+        return nullptr;
     }
 
     bool PriorityScheduler::has_ready_fibers() const noexcept
     {
-        boost::fibers::detail::spinlock_lock lk1{m_work_spinlock};
-
-        return !m_work_queue.empty();
+        boost::fibers::detail::spinlock_lock lk1{m_work_queue_spinlock};
+        for(auto itr = m_prioritized_work_queues.begin(); itr != m_prioritized_work_queues.end(); ++itr)
+        {
+            auto queue = itr->second.lock();
+            if(queue && !queue->empty())
+            {
+                return true;
+            }
+        }
+        return false;
     }
 
     void PriorityScheduler::property_change(boost::fibers::context* ctx, FiberProperty& props) noexcept
@@ -209,7 +206,8 @@ namespace mo
             return;
         }
         {
-            boost::fibers::detail::spinlock_lock lk1{m_work_spinlock};
+            boost::fibers::detail::spinlock_lock lk1{m_work_queue_spinlock};
+            // This removes the context from any existing work queues
             ctx->ready_unlink();
         }
         awakened(ctx, props);
@@ -245,13 +243,5 @@ namespace mo
         }
     }
 
-    void PriorityScheduler::releaseAssistant()
-    {
-        m_assistant.reset();
-    }
 
-    size_t PriorityScheduler::size() const
-    {
-        return m_work_queue.size();
-    }
 } // namespace mo

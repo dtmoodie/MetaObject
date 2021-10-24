@@ -131,7 +131,7 @@ namespace
                             {
                                 const auto header = Header(i * ms);
                                 result = input_param.getData(data, &header);
-                                boost::this_fiber::sleep_for(std::chrono::nanoseconds(5));
+                                boost::this_fiber::sleep_for(std::chrono::milliseconds(1));
                             }
                         }
                         else

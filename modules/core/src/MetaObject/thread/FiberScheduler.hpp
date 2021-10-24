@@ -11,9 +11,25 @@
 #include <boost/fiber/algo/algorithm.hpp>
 #include <boost/fiber/scheduler.hpp>
 
+#include <unordered_map>
+
 namespace mo
 {
     class ThreadPool;
+    class IAsyncStream;
+
+    class WorkQueue
+    {
+        boost::fibers::scheduler::ready_queue_type m_work_queue;
+        mutable boost::fibers::detail::spinlock m_work_spinlock;
+    public:
+        void pushBack(boost::fibers::context& ctx);
+        boost::fibers::context* front();
+        void popFront();
+        size_t size() const;
+        bool empty() const;
+        void disable(const uint64_t);
+    };
 
     struct MO_EXPORTS PriorityScheduler : public boost::fibers::algo::algorithm_with_properties<FiberProperty>
     {
@@ -35,19 +51,16 @@ namespace mo
 
         void notify() noexcept override;
 
-        boost::fibers::context* steal();
 
-        void releaseAssistant();
-
-        size_t size() const;
 
       private:
-        using Queue = boost::fibers::scheduler::ready_queue_type;
+        // These two refer to the same work queues, just in a different order
 
-        mutable boost::fibers::detail::spinlock m_work_spinlock;
-        Queue m_work_queue;
+        std::vector<std::pair<PriorityLevels, std::weak_ptr<WorkQueue>>> m_prioritized_work_queues;
+        std::shared_ptr<WorkQueue> m_default_work_queue;
+        mutable boost::fibers::detail::spinlock m_work_queue_spinlock;
 
-        std::mutex m_mtx;
+        mutable std::mutex m_mtx;
         std::condition_variable m_cv;
         bool m_flag = false;
         std::weak_ptr<ThreadPool> m_pool;

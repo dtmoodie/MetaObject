@@ -407,6 +407,7 @@ namespace mo
                     using Allocator_t = mo::CombinedPolicy<Pool_t, Stack_t>;
                     m_host_allocator = std::make_shared<Allocator_t>();
                     m_cv_cpu_allocator.reset(new mo::CvAllocatorProxy(m_host_allocator.get()));
+                    cv::Mat::setDefaultAllocator(m_cv_cpu_allocator.get());
                 }
                 {
                     using Pool_t = mo::PoolPolicy<cuda::CUDA>;
@@ -414,6 +415,7 @@ namespace mo
                     using Allocator_t = mo::CombinedPolicy<Pool_t, Stack_t>;
                     m_device_allocator = std::make_shared<Allocator_t>();
                     m_cv_gpu_allocator.reset(new mo::cuda::AllocatorProxy<>(m_device_allocator.get()));
+                    cv::cuda::GpuMat::setDefaultAllocator(m_cv_gpu_allocator.get());
                 }
 
                 m_factory->registerTranslationUnit();
@@ -500,12 +502,13 @@ namespace mo
             boost::python::object attrs = boost::python::dir(obj);
             const ssize_t size = boost::python::len(attrs);
             std::stringstream ss;
-            if (boost::python::hasattr(obj, "typename"))
+            /*if (boost::python::hasattr(obj, "typename"))
             {
                 boost::python::object type = boost::python::getattr(obj, "typename");
                 ss << "typename: " << boost::python::extract<std::string>(type)();
                 ss << '\n';
-            }
+            }*/
+            ss << '(';
             for (ssize_t i = 0; i < size; ++i)
             {
                 boost::python::object attr_name = attrs[i];
@@ -518,10 +521,11 @@ namespace mo
                         boost::python::object attr = boost::python::getattr(obj, attr_name);
                         ss << str << ": ";
                         ss << boost::python::extract<std::string>(boost::python::str(attr))();
-                        ss << '\n';
+                        ss << ' ';
                     }
                 }
             }
+            ss << ')';
 
             return std::move(ss).str();
         }

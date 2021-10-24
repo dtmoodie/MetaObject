@@ -2,8 +2,7 @@
 #define MO_LOGGING_CALLSTACK_HPP
 #include <MetaObject/detail/Export.hpp>
 
-#include <boost/stacktrace.hpp>
-
+#include <MetaObject/rcc/external_linkage/boost_stacktrace.hpp>
 namespace mo
 {
 

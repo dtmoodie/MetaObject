@@ -30,7 +30,7 @@ namespace
         {
         case TESTBUILDRRESULT_SUCCESS:
             std::cout << "TESTBUILDRRESULT_SUCCESS\n";
-            break;
+            return true;
         case TESTBUILDRRESULT_NO_FILES_TO_BUILD:
             std::cout << "TESTBUILDRRESULT_NO_FILES_TO_BUILD\n";
             break;
@@ -47,7 +47,7 @@ namespace
             std::cout << "TESTBUILDRRESULT_OBJECT_SWAP_FAIL\n";
             break;
         }
-        return true;
+        return false;
     }
     bool BuildCallback::TestBuildWaitAndUpdate()
     {

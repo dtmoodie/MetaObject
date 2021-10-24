@@ -47,13 +47,24 @@ namespace mo
         return false;
     }
 
-    bool IContainerTraits::isSharedPtr() const
+    bool IStructTraits::isPtr() const
     {
         return false;
     }
 
-    bool ISharedPtrTraits::isSharedPtr() const
+    bool IPtrTraits::isPtr() const
     {
         return true;
+    }
+
+
+    bool IPtrTraits::savePointedToData(ISaveVisitor&, const void* , const std::string& ) const
+    {
+        return false;
+    }
+
+    bool IPtrTraits::loadPointedToData(ILoadVisitor&, void* , const std::string& ) const
+    {
+        return false;
     }
 } // namespace mo

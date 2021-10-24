@@ -1,6 +1,6 @@
 #include "device_funcs.hpp"
 #include <cuda_runtime_api.h>
-
+#define CUB_IGNORE_DEPRECATED_CPP_DIALECT
 #include <thrust/device_ptr.h>
 #include <thrust/fill.h>
 

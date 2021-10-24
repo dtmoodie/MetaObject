@@ -1,4 +1,7 @@
 #pragma once
+
+#include <MetaObject/core/export.hpp>
+
 #include "IObjectTable.hpp"
 
 #include <MetaObject/core/TypeTable.hpp>

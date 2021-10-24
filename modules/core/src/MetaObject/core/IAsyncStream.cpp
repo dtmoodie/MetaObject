@@ -25,22 +25,17 @@ namespace mo
                                                PriorityLevels thread_priority)
     {
         auto stream = IAsyncStream::create(name, device_id, device_priority, thread_priority);
+        setCurrent(stream);
         auto typed = std::dynamic_pointer_cast<IDeviceStream>(stream);
-        setCurrent(typed);
         return typed;
     }
 
-    auto IAsyncStream::current() -> Ptr_t
+    IAsyncStream::Ptr_t IAsyncStream::current()
     {
         boost::fibers::context* ctx = boost::fibers::context::active();
         if (ctx)
         {
-            auto props = ctx->get_properties();
-            if (!props)
-            {
-                initThread();
-            }
-            return boost::this_fiber::properties<FiberProperty>().stream();
+            return boost::this_fiber::properties<FiberProperty>().getStream();
         }
         return {};
     }
@@ -52,15 +47,9 @@ namespace mo
         return *cur;
     }
 
-    void IAsyncStream::setCurrent(Ptr_t stream)
+    void IAsyncStream::setCurrent(std::shared_ptr<IAsyncStream> stream)
     {
-        auto props = boost::fibers::context::active()->get_properties();
-        if (!props)
-        {
-            initThread();
-        }
-
-        boost::this_fiber::properties<FiberProperty>().setStream(std::move(stream));
+        boost::this_fiber::properties<FiberProperty>().setStream(stream);
     }
 
     IDeviceStream* IAsyncStream::getDeviceStream()
@@ -73,15 +62,10 @@ namespace mo
         return nullptr;
     }
 
-    auto IDeviceStream::current() -> Ptr_t
+    IDeviceStream::Ptr_t IDeviceStream::current()
     {
-        return boost::this_fiber::properties<FiberProperty>().deviceStream();
-    }
-
-    void IDeviceStream::setCurrent(Ptr_t stream)
-    {
-        IAsyncStream::setCurrent(stream);
-        boost::this_fiber::properties<FiberProperty>().setDeviceStream(std::move(stream));
+        auto stream = boost::this_fiber::properties<FiberProperty>().getStream();
+        return std::dynamic_pointer_cast<IDeviceStream>(stream);
     }
 
     IDeviceStream* IDeviceStream::getDeviceStream()

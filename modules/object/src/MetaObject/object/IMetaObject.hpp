@@ -1,6 +1,7 @@
 #ifndef MO_OBJECT_IMETAOBJECT_HPP
 #define MO_OBJECT_IMETAOBJECT_HPP
 #include "TInterface.hpp"
+#include "export.hpp"
 
 #include <MetaObject/core/detail/Enums.hpp>
 #include <MetaObject/core/detail/Time.hpp>

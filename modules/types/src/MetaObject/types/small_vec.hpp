@@ -10,7 +10,7 @@
 
 namespace mo
 {
-    template <class T, int N>
+    template <class T, uint8_t N>
     struct MO_EXPORTS SmallVec
     {
         SmallVec()
@@ -27,13 +27,13 @@ namespace mo
             assign(other.begin(), other.end());
         }
 
-        template <int N1>
+        template <uint8_t N1>
         SmallVec(const SmallVec<T, N1>& other)
         {
             assign(other.begin(), other.end());
         }
 
-        template <int N1>
+        template <uint8_t N1>
         SmallVec(SmallVec<T, N1>&& other)
         {
             if (other.m_data != other.m_ptr)
@@ -147,6 +147,7 @@ namespace mo
                 m_size = size;
             }
         }
+
         template <class InputIter>
         void assign(InputIter begin, InputIter end)
         {
@@ -213,34 +214,28 @@ namespace mo
         {
             return m_ptr;
         }
+
         T* end()
         {
             return m_ptr + m_size;
         }
+
         const T* begin() const
         {
             return m_ptr;
         }
+
         const T* end() const
         {
             return m_ptr + m_size;
         }
-        unsigned char size() const
+
+        uint8_t size() const
         {
             return m_size;
         }
-        const T& operator[](int i) const
-        {
-            if (i >= 0)
-            {
-                return begin()[i];
-            }
-            else
-            {
-                return end()[i];
-            }
-        }
-        T& operator[](int i)
+
+        const T& operator[](int32_t i) const
         {
             if (i >= 0)
             {
@@ -252,39 +247,26 @@ namespace mo
             }
         }
 
-        template <class AR>
-        void load(AR& ar)
+        T& operator[](int32_t i)
         {
-            size_t size;
-            ar(cereal::make_size_tag(size));
-            resize(size);
-            for (size_t i = 0; i < m_size; ++i)
+            if (i >= 0)
             {
-                ar(m_ptr[i]);
+                return begin()[i];
             }
-        }
-
-        template <class AR>
-        void save(AR& ar) const
-        {
-            if (m_size)
+            else
             {
-                ar(cereal::make_size_tag(m_size));
-                for (size_t i = 0; i < m_size; ++i)
-                {
-                    ar(m_ptr[i]);
-                }
+                return end()[i];
             }
         }
 
       private:
         T* m_ptr = m_data;
-        unsigned char m_size = 0;
-        bool m_owns_data = true;
         T m_data[N];
+        uint8_t m_size = 0;
+        bool m_owns_data = true;
     };
 
-    template <class T, int N>
+    template <class T, uint8_t N>
     std::ostream& operator<<(std::ostream& os, const SmallVec<T, N>& vec)
     {
         const size_t size = vec.size();
@@ -305,7 +287,7 @@ namespace mo
 
 namespace ct
 {
-    template <class T, int N>
+    template <class T, uint8_t N>
     struct ReflectImpl<mo::SmallVec<T, N>>
     {
         using DataType = mo::SmallVec<T, N>;

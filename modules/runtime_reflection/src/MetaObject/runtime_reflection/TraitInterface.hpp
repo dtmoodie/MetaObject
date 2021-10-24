@@ -1,5 +1,7 @@
 #ifndef MO_VISITATION_TRAIT_INTERFACE_HPP
 #define MO_VISITATION_TRAIT_INTERFACE_HPP
+#include "export.hpp"
+
 #include "TraitRegistry.hpp"
 #include "type_traits.hpp"
 
@@ -53,6 +55,8 @@ namespace mo
 
         virtual bool
         saveMember(ISaveVisitor& visitor, const void* inst, const std::string& name, uint32_t* idx = nullptr) const;
+
+        virtual bool isPtr() const;
     };
 
     struct MO_EXPORTS IContainerTraits : virtual IStructTraits
@@ -72,15 +76,16 @@ namespace mo
         virtual const void* valuePointer(const void* inst) const = 0;
         virtual void* keyPointer(void* inst) const = 0;
         virtual const void* keyPointer(const void* inst) const = 0;
-        virtual bool isSharedPtr() const;
     };
 
-    struct MO_EXPORTS ISharedPtrTraits : virtual IContainerTraits
+    struct MO_EXPORTS IPtrTraits : virtual IStructTraits
     {
         using base = IContainerTraits;
 
         virtual std::shared_ptr<const void> getPointer(const void* inst) const = 0;
-        bool isSharedPtr() const override;
+        bool isPtr() const override;
+        virtual bool savePointedToData(ISaveVisitor&, const void* inst, const std::string& name) const;
+        virtual bool loadPointedToData(ILoadVisitor&, void* inst, const std::string& name) const;
     };
 
     template <class T, int P = 10, class E = void>

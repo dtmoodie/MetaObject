@@ -1,4 +1,4 @@
-if(MO_HAVE_PYTHON2 AND MO_HAVE_OPENCV)
+if(MO_HAVE_PYTHON AND MO_HAVE_OPENCV)
     LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
     metaobject_declare_module(NAME python
         DEPENDS
@@ -7,10 +7,13 @@ if(MO_HAVE_PYTHON2 AND MO_HAVE_OPENCV)
             metaobject_cuda
             ${OpenCV_LIBRARIES}
             ${PYTHON_LIBRARY}
+            ${Python_LIBRARIES}
             ct
         INCLUDES
             $<BUILD_INTERFACE:${PYTHON_INCLUDE_DIR}>
+            $<BUILD_INTERFACE:${Python_INCLUDE_DIRS}>
             $<BUILD_INTERFACE:${NUMPY_INCLUDE_DIR}>
+            $<BUILD_INTERFACE:${Python_NumPy_INCLUDE_DIRS}>
     )
 
     if(TARGET Boost::python)
@@ -20,6 +23,10 @@ if(MO_HAVE_PYTHON2 AND MO_HAVE_OPENCV)
     if(TARGET Boost::python27)
         target_link_libraries(metaobject_python PUBLIC Boost::python27)
     endif()
+
+    if(TARGET Boost::python3)
+        target_link_libraries(metaobject_python PUBLIC Boost::python3)
+    endif(TARGET Boost::python3)
 
     if(Boost_PYTHON_LIBRARY_RELEASE)
         target_link_libraries(metaobject_python PUBLIC ${Boost_PYTHON_LIBRARY_RELEASE})
@@ -41,15 +48,9 @@ if(MO_HAVE_PYTHON2 AND MO_HAVE_OPENCV)
 
         add_test(NAME test_mo_python COMMAND python2 test_mo_python.py)
     endif(BUILD_TESTS)
-endif(MO_HAVE_PYTHON2 AND MO_HAVE_OPENCV)
+endif(MO_HAVE_PYTHON AND MO_HAVE_OPENCV)
 
-if(MO_HAVE_PYTHON3 AND MO_HAVE_OPENCV)
-
-endif(MO_HAVE_PYTHON3 AND MO_HAVE_OPENCV)
-
-
-
-if(MO_HAVE_PYTHON2 AND MO_HAVE_OPENCV)
+if(MO_HAVE_PYTHON AND MO_HAVE_OPENCV)
     if(UNIX)
         set(POSTFIX "")
         if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -58,6 +59,8 @@ if(MO_HAVE_PYTHON2 AND MO_HAVE_OPENCV)
         get_target_property(out_dir metaobject_python ARCHIVE_OUTPUT_DIRECTORY)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/metaobject.py.in.unix ${out_dir}/metaobject.py @ONLY)
         add_custom_target(metaobject.py.in.unix ALL)
+        get_target_property(PLUGIN_PATH mo_objectplugin ARCHIVE_OUTPUT_DIRECTORY)
+        get_target_property(PLUGIN_NAME mo_objectplugin ARCHIVE_OUTPUT_NAME)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/tests/test_python.py ${out_dir}/metaobject_python_test.py @ONLY)
     else()
         get_target_property(out_dir metaobject_python ARCHIVE_OUTPUT_DIRECTORY)

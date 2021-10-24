@@ -13,18 +13,18 @@ namespace mo
     template <class T, size_t N>
     struct TTraits<std::array<T, N>, 4, void> : virtual ContainerBase<std::array<T, N>, T>
     {
-        void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t) const override
+        void load(ILoadVisitor& visitor, void* inst, const std::string& name, size_t) const override
         {
             auto& ref = this->ref(inst);
             auto data = ref.data();
-            visitor(data, "", N);
+            visitor(data, name, N);
         }
 
-        void save(ISaveVisitor& visitor, const void* inst, const std::string&, size_t) const override
+        void save(ISaveVisitor& visitor, const void* inst, const std::string& name, size_t) const override
         {
             const auto& ref = this->ref(inst);
             auto data = ref.data();
-            visitor(data, "", N);
+            visitor(data, name, N);
         }
 
         void visit(StaticVisitor& visitor, const std::string&) const override
@@ -66,20 +66,20 @@ namespace mo
     template <class T>
     struct TTraits<ct::TArrayView<T>, 4, void> : virtual ContainerBase<ct::TArrayView<T>, T>
     {
-        void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t) const override
+        void load(ILoadVisitor& visitor, void* inst, const std::string& name, size_t) const override
         {
             auto ptr = this->ptr(inst);
             auto data = ptr->data();
             const auto size = ptr->size();
-            visitor(data, "", size);
+            visitor(data, name, size);
         }
 
-        void save(ISaveVisitor& visitor, const void* val, const std::string&, size_t) const override
+        void save(ISaveVisitor& visitor, const void* val, const std::string& name, size_t) const override
         {
             auto ptr = this->ptr(val);
             auto data = ptr->data();
             const auto size = ptr->size();
-            visitor(data, "", size);
+            visitor(data, name, size);
         }
 
         void visit(StaticVisitor& visitor, const std::string&) const override

@@ -1,11 +1,15 @@
 #ifndef MO_VISITATION_STRUCT_TRAITS_HPP
 #define MO_VISITATION_STRUCT_TRAITS_HPP
-#include "IDynamicVisitor.hpp"
+#include "export.hpp"
+
 #include "TraitInterface.hpp"
 #include "TraitRegistry.hpp"
 
+#include "type_traits.hpp"
+
 #include <ct/reflect.hpp>
 #include <ct/reflect/visitor.hpp>
+#include <ct/reflect_traits.hpp>
 
 namespace mo
 {
@@ -14,44 +18,44 @@ namespace mo
     {
         using base = IStructTraits;
         static constexpr const bool DEFAULT = false;
-        StructBase()
-        {
-        }
+        StructBase();
 
-        size_t size() const override
-        {
-            return sizeof(T);
-        }
+        size_t size() const override;
 
-        bool triviallySerializable() const override
-        {
-            return std::is_trivially_copyable<T>::value;
-        }
+        bool triviallySerializable() const override;
 
-        TypeInfo type() const override
-        {
-            return TypeInfo::create<T>();
-        }
+        TypeInfo type() const override;
 
-        T* ptr(void* inst) const
-        {
-            return static_cast<T*>(inst);
-        }
+        T* ptr(void* inst) const;
 
-        const T* ptr(const void* inst) const
-        {
-            return static_cast<const T*>(inst);
-        }
+        const T* ptr(const void* inst) const;
 
-        T& ref(void* inst) const
-        {
-            return *ptr(inst);
-        }
+        T& ref(void* inst) const;
 
-        const T& ref(const void* inst) const
-        {
-            return *ptr(inst);
-        }
+        const T& ref(const void* inst) const;
+    };
+
+    template <class T>
+    struct PtrBase : virtual IPtrTraits
+    {
+        using base = IStructTraits;
+        static constexpr const bool DEFAULT = false;
+
+        PtrBase();
+
+        size_t size() const override;
+
+        bool triviallySerializable() const override;
+
+        TypeInfo type() const override;
+
+        T* ptr(void* inst) const;
+
+        const T* ptr(const void* inst) const;
+
+        T& ref(void* inst) const;
+
+        const T& ref(const void* inst) const;
     };
 
     struct RuntimeVisitorParams : ct::DefaultVisitorParams
@@ -59,30 +63,180 @@ namespace mo
         constexpr static const bool ACCUMULATE_PATH = false;
 
         template <class T>
-        constexpr static bool visitMemberFunctions(T)
-        {
-            return false;
-        }
+        constexpr static bool visitMemberFunctions(T);
+
         template <class T>
-        constexpr static bool visitMemberFunction(T)
-        {
-            return false;
-        }
+        constexpr static bool visitMemberFunction(T);
+
         template <class T>
-        constexpr static bool visitStaticFunctions(T)
-        {
-            return false;
-        }
+        constexpr static bool visitStaticFunctions(T);
+
         template <class T>
-        constexpr static bool visitStaticFunction(T)
-        {
-            return false;
-        }
+        constexpr static bool visitStaticFunction(T);
     };
 
     using index_t = ct::index_t;
     template <index_t N>
     using Indexer = ct::Indexer<N>;
+
+    template <class T>
+    struct TTraits<T, 4, ct::EnableIfReflected<T>> : virtual StructBase<T>
+    {
+        using MemberObjectTypes = typename ct::GlobMemberObjects<T>::types;
+        using WritableObjectTypes = typename ct::GlobWritable<T>::types;
+        static constexpr const uint32_t num_member_objects = ct::GlobMemberObjects<T>::num + ct::GlobWritable<T>::num;
+
+        void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t) const override;
+
+        void save(ISaveVisitor& visitor, const void* inst, const std::string&, size_t) const override;
+
+        void visit(StaticVisitor& visitor, const std::string&) const override;
+
+        std::string name() const override;
+
+        uint32_t getNumMembers() const override;
+
+        bool loadMember(ILoadVisitor& visitor, void* inst, uint32_t idx, std::string* name = nullptr) const override;
+
+        bool
+        saveMember(ISaveVisitor& visitor, const void* inst, uint32_t idx, std::string* name = nullptr) const override;
+    };
+
+    template <class T>
+    struct TTraits<T, 9, ct::EnableIf<IsPrimitiveRuntimeReflected<T>::value>> : virtual StructBase<T>
+    {
+        void load(ILoadVisitor& visitor, void* inst, const std::string& name, size_t) const override;
+
+        void save(ISaveVisitor& visitor, const void* inst, const std::string& name, size_t) const override;
+
+        void visit(StaticVisitor& visitor, const std::string&) const override;
+
+        uint32_t getNumMembers() const override;
+    };
+} // namespace mo
+
+// implementation
+
+#include "IDynamicVisitor.hpp"
+namespace mo
+{
+    template <class T>
+    StructBase<T>::StructBase()
+    {
+    }
+
+    template <class T>
+    size_t StructBase<T>::size() const
+    {
+        return sizeof(T);
+    }
+
+    template <class T>
+    bool StructBase<T>::triviallySerializable() const
+    {
+        return std::is_trivially_copyable<T>::value;
+    }
+
+    template <class T>
+    TypeInfo StructBase<T>::type() const
+    {
+        return TypeInfo::create<T>();
+    }
+
+    template <class T>
+    T* StructBase<T>::ptr(void* inst) const
+    {
+        return static_cast<T*>(inst);
+    }
+
+    template <class T>
+    const T* StructBase<T>::ptr(const void* inst) const
+    {
+        return static_cast<const T*>(inst);
+    }
+
+    template <class T>
+    T& StructBase<T>::ref(void* inst) const
+    {
+        return *ptr(inst);
+    }
+
+    template <class T>
+    const T& StructBase<T>::ref(const void* inst) const
+    {
+        return *ptr(inst);
+    }
+
+    template <class T>
+    PtrBase<T>::PtrBase()
+    {
+    }
+
+    template <class T>
+    size_t PtrBase<T>::size() const
+    {
+        return sizeof(T);
+    }
+
+    template <class T>
+    bool PtrBase<T>::triviallySerializable() const
+    {
+        return std::is_trivially_copyable<T>::value;
+    }
+
+    template <class T>
+    TypeInfo PtrBase<T>::type() const
+    {
+        return TypeInfo::create<T>();
+    }
+
+    template <class T>
+    T* PtrBase<T>::ptr(void* inst) const
+    {
+        return static_cast<T*>(inst);
+    }
+
+    template <class T>
+    const T* PtrBase<T>::ptr(const void* inst) const
+    {
+        return static_cast<const T*>(inst);
+    }
+
+    template <class T>
+    T& PtrBase<T>::ref(void* inst) const
+    {
+        return *ptr(inst);
+    }
+
+    template <class T>
+    const T& PtrBase<T>::ref(const void* inst) const
+    {
+        return *ptr(inst);
+    }
+
+    template <class T>
+    constexpr bool RuntimeVisitorParams::visitMemberFunctions(T)
+    {
+        return false;
+    }
+
+    template <class T>
+    constexpr bool RuntimeVisitorParams::visitMemberFunction(T)
+    {
+        return false;
+    }
+
+    template <class T>
+    constexpr bool RuntimeVisitorParams::visitStaticFunctions(T)
+    {
+        return false;
+    }
+
+    template <class T>
+    constexpr bool RuntimeVisitorParams::visitStaticFunction(T)
+    {
+        return false;
+    }
 
     template <class T, index_t I>
     auto visitValue(ILoadVisitor& visitor, T& obj, const Indexer<I> idx)
@@ -123,15 +277,14 @@ namespace mo
     {
         auto accessor = ct::Reflect<T>::getPtr(idx);
         using RefType = typename ct::ReferenceType<typename ct::GetType<decltype(accessor)>::type>::ConstType;
+        const std::string name = ct::getName<I, T>();
         RefType ref = static_cast<RefType>(accessor.get(obj));
-        auto name = ct::getName<I, T>();
         visitor(&ref, name);
         return true;
     }
 
     template <class T, index_t I>
-    auto visitValue(ISaveVisitor&, const T&, const ct::Indexer<I> idx)
-        -> ct::EnableIf<!ct::IsWritable<T, I>::value, bool>
+    auto visitValue(ISaveVisitor&, const T&, const ct::Indexer<I>) -> ct::EnableIf<!ct::IsWritable<T, I>::value, bool>
     {
         return true;
     }
@@ -167,7 +320,7 @@ namespace mo
     {
         using Type = typename ct::GetType<decltype(ct::Reflect<T>::getPtr(idx))>::type;
         const auto name = ct::getName<I, T>();
-        visitor.visit<typename std::decay<Type>::type>(name);
+        visitor.template visit<typename std::decay<Type>::type>(name);
     }
 
     template <class T, index_t I>
@@ -285,7 +438,7 @@ namespace mo
 
     template <class T, ct::index_t I>
     ct::EnableIf<!ct::IsWritable<T, I>::value, bool>
-    saveMemberHelper(ISaveVisitor& visitor, const T& inst, ct::Indexer<I> itr, std::string* name = nullptr)
+    saveMemberHelper(ISaveVisitor&, const T&, ct::Indexer<I>, std::string* = nullptr)
     {
 
         return false;
@@ -350,7 +503,7 @@ namespace mo
     // Save by name
     template <class T>
     bool saveMemberRecurse(
-        ISaveVisitor& visitor, const T& inst, const std::string& name, ct::Indexer<0> itr, uint32_t* idx = nullptr)
+        ISaveVisitor& visitor, const T& inst, const std::string& name, ct::Indexer<0> itr, uint32_t* = nullptr)
     {
         auto ptr = ct::Reflect<T>::getPtr(itr);
         if (ptr.getName() == name)
@@ -380,86 +533,102 @@ namespace mo
     }
 
     template <class T>
-    struct TTraits<T, 4, ct::EnableIfReflected<T>> : virtual StructBase<T>
+    void
+    TTraits<T, 4, ct::EnableIfReflected<T>>::load(ILoadVisitor& visitor, void* inst, const std::string&, size_t) const
     {
-        using MemberObjectTypes = typename ct::GlobMemberObjects<T>::types;
-        using WritableObjectTypes = typename ct::GlobWritable<T>::types;
-        static constexpr const uint32_t num_member_objects = ct::GlobMemberObjects<T>::num + ct::GlobWritable<T>::num;
-
-        void load(ILoadVisitor& visitor, void* inst, const std::string& name, size_t) const override
-        {
-            auto ptr = static_cast<T*>(inst);
-            const auto idx = ct::Reflect<T>::end();
-            visitHelper(visitor, *ptr, idx);
-        }
-
-        void save(ISaveVisitor& visitor, const void* inst, const std::string& name, size_t) const override
-        {
-            auto ptr = static_cast<const T*>(inst);
-            const auto idx = ct::Reflect<T>::end();
-            visitHelper(visitor, *ptr, idx);
-        }
-
-        void visit(StaticVisitor& visitor, const std::string& name) const override
-        {
-            // TODO
-            const auto idx = ct::Reflect<T>::end();
-            visitHelper<T>(visitor, idx);
-        }
-
-        std::string name() const override
-        {
-            return ct::Reflect<T>::getTypeName();
-        }
-
-        uint32_t getNumMembers() const override
-        {
-            return num_member_objects;
-        }
-
-        bool loadMember(ILoadVisitor& visitor, void* inst, uint32_t idx, std::string* name = nullptr) const override
-        {
-            T& ref = this->ref(inst);
-            const auto itr = ct::Reflect<T>::end();
-            uint32_t member_counter = 0;
-            return loadMemberRecurse(visitor, ref, idx, itr, member_counter, name);
-        }
-
-        bool
-        saveMember(ISaveVisitor& visitor, const void* inst, uint32_t idx, std::string* name = nullptr) const override
-        {
-            const T& ref = this->ref(inst);
-            const auto itr = ct::Reflect<T>::end();
-            uint32_t member_counter = 0;
-            return saveMemberRecurse(visitor, ref, idx, itr, member_counter, name);
-        }
-    };
+        auto ptr = static_cast<T*>(inst);
+        const auto idx = ct::Reflect<T>::end();
+        visitHelper(visitor, *ptr, idx);
+    }
 
     template <class T>
-    struct TTraits<T, 9, ct::EnableIf<IsPrimitiveRuntimeReflected<T>::value>> : virtual StructBase<T>
+    void TTraits<T, 4, ct::EnableIfReflected<T>>::save(ISaveVisitor& visitor,
+                                                       const void* inst,
+                                                       const std::string&,
+                                                       size_t) const
     {
-        void load(ILoadVisitor& visitor, void* inst, const std::string& name, size_t) const override
-        {
-            T* ptr = static_cast<T*>(inst);
-            visitor(ptr, name);
-        }
+        auto ptr = static_cast<const T*>(inst);
+        const auto idx = ct::Reflect<T>::end();
+        visitHelper(visitor, *ptr, idx);
+    }
 
-        void save(ISaveVisitor& visitor, const void* inst, const std::string& name, size_t) const override
-        {
-            const T* ptr = static_cast<const T*>(inst);
-            visitor(ptr, name);
-        }
+    template <class T>
+    void TTraits<T, 4, ct::EnableIfReflected<T>>::visit(StaticVisitor& visitor, const std::string&) const
+    {
+        // TODO
+        const auto idx = ct::Reflect<T>::end();
+        visitHelper<T>(visitor, idx);
+    }
 
-        void visit(StaticVisitor& visitor, const std::string& name) const override
-        {
-            visitor.template visit<T>("value");
-        }
+    template <class T>
+    std::string TTraits<T, 4, ct::EnableIfReflected<T>>::name() const
+    {
+        return ct::Reflect<T>::getTypeName();
+    }
 
-        uint32_t getNumMembers() const override
-        {
-            return 0;
-        }
-    };
+    template <class T>
+    uint32_t TTraits<T, 4, ct::EnableIfReflected<T>>::getNumMembers() const
+    {
+        return num_member_objects;
+    }
+
+    template <class T>
+    bool TTraits<T, 4, ct::EnableIfReflected<T>>::loadMember(ILoadVisitor& visitor,
+                                                             void* inst,
+                                                             uint32_t idx,
+                                                             std::string* name) const
+    {
+        T& ref = this->ref(inst);
+        const auto itr = ct::Reflect<T>::end();
+        uint32_t member_counter = 0;
+        return loadMemberRecurse(visitor, ref, idx, itr, member_counter, name);
+    }
+
+    template <class T>
+    bool TTraits<T, 4, ct::EnableIfReflected<T>>::saveMember(ISaveVisitor& visitor,
+                                                             const void* inst,
+                                                             uint32_t idx,
+                                                             std::string* name) const
+    {
+        const T& ref = this->ref(inst);
+        const auto itr = ct::Reflect<T>::end();
+        uint32_t member_counter = 0;
+        return saveMemberRecurse(visitor, ref, idx, itr, member_counter, name);
+    }
+
+    template <class T>
+    void TTraits<T, 9, ct::EnableIf<IsPrimitiveRuntimeReflected<T>::value>>::load(ILoadVisitor& visitor,
+                                                                                  void* inst,
+                                                                                  const std::string& name,
+                                                                                  size_t) const
+    {
+        T* ptr = static_cast<T*>(inst);
+        visitor(ptr, name);
+    }
+
+    template <class T>
+    void TTraits<T, 9, ct::EnableIf<IsPrimitiveRuntimeReflected<T>::value>>::save(ISaveVisitor& visitor,
+                                                                                  const void* inst,
+                                                                                  const std::string& name,
+                                                                                  size_t) const
+    {
+        const T* ptr = static_cast<const T*>(inst);
+        visitor(ptr, name);
+    }
+
+    template <class T>
+    void TTraits<T, 9, ct::EnableIf<IsPrimitiveRuntimeReflected<T>::value>>::visit(StaticVisitor& visitor,
+                                                                                   const std::string&) const
+    {
+        visitor.template visit<T>("value");
+    }
+
+    template <class T>
+    uint32_t TTraits<T, 9, ct::EnableIf<IsPrimitiveRuntimeReflected<T>::value>>::getNumMembers() const
+    {
+        return 0;
+    }
+
 } // namespace mo
 
 #endif // MO_VISITATION_STRUCT_TRAITS_HPP

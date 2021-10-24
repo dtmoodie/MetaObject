@@ -4,7 +4,7 @@ metaobject_declare_module(NAME core SRC src DEPENDS
     Boost::thread
     Boost::fiber
     Boost::system
-    cereal
+    Boost::chrono
     RuntimeObjectSystem
     spdlog
     ct
@@ -49,6 +49,7 @@ if(BUILD_TESTS)
     file(GLOB_RECURSE tests "tests/*.cpp")
     add_executable(test_mo_core ${tests})
     target_link_libraries(test_mo_core metaobject_core gtest gtest_main Boost::context)
+    target_compile_definitions(test_mo_core PRIVATE -DMetaObject_EXPORTS)
 
     if(OpenCV_FOUND)
         target_compile_definitions(test_mo_core

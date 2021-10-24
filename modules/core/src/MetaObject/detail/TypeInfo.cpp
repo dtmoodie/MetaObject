@@ -64,11 +64,17 @@ namespace mo
 #endif
     }
 
-    bool TypeInfo::operator==(const std::type_info& rhs)
+    ct::StringView TypeInfo::nameView() const
+    {
+        return m_name;
+    }
+
+    bool TypeInfo::operator==(const std::type_info& rhs) const
     {
         return this->m_info == &rhs;
     }
-    bool TypeInfo::operator!=(const std::type_info& rhs)
+
+    bool TypeInfo::operator!=(const std::type_info& rhs) const
     {
         return !(*this == rhs);
     }
@@ -78,19 +84,28 @@ namespace mo
         return m_info;
     }
 
-    bool operator==(const TypeInfo& lhs, const TypeInfo& rhs)
+    bool TypeInfo::operator==(const TypeInfo& rhs) const
     {
-        return (lhs.get() == rhs.get()) != 0;
+        if (!m_name.empty())
+        {
+            return m_name == rhs.m_name;
+        }
+        return strcmp(m_info->name(), rhs.m_info->name()) == 0;
+    }
+
+    bool TypeInfo::operator!=(const TypeInfo& rhs) const
+    {
+        return !((*this) == rhs);
+    }
+
+    std::size_t TypeInfo::getHash() const
+    {
+        return m_hash;
     }
 
     bool operator<(const TypeInfo& lhs, const TypeInfo& rhs)
     {
         return lhs.before(rhs);
-    }
-
-    bool operator!=(const TypeInfo& lhs, const TypeInfo& rhs)
-    {
-        return !(lhs == rhs);
     }
 
     bool operator>(const TypeInfo& lhs, const TypeInfo& rhs)
@@ -121,6 +136,11 @@ namespace std
 
     hash<mo::TypeInfo>::result_type hash<mo::TypeInfo>::operator()(argument_type const& s) const noexcept
     {
-        return std::hash<const std::type_info*>{}(s.ptr());
+        const size_t output = s.getHash();
+        if(output != 0)
+        {
+            return output;
+        }
+        return ct::crc32(s.nameView());
     }
 } // namespace std

@@ -20,7 +20,7 @@ int main()
 
     for (uint32_t i = 0; i < 1000; ++i)
     {
-        stream->pushWork([]() {
+        stream->pushWork([](mo::IAsyncStream*) {
             // This is where we do all the things
             boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
         });

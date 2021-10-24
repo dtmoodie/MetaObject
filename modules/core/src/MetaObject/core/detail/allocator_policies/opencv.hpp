@@ -9,6 +9,14 @@ namespace mo
 {
     struct Allocator;
 
+    // Todo add backward compat here
+#if CV_VERSION_MAJOR < 4
+    using AccessFlag = int;
+#else
+    using AccessFlag = cv::AccessFlag;
+#endif
+    const constexpr size_t AUTO_STEP = cv::Mat::AUTO_STEP;
+
     struct CvAllocatorProxy : public cv::MatAllocator
     {
         inline CvAllocatorProxy(mo::Allocator* allocator)
@@ -16,15 +24,20 @@ namespace mo
         {
         }
 
-        inline cv::UMatData*
-        allocate(int dims, const int* sizes, int type, void* data, size_t* step, int, cv::UMatUsageFlags) const override
+        inline cv::UMatData* allocate(int dims,
+                                      const int* sizes,
+                                      int type,
+                                      void* data,
+                                      size_t* step,
+                                      AccessFlag,
+                                      cv::UMatUsageFlags) const override
         {
             auto total = static_cast<size_t>(CV_ELEM_SIZE(type));
             for (int i = dims - 1; i >= 0; i--)
             {
                 if (step)
                 {
-                    if (data && step[i] != CV_AUTOSTEP)
+                    if (data && step[i] != AUTO_STEP)
                     {
                         CV_Assert(total <= step[i]);
                         total = step[i];
@@ -55,7 +68,7 @@ namespace mo
             return u;
         }
 
-        inline bool allocate(cv::UMatData*, int, cv::UMatUsageFlags) const override
+        inline bool allocate(cv::UMatData*, AccessFlag, cv::UMatUsageFlags) const override
         {
             return false;
         }
@@ -96,9 +109,9 @@ namespace mo
                                int type,
                                void* data,
                                size_t* step,
-                               int flags,
+                               AccessFlag flags,
                                cv::UMatUsageFlags usageFlags) const override;
-        bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const override;
+        bool allocate(cv::UMatData* data, AccessFlag accessflags, cv::UMatUsageFlags usageFlags) const override;
         void deallocate(cv::UMatData* data) const override;
 
       private:
@@ -118,14 +131,14 @@ namespace mo
 
     template <class BASE_ALLOCATOR>
     cv::UMatData* CvAllocator<BASE_ALLOCATOR>::allocate(
-        int dims, const int* sizes, int type, void* data, size_t* step, int, cv::UMatUsageFlags) const
+        int dims, const int* sizes, int type, void* data, size_t* step, AccessFlag, cv::UMatUsageFlags) const
     {
         auto total = static_cast<size_t>(CV_ELEM_SIZE(type));
         for (int i = dims - 1; i >= 0; i--)
         {
             if (step)
             {
-                if (data && step[i] != CV_AUTOSTEP)
+                if (data && step[i] != AUTO_STEP)
                 {
                     CV_Assert(total <= step[i]);
                     total = step[i];
@@ -157,7 +170,7 @@ namespace mo
     }
 
     template <class BASE_ALLOCATOR>
-    bool CvAllocator<BASE_ALLOCATOR>::allocate(cv::UMatData*, int, cv::UMatUsageFlags) const
+    bool CvAllocator<BASE_ALLOCATOR>::allocate(cv::UMatData*, AccessFlag, cv::UMatUsageFlags) const
     {
         return false;
     }
@@ -184,6 +197,6 @@ namespace mo
             delete data;
         }
     }
-}
+} // namespace mo
 
 #endif // MO_CORE_ALLOCATOR_POLICIES_OPENCV_HPP

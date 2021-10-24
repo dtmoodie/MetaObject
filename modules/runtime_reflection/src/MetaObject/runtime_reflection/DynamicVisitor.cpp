@@ -30,16 +30,6 @@ namespace mo
         //(*m_serialized_pointers)[val->type()][id] = ptr;
 
         val->load(*this, ptr, name, cnt);
-
-        if (traits.reader)
-        {
-            // reading data in
-            // void* ptr = val->ptr();
-        }
-        else
-        {
-            // writing data out
-        }
         return *this;
     }
 

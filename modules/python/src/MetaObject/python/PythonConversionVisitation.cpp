@@ -186,11 +186,12 @@ namespace mo
             }
         };
 
-        ISaveVisitor& ToPythonVisitor::
-        operator()(const IStructTraits* trait, const void* inst, const std::string& name, size_t cnt)
+        ISaveVisitor&
+        ToPythonVisitor::operator()(const IStructTraits* trait, const void* inst, const std::string& name, size_t cnt)
         {
             const mo::TypeInfo type = trait->type();
-            const std::string type_name = type.name();
+            std::string type_name = type.name();
+            // const bool using_shortcut = m_shortcut != nullptr;
             ShortcutContextManager tmp(&m_shortcut);
             python::DataConversionTable::ToPython_t converter = m_conversion_table->getConverterToPython(type);
             if (converter)
@@ -201,16 +202,16 @@ namespace mo
             else
             {
                 const uint32_t num_members = trait->getNumMembers();
-                if (num_members == 1)
+                if (num_members == 1 && !m_list)
                 {
                     // TODO add if we are in a list in here as an additional possibility
                     boost::python::object old_object = std::move(m_object);
                     Shortcut shortcut{old_object, name, false};
                     m_shortcut = &shortcut;
                     std::string name_;
+
                     m_object = boost::python::object(ParameterPythonWrapper{});
                     const bool save_success = trait->saveMember(*this, inst, 0, &name_);
-
                     if (save_success)
                     {
                         if (!shortcut.used)
@@ -220,6 +221,7 @@ namespace mo
                         m_object = std::move(old_object);
                         return *this;
                     }
+
                     m_object = std::move(old_object);
                 }
                 if (m_list)
@@ -227,14 +229,15 @@ namespace mo
                     boost::python::object old_object = std::move(m_object);
                     const size_t sz = trait->size();
                     std::unique_ptr<boost::python::list> list = std::move(m_list);
+                    const uint8_t* inst_ = ct::ptrCast<uint8_t>(inst);
                     for (size_t i = 0; i < cnt; ++i)
                     {
                         m_object = boost::python::object(ParameterPythonWrapper{});
-                        m_object.attr("typename") = boost::python::str(trait->name());
+                        m_object.attr("typename") = boost::python::str(std::move(type_name));
+                        trait->save(*this, ct::ptrCast<void>(inst_), name, 1);
 
-                        trait->save(*this, inst, name, 1);
                         list->append(std::move(m_object));
-                        inst += sz;
+                        inst_ += sz;
                     }
                     m_object = std::move(old_object);
                     m_list = std::move(list);
@@ -244,7 +247,7 @@ namespace mo
                     boost::python::object old_object = std::move(m_object);
                     std::unique_ptr<boost::python::list> old_list = std::move(m_list);
                     m_object = boost::python::object(ParameterPythonWrapper{});
-                    m_object.attr("typename") = boost::python::str(trait->name());
+                    m_object.attr("typename") = boost::python::str(std::move(type_name));
                     trait->save(*this, inst, name, cnt);
                     old_object.attr(name.c_str()) = std::move(m_object);
                     m_object = std::move(old_object);
@@ -254,8 +257,10 @@ namespace mo
             return *this;
         }
 
-        ISaveVisitor& ToPythonVisitor::
-        operator()(const IContainerTraits* trait, const void* inst, const std::string& name, size_t cnt)
+        ISaveVisitor& ToPythonVisitor::operator()(const IContainerTraits* trait,
+                                                  const void* inst,
+                                                  const std::string& name,
+                                                  size_t cnt)
         {
             const mo::TypeInfo type = trait->type();
             const std::string type_name = type.name();
@@ -301,6 +306,8 @@ namespace mo
 
         std::shared_ptr<Allocator> FromPythonVisitor::getAllocator() const
         {
+            // TODO implement
+            return {};
         }
 
         void FromPythonVisitor::setAllocator(std::shared_ptr<Allocator>)
@@ -439,8 +446,8 @@ namespace mo
             return *this;
         }
 
-        ILoadVisitor& FromPythonVisitor::
-        operator()(const IStructTraits* trait, void* inst, const std::string& name, size_t cnt)
+        ILoadVisitor&
+        FromPythonVisitor::operator()(const IStructTraits* trait, void* inst, const std::string& name, size_t cnt)
         {
             const mo::TypeInfo type = trait->type();
             python::DataConversionTable::FromPython_t converter = m_conversion_table->getConverterFromPython(type);
@@ -487,8 +494,8 @@ namespace mo
             return *this;
         }
 
-        ILoadVisitor& FromPythonVisitor::
-        operator()(const IContainerTraits* trait, void* inst, const std::string& name, size_t cnt)
+        ILoadVisitor&
+        FromPythonVisitor::operator()(const IContainerTraits* trait, void* inst, const std::string& name, size_t cnt)
         {
             const mo::TypeInfo type = trait->type();
             python::DataConversionTable::FromPython_t converter = m_conversion_table->getConverterFromPython(type);
@@ -533,8 +540,8 @@ namespace mo
         {
         }
 
-        ILoadVisitor& ControlParamSetter::
-        operator()(const IStructTraits* trait, void* inst, const std::string& name, size_t cnt)
+        ILoadVisitor&
+        ControlParamSetter::operator()(const IStructTraits* trait, void* inst, const std::string& name, size_t cnt)
         {
             // Either this is some kind of object that has a data field which we should use for populating the data of
             // the parameter

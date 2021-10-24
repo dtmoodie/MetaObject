@@ -58,15 +58,17 @@ TEST(cuda_stream, launch)
     auto ptr = alloc->allocate(100 * sizeof(float), sizeof(float));
     ASSERT_NE(ptr, nullptr);
 
-    auto device_stream = typed0->getStream();
+    auto device_stream0 = typed0->getStream();
+    auto device_stream1 = typed1->getStream();
+    ASSERT_NE(device_stream0, device_stream1);
 
     mo::cuda::CUDAMemoryBlock mem(1);
-    cudaMemsetAsync(mem.begin(), 0, 1, typed0->getStream());
+    cudaMemsetAsync(mem.begin(), 0, 1, device_stream0);
 
-    cuda_tests::wait(ct::ptrCast<const bool>(mem.begin()), typed0->getStream());
+    cuda_tests::wait(ct::ptrCast<const bool>(mem.begin()), device_stream0);
 
     volatile bool callback_invoked = false;
-    typed0->enqueueCallback([&callback_invoked]() { callback_invoked = true; });
+    typed0->enqueueCallback([&callback_invoked](mo::IAsyncStream*) { callback_invoked = true; });
 
     ASSERT_EQ(callback_invoked, false);
 
@@ -77,7 +79,9 @@ TEST(cuda_stream, launch)
     cuda_tests::set(ct::ptrCast<bool>(mem.begin()), typed1->getStream());
     while (!callback_invoked)
     {
-        boost::this_fiber::yield();
+        typed0->synchronize();
+        typed1->synchronize();
+        // boost::this_fiber::yield();
     }
     ASSERT_EQ(callback_invoked, true);
 }

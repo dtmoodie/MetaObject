@@ -13,6 +13,8 @@
 #include "MetaObject/core/detail/allocator_policies/Stack.hpp"
 #include "MetaObject/core/detail/allocator_policies/Usage.hpp"
 
+#include <MetaObject/thread/Thread.hpp>
+
 #include <boost/fiber/condition_variable.hpp>
 #include <boost/fiber/recursive_timed_mutex.hpp>
 
@@ -25,16 +27,15 @@ using Allocator_t =
 
 std::shared_ptr<SystemTable> SystemTable::instanceImpl()
 {
-    static std::shared_ptr<SystemTable> inst;
-    std::shared_ptr<SystemTable> output = inst;
+    static std::weak_ptr<SystemTable> inst;
+    std::shared_ptr<SystemTable> output = inst.lock();
     if (!output)
     {
         output.reset(new SystemTable());
         auto logger = output->getDefaultLogger();
         logger->debug("Created new system table instance at {}", static_cast<void*>(output.get()));
         inst = output;
-        std::shared_ptr<mo::ThreadPool> pool = output->getSingleton<mo::ThreadPool>();
-        boost::fibers::use_scheduling_algorithm<mo::PriorityScheduler>(pool);
+        initThread(*output);
     }
     return output;
 }

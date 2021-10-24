@@ -1,6 +1,9 @@
 #pragma once
+#include <MetaObject/core/export.hpp>
+
 #include "MetaObject/detail/Export.hpp"
 #include "MetaObject/detail/TypeInfo.hpp"
+
 #include <memory>
 #include <string>
 #include <vector>

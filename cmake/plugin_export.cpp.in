@@ -26,30 +26,35 @@ const char* getPluginBuildInfo()
            "  builder          : @GIT_USERNAME@ - @GIT_EMAIL@\n";
 }
 
+void initPlugin(const int32_t id, mo::MetaObjectFactory* factory)
+{
+    @PLUGIN_NAME@::initPlugin(id, factory);
+}
+
 namespace @PLUGIN_NAME@
 {
-    void initPlugin(mo::MetaObjectFactory* factory)
+    void initPlugin(const int32_t id, mo::MetaObjectFactory* factory)
     {
         static bool initialized = false;
         if(!initialized)
         {
+            mo::PluginCompilationOptions options;
+            options.includes = getPluginIncludes();
+            options.link_dirs_debug = getPluginLinkDirsDebug();
+            options.link_dirs_release = getPluginLinkDirsRelease();
+            options.compile_options = getPluginCompileOptions();
+            options.compile_definitions = getPluginCompileDefinitions();
+            options.link_libs = getPluginLinkLibs();
+            options.link_libs_debug = getPluginLinkLibsDebug();
+            options.link_libs_release = getPluginLinkLibsRelease();
+            options.compiler = getCompiler();
+            PerModuleInterface::GetInstance()->SetProjectIdForAllConstructors(id);
+            factory->setupPluginCompilationOptions(id, options);
             factory->setupObjectConstructors(PerModuleInterface::GetInstance());
             initialized = true;
         }
     }
 
-    struct StaticInit
-    {
-        static StaticInit g_init;
-        StaticInit()
-        {
-            (void)&g_init;
-            mo::MetaObjectFactory::Ptr_t instance = mo::MetaObjectFactory::instance();
-            initPlugin(instance.get());
-        }
-    };
-
-    StaticInit StaticInit::g_init;
 }
 
 // clang-format on

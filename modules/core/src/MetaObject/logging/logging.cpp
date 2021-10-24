@@ -39,7 +39,8 @@ spdlog::details::registry& mo::getLoggerRegistry(SystemTable& table)
 
 spdlog::logger& mo::getDefaultLogger()
 {
-    auto table = PerModuleInterface::GetInstance()->GetSystemTable();
+    PerModuleInterface* instance = PerModuleInterface::GetInstance();
+    auto table = instance->GetSystemTable();
     if (table == nullptr)
     {
         throw std::runtime_error("SystemTable == nullptr");

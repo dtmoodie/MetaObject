@@ -14,7 +14,7 @@
 
 #include <gtest/gtest.h>
 
-#include <RuntimeObjectSystem/RuntimeLinkLibrary.h>
+#include "TestObjects.hpp"
 
 #include <boost/thread.hpp>
 
@@ -22,39 +22,14 @@
 #include <thread>
 using namespace mo;
 
-struct output_parametered_object : public MetaObject
-{
-    MO_BEGIN(output_parametered_object)
-    OUTPUT(int, test_output, 0)
-    OUTPUT(double, test_double, 0.0)
-    MO_END;
-    void increment()
-    {
-        // wut, get access token, get ref to data, increment
-        ++output_val;
-        test_output.publish(output_val);
-        // old way
-        // test_output++;
-    }
-    int output_val = 0;
-};
-
-struct input_parametered_object : public MetaObject
-{
-    MO_BEGIN(input_parametered_object)
-    INPUT(int, test_input)
-    MO_END;
-};
-
-MO_REGISTER_OBJECT(input_parametered_object)
-MO_REGISTER_OBJECT(output_parametered_object)
+using namespace test;
 
 TEST(object, input_parameter_manual)
 {
     IAsyncStreamPtr_t stream = IAsyncStream::create();
     mo::MetaObjectFactory::instance();
-    auto input = input_parametered_object::create();
-    auto output = output_parametered_object::create();
+    auto input = InputParameterizedObject::create();
+    auto output = OutputParameterizedObject::create();
     ASSERT_EQ(input->test_input_param.setInput(&output->test_output), true);
     output->increment();
     ASSERT_NE(input->test_input, nullptr);
@@ -65,10 +40,10 @@ TEST(object, input_parameter_manual)
 TEST(object, input_parameter_programatic)
 {
     IAsyncStreamPtr_t stream = IAsyncStream::create();
-    auto input = input_parametered_object::create();
+    auto input = InputParameterizedObject::create();
     auto input_ = input->getInput("test_input");
 
-    auto output = output_parametered_object::create();
+    auto output = OutputParameterizedObject::create();
     auto output_ = output->getOutput("test_output");
 
     ASSERT_NE(input_, nullptr);
@@ -155,10 +130,10 @@ BOOST_AUTO_TEST_CASE(threaded_buffered_input)
 TEST(object, threaded_stream_buffer)
 {
     IAsyncStreamPtr_t stream = IAsyncStream::create();
-    auto input = input_parametered_object::create();
+    auto input = InputParameterizedObject::create();
     auto input_param = input->getInput("test_input");
 
-    auto output = output_parametered_object::create();
+    auto output = OutputParameterizedObject::create();
     auto output_ = output->getOutput("test_output");
 
     ASSERT_NE(input_param, nullptr);

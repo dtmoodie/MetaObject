@@ -14,9 +14,6 @@
 #define MO_EXPORTS
 #endif
 
-#include <cereal/types/string.hpp>
-#include <cereal/types/vector.hpp>
-
 namespace mo
 {
     namespace metaparams

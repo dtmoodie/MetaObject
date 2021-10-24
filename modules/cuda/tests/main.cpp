@@ -10,5 +10,6 @@ int main(int argc, char** argv)
     auto table = SystemTable::instance();
     mo::cuda::init(table.get());
     auto result = RUN_ALL_TESTS();
+    table.reset();
     return result;
 }

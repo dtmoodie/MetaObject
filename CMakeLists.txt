@@ -42,6 +42,7 @@ set(MO_HAVE_CEREAL 0 CACHE BOOL INTERNAL FORCE)
 set(MO_HAVE_PYTHON2 0 CACHE BOOL INTERNAL FORCE)
 set(MO_HAVE_PYTHON3 0 CACHE BOOL INTERNAL FORCE)
 set(MO_PYTHON2_STATUS "" CACHE BOOL INTERNAL FORCE)
+set(MO_PYTHON3_STATUS "" CACHE BOOL INTERNAL FORCE)
 set(MO_HAVE_QT 0 CACHE BOOL INTERNAL FORCE)
 set(MO_HAVE_WT 0 CACHE BOOL INTERNAL FORCE)
 
@@ -187,8 +188,9 @@ message(STATUS
     "  OpenCV         ${OpenCV_VERSION} - ${OpenCV_DIR}\n"
     "  Qt5            ${Qt5_VERSION}\n"
     "  Python2        ${MO_PYTHON2_STATUS}\n"
-    "  Python3        ${MO_PYTHON3_STATUS}\n"
+    "  Python3        ${PYTHON3_STATUS}\n"
     "  CUDA           ${CUDA_FOUND}\n"
+    "  Modules: ${METAOBJECT_MODULES_LIST}"
 )
 
 # ----------------------- examples ---------------------------

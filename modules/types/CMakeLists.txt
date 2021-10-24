@@ -1,5 +1,5 @@
 FILE(GLOB_RECURSE src "src/*.hpp" "src/*.cu" "src/*.cpp")
-metaobject_declare_module(NAME types SRC src DEPENDS ct metaobject_core)
+metaobject_declare_module(NAME types SRC src DEPENDS ct metaobject_core ${Boost_FILESYSTEM_LIBRARY_RELEASE} ${Boost_FILESYSTEM_LIBRARY_DEBUG})
 
 if(BUILD_TESTS)
     add_executable(test_mo_types tests/test_mo_small_vec.cpp tests/main.cpp)

@@ -27,7 +27,7 @@ namespace mo
         param->save(getter);
         boost::python::object out = getter.getObject();
 
-        return std::move(out);
+        return out;
     }
 
     boost::python::object getParam(mo::IPublisher* param)
@@ -39,7 +39,7 @@ namespace mo
             data->save(getter, "data");
             boost::python::object out = getter.getObject();
 
-            return std::move(out);
+            return out;
         }
         return {};
     }

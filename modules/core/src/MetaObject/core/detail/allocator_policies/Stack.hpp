@@ -11,6 +11,7 @@ namespace mo
     class StackPolicy : public XPU::Allocator_t
     {
       public:
+        ~StackPolicy();
         using Allocator_t = typename XPU::Allocator_t;
         uint8_t* allocate(size_t num_bytes, size_t elem_size) override;
 
@@ -21,9 +22,9 @@ namespace mo
         void clear();
         struct FreeMemory
         {
-            uint8_t* ptr;
+            uint8_t* ptr = nullptr;
             clock_t free_time;
-            size_t size;
+            size_t size = 0;
         };
         std::list<FreeMemory> m_deallocate_list;
         size_t m_deallocate_delay; // ms
@@ -36,12 +37,22 @@ namespace mo
     ///////////////////////////////////////////////////////////////////////////
 
     template <class XPU>
+    StackPolicy<XPU>::~StackPolicy()
+    {
+        for(auto itr = m_deallocate_list.begin(); itr != m_deallocate_list.end(); )
+        {
+            XPU::deallocate(itr->ptr);
+            itr = m_deallocate_list.erase(itr);
+        }
+    }
+
+    template <class XPU>
     uint8_t* StackPolicy<XPU>::allocate(const size_t num_bytes, const size_t elem_size)
     {
         unsigned char* ptr = nullptr;
         for (auto itr = m_deallocate_list.begin(); itr != m_deallocate_list.end(); ++itr)
         {
-            const size_t alignment_offset = alignmentOffset(itr->ptr, elem_size);
+            // const size_t alignment_offset = alignmentOffset(itr->ptr, elem_size);
             if (itr->size == num_bytes)
             {
                 ptr = itr->ptr;

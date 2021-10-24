@@ -15,8 +15,8 @@ namespace mo
             GUI,
             ANY
         };
-        void registerThread(ThreadType type, mo::IAsyncStreamPtr_t stream = mo::IAsyncStream::current());
-        mo::IAsyncStreamPtr_t getThread(ThreadType type);
+        void registerThread(ThreadType type, IAsyncStream::Ptr_t stream = IAsyncStream::current());
+        IAsyncStream::Ptr_t getThread(ThreadType type);
         static ThreadRegistry* instance();
 
       private:

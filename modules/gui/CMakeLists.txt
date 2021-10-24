@@ -1,12 +1,23 @@
 if(MO_HAVE_QT)
-    file(GLOB_RECURSE hdr "src/*.hpp")
-    file(GLOB_RECURSE src "src/MetaObject/params/ui/Qt/*.cpp")
-    list(APPEND src "src/MetaObject/params/ui/Qt.cpp")
-    QT5_WRAP_CPP(MOC "src/MetaObject/params/ui/Qt/SignalProxy.hpp")
-    set(src "${src};${MOC};${hdr}")
-    metaobject_declare_module(NAME qtgui SRC src DEPENDS ${OpenCV_LIBS}
-        Qt5::Core Qt5::Widgets metaobject_core metaobject_params metaobject_types
-    )
+    find_package(OpenCV QUIET)
+    if(OpenCV_FOUND)
+        file(GLOB_RECURSE hdr "src/*.hpp")
+        file(GLOB_RECURSE src "src/MetaObject/params/ui/Qt/*.cpp")
+        list(APPEND src "src/MetaObject/params/ui/Qt.cpp")
+        QT5_WRAP_CPP(MOC "src/MetaObject/params/ui/Qt/SignalProxy.hpp")
+        set(src "${src};${MOC};${hdr}")
+        metaobject_declare_module(NAME qtgui SRC src DEPENDS ${OpenCV_LIBS}
+            Qt5::Core 
+            Qt5::Widgets 
+            metaobject_core 
+            metaobject_params 
+            metaobject_types
+        )
+        target_include_directories(metaobject_qtgui 
+            PUBLIC
+                $<BUILD_INTERFACE:${OpenCV_INCLUDE_DIRS}>
+        )
+    endif()
 endif(MO_HAVE_QT)
 
 if(MO_HAVE_WT)

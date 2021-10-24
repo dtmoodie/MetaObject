@@ -22,29 +22,23 @@ namespace mo
         void setId(uint64_t id);
 
         void setBoth(PriorityLevels priority, uint64_t id);
-        void setAll(PriorityLevels priority, uint64_t id, bool work);
-
-        bool isWork() const;
-        void setWork(bool val);
+        void setAll(PriorityLevels priority, uint64_t id);
+        void setAll(PriorityLevels priority, uint64_t id, std::shared_ptr<IAsyncStream>);
 
         void disable();
-        bool enabled() const;
+        bool isEnabled() const;
 
-        std::shared_ptr<IAsyncStream> stream() const;
-        std::shared_ptr<IAsyncStream> stream();
-        std::shared_ptr<IDeviceStream> deviceStream() const;
+        std::shared_ptr<IAsyncStream> getStream() const;
 
         void setStream(std::shared_ptr<IAsyncStream>);
-        void setDeviceStream(std::shared_ptr<IDeviceStream>);
+
+        bool isOnStream(const IAsyncStream*) const;
 
       private:
         PriorityLevels m_priority = MEDIUM;
         uint64_t m_id = 0;
         bool m_enabled = true;
-        bool m_is_work = true;
-        // Weak pointer or shared ptr?
-        std::weak_ptr<IAsyncStream> m_stream;
-        std::weak_ptr<IDeviceStream> m_device_stream;
+        std::shared_ptr<IAsyncStream> m_stream = nullptr;
     };
 } // namespace mo
 

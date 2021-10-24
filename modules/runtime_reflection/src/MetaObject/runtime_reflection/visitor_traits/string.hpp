@@ -16,10 +16,12 @@ namespace mo
             visitor(&(*ptr)[0], name, ptr->size());
         }
 
-        void load(ILoadVisitor& visitor, void* instance, const std::string& name, size_t) const override
+        void load(ILoadVisitor& visitor, void* instance, const std::string& name, size_t cnt) const override
         {
             auto ptr = this->ptr(instance);
-            visitor(&(*ptr)[0], name, ptr->size());
+            auto load_size = visitor.getCurrentContainerSize();
+            ptr->resize(load_size);
+            visitor(&(*ptr)[0], name, load_size);
         }
 
         void visit(StaticVisitor& visitor, const std::string& name) const

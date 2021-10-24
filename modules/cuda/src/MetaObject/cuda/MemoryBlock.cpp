@@ -9,7 +9,7 @@ namespace mo
 {
     namespace cuda
     {
-        uint8_t* CUDA::allocate(const uint64_t size, const int32_t elem_size)
+        uint8_t* CUDA::allocate(const uint64_t size, const int32_t)
         {
             void* ptr = nullptr;
             cudaError_t err = cudaMalloc(&ptr, size);

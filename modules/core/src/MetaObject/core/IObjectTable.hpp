@@ -1,5 +1,7 @@
 #ifndef MO_CORE_IOBJECT_TABLE_HPP
 #define MO_CORE_IOBJECT_TABLE_HPP
+#include <MetaObject/core/export.hpp>
+
 #include <MetaObject/core/detail/ObjectConstructor.hpp>
 #include <MetaObject/detail/Export.hpp>
 #include <MetaObject/detail/TypeInfo.hpp>

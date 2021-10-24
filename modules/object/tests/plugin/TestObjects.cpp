@@ -98,9 +98,13 @@ namespace test
         ++update_count;
     }
 
-    void setupPlugin(SystemTable* table)
+    void OutputParameterizedObject::increment()
     {
-        MetaObjectFactory::instance(table)->setupObjectConstructors(PerModuleInterface::GetInstance());
+        // wut, get access token, get ref to data, increment
+        ++output_val;
+        test_output.publish(output_val);
+        // old way
+        // test_output++;
     }
 } // namespace test
 
@@ -118,3 +122,6 @@ MO_REGISTER_OBJECT(MetaObjectCallback)
 MO_REGISTER_OBJECT(MetaObjectPublisher)
 MO_REGISTER_OBJECT(MetaObjectSubscriber)
 MO_REGISTER_OBJECT(ParamedObject)
+
+MO_REGISTER_OBJECT(InputParameterizedObject)
+MO_REGISTER_OBJECT(OutputParameterizedObject)

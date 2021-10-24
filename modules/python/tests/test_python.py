@@ -1,6 +1,7 @@
 import metaobject as mo
 import glob
-plugin = glob.glob('libmo_objectplugin*.so')
+
+plugin = glob.glob('@PLUGIN_PATH@/libmo_objectplugin*')
 assert(mo.plugins.loadPlugin(plugin[0]))
 print(mo.listConstructableObjects())
 
