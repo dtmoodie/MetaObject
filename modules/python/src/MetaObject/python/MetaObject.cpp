@@ -20,6 +20,37 @@
 
 namespace mo
 {
+
+    boost::python::object getParam(const mo::IControlParam* param)
+    {
+        python::ControlParamGetter getter;
+        param->save(getter);
+        boost::python::object out = getter.getObject();
+
+        return out;
+    }
+
+    boost::python::object getParam(mo::IPublisher* param)
+    {
+        IDataContainerConstPtr_t data = param->getData();
+        if (data)
+        {
+            python::ToPythonVisitor getter;
+            data->save(getter, "data");
+            boost::python::object out = getter.getObject();
+
+            return out;
+        }
+        return {};
+    }
+
+    bool setParam(mo::IControlParam* param, const boost::python::object& python_obj)
+    {
+        python::ControlParamSetter setter(python_obj);
+        param->load(setter);
+        return setter.success();
+    }
+
     namespace python
     {
         namespace detail

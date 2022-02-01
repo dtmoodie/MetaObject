@@ -10,19 +10,11 @@
 namespace mo
 {
     template <class T>
-    struct ObjectPool
+    struct ObjectPool: std::enable_shared_from_this<ObjectPool<T>>
     {
         using Ptr_t = std::shared_ptr<T>;
 
-        ObjectPool(const uint64_t initial_pool_size = 0, ObjectConstructor<T> ctr = ObjectConstructor<T>())
-            : m_ctr(std::move(ctr))
-        {
-            for (uint64_t i = 0; i < initial_pool_size; ++i)
-            {
-                Ptr_t obj = m_ctr.createShared();
-                returnObject(obj);
-            }
-        }
+        static std::shared_ptr<ObjectPool<T>> create(const uint64_t initial_pool_size = 0, ObjectConstructor<T> ctr = ObjectConstructor<T>());
 
         Ptr_t get()
         {
@@ -38,10 +30,30 @@ namespace mo
                 m_free_objects.pop_front();
             }
             MO_ASSERT(owning_ptr);
-            return Ptr_t(owning_ptr.get(), [this, owning_ptr](T*) { returnObject(owning_ptr); });
+            std::weak_ptr<ObjectPool<T>> weak = this->shared_from_this();
+            return Ptr_t(owning_ptr.get(), [weak, owning_ptr](T*)
+            {
+                std::shared_ptr<ObjectPool<T>> shared = weak.lock();
+                if(shared)
+                {
+                    shared->returnObject(owning_ptr);
+                }
+
+            });
         }
 
+      protected:
+        ObjectPool(const uint64_t initial_pool_size = 0, ObjectConstructor<T> ctr = ObjectConstructor<T>())
+            : m_ctr(std::move(ctr))
+        {
+            for (uint64_t i = 0; i < initial_pool_size; ++i)
+            {
+                Ptr_t obj = m_ctr.createShared();
+                returnObject(obj);
+            }
+        }
       private:
+
         void returnObject(const Ptr_t& obj)
         {
             Mutex::Lock_t lock(m_mtx);
@@ -52,6 +64,19 @@ namespace mo
         ObjectConstructor<T> m_ctr;
         Mutex m_mtx;
     };
+    template<class T>
+    std::shared_ptr<ObjectPool<T>> ObjectPool<T>::create(const uint64_t initial_pool_size, ObjectConstructor<T> ctr)
+    {
+        struct MakeSharedEnabler : ObjectPool<T> {
+            MakeSharedEnabler(const uint64_t initial_pool_size, ObjectConstructor<T> ctr):
+                ObjectPool<T>(initial_pool_size, std::move(ctr))
+            {
+
+            }
+        };
+
+        return std::make_shared<MakeSharedEnabler>(initial_pool_size, std::move(ctr));
+    }
 } // namespace mo
 
 #endif // MO_CORE_OBJECT_POOL_HPP

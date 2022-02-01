@@ -3,6 +3,7 @@
 #include "MetaObject.hpp"
 #include "Parameters.hpp"
 #include "PythonAllocator.hpp"
+#include "PythonConversionVisitation.hpp"
 #include "PythonPolicy.hpp"
 
 #include "ct/reflect.hpp"
@@ -396,6 +397,8 @@ namespace mo
                 m_system_table = SystemTable::instance();
                 m_factory = mo::MetaObjectFactory::instance();
                 m_factory->registerTranslationUnit();
+                m_stream = mo::IAsyncStream::create();
+                mo::IAsyncStream::setCurrent(m_stream);
 
                 m_default_opencv_allocator = cv::Mat::getStdAllocator();
                 m_default_opencv_gpu_allocator = cv::cuda::GpuMat::defaultAllocator();
@@ -406,13 +409,15 @@ namespace mo
                     using Allocator_t = mo::CombinedPolicy<Pool_t, Stack_t>;
                     m_host_allocator = std::make_shared<Allocator_t>();
                     m_cv_cpu_allocator.reset(new mo::CvAllocatorProxy(m_host_allocator.get()));
+                    cv::Mat::setDefaultAllocator(m_cv_cpu_allocator.get());
                 }
                 {
                     using Pool_t = mo::PoolPolicy<cuda::CUDA>;
                     using Stack_t = mo::StackPolicy<cuda::CUDA>;
                     using Allocator_t = mo::CombinedPolicy<Pool_t, Stack_t>;
                     m_device_allocator = std::make_shared<Allocator_t>();
-                    m_cv_gpu_allocator.reset(new mo::cuda::AllocatorProxy<>(m_device_allocator.get()));
+                    m_cv_gpu_allocator = std::make_unique<mo::cuda::AllocatorProxy<>>(m_device_allocator);
+                    cv::cuda::GpuMat::setDefaultAllocator(m_cv_gpu_allocator.get());
                 }
 
                 m_factory->registerTranslationUnit();
@@ -448,6 +453,8 @@ namespace mo
             std::shared_ptr<mo::Allocator> m_host_allocator;
             std::shared_ptr<mo::DeviceAllocator> m_device_allocator;
 
+            mo::IAsyncStream::Ptr_t m_stream;
+
             std::unique_ptr<mo::CvAllocatorProxy> m_cv_cpu_allocator;
             std::unique_ptr<mo::cuda::AllocatorProxy<>> m_cv_gpu_allocator;
 
@@ -470,6 +477,105 @@ namespace mo
             mo::Mutex_t::Lock_t lock(mtx);
             cv.wait_for(lock, std::chrono::milliseconds(milliseconds));
         }
+
+        boost::python::object stringConverterToPython(const void* inst, const mo::ITraits* trait_)
+        {
+            const mo::IContainerTraits* trait = dynamic_cast<const mo::IContainerTraits*>(trait_);
+            MO_ASSERT(trait);
+            const char* char_ptr = static_cast<const char*>(trait->valuePointer(inst));
+            const size_t size = trait->getContainerSize(inst);
+            return boost::python::str(char_ptr, size);
+        }
+
+        bool stringConverterFromPython(void* str_inst, const ITraits* trait_, const boost::python::object& obj)
+        {
+            const mo::IContainerTraits* trait = dynamic_cast<const mo::IContainerTraits*>(trait_);
+            MO_ASSERT(trait);
+            boost::python::extract<std::string> ext(obj);
+            MO_ASSERT(ext.check());
+            std::string str = ext();
+            const size_t sz = str.size();
+            trait->setContainerSize(sz, str_inst);
+            char* ptr = static_cast<char*>(trait->valuePointer(str_inst));
+            memcpy(ptr, str.data(), sz);
+            return true;
+        }
+
+        std::string printParamWrapper(const boost::python::object& obj)
+        {
+            boost::python::object attrs = boost::python::dir(obj);
+            const ssize_t size = boost::python::len(attrs);
+            std::stringstream ss;
+            /*if (boost::python::hasattr(obj, "typename"))
+            {
+                boost::python::object type = boost::python::getattr(obj, "typename");
+                ss << "typename: " << boost::python::extract<std::string>(type)();
+                ss << '\n';
+            }*/
+            ss << '(';
+            for (ssize_t i = 0; i < size; ++i)
+            {
+                boost::python::object attr_name = attrs[i];
+                boost::python::extract<std::string> ext(attr_name);
+                if (ext.check())
+                {
+                    const std::string str = ext();
+                    if (str.find("__") != 0 && str != "typename")
+                    {
+                        boost::python::object attr = boost::python::getattr(obj, attr_name);
+                        ss << str << ": ";
+                        ss << boost::python::extract<std::string>(boost::python::str(attr))();
+                        ss << ' ';
+                    }
+                }
+            }
+            ss << ')';
+
+            return std::move(ss).str();
+        }
+
+
+        template<class T>
+        bool isPrimitive(const ITraits* query, ct::VariadicTypedef<T>)
+        {
+            if(query->type() == mo::TypeInfo::create<T>())
+            {
+                return true;
+            }
+            return false;
+        }
+
+        template<class T, class ... Ts>
+        bool isPrimitive(const ITraits* query, ct::VariadicTypedef<T, Ts...>)
+        {
+            if(query->type() == mo::TypeInfo::create<T>())
+            {
+                return true;
+            }
+            return isPrimitive(query, ct::VariadicTypedef<Ts...>{});
+        }
+
+        void setupPodTypes()
+        {
+            auto traits = mo::TraitRegistry::instance().getTraits();
+            
+            for(auto itr = traits.begin(); itr != traits.end(); ++itr)
+            {
+                const mo::TypeInfo& type = itr->first;
+                const ITraits* trait = itr->second;
+                if(isPrimitive(trait, mo::PrimitiveTypes{}))
+                {
+                    continue;
+                }
+                const std::string name = type.name(); // nameView isn't necessarily null terminated
+                const std::type_info* type_info = type.ptr();
+                boost::python::type_info tinfo(*type_info);
+                boost::python::objects::class_base obj(name.c_str(), 1, &tinfo);
+                // Now need to figure out how to add properties and functions, etc
+
+            }
+        }
+
 
         std::shared_ptr<SystemTable> pythonSetup(const char* module_name_)
         {
@@ -521,12 +627,20 @@ namespace mo
 
             boost::python::def("eventLoop", &eventLoop);
 
+            boost::python::class_<ParameterPythonWrapper> wrapper("ParameterWrapper");
+            wrapper.def("__repr__", &printParamWrapper);
+
+            DataConversionTable::instance()->registerConverters<std::string>(&stringConverterFromPython,
+                                                                             &stringConverterToPython);
+
             loadMetaParams(lib_guard->m_system_table.get());
 
             for (const auto& func : setup->setup_functions)
             {
                 func();
             }
+
+            setupPodTypes();
             setupInterface();
             setupPlugins(module_name);
             setup->setup = true;

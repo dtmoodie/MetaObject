@@ -22,24 +22,14 @@ namespace mo
         setCache(cache);
     }
 
-    ILoadVisitor& LoadCache::operator()(IStructTraits* val, void* ptr, const std::string& name, size_t cnt)
+    ILoadVisitor& LoadCache::operator()(const IStructTraits* val, void* ptr, const std::string& name, size_t cnt)
     {
-        const auto traits = this->traits();
+        //const auto traits = this->traits();
         // writing data out,
         // const auto id = uint64_t(ptr);
         //(*m_serialized_pointers)[val->type()][id] = ptr;
 
         val->load(*this, ptr, name, cnt);
-
-        if (traits.reader)
-        {
-            // reading data in
-            // void* ptr = val->ptr();
-        }
-        else
-        {
-            // writing data out
-        }
         return *this;
     }
 
@@ -96,7 +86,7 @@ namespace mo
         setCache(cache);
     }
 
-    ISaveVisitor& SaveCache::operator()(IStructTraits* val, const void* ptr, const std::string& name, size_t cnt)
+    ISaveVisitor& SaveCache::operator()(const IStructTraits* val, const void* ptr, const std::string& name, size_t cnt)
     {
         // const auto traits = this->traits();
         // writing data out,

@@ -1,9 +1,11 @@
 #include "common.hpp"
 
-#include <MetaObject/runtime_reflection/StructTraits.hpp>
-#include <MetaObject/runtime_reflection/visitor_traits/filesystem.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/string.hpp>
+
+#include <MetaObject/runtime_reflection/visitor_traits/filesystem.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/vector.hpp>
+
+#include <MetaObject/runtime_reflection/StructTraits.hpp>
 
 #include "MetaObject/core/metaobject_config.hpp"
 
@@ -11,9 +13,6 @@
 #include <MetaObject/params/AccessToken.hpp>
 
 #include <boost/lexical_cast.hpp>
-
-#include <cereal/types/string.hpp>
-#include <cereal/types/vector.hpp>
 
 #ifdef MO_EXPORTS
 #undef MO_EXPORTS

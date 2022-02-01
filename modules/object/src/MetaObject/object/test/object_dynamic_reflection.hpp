@@ -173,9 +173,9 @@ namespace mo
             {
                 if (param->getParamFlags().test(ParamFlags::kINPUT))
                 {
-                    EXPECT_EQ(
-                        param->getDataType(),
-                        mo::TypeInfo::create<typename std::remove_pointer<typename std::remove_const<D>::type>::type>())
+                    EXPECT_EQ(param->getDataType(),
+                              mo::TypeInfo::create<typename std::remove_const<
+                                  typename std::remove_pointer<typename std::remove_const<D>::type>::type>::type>())
                         << "Parameter types not equal for " << name << " which is a " << param->getParamFlags();
                 }
                 else

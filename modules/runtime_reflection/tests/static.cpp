@@ -38,12 +38,14 @@ namespace
     {
 
         template <class T>
-        typename std::enable_if<std::is_base_of<mo::IStructTraits, mo::TTraits<T>>::value>::type testImpl(const T& data)
+        typename std::enable_if<std::is_base_of<mo::IStructTraits, mo::TTraits<T>>::value && !std::is_base_of<mo::IContainerTraits, mo::TTraits<T>>::value && !std::is_base_of<mo::IPtrTraits, mo::TTraits<T>>::value>::type testImpl(const T& data)
         {
             auto trait = mo::makeTraits(&data);
             if (trait.triviallySerializable())
             {
                 T tmp;
+                // We know that this is going to be a warning,t he point of this function is to test to make sure the dynamic value of trait.triviallySerializable()
+                // only lets us enter this if statement if trivially serializable is
                 std::memcpy(&tmp, &data, sizeof(T));
                 if (!ct::compare(tmp, data, DebugEqual()))
                 {
@@ -52,7 +54,18 @@ namespace
         }
 
         template <class T>
+        typename std::enable_if<std::is_base_of<mo::IContainerTraits, mo::TTraits<T>>::value>::type testImpl(const T&)
+        {
+
+        }
+
+        template <class T>
         typename std::enable_if<!std::is_base_of<mo::IStructTraits, mo::TTraits<T>>::value>::type testImpl(const T&)
+        {
+        }
+
+        template <class T>
+        typename std::enable_if< std::is_base_of<mo::IPtrTraits, mo::TTraits<T>>::value >::type testImpl(const T&)
         {
         }
 

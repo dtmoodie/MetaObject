@@ -108,7 +108,8 @@ namespace mo
         return saveBinary(static_cast<const char*>(ptr), name, cnt);
     }
 
-    ISaveVisitor& BinarySaver::operator()(IStructTraits* trait, const void* val, const std::string& name, size_t cnt)
+    ISaveVisitor&
+    BinarySaver::operator()(const IStructTraits* trait, const void* val, const std::string& name, size_t cnt)
     {
         if (trait->triviallySerializable() && !m_cereal_compat)
         {
@@ -129,19 +130,26 @@ namespace mo
         return *this;
     }
 
-    ISaveVisitor& BinarySaver::operator()(IContainerTraits* val, const void* inst, const std::string& name, size_t cnt)
+    ISaveVisitor&
+    BinarySaver::operator()(const IContainerTraits* val, const void* inst, const std::string& name, size_t cnt)
     {
-        uint64_t num_vals = val->getContainerSize(inst);
-        saveBinary(&num_vals);
-        val->save(*this, inst, name, cnt);
+        const uint8_t* inst_ = ct::ptrCast<uint8_t>(inst);
+        for (size_t i = 0; i < cnt; ++i)
+        {
+            uint64_t num_vals = val->getContainerSize(inst);
+            saveBinary(&num_vals);
+            val->save(*this, ct::ptrCast<void>(inst_), name, cnt);
+            inst_ += val->size();
+        }
+
         return *this;
     }
 
     VisitorTraits BinarySaver::traits() const
     {
         VisitorTraits out;
-        out.reader = false;
         out.supports_named_access = false;
+        out.human_readable = false;
         return out;
     }
 

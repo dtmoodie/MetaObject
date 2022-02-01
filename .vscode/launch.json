@@ -101,6 +101,43 @@
             ]
         },
         {
+            "name": "python_gdb",
+            "type": "cppdbg",
+            "request": "launch",
+            "program": "/opt/conda/bin/python3",
+            "args": [
+                "${workspaceFolder}_build/metaobject_python_test.py"
+            ],
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}_build",
+            "environment": [],
+            "externalConsole": false,
+            "MIMode": "gdb",
+            "setupCommands": [
+                {
+                    "description": "Enable pretty-printing for gdb",
+                    "text": "-enable-pretty-printing",
+                    "ignoreFailures": true
+                },
+                {
+                    "description": "Enable all-exceptions",
+                    "text": "catch throw",
+                    "ignoreFailures": true
+                }
+            ]
+        },
+        {
+            "name": "python",
+            "type": "python",
+            "request": "launch",
+            "python": "/opt/conda/bin/python3",
+            "program": "${workspaceFolder}_build/metaobject_python_test.py",
+            "stopAtEntry": false,
+            "cwd": "${workspaceFolder}_build",
+            "environment": [],
+            "externalConsole": false
+        },
+        {
             "name": "runtime_reflection",
             "type": "cppdbg",
             "request": "launch",
@@ -172,6 +209,5 @@
                 }
             ]
         }
-
     ]
 }

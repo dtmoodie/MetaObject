@@ -1,4 +1,6 @@
 #pragma once
+#include "export.hpp"
+
 #include <ct/VariadicTypedef.hpp>
 #include <type_traits>
 #include <cstdint>
@@ -22,13 +24,17 @@
 
 namespace mo
 {
+    struct Byte
+    {
+        uint8_t data;
+    };
     using PrimitiveTypes = ct::VariadicTypedef<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t,
 #ifdef ENVIRONMENT64
                                                long long, unsigned long long,
 #else
                                                long int, unsigned long int,
 #endif
-                                               float, double, void*, char, bool>;
+                                               float, double, void*, char, bool, Byte>;
 
     template <class T>
     struct IsPrimitive
@@ -37,9 +43,27 @@ namespace mo
         static constexpr const bool value = PrimitiveTypes::template contains<T>();
     };
 
+    using PrimiviteRuntimeTypes = ct::VariadicTypedef<char,
+                                                      bool,
+                                                      int8_t,
+                                                      uint8_t,
+                                                      int16_t,
+                                                      uint16_t,
+                                                      int32_t,
+                                                      uint32_t,
+                                                      int64_t,
+                                                      uint64_t,
+                                                      float,
+                                                      double>;
+    template <class T>
+    struct IsPrimitiveRuntimeReflected
+    {
+
+        static constexpr const bool value = PrimiviteRuntimeTypes::contains<T>();
+    };
 }
 
-#if __GNUG__ && __GNUC__ < 5
+#if __GNUG__ && (__GNUC__ < 5)
 
 
 

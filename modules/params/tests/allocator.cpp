@@ -245,6 +245,7 @@ std::shared_ptr<ParamAllocator::SerializationBuffer> save(const TDataContainer<s
 {
     const auto header_size = serializedSize(container.header) + sizeof(uint32_t);
     auto allocator = container.getAllocator();
+    MO_ASSERT(allocator != nullptr);
     auto data = container.data.data();
     auto binary_serialization_buffer = allocator->allocateSerialization(header_size, 0, data);
     SaveStream stream(binary_serialization_buffer->slice(0));
@@ -307,7 +308,7 @@ bool serializeWithHeader(const void* header, size_t header_size, const std::vect
 TEST(serialization_aware_allocator, no_header)
 {
     auto alloc = ParamAllocator::create();
-    TDataContainer<std::vector<float>> container(alloc);
+    TDataContainer<mo::vector<float>> container(alloc);
     container.data.reserve(static_cast<size_t>(1e4));
     ASSERT_EQ(container.data.capacity(), 1e4);
     for (int i = 0; i < 1e4; ++i)
@@ -329,7 +330,7 @@ TEST(serialization_aware_allocator, no_header)
 TEST(serialization_aware_allocator, predefined_pad)
 {
     auto alloc = ParamAllocator::create();
-    TDataContainer<std::vector<float>> container(alloc);
+    TDataContainer<mo::vector<float>> container(alloc);
     container.getAllocator()->setPadding(sizeof(uint32_t));
     auto alloc2 = container.data.get_allocator();
     ASSERT_EQ(alloc2.getAllocator().get(), alloc.get());
@@ -355,7 +356,7 @@ TEST(serialization_aware_allocator, predefined_pad)
 TEST(serialization_aware_allocator, container)
 {
     auto alloc = ParamAllocator::create();
-    TDataContainer<std::vector<float>> container(alloc);
+    TDataContainer<mo::vector<float>> container(alloc);
     container.data.reserve(static_cast<size_t>(1e4));
     ASSERT_EQ(container.data.capacity(), 1e4);
     for (int i = 0; i < 1e4; ++i)
@@ -369,7 +370,7 @@ TEST(serialization_aware_allocator, container)
 void serializeContainerOverpad(Allocator::Ptr_t allocator_)
 {
     auto allocator = ParamAllocator::create(allocator_);
-    TDataContainer<std::vector<float>> container(allocator);
+    TDataContainer<mo::vector<float>> container(allocator);
     container.getAllocator()->setPadding(10);
     container.data.reserve(static_cast<size_t>(1e4));
     ASSERT_EQ(container.data.capacity(), 1e4);
@@ -401,7 +402,7 @@ TEST(serialization_aware_allocator, overpad_stack_allocator)
 void serializeContainerCreatedFromParam(Allocator::Ptr_t allocator_)
 {
     auto allocator = ParamAllocator::create(allocator_);
-    TDataContainer<std::vector<float>> container0(allocator);
+    TDataContainer<mo::vector<float>> container0(allocator);
 
     float header;
     container0.data.reserve(static_cast<size_t>(1e4));
@@ -416,7 +417,7 @@ void serializeContainerCreatedFromParam(Allocator::Ptr_t allocator_)
         ASSERT_EQ(container0.data[i], i);
     }
 
-    TDataContainer<std::vector<float>> container1(allocator);
+    TDataContainer<mo::vector<float>> container1(allocator);
     container1.data.reserve(static_cast<size_t>(1e4));
     for (int i = 0; i < 1e4; ++i)
     {
@@ -449,7 +450,7 @@ TEST(serialization_aware_allocator, container_created_from_param_stack_allocator
 
 void serializeAndDeserializeFromParam(Allocator::Ptr_t allocator)
 {
-    TPublisher<std::vector<float>> param;
+    TPublisher<mo::vector<float>> param;
     param.setAllocator(allocator);
 
     for (size_t sz = 100; sz <= 10000; sz += 100)
@@ -502,7 +503,9 @@ void serializeAndDeserializeFromParam(Allocator::Ptr_t allocator)
 
 TEST(serialization_aware_allocator, container_from_param_default_allocator)
 {
-    serializeAndDeserializeFromParam(mo::Allocator::getDefault());
+    auto allocator = mo::Allocator::getDefault();
+    ASSERT_TRUE(allocator);
+    serializeAndDeserializeFromParam(allocator);
 }
 
 TEST(serialization_aware_allocator, container_from_param_pool_allocator)
@@ -520,7 +523,7 @@ TEST(serialization_aware_allocator, container_from_param_stack_allocator)
 TEST(serialization_aware_allocator, load_wrap)
 {
     auto allocator = mo::Allocator::getDefault();
-    TPublisher<std::vector<float>> param;
+    TPublisher<mo::vector<float>> param;
     param.setAllocator(allocator);
 
     for (size_t sz = 100; sz <= 10000; sz += 100)
@@ -580,7 +583,7 @@ TEST(serialization_aware_allocator, load_wrap)
 
 TEST(serialization_aware_allocator, vector_of_reflected)
 {
-    TPublisher<std::vector<TestPodStruct>> param;
+    TPublisher<mo::vector<TestPodStruct>> param;
     {
         auto container = param.create(100);
         container->data.resize(100);
@@ -643,7 +646,7 @@ namespace
 
 TEST(serialization_aware_allocator, vector_alignment)
 {
-    TPublisher<std::vector<AlignedVector>> param;
+    TPublisher<mo::vector<AlignedVector>> param;
     {
         {
             auto container = param.create(100);

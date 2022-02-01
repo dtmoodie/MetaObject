@@ -1,6 +1,6 @@
 #include "Stream.hpp"
 #include "Event.hpp"
-#include "common.hpp"
+#include "errors.hpp"
 
 #include <cuda_runtime_api.h>
 
@@ -17,10 +17,10 @@ namespace mo
         std::shared_ptr<CUstream_st> Stream::create(const int priority)
         {
             cudaStream_t stream = nullptr;
-            CUDA_ERROR_CHECK(cudaStreamCreateWithPriority(&stream, cudaStreamNonBlocking, priority));
+            CHECK_CUDA_ERROR(&cudaStreamCreateWithPriority, &stream, cudaStreamNonBlocking, priority);
             return std::shared_ptr<CUstream_st>(stream, [](cudaStream_t st) {
-                CUDA_ERROR_CHECK(cudaStreamSynchronize(st));
-                CUDA_ERROR_CHECK(cudaStreamDestroy(st));
+                CHECK_CUDA_ERROR(&cudaStreamSynchronize, st);
+                CHECK_CUDA_ERROR(&cudaStreamDestroy, st);
             });
         }
 
@@ -29,8 +29,8 @@ namespace mo
             if (owns_stream)
             {
                 m_stream = Ptr_t(stream, [](cudaStream_t st) {
-                    CUDA_ERROR_CHECK(cudaStreamSynchronize(st));
-                    CUDA_ERROR_CHECK(cudaStreamDestroy(st));
+                    CHECK_CUDA_ERROR(&cudaStreamSynchronize, st);
+                    CHECK_CUDA_ERROR(&cudaStreamDestroy, st);
                 });
             }
             else
@@ -63,13 +63,13 @@ namespace mo
         {
             if (!event.queryCompletion())
             {
-                CUDA_ERROR_CHECK(cudaStreamWaitEvent(m_stream.get(), event, 0));
+                CHECK_CUDA_ERROR(&cudaStreamWaitEvent, m_stream.get(), event, 0);
             }
         }
 
         void Stream::synchronize() const
         {
-            CUDA_ERROR_CHECK(cudaStreamSynchronize(m_stream.get()));
+            CHECK_CUDA_ERROR(&cudaStreamSynchronize, m_stream.get());
         }
 
         bool Stream::query() const

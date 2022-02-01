@@ -23,6 +23,17 @@ https://github.com/dtmoodie/MetaObject
 
 namespace mo
 {
+    template <class T>
+    T* maybeDynamicCast(T* ptr)
+    {
+        return ptr;
+    }
+
+    template <class T, class U>
+    ct::EnableIf<!std::is_same<T, U>::value, T*> maybeDynamicCast(U* ptr)
+    {
+        return dynamic_cast<T*>(ptr);
+    }
 
     // Meant to reference a pointer variable in user space, and to update that variable whenever
     // IE int* myVar;
@@ -95,7 +106,8 @@ namespace mo
             Lock_t lock(this->mtx());
             if (m_user_var)
             {
-                *m_user_var = dynamic_cast<Input_t>(data->ptr());
+                auto ptr = data->ptr();
+                *m_user_var = maybeDynamicCast<const T>(ptr);
             }
         }
 

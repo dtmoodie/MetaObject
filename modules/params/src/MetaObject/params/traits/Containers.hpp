@@ -7,8 +7,8 @@ namespace mo
     template <class T, class E>
     struct ContainerTraits;
 
-    template <class T, class A>
-    struct ContainerTraits<std::vector<T, A>, ct::EnableIf<std::is_trivially_copyable<T>::value>>
+    template <class T>
+    struct ContainerTraits<std::vector<T, TStlAllocator<T>>, ct::EnableIf<std::is_trivially_copyable<T>::value>>
     {
         using type = std::vector<T, TStlAllocator<T>>;
         static constexpr const bool CONST = false;

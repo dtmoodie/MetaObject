@@ -99,7 +99,11 @@ namespace mo
     template <class T>
     void TControlParam<T>::setModified(bool val)
     {
-        m_modified = val;
+        if (m_modified != val)
+        {
+            m_modified = val;
+            this->emitUpdate({}, mo::UpdateFlags::kVALUE_UPDATED, mo::IAsyncStream::currentRef());
+        }
     }
 
     template <class T>
@@ -107,6 +111,7 @@ namespace mo
     {
         ITControlParam<T>::load(visitor);
         visitor(&m_data, "data");
+        setModified(true);
     }
     template <class T>
     void TControlParam<T>::save(ISaveVisitor& visitor) const
@@ -181,7 +186,11 @@ namespace mo
     template <class T>
     void TControlParam<T*>::setModified(bool val)
     {
-        m_modified = val;
+        if (m_modified != val)
+        {
+            m_modified = val;
+            this->emitUpdate({}, mo::UpdateFlags::kVALUE_UPDATED, mo::IAsyncStream::currentRef());
+        }
     }
 
     template <class T>
@@ -191,6 +200,7 @@ namespace mo
         if (m_ptr)
         {
             visitor(m_ptr, "data");
+            setModified(true);
         }
     }
 

@@ -19,40 +19,43 @@ TEST(async_stream, creation)
 
 TEST(async_stream, work)
 {
-    auto scheduler = mo::PriorityScheduler::current();
-    ASSERT_EQ(scheduler->size(), 1);
-
     auto stream = mo::IAsyncStream::create();
+    ASSERT_EQ(stream->size(), 0);
 
     bool work_complete = false;
-    stream->pushWork([&work_complete]() { work_complete = true; });
-    ASSERT_EQ(scheduler->size(), 2);
+    stream->pushWork([&work_complete](mo::IAsyncStream*) { work_complete = true; });
+    ASSERT_EQ(stream->size(), 1);
     boost::this_fiber::sleep_for(std::chrono::milliseconds(100));
     ASSERT_EQ(work_complete, true);
 }
 
 TEST(async_stream, work_sync)
 {
-    auto scheduler = mo::PriorityScheduler::current();
-    ASSERT_EQ(scheduler->size(), 1);
-
     auto stream = mo::IAsyncStream::create();
+    ASSERT_EQ(stream->size(), 0);
 
     bool work_complete = false;
-    stream->pushWork([&work_complete]() { work_complete = true; });
+    stream->pushWork([&work_complete](mo::IAsyncStream*)
+    {
+        work_complete = true;
+    });
+    ASSERT_EQ(stream->size(), 1);
     stream->synchronize();
     ASSERT_EQ(work_complete, true);
 }
 
 TEST(async_stream, current_stream)
 {
-    auto scheduler = mo::PriorityScheduler::current();
-    ASSERT_EQ(scheduler->size(), 1);
-
     auto stream = mo::IAsyncStream::create();
+    ASSERT_EQ(stream->size(), 0);
 
     bool check_passes = false;
-    stream->pushWork([&check_passes, stream]() { check_passes = stream == mo::IAsyncStream::current(); });
+    stream->pushWork([&check_passes, stream](mo::IAsyncStream* ref)
+    {
+        check_passes = (stream == mo::IAsyncStream::current()) && (stream.get() == ref);
+
+    });
+    ASSERT_EQ(stream->size(), 1);
     stream->synchronize();
     ASSERT_EQ(check_passes, true);
 }

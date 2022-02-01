@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.5)
 CMAKE_POLICY(SET CMP0048 NEW)
 PROJECT(MetaObject
     VERSION 0.1
@@ -6,6 +6,15 @@ PROJECT(MetaObject
 )
 set_property(GLOBAL PROPERTY USE_FOLDERS ON)
 CMAKE_POLICY(SET CMP0020 NEW)
+
+set(MO_HAVE_OPENCV 0 CACHE BOOL INTERNAL FORCE)
+set(MO_HAVE_CUDA 0 CACHE BOOL INTERNAL FORCE)
+set(MO_HAVE_CEREAL 0 CACHE BOOL INTERNAL FORCE)
+set(MO_HAVE_QT 0 CACHE BOOL INTERNAL FORCE)
+option(BUILD_TESTS "Build tests" ON)
+
+include(cmake/metaobject_dependencies.cmake)
+
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/CMakeMacros.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/metaobject_declare_plugin.cmake")
 include("${CMAKE_CURRENT_LIST_DIR}/cmake/setup_msvc_target.cmake")
@@ -36,16 +45,6 @@ set(link_dirs_deb "")
 set(link_dirs_rel "")
 set(compile_flags "")
 
-set(MO_HAVE_OPENCV 0 CACHE BOOL INTERNAL FORCE)
-set(MO_HAVE_CUDA 0 CACHE BOOL INTERNAL FORCE)
-set(MO_HAVE_CEREAL 0 CACHE BOOL INTERNAL FORCE)
-set(MO_HAVE_PYTHON2 0 CACHE BOOL INTERNAL FORCE)
-set(MO_HAVE_PYTHON3 0 CACHE BOOL INTERNAL FORCE)
-set(MO_PYTHON2_STATUS "" CACHE BOOL INTERNAL FORCE)
-set(MO_HAVE_QT 0 CACHE BOOL INTERNAL FORCE)
-set(MO_HAVE_WT 0 CACHE BOOL INTERNAL FORCE)
-
-include(cmake/metaobject_dependencies.cmake)
 
 configure_file(metaobject_config.hpp.in ${CMAKE_BINARY_DIR}/include/MetaObject/core/metaobject_config.hpp @ONLY)
 
@@ -80,8 +79,6 @@ IF(Boost_LIBRARY_DIR_DEBUG AND EXISTS "${Boost_LIBRARY_DIR_DEBUG}" AND IS_DIRECT
 ELSE(Boost_LIBRARY_DIR_DEBUG AND EXISTS "${Boost_LIBRARY_DIR_DEBUG}" AND IS_DIRECTORY "${Boost_LIBRARY_DIR_DEBUG}")
     IF(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
         LIST(APPEND PROJECT_BIN_DIRS_DEBUG ${BOOST_LIBRARYDIR})
-    ELSE(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
-        MESSAGE("Could not find boost binary dir in Boost_LIBRARY_DIR_DEBUG or BOOST_LIBRARYDIR")
     ENDIF(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
 ENDIF(Boost_LIBRARY_DIR_DEBUG AND EXISTS "${Boost_LIBRARY_DIR_DEBUG}" AND IS_DIRECTORY "${Boost_LIBRARY_DIR_DEBUG}")
 
@@ -96,8 +93,6 @@ ELSE(Boost_LIBRARY_DIR_RELEASE AND EXISTS "${Boost_LIBRARY_DIR_RELEASE}" AND IS_
         IF(Boost_LIBRARY_DIR)
             LIST(APPEND PROJECT_BIN_DIRS_RELEASE ${Boost_LIBRARY_DIR})
             LIST(APPEND PROJECT_BIN_DIRS_DEBUG ${Boost_LIBRARY_DIR})
-        ELSE()
-            MESSAGE("Could not find boost binary dir in Boost_LIBRARY_DIR_DEBUG or BOOST_LIBRARYDIR")
         ENDIF()
     ENDIF(BOOST_LIBRARYDIR AND EXISTS "${BOOST_LIBRARYDIR}" AND IS_DIRECTORY "${BOOST_LIBRARYDIR}")
 ENDIF(Boost_LIBRARY_DIR_RELEASE AND EXISTS "${Boost_LIBRARY_DIR_RELEASE}" AND IS_DIRECTORY "${Boost_LIBRARY_DIR_RELEASE}")
@@ -176,7 +171,7 @@ add_subdirectory(${CMAKE_CURRENT_LIST_DIR}/modules/gui)
 get_target_property(metaparam_build_dir metaobject_metaparams BINARY_DIR)
 
 set(MetaObject_LIBRARIES "${metaobject_modules}" CACHE STRING "" FORCE)
-set(MetaObject_INCLUDE_DIRS "${metaobject_module_includes};${CMAKE_BINARY_DIR}/include" CACHE PATH "" FORCE)
+#set(MetaObject_INCLUDE_DIRS "${metaobject_module_includes};${CMAKE_BINARY_DIR}/include" CACHE PATH "" FORCE)
 
 # ---------------------- status message -----------------------------
 message(STATUS
@@ -187,8 +182,9 @@ message(STATUS
     "  OpenCV         ${OpenCV_VERSION} - ${OpenCV_DIR}\n"
     "  Qt5            ${Qt5_VERSION}\n"
     "  Python2        ${MO_PYTHON2_STATUS}\n"
-    "  Python3        ${MO_PYTHON3_STATUS}\n"
+    "  Python3        ${PYTHON3_STATUS}\n"
     "  CUDA           ${CUDA_FOUND}\n"
+    "  Modules: ${METAOBJECT_MODULES_LIST}"
 )
 
 # ----------------------- examples ---------------------------

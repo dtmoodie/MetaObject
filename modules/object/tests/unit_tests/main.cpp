@@ -6,6 +6,8 @@
 #include <MetaObject/thread/FiberScheduler.hpp>
 #include <MetaObject/thread/ThreadPool.hpp>
 
+#include "mo_objectplugin_export.hpp"
+
 #include <boost/filesystem.hpp>
 
 #include <gtest/gtest.h>
@@ -33,8 +35,9 @@ int main(int argc, char** argv)
     }
     PerModuleInterface::GetInstance()->SetSystemTable(table.get());
     mo::params::init(table.get());
-    mo::MetaObjectFactory::instance()->registerTranslationUnit();
-    test::setupPlugin(table.get());
+    std::shared_ptr<mo::MetaObjectFactory> factory = mo::MetaObjectFactory::instance(table.get());
+    mo_objectplugin::initPlugin(0, factory.get());
+
     if (!quiet)
     {
         MO_LOG(info, "Current working directory {}", boost::filesystem::current_path().string());
@@ -50,22 +53,10 @@ int main(int argc, char** argv)
     }
 
     mo::MetaObjectFactory::loadStandardPlugins();
-#ifdef _MSC_VER
-    const bool loaded =
-        mo::MetaObjectFactory::instance()->loadPlugin("./bin/plugins/mo_objectplugin" + postfix + ".dll");
-#else
-    const bool loaded =
-        mo::MetaObjectFactory::instance()->loadPlugin("./bin/plugins/libmo_objectplugin" + postfix + ".so");
-#endif
+
     if (!quiet)
     {
         table->getDefaultLogger()->set_level(spdlog::level::info);
-    }
-    if (!loaded)
-    {
-        MO_LOG(warn,
-               "Unable to load objectplugin shared library, most tests wont work, this is okay if you're just querying "
-               "for available tests");
     }
 
     auto result = RUN_ALL_TESTS();

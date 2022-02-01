@@ -1,5 +1,7 @@
 #ifndef MO_VISITATION_TRAIT_REGISTRY_HPP
 #define MO_VISITATION_TRAIT_REGISTRY_HPP
+#include "export.hpp"
+
 #include <MetaObject/core/detail/ObjectConstructor.hpp>
 #include <MetaObject/detail/TypeInfo.hpp>
 

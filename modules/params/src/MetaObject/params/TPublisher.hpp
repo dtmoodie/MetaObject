@@ -4,6 +4,9 @@
 #include <MetaObject/params/IPublisher.hpp>
 #include <MetaObject/params/ParamAllocator.hpp>
 #include <MetaObject/params/TParam.hpp>
+#include <MetaObject/runtime_reflection/StructTraits.hpp>
+#include <MetaObject/runtime_reflection/VisitorTraits.hpp>
+#include <MetaObject/runtime_reflection/visitor_traits/memory.hpp>
 
 namespace mo
 {
@@ -28,11 +31,12 @@ namespace mo
         void setAllocator(Allocator::Ptr_t alloc) override;
 
         // TODO create a few overloads of publish
-        void publish(TContainerConstPtr_t data, IAsyncStream* = nullptr);
+        void publish(const TContainerConstPtr_t& data, IAsyncStream* = nullptr);
+        void publish(const TContainerPtr_t& data, IAsyncStream* = nullptr);
         void publish(const T& data, Header, IAsyncStream* = nullptr);
         void publish(T&& data, Header, IAsyncStream* = nullptr);
-        template <class U, class... Ts>
-        void publish(U&& data, Ts&&... args);
+        template <class... Ts>
+        auto publish(T data, Ts&&... args) -> void; // ct::EnableIf<ct::IsBase<ct::Base<T>, ct::Derived<ct::decay_t<U>>>::value || std::is_same<ct::decay_t<U>, T>::value>;
 
         // create data using m_allocator for publishing
         // This is more optimal than creating the data on your own because it can use
@@ -45,6 +49,10 @@ namespace mo
         ConnectionPtr_t registerUpdateNotifier(ISlot& f);
 
         ConnectionPtr_t registerUpdateNotifier(const ISignalRelay::Ptr_t& relay_);
+
+        void load(ILoadVisitor& visitor) override;
+        void save(ISaveVisitor& visitor) const override;
+        void visit(StaticVisitor& visitor) const override;
 
       protected:
         TContainerConstPtr_t getCurrentData() const;
@@ -143,7 +151,7 @@ namespace mo
     }
 
     template <typename T>
-    void TPublisherImpl<T>::publish(TContainerConstPtr_t data, IAsyncStream* stream)
+    void TPublisherImpl<T>::publish(const TContainerConstPtr_t& data, IAsyncStream* stream)
     {
         if (stream == nullptr)
         {
@@ -158,6 +166,12 @@ namespace mo
         // TODO finish
         m_update_signal(data, *this, ct::value(UpdateFlags::kVALUE_UPDATED), *stream);
         emitUpdate(data->header, ct::value(UpdateFlags::kVALUE_UPDATED), *stream);
+    }
+
+    template <typename T>
+    void TPublisherImpl<T>::publish(const TContainerPtr_t& data, IAsyncStream* stream)
+    {
+        publish(TContainerConstPtr_t(data), stream);
     }
 
     template <typename T>
@@ -187,8 +201,8 @@ namespace mo
     }
 
     template <typename T>
-    template <class U, class... Ts>
-    void TPublisherImpl<T>::publish(U&& data, Ts&&... args)
+    template <class... Ts>
+    auto TPublisherImpl<T>::publish(T data, Ts&&... args) -> void // ct::EnableIf<ct::IsBase<ct::Base<T>, ct::Derived<ct::decay_t<U>>>::value || std::is_same<ct::decay_t<U>, T>::value>
     {
         auto stream = getKeywordInputDefault<tags::Stream>(nullptr, std::forward<Ts>(args)...);
 
@@ -196,6 +210,15 @@ namespace mo
         auto timestamp = getKeywordInputOptional<tags::Timestamp>(std::forward<Ts>(args)...);
         auto fn = getKeywordInputOptional<tags::FrameNumber>(std::forward<Ts>(args)...);
         auto src = getKeywordInputOptional<tags::Source>(std::forward<Ts>(args)...);
+        auto param = getKeywordInputOptional<tags::Param>(std::forward<Ts>(args)...);
+        if (param)
+        {
+            auto header_ = param->getNewestHeader();
+            if (header_)
+            {
+                header = *header_;
+            }
+        }
         if (timestamp)
         {
             header.timestamp = *timestamp;
@@ -267,6 +290,26 @@ namespace mo
             return m_update_signal.connect(tmp);
         }
         return TParam<IPublisher>::registerUpdateNotifier(relay_);
+    }
+
+    template <typename T>
+    void TPublisherImpl<T>::load(ILoadVisitor& visitor)
+    {
+    }
+
+    template <typename T>
+    void TPublisherImpl<T>::save(ISaveVisitor& visitor) const
+    {
+        TContainerConstPtr_t data = this->getCurrentData();
+        if (data)
+        {
+            visitor(&data, "data");
+        }
+    }
+
+    template <typename T>
+    void TPublisherImpl<T>::visit(StaticVisitor& visitor) const
+    {
     }
 
     template <typename T>

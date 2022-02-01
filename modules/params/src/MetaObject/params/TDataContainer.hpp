@@ -6,6 +6,7 @@
 
 #include <MetaObject/core/detail/Allocator.hpp>
 #include <MetaObject/runtime_reflection.hpp>
+#include <MetaObject/runtime_reflection/StructTraits.hpp>
 #include <MetaObject/runtime_reflection/type_traits.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/time.hpp>
 
@@ -312,5 +313,14 @@ namespace mo
         return nullptr;
     }
 } // namespace mo
+
+namespace ct
+{
+    REFLECT_TEMPLATED_DERIVED(mo::TDataContainer, mo::IDataContainer)
+        PUBLIC_ACCESS(data)
+        PUBLIC_ACCESS(header)
+        PUBLIC_ACCESS(data)
+    REFLECT_END;
+} // namespace ct
 
 #endif // MO_PARAMS_TDATACONTAINER_HPP

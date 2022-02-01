@@ -24,38 +24,39 @@ namespace mo
         const std::type_info& get() const;
         bool before(const TypeInfo& rhs) const;
         std::string name() const;
+        ct::StringView nameView() const;
 
         template <class T>
         bool isType() const;
 
-        bool operator==(const std::type_info& rhs);
-        bool operator!=(const std::type_info& rhs);
+        bool operator==(const std::type_info& rhs) const;
+        bool operator!=(const std::type_info& rhs) const;
+
+        bool operator==(const TypeInfo& rhs) const;
+        bool operator!=(const TypeInfo& rhs) const;
 
         const std::type_info* ptr() const;
+
+        std::size_t getHash() const;
 
       private:
         TypeInfo(const std::type_info&, ct::StringView name);
         const std::type_info* m_info;
         ct::StringView m_name;
+        std::size_t m_hash = 0;
     };
 
-    MO_EXPORTS bool operator==(const TypeInfo& lhs, const TypeInfo& rhs);
+    
 
     MO_EXPORTS bool operator<(const TypeInfo& lhs, const TypeInfo& rhs);
 
-    MO_EXPORTS bool operator!=(const TypeInfo& lhs, const TypeInfo& rhs);
+    
 
     MO_EXPORTS bool operator>(const TypeInfo& lhs, const TypeInfo& rhs);
 
     MO_EXPORTS bool operator<=(const TypeInfo& lhs, const TypeInfo& rhs);
 
     MO_EXPORTS bool operator>=(const TypeInfo& lhs, const TypeInfo& rhs);
-
-    template <class T>
-    TypeInfo TypeInfo::create()
-    {
-        return TypeInfo(typeid(T), ct::GetName<T>::getName());
-    }
 
     template <class T>
     bool TypeInfo::isType() const
@@ -84,4 +85,16 @@ namespace ct
     REFLECT_END;
 } // namespace ct
 
+
+namespace mo
+{
+    template <class T>
+    TypeInfo TypeInfo::create()
+    {
+        TypeInfo type(typeid(T), ct::GetName<T>::getName());
+        static std::size_t g_hash = std::hash<mo::TypeInfo>{}(type);
+        type.m_hash = g_hash;
+        return type;
+    }
+}
 #endif // MO_CORE_TYPE_INFO_HPP

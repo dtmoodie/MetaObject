@@ -103,11 +103,14 @@ namespace
     struct StreamFixture : ::testing::Test
     {
         IAsyncStreamPtr_t m_stream;
+        IAsyncStreamPtr_t m_high_stream;
 
         StreamFixture()
             : execution_count(0)
         {
             m_stream = std::make_shared<AsyncStream>();
+            m_high_stream = std::make_shared<AsyncStream>();
+            m_high_stream->setHostPriority(PriorityLevels::HIGHEST);
         }
 
         int count = 0;
@@ -118,7 +121,7 @@ namespace
             if (!stop)
             {
                 boost::this_fiber::sleep_for(1 * ms);
-                m_stream->pushWork([this]() { loopImpl(); });
+                m_stream->pushWork([this](mo::IAsyncStream*) { loopImpl(); });
             }
         }
 
@@ -126,7 +129,7 @@ namespace
         {
             stop = false;
             count = 0;
-            m_stream->pushWork([this]() { loopImpl(); });
+            m_stream->pushWork([this](mo::IAsyncStream*) { loopImpl(); });
 
             boost::this_fiber::sleep_for(100 * ms);
             stop = true;
@@ -134,55 +137,23 @@ namespace
             ASSERT_GT(count, 80);
         }
 
-        void testEventSimple()
-        {
-            execution_count = 0;
-            m_stream->pushEvent([this]() { ++execution_count; }, 15);
-
-            m_stream->pushEvent([this]() { ++execution_count; }, 15);
-
-            boost::this_fiber::sleep_for(1 * ms);
-            ASSERT_EQ(execution_count, 1);
-        }
 
         void testEventComplex()
         {
             execution_count = 0;
             for (uint32_t i = 0; i < 5; ++i)
             {
-                m_stream->pushEvent([]() {}, i);
+                m_stream->pushEvent([](mo::IAsyncStream*) {}, i);
             }
 
-            m_stream->pushEvent([this]() { ++execution_count; }, 15);
+            m_stream->pushEvent([this](mo::IAsyncStream*) { ++execution_count; }, 15);
 
-            m_stream->pushEvent([this]() { ++execution_count; }, 15);
+            m_stream->pushEvent([this](mo::IAsyncStream*) { ++execution_count; }, 15);
 
             boost::this_fiber::sleep_for(1 * ms);
             ASSERT_EQ(execution_count, 1);
         }
 
-        void testWorkPriority()
-        {
-            bool higher_priority_executed = false;
-            bool lower_priority_executed = false;
-            auto pool = mo::singleton<mo::ThreadPool>();
-            auto schedulers = pool->getSchedulers();
-            m_stream->pushWork([&lower_priority_executed, &higher_priority_executed]() {
-                lower_priority_executed = true;
-                ASSERT_EQ(higher_priority_executed, true);
-            });
-
-            m_stream->pushWork(
-                [&lower_priority_executed, &higher_priority_executed]() {
-                    higher_priority_executed = true;
-                    ASSERT_EQ(lower_priority_executed, false);
-                },
-                HIGHEST);
-            boost::this_fiber::sleep_for(1 * ms);
-
-            ASSERT_EQ(higher_priority_executed, true);
-            ASSERT_EQ(lower_priority_executed, true);
-        }
 
         volatile std::atomic<uint32_t> execution_count;
 
@@ -196,7 +167,7 @@ namespace
 
             for (uint32_t i = 0; i < 1000; ++i)
             {
-                m_stream->pushWork([this]() {
+                m_stream->pushWork([this](mo::IAsyncStream*) {
                     ++execution_count;
                     boost::this_thread::sleep_for(boost::chrono::milliseconds(1));
                 });
@@ -235,21 +206,71 @@ TEST_F(StreamFixture, stream_loop)
 
 TEST_F(StreamFixture, priority)
 {
-    testWorkPriority();
+    bool higher_priority_executed = false;
+    bool lower_priority_executed = false;
+    auto pool = mo::singleton<mo::ThreadPool>();
+    auto schedulers = pool->getSchedulers();
+    m_stream->pushWork([&lower_priority_executed, &higher_priority_executed](mo::IAsyncStream*) {
+        lower_priority_executed = true;
+        ASSERT_EQ(higher_priority_executed, true);
+    });
+
+    m_high_stream->pushWork(
+        [&lower_priority_executed, &higher_priority_executed](mo::IAsyncStream*) {
+            higher_priority_executed = true;
+            ASSERT_EQ(lower_priority_executed, false);
+        });
+    boost::this_fiber::sleep_for(1 * ms);
+
+    ASSERT_TRUE(higher_priority_executed);
+    ASSERT_TRUE(lower_priority_executed);
 }
 
 TEST_F(StreamFixture, stream_event_simple)
 {
-    testEventSimple();
+    execution_count = 0;
+    bool first_executed = false;
+    bool second_executed = false;
+
+    m_stream->pushEvent(
+        [this, &first_executed](mo::IAsyncStream*) {
+            ++execution_count;
+            first_executed = true;
+        },
+        15);
+
+    m_stream->pushEvent(
+        [this, &second_executed](mo::IAsyncStream*) {
+            ++execution_count;
+            second_executed = true;
+        },
+        15);
+
+    boost::this_fiber::sleep_for(1 * ms);
+    EXPECT_EQ(execution_count, 1);
+    EXPECT_FALSE(first_executed);
+    EXPECT_TRUE(second_executed);
 }
 
-TEST_F(StreamFixture, spawn_assistant)
+/*TEST_F(StreamFixture, spawn_assistant)
 {
     testSpawningOfAssistant();
     auto pool = mo::singleton<mo::ThreadPool>();
     auto schedulers = pool->getSchedulers();
-    schedulers[0]->releaseAssistant();
+    //schedulers[0]->releaseAssistant();
     pool->cleanup();
     schedulers = pool->getSchedulers();
     ASSERT_EQ(schedulers.size(), 1);
+}*/
+
+TEST(stream, execute_fiber_with_yield)
+{
+    bool callback_called = false;
+    boost::fibers::fiber fib([&callback_called]() { callback_called = true; });
+    fib.detach();
+    ASSERT_FALSE(callback_called);
+
+    boost::this_fiber::yield();
+    ASSERT_TRUE(callback_called);
 }
+

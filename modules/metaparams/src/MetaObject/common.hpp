@@ -10,8 +10,8 @@ namespace mo
         void registerTrait()
         {
             // TODO finish
-            mo::TTraits<T> trait;
-            (void)trait;
+            static mo::TTraits<T> trait;
+            mo::TraitRegistry::registerTrait(mo::TypeInfo::create<T>(), &trait);
         }
     } // namespace metaparams
 } // namespace mo

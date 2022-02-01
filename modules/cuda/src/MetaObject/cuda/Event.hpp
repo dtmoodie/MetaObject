@@ -19,7 +19,8 @@ namespace mo
         {
             static std::shared_ptr<CUevent_st> create();
 
-            Event(ObjectPool<CUevent_st>* event_pool);
+            Event(std::shared_ptr<ObjectPool<CUevent_st>> event_pool);
+            ~Event();
 
             void record(Stream& stream);
 
@@ -39,8 +40,9 @@ namespace mo
 
             /**
              * @brief setCallback to be called on event completion
+             * @brief priority is the priority of executing the callback
              */
-            void setCallback(std::function<void(void)>&& cb);
+            void setCallback(std::function<void(mo::IAsyncStream*)>&& cb, uint64_t event_id = 0);
 
             operator cudaEvent_t();
             operator constCudaEvent_t() const;

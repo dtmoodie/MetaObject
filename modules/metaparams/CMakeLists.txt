@@ -11,6 +11,10 @@ if(OpenCV_FOUND)
     target_compile_definitions(metaobject_metaparams
         PUBLIC MO_HAVE_OPENCV
     )
+    target_include_directories(metaobject_metaparams
+      PUBLIC
+        "${OpenCV_INCLUDE_DIRS}"
+    )
 endif()
 
 IF(TARGET metaobject_qtgui)

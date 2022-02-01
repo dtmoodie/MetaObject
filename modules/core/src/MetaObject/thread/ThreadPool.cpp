@@ -6,10 +6,10 @@ using namespace mo;
 
 ThreadPool::~ThreadPool()
 {
-    for (auto sched : m_schedulers)
+    /*for (auto sched : m_schedulers)
     {
         sched->releaseAssistant();
-    }
+    }*/
     cleanup();
     m_running_threads.clear();
 }

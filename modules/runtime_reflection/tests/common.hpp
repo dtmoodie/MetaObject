@@ -247,6 +247,8 @@ struct TestData;
 TEST_DATA(int, 10);
 TEST_DATA(float, 13.2F);
 TEST_DATA(double, 3.14159);
+TEST_DATA(std::string, "asdf");
+TEST_DATA(std::vector<std::string>, {"asdf", "1235"});
 TEST_DATA(TestPodStruct, {0, 1, 2, 10});
 TEST_DATA(std::vector<Vec>, {{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}});
 TEST_DATA(VecOwner, {{{0, 1, 2}, {3, 4, 5}, {6, 7, 8}, {9, 10, 11}}});
@@ -392,11 +394,32 @@ TEST_DATA(cv::Matx44f,
           {0.0F, 1.0F, 2.0F, 3.0F, 4.0F, 5.0F, 6.0F, 7.0F, 8.0F, 9.0F, 10.0F, 11.0F, 12.0F, 13.0F, 14.0F, 15.0F});
 TEST_DATA(cv::Vec2b, {0, 1});
 TEST_DATA(cv::Vec2i, {0, 3});
+/*template <>
+struct TestData<cv::Mat>
+{
+    static cv::Mat init()
+    {
+        return cv::Mat(std::vector<float>{0.0F,1.1F,2.2F,3.3F,4.4F,5.5F});
+    }
+
+    static testing::AssertionResult Compare(const char* lhs_expression, const char* rhs_expression, const cv::Mat& lhs, const cv::Mat rhs)
+    {
+        if(lhs.size() != rhs.size())
+        {
+            return testing::internal::EqFailure("lhs.size()", "rhs.size()", 
+            testing::internal::FormatForComparisonFailureMessage(lhs.size(), ))
+        }
+    }
+};*/
 #endif
 
+using String = std::string;
+using VecOfStrings = std::vector<std::string>;
 using RuntimeReflectionTypeTest = ::testing::Types<int,
                                                    float,
                                                    double,
+                                                   String,
+                                                   VecOfStrings,
 #ifdef MO_HAVE_OPENCV
                                                    cv::Rect2f,
                                                    cv::Rect,
@@ -404,6 +427,7 @@ using RuntimeReflectionTypeTest = ::testing::Types<int,
                                                    cv::Matx33f,
                                                    cv::Matx22f,
                                                    cv::Matx44f,
+                                                   //cv::Mat,
                                                    cv::Vec2b,
                                                    cv::Vec2i,
 #endif

@@ -122,7 +122,7 @@ struct Serialization : ::testing::Test
             mo::JSONLoader reader(ss1);
             mo::ILoadVisitor& visitor = reader;
             T loaded;
-            visitor(&loaded);
+            visitor(&loaded, "value0");
             EXPECT_PRED_FORMAT2(TestData<T>::Compare, loaded, data)
                 << "Unable to use runtime reflection to load from a json created with cereal\n"
                 << stat.str();
@@ -354,7 +354,7 @@ struct Serialization<std::shared_ptr<T>> : ::testing::Test
                 EXPECT_NE(loaded, nullptr);
                 EXPECT_EQ(*loaded, *data) << "Failed to correctly deserialize \n" << sstream.str();
             }
-            catch (cereal::RapidJSONException e)
+            catch (const cereal::RapidJSONException& e)
             {
                 error = e.what();
                 success = false;
@@ -646,7 +646,7 @@ void testBinarySpeed(size_t count, bool cereal_compat = true)
     }
 }
 
-TEST(serialization, binary_performance)
+TEST(serialization_performance, binary)
 {
     int size = 9;
     bool success = false;
@@ -657,7 +657,7 @@ TEST(serialization, binary_performance)
             testBinarySpeed<float>(static_cast<size_t>(std::exp(size)));
             success = true;
         }
-        catch (std::bad_alloc)
+        catch (const std::bad_alloc&)
         {
             size -= 1;
         }
@@ -671,7 +671,7 @@ TEST(serialization, binary_performance)
             testBinarySpeed<TestPodStruct>(static_cast<size_t>(std::exp(size)));
             success = true;
         }
-        catch (std::bad_alloc)
+        catch (const std::bad_alloc&)
         {
             size -= 1;
         }

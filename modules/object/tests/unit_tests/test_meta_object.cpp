@@ -224,6 +224,7 @@ void testParams(mo::BufferFlags flags)
     auto mgr = std::make_shared<RelayManager>();
     auto publisher = MetaObjectPublisher::create();
     ASSERT_NE(publisher, nullptr);
+    publisher->setStream(stream);
     ASSERT_EQ(publisher->getStream().get(), stream.get());
     auto num_signals = publisher->setupSignals(mgr);
     EXPECT_GT(num_signals, 0);
@@ -232,6 +233,7 @@ void testParams(mo::BufferFlags flags)
     auto params = publisher->getParams();
 
     auto subscriber = MetaObjectSubscriber::create();
+    subscriber->setStream(stream);
     ASSERT_EQ(subscriber->getStream().get(), stream.get());
     ASSERT_EQ(subscriber->getStream().get(), publisher->getStream().get());
     subscriber->setupSignals(mgr);
@@ -247,7 +249,8 @@ void testParams(mo::BufferFlags flags)
 
     ASSERT_EQ(subscriber->update_count, 0);
     ASSERT_TRUE(subscriber->connectInput("test_int", publisher.get(), "test_int", flags));
-    ASSERT_EQ(subscriber->update_count, 1);
+    // signal on input set and signal on initial data
+    ASSERT_EQ(subscriber->update_count, 2);
     publisher->test_int.publish(10);
 
     if (flags & ct::value(mo::BufferFlags::FORCE_BUFFERED))
@@ -266,7 +269,7 @@ void testParams(mo::BufferFlags flags)
     ASSERT_NE(subscriber->test_int, nullptr);
     ASSERT_EQ((*subscriber->test_int), 10);
     ASSERT_EQ(publisher->update_count, 1);
-    ASSERT_EQ(subscriber->update_count, 2);
+    ASSERT_EQ(subscriber->update_count, 3);
 }
 
 TEST(object, params)

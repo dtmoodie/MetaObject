@@ -1,10 +1,12 @@
-#pragma once
+#ifndef MO_RUNTIME_REFLECTION_VISITOR_TRAITS_MAP_HPP
+#define MO_RUNTIME_REFLECTION_VISITOR_TRAITS_MAP_HPP
+
+#include "../StructTraits.hpp"
+
 #include "../ContainerTraits.hpp"
 #include "../IDynamicVisitor.hpp"
 #include "../type_traits.hpp"
 #include "string.hpp"
-
-#include <cereal/cereal.hpp>
 
 #include <map>
 #include <utility>
@@ -24,7 +26,18 @@ namespace mo
         K key;
         V value;
     };
+} // namespace mo
 
+namespace ct
+{
+    REFLECT_TEMPLATED_BEGIN(mo::KVP)
+        PUBLIC_ACCESS(key)
+        PUBLIC_ACCESS(value)
+    REFLECT_END;
+} // namespace ct
+
+namespace mo
+{
     template <class T1, class T2>
     struct TTraits<KVP<T1, const T2&>, 6> : StructBase<KVP<T1, const T2&>>
     {
@@ -50,6 +63,36 @@ namespace mo
         {
             return false;
         }
+
+        // TODO another approach?
+        uint32_t getNumMembers() const override
+        {
+            return 2;
+        }
+
+        bool loadMember(ILoadVisitor& visitor, void* inst, uint32_t idx, std::string* name) const override
+        {
+            auto& ref = this->ref(inst);
+            if (idx == 0)
+            {
+                visitor(&ref.key);
+            }
+            return false;
+        }
+
+        bool saveMember(ISaveVisitor& visitor, const void* inst, uint32_t idx, std::string* name) const override
+        {
+            auto& ref = this->ref(inst);
+            if (idx == 0)
+            {
+                visitor(&ref.key, "key");
+            }
+            else if (idx == 1)
+            {
+                visitor(&ref.value, "value");
+            }
+            return false;
+        }
     };
 
     template <class K, class V>
@@ -60,6 +103,7 @@ namespace mo
             MO_ASSERT_EQ(cnt, 1);
             auto ptr = static_cast<std::map<K, V>*>(inst);
             auto size = visitor.getCurrentContainerSize();
+            static_assert(ct::IsReflected<KVP<K, V>>::value, "");
             for (size_t i = 0; i < size; ++i)
             {
                 KVP<K, V> kvp;
@@ -172,10 +216,4 @@ namespace mo
     };
 } // namespace mo
 
-namespace ct
-{
-    REFLECT_TEMPLATED_BEGIN(mo::KVP)
-        PUBLIC_ACCESS(key)
-        PUBLIC_ACCESS(value)
-    REFLECT_END;
-} // namespace ct
+#endif // MO_RUNTIME_REFLECTION_VISITOR_TRAITS_MAP_HPP

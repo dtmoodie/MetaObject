@@ -1,23 +1,26 @@
+#!@Python_EXECUTABLE@
+
 import metaobject as mo
 import glob
-plugin = glob.glob('libmo_objectplugin*.so')
+
+plugin = glob.glob('@PLUGIN_PATH@/libmo_objectplugin*')
 assert(mo.plugins.loadPlugin(plugin[0]))
 print(mo.listConstructableObjects())
 
 obj = mo.object.SerializableObject()
 
-assert(obj.test == 5)
-assert(obj.test2 == 6)
+assert(obj.test.data == 5)
+assert(obj.test2.data == 6)
 
 obj.test = 10
 obj.test2 = 20
 
-assert(obj.test == 10)
-assert(obj.test2 == 20)
+assert obj.test.data == 10, "Failed to set value"
+assert(obj.test2.data == 20)
 
 obj = mo.object.DerivedSignals()
 
-assert(obj.base_param == 5)
+assert(obj.base_param.data == 5)
 
 types = mo.listConstructableObjects()
 

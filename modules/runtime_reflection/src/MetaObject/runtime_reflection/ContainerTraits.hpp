@@ -112,6 +112,11 @@ namespace mo
         {
             return std::is_trivially_copyable<V>::value;
         }
+
+        uint32_t getNumMembers() const override
+        {
+            return 0;
+        }
     };
 } // namespace mo
 

@@ -1,5 +1,7 @@
 #ifndef MO_VISITATION_TRAIT_INTERFACE_HPP
 #define MO_VISITATION_TRAIT_INTERFACE_HPP
+#include "export.hpp"
+
 #include "TraitRegistry.hpp"
 #include "type_traits.hpp"
 
@@ -36,6 +38,25 @@ namespace mo
 
         // can be serialized via a memcpy(ptr)
         virtual bool triviallySerializable() const = 0;
+
+        virtual uint32_t getNumMembers() const;
+
+        virtual std::string getMemberName(uint32_t idx) const;
+        virtual int32_t getMemberIndex(const std::string& name) const;
+
+        virtual bool loadMember(ILoadVisitor& visitor, void* inst, uint32_t idx, std::string* name = nullptr) const;
+
+        virtual bool
+        saveMember(ISaveVisitor& visitor, const void* inst, uint32_t idx, std::string* name = nullptr) const;
+
+        // Lookup a member by name
+        virtual bool
+        loadMember(ILoadVisitor& visitor, void* inst, const std::string& name, uint32_t* idx = nullptr) const;
+
+        virtual bool
+        saveMember(ISaveVisitor& visitor, const void* inst, const std::string& name, uint32_t* idx = nullptr) const;
+
+        virtual bool isPtr() const;
     };
 
     struct MO_EXPORTS IContainerTraits : virtual IStructTraits
@@ -55,6 +76,16 @@ namespace mo
         virtual const void* valuePointer(const void* inst) const = 0;
         virtual void* keyPointer(void* inst) const = 0;
         virtual const void* keyPointer(const void* inst) const = 0;
+    };
+
+    struct MO_EXPORTS IPtrTraits : virtual IStructTraits
+    {
+        using base = IStructTraits;
+
+        virtual std::shared_ptr<const void> getPointer(const void* inst) const = 0;
+        bool isPtr() const override;
+        virtual bool savePointedToData(ISaveVisitor&, const void* inst, const std::string& name) const;
+        virtual bool loadPointedToData(ILoadVisitor&, void* inst, const std::string& name) const;
     };
 
     template <class T, int P = 10, class E = void>
@@ -88,7 +119,7 @@ namespace mo
             (void)s_registerer;
             // Traits should only ever be a pointer to a vftable, thus this check ensures you don't put stuff in them
             // that doesn't belong.
-            //ct::StaticEquality<size_t, sizeof(TTraits<T>), sizeof(void*)>{};
+            // ct::StaticEquality<size_t, sizeof(TTraits<T>), sizeof(void*)>{};
             // msvc puts stuff in there that doesn't belong -_-
         }
     };

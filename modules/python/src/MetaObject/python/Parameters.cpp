@@ -1,10 +1,14 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
 #include "Parameters.hpp"
+#include "MetaObject.hpp"
+
 #include "MetaObject/core/TypeTable.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include "MetaObject/params/ISubscriber.hpp"
 #include "MetaObject/python/DataConverter.hpp"
+
+#include "MetaObject/python/PythonConversionVisitation.hpp"
 
 #include <MetaObject/runtime_reflection/DynamicVisitor.hpp>
 
@@ -17,93 +21,6 @@
 
 namespace mo
 {
-
-    struct ToPythonVisitor : SaveCache
-    {
-
-        VisitorTraits traits() const override
-        {
-        }
-        std::shared_ptr<Allocator> getAllocator() const override
-        {
-        }
-        void setAllocator(std::shared_ptr<Allocator>) override
-        {
-        }
-        ISaveVisitor& operator()(const bool* val, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-        ISaveVisitor& operator()(const char* val, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-        ISaveVisitor& operator()(const int8_t* val, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-        ISaveVisitor& operator()(const uint8_t* val, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-        ISaveVisitor& operator()(const int16_t* val, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-        ISaveVisitor& operator()(const uint16_t* val, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-        ISaveVisitor& operator()(const int32_t* val, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-        ISaveVisitor& operator()(const uint32_t* val, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-        ISaveVisitor& operator()(const int64_t* val, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-        ISaveVisitor& operator()(const uint64_t* val, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-#ifdef ENVIRONMENT64
-#ifndef _MSC_VER
-        ISaveVisitor& operator()(const long long* val, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-        ISaveVisitor& operator()(const unsigned long long* val, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-#endif
-#else
-        ISaveVisitor& operator()(const long int* val, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-        ISaveVisitor& operator()(const unsigned long int* val, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-#endif
-        ISaveVisitor& operator()(const float* val, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-        ISaveVisitor& operator()(const double* val, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-        ISaveVisitor& operator()(const void* binary, const std::string& name = "", size_t bytes = 1) override
-        {
-        }
-
-        ISaveVisitor&
-        operator()(IStructTraits* trait, const void* inst, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-        ISaveVisitor&
-        operator()(IContainerTraits* trait, const void* inst, const std::string& name = "", size_t cnt = 1) override
-        {
-        }
-
-        boost::python::object getObject()
-        {
-            return std::move(m_object);
-        }
-
-      private:
-        boost::python::object m_object;
-    };
 
     std::string printParam(const IParam* param)
     {
@@ -151,9 +68,9 @@ namespace mo
 
     std::string printTypes()
     {
-        auto types = mo::python::DataConverterRegistry::instance()->listConverters();
+        auto types = mo::python::DataConversionTable::instance()->listConverters();
         std::stringstream ss;
-        for (auto& type : types)
+        for (const auto& type : types)
         {
             ss << mo::TypeTable::instance()->typeToName(type) << "\n";
         }
@@ -167,17 +84,7 @@ namespace mo
             auto control = static_cast<const IControlParam*>(param);
             if (control)
             {
-                const mo::TypeInfo type = control->getTypeInfo();
-                const mo::python::DataConverterRegistry* converter_registry =
-                    mo::python::DataConverterRegistry::instance();
-                auto getter = converter_registry->getGetter(type);
-                if (getter)
-                {
-                    return getter(control);
-                }
-                MO_LOG(trace, "Accessor function not found for for {} Available converters:\n {}", type, printTypes());
-                return boost::python::object(std::string("No to python converter registered for ") +
-                                             TypeTable::instance()->typeToName(control->getTypeInfo()));
+                return getParam(control);
             }
         }
         if (param->checkFlags(ParamFlags::kINPUT))
@@ -188,7 +95,7 @@ namespace mo
                 IDataContainerConstPtr_t data = sub->getCurrentData();
                 if (data)
                 {
-                    ToPythonVisitor visitor;
+                    python::ToPythonVisitor visitor;
                     data->save(visitor, "data_container");
                     return visitor.getObject();
                 }
@@ -202,7 +109,7 @@ namespace mo
                 IDataContainerConstPtr_t data = pub->getData();
                 if (data)
                 {
-                    ToPythonVisitor visitor;
+                    python::ToPythonVisitor visitor;
                     data->save(visitor, "data_container");
                     return visitor.getObject();
                 }
@@ -216,15 +123,7 @@ namespace mo
         if (param->checkFlags(ParamFlags::kCONTROL))
         {
             auto control = static_cast<IControlParam*>(param);
-            if (control)
-            {
-                auto setter = mo::python::DataConverterRegistry::instance()->getSetter(control->getTypeInfo());
-                if (setter)
-                {
-                    return setter(control, obj);
-                }
-                MO_LOG(trace, "Setter function not found for {}", control->getTypeInfo());
-            }
+            return setParam(control, obj);
         }
         return false;
     }
@@ -250,7 +149,8 @@ namespace mo
         m_delete_slot.bind(&ParamCallbackContainer::onParamDelete, this);
         if (ptr)
         {
-            m_getter = mo::python::DataConverterRegistry::instance()->getGetter(ptr->getTypeInfo());
+            setParam(ptr, obj);
+            // m_getter = mo::python::DataConverterRegistry::instance()->getGetter(ptr->getTypeInfo());
             update_connection = ptr->registerUpdateNotifier(m_slot);
             del_connection = ptr->registerDeleteNotifier(m_delete_slot);
         }
@@ -269,11 +169,7 @@ namespace mo
         {
             return;
         }
-        if (!m_getter)
-        {
-            m_getter = mo::python::DataConverterRegistry::instance()->getGetter(m_ptr->getTypeInfo());
-        }
-        auto obj = m_getter(m_ptr);
+        boost::python::object obj = getParam(m_ptr);
         if (obj)
         {
             try
@@ -291,8 +187,6 @@ namespace mo
             {
                 MO_LOG(warn, "Callback invokation failed");
             }
-
-            // m_callback();
         }
     }
 
@@ -375,6 +269,9 @@ namespace mo
 
         boost::python::class_<std::vector<ISubscriber*>> input_param_vec("InputParamVec", boost::python::no_init);
         input_param_vec.def(boost::python::vector_indexing_suite<std::vector<ISubscriber*>>());
+
+        boost::python::class_<std::vector<IPublisher*>> output_param_vec("OutputParamVec", boost::python::no_init);
+        output_param_vec.def(boost::python::vector_indexing_suite<std::vector<IPublisher*>>());
 
         boost::python::class_<IAsyncStream, std::shared_ptr<IAsyncStream>, boost::noncopyable>("AsyncStream",
                                                                                                boost::python::no_init)

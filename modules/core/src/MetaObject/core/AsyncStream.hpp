@@ -27,9 +27,9 @@ namespace mo
         AsyncStream& operator=(AsyncStream&&) = delete;
         ~AsyncStream() override;
 
-        void pushWork(std::function<void(void)>&& work, PriorityLevels priority = NONE) override;
+        void pushWork(std::function<void(IAsyncStream*)>&& work) override;
         void
-        pushEvent(std::function<void(void)>&& event, uint64_t event_id = 0, PriorityLevels priority = NONE) override;
+        pushEvent(std::function<void(IAsyncStream*)>&& event, uint64_t event_id = 0) override;
 
         void setName(const std::string& name) override;
         void setHostPriority(PriorityLevels p) override;
@@ -43,9 +43,9 @@ namespace mo
         uint64_t processId() const override;
         AllocatorPtr_t hostAllocator() const override;
         uint64_t streamId() const override;
-
+        std::shared_ptr<WorkQueue> getWorkQueue() const override;
+        size_t size() const override;
       private:
-        void makeCurrent();
         std::string m_name;
         uint64_t m_process_id = 0;
         uint64_t m_thread_id = 0;
@@ -54,6 +54,7 @@ namespace mo
         AllocatorPtr_t m_allocator;
         uint64_t m_stream_id = 0;
         PriorityLevels m_host_priority = MEDIUM;
+        std::shared_ptr<WorkQueue> m_work_queue;
     }; // class mo::IContext
 
 } // namespace mo

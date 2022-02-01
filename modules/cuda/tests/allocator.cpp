@@ -70,8 +70,8 @@ TEST(gpu_allocator, random_pattern)
     double default_allocator_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
     start = mo::Time::now();
-    CombinedPolicy<PoolPolicy<cuda::CUDA>, StackPolicy<cuda::CUDA>> combined_allocator;
-    mo::cuda::AllocatorProxy<> combined_allocator_proxy(&combined_allocator);
+    std::shared_ptr<CombinedPolicy<PoolPolicy<cuda::CUDA>, StackPolicy<cuda::CUDA>>> combined_allocator = std::make_unique<CombinedPolicy<PoolPolicy<cuda::CUDA>, StackPolicy<cuda::CUDA>>>();
+    mo::cuda::AllocatorProxy<> combined_allocator_proxy(combined_allocator);
     cv::cuda::GpuMat::setDefaultAllocator(&combined_allocator_proxy);
     for (int i = 0; i < 1000; ++i)
     {
@@ -123,8 +123,8 @@ TEST(gpu_allocator, static_allocation_pattern)
     const auto default_allocator_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
     // Custom allocator
-    PoolPolicy<cuda::CUDA> pool_allocator;
-    mo::cuda::AllocatorProxy<> pool_allocator_proxy(&pool_allocator);
+    std::shared_ptr<PoolPolicy<cuda::CUDA>> pool_allocator = std::make_shared<PoolPolicy<cuda::CUDA>>();
+    mo::cuda::AllocatorProxy<> pool_allocator_proxy(pool_allocator);
 
     cv::cuda::GpuMat::setDefaultAllocator(&pool_allocator_proxy);
     start = mo::Time::now();
@@ -277,8 +277,8 @@ TEST(gpu_allocator, async_transfer_rate_random)
 
     {
         // mo::ConcreteAllocator<mo::CpuStackPolicy, mo::StackPolicy<cv::cuda::GpuMat, mo::ContinuousPolicy>> allocator;
-        PoolPolicy<cuda::CUDA> gpu_allocator;
-        mo::cuda::AllocatorProxy<> gpu_allocator_proxy(&gpu_allocator);
+        std::shared_ptr<PoolPolicy<cuda::CUDA>> gpu_allocator = std::make_shared<PoolPolicy<cuda::CUDA>>();
+        mo::cuda::AllocatorProxy<> gpu_allocator_proxy(gpu_allocator);
 
         cv::cuda::GpuMat::setDefaultAllocator(&gpu_allocator_proxy);
         mo::CvAllocator<PoolPolicy<cuda::CUDA>> cpu_allocator;

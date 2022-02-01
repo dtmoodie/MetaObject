@@ -1,13 +1,26 @@
 #include "JSONPrinter.hpp"
 #include <MetaObject/logging/logging.hpp>
+#include <cereal/archives/json.hpp>
 #include <ct/types/TArrayView.hpp>
 
 namespace mo
 {
+    struct JSONSaver::Impl
+    {
+        Impl(std::ostream& stream)
+            : m_ar(stream)
+        {
+        }
+
+        cereal::JSONOutputArchive m_ar;
+    };
+
     JSONSaver::JSONSaver(std::ostream& os)
-        : m_ar(os)
+        : m_impl(std::make_unique<Impl>(os))
     {
     }
+
+    JSONSaver::~JSONSaver() = default;
 
     template <class T>
     ISaveVisitor& JSONSaver::writePod(const T* ptr, const std::string& name, const size_t cnt)
@@ -18,7 +31,7 @@ namespace mo
         }
         if (!name.empty())
         {
-            m_ar.setNextName(name.c_str());
+            m_impl->m_ar.setNextName(name.c_str());
         }
         if (cnt > 1)
         {
@@ -26,13 +39,13 @@ namespace mo
             // m_ar.makeArray();
             for (size_t i = 0; i < cnt; ++i)
             {
-                m_ar(ptr[i]);
+                m_impl->m_ar(ptr[i]);
             }
             // m_ar.finishNode();
         }
         if (cnt == 1)
         {
-            m_ar(ptr[0]);
+            m_impl->m_ar(ptr[0]);
         }
 
         return *this;
@@ -128,67 +141,86 @@ namespace mo
             name_ptr = name.c_str();
         }
 
-        m_ar.saveBinaryValue(val, cnt, name_ptr);
+        m_impl->m_ar.saveBinaryValue(val, cnt, name_ptr);
         return *this;
     }
 
-    ISaveVisitor& JSONSaver::operator()(IStructTraits* val, const void* inst, const std::string& name, size_t cnt)
+    ISaveVisitor& JSONSaver::operator()(const IStructTraits* val, const void* inst, const std::string& name, size_t cnt)
     {
         if (!name.empty())
         {
-            m_ar.setNextName(name.c_str());
+            m_impl->m_ar.setNextName(name.c_str());
         }
         const uint8_t* ptr = ct::ptrCast<const uint8_t>(inst);
+        const uint32_t num_members = val->getNumMembers();
         for (size_t i = 0; i < cnt; ++i)
         {
-            m_ar.startNode();
+            m_impl->m_ar.startNode();
             auto tptr = ct::ptrCast<const void>(ptr);
-            SaveCache::operator()(val, tptr, name, 1);
+            bool member_save_success = false;
+            const bool is_ptr = val->isPtr();
+            if (num_members == 1 && !is_ptr)
+            {
+                member_save_success = val->saveMember(*this, tptr, 0);
+            }
+            if (!member_save_success)
+            {
+                SaveCache::operator()(val, tptr, name, 1);
+            }
+
             ptr += val->size();
-            m_ar.finishNode();
+            m_impl->m_ar.finishNode();
         }
         return *this;
     }
 
-    ISaveVisitor& JSONSaver::operator()(IContainerTraits* val, const void* inst, const std::string& name, size_t cnt)
+    ISaveVisitor&
+    JSONSaver::operator()(const IContainerTraits* val, const void* inst_, const std::string& name, size_t cnt)
     {
         auto str_type = TypeInfo::create<std::string>();
         const bool saving_string = val->type() == str_type;
         const bool saving_binary = val->valueType() == TypeInfo::Void();
         const bool saving_string_dictionary = val->keyType() == str_type;
 
-        if (!name.empty())
-        {
-            m_ar.setNextName(name.c_str());
-        }
+        const uint8_t* inst = ct::ptrCast<uint8_t>(inst_);
 
-        if (saving_string)
+        for (size_t i = 0; i < cnt; ++i)
         {
-            m_ar.writeName();
-            m_ar.saveValue(*static_cast<const std::string*>(inst));
-            return *this;
-        }
-
-        if (saving_binary)
-        {
-            auto size = val->getContainerSize(inst);
-            m_ar(cereal::make_nvp("size", size));
-        }
-
-        if (!saving_binary)
-        {
-            m_ar.startNode();
-            if (!saving_string_dictionary)
+            if (!name.empty())
             {
-                m_ar.makeArray();
+                m_impl->m_ar.setNextName(name.c_str());
             }
-        }
 
-        val->save(*this, inst, name, cnt);
+            if (saving_string)
+            {
+                m_impl->m_ar.writeName();
+                m_impl->m_ar.saveValue(*ct::ptrCast<const std::string>(inst));
+                inst += val->size();
+                continue;
+            }
 
-        if (!saving_binary)
-        {
-            m_ar.finishNode();
+            if (saving_binary)
+            {
+                // const uint64_t size = val->getContainerSize(inst);
+                // m_ar(cereal::make_nvp("size", size));
+            }
+
+            if (!saving_binary)
+            {
+                m_impl->m_ar.startNode();
+                if (!saving_string_dictionary)
+                {
+                    m_impl->m_ar.makeArray();
+                }
+            }
+
+            val->save(*this, inst, name, cnt);
+
+            if (!saving_binary)
+            {
+                m_impl->m_ar.finishNode();
+            }
+            inst += val->size();
         }
 
         return *this;
@@ -198,7 +230,7 @@ namespace mo
     {
         VisitorTraits out;
         out.supports_named_access = true;
-        out.reader = false;
+        out.human_readable = true;
         return out;
     }
 
@@ -216,36 +248,47 @@ namespace mo
     ///                                      JSONLoader
     /////////////////////////////////////////////////////////////////////////////////////////////////////////
 
+    struct JSONLoader::Impl
+    {
+        Impl(std::istream& os)
+            : m_ar(os)
+        {
+        }
+        cereal::JSONInputArchive m_ar;
+    };
+
     JSONLoader::JSONLoader(std::istream& os)
-        : m_ar(os)
+        : m_impl(std::make_unique<Impl>(os))
     {
     }
+
+    JSONLoader::~JSONLoader() = default;
 
     template <class T>
     ILoadVisitor& JSONLoader::readPod(T* ptr, const std::string& name, const size_t cnt)
     {
-        if (cnt == 0)
+        /*if (cnt == 0)
         {
             return *this;
-        }
+        }*/
         try
         {
             if (!name.empty())
             {
-                m_ar.setNextName(name.c_str());
+                m_impl->m_ar.setNextName(name.c_str());
             }
-            auto node_name = m_ar.getNodeName();
+            auto node_name = m_impl->m_ar.getNodeName();
             if (cnt > 1)
             {
                 // m_ar.startNode();
                 cereal::size_type size;
-                m_ar.loadSize(size);
+                m_impl->m_ar.loadSize(size);
                 MO_ASSERT_EQ(size, cnt);
             }
             for (size_t i = 0; i < cnt; ++i)
             {
-                node_name = m_ar.getNodeName();
-                m_ar(ptr[i]);
+                node_name = m_impl->m_ar.getNodeName();
+                m_impl->m_ar(ptr[i]);
                 if (node_name)
                 {
                     m_last_read_name = name;
@@ -357,115 +400,132 @@ namespace mo
         {
             name_ptr = name.c_str();
         }
-        m_ar.loadBinaryValue(val, cnt, name_ptr);
+        m_impl->m_ar.loadBinaryValue(val, cnt, name_ptr);
         return *this;
     }
 
-    ILoadVisitor& JSONLoader::operator()(IStructTraits* val, void* inst, const std::string& name, size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(const IStructTraits* val, void* inst, const std::string& name, size_t cnt)
     {
         if (!name.empty())
         {
-            m_ar.setNextName(name.c_str());
+            m_impl->m_ar.setNextName(name.c_str());
         }
         auto ptr = ct::ptrCast<uint8_t>(inst);
+        const uint32_t num_members = val->getNumMembers();
         for (size_t i = 0; i < cnt; ++i)
         {
-            auto name_ptr = m_ar.getNodeName();
-            m_ar.startNode();
+            auto name_ptr = m_impl->m_ar.getNodeName();
+            m_impl->m_ar.startNode();
             auto tptr = ct::ptrCast<void>(ptr);
-            LoadCache::operator()(val, tptr, name, 1);
+            bool member_load_success = false;
+            const bool is_ptr = val->isPtr();
+            if (num_members == 1 && !is_ptr)
+            {
+                member_load_success = val->loadMember(*this, tptr, 0);
+            }
+            if (!member_load_success)
+            {
+                LoadCache::operator()(val, tptr, name, 1);
+            }
+
             if (name_ptr)
             {
                 m_last_read_name = name_ptr;
             }
             ptr += val->size();
-            m_ar.finishNode();
+            m_impl->m_ar.finishNode();
         }
 
         return *this;
     }
 
-    ILoadVisitor& JSONLoader::operator()(IContainerTraits* val, void* inst, const std::string& name, size_t cnt)
+    ILoadVisitor& JSONLoader::operator()(const IContainerTraits* val, void* inst_, const std::string& name, size_t cnt)
     {
-        MO_ASSERT_EQ(cnt, 1);
-        std::string container_name = name;
-        const char* node_name = m_ar.getNodeName();
-        if (val->type() == TypeInfo::create<std::string>() && node_name && name == node_name)
+        static const TypeInfo string_type = TypeInfo::create<std::string>();
+        const bool loading_string = val->type() == string_type;
+        const bool loading_binary =
+            val->valueType() == TypeInfo::Void() || val->valueType() == TypeInfo::create<Byte>();
+        const bool loading_string_dict = val->keyType() == string_type;
+        uint8_t* inst = ct::ptrCast<uint8_t>(inst_);
+        for (size_t i = 0; i < cnt; ++i)
         {
-            std::string val;
-            m_ar.loadValue(val);
-            *static_cast<std::string*>(inst) = val;
-            return *this;
-        }
-        const bool already_in_node = container_name != node_name;
-        const bool loading_string = val->type() == TypeInfo::create<std::string>();
-        const bool loading_binary = val->valueType() == TypeInfo::Void();
-        const bool loading_string_dict = val->keyType() == TypeInfo::create<std::string>();
-
-        if (!name.empty() && already_in_node)
-        {
-            m_ar.setNextName(name.c_str());
-        }
-
-        if (!loading_string)
-        {
-            if (node_name && !loading_binary)
+            std::string container_name = name;
+            const char* node_name = m_impl->m_ar.getNodeName();
+            const bool already_in_node = node_name != nullptr ? container_name == node_name : false;
+            if (loading_string)
             {
-                m_ar.startNode();
+                m_impl->m_ar.loadValue(*ct::ptrCast<std::string>(inst));
+                inst += val->size();
+                continue;
             }
 
-            if (node_name && name == node_name)
+            if (!name.empty() && !already_in_node)
             {
-                container_name.clear();
+                m_impl->m_ar.setNextName(name.c_str());
             }
 
-            if (loading_binary)
+            if (!loading_string)
             {
-                uint64_t size = 0;
-                m_ar(cereal::make_nvp("size", size));
-                val->setContainerSize(size, inst);
-                m_current_size = size;
-            }
-            else
-            {
-                if (!loading_string_dict)
+                if (node_name && !loading_binary)
                 {
-                    uint64_t size;
-                    m_ar.loadSize(size);
-                    val->setContainerSize(size, inst);
-                    m_current_size = size;
+                    m_impl->m_ar.startNode();
+                }
+
+                if (node_name && name == node_name)
+                {
+                    container_name.clear();
+                }
+
+                if (loading_binary)
+                {
+                    // uint64_t size = 0;
+                    // m_ar(cereal::make_nvp("size", size));
+                    // val->setContainerSize(size, inst);
+                    // m_current_size = size;
                 }
                 else
                 {
-                    uint64_t count = 0;
-                    while (true)
+                    if (!loading_string_dict)
                     {
-                        const auto name = m_ar.getNodeName();
-                        if (!name)
+                        uint64_t size;
+                        m_impl->m_ar.loadSize(size);
+                        val->setContainerSize(size, inst);
+                        m_current_size = size;
+                    }
+                    else
+                    {
+                        uint64_t count = 0;
+                        while (true)
                         {
-                            break;
+                            const auto name = m_impl->m_ar.getNodeName();
+                            if (!name)
+                            {
+                                break;
+                            }
+                            count += 1;
+                            m_impl->m_ar.startNode();
+                            m_impl->m_ar.finishNode();
                         }
-                        count += 1;
-                        m_ar.startNode();
-                        m_ar.finishNode();
-                    }
-                    val->setContainerSize(count, inst);
-                    m_current_size = count;
-                    m_ar.finishNode();
-                    if (node_name)
-                    {
-                        m_ar.setNextName(node_name);
-                    }
+                        val->setContainerSize(count, inst);
+                        m_current_size = count;
+                        m_impl->m_ar.finishNode();
+                        if (node_name)
+                        {
+                            m_impl->m_ar.setNextName(node_name);
+                        }
 
-                    m_ar.startNode();
+                        m_impl->m_ar.startNode();
+                    }
                 }
             }
+            val->load(*this, inst, container_name, cnt);
+            if (!loading_string && !loading_binary)
+            {
+                m_impl->m_ar.finishNode();
+            }
+            inst += val->size();
         }
-        val->load(*this, inst, container_name, cnt);
-        if (!loading_string && !loading_binary)
-        {
-            m_ar.finishNode();
-        }
+
         return *this;
     }
 
@@ -473,7 +533,7 @@ namespace mo
     {
         VisitorTraits out;
         out.supports_named_access = true;
-        out.reader = true;
+        out.human_readable = true;
         return out;
     }
 

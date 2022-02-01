@@ -5,33 +5,24 @@ namespace mo
 {
     namespace python
     {
-        DataConverterRegistry* DataConverterRegistry::instance()
+        DataConversionTable* DataConversionTable::instance()
         {
-            return singleton<DataConverterRegistry>().get();
+            return singleton<DataConversionTable>().get();
         }
 
-        DataConverterRegistry* DataConverterRegistry::instance(SystemTable* table)
+        DataConversionTable* DataConversionTable::instance(SystemTable* table)
         {
-            return table->getSingleton<DataConverterRegistry>().get();
+            return table->getSingleton<DataConversionTable>().get();
         }
 
-        void
-        DataConverterRegistry::registerConverters(const mo::TypeInfo& type, const Set_t& setter, const Get_t& getter)
+        void DataConversionTable::registerConverters(const mo::TypeInfo& type,
+                                                     const FromPython_t& from,
+                                                     const ToPython_t& to)
         {
-            m_registered_converters[type] = std::make_pair(setter, getter);
+            m_registered_converters[type] = std::make_pair(to, from);
         }
 
-        DataConverterRegistry::Set_t DataConverterRegistry::getSetter(const mo::TypeInfo& type) const
-        {
-            auto itr = m_registered_converters.find(type);
-            if (itr != m_registered_converters.end())
-            {
-                return itr->second.first;
-            }
-            return {};
-        }
-
-        DataConverterRegistry::Get_t DataConverterRegistry::getGetter(const mo::TypeInfo& type) const
+        DataConversionTable::FromPython_t DataConversionTable::getConverterFromPython(const mo::TypeInfo& type) const
         {
             auto itr = m_registered_converters.find(type);
             if (itr != m_registered_converters.end())
@@ -41,7 +32,17 @@ namespace mo
             return {};
         }
 
-        std::vector<mo::TypeInfo> DataConverterRegistry::listConverters()
+        DataConversionTable::ToPython_t DataConversionTable::getConverterToPython(const mo::TypeInfo& type) const
+        {
+            auto itr = m_registered_converters.find(type);
+            if (itr != m_registered_converters.end())
+            {
+                return itr->second.first;
+            }
+            return {};
+        }
+
+        std::vector<mo::TypeInfo> DataConversionTable::listConverters() const
         {
             std::vector<mo::TypeInfo> types;
             for (const auto& itr : m_registered_converters)

@@ -8,7 +8,8 @@ if(CUDA_FOUND)
         set(CMAKE_CXX_FLAGS "-std=c++11")
     endif()
 
-
+    set(CUDA_LINK_LIBRARIES_KEYWORD PUBLIC)
+    
     metaobject_declare_module(NAME cuda SRC src DEPENDS
         metaobject_core
         metaobject_types
@@ -40,9 +41,16 @@ if(CUDA_FOUND)
         endif()
 
         target_link_libraries(test_mo_cuda PRIVATE metaobject_cuda ${OpenCV_LIBRARIES} gtest gtest_main)
-        add_test(NAME test_mo_cuda COMMAND test_mo_cuda)
+        add_test(
+            NAME test_mo_cuda 
+            COMMAND test_mo_cuda
+        )
 
         cuda_add_executable(test_mo_cuda_fiber tests2/cuda_build.cu)
+        add_test(
+            NAME test_mo_cuda_fiber 
+            COMMAND test_mo_cuda_fiber
+        )
         TARGET_INCLUDE_DIRECTORIES(test_mo_cuda_fiber PRIVATE "../core/src")
         target_link_libraries(test_mo_cuda_fiber PRIVATE gtest gtest_main )
         if(TARGET Boost::system)

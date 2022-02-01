@@ -1,4 +1,5 @@
-#include "MetaObject/Python/Python.hpp"
+/*
+#include "MetaObject/python/PythonSetup.hpp"
 #include "MetaObject/logging/logging.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
 #include "MetaObject/object/MetaObjectFactory.hpp"
@@ -45,12 +46,6 @@ const T* get_pointer(const rcc::shared_ptr<T>& p)
 
 namespace boost
 {
-    /*template <>
-    example_python_object const volatile * get_pointer<class example_python_object const volatile >(
-        class example_python_object const volatile *c)
-    {
-        return c;
-    }*/
     namespace python
     {
 
@@ -79,3 +74,4 @@ BOOST_PYTHON_MODULE(MetaPython)
 
     bp::class_<std::vector<std::string>>("StringVec").def(bp::vector_indexing_suite<std::vector<std::string>>());
 }
+*/

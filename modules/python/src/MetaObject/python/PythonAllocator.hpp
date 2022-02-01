@@ -5,6 +5,8 @@
 #include "numpy/ndarraytypes.h"
 #include <MetaObject/Python.hpp>
 #include <MetaObject/core/detail/Allocator.hpp>
+#include <MetaObject/core/detail/allocator_policies/opencv.hpp>
+
 #include <Python.h>
 
 #include <ct/interop/boost_python/PythonConverter.hpp>
@@ -49,10 +51,10 @@ namespace mo
                                        int type,
                                        void* data,
                                        size_t* step,
-                                       int flags,
+                                       AccessFlag flags,
                                        cv::UMatUsageFlags usageFlags) const override;
 
-        virtual bool allocate(cv::UMatData* u, int accessFlags, cv::UMatUsageFlags usageFlags) const override;
+        virtual bool allocate(cv::UMatData* u, AccessFlag accessFlags, cv::UMatUsageFlags usageFlags) const override;
 
         void deallocate(cv::UMatData* u) const override;
 

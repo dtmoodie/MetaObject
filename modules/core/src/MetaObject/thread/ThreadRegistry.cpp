@@ -10,7 +10,7 @@ using namespace mo;
 
 struct ThreadRegistry::impl
 {
-    std::map<int, std::vector<IAsyncStreamPtr_t>> _thread_map;
+    std::map<int, std::vector<std::weak_ptr<IAsyncStream>>> _thread_map;
     std::mutex mtx;
 };
 
@@ -41,42 +41,57 @@ ThreadRegistry::~ThreadRegistry()
     delete _pimpl;
 }
 
-void ThreadRegistry::registerThread(ThreadType type, mo::IAsyncStreamPtr_t stream)
+void ThreadRegistry::registerThread(ThreadType type, mo::IAsyncStream::Ptr_t stream)
 {
     std::lock_guard<std::mutex> lock(_pimpl->mtx);
     auto& threads = _pimpl->_thread_map[type];
-    if (std::count(threads.begin(), threads.end(), stream) == 0)
+    auto pred = [stream](const std::weak_ptr<IAsyncStream> weak)
+    {
+        return weak.lock() == stream;
+    };
+    const size_t count = std::count_if(threads.begin(), threads.end(), pred);
+    if (count == 0)
     {
         threads.push_back(stream);
     }
 }
 
-mo::IAsyncStreamPtr_t ThreadRegistry::getThread(ThreadType type_)
+mo::IAsyncStream::Ptr_t ThreadRegistry::getThread(ThreadType type_)
 {
     const int type = type_;
     std::lock_guard<std::mutex> lock(_pimpl->mtx);
     // TODO some kind of load balancing for multiple threads of a specific type
-    IAsyncStreamPtr_t current_thread = IAsyncStream::current();
+    IAsyncStream::Ptr_t current_thread = IAsyncStream::current();
     auto itr = _pimpl->_thread_map.find(type);
     if (itr != _pimpl->_thread_map.end())
     {
         if (!itr->second.empty())
         {
-            if (std::count(itr->second.begin(), itr->second.end(), current_thread) == 0)
+            auto pred = [current_thread](const std::weak_ptr<IAsyncStream>& weak)
             {
-                return itr->second.back();
+                return weak.lock() == current_thread;
+            };
+            if (std::count_if(itr->second.begin(), itr->second.end(), pred) == 0)
+            {
+                auto stream = itr->second.back().lock();
+                if(stream)
+                {
+                    return stream;
+                }
             }
 
             return current_thread;
         }
     }
-    return {};
+    return nullptr;
 }
 
 ThreadRegistry* ThreadRegistry::instance()
 {
     static ThreadRegistry* inst = nullptr;
     if (inst == nullptr)
+    {
         inst = new ThreadRegistry();
+    }
     return inst;
 }

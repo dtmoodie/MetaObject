@@ -110,7 +110,7 @@ namespace mo
         return loadBinary(static_cast<char*>(ptr), cnt);
     }
 
-    ILoadVisitor& BinaryLoader::operator()(IStructTraits* val, void* inst, const std::string& name, size_t cnt)
+    ILoadVisitor& BinaryLoader::operator()(const IStructTraits* val, void* inst, const std::string& name, size_t cnt)
     {
         if (val->triviallySerializable() && !m_cereal_compat)
         {
@@ -131,22 +131,29 @@ namespace mo
         return *this;
     }
 
-    ILoadVisitor& BinaryLoader::operator()(IContainerTraits* val, void* inst, const std::string& name, size_t cnt)
+    ILoadVisitor&
+    BinaryLoader::operator()(const IContainerTraits* val, void* inst_, const std::string& name, size_t cnt)
     {
-        uint64_t size = 0;
-        loadBinary(&size);
-        val->setContainerSize(size, inst);
-        m_current_size = size;
-        val->load(*this, inst, name, cnt);
-        m_current_size = 0;
+        uint8_t* inst = ct::ptrCast<uint8_t>(inst_);
+        for (size_t i = 0; i < cnt; ++i)
+        {
+            uint64_t size = 0;
+            loadBinary(&size);
+            val->setContainerSize(size, ct::ptrCast<void>(inst));
+            m_current_size = size;
+            val->load(*this, ct::ptrCast<void>(inst), name, cnt);
+            m_current_size = 0;
+            inst += val->size();
+        }
+
         return *this;
     }
 
     VisitorTraits BinaryLoader::traits() const
     {
         VisitorTraits out;
-        out.reader = true;
         out.supports_named_access = false;
+        out.human_readable = false;
         return out;
     }
 

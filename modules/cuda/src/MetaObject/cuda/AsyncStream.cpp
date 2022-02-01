@@ -1,5 +1,6 @@
 #include "AsyncStream.hpp"
 #include "common.hpp"
+#include "errors.hpp"
 
 #include "MetaObject/core/AsyncStreamConstructor.hpp"
 #include "MetaObject/core/AsyncStreamFactory.hpp"
@@ -21,7 +22,9 @@ namespace mo
         AsyncStream::AsyncStream(Stream stream, DeviceAllocator::Ptr_t allocator, Allocator::Ptr_t host_alloc)
             : mo::AsyncStream(std::move(host_alloc))
             , m_stream(std::move(stream))
+            , m_event_pool(ObjectPool<CUevent_st>::create())
             , m_allocator(std::move(allocator))
+
 
         {
             init();
@@ -29,35 +32,33 @@ namespace mo
 
         AsyncStream::~AsyncStream() = default;
 
-        void AsyncStream::pushWork(std::function<void(void)>&& work, PriorityLevels priority)
+        void AsyncStream::pushWork(std::function<void(mo::IAsyncStream*)>&& work)
         {
-            boost::fibers::fiber fiber(std::move(work));
-            auto& prop = fiber.properties<FiberProperty>();
-            prop.setPriority(priority == NONE ? hostPriority() : priority);
-            prop.setStream(this->shared_from_this());
-            prop.setDeviceStream(std::dynamic_pointer_cast<IDeviceStream>(shared_from_this()));
-            fiber.detach();
+            Event event = this->createEvent();
+            event.record(m_stream);
+            // clang-format off
+            auto callback = [work, event](mo::IAsyncStream* stream)
+            {
+                work(stream);
+            };
+            // clang-format on
+            event.setCallback(std::move(callback));
         }
 
-        void AsyncStream::pushEvent(std::function<void(void)>&& event, uint64_t event_id, PriorityLevels priority)
+        void AsyncStream::pushEvent(std::function<void(mo::IAsyncStream*)>&& event, uint64_t event_id)
         {
-            boost::fibers::fiber fiber([event]() {
-                if (boost::this_fiber::properties<FiberProperty>().enabled())
-                {
-                    event();
-                }
-            });
-
-            auto& prop = fiber.properties<FiberProperty>();
-            prop.setAll(priority == NONE ? hostPriority() : priority, event_id, false);
-            prop.setStream(this->shared_from_this());
-            prop.setDeviceStream(std::dynamic_pointer_cast<IDeviceStream>(shared_from_this()));
-            fiber.detach();
+            Event cuda_event = this->createEvent();
+            cuda_event.record(m_stream);
+            cuda_event.setCallback(
+                [event, cuda_event](mo::IAsyncStream* stream) {
+                    event(stream);
+                },
+                event_id);
         }
 
         void AsyncStream::init()
         {
-            CUDA_ERROR_CHECK(cudaGetDevice(&m_device_id));
+            CHECK_CUDA_ERROR(&cudaGetDevice, &m_device_id);
         }
 
         void AsyncStream::setName(const std::string& name)
@@ -88,16 +89,16 @@ namespace mo
 
         Event AsyncStream::createEvent()
         {
-            return mo::cuda::Event(&m_event_pool);
+            return mo::cuda::Event(m_event_pool);
         }
 
-        void AsyncStream::enqueueCallback(std::function<void(void)> cb)
+        void AsyncStream::enqueueCallback(std::function<void(mo::IAsyncStream*)> cb)
         {
             auto event = createEvent();
             event.record(m_stream);
-            pushWork([event, cb] {
+            mo::AsyncStream::pushWork([event, cb](mo::IAsyncStream* stream) {
                 event.synchronize();
-                cb();
+                cb(stream);
             });
         }
 
@@ -106,12 +107,11 @@ namespace mo
             auto event = createEvent();
             event.record(m_stream);
 
-            const auto sched = PriorityScheduler::current();
-            auto size = sched->size();
-            while (size != 1)
+            auto size = this->size();
+            while (size > 0)
             {
                 boost::this_fiber::yield();
-                size = sched->size();
+                size = this->size();
             }
 
             while (!event.queryCompletion())
@@ -128,7 +128,8 @@ namespace mo
                 auto event = createEvent();
                 event.record(m_stream);
                 typed->m_stream.waitEvent(event);
-                pushWork([event]() { event.synchronize(); });
+                // Not sure if this line is necessary
+                mo::AsyncStream::pushWork([event](mo::IAsyncStream*) { event.synchronize(); });
             }
         }
 
@@ -137,7 +138,7 @@ namespace mo
             MO_ASSERT(dst.data() != nullptr);
             MO_ASSERT(src.data() != nullptr);
             MO_ASSERT_EQ(dst.size(), src.size());
-            CUDA_ERROR_CHECK(cudaMemcpyAsync(dst.data(), src.data(), src.size(), cudaMemcpyHostToDevice, m_stream));
+            CHECK_CUDA_ERROR(&cudaMemcpyAsync, dst.data(), src.data(), src.size(), cudaMemcpyHostToDevice, m_stream);
         }
 
         void AsyncStream::deviceToHost(ct::TArrayView<void> dst, ct::TArrayView<const void> src)
@@ -145,7 +146,7 @@ namespace mo
             MO_ASSERT(dst.data() != nullptr);
             MO_ASSERT(src.data() != nullptr);
             MO_ASSERT_EQ(dst.size(), src.size());
-            CUDA_ERROR_CHECK(cudaMemcpyAsync(dst.data(), src.data(), src.size(), cudaMemcpyDeviceToHost, m_stream));
+            CHECK_CUDA_ERROR(&cudaMemcpyAsync, dst.data(), src.data(), src.size(), cudaMemcpyDeviceToHost, m_stream);
         }
 
         void AsyncStream::deviceToDevice(ct::TArrayView<void> dst, ct::TArrayView<const void> src)
@@ -153,7 +154,7 @@ namespace mo
             MO_ASSERT(dst.data() != nullptr);
             MO_ASSERT(src.data() != nullptr);
             MO_ASSERT_EQ(dst.size(), src.size());
-            CUDA_ERROR_CHECK(cudaMemcpyAsync(dst.data(), src.data(), src.size(), cudaMemcpyDeviceToDevice, m_stream));
+            CHECK_CUDA_ERROR(&cudaMemcpyAsync, dst.data(), src.data(), src.size(), cudaMemcpyDeviceToDevice, m_stream);
         }
 
         void AsyncStream::hostToHost(ct::TArrayView<void> dst, ct::TArrayView<const void> src)
@@ -161,12 +162,17 @@ namespace mo
             MO_ASSERT(dst.data() != nullptr);
             MO_ASSERT(src.data() != nullptr);
             MO_ASSERT_EQ(dst.size(), src.size());
-            CUDA_ERROR_CHECK(cudaMemcpyAsync(dst.data(), src.data(), src.size(), cudaMemcpyHostToHost, m_stream));
+            CHECK_CUDA_ERROR(&cudaMemcpyAsync, dst.data(), src.data(), src.size(), cudaMemcpyHostToHost, m_stream);
         }
 
         std::shared_ptr<DeviceAllocator> AsyncStream::deviceAllocator() const
         {
             return m_allocator;
+        }
+
+        bool AsyncStream::isDeviceStream() const
+        {
+            return true;
         }
 
         namespace

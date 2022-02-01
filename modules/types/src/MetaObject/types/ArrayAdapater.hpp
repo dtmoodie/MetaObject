@@ -4,7 +4,6 @@
 #include <ct/reflect.hpp>
 #include <ct/type_traits.hpp>
 
-#include <cereal/cereal.hpp>
 #include <ostream>
 
 namespace mo
@@ -30,62 +29,6 @@ namespace mo
         }
 
         T* ptr;
-
-        template <class AR>
-        typename std::enable_if<cereal::traits::is_output_serializable<cereal::BinaryData<T>, AR>::value &&
-                                std::is_arithmetic<T>::value>::type
-        save(AR& ar) const
-        {
-            if (ptr)
-            {
-                const size_t N = Rows * Cols;
-                ar(cereal::BinaryData<T>(ptr, N * sizeof(T)));
-            }
-        }
-
-        template <class AR>
-        typename std::enable_if<!cereal::traits::is_output_serializable<cereal::BinaryData<T>, AR>::value ||
-                                !std::is_arithmetic<T>::value>::type
-        save(AR& ar) const
-        {
-            if (ptr)
-            {
-                size_t N = Rows * Cols;
-                ar(cereal::make_size_tag(N));
-                for (int i = 0; i < N; ++i)
-                {
-                    ar(ptr[i]);
-                }
-            }
-        }
-
-        template <class AR>
-        typename std::enable_if<cereal::traits::is_input_serializable<cereal::BinaryData<T>, AR>::value &&
-                                std::is_arithmetic<T>::value>::type
-        load(AR& ar)
-        {
-            if (ptr)
-            {
-                const size_t N = Rows * Cols;
-                ar(cereal::BinaryData<T>(ptr, N * sizeof(T)));
-            }
-        }
-
-        template <class AR>
-        typename std::enable_if<!cereal::traits::is_input_serializable<cereal::BinaryData<T>, AR>::value ||
-                                !std::is_arithmetic<T>::value>::type
-        load(AR& ar)
-        {
-            if (ptr)
-            {
-                size_t N = Rows * Cols;
-                ar(cereal::make_size_tag(N));
-                for (int i = 0; i < N; ++i)
-                {
-                    ar(ptr[i]);
-                }
-            }
-        }
     };
 
     template <class T, size_t ROWS, size_t COLS>
@@ -115,7 +58,7 @@ namespace mo
         }
         return os;
     }
-}
+} // namespace mo
 
 namespace ct
 {
@@ -125,5 +68,5 @@ namespace ct
         using Type = mo::MatrixAdapter<T, ROWS, COLS>;
         using ConstType = mo::MatrixAdapter<const T, ROWS, COLS>;
     };
-}
+} // namespace ct
 #endif // MO_TYPES_ARRAY_ADAPTER_HPP

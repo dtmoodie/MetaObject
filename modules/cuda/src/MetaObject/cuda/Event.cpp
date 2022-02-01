@@ -1,8 +1,12 @@
 #include "Event.hpp"
 #include "Stream.hpp"
-#include <MetaObject/logging/logging.hpp>
 
+#include <MetaObject/logging/logging.hpp>
+#include <MetaObject/thread/FiberProperties.hpp>
 #include <MetaObject/thread/Mutex.hpp>
+
+#include <MetaObject/cuda/errors.hpp>
+
 #include <boost/fiber/operations.hpp>
 
 #include <cuda_runtime_api.h>
@@ -17,25 +21,43 @@ namespace mo
 
         struct Event::Impl
         {
-            mutable Mutex m_mtx;
             mutable std::shared_ptr<CUevent_st> m_event;
-            std::function<void(void)> m_cb;
-            ObjectPool<CUevent_st>* m_event_pool;
-            volatile mutable bool m_complete;
+            std::function<void(mo::IAsyncStream*)> m_cb;
+            std::weak_ptr<ObjectPool<CUevent_st>> m_event_pool;
+            mutable std::atomic<bool> m_complete;
 
             bool queryCompletion() const
             {
-                Mutex::Lock_t lock(m_mtx);
                 if (m_complete)
                 {
                     return m_complete;
                 }
 
-                MO_ASSERT(m_event != nullptr);
-                if (cudaEventQuery(m_event.get()) == cudaSuccess)
+                if (m_event == nullptr)
+                {
+                    // We haven't recorded anything, so of course it is complete
+                    return true;
+                }
+                const cudaError_t status = cudaEventQuery(m_event.get());
+                if (status == cudaSuccess)
                 {
                     m_complete = true;
                     m_event.reset();
+                    auto cb = std::move(m_cb);
+                    if (cb)
+                    {
+                        auto stream = mo::IAsyncStream::current();
+                        cb(stream.get());
+                    }
+
+                    return m_complete;
+                }
+                else
+                {
+                    if (status != cudaErrorNotReady)
+                    {
+                        THROW(error, "cuda error {}", status);
+                    }
                 }
                 return m_complete;
             }
@@ -46,12 +68,15 @@ namespace mo
                 {
                     return true;
                 }
-                MO_ASSERT(m_event != nullptr);
+                if (m_event == nullptr)
+                {
+                    return true;
+                }
                 if (timeout == 0 * ms)
                 {
                     while (!queryCompletion())
                     {
-                        boost::this_fiber::yield();
+                        boost::this_fiber::sleep_for(std::chrono::milliseconds(1));
                     }
                     return m_complete;
                 }
@@ -60,7 +85,7 @@ namespace mo
 
                 while (now <= end && !queryCompletion())
                 {
-                    boost::this_fiber::yield();
+                    boost::this_fiber::sleep_for(std::chrono::milliseconds(1));
                     now = Time::now();
                 }
                 return m_complete;
@@ -70,24 +95,37 @@ namespace mo
         std::shared_ptr<CUevent_st> Event::create()
         {
             cudaEvent_t event = nullptr;
-            cudaEventCreate(&event);
-            return std::shared_ptr<CUevent_st>(event, [](cudaEvent_t ev) { cudaEventDestroy(ev); });
+            CHECK_CUDA_ERROR(&cudaEventCreate, &event);
+
+            return std::shared_ptr<CUevent_st>(event, [](cudaEvent_t ev) { CHECK_CUDA_ERROR(&cudaEventDestroy, ev); });
         }
 
-        Event::Event(ObjectPool<CUevent_st>* event_pool)
+        Event::Event(std::shared_ptr<ObjectPool<CUevent_st> > event_pool)
             : m_impl(new Impl())
         {
             m_impl->m_complete = false;
             m_impl->m_event_pool = event_pool;
         }
 
+        Event::~Event()
+        {
+            if (m_impl)
+            {
+                if (m_impl->m_cb)
+                {
+                    m_impl->synchronize();
+                }
+            }
+        }
+
         void Event::record(Stream& stream)
         {
-            Mutex::Lock_t lock(m_impl->m_mtx);
             MO_ASSERT(m_impl->m_event == nullptr);
-            m_impl->m_event = m_impl->m_event_pool->get();
+            auto pool = m_impl->m_event_pool.lock();
+            MO_ASSERT(pool != nullptr);
+            m_impl->m_event = pool->get();
             cudaStream_t st = stream;
-            cudaEventRecord(m_impl->m_event.get(), st);
+            CHECK_CUDA_ERROR(&cudaEventRecord, m_impl->m_event.get(), st);
         }
 
         bool Event::queryCompletion() const
@@ -102,7 +140,6 @@ namespace mo
 
         Event::operator cudaEvent_t()
         {
-            Mutex::Lock_t lock(m_impl->m_mtx);
             if (m_impl->m_event)
             {
                 return m_impl->m_event.get();
@@ -112,7 +149,6 @@ namespace mo
 
         Event::operator constCudaEvent_t() const
         {
-            Mutex::Lock_t lock(m_impl->m_mtx);
             if (m_impl->m_event)
             {
                 return m_impl->m_event.get();
@@ -120,17 +156,17 @@ namespace mo
             return nullptr;
         }
 
-        void Event::setCallback(std::function<void(void)>&& cb)
+        void Event::setCallback(std::function<void(mo::IAsyncStream*)>&& cb, uint64_t event_id)
         {
-            Mutex::Lock_t lock(m_impl->m_mtx);
             MO_ASSERT(m_impl->m_event != nullptr);
-            MO_ASSERT(!m_impl->m_cb);
             m_impl->m_cb = std::move(cb);
             auto impl = m_impl;
-            boost::fibers::fiber fib([impl]() {
+            boost::fibers::fiber fib([impl]()
+            {
                 impl->synchronize();
-                impl->m_cb();
             });
+            auto& prop = fib.properties<FiberProperty>();
+            prop.setId(event_id);
             fib.detach();
         }
     } // namespace cuda

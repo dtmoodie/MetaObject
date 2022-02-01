@@ -74,13 +74,13 @@ struct call_bar
 
 DEFINE_MEMBER_DETECTOR(member_variable);
 
-TEST(detect, member)
+TEST(detect_member_functions, member)
 {
     ASSERT_EQ(Detect_member_variable<object_with_members>::value, true);
     ASSERT_EQ(Detect_member_variable<object_with_function>::value, false);
 }
 
-TEST(detect, static_function)
+TEST(detect_member_functions, static_function)
 {
     ASSERT_EQ(call_foo<object_with_members>::call(), 0);
     ASSERT_EQ(call_foo<object_with_function>::call(), 1);

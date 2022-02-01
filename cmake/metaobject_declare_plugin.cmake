@@ -1,6 +1,7 @@
 set(plugin_config_script "${CMAKE_CURRENT_LIST_DIR}/parse_cmake.py" CACHE STRING "" FORCE)
 set(plugin_export_template_path "${CMAKE_CURRENT_LIST_DIR}/plugin_export.hpp.in" CACHE STRING "" FORCE)
 set(plugin_config_file_path "${CMAKE_CURRENT_LIST_DIR}/plugin_export.cpp.in" CACHE STRING "" FORCE)
+set(plugin_link_lib_input_path "${CMAKE_CURRENT_LIST_DIR}/link_libs.hpp.in" CACHE STRING "" FORCE)
 
 macro(metaobject_declare_plugin tgt)
     set(options NOINSTALL)
@@ -37,7 +38,7 @@ macro(metaobject_declare_plugin tgt)
             $<BUILD_INTERFACE:${CMAKE_BINARY_DIR}/plugins/${tgt}/>
     )
 
-    RCC_TARGET_CONFIG(${tgt} plugin_libraries_debug plugin_libraries_release)
+    RCC_TARGET_CONFIG(${tgt} plugin_libraries plugin_libraries_debug plugin_libraries_release)
 
     if(EXISTS "${CMAKE_CURRENT_BINARY_DIR}/${tgt}_config.txt")
       FILE(READ "${CMAKE_CURRENT_BINARY_DIR}/${tgt}_config.txt" temp)
@@ -52,9 +53,10 @@ macro(metaobject_declare_plugin tgt)
         message("Project ID for ${tgt}: ${PROJECT_ID}")
       endif()
     ELSE(temp)
-      SET(PROJECT_ID "1")
+      SET(PROJECT_ID "-1")
     ENDIF(temp)
 
+    SET(LINK_LIBS ${plugin_libraries})
     set(LINK_LIBS_RELEASE ${plugin_libraries_release})
     set(LINK_LIBS_DEBUG ${plugin_libraries_debug})
 
@@ -65,6 +67,7 @@ macro(metaobject_declare_plugin tgt)
     string(TIMESTAMP BUILD_DATE "%Y-%m-%d %H:%M")
 
     CONFIGURE_FILE(${plugin_export_template_path} "${CMAKE_BINARY_DIR}/plugins/${tgt}/${tgt}_export.hpp" @ONLY)
+    CONFIGURE_FILE(${plugin_link_lib_input_path} "${CMAKE_BINARY_DIR}/plugins/${tgt}/${tgt}_link_libs.hpp" @ONLY)
 
     CONFIGURE_FILE("${plugin_config_file_path}" "${CMAKE_BINARY_DIR}/plugins/${tgt}/plugin_config.cpp" @ONLY)
 
@@ -73,15 +76,33 @@ macro(metaobject_declare_plugin tgt)
         FILE(APPEND "${CMAKE_BINARY_DIR}/bin/plugins/${tgt}_config.txt" "pthread\n")
     endif()
 
-    FILE(APPEND "${CMAKE_BINARY_DIR}/bin/plugins/${tgt}_config.txt" "\n\nlink_libs_debug:\n${LINK_LIBS_DEBUG}")
-    FILE(APPEND "${CMAKE_BINARY_DIR}/bin/plugins/${tgt}_config.txt" "\n\nlink_libs_release:\n${LINK_LIBS_RELEASE}")
+
+    foreach(lib ${LINK_LIBS})
+        FILE(APPEND "${CMAKE_BINARY_DIR}/bin/plugins/${tgt}_config.txt" "${lib}\n")
+    endforeach()
+    FILE(APPEND "${CMAKE_BINARY_DIR}/bin/plugins/${tgt}_config.txt" "\n\nlink_libs_debug:\n")
+    foreach(lib ${LINK_LIBS_DEBUG})
+        FILE(APPEND "${CMAKE_BINARY_DIR}/bin/plugins/${tgt}_config.txt" "${lib}\n")
+    endforeach()
+    FILE(APPEND "${CMAKE_BINARY_DIR}/bin/plugins/${tgt}_config.txt" "\n\nlink_libs_release:\n")
+    foreach(lib ${LINK_LIBS_RELEASE})
+        FILE(APPEND "${CMAKE_BINARY_DIR}/bin/plugins/${tgt}_config.txt" "${lib}\n")
+    endforeach()
 
     execute_process(
-        COMMAND python ${plugin_config_script} ${CMAKE_BINARY_DIR}/bin/plugins/${tgt}_config.txt ${CMAKE_BINARY_DIR}/plugins/${tgt}/plugin_config2.cpp ${tgt})
+        COMMAND
+            python
+            ${plugin_config_script}
+            --in_path ${CMAKE_BINARY_DIR}/bin/plugins/${tgt}_config.txt
+            --out_path ${CMAKE_BINARY_DIR}/plugins/${tgt}/plugin_config2.cpp
+            --plugin_name ${tgt}
+            --link_path ${CMAKE_BINARY_DIR}/plugins/${tgt}/${tgt}_link_libs.hpp
+    )
 
     set_property(TARGET ${tgt} APPEND PROPERTY SOURCES "${CMAKE_BINARY_DIR}/plugins/${tgt}/plugin_config.cpp")
     set_property(TARGET ${tgt} APPEND PROPERTY SOURCES "${CMAKE_BINARY_DIR}/plugins/${tgt}/plugin_config2.cpp")
     set_property(TARGET ${tgt} APPEND PROPERTY SOURCES "${CMAKE_BINARY_DIR}/plugins/${tgt}/${tgt}_export.hpp")
+    set_property(TARGET ${tgt} APPEND PROPERTY SOURCES "${CMAKE_BINARY_DIR}/plugins/${tgt}/${tgt}_link_libs.hpp")
 
     LINK_DIRECTORIES(${LINK_DIRS_DEBUG})
     LINK_DIRECTORIES(${LINK_DIRS_RELEASE})
@@ -156,7 +177,7 @@ macro(metaobject_declare_plugin tgt)
 
       export(TARGETS ${tgt} FILE "${PROJECT_BINARY_DIR}/${tgt}Targets.cmake")
       export(PACKAGE ${tgt})
-      
+
       install(TARGETS ${tgt}
           DESTINATION lib
           EXPORT ${tgt}Targets

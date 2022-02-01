@@ -149,6 +149,23 @@ namespace test
         MO_SLOT(void, test_void)
         MO_END;
     };
-    void mo_objectplugin_EXPORT setupPlugin(SystemTable* table);
+
+    struct OutputParameterizedObject : public MetaObject
+    {
+        MO_BEGIN(OutputParameterizedObject)
+        OUTPUT(int, test_output, 0)
+        OUTPUT(double, test_double, 0.0)
+        MO_END;
+
+        void increment();
+        int output_val = 0;
+    };
+
+    struct InputParameterizedObject : public MetaObject
+    {
+        MO_BEGIN(InputParameterizedObject)
+        INPUT(int, test_input)
+        MO_END;
+    };
 } // namespace test
 #endif // MO_OBJECT_TESTS_OBJECTS_HPP

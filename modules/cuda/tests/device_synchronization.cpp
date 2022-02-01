@@ -47,7 +47,7 @@ TEST(cuda_stream_sync, callback)
 
     const uint32_t num_elements = 100000000;
 
-    mo::ObjectPool<CUevent_st> event_pool(2);
+    std::shared_ptr<mo::ObjectPool<CUevent_st>> event_pool = mo::ObjectPool<CUevent_st>::create(2);
 
     mo::TMemoryBlock<float, mo::cuda::CUDA> mem(num_elements);
 
@@ -55,24 +55,28 @@ TEST(cuda_stream_sync, callback)
     cuda_tests::multiply(mem.size(), mem.begin(), 2.0F, stream);
     cuda_tests::multiply(mem.size(), mem.begin(), 2.0F, stream);
 
-    mo::cuda::Event ev(&event_pool);
+    mo::cuda::Event ev(event_pool);
     bool callback_called = false;
 
-    ASSERT_THROW(ev.setCallback([]() {}), mo::TExceptionWithCallstack<std::runtime_error>);
+    ASSERT_THROW(ev.setCallback([](mo::IAsyncStream*) {}), mo::TExceptionWithCallstack<std::runtime_error>);
     ev.record(stream);
 
-    ev.setCallback([&callback_called]() { callback_called = true; });
+    // clang-format off
+    ev.setCallback([&callback_called](mo::IAsyncStream*)
+    {
+        callback_called = true;
+    });
+    // clang-format on
 
-    ASSERT_THROW(ev.setCallback([]() {}), mo::TExceptionWithCallstack<std::runtime_error>);
+    // Can now overwrite a callback
+    //ASSERT_THROW(ev.setCallback([](mo::IAsyncStream&) {}), mo::TExceptionWithCallstack<std::runtime_error>);
 
     cuda_tests::multiply(mem.size(), mem.begin(), 2.0F, stream);
     cuda_tests::multiply(mem.size(), mem.begin(), 2.0F, stream);
 
     ASSERT_EQ(callback_called, false);
-    while (!callback_called)
-    {
-        boost::this_fiber::yield();
-    }
+    boost::this_fiber::sleep_for(std::chrono::milliseconds(50));
+    ASSERT_EQ(callback_called, true);
 }
 
 TEST(cuda_stream_sync, event)
@@ -82,7 +86,7 @@ TEST(cuda_stream_sync, event)
 
     const uint32_t num_elements = 100000000;
 
-    mo::ObjectPool<CUevent_st> event_pool(2);
+    std::shared_ptr<mo::ObjectPool<CUevent_st>> event_pool = mo::ObjectPool<CUevent_st>::create(2);
 
     mo::TMemoryBlock<float, mo::cuda::CUDA> mem(num_elements);
 
@@ -92,7 +96,7 @@ TEST(cuda_stream_sync, event)
     cuda_tests::multiply(mem.size(), mem.begin(), 2.0F, stream1);
     cuda_tests::multiply(mem.size(), mem.begin(), 2.0F, stream1);
 
-    mo::cuda::Event ev(&event_pool);
+    mo::cuda::Event ev(event_pool);
 
     ev.record(stream1);
     stream2.waitEvent(ev);

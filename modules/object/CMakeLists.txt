@@ -23,7 +23,10 @@ if(BUILD_TESTS)
     file(GLOB_RECURSE tests "tests/unit_tests/*.cpp")
     add_executable(test_mo_object ${tests})
     target_link_libraries(test_mo_object metaobject_object metaobject_serialization mo_objectplugin gtest gtest_main)
-    add_test(NAME test_mo_object COMMAND test_mo_object)
+    add_test(
+        NAME test_mo_object 
+        COMMAND test_mo_object
+    )
     
     set_target_properties(test_mo_object PROPERTIES FOLDER Tests/MetaObject/object)
     setup_msvc_target(test_mo_object)

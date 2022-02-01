@@ -53,6 +53,19 @@ namespace mo
         unsigned int m_id = 0;
     };
 
+    struct PluginCompilationOptions
+    {
+        const char** includes = nullptr;
+        const char** link_dirs_debug = nullptr;
+        const char** link_dirs_release = nullptr;
+        const char** compile_options = nullptr;
+        const char** compile_definitions = nullptr;
+        const char** link_libs = nullptr;
+        const char** link_libs_debug = nullptr;
+        const char** link_libs_release = nullptr;
+        const char* compiler = nullptr;
+    };
+
     class MO_EXPORTS MetaObjectFactory
     {
       public:
@@ -66,7 +79,7 @@ namespace mo
         };
 
         MO_INLINE static Ptr_t instance();
-        static Ptr_t instance(SystemTable* table);
+        __attribute__ ((noinline)) static Ptr_t instance(SystemTable* table);
 
         static uint32_t loadStandardPlugins();
 
@@ -119,6 +132,9 @@ namespace mo
 
         template <class T, class TINFO, class SCORING_FUNCTOR>
         rcc::shared_ptr<T> createBestObject(int64_t interface_id, SCORING_FUNCTOR&& scorer) const;
+
+        // only use this when not dynamically loading a plugin
+        virtual void setupPluginCompilationOptions(const int32_t project_id, PluginCompilationOptions options) = 0;
     };
 
     template <class T>

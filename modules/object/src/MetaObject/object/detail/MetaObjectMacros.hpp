@@ -123,7 +123,8 @@ namespace mo
 */
 #define MO_BEGIN(TYPE)                                                                                                 \
     REFLECT_INTERNAL_BEGIN(TYPE)                                                                                       \
-        static rcc::shared_ptr<DataType> create();
+        static rcc::shared_ptr<DataType> create();                                                                     \
+        static rcc::shared_ptr<DataType> create(mo::IAsyncStreamPtr_t);
 
 #define MO_BASE(TYPE) REFLECT_INTERNAL_BEGIN(TYPE)
 
@@ -133,6 +134,7 @@ namespace mo
 #define MO_DERIVE(TYPE, ...)                                                                                           \
     REFLECT_INTERNAL_DERIVED(TYPE, __VA_ARGS__)                                                                        \
     static rcc::shared_ptr<DataType> create();                                                                         \
+    static rcc::shared_ptr<DataType> create(mo::IAsyncStreamPtr_t);                                                    \
     static constexpr ct::StringView getTypeName()                                                                      \
     {                                                                                                                  \
         return #TYPE;                                                                                                  \
@@ -250,6 +252,12 @@ struct ReflectParent<ct::VariadicTypedef<Parent, Parents...>>
     ::rcc::shared_ptr<TYPE> TYPE::create()                                                                             \
     {                                                                                                                  \
         auto obj = ::mo::MetaObjectFactory::instance()->create(#TYPE);                                                 \
+        return ::rcc::shared_ptr<TYPE>(obj);                                                                           \
+    }                                                                                                                  \
+    ::rcc::shared_ptr<TYPE> TYPE::create(mo::IAsyncStreamPtr_t stream)                                                 \
+    {                                                                                                                  \
+        auto obj = ::mo::MetaObjectFactory::instance()->create(#TYPE);                                                 \
+        obj->setStream(stream);                                                                                        \
         return ::rcc::shared_ptr<TYPE>(obj);                                                                           \
     }                                                                                                                  \
     REGISTERCLASS(TYPE, &TYPE##_info);

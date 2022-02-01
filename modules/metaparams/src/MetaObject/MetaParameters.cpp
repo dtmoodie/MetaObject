@@ -1,5 +1,6 @@
 #include "MetaParameters.hpp"
 #include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
+#include <MetaObject/runtime_reflection.hpp>
 struct SystemTable;
 namespace mo
 {
@@ -12,9 +13,12 @@ namespace mo
         void instCVRect(SystemTable* table);
         void instMOTypes(SystemTable* table);
     } // namespace metaparams
+
     void initMetaParamsModule(SystemTable* table)
     {
         PerModuleInterface::GetInstance()->SetSystemTable(table);
+        mo::runtime_reflection::initModule(table);
+        
         metaparams::instantiatePOD(table);
         metaparams::instantiateVectors(table);
 #ifdef MO_HAVE_OPENCV

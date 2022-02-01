@@ -1,0 +1,6 @@
+#ifndef MO_RUNTIME_REFLECTION_EXPORT_HPP
+#define MO_RUNTIME_REFLECTION_EXPORT_HPP
+#define METAOBJECT_MODULE "runtime_reflection"
+#include <MetaObject/detail/Export.hpp>
+#undef METAOBJECT_MODULE
+#endif // MO_RUNTIME_REFLECTION_EXPORT_HPP

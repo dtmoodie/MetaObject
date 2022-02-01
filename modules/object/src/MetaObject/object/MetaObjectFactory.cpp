@@ -119,6 +119,8 @@ class MetaObjectFactoryImpl : public MetaObjectFactory
     void setCompileCallback(std::function<void(const std::string, int)>& f) override;
     std::shared_ptr<Connection> connectConstructorAdded(TSlot<void(void)>& slot) override;
 
+    void setupPluginCompilationOptions(const int32_t project_id, PluginCompilationOptions options) override;
+
   private:
     RuntimeObjectSystem obj_system;
     CompileLogger m_compiler_logger;
@@ -146,7 +148,7 @@ namespace mo
     };
 } // namespace mo
 
-std::shared_ptr<MetaObjectFactory> MetaObjectFactory::instance(SystemTable* table)
+__attribute__ ((noinline)) MetaObjectFactory::Ptr_t MetaObjectFactory::instance(SystemTable* table)
 {
     return table->getSingleton<MetaObjectFactory, MetaObjectFactoryImpl>();
 }
@@ -482,21 +484,6 @@ boost::optional<R> invoke(void* handle, const char* name)
     return {};
 }
 
-template <class F>
-void forEachString(void* handle, const char* name, const F& op)
-{
-    auto strings = invoke<const char**>(handle, name);
-    if (strings)
-    {
-        int i = 0;
-        while ((*strings)[i] != nullptr)
-        {
-            op((*strings)[i]);
-            ++i;
-        }
-    }
-}
-
 bool MetaObjectFactoryImpl::loadPlugin(const std::string& full_plugin_path)
 {
     std::string old_name = mo::getThisThreadName();
@@ -528,12 +515,21 @@ bool MetaObjectFactoryImpl::loadPlugin(const std::string& full_plugin_path)
         }
     }
 
-    typedef void (*InitFunctor)();
-
-    InitFunctor init = InitFunctor(dlsym(handle, "InitModule"));
-    if (init)
     {
-        init();
+        typedef void (*InitFunctor)(SystemTable*);
+
+        InitFunctor init = InitFunctor(dlsym(handle, "initModule"));
+        if (init)
+        {
+            SystemTable* table = SystemTable::instance().get();
+            init(table);
+        }
+    }
+
+    auto pid = invoke<int>(handle, "getPluginProjectId");
+    if (!pid || *pid == -1)
+    {
+        pid = obj_system.GetProjectCount();
     }
 
     auto info = invoke<const char*>(handle, "getPluginBuildInfo");
@@ -568,65 +564,96 @@ bool MetaObjectFactoryImpl::loadPlugin(const std::string& full_plugin_path)
             mo::setThisThreadName(old_name);
         }
     }
-
     IPerModuleInterface* interface = *module;
     interface->SetModuleFileName(full_plugin_path.c_str());
 
-    auto pid = invoke<int>(handle, "getPluginProjectId");
-    if (pid)
+    typedef void (*InitPlugin_f)(const int32_t, MetaObjectFactory*);
+    InitPlugin_f init = InitPlugin_f(dlsym(handle, "initPlugin"));
+    if (init)
+    {
+        init(*pid, this);
+    }
+    else
     {
         m_logger.debug("Loading plugin ({}) compile options:", full_plugin_path);
 
-        forEachString(handle, "getPluginIncludes", [this, pid](const char* dir) {
-            obj_system.AddIncludeDir(dir, *pid);
-            m_logger.debug("  -I{}", dir);
-        });
-#ifdef _DEBUG
-        const char* link_dir_name = "getPluginLinkDirsDebug";
-#else
-        const char* link_dir_name = "getPluginLinkDirsRelease";
-#endif
-        forEachString(handle, link_dir_name, [this, pid](const char* dir) {
-            obj_system.AddLibraryDir(dir, *pid);
-            m_logger.debug("-L{}", dir);
-        });
-
-        forEachString(handle, "getPluginCompileOptions", [this, pid](const char* opt) {
-            obj_system.AppendAdditionalCompileOptions(opt, *pid);
-            m_logger.debug(opt);
-        });
-
-        forEachString(handle, "getPluginCompileDefinitions", [this, pid](const char* def) {
-            obj_system.AppendAdditionalCompileOptions(def, *pid);
-            m_logger.debug("-D{}", def);
-        });
-    }
-
-#ifdef NDEBUG
-    base = base.substr(3, base.size() - 3);
-#else
-    base = base.substr(3, base.size() - 4); // strip off the d tag on the library file
-#endif
-    boost::filesystem::path config_path = path.parent_path();
-    config_path += "/" + base + "_config.txt";
-    int id = obj_system.ParseConfigFile(config_path.string().c_str());
-
-    if (id >= 0)
-    {
 #ifdef _DEBUG
 // obj_system.SetOptimizationLevel(RCCPPOPTIMIZATIONLEVEL_DEBUG, id);
 #else
-        obj_system.SetOptimizationLevel(RCCPPOPTIMIZATIONLEVEL_PERF, id);
+        obj_system.SetOptimizationLevel(RCCPPOPTIMIZATIONLEVEL_PERF, *pid);
 #endif
-        interface->SetProjectIdForAllConstructors(static_cast<unsigned short>(id));
+        interface->SetProjectIdForAllConstructors(static_cast<unsigned short>(*pid));
+
+        setupObjectConstructors(interface);
     }
-    setupObjectConstructors(interface);
+
     boost::posix_time::ptime end = boost::posix_time::microsec_clock::universal_time();
-    plugins.emplace_back(full_plugin_path, "success", (end - start).total_milliseconds(), info ? *info : nullptr, id);
+    plugins.emplace_back(
+        full_plugin_path, "success", (end - start).total_milliseconds(), info ? *info : nullptr, pid ? *pid : 0);
     mo::setThisThreadName(old_name);
     return true;
 }
 #endif
+
+template <class F>
+void forEachString(const char** strings, const F& op)
+{
+    int32_t i = 0;
+    while (strings[i] != nullptr)
+    {
+        op(strings[i]);
+        ++i;
+    }
+}
+
+void MetaObjectFactoryImpl::setupPluginCompilationOptions(const int32_t pid, PluginCompilationOptions options)
+{
+    forEachString(options.includes, [this, pid](const char* dir) {
+        obj_system.AddIncludeDir(dir, pid);
+        m_logger.debug("  -I{}", dir);
+    });
+#ifdef _DEBUG
+
+    forEachString(options.link_dirs_debug, [this, pid](const char* dir) {
+        obj_system.AddLibraryDir(dir, pid);
+        m_logger.debug("-L{}", dir);
+    });
+#else
+    forEachString(options.link_dirs_release, [this, pid](const char* dir) {
+        obj_system.AddLibraryDir(dir, pid);
+        m_logger.debug("-L{}", dir);
+    });
+#endif
+
+    forEachString(options.compile_options, [this, pid](const char* opt) {
+        obj_system.AppendAdditionalCompileOptions(opt, pid);
+        m_logger.debug(opt);
+    });
+
+    forEachString(options.compile_definitions, [this, pid](const char* def) {
+        obj_system.AppendAdditionalCompileOptions(def, pid);
+        m_logger.debug("{}", def);
+    });
+
+    if (options.compiler != nullptr)
+    {
+        obj_system.SetCompilerLocation(options.compiler, pid);
+        m_logger.debug("compiler location = {}", options.compiler);
+    }
+    forEachString(options.link_libs, [this, pid](const char* lib)
+    {
+        obj_system.AppendAdditionalLinkLibraries(lib, pid);
+    });
+    forEachString(options.link_libs_debug, [this, pid](const char* lib)
+    {
+        obj_system.AppendAdditionalDebugLinkLibraries(lib, pid);
+    });
+
+    forEachString(options.link_libs_release, [this, pid](const char* lib)
+    {
+        obj_system.AppendAdditionalReleaseLinkLibraries(lib, pid);
+    });
+}
 
 bool MetaObjectFactoryImpl::abortCompilation()
 {

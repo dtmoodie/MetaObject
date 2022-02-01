@@ -302,6 +302,26 @@ namespace mo
         {
         }
 
+        template <ct::index_t I, class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA>
+        static void paramInfo(std::vector<mo::ParamInfo*>& vec,
+                              ct::MemberObjectPointer<mo::TPublisher<DTYPE> CTYPE::*, FLAGS, METADATA> ptr,
+                              ct::Indexer<I>)
+        {
+            static mo::ParamInfo param_info(
+                mo::TypeInfo::create<DTYPE>(), ptr.m_name.toString(), "", "", mo::ParamFlags::kOUTPUT, "");
+            vec.push_back(&param_info);
+        }
+
+        template <ct::index_t I, class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, uint64_t PFLAGS>
+        static void paramInfo(std::vector<mo::ParamInfo*>& vec,
+                              ct::MemberObjectPointer<mo::TFPublisher<DTYPE, PFLAGS> CTYPE::*, FLAGS, METADATA> ptr,
+                              ct::Indexer<I>)
+        {
+            static mo::ParamInfo param_info(
+                mo::TypeInfo::create<DTYPE>(), ptr.m_name.toString(), "", "", mo::ParamFlags::kOUTPUT, "");
+            vec.push_back(&param_info);
+        }
+
         template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
         static void paramInfo(std::vector<mo::ParamInfo*>& vec,
                               ct::MemberObjectPointer<mo::TSubscriberPtr<DTYPE> CTYPE::*, FLAGS, METADATA> ptr,

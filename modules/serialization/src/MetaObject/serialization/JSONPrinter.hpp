@@ -1,8 +1,8 @@
-#pragma once
+#ifndef METAOBJECT_SERIALIZATION_JSONPRINTER_HPP
+#define METAOBJECT_SERIALIZATION_JSONPRINTER_HPP
 
 #include "MetaObject/runtime_reflection/DynamicVisitor.hpp"
 
-#include <cereal/archives/json.hpp>
 #include <iostream>
 #include <unordered_map>
 namespace mo
@@ -10,6 +10,7 @@ namespace mo
     struct MO_EXPORTS JSONSaver : public SaveCache
     {
         JSONSaver(std::ostream& os);
+        ~JSONSaver();
         ISaveVisitor& operator()(const bool* val, const std::string& name = "", const size_t cnt = 1) override;
         ISaveVisitor& operator()(const char* val, const std::string& name = "", const size_t cnt = 1) override;
         ISaveVisitor& operator()(const int8_t*, const std::string& name = "", const size_t cnt = 1) override;
@@ -34,9 +35,11 @@ namespace mo
         ISaveVisitor& operator()(const double*, const std::string&, const size_t) override;
         ISaveVisitor& operator()(const void*, const std::string&, const size_t) override;
         ISaveVisitor&
-        operator()(IStructTraits* val, const void* inst, const std::string& name = "", size_t cnt = 1) override;
-        ISaveVisitor&
-        operator()(IContainerTraits* val, const void* inst, const std::string& name = "", size_t cnt = 1) override;
+        operator()(const IStructTraits* val, const void* inst, const std::string& name = "", size_t cnt = 1) override;
+        ISaveVisitor& operator()(const IContainerTraits* val,
+                                 const void* inst,
+                                 const std::string& name = "",
+                                 size_t cnt = 1) override;
 
         VisitorTraits traits() const override;
 
@@ -53,13 +56,15 @@ namespace mo
         template <class T>
         ISaveVisitor& writePod(const T* ptr, const std::string& name, const size_t cnt);
 
-        cereal::JSONOutputArchive m_ar;
+        struct Impl;
+        std::unique_ptr<Impl> m_impl;
         std::shared_ptr<Allocator> m_allocator;
     };
 
     struct MO_EXPORTS JSONLoader : public LoadCache
     {
         JSONLoader(std::istream& os);
+        ~JSONLoader();
         ILoadVisitor& operator()(bool* val, const std::string& name = "", const size_t cnt = 1) override;
         ILoadVisitor& operator()(char* val, const std::string& name = "", const size_t cnt = 1) override;
         ILoadVisitor& operator()(int8_t*, const std::string& name = "", const size_t cnt = 1) override;
@@ -82,9 +87,10 @@ namespace mo
         ILoadVisitor& operator()(float* val, const std::string& name, const size_t cnt) override;
         ILoadVisitor& operator()(double*, const std::string&, const size_t) override;
         ILoadVisitor& operator()(void*, const std::string&, const size_t) override;
-        ILoadVisitor& operator()(IStructTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
         ILoadVisitor&
-        operator()(IContainerTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
+        operator()(const IStructTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
+        ILoadVisitor&
+        operator()(const IContainerTraits* val, void* inst, const std::string& name = "", size_t cnt = 1) override;
 
         template <class T>
         ILoadVisitor& operator()(T* val, const std::string& name = "", size_t cnt = 1)
@@ -104,9 +110,12 @@ namespace mo
         template <class T>
         ILoadVisitor& readPod(T* ptr, const std::string& name, const size_t cnt);
 
-        cereal::JSONInputArchive m_ar;
+        struct Impl;
+        std::unique_ptr<Impl> m_impl;
+
         std::string m_last_read_name;
         size_t m_current_size;
         std::shared_ptr<Allocator> m_allocator;
     };
 } // namespace mo
+#endif // METAOBJECT_SERIALIZATION_JSONPRINTER_HPP

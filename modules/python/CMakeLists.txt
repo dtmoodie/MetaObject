@@ -1,4 +1,4 @@
-if(MO_HAVE_PYTHON2 AND MO_HAVE_OPENCV)
+if(CT_HAVE_PYTHON AND MO_HAVE_OPENCV)
     LIST(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
     metaobject_declare_module(NAME python
         DEPENDS
@@ -7,10 +7,18 @@ if(MO_HAVE_PYTHON2 AND MO_HAVE_OPENCV)
             metaobject_cuda
             ${OpenCV_LIBRARIES}
             ${PYTHON_LIBRARY}
-            ct
-        INCLUDES
+            ${Python_LIBRARIES}
+            ct            
+    )
+
+    target_link_directories(metaobject_python
+        PUBLIC
             $<BUILD_INTERFACE:${PYTHON_INCLUDE_DIR}>
+            $<BUILD_INTERFACE:${Python_INCLUDE_DIRS}>
+            $<BUILD_INTERFACE:${Python_NumPy_INCLUDE_DIRS}>
             $<BUILD_INTERFACE:${NUMPY_INCLUDE_DIR}>
+            $<BUILD_INTERFACE:${Boost_INCLUDE_DIR}>
+            $<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>
     )
 
     if(TARGET Boost::python)
@@ -20,6 +28,22 @@ if(MO_HAVE_PYTHON2 AND MO_HAVE_OPENCV)
     if(TARGET Boost::python27)
         target_link_libraries(metaobject_python PUBLIC Boost::python27)
     endif()
+
+    if(TARGET Boost::python3)
+        target_link_libraries(metaobject_python PUBLIC Boost::python3)
+    endif(TARGET Boost::python3)
+
+    if(TARGET Python::Python)
+        target_link_libraries(metaobject_python PUBLIC Python::Python)
+    endif(TARGET Python::Python)
+
+    if(TARGET Python::NumPy)
+        target_link_libraries(metaobject_python PUBLIC Python::NumPy)
+    endif(TARGET Python::NumPy)
+
+    if(TARGET Python3::NumPy)
+        target_link_libraries(metaobject_python PUBLIC Python3::NumPy)
+    endif(TARGET Python3::NumPy)
 
     if(Boost_PYTHON_LIBRARY_RELEASE)
         target_link_libraries(metaobject_python PUBLIC ${Boost_PYTHON_LIBRARY_RELEASE})
@@ -39,17 +63,16 @@ if(MO_HAVE_PYTHON2 AND MO_HAVE_OPENCV)
             ${PYTHON_LIBRARY}
         )
 
-        add_test(NAME test_mo_python COMMAND python2 test_mo_python.py)
+        add_test(
+            NAME test_mo_python_init
+            COMMAND test_mo_python_init
+        )
     endif(BUILD_TESTS)
-endif(MO_HAVE_PYTHON2 AND MO_HAVE_OPENCV)
+else(CT_HAVE_PYTHON AND MO_HAVE_OPENCV)
+    message(INFO " Missing python (${CT_HAVE_PYTHON}) or opencv (${MO_HAVE_OPENCV}), can't build python module")
+endif(CT_HAVE_PYTHON AND MO_HAVE_OPENCV)
 
-if(MO_HAVE_PYTHON3 AND MO_HAVE_OPENCV)
-
-endif(MO_HAVE_PYTHON3 AND MO_HAVE_OPENCV)
-
-
-
-if(MO_HAVE_PYTHON2 AND MO_HAVE_OPENCV)
+if(CT_HAVE_PYTHON AND MO_HAVE_OPENCV)
     if(UNIX)
         set(POSTFIX "")
         if(CMAKE_BUILD_TYPE STREQUAL "Debug")
@@ -58,7 +81,14 @@ if(MO_HAVE_PYTHON2 AND MO_HAVE_OPENCV)
         get_target_property(out_dir metaobject_python ARCHIVE_OUTPUT_DIRECTORY)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/metaobject.py.in.unix ${out_dir}/metaobject.py @ONLY)
         add_custom_target(metaobject.py.in.unix ALL)
+        get_target_property(PLUGIN_PATH mo_objectplugin ARCHIVE_OUTPUT_DIRECTORY)
+        get_target_property(PLUGIN_NAME mo_objectplugin ARCHIVE_OUTPUT_NAME)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/tests/test_python.py ${out_dir}/metaobject_python_test.py @ONLY)
+        add_test(
+            NAME test_mo_python
+            COMMAND ${out_dir}/metaobject_python_test.py
+            WORKING_DIRECTORY ${out_dir}
+        )
     else()
         get_target_property(out_dir metaobject_python ARCHIVE_OUTPUT_DIRECTORY)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/metaobject.py.in.win32 ${out_dir}/Debug/metaobject.py @ONLY)

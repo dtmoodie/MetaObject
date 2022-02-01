@@ -8,6 +8,7 @@
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 
 #include <MetaObject/thread/fiber_include.hpp>
+#include <MetaObject/thread/Thread.hpp>
 
 #include <boost/thread.hpp>
 #include <iostream>
@@ -42,6 +43,7 @@ TEST(signals, multi_threaded)
         std::placeholders::_1));
 
     boost::thread thread = boost::thread([&thread_ctx]() -> void {
+        mo::initThread();
         thread_ctx = mo::AsyncStreamFactory::instance()->create("Thread context");
         while (!boost::this_thread::interruption_requested())
         {

@@ -37,7 +37,7 @@ namespace mo
             cudaError_t err = cudaFreeHost(data);
             MO_ASSERT_FMT(err == cudaSuccess, "Unable to free host pinned memory due to {}", err);
         }
-    }
+    } // namespace cuda
     template struct MemoryBlock<cuda::CUDA>;
     template struct MemoryBlock<cuda::HOST>;
-}
+} // namespace mo

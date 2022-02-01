@@ -25,12 +25,16 @@ namespace mo
     {
       public:
         TSlot();
+        TSlot(TSlot&& other);
+        TSlot(const TSlot& other);
+
         template <class... ARGS>
         TSlot(ARGS&&... args);
         ~TSlot() override;
 
         TSlot& operator=(const std::function<R(T...)>& other);
         TSlot& operator=(const TSlot& other);
+        TSlot& operator=(TSlot&& other);
 
         // R invokeArgpack(const ArgumentPack<T...>&);
 
@@ -65,6 +69,20 @@ namespace mo
     }
 
     template <class R, class... T>
+    TSlot<R(T...)>::TSlot(TSlot&& other)
+        : std::function<R(T...)>(std::move(static_cast<std::function<R(T...)>&&>(other)))
+        , _relays(std::move(other._relays))
+    {
+    }
+
+    template <class R, class... T>
+    TSlot<R(T...)>::TSlot(const TSlot& other)
+        : std::function<R(T...)>(static_cast<const std::function<R(T...)>&>(other))
+        , _relays(other.relays)
+    {
+    }
+
+    template <class R, class... T>
     template <class... ARGS>
     TSlot<R(T...)>::TSlot(ARGS&&... args)
         : std::function<R(T...)>(std::forward<ARGS>(args)...)
@@ -87,7 +105,16 @@ namespace mo
     template <class R, class... T>
     TSlot<R(T...)>& TSlot<R(T...)>::operator=(const TSlot<R(T...)>& other)
     {
+        static_cast<std::function<R(T...)>&>(*this) = static_cast<const std::function<R(T...)>&>(other);
         this->_relays = other._relays;
+        return *this;
+    }
+
+    template <class R, class... T>
+    TSlot<R(T...)>& TSlot<R(T...)>::operator=(TSlot<R(T...)>&& other)
+    {
+        static_cast<std::function<R(T...)>&>(*this) = static_cast<std::function<R(T...)>&&>(other);
+        this->_relays = std::move(other._relays);
         return *this;
     }
 

@@ -41,8 +41,7 @@ namespace mo
     {
         auto table = SystemTable::instance();
         MO_ASSERT(table);
-        std::shared_ptr<mo::ThreadPool> pool = table->getSingleton<mo::ThreadPool>();
-        boost::fibers::use_scheduling_algorithm<mo::PriorityScheduler>(pool);
+        initThread(*table);
     }
 
     void initThread(SystemTable& table)

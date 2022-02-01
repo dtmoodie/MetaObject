@@ -10,10 +10,5 @@ namespace mo
         struct DataConverter
         {
         };
-        // Converts a parameter
-        template <class T>
-        struct ParamConverter
-        {
-        };
-    }
-}
+    } // namespace python
+} // namespace mo

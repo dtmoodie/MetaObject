@@ -2,8 +2,9 @@
 #include "RuntimeObjectSystem/ObjectInterfacePerModule.h"
 namespace mo
 {
-void initCoreModule(SystemTable* table)
-{
-    PerModuleInterface::GetInstance()->SetSystemTable(table);
-}
-}
+    void initCoreModule(SystemTable* table)
+    {
+        PerModuleInterface* instance = PerModuleInterface::GetInstance();
+        instance->SetSystemTable(table);
+    }
+} // namespace mo

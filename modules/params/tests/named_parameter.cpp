@@ -5,6 +5,7 @@
 #include <MetaObject/params/NamedParam.hpp>
 #include <MetaObject/params/ParamTags.hpp>
 #include <MetaObject/params/TControlParam.hpp>
+#include <MetaObject/params/TSubscriber.hpp>
 #include <MetaObject/thread/Mutex.hpp>
 
 #include <gtest/gtest.h>
@@ -110,7 +111,7 @@ TEST(named_parameter, tag_param)
         EXPECT_TRUE(p);
         return p->getName();
     };
-    mo::TControlParam<int> param;
+    mo::TSubscriber<int> param;
     param.setName("asdf");
 
     EXPECT_EQ(foo(mo::tags::param = &param), "asdf");
@@ -218,4 +219,3 @@ TEST(named_parameter, explicit_timestamp)
     ASSERT_FALSE(header.timestamp);
     ASSERT_FALSE(header.frame_number.valid());
 }
-

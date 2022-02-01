@@ -10,20 +10,20 @@ namespace mo
     {
         void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t) const override
         {
-            auto& ref = this->ref(inst);
+            boost::optional<T>& ref = this->ref(inst);
             bool valid = false;
             visitor(&valid, "valid");
             if (valid)
             {
                 T val;
                 visitor(&val, "value");
-                ref = val;
+                ref = std::move(val);
             }
         }
 
         void save(ISaveVisitor& visitor, const void* inst, const std::string&, size_t) const override
         {
-            const auto& ref = this->ref(inst);
+            const boost::optional<T>& ref = this->ref(inst);
             const bool valid = static_cast<bool>(ref);
             visitor(&valid, "valid");
             if (valid)
@@ -36,6 +36,41 @@ namespace mo
         {
             visitor.template visit<bool>("valid");
             visitor.template visit<T>("value");
+        }
+
+        uint32_t getNumMembers() const override
+        {
+            return 1;
+        }
+
+        bool loadMember(ILoadVisitor& visitor, void* inst, uint32_t idx, std::string* name) const override
+        {
+            if (idx == 0)
+            {
+                boost::optional<T>& ref = this->ref(inst);
+                if (!ref.is_initialized())
+                {
+                    ref = T();
+                }
+                visitor(&ref.value(), "value");
+                return true;
+            }
+            return false;
+        }
+
+        bool saveMember(ISaveVisitor& visitor, const void* inst, uint32_t idx, std::string* name) const override
+        {
+            if (idx == 0)
+            {
+                const boost::optional<T>& ref = this->ref(inst);
+                if (!ref.is_initialized())
+                {
+                    return false;
+                }
+                visitor(&ref.value());
+                return true;
+            }
+            return false;
         }
     };
 

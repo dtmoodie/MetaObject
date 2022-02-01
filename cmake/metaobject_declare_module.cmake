@@ -1,3 +1,4 @@
+set(METAOBJECT_MODULES_LIST "" CACHE STRING BOOL FORCE)
 function(metaobject_declare_module)
     set(oneValueArgs NAME)
     set(multiValueArgs SRC DEPENDS FLAGS CUDA_SRC INCLUDES)
@@ -39,7 +40,9 @@ function(metaobject_declare_module)
     target_compile_definitions(metaobject_${metaobject_declare_module_NAME} PRIVATE -DMetaObject_EXPORTS)
 
     if(metaobject_declare_module_DEPENDS)
-        rcc_link_lib(metaobject_${metaobject_declare_module_NAME} ${metaobject_declare_module_DEPENDS})
+        target_link_libraries(metaobject_${metaobject_declare_module_NAME}
+            PUBLIC ${metaobject_declare_module_DEPENDS}
+        )
     endif()
     if(metaobject_declare_module_INCLUDES)
         target_include_directories(metaobject_python
@@ -57,14 +60,12 @@ function(metaobject_declare_module)
             $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
             $<INSTALL_INTERFACE:include>
     )
-    set(metaobject_module_includes "${metaobject_module_includes};${CMAKE_CURRENT_LIST_DIR}/src" CACHE INTERNAL "" FORCE)
+    #set(metaobject_module_includes "${metaobject_module_includes};${CMAKE_CURRENT_LIST_DIR}/src" CACHE INTERNAL "" FORCE)
 
     set_target_properties(metaobject_${metaobject_declare_module_NAME} PROPERTIES FOLDER Modules)
     if(metaobject_declare_module_FLAGS)
         target_compile_options(metaobject_${metaobject_declare_module_NAME} PUBLIC ${metaobject_declare_module_FLAGS})
     endif()
-
-    #cotire(metaobject_${metaobject_declare_module_NAME})
 
     if(EXISTS "${CMAKE_CURRENT_LIST_DIR}/pch.hpp")
         configure_file(${CMAKE_CURRENT_LIST_DIR}/pch.hpp
@@ -112,4 +113,5 @@ function(metaobject_declare_module)
             message("  ${inc}")
         endforeach()
     endif(RCC_VERBOSE_CONFIG)
+    set(METAOBJECT_MODULES_LIST "${metaobject_declare_module_NAME};${METAOBJECT_MODULES_LIST}" CACHE STRING BOOL FORCE)    
 endfunction()

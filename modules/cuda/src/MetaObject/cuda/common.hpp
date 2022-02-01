@@ -5,14 +5,6 @@
 #include <cuda_runtime_api.h>
 #include <ostream>
 
-#define CUDA_ERROR_CHECK(EXPR)                                                                                         \
-    do                                                                                                                 \
-    {                                                                                                                  \
-        auto ret = (EXPR);                                                                                             \
-        if (ret != cudaSuccess)                                                                                        \
-            THROW(error, #EXPR " failed! Due to: {}", ret);                                                            \
-    } while (0)
-
 namespace fmt
 {
     std::string to_string(cudaError err);

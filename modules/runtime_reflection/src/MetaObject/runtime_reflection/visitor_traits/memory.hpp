@@ -198,6 +198,12 @@ namespace mo
         {
             savePointer(visitor, val);
         }
+
+        template <class Ptr_t>
+        static void loadMember(ILoadVisitor& visitor, Ptr_t val)
+        {
+            visitor(val, "data");
+        }
     };
 
     template <class T>
@@ -212,11 +218,21 @@ namespace mo
         {
             savePointer(visitor, val);
         }
+
+        template <class Ptr_t>
+        static void loadMember(ILoadVisitor& visitor, Ptr_t val)
+        {
+        }
     };
 
     template <class T>
-    struct TTraits<PointerWrapper<T>, 4> : virtual StructBase<PointerWrapper<T>>
+    struct TTraits<PointerWrapper<T>, 4> : virtual PtrBase<PointerWrapper<T>>
     {
+        std::shared_ptr<const void> getPointer(const void* inst) const
+        {
+            return this->ref(inst).ptr;
+        }
+
         void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t cnt) const override
         {
             MO_ASSERT_EQ(cnt, 1);
@@ -239,8 +255,13 @@ namespace mo
     };
 
     template <class T>
-    struct TTraits<std::shared_ptr<T>, 4> : virtual StructBase<std::shared_ptr<T>>
+    struct TTraits<std::shared_ptr<T>, 4> : virtual PtrBase<std::shared_ptr<T>>
     {
+        std::shared_ptr<const void> getPointer(const void* inst) const
+        {
+            return this->ref(inst);
+        }
+
         void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t cnt) const override
         {
             MO_ASSERT_EQ(cnt, 1);
@@ -259,11 +280,76 @@ namespace mo
         {
             visitor.template visit<T>("ptr");
         }
+
+        uint32_t getNumMembers() const
+        {
+            return 1;
+        }
+
+        bool loadMember(ILoadVisitor& visitor, void* inst, uint32_t idx, std::string* name = nullptr) const
+        {
+            if (idx != 0)
+            {
+                return false;
+            }
+            std::shared_ptr<T>& ref = this->ref(inst);
+            SharedPointerHelper<T>::load(visitor, ref);
+            if (name)
+            {
+                *name = "data";
+            }
+            return true;
+        }
+
+        bool saveMember(ISaveVisitor& visitor, const void* inst, uint32_t idx, std::string* name = nullptr) const
+        {
+            if (idx != 0)
+            {
+                return false;
+            }
+            const std::shared_ptr<T>& ref = this->ref(inst);
+            if (name)
+            {
+                *name = "data";
+            }
+            SharedPointerHelper<T>::save(visitor, ref);
+            return true;
+        }
+
+        bool savePointedToData(ISaveVisitor& visitor, const void* inst, const std::string& name) const
+        {
+            const auto& ref = this->ref(inst);
+            if(ref)
+            {
+                visitor(ref.get(), name);
+                return true;
+            }
+            return false;
+        }
+
+        bool loadPointedToData(ILoadVisitor& visitor, void* inst, const std::string& name) const
+        {
+            if(std::is_const<T>::value)
+            {
+                return false;
+            }
+            auto& ref = this->ref(inst);
+            if(ref)
+            {
+                visitor(const_cast<typename std::remove_const<T>::type*>(ref.get()), name);
+                return true;
+            }
+            return false;
+        }
     };
 
     template <class T>
-    struct TTraits<T*, 3> : virtual StructBase<T*>
+    struct TTraits<T*, 3> : virtual PtrBase<T*>
     {
+        std::shared_ptr<const void> getPointer(const void*) const
+        {
+            return {};
+        }
         void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t cnt) const override
         {
             MO_ASSERT_EQ(cnt, 1);
@@ -305,11 +391,39 @@ namespace mo
         {
             visitor.template visit<T>("ptr");
         }
+
+        bool savePointedToData(ISaveVisitor& visitor, const void* inst, const std::string& name) const
+        {
+            const T* ref = this->ref(inst);
+            if(ref)
+            {
+                visitor(ref, name);
+                return true;
+            }
+            return false;
+        }
+
+        bool loadPointedToData(ILoadVisitor& visitor, void* inst, const std::string& name) const
+        {
+            T* ref = this->ref(inst);
+            if(ref)
+            {
+                visitor(ref, name);
+                return true;
+            }
+            return false;
+        }
     };
 
     template <class T>
-    struct TTraits<const T*, 3> : virtual StructBase<const T*>
+    struct TTraits<const T*, 3> : virtual PtrBase<const T*>
     {
+
+        std::shared_ptr<const void> getPointer(const void*) const
+        {
+            return {};
+        }
+
         void load(ILoadVisitor& visitor, void* inst, const std::string&, size_t cnt) const override
         {
             THROW(error, "Unable to load a const ptr");
@@ -333,6 +447,22 @@ namespace mo
         void visit(StaticVisitor& visitor, const std::string&) const override
         {
             visitor.template visit<T>("ptr");
+        }
+
+        bool savePointedToData(ISaveVisitor& visitor, const void* inst, const std::string& name) const
+        {
+            const T* ref = this->ref(inst);
+            if(ref)
+            {
+                visitor(ref, name);
+                return true;
+            }
+            return false;
+        }
+
+        bool loadPointedToData(ILoadVisitor& visitor, void* inst, const std::string& name) const
+        {
+            return false;
         }
     };
 } // namespace mo

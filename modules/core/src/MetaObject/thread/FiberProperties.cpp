@@ -1,5 +1,6 @@
 #include "FiberProperties.hpp"
-
+#include <MetaObject/core/AsyncStreamFactory.hpp>
+#include <MetaObject/core/IAsyncStream.hpp>
 namespace mo
 {
 
@@ -46,58 +47,51 @@ namespace mo
         }
     }
 
-    void FiberProperty::setAll(const PriorityLevels priority, const uint64_t id, const bool work)
+    void FiberProperty::setAll(const PriorityLevels priority, const uint64_t id)
     {
-        if (m_priority != priority || id != m_id || m_is_work != work)
+        if (m_priority != priority || id != m_id)
         {
             m_priority = priority;
             m_id = id;
-            m_is_work = work;
             notify();
         }
     }
-
-    bool FiberProperty::isWork() const
+    void FiberProperty::setAll(PriorityLevels priority, uint64_t id, std::shared_ptr<IAsyncStream> stream)
     {
-        return m_is_work;
-    }
-
-    void FiberProperty::setWork(const bool val)
-    {
-        if (m_is_work != val)
+        if (m_priority != priority || id != m_id || stream != m_stream)
         {
-            m_is_work = val;
+            m_priority = priority;
+            m_id = id;
+            m_stream = std::move(stream);
             notify();
         }
     }
 
     void FiberProperty::disable()
     {
+        // Instead of calling ready_unlink on the context, we set a flag to disable execution of the lambda
+        // this->ctx_->ready_unlink();
         m_enabled = false;
     }
 
-    bool FiberProperty::enabled() const
+    bool FiberProperty::isEnabled() const
     {
         return m_enabled;
     }
 
-    std::shared_ptr<IAsyncStream> FiberProperty::stream() const
+    std::shared_ptr<IAsyncStream> FiberProperty::getStream() const
     {
-        return m_stream.lock();
-    }
-
-    std::shared_ptr<IDeviceStream> FiberProperty::deviceStream() const
-    {
-        return m_device_stream.lock();
+        return m_stream;
     }
 
     void FiberProperty::setStream(std::shared_ptr<IAsyncStream> stream)
     {
         m_stream = std::move(stream);
+        notify();
     }
 
-    void FiberProperty::setDeviceStream(std::shared_ptr<IDeviceStream> stream)
+    bool FiberProperty::isOnStream(const IAsyncStream* strm) const
     {
-        m_device_stream = std::move(stream);
+        return m_stream.get() == strm;
     }
 } // namespace mo

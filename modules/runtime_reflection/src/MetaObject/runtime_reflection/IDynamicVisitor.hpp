@@ -1,6 +1,8 @@
 #ifndef MO_VISITATION_IDYNAMICVISITOR_HPP
 #define MO_VISITATION_IDYNAMICVISITOR_HPP
 
+#include "export.hpp"
+
 #include "TraitInterface.hpp"
 #include "type_traits.hpp"
 
@@ -15,6 +17,7 @@
 
 namespace mo
 {
+    
     class Allocator;
     struct MO_EXPORTS CacheDataContainer
     {
@@ -63,9 +66,7 @@ namespace mo
     {
         // if true, the name field of the () operator is used to search for the provided data
         bool supports_named_access;
-        // If this is true, read data from external source and put into the visited struct
-        // else read data from struct and put into output
-        bool reader;
+        bool human_readable;
     };
 
     struct MO_EXPORTS IDynamicVisitor
@@ -122,6 +123,7 @@ namespace mo
         virtual ILoadVisitor& operator()(float* val, const std::string& name = "", size_t cnt = 1) = 0;
         virtual ILoadVisitor& operator()(double* val, const std::string& name = "", size_t cnt = 1) = 0;
         virtual ILoadVisitor& operator()(void* binary, const std::string& name = "", size_t num_bytes = 1) = 0;
+        virtual ILoadVisitor& operator()(Byte* binary, const std::string& name = "", size_t num_bytes = 1);
 
         template <class T>
         ILoadVisitor& operator()(T* val, const std::string& name = "", size_t cnt = 1);
@@ -140,14 +142,15 @@ namespace mo
 
       protected:
         virtual ILoadVisitor&
-        operator()(IStructTraits* trait, void* inst, const std::string& name = "", size_t cnt = 1) = 0;
+        operator()(const IStructTraits* trait, void* inst, const std::string& name = "", size_t cnt = 1) = 0;
         virtual ILoadVisitor&
-        operator()(IContainerTraits* trait, void* inst, const std::string& name = "", size_t cnt = 1) = 0;
+        operator()(const IContainerTraits* trait, void* inst, const std::string& name = "", size_t cnt = 1) = 0;
 
         // These are helpers that enforce casting of a trait to the ILoadStructTraits type instead of infinitely going
         // into the templated () operator above
-        ILoadVisitor& loadTrait(IStructTraits* trait, void* inst, const std::string& name = "", size_t cnt = 1);
-        ILoadVisitor& loadTrait(IContainerTraits* trait, void* inst, const std::string& name = "", size_t cnt = 1);
+        ILoadVisitor& loadTrait(const IStructTraits* trait, void* inst, const std::string& name = "", size_t cnt = 1);
+        ILoadVisitor&
+        loadTrait(const IContainerTraits* trait, void* inst, const std::string& name = "", size_t cnt = 1);
 
         virtual void* getPointer(TypeInfo type, uint32_t id) = 0;
         virtual void setSerializedPointer(TypeInfo type, uint32_t id, void* ptr) = 0;
@@ -179,6 +182,7 @@ namespace mo
         virtual ISaveVisitor& operator()(const float* val, const std::string& name = "", size_t cnt = 1) = 0;
         virtual ISaveVisitor& operator()(const double* val, const std::string& name = "", size_t cnt = 1) = 0;
         virtual ISaveVisitor& operator()(const void* binary, const std::string& name = "", size_t bytes = 1) = 0;
+        virtual ISaveVisitor& operator()(const Byte* binary, const std::string& name = "", size_t bytes = 1);
 
         template <class T>
         ISaveVisitor& operator()(const T* val, const std::string& name = "", size_t cnt = 1);
@@ -196,12 +200,13 @@ namespace mo
 
       protected:
         virtual ISaveVisitor&
-        operator()(IStructTraits* trait, const void* inst, const std::string& name = "", size_t cnt = 1) = 0;
+        operator()(const IStructTraits* trait, const void* inst, const std::string& name = "", size_t cnt = 1) = 0;
         virtual ISaveVisitor&
-        operator()(IContainerTraits* trait, const void* inst, const std::string& name = "", size_t cnt = 1) = 0;
-        ISaveVisitor& saveTrait(IStructTraits* trait, const void* inst, const std::string& name = "", size_t cnt = 1);
+        operator()(const IContainerTraits* trait, const void* inst, const std::string& name = "", size_t cnt = 1) = 0;
         ISaveVisitor&
-        saveTrait(IContainerTraits* trait, const void* inst, const std::string& name = "", size_t cnt = 1);
+        saveTrait(const IStructTraits* trait, const void* inst, const std::string& name = "", size_t cnt = 1);
+        ISaveVisitor&
+        saveTrait(const IContainerTraits* trait, const void* inst, const std::string& name = "", size_t cnt = 1);
         virtual const void* getPointer(TypeInfo type, uint32_t id) = 0;
 
         virtual void setSerializedPointer(TypeInfo type, uint32_t id, const void* ptr) = 0;
