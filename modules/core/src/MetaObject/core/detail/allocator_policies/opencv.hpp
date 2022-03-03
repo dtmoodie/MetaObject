@@ -24,6 +24,11 @@ namespace mo
         {
         }
 
+        ~CvAllocatorProxy()
+        {
+            MO_LOG(debug, "Opencv allocator destroyed");
+        }
+
         inline cv::UMatData* allocate(int dims,
                                       const int* sizes,
                                       int type,

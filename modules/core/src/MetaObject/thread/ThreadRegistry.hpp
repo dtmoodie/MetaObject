@@ -13,18 +13,15 @@ namespace mo
         enum ThreadType
         {
             GUI,
-            ANY
+            ANY,
+            WORKER
         };
-        void registerThread(ThreadType type, IAsyncStream::Ptr_t stream = IAsyncStream::current());
-        IAsyncStream::Ptr_t getThread(ThreadType type);
+        virtual ~ThreadRegistry();
+        virtual void registerThread(ThreadType type, IAsyncStream::Ptr_t stream = IAsyncStream::current()) = 0;
+        virtual IAsyncStream::Ptr_t getThread(ThreadType type) = 0;
+
         static ThreadRegistry* instance();
-
-      private:
-        ThreadRegistry();
-        ~ThreadRegistry();
-
-        struct impl;
-        impl* _pimpl;
+        static ThreadRegistry* instance(SystemTable* table);
     };
 } // namespace mo
 #endif // MO_THREAD_REGISTRY_HPP

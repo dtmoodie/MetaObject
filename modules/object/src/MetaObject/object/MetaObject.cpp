@@ -992,16 +992,15 @@ namespace mo
                     {
                         m_param_connections.emplace_back(
                             rcc::weak_ptr<IMetaObject>(*output_object), output->getName(), input->getName(), type_);
+                        MO_LOG(info,
+                               "Successfully created a buffered connection between output {}:{} {} and input {}:{} {}",
+                               output_object->GetTypeName(),
+                               output->getName(),
+                               output_types,
+                               this->GetTypeName(),
+                               input->getName(),
+                               input_types);
                     }
-
-                    MO_LOG(info,
-                           "Successfully created a buffered connection between output {}:{} {} and input {}:{} {}",
-                           output_object->GetTypeName(),
-                           output->getName(),
-                           output_types,
-                           this->GetTypeName(),
-                           input->getName(),
-                           input_types);
                     return true;
                 }
 

@@ -39,7 +39,7 @@ namespace mo
             bool synchronize(Duration timeout = 0 * ms) const;
 
             /**
-             * @brief setCallback to be called on event completion
+             * @brief setCallback to be called on event completion. Callback can be called from ANY thread that services this event
              * @brief priority is the priority of executing the callback
              */
             void setCallback(std::function<void(mo::IAsyncStream*)>&& cb, uint64_t event_id = 0);

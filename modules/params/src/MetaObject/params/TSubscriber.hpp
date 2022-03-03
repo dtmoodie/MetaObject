@@ -123,10 +123,10 @@ namespace mo
             emitUpdate(Header(), UpdateFlags::kINPUT_SET, IAsyncStream::currentRef());
             mo::IAsyncStream* stream = this->getStream();
             IDataContainerConstPtr_t data = publisher->getData(nullptr, stream);
-            if (data && stream)
+            /*if (data && stream)
             {
                 this->onInputUpdate(data, *publisher, mo::UpdateFlags::kVALUE_UPDATED, *stream);
-            }
+            }*/
             return true;
         }
         const auto output_types = publisher->getOutputTypes();

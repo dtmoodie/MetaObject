@@ -7,6 +7,7 @@
 #include <ct/reflect.hpp>
 #include <ct/reflect_macros.hpp>
 #include <ct/types/TArrayView.hpp>
+#include <ct/reflect/MemberFunctionPointer.hpp>
 
 #include <functional>
 
@@ -17,6 +18,14 @@ namespace mo
     struct IAsyncStream;
 
     class WorkQueue;
+
+    struct AsyncStreamContextManager
+    {
+        AsyncStreamContextManager(const std::shared_ptr<IAsyncStream>& new_stream);
+        ~AsyncStreamContextManager();
+      private:
+        std::shared_ptr<IAsyncStream> m_previous;
+    };
 
     struct MO_EXPORTS IAsyncStream
     {
@@ -44,6 +53,8 @@ namespace mo
         pushEvent(std::function<void(IAsyncStream*)>&& event, uint64_t event_id = 0) = 0;
 
         virtual void synchronize() = 0;
+        virtual void synchronize(IAsyncStream& other);
+        void waitForCompletion();
 
         virtual void setName(const std::string& name) = 0;
         virtual void setHostPriority(PriorityLevels p) = 0;
@@ -93,7 +104,7 @@ namespace ct
         PROPERTY(processId)
         PROPERTY(streamId)
         PROPERTY(isDeviceStream)
-        MEMBER_FUNCTION(synchronize)
+        MEMBER_FUNCTION(synchronize, resolveFunctionPointer<mo::IAsyncStream, void>(&mo::IAsyncStream::synchronize))
     REFLECT_END;
 } // namespace ct
 #endif // MO_CORE_IASYNC_STREAM_HPP

@@ -35,6 +35,7 @@
 #include <RuntimeObjectSystem/InheritanceGraph.hpp>
 #include <RuntimeObjectSystem/InterfaceDatabase.hpp>
 
+#include <boost/fiber/operations.hpp>
 #include <boost/python.hpp>
 #include <boost/python/default_call_policies.hpp>
 #include <boost/python/raw_function.hpp>
@@ -341,16 +342,14 @@ namespace mo
         {
             switch (s)
             {
-            case SIGSEGV:
-            {
+            case SIGSEGV: {
                 boost::stacktrace::stacktrace st;
 
                 std::cout << "Caught SIGSEGV " << st;
                 std::terminate();
                 break;
             }
-            case SIGINT:
-            {
+            case SIGINT: {
                 std::cout << "Caught SIGINT, shutting down" << std::endl;
                 static int count = 0;
                 ++count;
@@ -360,25 +359,21 @@ namespace mo
                 }
                 return;
             }
-            case SIGILL:
-            {
+            case SIGILL: {
                 std::cout << "Caught SIGILL " << std::endl;
                 break;
             }
-            case SIGTERM:
-            {
+            case SIGTERM: {
                 std::cout << "Caught SIGTERM " << std::endl;
                 break;
             }
 #ifndef _MSC_VER
-            case SIGKILL:
-            {
+            case SIGKILL: {
                 std::cout << "Caught SIGKILL " << std::endl;
                 break;
             }
 #endif
-            default:
-            {
+            default: {
                 std::cout << "Caught signal " << s << std::endl;
             }
             }
@@ -438,6 +433,11 @@ namespace mo
                 m_callback_registry = python::ParamCallbackContainer::registry();
             }
 
+            ~LibGuard()
+            {
+                m_system_table.reset();
+            }
+
             void setAllocator(AllocatorMode mode)
             {
                 if (mode == DEFAULT)
@@ -472,10 +472,7 @@ namespace mo
 
         void eventLoop(int milliseconds)
         {
-            static mo::ConditionVariable cv;
-            static mo::Mutex_t mtx;
-            mo::Mutex_t::Lock_t lock(mtx);
-            cv.wait_for(lock, std::chrono::milliseconds(milliseconds));
+            boost::this_fiber::sleep_for(std::chrono::milliseconds(milliseconds));
         }
 
         boost::python::object stringConverterToPython(const void* inst, const mo::ITraits* trait_)
@@ -534,21 +531,20 @@ namespace mo
             return std::move(ss).str();
         }
 
-
-        template<class T>
+        template <class T>
         bool isPrimitive(const ITraits* query, ct::VariadicTypedef<T>)
         {
-            if(query->type() == mo::TypeInfo::create<T>())
+            if (query->type() == mo::TypeInfo::create<T>())
             {
                 return true;
             }
             return false;
         }
 
-        template<class T, class ... Ts>
+        template <class T, class... Ts>
         bool isPrimitive(const ITraits* query, ct::VariadicTypedef<T, Ts...>)
         {
-            if(query->type() == mo::TypeInfo::create<T>())
+            if (query->type() == mo::TypeInfo::create<T>())
             {
                 return true;
             }
@@ -558,12 +554,12 @@ namespace mo
         void setupPodTypes()
         {
             auto traits = mo::TraitRegistry::instance().getTraits();
-            
-            for(auto itr = traits.begin(); itr != traits.end(); ++itr)
+
+            for (auto itr = traits.begin(); itr != traits.end(); ++itr)
             {
                 const mo::TypeInfo& type = itr->first;
                 const ITraits* trait = itr->second;
-                if(isPrimitive(trait, mo::PrimitiveTypes{}))
+                if (isPrimitive(trait, mo::PrimitiveTypes{}))
                 {
                     continue;
                 }
@@ -572,10 +568,8 @@ namespace mo
                 boost::python::type_info tinfo(*type_info);
                 boost::python::objects::class_base obj(name.c_str(), 1, &tinfo);
                 // Now need to figure out how to add properties and functions, etc
-
             }
         }
-
 
         std::shared_ptr<SystemTable> pythonSetup(const char* module_name_)
         {

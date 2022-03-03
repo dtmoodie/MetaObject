@@ -20,17 +20,17 @@
 
 namespace mo
 {
-    AsyncStream::AsyncStream(AllocatorPtr_t alloc)
+    AsyncStream::AsyncStream(AllocatorPtr_t alloc, std::shared_ptr<WorkQueue> work_queue)
     {
         m_thread_id = getThisThreadId();
         m_allocator = std::move(alloc);
         m_device_id = -1;
-        m_work_queue = std::make_shared<WorkQueue>();
+        m_work_queue = std::move(work_queue);
     }
 
     AsyncStream::~AsyncStream()
     {
-        this->synchronize();
+        this->AsyncStream::synchronize();
     }
 
     void AsyncStream::setName(const std::string& name)
@@ -79,10 +79,10 @@ namespace mo
     {
         if(m_work_queue)
         {
-            auto size = m_work_queue->size();
+            size_t size = m_work_queue->size();
             while(size > 0)
             {
-                boost::this_fiber::sleep_for(std::chrono::milliseconds(5));
+                boost::this_fiber::sleep_for(std::chrono::microseconds(5));
                 size = m_work_queue->size();
             }
         }
@@ -171,9 +171,13 @@ namespace mo
                 return 1U;
             }
 
-            Ptr_t create(const std::string& name, int32_t, PriorityLevels, PriorityLevels thread_priority) override
+            Ptr_t create(const std::string& name, int32_t, PriorityLevels, PriorityLevels thread_priority, std::shared_ptr<WorkQueue> queue) override
             {
-                auto stream = std::make_shared<AsyncStream>();
+                if(!queue)
+                {
+                    queue = WorkQueue::create(thread_priority);
+                }
+                auto stream = std::make_shared<AsyncStream>(Allocator::getDefault(), std::move(queue));
                 stream->setName(name);
                 stream->setHostPriority(thread_priority);
                 return stream;

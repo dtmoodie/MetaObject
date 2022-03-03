@@ -1,5 +1,7 @@
 #include "AsyncStreamFactory.hpp"
 #include "AsyncStreamConstructor.hpp"
+
+#include <MetaObject/thread/FiberScheduler.hpp>
 #include <MetaObject/core/IAsyncStream.hpp>
 #include <MetaObject/core/SystemTable.hpp>
 namespace mo
@@ -22,7 +24,8 @@ namespace mo
     AsyncStreamFactory::Ptr_t AsyncStreamFactory::create(const std::string& name,
                                                          const int32_t device_id,
                                                          const PriorityLevels device_priority,
-                                                         const PriorityLevels thread_priority)
+                                                         const PriorityLevels thread_priority,
+                                                         std::shared_ptr<WorkQueue> work_queue)
     {
         AsyncStreamConstructor* best_ctr = nullptr;
         uint32_t highest_priority = 0;
@@ -35,10 +38,13 @@ namespace mo
                 best_ctr = ctr;
             }
         }
+        if(!work_queue)
+        {
+            work_queue = WorkQueue::create(thread_priority);
+        }
         if (best_ctr)
         {
-            auto ret = best_ctr->create(name, device_id, device_priority, thread_priority);
-            IAsyncStream::setCurrent(ret);
+            auto ret = best_ctr->create(name, device_id, device_priority, thread_priority, work_queue);
             return ret;
         }
         return {};

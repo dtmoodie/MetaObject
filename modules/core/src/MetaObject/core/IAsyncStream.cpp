@@ -7,6 +7,18 @@
 #include <boost/fiber/operations.hpp>
 namespace mo
 {
+
+    AsyncStreamContextManager::AsyncStreamContextManager(const std::shared_ptr<IAsyncStream>& new_stream)
+    {
+        m_previous = IAsyncStream::current();
+        IAsyncStream::setCurrent(new_stream);
+    }
+
+    AsyncStreamContextManager::~AsyncStreamContextManager()
+    {
+        IAsyncStream::setCurrent(m_previous);
+    }
+
     IAsyncStream::~IAsyncStream() = default;
 
     IAsyncStream::Ptr_t IAsyncStream::create(const std::string& name,
@@ -14,8 +26,8 @@ namespace mo
                                              PriorityLevels device_priority,
                                              PriorityLevels thread_priority)
     {
-        auto stream = AsyncStreamFactory::instance()->create(name, device_id, device_priority, thread_priority);
-        setCurrent(stream);
+        std::shared_ptr<AsyncStreamFactory> instance = AsyncStreamFactory::instance();
+        auto stream = instance->create(name, device_id, device_priority, thread_priority);
         return stream;
     }
 
@@ -60,6 +72,35 @@ namespace mo
     void IAsyncStream::noLongerCurrent()
     {
 
+    }
+
+    void IAsyncStream::waitForCompletion()
+    {
+        this->synchronize();
+    }
+
+    // TODO implement
+    void IAsyncStream::synchronize(IAsyncStream& other)
+    {
+        std::shared_ptr<ConditionVariable> cv = std::make_shared<ConditionVariable>();
+        // This is needed in case the other stream has already finished all of its work before we try to have this stream wait on results
+        // Otherwise we will wait indefinitely on a condition variable that has already notified
+        std::shared_ptr<bool> triggered = std::make_shared<bool>(false);
+        other.pushWork([cv, triggered](IAsyncStream* stream)
+        {
+            cv->notify_all();
+            *triggered = true;
+        });
+        this->pushWork([cv, triggered](IAsyncStream* stream)
+        {
+            if(!*triggered)
+            {
+                Mutex mtx;
+                Mutex::Lock_t lock(mtx);
+                cv->wait(lock);
+            }
+
+        });
     }
 
     IDeviceStream* IAsyncStream::getDeviceStream()

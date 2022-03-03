@@ -4,6 +4,7 @@
 #include <MetaObject/thread/FiberScheduler.hpp>
 #include <MetaObject/thread/Thread.hpp>
 #include <MetaObject/thread/ThreadPool.hpp>
+#include <MetaObject/thread/ThreadRegistry.hpp>
 
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/operations.hpp>
@@ -13,6 +14,18 @@
 #include <iostream>
 
 using namespace mo;
+
+
+/*
+Things that we want to test:
+- pushing work to a stream on the same thread
+- pushing work to a stream on a different thread
+- stream prioritization
+- events and overriding of events
+- helper thread spawning and helping to process tasks
+
+*/
+
 
 namespace
 {
@@ -272,5 +285,19 @@ TEST(stream, execute_fiber_with_yield)
 
     boost::this_fiber::yield();
     ASSERT_TRUE(callback_called);
+}
+
+// So the problem that I'm having is that the work stream for the created stream is being associated with the wrong thread
+TEST(worker_thread, execute_on_worker)
+{
+    auto worker = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::WORKER);
+    const size_t this_thread = mo::getThisThread();
+    auto work = [this_thread](mo::IAsyncStream*)
+    {
+        const size_t work_thread = mo::getThisThread();
+        ASSERT_NE(this_thread, work_thread);
+    };
+    worker->pushWork(std::move(work));
+    worker->synchronize();
 }
 

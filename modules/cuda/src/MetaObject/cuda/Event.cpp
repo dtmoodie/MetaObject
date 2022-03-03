@@ -26,6 +26,14 @@ namespace mo
             std::weak_ptr<ObjectPool<CUevent_st>> m_event_pool;
             mutable std::atomic<bool> m_complete;
 
+            ~Impl()
+            {
+                if (m_cb)
+                {
+                    synchronize();
+                }
+            }
+
             bool queryCompletion() const
             {
                 if (m_complete)
@@ -54,6 +62,11 @@ namespace mo
                 }
                 else
                 {
+                    if(status == cudaErrorCudartUnloading)
+                    {
+                        // event is complete because cuda is being shut down
+                        return true;
+                    }
                     if (status != cudaErrorNotReady)
                     {
                         THROW(error, "cuda error {}", status);
@@ -107,16 +120,8 @@ namespace mo
             m_impl->m_event_pool = event_pool;
         }
 
-        Event::~Event()
-        {
-            if (m_impl)
-            {
-                if (m_impl->m_cb)
-                {
-                    m_impl->synchronize();
-                }
-            }
-        }
+        Event::~Event() = default;
+
 
         void Event::record(Stream& stream)
         {

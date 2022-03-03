@@ -35,7 +35,7 @@ namespace mo
     class MO_EXPORTS Thread
     {
       public:
-        Thread(ThreadPool* pool);
+        Thread(ThreadPool* pool = nullptr);
         Thread(const Thread&) = delete;
         Thread& operator=(const Thread&) = delete;
         ~Thread();

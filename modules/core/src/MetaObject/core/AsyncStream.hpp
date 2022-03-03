@@ -20,7 +20,7 @@ namespace mo
     {
         using Ptr_t = std::shared_ptr<AsyncStream>;
 
-        AsyncStream(AllocatorPtr_t host_alloc = Allocator::getDefault());
+        AsyncStream(AllocatorPtr_t host_alloc = Allocator::getDefault(), std::shared_ptr<WorkQueue> work_queue = {});
         AsyncStream(const AsyncStream&) = delete;
         AsyncStream(AsyncStream&&) = delete;
         AsyncStream& operator=(const AsyncStream&) = delete;

@@ -59,6 +59,7 @@ namespace mo
         void AllocatorProxy<PADDING_POLICY>::free(GpuMat* mat)
         {
             m_allocator->deallocate(mat->datastart, mat->dataend - mat->datastart);
+            cv::fastFree(mat->refcount);
         }
     } // namespace cuda
 } // namespace mo

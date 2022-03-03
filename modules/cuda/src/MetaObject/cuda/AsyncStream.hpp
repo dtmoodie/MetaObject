@@ -26,7 +26,8 @@ namespace mo
         {
             AsyncStream(Stream stream = Stream::create(),
                         DeviceAllocator::Ptr_t allocator = DeviceAllocator::getDefault(),
-                        Allocator::Ptr_t host_alloc = Allocator::getDefault());
+                        Allocator::Ptr_t host_alloc = Allocator::getDefault(),
+                        std::shared_ptr<WorkQueue> work_queue = {});
 
             AsyncStream(const AsyncStream&) = delete;
             AsyncStream(AsyncStream&&) = delete;

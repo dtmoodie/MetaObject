@@ -5,6 +5,7 @@
 namespace mo
 {
     struct IAsyncStream;
+    class WorkQueue;
     struct MO_EXPORTS AsyncStreamConstructor
     {
         using Ptr_t = std::shared_ptr<IAsyncStream>;
@@ -20,6 +21,7 @@ namespace mo
         virtual Ptr_t create(const std::string& name,
                              int32_t device_id,
                              PriorityLevels device_priority,
-                             PriorityLevels thread_priority) = 0;
+                             PriorityLevels thread_priority,
+                             std::shared_ptr<WorkQueue> = {}) = 0;
     };
 } // namespace mo

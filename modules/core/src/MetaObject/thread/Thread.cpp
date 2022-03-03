@@ -47,7 +47,10 @@ namespace mo
     void initThread(SystemTable& table)
     {
         std::shared_ptr<mo::ThreadPool> pool = table.getSingleton<mo::ThreadPool>();
-        boost::fibers::use_scheduling_algorithm<mo::PriorityScheduler>(pool);
+        if(mo::PriorityScheduler::current() == nullptr)
+        {
+            boost::fibers::use_scheduling_algorithm<mo::PriorityScheduler>(pool);
+        }
     }
 
     void Thread::setExitCallback(std::function<void(void)>&& f)
@@ -79,6 +82,10 @@ namespace mo
 
     Thread::Thread(ThreadPool* pool)
     {
+        if(pool == nullptr)
+        {
+            pool = SystemTable::instance()->getSingleton<ThreadPool>().get();
+        }
         m_pool = pool;
         m_thread = boost::thread(&Thread::main, this);
     }
@@ -111,7 +118,10 @@ namespace mo
 
     void Thread::main()
     {
-        auto stream = mo::AsyncStreamFactory::instance()->create();
+        mo::setThisThreadName("Worker");
+        std::shared_ptr<WorkQueue> work_queue;
+        boost::fibers::use_scheduling_algorithm<PriorityScheduler>(m_pool->shared_from_this(), &m_scheduler_wakeup_cv, &work_queue);
+        auto stream = mo::AsyncStreamFactory::instance()->create("WorkerStream", 0, PriorityLevels::MEDIUM, PriorityLevels::MEDIUM, work_queue);
         {
             // TODO fiber
             Lock_t lock(m_mtx);
@@ -119,7 +129,6 @@ namespace mo
             lock.unlock();
             m_cv.notify_all();
         }
-        boost::fibers::use_scheduling_algorithm<PriorityScheduler>(m_pool->shared_from_this(), &m_scheduler_wakeup_cv);
 
         ThreadExit on_exit{[this]() {
             if (m_on_exit)
