@@ -2,6 +2,8 @@
 #include "Stream.hpp"
 
 #include <MetaObject/logging/logging.hpp>
+#include <MetaObject/logging/profiling.hpp>
+
 #include <MetaObject/thread/FiberProperties.hpp>
 #include <MetaObject/thread/Mutex.hpp>
 
@@ -77,6 +79,7 @@ namespace mo
 
             bool synchronize(const Duration timeout = 0 * ms) const
             {
+                mo::ScopedProfile profile("mo::cuda::Event::synchronize");
                 if (m_complete)
                 {
                     return true;
@@ -89,7 +92,7 @@ namespace mo
                 {
                     while (!queryCompletion())
                     {
-                        boost::this_fiber::sleep_for(std::chrono::milliseconds(1));
+                        boost::this_fiber::sleep_for(std::chrono::microseconds(1));
                     }
                     return m_complete;
                 }
@@ -98,7 +101,7 @@ namespace mo
 
                 while (now <= end && !queryCompletion())
                 {
-                    boost::this_fiber::sleep_for(std::chrono::milliseconds(1));
+                    boost::this_fiber::sleep_for(std::chrono::microseconds(1));
                     now = Time::now();
                 }
                 return m_complete;
@@ -122,15 +125,19 @@ namespace mo
 
         Event::~Event() = default;
 
-
         void Event::record(Stream& stream)
+        {
+            cudaStream_t st = stream;
+            record(st);
+        }
+
+        void Event::record(cudaStream_t stream)
         {
             MO_ASSERT(m_impl->m_event == nullptr);
             auto pool = m_impl->m_event_pool.lock();
             MO_ASSERT(pool != nullptr);
             m_impl->m_event = pool->get();
-            cudaStream_t st = stream;
-            CHECK_CUDA_ERROR(&cudaEventRecord, m_impl->m_event.get(), st);
+            CHECK_CUDA_ERROR(&cudaEventRecord, m_impl->m_event.get(), stream);
         }
 
         bool Event::queryCompletion() const

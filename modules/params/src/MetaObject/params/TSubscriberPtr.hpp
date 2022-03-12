@@ -100,7 +100,7 @@ namespace mo
         void onData(TDataContainerConstPtr_t<typename TSubscriber<T>::type> data,
                     const IParam& update_source,
                     UpdateFlags fg,
-                    IAsyncStream& stream) override
+                    IAsyncStream* stream) override
         {
             TSubscriber<T>::onData(data, update_source, fg, stream);
             Lock_t lock(this->mtx());
@@ -152,7 +152,7 @@ namespace mo
         virtual void onData(TDataContainerConstPtr_t<std::vector<T, A>> data,
                             const IParam& param,
                             UpdateFlags fg,
-                            IAsyncStream& stream)
+                            IAsyncStream* stream)
         {
             Lock_t lock(this->mtx());
             TSubscriber<std::vector<T, A>>::onData(data, param, fg, stream);
@@ -240,7 +240,7 @@ namespace mo
         }
 
         void
-        onData(TDataContainerConstPtr_t<T> data, const IParam& param, UpdateFlags flags, IAsyncStream& stream) override
+        onData(TDataContainerConstPtr_t<T> data, const IParam& param, UpdateFlags flags, IAsyncStream* stream) override
         {
             Lock_t lock(this->mtx());
             TSubscriber<T>::onData(data, param, flags, stream);

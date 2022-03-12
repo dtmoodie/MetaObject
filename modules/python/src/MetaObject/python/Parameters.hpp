@@ -21,7 +21,7 @@ namespace mo
             static std::shared_ptr<Registry_t> registry();
             ParamCallbackContainer(mo::IControlParam* ptr, const boost::python::object& obj);
 
-            void onParamUpdate(const IParam&, Header, UpdateFlags, IAsyncStream&);
+            void onParamUpdate(const IParam&, Header, UpdateFlags, IAsyncStream*);
 
             void onParamDelete(const IParam&);
 

@@ -92,10 +92,10 @@ namespace mo
 
     using Delete_s = void(const IParam&);
 
-    using Update_s = void(const IParam&, Header, UpdateFlags, IAsyncStream&);
-    using DataUpdate_s = void(const IDataContainerConstPtr_t&, const IParam&, UpdateFlags, IAsyncStream&);
+    using Update_s = void(const IParam&, Header, UpdateFlags, IAsyncStream*);
+    using DataUpdate_s = void(const IDataContainerConstPtr_t&, const IParam&, UpdateFlags, IAsyncStream*);
     template <class T>
-    using TDataUpdate_s = void(const TDataContainerConstPtr_t<T>&, const IParam&, UpdateFlags, IAsyncStream&);
+    using TDataUpdate_s = void(const TDataContainerConstPtr_t<T>&, const IParam&, UpdateFlags, IAsyncStream*);
 
     using UpdateSlot_t = TSlot<Update_s>;
 

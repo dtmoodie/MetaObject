@@ -218,7 +218,7 @@ TEST_F(publisher, publish_callback)
 {
     bool update_callback_invoked = false;
 
-    auto cb = [this, &update_callback_invoked](const IParam& param_in, Header, UpdateFlags fg, IAsyncStream& stream) {
+    auto cb = [this, &update_callback_invoked](const IParam& param_in, Header, UpdateFlags fg, IAsyncStream* stream) {
         update_callback_invoked = (&param_in == &param);
         ASSERT_EQ(fg, ct::value(UpdateFlags::kVALUE_UPDATED));
     };
@@ -237,7 +237,7 @@ TEST_F(publisher, publish_callback_data)
 {
     bool update_callback_invoked = false;
     auto callback = [this, &update_callback_invoked](
-                        const IDataContainerConstPtr_t&, const IParam& param_in, UpdateFlags fg, IAsyncStream& stream) {
+                        const IDataContainerConstPtr_t&, const IParam& param_in, UpdateFlags fg, IAsyncStream* stream) {
         update_callback_invoked = (&param_in == &param);
         ASSERT_EQ(fg, ct::value(UpdateFlags::kVALUE_UPDATED));
     };

@@ -157,7 +157,7 @@ namespace mo
     }
 
     void
-    python::ParamCallbackContainer::onParamUpdate(const IParam& param, Header header, UpdateFlags flags, IAsyncStream&)
+    python::ParamCallbackContainer::onParamUpdate(const IParam& param, Header header, UpdateFlags flags, IAsyncStream*)
     {
         // TODO use stream?
         if (m_ptr == nullptr)

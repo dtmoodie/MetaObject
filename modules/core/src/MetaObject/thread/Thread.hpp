@@ -66,6 +66,7 @@ namespace mo
 
         std::string m_name;
         std::condition_variable* m_scheduler_wakeup_cv = nullptr;
+        std::atomic<bool> m_continue;
     };
 } // namespace mo
 

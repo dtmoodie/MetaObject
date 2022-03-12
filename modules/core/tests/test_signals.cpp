@@ -17,6 +17,8 @@
 
 using namespace mo;
 
+
+
 TEST(signals, single_threaded)
 {
     TSignal<int(int)> signal;
@@ -59,7 +61,7 @@ TEST(signals, multi_threaded)
     auto Connection = slot.connect(signal);
 
     boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
-    signal(*stream, 5);
+    signal(stream.get(), 5);
     thread.interrupt();
     thread.join();
 }

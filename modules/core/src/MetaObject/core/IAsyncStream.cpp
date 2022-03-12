@@ -5,6 +5,8 @@
 
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/operations.hpp>
+#include <boost/fiber/barrier.hpp>
+
 namespace mo
 {
 
@@ -19,7 +21,13 @@ namespace mo
         IAsyncStream::setCurrent(m_previous);
     }
 
-    IAsyncStream::~IAsyncStream() = default;
+    IAsyncStream::~IAsyncStream()
+    {
+        if(IAsyncStream::current().get() == this)
+        {
+            IAsyncStream::setCurrent({});
+        }
+    }
 
     IAsyncStream::Ptr_t IAsyncStream::create(const std::string& name,
                                              int32_t device_id,
@@ -82,25 +90,19 @@ namespace mo
     // TODO implement
     void IAsyncStream::synchronize(IAsyncStream& other)
     {
-        std::shared_ptr<ConditionVariable> cv = std::make_shared<ConditionVariable>();
-        // This is needed in case the other stream has already finished all of its work before we try to have this stream wait on results
-        // Otherwise we will wait indefinitely on a condition variable that has already notified
-        std::shared_ptr<bool> triggered = std::make_shared<bool>(false);
-        other.pushWork([cv, triggered](IAsyncStream* stream)
-        {
-            cv->notify_all();
-            *triggered = true;
-        });
-        this->pushWork([cv, triggered](IAsyncStream* stream)
-        {
-            if(!*triggered)
-            {
-                Mutex mtx;
-                Mutex::Lock_t lock(mtx);
-                cv->wait(lock);
-            }
 
-        });
+        if(other.size())
+        {
+            std::shared_ptr<boost::fibers::barrier> barrier = std::make_shared<boost::fibers::barrier>(2);
+            other.pushWork([barrier](IAsyncStream* stream)
+                           {
+                               barrier->wait();
+                           });
+            this->pushWork([barrier](IAsyncStream* stream)
+                           {
+                               barrier->wait();
+                           });
+        }
     }
 
     IDeviceStream* IAsyncStream::getDeviceStream()

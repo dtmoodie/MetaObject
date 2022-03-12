@@ -60,7 +60,7 @@ namespace mo
       protected:
         spdlog::logger& getLogger() const;
 
-        void emitUpdate(Header, UpdateFlags, IAsyncStream&) const;
+        void emitUpdate(Header, UpdateFlags, IAsyncStream*) const;
 
       private:
         mutable mo::Mutex_t* m_mtx = nullptr;
@@ -275,7 +275,7 @@ namespace mo
     }
 
     template <class BASE>
-    void TParam<BASE>::emitUpdate(Header hdr, UpdateFlags fgs, IAsyncStream& stream) const
+    void TParam<BASE>::emitUpdate(Header hdr, UpdateFlags fgs, IAsyncStream* stream) const
     {
         m_update_signal(*this, std::move(hdr), std::move(fgs), stream);
     }

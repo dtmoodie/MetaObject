@@ -36,7 +36,6 @@ namespace mo
         size_t size() const;
         bool empty() const;
         void disable(const uint64_t);
-        void remove(const boost::fibers::context& ctx);
 
         PriorityScheduler* getScheduler() const;
         void setScheduler(PriorityScheduler*);
@@ -47,8 +46,8 @@ namespace mo
     {
         static PriorityScheduler* current();
 
-        PriorityScheduler(std::weak_ptr<ThreadPool> pool, uint64_t work_threshold = 100, std::shared_ptr<WorkQueue>* = nullptr);
-        PriorityScheduler(std::weak_ptr<ThreadPool> pool, std::condition_variable** wakeup_cv, std::shared_ptr<WorkQueue>* = nullptr);
+        PriorityScheduler(std::weak_ptr<ThreadPool> pool, uint64_t work_threshold = 100);
+        PriorityScheduler(std::weak_ptr<ThreadPool> pool, std::condition_variable** wakeup_cv);
         ~PriorityScheduler() override;
 
         void awakened(boost::fibers::context* ctx, FiberProperty& props) noexcept override;
@@ -63,15 +62,9 @@ namespace mo
 
         void notify() noexcept override;
 
-        void attachQueue(WorkQueue& queue, PriorityLevels priority);
-        void removeQueue(WorkQueue&);
-
       private:
-        boost::fibers::context* checkQueue(int32_t priority, int32_t index);
         // These two refer to the same work queues, just in a different order
         // This is used for round robining the work queues
-        std::vector<int32_t> m_work_queue_index;
-        std::vector<std::vector<std::weak_ptr<WorkQueue>>>  m_prioritized_work_queues;
         std::shared_ptr<WorkQueue> m_default_work_queue;
         mutable boost::fibers::detail::spinlock m_work_queue_spinlock;
 

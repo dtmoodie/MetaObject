@@ -36,7 +36,7 @@ namespace mo
         template <class... U>
         void operator()(U&&... args) const;
         template <class... U>
-        void operator()(IAsyncStream& stream, U&&... args) const;
+        void operator()(IAsyncStream* stream, U&&... args) const;
 
         TypeInfo getSignature() const override;
 
@@ -63,7 +63,7 @@ namespace mo
         template <class... U>
         R operator()(U&&... args) const;
         template <class... U>
-        R operator()(IAsyncStream& ctx, U&&... args) const;
+        R operator()(IAsyncStream* ctx, U&&... args) const;
 
         TypeInfo getSignature() const override;
 
@@ -86,7 +86,7 @@ namespace mo
     class TSignal;
 
     template <class T>
-    struct IsStream : std::is_same<T, IAsyncStream>
+    struct IsStream : std::is_same<T, IAsyncStream*>
     {
     };
 
@@ -107,7 +107,7 @@ namespace mo
         template <class... U>
         R operator()(U&&... args) const
         {
-            IAsyncStream& stream = ct::get<STREAM_INDEX>(std::forward<U>(args)...);
+            IAsyncStream* stream = ct::get<STREAM_INDEX>(std::forward<U>(args)...);
             return TSignalImpl<R(T...)>::operator()(stream, std::forward<U>(args)...);
         }
     };
@@ -121,7 +121,7 @@ namespace mo
         template <class... U>
         void operator()(U&&... args) const
         {
-            IAsyncStream& stream = ct::get<STREAM_INDEX>(std::forward<U>(args)...);
+            IAsyncStream* stream = ct::get<STREAM_INDEX>(std::forward<U>(args)...);
             TSignalImpl<void(T...)>::operator()(stream, std::forward<U>(args)...);
         }
     };
@@ -137,7 +137,7 @@ namespace mo
         }
 
         template <class... U>
-        R operator()(IAsyncStream& stream, U&&... args) const
+        R operator()(IAsyncStream* stream, U&&... args) const
         {
             return TSignalImpl<R(T...)>::operator()(stream, std::forward<U>(args)...);
         }
@@ -154,7 +154,7 @@ namespace mo
         }
 
         template <class... U>
-        void operator()(IAsyncStream& stream, U&&... args) const
+        void operator()(IAsyncStream* stream, U&&... args) const
         {
             TSignalImpl<void(T...)>::operator()(stream, std::forward<U>(args)...);
         }
@@ -178,12 +178,12 @@ namespace mo
         {
             stream = IAsyncStream::current().get();
         }
-        return (*this)(*stream, std::forward<U>(args)...);
+        return (*this)(stream, std::forward<U>(args)...);
     }
 
     template <class R, class... T>
     template <class... U>
-    R TSignalImpl<R(T...)>::operator()(IAsyncStream& stream, U&&... args) const
+    R TSignalImpl<R(T...)>::operator()(IAsyncStream* stream, U&&... args) const
     {
         typename TSignalRelay<R(T...)>::Ptr_t relay;
         {
@@ -310,11 +310,11 @@ namespace mo
         {
             stream = IAsyncStream::current().get();
         }
-        (*this)(*stream, std::forward<U>(args)...);
+        (*this)(stream, std::forward<U>(args)...);
     }
     template <class... T>
     template <class... U>
-    void TSignalImpl<void(T...)>::operator()(IAsyncStream& stream, U&&... args) const
+    void TSignalImpl<void(T...)>::operator()(IAsyncStream* stream, U&&... args) const
     {
         std::unique_lock<std::recursive_mutex> lock(m_mtx);
         auto relays = m_typed_relays;

@@ -30,6 +30,7 @@ TEST(object, param_access)
 {
     static_assert(std::is_same<typename ParamedObject::BaseTypes, ct::VariadicTypedef<MetaObject>>::value, "");
     auto stream = IAsyncStream::create();
+    IAsyncStream::setCurrent(stream);
     auto obj = rcc::shared_ptr<ParamedObject>::create();
     ASSERT_TRUE(obj->getParam("int_value"));
     ASSERT_TRUE(obj->getParam("double_value"));
@@ -250,7 +251,7 @@ void testParams(mo::BufferFlags flags)
     ASSERT_EQ(subscriber->update_count, 0);
     ASSERT_TRUE(subscriber->connectInput("test_int", publisher.get(), "test_int", flags));
     // signal on input set and signal on initial data
-    ASSERT_EQ(subscriber->update_count, 2);
+    ASSERT_EQ(subscriber->update_count, 1);
     publisher->test_int.publish(10);
 
     if (flags & ct::value(mo::BufferFlags::FORCE_BUFFERED))
@@ -269,7 +270,7 @@ void testParams(mo::BufferFlags flags)
     ASSERT_NE(subscriber->test_int, nullptr);
     ASSERT_EQ((*subscriber->test_int), 10);
     ASSERT_EQ(publisher->update_count, 1);
-    ASSERT_EQ(subscriber->update_count, 3);
+    ASSERT_EQ(subscriber->update_count, 2);
 }
 
 TEST(object, params)

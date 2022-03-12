@@ -19,8 +19,8 @@ namespace mo
 {
     namespace cuda
     {
-        AsyncStream::AsyncStream(Stream stream, DeviceAllocator::Ptr_t allocator, Allocator::Ptr_t host_alloc, std::shared_ptr<WorkQueue> work_queue)
-            : mo::AsyncStream(std::move(host_alloc), std::move(work_queue))
+        AsyncStream::AsyncStream(Stream stream, DeviceAllocator::Ptr_t allocator, Allocator::Ptr_t host_alloc)
+            : mo::AsyncStream(std::move(host_alloc))
             , m_stream(std::move(stream))
             , m_event_pool(ObjectPool<CUevent_st>::create())
             , m_allocator(std::move(allocator))
@@ -108,22 +108,12 @@ namespace mo
 
         void AsyncStream::synchronize()
         {
+            mo::ScopedProfile profile("mo::cuda::AsyncStream::synchronize");
             auto event = createEvent();
             event.record(m_stream);
 
-            auto size = this->size();
-            while (size > 0)
-            {
-                //boost::this_fiber::yield();
-                boost::this_fiber::sleep_for(std::chrono::milliseconds(5));
-                size = this->size();
-            }
-
-            while (!event.queryCompletion())
-            {
-                //boost::this_fiber::yield();
-                boost::this_fiber::sleep_for(std::chrono::milliseconds(5));
-            }
+            mo::AsyncStream::synchronize();
+            event.synchronize();
         }
 
         void AsyncStream::synchronize(IDeviceStream* other)
@@ -132,8 +122,8 @@ namespace mo
             if (typed)
             {
                 auto event = createEvent();
-                event.record(m_stream);
-                typed->m_stream.waitEvent(event);
+                event.record(typed->m_stream);
+                this->m_stream.waitEvent(event);
                 // Not sure if this line is necessary
                 mo::AsyncStream::pushWork([event](mo::IAsyncStream*) { event.synchronize(); });
             }
@@ -196,12 +186,11 @@ namespace mo
                     return 2U;
                 }
 
-                Ptr_t create(const std::string& name, int32_t, PriorityLevels, PriorityLevels thread_priority, std::shared_ptr<WorkQueue> work_queue) override
+                Ptr_t create(const std::string& name, int32_t, PriorityLevels, PriorityLevels thread_priority) override
                 {
                     auto stream = std::make_shared<mo::cuda::AsyncStream>(Stream::create(),
                                                                           DeviceAllocator::getDefault(),
-                                                                          Allocator::getDefault(),
-                                                                          std::move(work_queue));
+                                                                          Allocator::getDefault());
                     stream->setName(name);
                     stream->setHostPriority(thread_priority);
                     return stream;

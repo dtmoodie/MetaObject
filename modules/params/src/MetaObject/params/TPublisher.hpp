@@ -159,13 +159,12 @@ namespace mo
         }
         if (stream == nullptr)
         {
-            stream = &IAsyncStream::currentRef();
+            stream = IAsyncStream::current().get();
         }
         m_data = data;
-        MO_ASSERT_LOGGER(getLogger(), stream != nullptr);
         // TODO finish
-        m_update_signal(data, *this, ct::value(UpdateFlags::kVALUE_UPDATED), *stream);
-        emitUpdate(data->header, ct::value(UpdateFlags::kVALUE_UPDATED), *stream);
+        m_update_signal(data, *this, ct::value(UpdateFlags::kVALUE_UPDATED), stream);
+        emitUpdate(data->header, ct::value(UpdateFlags::kVALUE_UPDATED), stream);
     }
 
     template <typename T>

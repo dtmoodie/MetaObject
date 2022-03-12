@@ -6,8 +6,10 @@
 #include <memory>
 
 struct CUevent_st;
+struct CUstream_st;
 using cudaEvent_t = CUevent_st*;
 using constCudaEvent_t = CUevent_st const*;
+using cudaStream_t = CUstream_st*;
 
 namespace mo
 {
@@ -23,6 +25,7 @@ namespace mo
             ~Event();
 
             void record(Stream& stream);
+            void record(cudaStream_t stream);
 
             /**
              * @brief queryCompletion check if the event has triggered

@@ -66,11 +66,11 @@ namespace mo
             BufferFlags getBufferType() const override;
 
             // ISubscriber
-            bool acceptsPublisher(const IPublisher&) const;
-            bool acceptsType(const TypeInfo&) const;
-            std::vector<TypeInfo> getInputTypes() const;
-            bool isInputSet() const;
-            IPublisher* getPublisher() const;
+            bool acceptsPublisher(const IPublisher&) const override;
+            bool acceptsType(const TypeInfo&) const override;
+            std::vector<TypeInfo> getInputTypes() const override;
+            bool isInputSet() const override;
+            IPublisher* getPublisher() const override;
 
             bool setInput(std::shared_ptr<IPublisher> param) override;
             bool setInput(IPublisher* param = nullptr) override;
@@ -86,8 +86,8 @@ namespace mo
             std::vector<Header> getAvailableHeaders() const override;
             boost::optional<Header> getNewestHeader() const override;
 
-            uint32_t getNumSubscribers() const;
-            void setAllocator(Allocator::Ptr_t);
+            uint32_t getNumSubscribers() const override;
+            void setAllocator(Allocator::Ptr_t) override;
 
             // IParam
             void setMtx(Mutex_t& mtx) override;
@@ -100,7 +100,7 @@ namespace mo
             std::ostream& print(std::ostream& os) const override;
 
           protected:
-            void onInputUpdate(const IDataContainerConstPtr_t&, const IParam&, UpdateFlags, IAsyncStream&);
+            void onInputUpdate(const IDataContainerConstPtr_t&, const IParam&, UpdateFlags, IAsyncStream*);
 
             IDataContainerConstPtr_t search(const Header& hdr) const;
             IDataContainerConstPtr_t searchExact(const Header& hdr) const;
@@ -149,9 +149,9 @@ namespace mo
             using Buffer_t = std::map<Header, StoragePair>;
 
           private:
-            void pushData(const IDataContainerConstPtr_t& data, IAsyncStream&);
-            void pushOrDrop(const IDataContainerConstPtr_t& data, IAsyncStream&);
-            void pushAndWait(const IDataContainerConstPtr_t& data, IAsyncStream&);
+            void pushData(const IDataContainerConstPtr_t& data, IAsyncStream*);
+            void pushOrDrop(const IDataContainerConstPtr_t& data, IAsyncStream*);
+            void pushAndWait(const IDataContainerConstPtr_t& data, IAsyncStream*);
             uint32_t prune();
 
             ConditionVariable m_cv;

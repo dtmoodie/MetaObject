@@ -83,7 +83,7 @@ namespace test
 
     struct mo_objectplugin_EXPORT MetaObjectPublisher : public MetaObject
     {
-        void onParamUpdate(const IParam&, Header, UpdateFlags, IAsyncStream&) override;
+        void onParamUpdate(const IParam&, Header, UpdateFlags, IAsyncStream*) override;
 
         MO_DERIVE(MetaObjectPublisher, MetaObject)
         SOURCE(int, test_int, 5)
@@ -112,7 +112,7 @@ namespace test
         MO_END;
 
         int update_count = 0;
-        void onParamUpdate(const IParam&, Header, UpdateFlags, IAsyncStream&) override;
+        void onParamUpdate(const IParam&, Header, UpdateFlags, IAsyncStream*) override;
     };
 
     struct mo_objectplugin_EXPORT MetaObjectEmpty : public MetaObject

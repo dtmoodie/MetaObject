@@ -11,6 +11,10 @@
 
 using namespace mo;
 
+static_assert(std::is_trivially_copy_constructible<mo::IParam>::value == false, "");
+static_assert(std::is_trivially_copy_constructible<const mo::IParam>::value == false, "");
+//static_assert(std::is_trivially_copy_constructible<const mo::IParam&>::value == false, "");
+
 namespace ct
 {
     template <class T, class A>
@@ -124,7 +128,7 @@ namespace
             value = TestData<T>::init(std::move(data));
         }
 
-        void onUpdate(const IParam& param, Header, UpdateFlags fg, IAsyncStream&)
+        void onUpdate(const IParam& param, Header, UpdateFlags fg, IAsyncStream*)
         {
             update_called = true;
             update_flag.emplace_back(&param, fg);
@@ -133,7 +137,7 @@ namespace
         void onDataUpdate(const std::shared_ptr<const IDataContainer>& data,
                           const IParam& param,
                           UpdateFlags fg,
-                          IAsyncStream&)
+                          IAsyncStream*)
         {
             update_called = true;
             update_flag.emplace_back(&param, fg);

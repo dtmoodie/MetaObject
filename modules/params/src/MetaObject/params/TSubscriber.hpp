@@ -52,10 +52,10 @@ namespace mo
         TDataContainerConstPtr_t<T> getTypedData(const Header* desired = nullptr, IAsyncStream* stream = nullptr);
 
       protected:
-        void onInputUpdate(const IDataContainerConstPtr_t& data, const IParam& param, UpdateFlags, IAsyncStream&);
+        void onInputUpdate(const IDataContainerConstPtr_t& data, const IParam& param, UpdateFlags, IAsyncStream*);
         void onInputDelete(const IParam&);
 
-        virtual void onData(TDataContainerConstPtr_t<T>, const IParam&, UpdateFlags, IAsyncStream& stream);
+        virtual void onData(TDataContainerConstPtr_t<T>, const IParam&, UpdateFlags, IAsyncStream* stream);
 
         TSlot<DataUpdate_s> m_update_slot;
         TSlot<Delete_s> m_delete_slot;
@@ -110,7 +110,7 @@ namespace mo
             {
                 m_update_slot.clear();
                 m_delete_slot.clear();
-                emitUpdate(Header(), UpdateFlags::kINPUT_CLEARED, IAsyncStream::currentRef());
+                emitUpdate(Header(), UpdateFlags::kINPUT_CLEARED, IAsyncStream::current().get());
             }
             m_publisher = publisher;
             m_input_connection = publisher->registerUpdateNotifier(m_update_slot);
@@ -120,7 +120,7 @@ namespace mo
                 m_publisher = nullptr;
                 return false;
             }
-            emitUpdate(Header(), UpdateFlags::kINPUT_SET, IAsyncStream::currentRef());
+            emitUpdate(Header(), UpdateFlags::kINPUT_SET, IAsyncStream::current().get());
             mo::IAsyncStream* stream = this->getStream();
             IDataContainerConstPtr_t data = publisher->getData(nullptr, stream);
             /*if (data && stream)
@@ -271,7 +271,7 @@ namespace mo
     void TSubscriberImpl<T>::onInputUpdate(const IDataContainerConstPtr_t& data,
                                            const IParam& param,
                                            UpdateFlags fgs,
-                                           IAsyncStream& stream)
+                                           IAsyncStream* stream)
     {
         if (data == nullptr)
         {
@@ -349,7 +349,7 @@ namespace mo
     void TSubscriberImpl<T>::onData(TDataContainerConstPtr_t<T> data,
                                     const IParam& update_source,
                                     UpdateFlags fg,
-                                    IAsyncStream& stream)
+                                    IAsyncStream* stream)
     {
         const auto header = data->getHeader();
         if (fg & ct::value(UpdateFlags::kBUFFER_UPDATED) && update_source.checkFlags(mo::ParamFlags::kBUFFER))
@@ -359,20 +359,23 @@ namespace mo
         }
 
         auto dst_stream = this->getStream();
-        if (dst_stream && dst_stream != &stream)
+        if (dst_stream && dst_stream != stream)
         {
             m_data = data;
-            m_data->record(stream);
+            if(stream)
+            {
+                m_data->record(*stream);
+            }
             m_data->sync(*dst_stream);
             m_new_data_available = true;
-            emitUpdate(header, ct::value(UpdateFlags::kINPUT_UPDATED), *dst_stream);
-            m_update_signal(data, *this, ct::value(UpdateFlags::kINPUT_UPDATED), *dst_stream);
+            emitUpdate(header, ct::value(UpdateFlags::kINPUT_UPDATED), dst_stream);
+            m_update_signal(data, *this, ct::value(UpdateFlags::kINPUT_UPDATED), dst_stream);
         }
         else
         {
             m_data = data;
             m_new_data_available = true;
-            emitUpdate(header, ct::value(UpdateFlags::kINPUT_UPDATED), *dst_stream);
+            emitUpdate(header, ct::value(UpdateFlags::kINPUT_UPDATED), dst_stream);
             m_update_signal(data, *this, ct::value(UpdateFlags::kINPUT_UPDATED), stream);
         }
     }

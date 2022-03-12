@@ -102,7 +102,7 @@ namespace mo
         if (m_modified != val)
         {
             m_modified = val;
-            this->emitUpdate({}, mo::UpdateFlags::kVALUE_UPDATED, mo::IAsyncStream::currentRef());
+            this->emitUpdate({}, mo::UpdateFlags::kVALUE_UPDATED, mo::IAsyncStream::current().get());
         }
     }
 
@@ -189,7 +189,7 @@ namespace mo
         if (m_modified != val)
         {
             m_modified = val;
-            this->emitUpdate({}, mo::UpdateFlags::kVALUE_UPDATED, mo::IAsyncStream::currentRef());
+            this->emitUpdate({}, mo::UpdateFlags::kVALUE_UPDATED, mo::IAsyncStream::current().get());
         }
     }
 

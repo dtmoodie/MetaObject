@@ -58,7 +58,7 @@ namespace mo
     }
     void FiberProperty::setAll(PriorityLevels priority, uint64_t id, std::shared_ptr<IAsyncStream> stream)
     {
-        if (m_priority != priority || id != m_id || stream != m_stream)
+        if (m_priority != priority || id != m_id)
         {
             m_priority = priority;
             m_id = id;
@@ -81,17 +81,12 @@ namespace mo
 
     std::shared_ptr<IAsyncStream> FiberProperty::getStream() const
     {
-        return m_stream;
+        return m_stream.lock();
     }
 
     void FiberProperty::setStream(std::shared_ptr<IAsyncStream> stream)
     {
         m_stream = std::move(stream);
         notify();
-    }
-
-    bool FiberProperty::isOnStream(const IAsyncStream* strm) const
-    {
-        return m_stream.get() == strm;
     }
 } // namespace mo

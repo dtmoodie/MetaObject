@@ -32,13 +32,11 @@ namespace mo
 
         void setStream(std::shared_ptr<IAsyncStream>);
 
-        bool isOnStream(const IAsyncStream*) const;
-
       private:
         PriorityLevels m_priority = MEDIUM;
         uint64_t m_id = 0;
         bool m_enabled = true;
-        std::shared_ptr<IAsyncStream> m_stream = nullptr;
+        std::weak_ptr<IAsyncStream> m_stream;
     };
 } // namespace mo
 

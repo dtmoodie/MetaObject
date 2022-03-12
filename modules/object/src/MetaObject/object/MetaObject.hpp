@@ -138,7 +138,7 @@ namespace mo
                            const TypeInfo& signature,
                            rcc::shared_ptr<IMetaObject> obj = {}) override;
 
-        virtual void onParamUpdate(const IParam&, Header, UpdateFlags, IAsyncStream&);
+        virtual void onParamUpdate(const IParam&, Header, UpdateFlags, IAsyncStream*);
 
         bool isInitialized() const override;
 

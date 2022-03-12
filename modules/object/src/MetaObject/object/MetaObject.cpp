@@ -1514,7 +1514,7 @@ namespace mo
         m_connections.push_back(info);
     }
 
-    void MetaObject::onParamUpdate(const IParam& param, Header hdr, UpdateFlags, IAsyncStream&)
+    void MetaObject::onParamUpdate(const IParam& param, Header hdr, UpdateFlags, IAsyncStream*)
     {
         m_sig_param_updated(*this, hdr, param);
     }

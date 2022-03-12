@@ -121,7 +121,7 @@ namespace mo
                 auto data = param->getData();
                 if (data)
                 {
-                    pushData(data, *stream);
+                    pushData(data, stream);
                 }
                 m_publisher = param;
                 return true;
@@ -215,7 +215,7 @@ namespace mo
         void Map::onInputUpdate(const IDataContainerConstPtr_t& data,
                                 const IParam& param,
                                 UpdateFlags flags,
-                                IAsyncStream& stream)
+                                IAsyncStream* stream)
         {
             (void)param;
             (void)flags;
@@ -225,7 +225,7 @@ namespace mo
             }
         }
 
-        void Map::pushData(const IDataContainerConstPtr_t& data, IAsyncStream& stream)
+        void Map::pushData(const IDataContainerConstPtr_t& data, IAsyncStream* stream)
         {
             if ((m_push_policy == GROW) || (m_push_policy == PRUNE))
             {
@@ -248,7 +248,7 @@ namespace mo
             }
         }
 
-        void Map::pushOrDrop(const IDataContainerConstPtr_t& data, IAsyncStream& stream)
+        void Map::pushOrDrop(const IDataContainerConstPtr_t& data, IAsyncStream* stream)
         {
             {
                 Lock_t lock(this->mtx());
@@ -264,7 +264,7 @@ namespace mo
             m_update_signal(data, *this, ct::value(UpdateFlags::kBUFFER_UPDATED), stream);
         }
 
-        void Map::pushAndWait(const IDataContainerConstPtr_t& data, IAsyncStream& stream)
+        void Map::pushAndWait(const IDataContainerConstPtr_t& data, IAsyncStream* stream)
         {
             {
                 Lock_t lock(this->mtx());

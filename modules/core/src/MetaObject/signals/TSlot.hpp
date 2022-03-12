@@ -36,7 +36,7 @@ namespace mo
         TSlot& operator=(const TSlot& other);
         TSlot& operator=(TSlot&& other);
 
-        // R invokeArgpack(const ArgumentPack<T...>&);
+        using std::function<R(T...)>::operator();
 
         std::shared_ptr<Connection> connect(ISignal& sig) override;
         std::shared_ptr<Connection> connect(TSignal<R(T...)>& signal);

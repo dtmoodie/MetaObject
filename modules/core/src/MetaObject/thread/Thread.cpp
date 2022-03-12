@@ -87,6 +87,7 @@ namespace mo
             pool = SystemTable::instance()->getSingleton<ThreadPool>().get();
         }
         m_pool = pool;
+        m_continue = true;
         m_thread = boost::thread(&Thread::main, this);
     }
 
@@ -94,16 +95,11 @@ namespace mo
     {
         PROFILE_FUNCTION
 
-        // MO_LOG(info, "Waiting for {} to join", m_name);
+        m_continue = false;
         m_cv.notify_all();
         m_scheduler_wakeup_cv->notify_all();
 
-        if (!m_thread.timed_join(boost::posix_time::time_duration(0, 0, 10)))
-        {
-            // MO_LOG(warn, "{} did not join after waiting 10 seconds");
-        }
-
-        // MO_LOG(info, "{} shutdown complete", m_name);
+        m_thread.try_join_for(boost::chrono::seconds(10));
     }
 
     struct ThreadExit
@@ -119,9 +115,8 @@ namespace mo
     void Thread::main()
     {
         mo::setThisThreadName("Worker");
-        std::shared_ptr<WorkQueue> work_queue;
-        boost::fibers::use_scheduling_algorithm<PriorityScheduler>(m_pool->shared_from_this(), &m_scheduler_wakeup_cv, &work_queue);
-        auto stream = mo::AsyncStreamFactory::instance()->create("WorkerStream", 0, PriorityLevels::MEDIUM, PriorityLevels::MEDIUM, work_queue);
+        boost::fibers::use_scheduling_algorithm<PriorityScheduler>(m_pool->shared_from_this(), &m_scheduler_wakeup_cv);
+        auto stream = mo::AsyncStreamFactory::instance()->create("WorkerStream", 0, PriorityLevels::MEDIUM, PriorityLevels::MEDIUM);
         {
             // TODO fiber
             Lock_t lock(m_mtx);
@@ -137,9 +132,11 @@ namespace mo
             }
         }};
 
-        Mutex_t::Lock_t lock(m_mtx);
-        m_cv.wait(lock);
-
+        while(m_continue)
+        {
+            Mutex_t::Lock_t lock(m_mtx);
+            m_cv.wait_for(lock, std::chrono::milliseconds(1));
+        }
         stream.reset();
         m_stream.reset();
     }

@@ -27,7 +27,7 @@ namespace mo
         using ConstPtr_t = std::shared_ptr<const TSignalRelay<void(T...)>>;
 
         template <class... U>
-        void operator()(IAsyncStream& src_stream, U&&... args);
+        void operator()(IAsyncStream* src_stream, U&&... args);
         TypeInfo getSignature() const override;
         bool hasSlots() const override;
         uint32_t numSlots() const override;
@@ -57,7 +57,7 @@ namespace mo
         TSignalRelay();
 
         template <class... U>
-        R operator()(IAsyncStream& src_stream, U&&... args);
+        R operator()(IAsyncStream* src_stream, U&&... args);
 
         TypeInfo getSignature() const override;
         bool hasSlots() const override;
@@ -81,37 +81,96 @@ namespace mo
     ///                   Implementation
     //////////////////////////////////////////////////////////////////
 
+    template<class F, class ... ARGS, size_t ... IDX>
+    void invokeSlotImpl(F& slot, ct::IndexSequence<IDX...>, const std::tuple<ARGS...>& tuple)
+    {
+        slot(std::get<IDX>(tuple)...);
+    }
+
+    template<class F, class ... ARGS>
+    void invokeSlot(F& slot, const std::tuple<ARGS...>& tuple)
+    {
+        invokeSlotImpl(slot, ct::makeIndexSequence<sizeof...(ARGS)>{}, tuple);
+    }
+
+    template<class ... SARGS, class ... ARGS>
+    auto invokeOnStreamImpl(IAsyncStream& dst, TSlot<void(SARGS...)>* slot, ARGS&&... args) -> typename std::enable_if<sizeof...(ARGS) && ct::VariadicTypedef<std::decay_t<ARGS>...>::template all<std::is_trivially_copy_constructible>()>::type
+    {
+        std::tuple<std::decay_t<ARGS>...> values(std::forward<ARGS>(args)...);
+        dst.pushWork([slot, values](IAsyncStream* stream)
+        {
+            invokeSlot(*slot, values);
+        });
+    }
+
+    template<class ... SARGS, class ... ARGS>
+    auto invokeOnStreamImpl(IAsyncStream& dst, TSlot<void(SARGS...)>* slot, ARGS&&... args) -> typename std::enable_if<sizeof...(ARGS) && ct::VariadicTypedef<std::decay_t<ARGS>...>::template all<std::is_trivially_copy_constructible>() == false>::type
+    {
+        auto ptr = std::make_shared<std::tuple<ARGS...>>(std::forward_as_tuple(std::forward<ARGS>(args)...));
+        dst.pushWork([slot, ptr](IAsyncStream* stream) mutable
+        {
+            invokeSlot(*slot, *ptr);
+        });
+        dst.synchronize();
+    }
+
+    template<class ... SARGS, class ... ARGS>
+    auto invokeOnStream(IAsyncStream& dst, TSlot<void(SARGS...)>* slot, ARGS&&... args) -> typename std::enable_if<sizeof...(ARGS) != 0>::type
+    {
+        invokeOnStreamImpl(dst, slot, std::forward<ARGS>(args)...);
+    }
+
+    template<class ... SARGS, class ... ARGS>
+    auto invokeOnStream(IAsyncStream& dst, TSlot<void(SARGS...)>* slot, ARGS&&... args) -> typename std::enable_if<sizeof...(ARGS) == 0>::type
+    {
+        dst.pushWork([slot](IAsyncStream* stream)
+        {
+            (*slot)();
+        });
+    }
+
+
     template <class... T, class Mutex>
     template <class... U>
-    void TSignalRelay<void(T...), Mutex>::operator()(IAsyncStream& src, U&&... args)
+    void TSignalRelay<void(T...), Mutex>::operator()(IAsyncStream* src, U&&... args)
     {
         std::unique_lock<Mutex> lock(m_mtx);
         auto slots = m_slots;
         lock.unlock();
+        if(!src)
+        {
+            src = IAsyncStream::current().get();
+        }
         for (auto slot : slots)
         {
             auto dst_stream = slot->getStream();
             if (dst_stream)
             {
-                if (dst_stream->processId() == src.processId())
+                // WIP
+
+                if(src)
                 {
-                    if (dst_stream->threadId() != src.threadId())
+                    if (dst_stream->processId() == src->processId())
                     {
-                        // push as a task to the slot stream
-                        // TODO argpack?
-                        /*auto arg_pack =
-                            std::make_shared<ArgumentPack<T...>>(src, *dst_stream, std::forward<T>(args)...);
-                        dst_stream->pushWork([arg_pack, slot]() { slot->invokeArgpack(*arg_pack); });*/
+                        dst_stream->synchronize(*src);
+                        invokeOnStream(*dst_stream, slot, std::forward<U>(args)...);
                     }
-                }
-                else
+                    else
+                    {
+                        THROW(error, "IPC not implemented yet");
+                    }
+                }else
                 {
-                    THROW(error, "IPC not implemented yet");
+                    // no source stream or current, just directly call
+                    if (*slot)
+                    {
+                        invokeOnStream(*dst_stream, slot, std::forward<U>(args)...);
+                    }
                 }
             }
             else
             {
-                // slot_stream == nullptr
+                // slot stream == nullptr
                 if (*slot)
                 {
                     (*slot)(std::forward<U>(args)...);
@@ -209,13 +268,34 @@ namespace mo
     // TODO the stream thing
     template <class R, class... T, class Mutex>
     template <class... U>
-    R TSignalRelay<R(T...), Mutex>::operator()(IAsyncStream&, U&&... args)
+    R TSignalRelay<R(T...), Mutex>::operator()(IAsyncStream* src, U&&... args)
     {
         std::unique_lock<Mutex> lock(m_mtx);
-        auto slot = m_slot;
+        TSlot<R(T...)>* slot = m_slot;
         lock.unlock();
+
         if (slot && *slot)
         {
+            if(src == nullptr)
+            {
+                src = IAsyncStream::current().get();
+            }
+            IAsyncStream* dst = slot->getStream();
+            if(dst)
+            {
+                if(src)
+                {
+                    dst->synchronize(*src);
+                }
+                /*R out;
+                dst->pushWork([&out, slot, args...](IAsyncStream* stream)
+                {
+                    out = (*slot)(std::forward<U>(args)...);
+                });
+                */
+                //dst->synchronize();
+                //return out;
+            }
             return (*slot)(std::forward<U>(args)...);
         }
         THROW(debug, "Slot not connected");

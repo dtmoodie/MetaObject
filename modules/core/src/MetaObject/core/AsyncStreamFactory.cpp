@@ -38,13 +38,9 @@ namespace mo
                 best_ctr = ctr;
             }
         }
-        if(!work_queue)
-        {
-            work_queue = WorkQueue::create(thread_priority);
-        }
         if (best_ctr)
         {
-            auto ret = best_ctr->create(name, device_id, device_priority, thread_priority, work_queue);
+            auto ret = best_ctr->create(name, device_id, device_priority, thread_priority);
             return ret;
         }
         return {};

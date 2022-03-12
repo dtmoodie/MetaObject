@@ -30,6 +30,7 @@ namespace mo
     struct MO_EXPORTS IAsyncStream
     {
         using Ptr_t = std::shared_ptr<IAsyncStream>;
+        using Work_f = std::function<void(IAsyncStream*)>;
 
         static IAsyncStream::Ptr_t current();
         static IAsyncStream& currentRef();
@@ -48,9 +49,9 @@ namespace mo
 
         virtual ~IAsyncStream();
 
-        virtual void pushWork(std::function<void(IAsyncStream*)>&& work) = 0;
+        virtual void pushWork(Work_f&& work) = 0;
         virtual void
-        pushEvent(std::function<void(IAsyncStream*)>&& event, uint64_t event_id = 0) = 0;
+        pushEvent(Work_f&& event, uint64_t event_id = 0) = 0;
 
         virtual void synchronize() = 0;
         virtual void synchronize(IAsyncStream& other);
@@ -71,7 +72,6 @@ namespace mo
         virtual uint64_t processId() const = 0;
         virtual uint64_t streamId() const = 0;
         virtual AllocatorPtr_t hostAllocator() const = 0;
-        virtual std::shared_ptr<WorkQueue> getWorkQueue() const = 0;
         virtual size_t size() const = 0;
     }; // class mo::IAsyncStream
 

@@ -85,7 +85,7 @@ namespace
         {
             int callback_called = 0;
             auto cb = [&callback_called](
-                          const mo::IDataContainerConstPtr_t&, const mo::IParam&, mo::UpdateFlags, mo::IAsyncStream&) {
+                          const mo::IDataContainerConstPtr_t&, const mo::IParam&, mo::UpdateFlags, mo::IAsyncStream*) {
                 ++callback_called;
             };
             mo::TSlot<mo::DataUpdate_s> callback(std::move(cb));

@@ -30,6 +30,7 @@ namespace
         buffers()
         {
             m_stream = IAsyncStream::create();
+            mo::IAsyncStream::setCurrent(m_stream);
             param.setStream(*m_stream);
             param.setName("pub");
 

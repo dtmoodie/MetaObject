@@ -34,7 +34,7 @@ namespace test
     {
     }
 
-    void Base::on_base_param_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream&)
+    void Base::on_base_param_modified(const mo::IParam&, mo::Header, mo::UpdateFlags, mo::IAsyncStream*)
     {
     }
 
@@ -88,12 +88,12 @@ namespace test
         this->setParamValue(std::move(value), "int_value");
     }
 
-    void MetaObjectSubscriber::onParamUpdate(const IParam& param, Header hdr, UpdateFlags flgs, IAsyncStream&)
+    void MetaObjectSubscriber::onParamUpdate(const IParam& param, Header hdr, UpdateFlags flgs, IAsyncStream*)
     {
         ++update_count;
     }
 
-    void MetaObjectPublisher::onParamUpdate(const IParam&, Header, UpdateFlags, IAsyncStream&)
+    void MetaObjectPublisher::onParamUpdate(const IParam&, Header, UpdateFlags, IAsyncStream*)
     {
         ++update_count;
     }

@@ -15,22 +15,56 @@
 
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/operations.hpp>
+#include <boost/fiber/mutex.hpp>
+#include <boost/fiber/condition_variable.hpp>
+#include <boost/fiber/barrier.hpp>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/thread/tss.hpp>
 
 namespace mo
 {
-    AsyncStream::AsyncStream(AllocatorPtr_t alloc, std::shared_ptr<WorkQueue> work_queue)
+
+    void AsyncStream::workerLoop(AsyncStream* ptr)
+    {
+        while(ptr->m_continue)
+        {
+            std::function<void(IAsyncStream*)> work;
+            {
+                std::lock_guard<boost::fibers::mutex> lock(ptr->m_mtx);
+                if(!ptr->m_work_queue.empty())
+                {
+                    work = std::move(std::get<0>(ptr->m_work_queue.front()));
+                    ptr->m_work_queue.pop_front();
+                }
+            }
+            if(work)
+            {
+                work(ptr);
+            }else
+            {
+                boost::this_fiber::sleep_for(std::chrono::milliseconds(10));
+            }
+        }
+        (void)ptr;
+    }
+
+
+
+    AsyncStream::AsyncStream(AllocatorPtr_t alloc)
     {
         m_thread_id = getThisThreadId();
         m_allocator = std::move(alloc);
         m_device_id = -1;
-        m_work_queue = std::move(work_queue);
+        m_continue = true;
+        m_worker_fiber = boost::fibers::fiber(&AsyncStream::workerLoop, this);
     }
 
     AsyncStream::~AsyncStream()
     {
         this->AsyncStream::synchronize();
+        m_continue = false;
+        m_worker_fiber.join();
     }
 
     void AsyncStream::setName(const std::string& name)
@@ -55,37 +89,40 @@ namespace mo
 
     void AsyncStream::pushWork(std::function<void(IAsyncStream*)>&& work)
     {
-        boost::fibers::fiber fiber(std::move(work), this);
-        FiberProperty& prop = fiber.properties<FiberProperty>();
-        prop.setAll(m_host_priority, 0, this->shared_from_this());
-        fiber.detach();
+        std::lock_guard<boost::fibers::mutex> lock(m_mtx);
+        m_work_queue.push_back(std::make_tuple(std::move(work), 0));
     }
 
     void
     AsyncStream::pushEvent(std::function<void(IAsyncStream*)>&& event, const uint64_t event_id)
     {
-        boost::fibers::fiber fiber([this, event]() {
-            if (boost::this_fiber::properties<FiberProperty>().isEnabled())
+        std::lock_guard<boost::fibers::mutex> lock(m_mtx);
+        if(event_id != 0)
+        {
+            std::remove_if(m_work_queue.begin(), m_work_queue.end(), [event_id](const std::tuple<IAsyncStream::Work_f, uint64_t>& val)
             {
-                event(this);
-            }
-        });
-        FiberProperty& prop = fiber.properties<FiberProperty>();
-        prop.setAll(m_host_priority, event_id, this->shared_from_this());
-        fiber.detach();
+                return std::get<1>(val) == event_id;
+            });
+        }
+        m_work_queue.push_back(std::make_tuple(std::move(event), event_id));
     }
 
     void AsyncStream::synchronize()
     {
-        if(m_work_queue)
+        mo::ScopedProfile profile("mo::AsyncStream::synchronize");
+        boost::fibers::barrier barrier(2);
         {
-            size_t size = m_work_queue->size();
-            while(size > 0)
+            if(m_work_queue.empty())
             {
-                boost::this_fiber::sleep_for(std::chrono::microseconds(5));
-                size = m_work_queue->size();
+                return;
             }
+            std::lock_guard<boost::fibers::mutex> lock(m_mtx);
+            m_work_queue.push_back(std::make_tuple([&barrier](IAsyncStream* strm)
+            {
+                barrier.wait();
+            }, 0));
         }
+        barrier.wait();
     }
 
     void AsyncStream::hostToHost(ct::TArrayView<void> dst, ct::TArrayView<const void> src)
@@ -142,18 +179,14 @@ namespace mo
         return m_stream_id;
     }
 
-    std::shared_ptr<WorkQueue> AsyncStream::getWorkQueue() const
-    {
-        return m_work_queue;
-    }
-
     size_t AsyncStream::size() const
     {
-        if(m_work_queue)
-        {
-            return m_work_queue->size();
-        }
-        return 0;
+        return m_work_queue.size();
+    }
+
+    void AsyncStream::initializeFiber()
+    {
+        m_worker_fiber.properties<FiberProperty>().setStream(this->shared_from_this());
     }
 
     namespace
@@ -171,15 +204,12 @@ namespace mo
                 return 1U;
             }
 
-            Ptr_t create(const std::string& name, int32_t, PriorityLevels, PriorityLevels thread_priority, std::shared_ptr<WorkQueue> queue) override
+            Ptr_t create(const std::string& name, int32_t, PriorityLevels, PriorityLevels thread_priority) override
             {
-                if(!queue)
-                {
-                    queue = WorkQueue::create(thread_priority);
-                }
-                auto stream = std::make_shared<AsyncStream>(Allocator::getDefault(), std::move(queue));
+                auto stream = std::make_shared<AsyncStream>(Allocator::getDefault());
                 stream->setName(name);
                 stream->setHostPriority(thread_priority);
+                stream->initializeFiber();
                 return stream;
             }
         };
