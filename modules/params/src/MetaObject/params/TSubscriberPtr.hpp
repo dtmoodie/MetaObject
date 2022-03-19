@@ -102,8 +102,8 @@ namespace mo
                     UpdateFlags fg,
                     IAsyncStream* stream) override
         {
-            TSubscriber<T>::onData(data, update_source, fg, stream);
             Lock_t lock(this->mtx());
+            TSubscriber<T>::onData(data, update_source, fg, stream);
             if (m_user_var)
             {
                 auto ptr = data->ptr();

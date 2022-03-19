@@ -11,6 +11,7 @@ namespace mo
     class StackPolicy : public XPU::Allocator_t
     {
       public:
+        StackPolicy(std::chrono::milliseconds deallocate_delay = std::chrono::milliseconds(100));
         ~StackPolicy();
         using Allocator_t = typename XPU::Allocator_t;
         uint8_t* allocate(size_t num_bytes, size_t elem_size) override;
@@ -23,11 +24,11 @@ namespace mo
         struct FreeMemory
         {
             uint8_t* ptr = nullptr;
-            clock_t free_time;
+            std::chrono::high_resolution_clock::time_point free_time;
             size_t size = 0;
         };
         std::list<FreeMemory> m_deallocate_list;
-        size_t m_deallocate_delay; // ms
+        std::chrono::milliseconds m_deallocate_delay; // ms
     };
 
     using CpuStackPolicy = StackPolicy<CPU>;
@@ -35,6 +36,13 @@ namespace mo
     ///////////////////////////////////////////////////////////////////////////
     ///                      Implementation
     ///////////////////////////////////////////////////////////////////////////
+
+    template <class XPU>
+    StackPolicy<XPU>::StackPolicy(std::chrono::milliseconds deallocate_delay):
+        m_deallocate_delay(deallocate_delay)
+    {
+
+    }
 
     template <class XPU>
     StackPolicy<XPU>::~StackPolicy()
@@ -67,7 +75,7 @@ namespace mo
     template <class XPU>
     void StackPolicy<XPU>::deallocate(uint8_t* ptr, const size_t num_bytes)
     {
-        m_deallocate_list.push_back({ptr, clock(), num_bytes});
+        m_deallocate_list.push_back({ptr, std::chrono::high_resolution_clock::now(), num_bytes});
         clear();
     }
 
@@ -81,14 +89,15 @@ namespace mo
     void StackPolicy<XPU>::clear()
     {
 
-        auto time = clock();
+        std::chrono::high_resolution_clock::time_point time = std::chrono::high_resolution_clock::now();
         for (auto itr = m_deallocate_list.begin(); itr != m_deallocate_list.end();)
         {
-            if ((time - itr->free_time) > m_deallocate_delay)
+            const auto delta = (time - itr->free_time);
+            if (delta > m_deallocate_delay)
             {
                 getDefaultLogger().trace("Deallocating block of size {} which was stale for {} milliseconds at {}",
                                          itr->size / (1024 * 1024),
-                                         (time - itr->free_time) * 1000 / CLOCKS_PER_SEC,
+                                         std::chrono::duration_cast<std::chrono::milliseconds>(delta).count(),
                                          static_cast<void*>(itr->ptr));
 
                 XPU::deallocate(itr->ptr);

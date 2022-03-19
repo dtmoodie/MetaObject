@@ -24,7 +24,7 @@ namespace mo
             }
         }
 
-        void registerThread(ThreadType type, IAsyncStream::Ptr_t stream)
+        void registerThread(ThreadType type, IAsyncStream::Ptr_t stream) override
         {
             std::lock_guard<std::mutex> lock(mtx);
             auto& threads = _thread_map[type];

@@ -48,6 +48,7 @@ namespace mo
     struct MO_EXPORTS WriteDirectory : boost::filesystem::path
     {
         WriteDirectory(const std::string& str = "");
+        WriteDirectory& operator=(const std::string&);
     };
 
     MO_EXPORTS int findNextFileIndex(const std::string& dir, std::string extension, const std::string& stem);
@@ -112,6 +113,22 @@ namespace ct
     REFLECT_BEGIN(mo::AppendDirectory)
         MEMBER_FUNCTION(nextFilename)
         MEMBER_FUNCTION(nextFileIndex)
+        static constexpr decltype(ct::makeMemberPropertyPointer(
+            "path",
+            ct::selectConstMemberFunctionPointer<boost::filesystem::path, const std::string&>(
+                &boost::filesystem::path::string),
+            ct::selectMemberFunctionPointer<mo::AppendDirectory, mo::AppendDirectory&, const std::string&>(
+                &mo::AppendDirectory::operator=)))
+        getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_BEGIN>)
+        {
+            return ct::makeMemberPropertyPointer(
+                "path",
+                ct::selectConstMemberFunctionPointer<boost::filesystem::path, const std::string&>(
+                    &boost::filesystem::path::string),
+                ct::selectMemberFunctionPointer<mo::AppendDirectory,
+                                                mo::AppendDirectory&,
+                                                const std::string&>(&mo::AppendDirectory::operator=));
+        }
     REFLECT_END;
 
     template <class T>

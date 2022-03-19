@@ -25,6 +25,9 @@
 #include <MetaObject/core/detail/allocator_policies/Pool.hpp>
 #include <MetaObject/core/detail/allocator_policies/Stack.hpp>
 #include <MetaObject/core/detail/allocator_policies/opencv.hpp>
+#include <MetaObject/core/detail/allocator_policies/Lock.hpp>
+#include <MetaObject/cuda.hpp>
+
 
 #include <MetaObject/logging/logging.hpp>
 #include <MetaObject/logging/profiling.hpp>
@@ -390,6 +393,7 @@ namespace mo
             LibGuard()
             {
                 m_system_table = SystemTable::instance();
+                mo::cuda::init(m_system_table.get());
                 m_factory = mo::MetaObjectFactory::instance();
                 m_factory->registerTranslationUnit();
                 m_stream = mo::IAsyncStream::create();
@@ -399,16 +403,16 @@ namespace mo
                 m_default_opencv_gpu_allocator = cv::cuda::GpuMat::defaultAllocator();
 
                 {
-                    using Pool_t = mo::PoolPolicy<cuda::HOST>;
-                    using Stack_t = mo::StackPolicy<cuda::HOST>;
+                    using Pool_t = mo::LockPolicy<mo::PoolPolicy<cuda::HOST>>;
+                    using Stack_t = mo::LockPolicy<mo::StackPolicy<cuda::HOST>>;
                     using Allocator_t = mo::CombinedPolicy<Pool_t, Stack_t>;
                     m_host_allocator = std::make_shared<Allocator_t>();
                     m_cv_cpu_allocator.reset(new mo::CvAllocatorProxy(m_host_allocator.get()));
                     cv::Mat::setDefaultAllocator(m_cv_cpu_allocator.get());
                 }
                 {
-                    using Pool_t = mo::PoolPolicy<cuda::CUDA>;
-                    using Stack_t = mo::StackPolicy<cuda::CUDA>;
+                    using Pool_t = mo::LockPolicy<mo::PoolPolicy<cuda::CUDA>>;
+                    using Stack_t = mo::LockPolicy<mo::StackPolicy<cuda::CUDA>>;
                     using Allocator_t = mo::CombinedPolicy<Pool_t, Stack_t>;
                     m_device_allocator = std::make_shared<Allocator_t>();
                     m_cv_gpu_allocator = std::make_unique<mo::cuda::AllocatorProxy<>>(m_device_allocator);

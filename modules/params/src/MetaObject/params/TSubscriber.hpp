@@ -290,6 +290,7 @@ namespace mo
         if (data->getType().isType<T>())
         {
             auto typed = std::static_pointer_cast<const TDataContainer<T>>(data);
+            MO_ASSERT(typed);
             onData(std::move(typed), param, fgs, stream);
         }
     }
@@ -351,6 +352,11 @@ namespace mo
                                     UpdateFlags fg,
                                     IAsyncStream* stream)
     {
+        if(data == nullptr)
+        {
+            return;
+        }
+        Lock_t lock(this->mtx());
         const auto header = data->getHeader();
         if (fg & ct::value(UpdateFlags::kBUFFER_UPDATED) && update_source.checkFlags(mo::ParamFlags::kBUFFER))
         {

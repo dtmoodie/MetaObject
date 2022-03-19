@@ -27,6 +27,7 @@ namespace mo
 
     void AsyncStream::workerLoop(AsyncStream* ptr)
     {
+        mo::IAsyncStream::setCurrent(ptr->shared_from_this());
         while(ptr->m_continue)
         {
             std::function<void(IAsyncStream*)> work;

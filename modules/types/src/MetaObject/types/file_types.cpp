@@ -28,6 +28,20 @@ namespace mo
     WriteDirectory::WriteDirectory(const std::string& str)
         : boost::filesystem::path(str)
     {
+        if(!boost::filesystem::exists(*this))
+        {
+            boost::filesystem::create_directories(*this);
+        }
+    }
+
+    WriteDirectory& WriteDirectory::operator=(const std::string& str)
+    {
+        static_cast<boost::filesystem::path&>(*this) = str;
+        if(!boost::filesystem::exists(*this))
+        {
+            boost::filesystem::create_directories(*this);
+        }
+        return *this;
     }
 
     AppendDirectory::AppendDirectory(const std::string& path, const std::string& file_prefix, const std::string& ext)

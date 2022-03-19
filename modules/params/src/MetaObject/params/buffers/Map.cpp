@@ -8,9 +8,10 @@ namespace mo
 {
     namespace buffer
     {
-        Map::Map(const std::string& name, PushPolicy push_policy, SearchPolicy search_policy)
+        Map::Map(const std::string& name, PushPolicy push_policy, SearchPolicy search_policy, const Duration& pad)
             : m_push_policy(push_policy)
             , m_search_policy(search_policy)
+            , m_time_padding(pad)
         {
 
             this->appendFlags(mo::ParamFlags::kBUFFER);
@@ -23,21 +24,25 @@ namespace mo
 
         void Map::setFrameBufferCapacity(const uint64_t size)
         {
+            Lock_t lock(m_mtx);
             m_frame_padding = size;
         }
 
         void Map::setTimePaddingCapacity(const Duration& time)
         {
+            Lock_t lock(m_mtx);
             m_time_padding = time;
         }
 
         boost::optional<uint64_t> Map::getFrameBufferCapacity() const
         {
+            Lock_t lock(m_mtx);
             return m_frame_padding;
         }
 
         boost::optional<Duration> Map::getTimePaddingCapacity() const
         {
+            Lock_t lock(m_mtx);
             return m_time_padding;
         }
 
@@ -92,6 +97,7 @@ namespace mo
         {
             if (setInput(param.get()))
             {
+                Lock_t lock(m_mtx);
                 m_shared_publisher = std::move(param);
                 return true;
             }
@@ -100,6 +106,7 @@ namespace mo
 
         bool Map::setInput(IPublisher* param)
         {
+            Lock_t lock(m_mtx);
             if (param == nullptr)
             {
                 m_update_slot.clear();
@@ -169,6 +176,7 @@ namespace mo
 
         boost::optional<Header> Map::getNewestHeader() const
         {
+            Lock_t lock(m_mtx);
             if (!m_data_buffer.empty())
             {
                 return m_data_buffer.end()->first;
@@ -294,6 +302,7 @@ namespace mo
         IDataContainerConstPtr_t Map::getData(const Header* desired, IAsyncStream* stream)
         {
             IDataContainerConstPtr_t data;
+            Lock_t lock(m_mtx);
             if (desired)
             {
                 data = search(*desired);
@@ -309,7 +318,6 @@ namespace mo
 
             if (data)
             {
-                Lock_t lock(m_mtx);
                 m_current_data = data;
                 m_current_timestamp = m_current_data->getHeader().timestamp;
                 m_current_frame_number = m_current_data->getHeader().frame_number;
@@ -485,6 +493,7 @@ namespace mo
 
         ConnectionPtr_t Map::registerUpdateNotifier(ISlot& f)
         {
+            Lock_t lock(m_mtx);
             auto connection = TParam<IBuffer>::registerUpdateNotifier(f);
             if (!connection)
             {
@@ -495,6 +504,7 @@ namespace mo
 
         ConnectionPtr_t Map::registerUpdateNotifier(const ISignalRelay::Ptr_t& relay)
         {
+            Lock_t lock(m_mtx);
             MO_ASSERT_LOGGER(this->getLogger(), relay != nullptr);
             auto connection = TParam<IBuffer>::registerUpdateNotifier(relay);
             if (!connection)
@@ -507,6 +517,7 @@ namespace mo
 
         bool Map::hasNewData() const
         {
+            Lock_t lock(m_mtx);
             for (const auto& itr : m_data_buffer)
             {
                 if (itr.second.hasBeenRetrieved() == false)

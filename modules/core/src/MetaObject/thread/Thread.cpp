@@ -39,17 +39,27 @@ namespace mo
 
     void initThread()
     {
-        auto table = SystemTable::instance();
-        MO_ASSERT(table);
-        initThread(*table);
+        thread_local bool initialized = false;
+        if(!initialized)
+        {
+            auto table = SystemTable::instance();
+            MO_ASSERT(table);
+            initThread(*table);
+            initialized = true;
+        }
+
     }
 
     void initThread(SystemTable& table)
     {
-        std::shared_ptr<mo::ThreadPool> pool = table.getSingleton<mo::ThreadPool>();
-        if(mo::PriorityScheduler::current() == nullptr)
+        thread_local bool initialized = false;
+        if(!initialized)
         {
-            boost::fibers::use_scheduling_algorithm<mo::PriorityScheduler>(pool);
+            std::shared_ptr<mo::ThreadPool> pool = table.getSingleton<mo::ThreadPool>();
+            if(mo::PriorityScheduler::current() == nullptr)
+            {
+                boost::fibers::use_scheduling_algorithm<mo::PriorityScheduler>(pool);
+            }
         }
     }
 
