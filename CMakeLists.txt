@@ -25,7 +25,7 @@ set(link_libs "")
 
 option(BUILD_TESTS "Build tests" ON)
 option(BUILD_DEPENDENCIES "Build dependencies" ON)
-option(BUILD_EXAMPLES "Build examples" ON)
+option(BUILD_EXAMPLES "Build examples" OFF)
 option(BUILD_DEPENDENCIES "Build dependencies within the AquilOS family" ON)
 option(WITH_QT "Enable QT support" ON)
 option(WITH_PYTHON "Enable Python bindings" ON)
