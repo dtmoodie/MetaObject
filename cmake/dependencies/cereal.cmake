@@ -6,10 +6,11 @@ if(cereal_FOUND)
         INTERFACE
             ${cereal_INCLUDE_DIRS}
     )
-endif()
-
-if(NOT cereal_FOUND)
+else()
     set(JUST_INSTALL_CEREAL ON CACHE BOOL "" FORCE)
     add_subdirectory("${CMAKE_CURRENT_SOURCE_DIR}/dependencies/cereal")
+    export(TARGETS cereal
+        FILE cereal-targets.cmake
+    )
 endif()
 
