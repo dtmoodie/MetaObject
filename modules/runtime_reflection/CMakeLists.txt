@@ -7,7 +7,12 @@ metaobject_declare_module(NAME runtime_reflection
 if(BUILD_TESTS)
     file(GLOB src "tests/*.cpp" "tests/*.hpp")
     add_executable(test_mo_runtime_reflection ${src})
-    target_link_libraries(test_mo_runtime_reflection metaobject_runtime_reflection gtest gtest_main)
+    target_link_libraries(test_mo_runtime_reflection
+        metaobject_runtime_reflection
+        gtest
+        gtest_main
+        cereal
+    )
     set_target_properties(test_mo_runtime_reflection PROPERTIES FOLDER Tests/MetaObject/runtime_reflection)
     if(WITH_OPENCV)
         find_package(OpenCV QUIET)
