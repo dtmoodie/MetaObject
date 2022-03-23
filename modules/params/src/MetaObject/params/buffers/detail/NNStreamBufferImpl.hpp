@@ -139,5 +139,5 @@ namespace mo
             }
             return false;
         }
-    }
-}
+    } // namespace Buffer
+} // namespace mo

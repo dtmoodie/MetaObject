@@ -154,8 +154,8 @@ namespace mo
         m_signals["param_updated"][m_sig_param_updated.getSignature()] = &m_sig_param_updated;
         m_signals["param_added"][m_sig_param_updated.getSignature()] = &m_sig_param_added;
         // TODO
-        //auto stream = IAsyncStream::current();
-        //setStream();
+        // auto stream = IAsyncStream::current();
+        // setStream();
     }
 
     MetaObject::~MetaObject()
@@ -1030,14 +1030,15 @@ namespace mo
                                                                  type_);
                             }
 
-                            MO_LOG(info,
-                                   "Successfully created a buffered connection between output {}:{} {} and input {}:{} {}",
-                                   output_object->GetTypeName(),
-                                   output->getName(),
-                                   output_types,
-                                   this->GetTypeName(),
-                                   input->getName(),
-                                   input_types);
+                            MO_LOG(
+                                info,
+                                "Successfully created a buffered connection between output {}:{} {} and input {}:{} {}",
+                                output_object->GetTypeName(),
+                                output->getName(),
+                                output_types,
+                                this->GetTypeName(),
+                                input->getName(),
+                                input_types);
 
                             return true;
                         }

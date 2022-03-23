@@ -23,4 +23,4 @@ namespace std
         }
         return os;
     }
-}
+} // namespace std

@@ -7,7 +7,8 @@ using namespace mo;
 TParamProxy<EnumParam, void>::TParamProxy(ITAccessibleParam<EnumParam>* param_,
                                           MainApplication* app_,
                                           WContainerWidget* parent_)
-    : IParamProxy(param_, app_, parent_), _param(param_)
+    : IParamProxy(param_, app_, parent_)
+    , _param(param_)
 {
     _combo_box = new Wt::WComboBox(this);
     mo::ParamTraits<EnumParam>::InputStorage_t data;

@@ -2,9 +2,9 @@
 #include "BufferConstructor.hpp"
 #include "IBuffer.hpp"
 #include "MetaObject/detail/ConcurrentQueue.hpp"
-#include "MetaObject/params/TSubscriber.hpp"
 #include "MetaObject/params/MetaParam.hpp"
 #include "MetaObject/params/ParamConstructor.hpp"
+#include "MetaObject/params/TSubscriber.hpp"
 
 namespace mo
 {

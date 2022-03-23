@@ -23,8 +23,15 @@ namespace mo
                 virtual void onUiUpdate(QObject* sender, int row, int col);
                 static const bool UI_UPDATE_REQUIRED = true;
                 static const bool IS_DEFAULT = false;
-                inline void setUpdating(bool val = true) { _updating = val; }
-                inline bool getUpdating() const { return _updating; }
+                inline void setUpdating(bool val = true)
+                {
+                    _updating = val;
+                }
+                inline bool getUpdating() const
+                {
+                    return _updating;
+                }
+
               protected:
                 template <class T>
                 friend class ParamProxy;
@@ -32,6 +39,6 @@ namespace mo
                 bool _updating;
                 QWidget* _parent_widget;
             };
-        } // namespace mo::UI::qt
-    }     // namespace mo::UI
+        } // namespace qt
+    }     // namespace UI
 } // namespace mo

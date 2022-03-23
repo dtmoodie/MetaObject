@@ -10,7 +10,7 @@ namespace mo
         LOWEST = 0,
         LOW,
         MEDIUM,
-        DEFAULT=MEDIUM,
+        DEFAULT = MEDIUM,
         HIGH,
         HIGHEST
     };

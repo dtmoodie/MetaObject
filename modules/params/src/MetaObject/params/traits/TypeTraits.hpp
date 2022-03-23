@@ -12,7 +12,7 @@ namespace rcc
     struct weak_ptr;
     template <class T>
     struct shared_ptr;
-}
+} // namespace rcc
 
 namespace mo
 {
@@ -68,4 +68,4 @@ namespace mo
     struct ParamTraits : public TraitSelector<Type, 2>::TraitType
     {
     };
-}
+} // namespace mo

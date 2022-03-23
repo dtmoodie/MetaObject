@@ -10,11 +10,12 @@
 namespace mo
 {
     template <class T>
-    struct ObjectPool: std::enable_shared_from_this<ObjectPool<T>>
+    struct ObjectPool : std::enable_shared_from_this<ObjectPool<T>>
     {
         using Ptr_t = std::shared_ptr<T>;
 
-        static std::shared_ptr<ObjectPool<T>> create(const uint64_t initial_pool_size = 0, ObjectConstructor<T> ctr = ObjectConstructor<T>());
+        static std::shared_ptr<ObjectPool<T>> create(const uint64_t initial_pool_size = 0,
+                                                     ObjectConstructor<T> ctr = ObjectConstructor<T>());
 
         Ptr_t get()
         {
@@ -31,14 +32,12 @@ namespace mo
             }
             MO_ASSERT(owning_ptr);
             std::weak_ptr<ObjectPool<T>> weak = this->shared_from_this();
-            return Ptr_t(owning_ptr.get(), [weak, owning_ptr](T*)
-            {
+            return Ptr_t(owning_ptr.get(), [weak, owning_ptr](T*) {
                 std::shared_ptr<ObjectPool<T>> shared = weak.lock();
-                if(shared)
+                if (shared)
                 {
                     shared->returnObject(owning_ptr);
                 }
-
             });
         }
 
@@ -52,8 +51,8 @@ namespace mo
                 returnObject(obj);
             }
         }
-      private:
 
+      private:
         void returnObject(const Ptr_t& obj)
         {
             Mutex::Lock_t lock(m_mtx);
@@ -64,14 +63,14 @@ namespace mo
         ObjectConstructor<T> m_ctr;
         Mutex m_mtx;
     };
-    template<class T>
+    template <class T>
     std::shared_ptr<ObjectPool<T>> ObjectPool<T>::create(const uint64_t initial_pool_size, ObjectConstructor<T> ctr)
     {
-        struct MakeSharedEnabler : ObjectPool<T> {
-            MakeSharedEnabler(const uint64_t initial_pool_size, ObjectConstructor<T> ctr):
-                ObjectPool<T>(initial_pool_size, std::move(ctr))
+        struct MakeSharedEnabler : ObjectPool<T>
+        {
+            MakeSharedEnabler(const uint64_t initial_pool_size, ObjectConstructor<T> ctr)
+                : ObjectPool<T>(initial_pool_size, std::move(ctr))
             {
-
             }
         };
 

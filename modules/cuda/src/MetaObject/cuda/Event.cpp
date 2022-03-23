@@ -64,7 +64,7 @@ namespace mo
                 }
                 else
                 {
-                    if(status == cudaErrorCudartUnloading)
+                    if (status == cudaErrorCudartUnloading)
                     {
                         // event is complete because cuda is being shut down
                         return true;
@@ -116,7 +116,7 @@ namespace mo
             return std::shared_ptr<CUevent_st>(event, [](cudaEvent_t ev) { CHECK_CUDA_ERROR(&cudaEventDestroy, ev); });
         }
 
-        Event::Event(std::shared_ptr<ObjectPool<CUevent_st> > event_pool)
+        Event::Event(std::shared_ptr<ObjectPool<CUevent_st>> event_pool)
             : m_impl(new Impl())
         {
             m_impl->m_complete = false;
@@ -173,10 +173,7 @@ namespace mo
             MO_ASSERT(m_impl->m_event != nullptr);
             m_impl->m_cb = std::move(cb);
             auto impl = m_impl;
-            boost::fibers::fiber fib([impl]()
-            {
-                impl->synchronize();
-            });
+            boost::fibers::fiber fib([impl]() { impl->synchronize(); });
             auto& prop = fib.properties<FiberProperty>();
             prop.setId(event_id);
             fib.detach();

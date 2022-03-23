@@ -54,7 +54,7 @@ namespace mo
             return m_stream.get();
         }
 
-        Stream::operator CUstream_st const*() const
+        Stream::operator CUstream_st const *() const
         {
             return m_stream.get();
         }
@@ -76,5 +76,5 @@ namespace mo
         {
             return cudaStreamQuery(m_stream.get()) == cudaSuccess;
         }
-    }
-}
+    } // namespace cuda
+} // namespace mo

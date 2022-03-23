@@ -20,6 +20,6 @@ namespace mo
       private:
         mo::fibers::detail::SpinlockQueue<boost::fibers::context> m_queues[HIGHEST + 1];
     };
-}
+} // namespace mo
 
 #endif // MO_THREAD_CONTEXT_QUEUE_HPP

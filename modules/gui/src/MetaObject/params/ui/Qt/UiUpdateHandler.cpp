@@ -7,7 +7,11 @@ namespace mo
         namespace qt
         {
 
-            UiUpdateHandler::UiUpdateHandler(IParamProxy& parent) : _parent(parent), _parent_widget(nullptr) {}
+            UiUpdateHandler::UiUpdateHandler(IParamProxy& parent)
+                : _parent(parent)
+                , _parent_widget(nullptr)
+            {
+            }
             void UiUpdateHandler::onUiUpdate(QObject* sender)
             {
                 if (_updating)
@@ -38,6 +42,6 @@ namespace mo
                 if (_updating)
                     return;
             }
-        }
-    }
-}
+        } // namespace qt
+    }     // namespace UI
+} // namespace mo

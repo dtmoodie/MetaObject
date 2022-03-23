@@ -3,7 +3,8 @@
 
 using namespace mo::UI::qt;
 
-IHandler::IHandler() : proxy(new SignalProxy(this))
+IHandler::IHandler()
+    : proxy(new SignalProxy(this))
 {
 }
 

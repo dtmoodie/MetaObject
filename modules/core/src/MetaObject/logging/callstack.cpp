@@ -1,14 +1,10 @@
 #include "callstack.hpp"
 
-
 namespace mo
 {
 
-IExceptionWithCallstack::~IExceptionWithCallstack()
-{
+    IExceptionWithCallstack::~IExceptionWithCallstack()
+    {
+    }
 
-}
-
-
-
-}
+} // namespace mo

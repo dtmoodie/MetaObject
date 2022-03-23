@@ -9,7 +9,7 @@ namespace mo
 
     bool loadPlugin(std::string str)
     {
-        if(mo::MetaObjectFactory::instance()->loadPlugin(str))
+        if (mo::MetaObjectFactory::instance()->loadPlugin(str))
         {
             auto module_name = python::getModuleName();
             boost::python::object plugins_module(boost::python::handle<>(
@@ -21,8 +21,7 @@ namespace mo
             for (auto& name : plugin_names)
             {
                 boost::shared_ptr<PluginInfo> plugin(new PluginInfo(name));
-                boost::python::import(module_name.c_str()).attr("plugins").attr(name.getPluginName().c_str()) =
-                    plugin;
+                boost::python::import(module_name.c_str()).attr("plugins").attr(name.getPluginName().c_str()) = plugin;
             }
             mo::python::registerInterfaces();
             mo::python::registerObjects();
@@ -45,8 +44,7 @@ namespace mo
             for (auto& name : plugin_names)
             {
                 boost::shared_ptr<PluginInfo> plugin(new PluginInfo(name));
-                boost::python::import(module_name.c_str()).attr("plugins").attr(name.getPluginName().c_str()) =
-                    plugin;
+                boost::python::import(module_name.c_str()).attr("plugins").attr(name.getPluginName().c_str()) = plugin;
             }
         }
         return nplugins;
@@ -101,7 +99,10 @@ namespace mo
         mo::MetaObjectFactory::instance()->getObjectSystem()->AppendAdditionalCompileOptions(str.c_str(), plugin.m_id);
     }
 
-    std::vector<std::string> listLoadedPlugins() { return mo::MetaObjectFactory::instance()->listLoadedPlugins(); }
+    std::vector<std::string> listLoadedPlugins()
+    {
+        return mo::MetaObjectFactory::instance()->listLoadedPlugins();
+    }
 
     void setupPlugins(const std::string& module_name)
     {
@@ -135,4 +136,4 @@ namespace mo
         mo::python::registerInterfaces();
         mo::python::registerObjects();
     }
-}
+} // namespace mo

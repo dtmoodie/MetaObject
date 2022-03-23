@@ -222,5 +222,5 @@ namespace mo
             IParam::emitUpdate(ts, ctx, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
             TParamImpl<T>::emitTypedUpdate(data, this, ctx, ts, fn, cs, mo::UpdateFlags::kBUFFER_UPDATED);
         }
-    }
-}
+    } // namespace Buffer
+} // namespace mo

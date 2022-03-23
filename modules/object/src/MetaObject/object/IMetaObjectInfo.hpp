@@ -22,9 +22,15 @@ namespace mo
         virtual std::string Print(IObjectInfo::Verbosity verbosity = IObjectInfo::INFO) const; // Pascal case in RCC
         virtual std::string getObjectTooltip() const;
         virtual std::string getObjectHelp() const;
-        virtual std::string getDisplayName() const { return GetObjectName(); }
-        virtual std::vector<std::pair<ISlot*, std::string>> getStaticSlots() const { return {}; }
+        virtual std::string getDisplayName() const
+        {
+            return GetObjectName();
+        }
+        virtual std::vector<std::pair<ISlot*, std::string>> getStaticSlots() const
+        {
+            return {};
+        }
     };
-}
+} // namespace mo
 
 #endif // MO_OBJECT_IMETA_OBJECT_INFO_HPP

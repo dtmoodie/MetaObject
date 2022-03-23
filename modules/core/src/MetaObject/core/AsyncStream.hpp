@@ -23,7 +23,6 @@ namespace mo
     {
         using Ptr_t = std::shared_ptr<AsyncStream>;
 
-
         AsyncStream(AllocatorPtr_t host_alloc = Allocator::getDefault());
         AsyncStream(const AsyncStream&) = delete;
         AsyncStream(AsyncStream&&) = delete;
@@ -32,8 +31,7 @@ namespace mo
         ~AsyncStream() override;
 
         void pushWork(std::function<void(IAsyncStream*)>&& work) override;
-        void
-        pushEvent(std::function<void(IAsyncStream*)>&& event, uint64_t event_id = 0) override;
+        void pushEvent(std::function<void(IAsyncStream*)>&& event, uint64_t event_id = 0) override;
 
         void setName(const std::string& name) override;
         void setHostPriority(PriorityLevels p) override;
@@ -50,6 +48,7 @@ namespace mo
         size_t size() const override;
 
         void initializeFiber();
+
       private:
         std::string m_name;
         uint64_t m_process_id = 0;

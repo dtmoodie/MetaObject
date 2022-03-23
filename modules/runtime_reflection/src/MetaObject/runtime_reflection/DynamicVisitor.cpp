@@ -24,7 +24,7 @@ namespace mo
 
     ILoadVisitor& LoadCache::operator()(const IStructTraits* val, void* ptr, const std::string& name, size_t cnt)
     {
-        //const auto traits = this->traits();
+        // const auto traits = this->traits();
         // writing data out,
         // const auto id = uint64_t(ptr);
         //(*m_serialized_pointers)[val->type()][id] = ptr;

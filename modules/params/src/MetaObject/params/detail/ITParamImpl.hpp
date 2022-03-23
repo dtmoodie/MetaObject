@@ -76,5 +76,5 @@ namespace mo
 
     template <typename T>
     const TypeInfo TParamImpl<T>::_type_info(typeid(T));
-}
+} // namespace mo
 #endif

@@ -7,8 +7,8 @@
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 
-#include <MetaObject/thread/fiber_include.hpp>
 #include <MetaObject/thread/Thread.hpp>
+#include <MetaObject/thread/fiber_include.hpp>
 
 #include <boost/thread.hpp>
 #include <iostream>
@@ -16,8 +16,6 @@
 #include "gtest/gtest.h"
 
 using namespace mo;
-
-
 
 TEST(signals, single_threaded)
 {

@@ -43,6 +43,6 @@ namespace mo
                 SignalProxy* proxy;
                 std::function<void(void)> onUpdate;
             };
-        }
-    }
-}
+        } // namespace qt
+    }     // namespace UI
+} // namespace mo

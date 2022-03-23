@@ -12,4 +12,4 @@ namespace mo
         std::string tooltip;
         bool is_static;
     };
-}
+} // namespace mo

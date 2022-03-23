@@ -28,5 +28,5 @@ namespace mo
                 return nullptr;
             }
         };
-    }
-}
+    } // namespace buffer
+} // namespace mo

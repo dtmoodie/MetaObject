@@ -16,6 +16,6 @@ namespace cuda_tests
     void multiply(const uint32_t N, float* data, const float scale, cudaStream_t stream);
 
     void square(float* data, uint32_t N, cudaStream_t stream);
-}// cuda_tests
+} // namespace cuda_tests
 
 #endif // MO_CUDA_TEST_DEVICE_FUNCS_HPP

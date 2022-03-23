@@ -36,7 +36,9 @@ namespace mo
         void publish(const T& data, Header, IAsyncStream* = nullptr);
         void publish(T&& data, Header, IAsyncStream* = nullptr);
         template <class... Ts>
-        auto publish(T data, Ts&&... args) -> void; // ct::EnableIf<ct::IsBase<ct::Base<T>, ct::Derived<ct::decay_t<U>>>::value || std::is_same<ct::decay_t<U>, T>::value>;
+        auto publish(T data, Ts&&... args)
+            -> void; // ct::EnableIf<ct::IsBase<ct::Base<T>, ct::Derived<ct::decay_t<U>>>::value ||
+                     // std::is_same<ct::decay_t<U>, T>::value>;
 
         // create data using m_allocator for publishing
         // This is more optimal than creating the data on your own because it can use
@@ -201,7 +203,9 @@ namespace mo
 
     template <typename T>
     template <class... Ts>
-    auto TPublisherImpl<T>::publish(T data, Ts&&... args) -> void // ct::EnableIf<ct::IsBase<ct::Base<T>, ct::Derived<ct::decay_t<U>>>::value || std::is_same<ct::decay_t<U>, T>::value>
+    auto TPublisherImpl<T>::publish(T data, Ts&&... args)
+        -> void // ct::EnableIf<ct::IsBase<ct::Base<T>, ct::Derived<ct::decay_t<U>>>::value ||
+                // std::is_same<ct::decay_t<U>, T>::value>
     {
         auto stream = getKeywordInputDefault<tags::Stream>(nullptr, std::forward<Ts>(args)...);
 

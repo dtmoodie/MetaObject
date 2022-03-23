@@ -26,4 +26,4 @@ namespace mo
     {
         printImpl(os, data);
     }
-}
+} // namespace mo

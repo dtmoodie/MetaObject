@@ -25,7 +25,6 @@ namespace mo
             , m_event_pool(ObjectPool<CUevent_st>::create())
             , m_allocator(std::move(allocator))
 
-
         {
             init();
         }
@@ -53,11 +52,7 @@ namespace mo
         {
             Event cuda_event = this->createEvent();
             cuda_event.record(m_stream);
-            cuda_event.setCallback(
-                [event, cuda_event](mo::IAsyncStream* stream) {
-                    event(stream);
-                },
-                event_id);
+            cuda_event.setCallback([event, cuda_event](mo::IAsyncStream* stream) { event(stream); }, event_id);
         }
 
         void AsyncStream::init()
@@ -188,9 +183,8 @@ namespace mo
 
                 Ptr_t create(const std::string& name, int32_t, PriorityLevels, PriorityLevels thread_priority) override
                 {
-                    auto stream = std::make_shared<mo::cuda::AsyncStream>(Stream::create(),
-                                                                          DeviceAllocator::getDefault(),
-                                                                          Allocator::getDefault());
+                    auto stream = std::make_shared<mo::cuda::AsyncStream>(
+                        Stream::create(), DeviceAllocator::getDefault(), Allocator::getDefault());
                     stream->setName(name);
                     stream->setHostPriority(thread_priority);
                     return stream;

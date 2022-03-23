@@ -16,6 +16,9 @@ namespace mo
             ParamFactory::instance()->registerConstructor(TypeInfo(typeid(T)), std::bind(&ParamConstructor<T>::create));
         }
 
-        static std::shared_ptr<IParam> create() { return std::make_shared<T>(); }
+        static std::shared_ptr<IParam> create()
+        {
+            return std::make_shared<T>();
+        }
     };
-}
+} // namespace mo

@@ -9,7 +9,7 @@ namespace rcc
     class weak_ptr;
     template <class T>
     class shared_ptr;
-}
+} // namespace rcc
 namespace std
 {
     template <class T>
@@ -39,10 +39,16 @@ namespace mo
         typedef rcc::shared_ptr<const Type> InputStorage_t;
         typedef const Type* Input_t;
 
-        static inline Storage_t copy(const Storage_t& value) { return Storage_t(value); }
+        static inline Storage_t copy(const Storage_t& value)
+        {
+            return Storage_t(value);
+        }
         // TODO figure out deep copy, perhaps create a new object from the constructor
         // Then use an ISimpleSerializer to copy members?
-        static inline Storage_t clone(const Storage_t& value) { return Storage_t(); }
+        static inline Storage_t clone(const Storage_t& value)
+        {
+            return Storage_t();
+        }
 
         template <class... Args>
         static rcc::shared_ptr<Type>& reset(Storage_t& input_storage, Args... args)
@@ -51,7 +57,10 @@ namespace mo
             return get(input_storage);
         }
 
-        static void move(Storage_t& storage, rcc::shared_ptr<Type>&& data) { storage = std::move(data); }
+        static void move(Storage_t& storage, rcc::shared_ptr<Type>&& data)
+        {
+            storage = std::move(data);
+        }
 
         template <class... Args>
         static void reset(InputStorage_t& input_storage, Args... args)
@@ -122,10 +131,16 @@ namespace mo
         typedef rcc::weak_ptr<const Type> InputStorage_t;
         typedef const Type* Input_t;
 
-        static inline Storage_t copy(const Storage_t& value) { return Storage_t(value); }
+        static inline Storage_t copy(const Storage_t& value)
+        {
+            return Storage_t(value);
+        }
         // TODO figure out deep copy, perhaps create a new object from the constructor
         // Then use an ISimpleSerializer to copy members?
-        static inline Storage_t clone(const Storage_t& value) { return Storage_t(); }
+        static inline Storage_t clone(const Storage_t& value)
+        {
+            return Storage_t();
+        }
 
         template <class... Args>
         static rcc::weak_ptr<Type>& reset(Storage_t& input_storage, Args... args)
@@ -134,7 +149,10 @@ namespace mo
             return get(input_storage);
         }
 
-        static void move(Storage_t& storage, rcc::weak_ptr<Type>&& data) { storage = std::move(data); }
+        static void move(Storage_t& storage, rcc::weak_ptr<Type>&& data)
+        {
+            storage = std::move(data);
+        }
         // TODO figure out deep copy of polymorphic type, likely with ISimpleSerializer
         template <class... Args>
         static rcc::weak_ptr<Type>& reset(Storage_t& input_storage, ConstStorageRef_t args)
@@ -153,8 +171,14 @@ namespace mo
         {
             input_storage.Reset();
         }
-        static inline rcc::weak_ptr<Type>& get(Storage_t& value) { return value; }
-        static inline const rcc::weak_ptr<const Type>& get(const InputStorage_t& value) { return value; }
+        static inline rcc::weak_ptr<Type>& get(Storage_t& value)
+        {
+            return value;
+        }
+        static inline const rcc::weak_ptr<const Type>& get(const InputStorage_t& value)
+        {
+            return value;
+        }
 
         static inline Type* ptr(Storage_t& value)
         {
@@ -189,10 +213,16 @@ namespace mo
         typedef std::shared_ptr<const Type> InputStorage_t;
         typedef const Type* Input_t;
 
-        static inline Storage_t copy(const Storage_t& value) { return Storage_t(value); }
+        static inline Storage_t copy(const Storage_t& value)
+        {
+            return Storage_t(value);
+        }
         // TODO figure out deep copy, perhaps create a new object from the constructor
         // Then use an ISimpleSerializer to copy members?
-        static inline Storage_t clone(const Storage_t& value) { return Storage_t(); }
+        static inline Storage_t clone(const Storage_t& value)
+        {
+            return Storage_t();
+        }
 
         template <class... Args>
         static Type& reset(Storage_t& input_storage, Args... args)

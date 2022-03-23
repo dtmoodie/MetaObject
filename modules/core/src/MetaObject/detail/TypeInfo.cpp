@@ -137,7 +137,7 @@ namespace std
     hash<mo::TypeInfo>::result_type hash<mo::TypeInfo>::operator()(argument_type const& s) const noexcept
     {
         const size_t output = s.getHash();
-        if(output != 0)
+        if (output != 0)
         {
             return output;
         }

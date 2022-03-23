@@ -52,4 +52,4 @@ namespace mo
         }
         return true;
     }
-}
+} // namespace mo

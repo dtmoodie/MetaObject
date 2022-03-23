@@ -1,5 +1,5 @@
-#include <gtest/gtest.h>
 #include <MetaObject/core.hpp>
+#include <gtest/gtest.h>
 
 TEST(system_table, singleton)
 {

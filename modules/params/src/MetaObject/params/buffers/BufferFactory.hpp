@@ -32,7 +32,8 @@ namespace mo
             MO_INLINE static std::shared_ptr<BufferFactory> instance();
             static void registerConstructor(const BufferConstructor& constructor, BufferFlags buffer);
             virtual std::shared_ptr<IBuffer> createBuffer(IPublisher& param, BufferFlags flags) = 0;
-            virtual std::shared_ptr<IBuffer> createBuffer(const std::shared_ptr<IPublisher>& param, BufferFlags flags) = 0;
+            virtual std::shared_ptr<IBuffer> createBuffer(const std::shared_ptr<IPublisher>& param,
+                                                          BufferFlags flags) = 0;
 
           private:
             virtual void registerConstructorImpl(const BufferConstructor& constructor, BufferFlags buffer) = 0;

@@ -13,8 +13,11 @@ namespace mo
             {
               public:
                 IParamInputProxy(InputParam* param_, MainApplication* app_, WContainerWidget* parent_ = 0)
-                    : Wt::WContainerWidget(parent_), _input_param(param_), _app(app_),
-                      _combo_box(new Wt::WComboBox(this)), _item_text(new Wt::WText(this))
+                    : Wt::WContainerWidget(parent_)
+                    , _input_param(param_)
+                    , _app(app_)
+                    , _combo_box(new Wt::WComboBox(this))
+                    , _item_text(new Wt::WText(this))
 
                 {
                     _item_text->setText(param_->getTreeName());
@@ -57,6 +60,6 @@ namespace mo
                 Wt::WText* _item_text;
                 std::function<void(const Wt::WString&)> onInputSelected;
             };
-        } // wt
-    }     // UI
-} // mo
+        } // namespace wt
+    }     // namespace UI
+} // namespace mo

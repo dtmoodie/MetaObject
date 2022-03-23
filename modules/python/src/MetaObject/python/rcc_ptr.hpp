@@ -9,9 +9,9 @@ namespace rcc
         return ptr.get();
     }
 
-    template<class T>
+    template <class T>
     T* get_pointer(const rcc::weak_ptr<T>& ptr)
     {
         return ptr.get();
     }
-}
+} // namespace rcc

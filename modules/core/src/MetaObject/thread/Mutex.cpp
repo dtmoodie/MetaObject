@@ -51,7 +51,7 @@ namespace mo
         m_mtx->unlock();
     }
 
-    RecursiveMutex::operator boost::fibers::recursive_mutex&()
+    RecursiveMutex::operator boost::fibers::recursive_mutex &()
     {
         return *m_mtx;
     }
@@ -83,7 +83,7 @@ namespace mo
         return m_mtx->try_lock_until(timeout_time);
     }
 
-    TimedMutex::operator boost::fibers::recursive_timed_mutex&()
+    TimedMutex::operator boost::fibers::recursive_timed_mutex &()
     {
         return *m_mtx;
     }

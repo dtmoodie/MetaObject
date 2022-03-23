@@ -1,9 +1,9 @@
 #include "AsyncStreamFactory.hpp"
 #include "AsyncStreamConstructor.hpp"
 
-#include <MetaObject/thread/FiberScheduler.hpp>
 #include <MetaObject/core/IAsyncStream.hpp>
 #include <MetaObject/core/SystemTable.hpp>
+#include <MetaObject/thread/FiberScheduler.hpp>
 namespace mo
 {
     std::shared_ptr<AsyncStreamFactory> AsyncStreamFactory::instance(SystemTable* table)

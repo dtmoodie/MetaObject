@@ -45,7 +45,7 @@ namespace mo
 
         void unlock();
 
-        operator boost::fibers::recursive_mutex&();
+        operator boost::fibers::recursive_mutex &();
 
       private:
         std::unique_ptr<boost::fibers::recursive_mutex> m_mtx;
@@ -69,7 +69,7 @@ namespace mo
 
         void unlock();
 
-        operator boost::fibers::recursive_timed_mutex&();
+        operator boost::fibers::recursive_timed_mutex &();
 
       private:
         bool try_lock_until_(std::chrono::steady_clock::time_point const& timeout_time) noexcept;

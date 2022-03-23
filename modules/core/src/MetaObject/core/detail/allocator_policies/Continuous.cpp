@@ -7,4 +7,4 @@ namespace mo
         stride = static_cast<size_t>(cols) * static_cast<size_t>(elemSize);
         size_needed = stride * static_cast<size_t>(rows);
     }
-}
+} // namespace mo

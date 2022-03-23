@@ -38,16 +38,15 @@ namespace mo
     ///////////////////////////////////////////////////////////////////////////
 
     template <class XPU>
-    StackPolicy<XPU>::StackPolicy(std::chrono::milliseconds deallocate_delay):
-        m_deallocate_delay(deallocate_delay)
+    StackPolicy<XPU>::StackPolicy(std::chrono::milliseconds deallocate_delay)
+        : m_deallocate_delay(deallocate_delay)
     {
-
     }
 
     template <class XPU>
     StackPolicy<XPU>::~StackPolicy()
     {
-        for(auto itr = m_deallocate_list.begin(); itr != m_deallocate_list.end(); )
+        for (auto itr = m_deallocate_list.begin(); itr != m_deallocate_list.end();)
         {
             XPU::deallocate(itr->ptr);
             itr = m_deallocate_list.erase(itr);

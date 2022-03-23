@@ -24,6 +24,6 @@ namespace mo
                 bool _dirty;
                 boost::posix_time::ptime _last_update_time;
             };
-        }
-    }
-}
+        } // namespace wt
+    }     // namespace UI
+} // namespace mo

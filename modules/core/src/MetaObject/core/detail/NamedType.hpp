@@ -80,4 +80,4 @@ namespace mo
       private:
         TypeInfo _value;
     };
-}
+} // namespace mo

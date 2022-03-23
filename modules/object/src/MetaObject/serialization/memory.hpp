@@ -65,4 +65,4 @@ namespace cereal
         ar(cereal::make_nvp("object", *m));
     }
 
-}
+} // namespace cereal

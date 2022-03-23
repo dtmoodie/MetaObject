@@ -40,8 +40,7 @@ namespace mo
             operator cudaStream_t() override;
 
             void pushWork(std::function<void(mo::IAsyncStream*)>&& work) override;
-            void pushEvent(std::function<void(mo::IAsyncStream*)>&& event,
-                           uint64_t event_id = 0) override;
+            void pushEvent(std::function<void(mo::IAsyncStream*)>&& event, uint64_t event_id = 0) override;
 
             Event createEvent();
             void enqueueCallback(std::function<void(mo::IAsyncStream*)> cb) override;

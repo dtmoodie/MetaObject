@@ -10,13 +10,17 @@ struct FunctionBuilder
 template <class... Args>
 struct FunctionBuilder<ct::VariadicTypedef<Args...>>
 {
-    static void function(Args&&... args) {}
+    static void function(Args&&... args)
+    {
+    }
 };
 
 template <class... Args1, class... Args2>
 struct FunctionBuilder<ct::VariadicTypedef<Args1...>, ct::VariadicTypedef<Args2...>>
 {
-    static void function(Args1&&... args1, Args2&&... args2) {}
+    static void function(Args1&&... args1, Args2&&... args2)
+    {
+    }
 };
 
 int main()

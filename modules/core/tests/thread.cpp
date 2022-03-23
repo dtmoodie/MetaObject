@@ -15,7 +15,6 @@
 
 using namespace mo;
 
-
 /*
 Things that we want to test:
 - pushing work to a stream on the same thread
@@ -25,7 +24,6 @@ Things that we want to test:
 - helper thread spawning and helping to process tasks
 
 */
-
 
 namespace
 {
@@ -150,7 +148,6 @@ namespace
             ASSERT_GT(count, 80);
         }
 
-
         void testEventComplex()
         {
             execution_count = 0;
@@ -166,7 +163,6 @@ namespace
             boost::this_fiber::sleep_for(1 * ms);
             ASSERT_EQ(execution_count, 1);
         }
-
 
         volatile std::atomic<uint32_t> execution_count;
 
@@ -228,11 +224,10 @@ TEST_F(StreamFixture, priority)
         ASSERT_EQ(higher_priority_executed, true);
     });
 
-    m_high_stream->pushWork(
-        [&lower_priority_executed, &higher_priority_executed](mo::IAsyncStream*) {
-            higher_priority_executed = true;
-            ASSERT_EQ(lower_priority_executed, false);
-        });
+    m_high_stream->pushWork([&lower_priority_executed, &higher_priority_executed](mo::IAsyncStream*) {
+        higher_priority_executed = true;
+        ASSERT_EQ(lower_priority_executed, false);
+    });
     boost::this_fiber::sleep_for(1 * ms);
 
     ASSERT_TRUE(higher_priority_executed);
@@ -287,17 +282,16 @@ TEST(stream, execute_fiber_with_yield)
     ASSERT_TRUE(callback_called);
 }
 
-// So the problem that I'm having is that the work stream for the created stream is being associated with the wrong thread
+// So the problem that I'm having is that the work stream for the created stream is being associated with the wrong
+// thread
 TEST(worker_thread, execute_on_worker)
 {
     auto worker = mo::ThreadRegistry::instance()->getThread(mo::ThreadRegistry::WORKER);
     const size_t this_thread = mo::getThisThread();
-    auto work = [this_thread](mo::IAsyncStream*)
-    {
+    auto work = [this_thread](mo::IAsyncStream*) {
         const size_t work_thread = mo::getThisThread();
         ASSERT_NE(this_thread, work_thread);
     };
     worker->pushWork(std::move(work));
     worker->synchronize();
 }
-

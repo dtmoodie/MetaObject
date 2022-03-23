@@ -254,7 +254,8 @@ namespace mo
         boost::python::class_<std::vector<IParam*>> iparam_vec("IParamVec", boost::python::no_init);
         iparam_vec.def(boost::python::vector_indexing_suite<std::vector<IParam*>>());
 
-        boost::python::class_<std::vector<IControlParam*>> icontrolparam_vec("IControlParamVec", boost::python::no_init);
+        boost::python::class_<std::vector<IControlParam*>> icontrolparam_vec("IControlParamVec",
+                                                                             boost::python::no_init);
         iparam_vec.def(boost::python::vector_indexing_suite<std::vector<IControlParam*>>());
 
         boost::python::class_<ISubscriber, ISubscriber*, boost::python::bases<IParam>, boost::noncopyable> subscriber(

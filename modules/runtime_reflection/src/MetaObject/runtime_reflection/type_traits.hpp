@@ -1,9 +1,9 @@
 #pragma once
 #include "export.hpp"
 
+#include <cstdint>
 #include <ct/VariadicTypedef.hpp>
 #include <type_traits>
-#include <cstdint>
 
 #if defined(_WIN32) || defined(_WIN64)
 #if _WIN64
@@ -28,13 +28,27 @@ namespace mo
     {
         uint8_t data;
     };
-    using PrimitiveTypes = ct::VariadicTypedef<int8_t, uint8_t, int16_t, uint16_t, int32_t, uint32_t, int64_t, uint64_t,
+    using PrimitiveTypes = ct::VariadicTypedef<int8_t,
+                                               uint8_t,
+                                               int16_t,
+                                               uint16_t,
+                                               int32_t,
+                                               uint32_t,
+                                               int64_t,
+                                               uint64_t,
 #ifdef ENVIRONMENT64
-                                               long long, unsigned long long,
+                                               long long,
+                                               unsigned long long,
 #else
-                                               long int, unsigned long int,
+                                               long int,
+                                               unsigned long int,
 #endif
-                                               float, double, void*, char, bool, Byte>;
+                                               float,
+                                               double,
+                                               void*,
+                                               char,
+                                               bool,
+                                               Byte>;
 
     template <class T>
     struct IsPrimitive
@@ -61,20 +75,18 @@ namespace mo
 
         static constexpr const bool value = PrimiviteRuntimeTypes::contains<T>();
     };
-}
+} // namespace mo
 
 #if __GNUG__ && (__GNUC__ < 5)
-
-
 
 namespace std
 {
 
-    template<class T>
+    template <class T>
     struct is_trivially_copyable
     {
         static constexpr const bool value = __has_trivial_copy(T);
     };
-}
+} // namespace std
 
 #endif

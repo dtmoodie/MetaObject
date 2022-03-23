@@ -148,7 +148,7 @@ namespace mo
     };
 } // namespace mo
 
-__attribute__ ((noinline)) MetaObjectFactory::Ptr_t MetaObjectFactory::instance(SystemTable* table)
+__attribute__((noinline)) MetaObjectFactory::Ptr_t MetaObjectFactory::instance(SystemTable* table)
 {
     return table->getSingleton<MetaObjectFactory, MetaObjectFactoryImpl>();
 }
@@ -640,19 +640,13 @@ void MetaObjectFactoryImpl::setupPluginCompilationOptions(const int32_t pid, Plu
         obj_system.SetCompilerLocation(options.compiler, pid);
         m_logger.debug("compiler location = {}", options.compiler);
     }
-    forEachString(options.link_libs, [this, pid](const char* lib)
-    {
-        obj_system.AppendAdditionalLinkLibraries(lib, pid);
-    });
-    forEachString(options.link_libs_debug, [this, pid](const char* lib)
-    {
-        obj_system.AppendAdditionalDebugLinkLibraries(lib, pid);
-    });
+    forEachString(options.link_libs,
+                  [this, pid](const char* lib) { obj_system.AppendAdditionalLinkLibraries(lib, pid); });
+    forEachString(options.link_libs_debug,
+                  [this, pid](const char* lib) { obj_system.AppendAdditionalDebugLinkLibraries(lib, pid); });
 
-    forEachString(options.link_libs_release, [this, pid](const char* lib)
-    {
-        obj_system.AppendAdditionalReleaseLinkLibraries(lib, pid);
-    });
+    forEachString(options.link_libs_release,
+                  [this, pid](const char* lib) { obj_system.AppendAdditionalReleaseLinkLibraries(lib, pid); });
 }
 
 bool MetaObjectFactoryImpl::abortCompilation()

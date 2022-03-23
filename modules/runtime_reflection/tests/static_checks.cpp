@@ -1,8 +1,8 @@
 #include "common.hpp"
 #include <MetaObject/runtime_reflection.hpp>
+#include <MetaObject/runtime_reflection/type_traits.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/map.hpp>
 #include <MetaObject/runtime_reflection/visitor_traits/pair.hpp>
-#include <MetaObject/runtime_reflection/type_traits.hpp>
 namespace mo
 {
     void staticCheckFunction()
@@ -35,4 +35,4 @@ namespace mo
         static_assert(is_complete<TTraits<const Vec>>::value, "mo::is_complete<mo::TTraits<Vec>>::value");
         // static_assert(is_complete<TTraits<std::string>>::value, "mo::is_complete<mo::TTraits<std::string>>::value");
     }
-}
+} // namespace mo

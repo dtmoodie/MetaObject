@@ -232,5 +232,5 @@ namespace mo
     {
         return MemoryBlock<XPU>::size() / sizeof(T);
     }
-}
+} // namespace mo
 #endif // METAOBJECT_CORE_DETAIL_MEMORY_BLOCK_HPP

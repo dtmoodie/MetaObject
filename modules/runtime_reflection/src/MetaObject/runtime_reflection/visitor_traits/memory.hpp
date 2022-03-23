@@ -319,7 +319,7 @@ namespace mo
         bool savePointedToData(ISaveVisitor& visitor, const void* inst, const std::string& name) const
         {
             const auto& ref = this->ref(inst);
-            if(ref)
+            if (ref)
             {
                 visitor(ref.get(), name);
                 return true;
@@ -329,12 +329,12 @@ namespace mo
 
         bool loadPointedToData(ILoadVisitor& visitor, void* inst, const std::string& name) const
         {
-            if(std::is_const<T>::value)
+            if (std::is_const<T>::value)
             {
                 return false;
             }
             auto& ref = this->ref(inst);
-            if(ref)
+            if (ref)
             {
                 visitor(const_cast<typename std::remove_const<T>::type*>(ref.get()), name);
                 return true;
@@ -395,7 +395,7 @@ namespace mo
         bool savePointedToData(ISaveVisitor& visitor, const void* inst, const std::string& name) const
         {
             const T* ref = this->ref(inst);
-            if(ref)
+            if (ref)
             {
                 visitor(ref, name);
                 return true;
@@ -406,7 +406,7 @@ namespace mo
         bool loadPointedToData(ILoadVisitor& visitor, void* inst, const std::string& name) const
         {
             T* ref = this->ref(inst);
-            if(ref)
+            if (ref)
             {
                 visitor(ref, name);
                 return true;
@@ -452,7 +452,7 @@ namespace mo
         bool savePointedToData(ISaveVisitor& visitor, const void* inst, const std::string& name) const
         {
             const T* ref = this->ref(inst);
-            if(ref)
+            if (ref)
             {
                 visitor(ref, name);
                 return true;

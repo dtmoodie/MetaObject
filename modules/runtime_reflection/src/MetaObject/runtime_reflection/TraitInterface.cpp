@@ -57,13 +57,12 @@ namespace mo
         return true;
     }
 
-
-    bool IPtrTraits::savePointedToData(ISaveVisitor&, const void* , const std::string& ) const
+    bool IPtrTraits::savePointedToData(ISaveVisitor&, const void*, const std::string&) const
     {
         return false;
     }
 
-    bool IPtrTraits::loadPointedToData(ILoadVisitor&, void* , const std::string& ) const
+    bool IPtrTraits::loadPointedToData(ILoadVisitor&, void*, const std::string&) const
     {
         return false;
     }

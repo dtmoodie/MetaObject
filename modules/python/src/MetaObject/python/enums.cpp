@@ -35,4 +35,4 @@ namespace mo
             .value("InputUpdated", mo::UpdateFlags::kINPUT_UPDATED)
             .value("BufferUpdated", mo::UpdateFlags::kBUFFER_UPDATED);*/
     }
-}
+} // namespace mo

@@ -17,7 +17,7 @@ namespace Wt
     {
         class WAbstractChart;
     }
-}
+} // namespace Wt
 namespace mo
 {
     class IParam;
@@ -233,8 +233,8 @@ namespace mo
                     return nullptr;
                 }
             };
-        }
-    }
+        } // namespace wt
+    }     // namespace UI
 #define MO_UI_WT_PARAMTERPROXY_METAParam(N)                                                                            \
     template <class T>                                                                                                 \
     struct MetaParam<T, N, typename std::enable_if<!mo::UI::wt::TParamProxy<T>::IS_DEFAULT>::type>                     \
@@ -249,9 +249,8 @@ namespace mo
     };                                                                                                                 \
     template <class T>                                                                                                 \
     UI::wt::WidgetConstructor<T>                                                                                       \
-        MetaParam<T,                                                                                                   \
-                  N,                                                                                                   \
-                  typename std::enable_if<!mo::UI::wt::TParamProxy<T>::IS_DEFAULT>::type>::_Param_proxy_constructor;
+        MetaParam<T, N, typename std::enable_if<!mo::UI::wt::TParamProxy<T>::IS_DEFAULT>::type>::                      \
+            _Param_proxy_constructor;
 
     MO_UI_WT_PARAMTERPROXY_METAParam(__COUNTER__)
 
@@ -269,9 +268,8 @@ namespace mo
     };                                                                                                                 \
     template <class T>                                                                                                 \
     UI::wt::PlotConstructor<T>                                                                                         \
-        MetaParam<T,                                                                                                   \
-                  N,                                                                                                   \
-                  typename std::enable_if<!mo::UI::wt::TPlotProxy<T>::IS_DEFAULT>::type>::_Param_plot_constructor;
+        MetaParam<T, N, typename std::enable_if<!mo::UI::wt::TPlotProxy<T>::IS_DEFAULT>::type>::                       \
+            _Param_plot_constructor;
 
         MO_UI_WT_PLOTPROXY_METAParam(__COUNTER__)
-}
+} // namespace mo

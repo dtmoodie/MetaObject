@@ -5,9 +5,9 @@
 #include <MetaObject/thread/PriorityLevels.hpp>
 
 #include <ct/reflect.hpp>
+#include <ct/reflect/MemberFunctionPointer.hpp>
 #include <ct/reflect_macros.hpp>
 #include <ct/types/TArrayView.hpp>
-#include <ct/reflect/MemberFunctionPointer.hpp>
 
 #include <functional>
 
@@ -23,6 +23,7 @@ namespace mo
     {
         AsyncStreamContextManager(const std::shared_ptr<IAsyncStream>& new_stream);
         ~AsyncStreamContextManager();
+
       private:
         std::shared_ptr<IAsyncStream> m_previous;
     };
@@ -50,8 +51,7 @@ namespace mo
         virtual ~IAsyncStream();
 
         virtual void pushWork(Work_f&& work) = 0;
-        virtual void
-        pushEvent(Work_f&& event, uint64_t event_id = 0) = 0;
+        virtual void pushEvent(Work_f&& event, uint64_t event_id = 0) = 0;
 
         virtual void synchronize() = 0;
         virtual void synchronize(IAsyncStream& other);

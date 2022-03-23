@@ -2,5 +2,7 @@
 
 namespace mo
 {
-    ISignalRelay::~ISignalRelay() {}
-}
+    ISignalRelay::~ISignalRelay()
+    {
+    }
+} // namespace mo

@@ -78,7 +78,6 @@ namespace mo
                         }
                         catch (...)
                         {
-
                         }
                     }
                     return output;
@@ -157,8 +156,8 @@ namespace mo
                     return std::shared_ptr<IParamProxy>(new ParamProxy<T>(param));
                 }
             };
-        }
-    }
+        } // namespace qt
+    }     // namespace UI
 #define MO_UI_QT_PARAMTERPROXY_METAParam(N)                                                                            \
     template <class T>                                                                                                 \
     struct MetaParam<T, N, typename std::enable_if<!UI::qt::ParamProxy<T>::IS_DEFAULT>::type>                          \
@@ -176,5 +175,5 @@ namespace mo
         MetaParam<T, N, typename std::enable_if<!UI::qt::ParamProxy<T>::IS_DEFAULT>::type>::_Param_proxy_constructor;
 
     MO_UI_QT_PARAMTERPROXY_METAParam(__COUNTER__)
-}
+} // namespace mo
 //#include "detail/TParamProxyImpl.hpp"

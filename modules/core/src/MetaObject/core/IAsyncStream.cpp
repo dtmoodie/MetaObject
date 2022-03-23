@@ -3,9 +3,9 @@
 #include <MetaObject/thread/FiberProperties.hpp>
 #include <MetaObject/thread/Thread.hpp>
 
+#include <boost/fiber/barrier.hpp>
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/operations.hpp>
-#include <boost/fiber/barrier.hpp>
 
 namespace mo
 {
@@ -23,7 +23,7 @@ namespace mo
 
     IAsyncStream::~IAsyncStream()
     {
-        if(IAsyncStream::current().get() == this)
+        if (IAsyncStream::current().get() == this)
         {
             IAsyncStream::setCurrent({});
         }
@@ -74,12 +74,10 @@ namespace mo
 
     void IAsyncStream::makeCurrent()
     {
-
     }
 
     void IAsyncStream::noLongerCurrent()
     {
-
     }
 
     void IAsyncStream::waitForCompletion()
@@ -91,17 +89,11 @@ namespace mo
     void IAsyncStream::synchronize(IAsyncStream& other)
     {
 
-        if(other.size())
+        if (other.size())
         {
             std::shared_ptr<boost::fibers::barrier> barrier = std::make_shared<boost::fibers::barrier>(2);
-            other.pushWork([barrier](IAsyncStream* stream)
-                           {
-                               barrier->wait();
-                           });
-            this->pushWork([barrier](IAsyncStream* stream)
-                           {
-                               barrier->wait();
-                           });
+            other.pushWork([barrier](IAsyncStream* stream) { barrier->wait(); });
+            this->pushWork([barrier](IAsyncStream* stream) { barrier->wait(); });
         }
     }
 

@@ -17,6 +17,6 @@ namespace mo
             XPU::deallocate(ptr, num_bytes);
         }
     };
-}
+} // namespace mo
 
 #endif // MO_CORE_ALLOCATOR_DEFAULT_HPP

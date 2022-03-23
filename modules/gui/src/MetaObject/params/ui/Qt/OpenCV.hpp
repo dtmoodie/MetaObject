@@ -32,8 +32,11 @@ namespace mo
               public:
                 static const bool IS_DEFAULT = false;
                 THandler(IParamProxy& parent)
-                    : UiUpdateHandler(parent), _x_handler(parent), _y_handler(parent), _width_handler(parent),
-                      _height_handler(parent)
+                    : UiUpdateHandler(parent)
+                    , _x_handler(parent)
+                    , _y_handler(parent)
+                    , _width_handler(parent)
+                    , _height_handler(parent)
                 {
                 }
 
@@ -45,7 +48,10 @@ namespace mo
                     _height_handler.updateUi(data.height);
                 }
 
-                void onUiUpdate(QObject* sender) { _parent.onUiUpdate(sender); }
+                void onUiUpdate(QObject* sender)
+                {
+                    _parent.onUiUpdate(sender);
+                }
 
                 void updateParam(::cv::Rect_<T>& data)
                 {
@@ -81,7 +87,12 @@ namespace mo
                 THandler<int> _end_handler;
 
               public:
-                THandler(IParamProxy& parent) : _start_handler(parent), _end_handler(parent), UiUpdateHandler(parent) {}
+                THandler(IParamProxy& parent)
+                    : _start_handler(parent)
+                    , _end_handler(parent)
+                    , UiUpdateHandler(parent)
+                {
+                }
 
                 void updateUi(const cv::Range& data)
                 {
@@ -116,7 +127,10 @@ namespace mo
                 ::cv::Matx<T, ROW, COL>* matData;
 
               public:
-                THandler(IParamProxy& parent) : table(nullptr), matData(nullptr), UiUpdateHandler(parent)
+                THandler(IParamProxy& parent)
+                    : table(nullptr)
+                    , matData(nullptr)
+                    , UiUpdateHandler(parent)
                 {
                     table = new QTableWidget();
                     table->horizontalHeader()->hide();
@@ -190,13 +204,19 @@ namespace mo
             class THandler<typename ::cv::Vec<T, ROW>, void> : public THandler<::cv::Matx<T, ROW, 1>>
             {
               public:
-                THandler(IParamProxy& parent) : THandler<::cv::Matx<T, ROW, 1>>(parent) {}
+                THandler(IParamProxy& parent)
+                    : THandler<::cv::Matx<T, ROW, 1>>(parent)
+                {
+                }
             };
             template <typename T>
             class THandler<typename ::cv::Scalar_<T>, void> : public THandler<::cv::Vec<T, 4>>
             {
               public:
-                THandler(IParamProxy& parent) : THandler<cv::Vec<T, 4>>(parent) {}
+                THandler(IParamProxy& parent)
+                    : THandler<cv::Vec<T, 4>>(parent)
+                {
+                }
             };
 
             // **********************************************************************************
@@ -211,7 +231,9 @@ namespace mo
                 ::cv::Point_<T>* ptData;
 
               public:
-                THandler(IParamProxy& parent) : UiUpdateHandler(parent), ptData(nullptr)
+                THandler(IParamProxy& parent)
+                    : UiUpdateHandler(parent)
+                    , ptData(nullptr)
                 {
                     table = new QTableWidget();
                     first = new QTableWidgetItem();
@@ -283,7 +305,8 @@ namespace mo
                 QTableWidgetItem* third;
 
               public:
-                THandler(IParamProxy& parent) : UiUpdateHandler(parent)
+                THandler(IParamProxy& parent)
+                    : UiUpdateHandler(parent)
                 {
                     table = new QTableWidget();
                     first = new QTableWidgetItem();
@@ -351,7 +374,7 @@ namespace mo
                     return output;
                 }
             };
-        }
-    }
-}
+        } // namespace qt
+    }     // namespace UI
+} // namespace mo
 #endif

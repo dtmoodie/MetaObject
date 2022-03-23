@@ -30,19 +30,27 @@ namespace mo
                     _data_buffer.erase(_data_buffer.begin());
                 }
             }
-            virtual void SetSize(long long size) { _size = size; }
-            virtual BufferFlags getBufferType() const { return ConstMap_e; }
+            virtual void SetSize(long long size)
+            {
+                _size = size;
+            }
+            virtual BufferFlags getBufferType() const
+            {
+                return ConstMap_e;
+            }
+
           private:
             size_t _size;
         };
-    }
+    } // namespace Buffer
 #define MO_METAParam_INSTANCE_CONST_MAP_(N)                                                                            \
     template <class T>                                                                                                 \
     struct MetaParam<T, N, void> : public MetaParam<T, N - 1, void>                                                    \
     {                                                                                                                  \
         static ParamConstructor<Buffer::ConstMap<T>> _map_Param_constructor;                                           \
         static BufferConstructor<Buffer::ConstMap<T>> _map_constructor;                                                \
-        MetaParam<T, N>(SystemTable * table, const char* name) : MetaParam<T, N - 1>(table, name)                      \
+        MetaParam<T, N>(SystemTable * table, const char* name)                                                         \
+            : MetaParam<T, N - 1>(table, name)                                                                         \
         {                                                                                                              \
             (void)&_map_Param_constructor;                                                                             \
             (void)&_map_constructor;                                                                                   \
@@ -54,4 +62,4 @@ namespace mo
     BufferConstructor<Buffer::ConstMap<T>> MetaParam<T, N, void>::_map_constructor;
 
     MO_METAParam_INSTANCE_CONST_MAP_(__COUNTER__)
-}
+} // namespace mo

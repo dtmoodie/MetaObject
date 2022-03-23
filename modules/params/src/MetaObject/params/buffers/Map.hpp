@@ -49,7 +49,10 @@ namespace mo
 
             constexpr static const BufferFlags Type = BufferFlags::MAP_BUFFER;
 
-            Map(const std::string& name = "", PushPolicy push_policy = GROW, SearchPolicy search_policy = EXACT, const Duration& pad = std::chrono::milliseconds(100));
+            Map(const std::string& name = "",
+                PushPolicy push_policy = GROW,
+                SearchPolicy search_policy = EXACT,
+                const Duration& pad = std::chrono::milliseconds(100));
             ~Map() override;
 
             // IBuffer

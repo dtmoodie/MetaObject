@@ -9,4 +9,4 @@ namespace mo
     IObjectTable::IObjectContainer::~IObjectContainer()
     {
     }
-}
+} // namespace mo

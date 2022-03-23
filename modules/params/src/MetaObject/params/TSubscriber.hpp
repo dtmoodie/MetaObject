@@ -352,7 +352,7 @@ namespace mo
                                     UpdateFlags fg,
                                     IAsyncStream* stream)
     {
-        if(data == nullptr)
+        if (data == nullptr)
         {
             return;
         }
@@ -368,7 +368,7 @@ namespace mo
         if (dst_stream && dst_stream != stream)
         {
             m_data = data;
-            if(stream)
+            if (stream)
             {
                 m_data->record(*stream);
             }

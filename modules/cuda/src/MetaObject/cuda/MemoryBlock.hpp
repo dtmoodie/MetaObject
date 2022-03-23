@@ -23,10 +23,10 @@ namespace mo
 
         using HOSTMemoryBlock = MemoryBlock<HOST>;
         using CUDAMemoryBlock = MemoryBlock<CUDA>;
-    }
+    } // namespace cuda
 
     extern template struct MemoryBlock<cuda::CUDA>;
     extern template struct MemoryBlock<cuda::HOST>;
-}
+} // namespace mo
 
 #endif // MO_CUDA_MEMORY_BLOCK_HPP

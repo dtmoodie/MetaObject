@@ -16,7 +16,8 @@ using namespace mo::UI;
 #include <boost/thread.hpp>
 using namespace Wt;
 
-mo::UI::wt::MainApplication::MainApplication(const WEnvironment& env) : WApplication(env)
+mo::UI::wt::MainApplication::MainApplication(const WEnvironment& env)
+    : WApplication(env)
 {
     setTitle("EagleEye Web"); // application title
     enableUpdates();

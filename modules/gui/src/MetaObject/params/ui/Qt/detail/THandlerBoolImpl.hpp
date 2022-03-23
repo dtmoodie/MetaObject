@@ -8,5 +8,5 @@ namespace mo
         namespace qt
         {
         }
-    }
-}
+    } // namespace UI
+} // namespace mo

@@ -26,7 +26,6 @@ namespace mo
 
         ~CvAllocatorProxy()
         {
-
         }
 
         inline cv::UMatData* allocate(int dims,

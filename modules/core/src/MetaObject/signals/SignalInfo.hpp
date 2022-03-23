@@ -11,4 +11,4 @@ namespace mo
         std::string description;
         std::string tooltip;
     };
-}
+} // namespace mo

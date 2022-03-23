@@ -54,4 +54,4 @@ namespace mo
         }
     };
 
-}
+} // namespace mo

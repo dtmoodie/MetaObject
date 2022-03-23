@@ -11,6 +11,6 @@ namespace mo
             class IParamOutputProxy
             {
             };
-        }
-    }
-}
+        } // namespace wt
+    }     // namespace UI
+} // namespace mo

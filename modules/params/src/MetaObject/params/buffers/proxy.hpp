@@ -16,8 +16,9 @@ namespace mo
 
           public:
             Proxy(TParam<T>* input, Params::Param::Ptr_t buffer)
-                : _input_Param(input), _buffer(std::dynamic_pointer_cast<TParam>(buffer)),
-                  TParam<T>("proxy for " + (input ? input->getName() : std::string("null")))
+                : _input_Param(input)
+                , _buffer(std::dynamic_pointer_cast<TParam>(buffer))
+                , TParam<T>("proxy for " + (input ? input->getName() : std::string("null")))
             {
                 if (input)
                 {
@@ -28,7 +29,10 @@ namespace mo
                     _input_Param->subscribers++;
                 }
             }
-            Proxy(TParam<T>* input, TParam<T>* buffer) : _input_Param(input), _buffer(buffer), TParam<T>("proxy")
+            Proxy(TParam<T>* input, TParam<T>* buffer)
+                : _input_Param(input)
+                , _buffer(buffer)
+                , TParam<T>("proxy")
 
             {
                 if (input)
@@ -75,25 +79,44 @@ namespace mo
                     }
                 }
             }
-            virtual T* Data(mo::Time timestamp) { return _buffer->Data(timestamp); }
+            virtual T* Data(mo::Time timestamp)
+            {
+                return _buffer->Data(timestamp);
+            }
             virtual bool GetData(T& value, mo::Time ts = -1 * mo::second)
             {
                 return _buffer->GetData(value, time_index);
             }
-            virtual void updateData(T& data_, mo::Time ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr) {}
+            virtual void updateData(T& data_, mo::Time ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
+            {
+            }
             virtual void updateData(const T& data_, mo::Time ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
             {
             }
-            virtual void updateData(T* data_, mo::Time ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr) {}
+            virtual void updateData(T* data_, mo::Time ts = -1 * mo::second, cv::cuda::Stream* stream = nullptr)
+            {
+            }
 
-            virtual Param::Ptr_t DeepCopy() const { return Param::Ptr(new Proxy(_input_Param, _buffer->DeepCopy())); }
-            virtual void SetSize(mo::Time size) { dynamic_cast<IBuffer*>(_buffer.get())->SetSize(size); }
-            virtual mo::Time getSize() { return dynamic_cast<IBuffer*>(_buffer.get())->getSize(); }
+            virtual Param::Ptr_t DeepCopy() const
+            {
+                return Param::Ptr(new Proxy(_input_Param, _buffer->DeepCopy()));
+            }
+            virtual void SetSize(mo::Time size)
+            {
+                dynamic_cast<IBuffer*>(_buffer.get())->SetSize(size);
+            }
+            virtual mo::Time getSize()
+            {
+                return dynamic_cast<IBuffer*>(_buffer.get())->getSize();
+            }
             virtual void getTimestampRange(mo::Time& start, mo::Time& end)
             {
                 dynamic_cast<IBuffer*>(_buffer.get())->getTimestampRange(start, end);
             }
-            virtual std::recursive_mutex& mtx() { return _buffer->mtx(); }
+            virtual std::recursive_mutex& mtx()
+            {
+                return _buffer->mtx();
+            }
         };
-    }
-}
+    } // namespace Buffer
+} // namespace mo

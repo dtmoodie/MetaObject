@@ -25,4 +25,4 @@ namespace mo
         std::list<std::shared_ptr<Thread>> m_running_threads;
         std::set<PriorityScheduler*> m_schedulers;
     };
-}
+} // namespace mo

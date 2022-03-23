@@ -386,60 +386,46 @@ namespace mo
         auto param_names = policy(param_info);
         switch (param_names.size())
         {
-        case 0:
-        {
+        case 0: {
             return makeConstructorHelper<T, 0, Storage, Creator>(ctr, param_names);
         }
-        case 1:
-        {
+        case 1: {
             return makeConstructorHelper<T, 1, Storage, Creator>(ctr, param_names);
         }
-        case 2:
-        {
+        case 2: {
             return makeConstructorHelper<T, 2, Storage, Creator>(ctr, param_names);
         }
-        case 3:
-        {
+        case 3: {
             return makeConstructorHelper<T, 3, Storage, Creator>(ctr, param_names);
         }
-        case 4:
-        {
+        case 4: {
             return makeConstructorHelper<T, 4, Storage, Creator>(ctr, param_names);
         }
-        case 5:
-        {
+        case 5: {
             return makeConstructorHelper<T, 5, Storage, Creator>(ctr, param_names);
         }
-        case 6:
-        {
+        case 6: {
             return makeConstructorHelper<T, 6, Storage, Creator>(ctr, param_names);
         }
-        case 7:
-        {
+        case 7: {
             return makeConstructorHelper<T, 7, Storage, Creator>(ctr, param_names);
         }
-        case 8:
-        {
+        case 8: {
             return makeConstructorHelper<T, 8, Storage, Creator>(ctr, param_names);
         }
-        case 9:
-        {
+        case 9: {
             return makeConstructorHelper<T, 9, Storage, Creator>(ctr, param_names);
         }
-        case 10:
-        {
+        case 10: {
             return makeConstructorHelper<T, 10, Storage, Creator>(ctr, param_names);
         }
-        case 11:
-        {
+        case 11: {
             return makeConstructorHelper<T, 11, Storage, Creator>(ctr, param_names);
         }
-        case 12:
-        {
+        case 12: {
             return makeConstructorHelper<T, 12, Storage, Creator>(ctr, param_names);
         }
-        case 13:
-        {
+        case 13: {
             return makeConstructorHelper<T, 13, Storage, Creator>(ctr, param_names);
         }
         }

@@ -85,4 +85,4 @@ namespace mo
     {
         return m_threshold;
     }
-}
+} // namespace mo

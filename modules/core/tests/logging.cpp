@@ -10,7 +10,6 @@ TEST(logging, init)
     mo::initLogging();
 }
 
-
 /*BOOST_AUTO_TEST_CASE(single_threaded_logging, *boost::unit_test::timeout(100))
 {
     for (int i = 0; i < 1000; ++i)

@@ -167,7 +167,12 @@ namespace std
 {
     std::ostream& operator<<(std::ostream& lhs, const mo::Time& rhs)
     {
-        rhs.print(lhs, false, false, true, true, true);
+        const std::chrono::high_resolution_clock::duration day =
+            std::chrono::duration_cast<std::chrono::high_resolution_clock::duration>(std::chrono::hours(24));
+        const std::chrono::high_resolution_clock::duration hour =
+            std::chrono::duration_cast<std::chrono::high_resolution_clock::duration>(std::chrono::hours(1));
+
+        rhs.print(lhs, (rhs.time_since_epoch() > day), (rhs.time_since_epoch() > hour), true, true, true);
         return lhs;
     }
 } // namespace std

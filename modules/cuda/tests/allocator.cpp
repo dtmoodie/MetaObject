@@ -36,7 +36,7 @@ namespace
         }
         cv::cuda::GpuMat::Allocator* alloc;
     };
-}
+} // namespace
 
 TEST(gpu_allocator, random_pattern)
 {
@@ -70,7 +70,8 @@ TEST(gpu_allocator, random_pattern)
     double default_allocator_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
     start = mo::Time::now();
-    std::shared_ptr<CombinedPolicy<PoolPolicy<cuda::CUDA>, StackPolicy<cuda::CUDA>>> combined_allocator = std::make_unique<CombinedPolicy<PoolPolicy<cuda::CUDA>, StackPolicy<cuda::CUDA>>>();
+    std::shared_ptr<CombinedPolicy<PoolPolicy<cuda::CUDA>, StackPolicy<cuda::CUDA>>> combined_allocator =
+        std::make_unique<CombinedPolicy<PoolPolicy<cuda::CUDA>, StackPolicy<cuda::CUDA>>>();
     mo::cuda::AllocatorProxy<> combined_allocator_proxy(combined_allocator);
     cv::cuda::GpuMat::setDefaultAllocator(&combined_allocator_proxy);
     for (int i = 0; i < 1000; ++i)

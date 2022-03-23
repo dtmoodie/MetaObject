@@ -22,4 +22,4 @@ namespace mo
       private:
         std::shared_ptr<Thread> m_thread;
     };
-}
+} // namespace mo

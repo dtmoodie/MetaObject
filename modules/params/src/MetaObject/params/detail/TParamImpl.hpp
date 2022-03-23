@@ -8,7 +8,10 @@ namespace mo
     class TParam;
 
     template <typename T>
-    TParam<T>::TParam() : TParam<T>(), _data(), IParam()
+    TParam<T>::TParam()
+        : TParam<T>()
+        , _data()
+        , IParam()
     {
     }
 
@@ -77,11 +80,8 @@ namespace mo
     }
 
     template <typename T>
-    bool TParam<T>::updateDataImpl(Storage_t&& data,
-                                   const OptionalTime& ts,
-                                   Context* ctx,
-                                   size_t fn,
-                                   const std::shared_ptr<ICoordinateSystem>& cs)
+    bool TParam<T>::updateDataImpl(
+        Storage_t&& data, const OptionalTime& ts, Context* ctx, size_t fn, const std::shared_ptr<ICoordinateSystem>& cs)
     {
         _data = std::move(data);
         this->_fn = fn;
@@ -89,4 +89,4 @@ namespace mo
         TParamImpl<T>::emitTypedUpdate(_data, this, ctx, ts, this->_fn, cs, UpdateFlags::kVALUE_UPDATED);
         return true;
     }
-}
+} // namespace mo

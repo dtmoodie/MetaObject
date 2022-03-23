@@ -36,5 +36,5 @@ namespace mo
             }
             size_needed = stride * static_cast<uint64_t>(rows);
         }
-    }
-}
+    } // namespace cuda
+} // namespace mo

@@ -15,6 +15,6 @@ namespace mo
     {
         void initModule(SystemTable* table);
     }
-}
+} // namespace mo
 
 #endif

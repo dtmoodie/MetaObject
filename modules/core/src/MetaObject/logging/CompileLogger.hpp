@@ -24,4 +24,4 @@ namespace mo
         bool TestBuildCallback(const char* file, TestBuildResult type) override;
         bool TestBuildWaitAndUpdate() override;
     };
-}
+} // namespace mo

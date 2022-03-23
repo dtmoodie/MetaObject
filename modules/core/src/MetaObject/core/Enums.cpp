@@ -11,7 +11,7 @@ namespace mo
     {
         static std::map<const IAsyncStream*, std::map<const IAsyncStream*, BufferFlags>> connection_map;
         static BufferFlags default_connection_type = BufferFlags::BLOCKING_STREAM_BUFFER;
-    }
+    } // namespace
 
     static_assert(ct::Flags::CT_RESERVED_FLAG_BITS + 1 < 10, "");
     static_assert(ct::Flags::CT_RESERVED_FLAG_BITS + 1 < 10, "");
@@ -75,4 +75,4 @@ namespace mo
             connection_map[source][dest] = type;
         }
     }
-}
+} // namespace mo

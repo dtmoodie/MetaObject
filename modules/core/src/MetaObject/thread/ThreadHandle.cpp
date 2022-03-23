@@ -35,4 +35,4 @@ namespace mo
     {
         m_thread->setName(name);
     }
-}
+} // namespace mo

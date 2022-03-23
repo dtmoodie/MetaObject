@@ -169,10 +169,22 @@ class ConcurrentQueue : public std::queue<Data, Container>
         boost::mutex::scoped_lock lock(the_mutex);
         Super::c.clear();
     }
-    iterator begin() { return this->c.begin(); }
-    iterator end() { return this->c.end(); }
-    const_iterator begin() const { return this->c.begin(); }
-    const_iterator end() const { return this->c.end(); }
+    iterator begin()
+    {
+        return this->c.begin();
+    }
+    iterator end()
+    {
+        return this->c.end();
+    }
+    const_iterator begin() const
+    {
+        return this->c.begin();
+    }
+    const_iterator end() const
+    {
+        return this->c.end();
+    }
     iterator erase(iterator item)
     {
         boost::mutex::scoped_lock lock(the_mutex);
@@ -261,10 +273,13 @@ namespace moodycamel
         {
             typedef thread_id_t thread_id_numeric_size_t;
             typedef thread_id_t thread_id_hash_t;
-            static thread_id_hash_t prehash(thread_id_t const& x) { return x; }
+            static thread_id_hash_t prehash(thread_id_t const& x)
+            {
+                return x;
+            }
         };
-    }
-}
+    } // namespace details
+} // namespace moodycamel
 #if defined(MCDBGQ_USE_RELACY)
 namespace moodycamel
 {
@@ -273,9 +288,12 @@ namespace moodycamel
         typedef std::uint32_t thread_id_t;
         static const thread_id_t invalid_thread_id = 0xFFFFFFFFU;
         static const thread_id_t invalid_thread_id2 = 0xFFFFFFFEU;
-        static inline thread_id_t thread_id() { return rl::thread_index(); }
-    }
-}
+        static inline thread_id_t thread_id()
+        {
+            return rl::thread_index();
+        }
+    } // namespace details
+} // namespace moodycamel
 #elif defined(_WIN32) || defined(__WINDOWS__) || defined(__WIN32__)
 // No sense pulling in windows.h in a header, we'll manually declare the function
 // we use and rely on backwards-compatibility for this not to break
@@ -292,9 +310,12 @@ namespace moodycamel
         static const thread_id_t invalid_thread_id2 = 0xFFFFFFFFU; // Not technically guaranteed to be invalid, but is
                                                                    // never used in practice. Note that all Win32 thread
                                                                    // IDs are presently multiples of 4.
-        static inline thread_id_t thread_id() { return static_cast<thread_id_t>(::GetCurrentThreadId()); }
-    }
-}
+        static inline thread_id_t thread_id()
+        {
+            return static_cast<thread_id_t>(::GetCurrentThreadId());
+        }
+    } // namespace details
+} // namespace moodycamel
 #elif defined(__arm__) || defined(_M_ARM) || defined(__aarch64__) || (defined(__APPLE__) && TARGET_OS_IPHONE)
 namespace moodycamel
 {
@@ -309,7 +330,10 @@ namespace moodycamel
         // Note we don't define a invalid_thread_id2 since std::thread::id doesn't have one; it's
         // only used if MOODYCAMEL_CPP11_THREAD_LOCAL_SUPPORTED is defined anyway, which it won't
         // be.
-        static inline thread_id_t thread_id() { return std::this_thread::get_id(); }
+        static inline thread_id_t thread_id()
+        {
+            return std::this_thread::get_id();
+        }
 
         template <std::size_t>
         struct thread_id_size
@@ -345,8 +369,8 @@ namespace moodycamel
 #endif
             }
         };
-    }
-}
+    } // namespace details
+} // namespace moodycamel
 #else
 // Use a nice trick from this answer: http://stackoverflow.com/a/8438730/21475
 // In order to get a numeric thread ID in a platform-independent way, we use a thread-local
@@ -372,8 +396,8 @@ namespace moodycamel
             static MOODYCAMEL_THREADLOCAL int x;
             return reinterpret_cast<thread_id_t>(&x);
         }
-    }
-}
+    } // namespace details
+} // namespace moodycamel
 #endif
 
 // Exceptions
@@ -468,14 +492,26 @@ namespace moodycamel
     namespace details
     {
 #if defined(__GNUC__)
-        inline bool likely(bool x) { return __builtin_expect((x), true); }
-        inline bool unlikely(bool x) { return __builtin_expect((x), false); }
+        inline bool likely(bool x)
+        {
+            return __builtin_expect((x), true);
+        }
+        inline bool unlikely(bool x)
+        {
+            return __builtin_expect((x), false);
+        }
 #else
-        inline bool likely(bool x) { return x; }
-        inline bool unlikely(bool x) { return x; }
+        inline bool likely(bool x)
+        {
+            return x;
+        }
+        inline bool unlikely(bool x)
+        {
+            return x;
+        }
 #endif
-    }
-}
+    } // namespace details
+} // namespace moodycamel
 
 #ifdef MOODYCAMEL_QUEUE_INTERNAL_DEBUG
 #include "internal/concurrentqueue_internal_debug.h"
@@ -499,7 +535,7 @@ namespace moodycamel
 #else
         typedef std::max_align_t max_align_t; // Others (e.g. MSVC) insist it can *only* be accessed via std::
 #endif
-    }
+    } // namespace details
 
     // Default traits for the ConcurrentQueue. To change some of the
     // traits without re-implementing all of them, inherit from this
@@ -569,19 +605,43 @@ namespace moodycamel
 #if defined(malloc) || defined(free)
         // Gah, this is 2015, stop defining macros that break standard code already!
         // Work around malloc/free being special macros:
-        static inline void* WORKAROUND_malloc(size_t size) { return malloc(size); }
-        static inline void WORKAROUND_free(void* ptr) { return free(ptr); }
-        static inline void*(malloc)(size_t size) { return WORKAROUND_malloc(size); }
-        static inline void(free)(void* ptr) { return WORKAROUND_free(ptr); }
+        static inline void* WORKAROUND_malloc(size_t size)
+        {
+            return malloc(size);
+        }
+        static inline void WORKAROUND_free(void* ptr)
+        {
+            return free(ptr);
+        }
+        static inline void*(malloc)(size_t size)
+        {
+            return WORKAROUND_malloc(size);
+        }
+        static inline void(free)(void* ptr)
+        {
+            return WORKAROUND_free(ptr);
+        }
 #else
-        static inline void* malloc(size_t size) { return std::malloc(size); }
-        static inline void free(void* ptr) { return std::free(ptr); }
+        static inline void* malloc(size_t size)
+        {
+            return std::malloc(size);
+        }
+        static inline void free(void* ptr)
+        {
+            return std::free(ptr);
+        }
 #endif
 #else
         // Debug versions when running under the Relacy race detector (ignore
         // these in user code)
-        static inline void* malloc(size_t size) { return rl::rl_malloc(size, $); }
-        static inline void free(void* ptr) { return rl::rl_free(ptr, $); }
+        static inline void* malloc(size_t size)
+        {
+            return rl::rl_malloc(size, $);
+        }
+        static inline void free(void* ptr)
+        {
+            return rl::rl_free(ptr, $);
+        }
 #endif
     };
 
@@ -609,7 +669,12 @@ namespace moodycamel
             std::atomic<bool> inactive;
             ProducerToken* token;
 
-            ConcurrentQueueProducerTypelessBase() : next(nullptr), inactive(false), token(nullptr) {}
+            ConcurrentQueueProducerTypelessBase()
+                : next(nullptr)
+                , inactive(false)
+                , token(nullptr)
+            {
+            }
         };
 
         template <bool use32>
@@ -786,7 +851,10 @@ namespace moodycamel
             }
 
           private:
-            ThreadExitNotifier() : tail(nullptr) {}
+            ThreadExitNotifier()
+                : tail(nullptr)
+            {
+            }
             ThreadExitNotifier(ThreadExitNotifier const&) MOODYCAMEL_DELETE_FUNCTION;
             ThreadExitNotifier& operator=(ThreadExitNotifier const&) MOODYCAMEL_DELETE_FUNCTION;
 
@@ -883,7 +951,7 @@ namespace moodycamel
                 value = ATOMIC_POINTER_LOCK_FREE
             };
         };
-    }
+    } // namespace details
 
     struct ProducerToken
     {
@@ -929,7 +997,10 @@ namespace moodycamel
         // Note that if valid() returns true, that only indicates
         // that the token is valid for use with a specific queue,
         // but not which one; that's up to the user to track.
-        inline bool valid() const { return producer != nullptr; }
+        inline bool valid() const
+        {
+            return producer != nullptr;
+        }
 
         ~ProducerToken()
         {
@@ -1076,8 +1147,11 @@ namespace moodycamel
         // includes making the memory effects of construction visible, possibly with a
         // memory barrier).
         explicit ConcurrentQueue(size_t capacity = 6 * BLOCK_SIZE)
-            : producerListTail(nullptr), producerCount(0), initialBlockPoolIndex(0), nextExplicitConsumerId(0),
-              globalExplicitConsumerOffset(0)
+            : producerListTail(nullptr)
+            , producerCount(0)
+            , initialBlockPoolIndex(0)
+            , nextExplicitConsumerId(0)
+            , globalExplicitConsumerOffset(0)
         {
             implicitProducerHashResizeInProgress.clear(std::memory_order_relaxed);
             populate_initial_implicit_producer_hash();
@@ -1097,8 +1171,11 @@ namespace moodycamel
         // on the minimum number of elements you want available at any given
         // time, and the maximum concurrent number of each type of producer.
         ConcurrentQueue(size_t minCapacity, size_t maxExplicitProducers, size_t maxImplicitProducers)
-            : producerListTail(nullptr), producerCount(0), initialBlockPoolIndex(0), nextExplicitConsumerId(0),
-              globalExplicitConsumerOffset(0)
+            : producerListTail(nullptr)
+            , producerCount(0)
+            , initialBlockPoolIndex(0)
+            , nextExplicitConsumerId(0)
+            , globalExplicitConsumerOffset(0)
         {
             implicitProducerHashResizeInProgress.clear(std::memory_order_relaxed);
             populate_initial_implicit_producer_hash();
@@ -1210,14 +1287,20 @@ namespace moodycamel
             reown_producers();
         }
 
-        inline ConcurrentQueue& operator=(ConcurrentQueue&& other) MOODYCAMEL_NOEXCEPT { return swap_internal(other); }
+        inline ConcurrentQueue& operator=(ConcurrentQueue&& other) MOODYCAMEL_NOEXCEPT
+        {
+            return swap_internal(other);
+        }
 
         // Swaps this queue's state with the other's. Not thread-safe.
         // Swapping two queues does not invalidate their tokens, however
         // the tokens that were created for one queue must be used with
         // only the swapped queue (i.e. the tokens are tied to the
         // queue's movable state, not the object itself).
-        inline void swap(ConcurrentQueue& other) MOODYCAMEL_NOEXCEPT { swap_internal(other); }
+        inline void swap(ConcurrentQueue& other) MOODYCAMEL_NOEXCEPT
+        {
+            swap_internal(other);
+        }
 
       private:
         ConcurrentQueue& swap_internal(ConcurrentQueue& other)
@@ -1748,7 +1831,11 @@ namespace moodycamel
         template <typename N>
         struct FreeListNode
         {
-            FreeListNode() : freeListRefs(0), freeListNext(nullptr) {}
+            FreeListNode()
+                : freeListRefs(0)
+                , freeListNext(nullptr)
+            {
+            }
 
             std::atomic<std::uint32_t> freeListRefs;
             std::atomic<N*> freeListNext;
@@ -1760,12 +1847,19 @@ namespace moodycamel
         template <typename N> // N must inherit FreeListNode or have the same fields (and initialization of them)
         struct FreeList
         {
-            FreeList() : freeListHead(nullptr) {}
-            FreeList(FreeList&& other) : freeListHead(other.freeListHead.load(std::memory_order_relaxed))
+            FreeList()
+                : freeListHead(nullptr)
+            {
+            }
+            FreeList(FreeList&& other)
+                : freeListHead(other.freeListHead.load(std::memory_order_relaxed))
             {
                 other.freeListHead.store(nullptr, std::memory_order_relaxed);
             }
-            void swap(FreeList& other) { details::swap_relaxed(freeListHead, other.freeListHead); }
+            void swap(FreeList& other)
+            {
+                details::swap_relaxed(freeListHead, other.freeListHead);
+            }
 
             FreeList(FreeList const&) MOODYCAMEL_DELETE_FUNCTION;
             FreeList& operator=(FreeList const&) MOODYCAMEL_DELETE_FUNCTION;
@@ -1835,7 +1929,10 @@ namespace moodycamel
             }
 
             // Useful for traversing the list when there's no contention (e.g. to destroy remaining nodes)
-            N* head_unsafe() const { return freeListHead.load(std::memory_order_relaxed); }
+            N* head_unsafe() const
+            {
+                return freeListHead.load(std::memory_order_relaxed);
+            }
 
           private:
             inline void add_knowing_refcount_is_zero(N* node)
@@ -1892,8 +1989,12 @@ namespace moodycamel
         struct Block
         {
             Block()
-                : next(nullptr), elementsCompletelyDequeued(0), freeListRefs(0), freeListNext(nullptr),
-                  shouldBeOnFreeList(false), dynamicallyAllocated(true)
+                : next(nullptr)
+                , elementsCompletelyDequeued(0)
+                , freeListRefs(0)
+                , freeListNext(nullptr)
+                , shouldBeOnFreeList(false)
+                , dynamicallyAllocated(true)
             {
 #if MCDBGQ_TRACKMEM
                 owner = nullptr;
@@ -2077,8 +2178,13 @@ namespace moodycamel
         struct ProducerBase : public details::ConcurrentQueueProducerTypelessBase
         {
             ProducerBase(ConcurrentQueue* parent, bool isExplicit)
-                : tailIndex(0), headIndex(0), dequeueOptimisticCount(0), dequeueOvercommit(0), tailBlock(nullptr),
-                  isExplicit(isExplicit), parent(parent)
+                : tailIndex(0)
+                , headIndex(0)
+                , dequeueOptimisticCount(0)
+                , dequeueOvercommit(0)
+                , tailBlock(nullptr)
+                , isExplicit(isExplicit)
+                , parent(parent)
             {
             }
 
@@ -2110,7 +2216,10 @@ namespace moodycamel
                 }
             }
 
-            inline ProducerBase* next_prod() const { return static_cast<ProducerBase*>(next); }
+            inline ProducerBase* next_prod() const
+            {
+                return static_cast<ProducerBase*>(next);
+            }
 
             inline size_t size_approx() const
             {
@@ -2119,7 +2228,11 @@ namespace moodycamel
                 return details::circular_less_than(head, tail) ? static_cast<size_t>(tail - head) : 0;
             }
 
-            inline index_t getTail() const { return tailIndex.load(std::memory_order_relaxed); }
+            inline index_t getTail() const
+            {
+                return tailIndex.load(std::memory_order_relaxed);
+            }
+
           protected:
             std::atomic<index_t> tailIndex; // Where to enqueue to next
             std::atomic<index_t> headIndex; // Where to dequeue from next
@@ -2146,9 +2259,13 @@ namespace moodycamel
         struct ExplicitProducer : public ProducerBase
         {
             explicit ExplicitProducer(ConcurrentQueue* parent)
-                : ProducerBase(parent, true), blockIndex(nullptr), pr_blockIndexSlotsUsed(0),
-                  pr_blockIndexSize(EXPLICIT_INITIAL_INDEX_SIZE >> 1), pr_blockIndexFront(0),
-                  pr_blockIndexEntries(nullptr), pr_blockIndexRaw(nullptr)
+                : ProducerBase(parent, true)
+                , blockIndex(nullptr)
+                , pr_blockIndexSlotsUsed(0)
+                , pr_blockIndexSize(EXPLICIT_INITIAL_INDEX_SIZE >> 1)
+                , pr_blockIndexFront(0)
+                , pr_blockIndexEntries(nullptr)
+                , pr_blockIndexRaw(nullptr)
             {
                 size_t poolBasedIndexSize = details::ceil_to_pow_2(parent->initialBlockPoolSize) >> 1;
                 if (poolBasedIndexSize > pr_blockIndexSize)
@@ -2329,7 +2446,10 @@ namespace moodycamel
                     {
                         // The constructor may throw. We want the element not to appear in the queue in
                         // that case (without corrupting the queue):
-                        MOODYCAMEL_TRY { new ((*this->tailBlock)[currentTailIndex]) T(std::forward<U>(element)); }
+                        MOODYCAMEL_TRY
+                        {
+                            new ((*this->tailBlock)[currentTailIndex]) T(std::forward<U>(element));
+                        }
                         MOODYCAMEL_CATCH(...)
                         {
                             // Revert change to the current block, but leave the new block available
@@ -2655,11 +2775,10 @@ namespace moodycamel
                                 // may only define a (noexcept) move constructor, and so calls to the
                                 // cctor will not compile, even if they are in an if branch that will never
                                 // be executed
-                                new ((*this->tailBlock)[currentTailIndex])
-                                    T(details::nomove_if<(bool)!MOODYCAMEL_NOEXCEPT_CTOR(
-                                          T,
-                                          decltype(*itemFirst),
-                                          new (nullptr) T(details::deref_noexcept(itemFirst)))>::eval(*itemFirst));
+                                new ((*this->tailBlock)[currentTailIndex]) T(
+                                    details::nomove_if<(bool)!MOODYCAMEL_NOEXCEPT_CTOR(
+                                        T, decltype(*itemFirst), new (nullptr) T(details::deref_noexcept(itemFirst)))>::
+                                        eval(*itemFirst));
                                 ++currentTailIndex;
                                 ++itemFirst;
                             }
@@ -2939,17 +3058,19 @@ namespace moodycamel
         struct ImplicitProducer : public ProducerBase
         {
             ImplicitProducer(ConcurrentQueue* parent)
-                : ProducerBase(parent, false), nextBlockIndexCapacity(IMPLICIT_INITIAL_INDEX_SIZE), blockIndex(nullptr)
+                : ProducerBase(parent, false)
+                , nextBlockIndexCapacity(IMPLICIT_INITIAL_INDEX_SIZE)
+                , blockIndex(nullptr)
             {
                 new_block_index();
             }
 
             ~ImplicitProducer()
             {
-// Note that since we're in the destructor we can assume that all enqueue/dequeue operations
-// completed already; this means that all undequeued elements are placed contiguously across
-// contiguous blocks, and that only the first and last remaining blocks can be only partially
-// empty (all other remaining blocks must be completely full).
+                // Note that since we're in the destructor we can assume that all enqueue/dequeue operations
+                // completed already; this means that all undequeued elements are placed contiguously across
+                // contiguous blocks, and that only the first and last remaining blocks can be only partially
+                // empty (all other remaining blocks must be completely full).
 
 #ifdef MOODYCAMEL_CPP11_THREAD_LOCAL_SUPPORTED
                 // Unregister ourselves for thread termination notification
@@ -3051,7 +3172,10 @@ namespace moodycamel
                     if (!MOODYCAMEL_NOEXCEPT_CTOR(T, U, new (nullptr) T(std::forward<U>(element))))
                     {
                         // May throw, try to insert now before we publish the fact that we have this new block
-                        MOODYCAMEL_TRY { new ((*newBlock)[currentTailIndex]) T(std::forward<U>(element)); }
+                        MOODYCAMEL_TRY
+                        {
+                            new ((*newBlock)[currentTailIndex]) T(std::forward<U>(element));
+                        }
                         MOODYCAMEL_CATCH(...)
                         {
                             rewind_block_index_tail();
@@ -3283,11 +3407,10 @@ namespace moodycamel
                         {
                             while (currentTailIndex != stopIndex)
                             {
-                                new ((*this->tailBlock)[currentTailIndex])
-                                    T(details::nomove_if<(bool)!MOODYCAMEL_NOEXCEPT_CTOR(
-                                          T,
-                                          decltype(*itemFirst),
-                                          new (nullptr) T(details::deref_noexcept(itemFirst)))>::eval(*itemFirst));
+                                new ((*this->tailBlock)[currentTailIndex]) T(
+                                    details::nomove_if<(bool)!MOODYCAMEL_NOEXCEPT_CTOR(
+                                        T, decltype(*itemFirst), new (nullptr) T(details::deref_noexcept(itemFirst)))>::
+                                        eval(*itemFirst));
                                 ++currentTailIndex;
                                 ++itemFirst;
                             }
@@ -3699,7 +3822,10 @@ namespace moodycamel
             }
         }
 
-        inline Block* try_get_block_from_free_list() { return freeList.try_get(); }
+        inline Block* try_get_block_from_free_list()
+        {
+            return freeList.try_get();
+        }
 
         // Gets a free block from one of the memory pools, or allocates a new one (if applicable)
         template <AllocationMode canAlloc>
@@ -3848,7 +3974,11 @@ namespace moodycamel
         };
 
         // For debugging only. Not thread-safe.
-        MemStats getMemStats() { return MemStats::getFor(this); }
+        MemStats getMemStats()
+        {
+            return MemStats::getFor(this);
+        }
+
       private:
         friend struct MemStats;
 #endif
@@ -3956,7 +4086,10 @@ namespace moodycamel
             ImplicitProducer*
                 value; // No need for atomicity since it's only read by the thread that sets it in the first place
 
-            ImplicitProducerKVP() : value(nullptr) {}
+            ImplicitProducerKVP()
+                : value(nullptr)
+            {
+            }
 
             ImplicitProducerKVP(ImplicitProducerKVP&& other) MOODYCAMEL_NOEXCEPT
             {
@@ -4056,15 +4189,15 @@ namespace moodycamel
         // Only fails (returns nullptr) if memory allocation fails
         ImplicitProducer* get_or_add_implicit_producer()
         {
-// Note that since the data is essentially thread-local (key is thread ID),
-// there's a reduced need for fences (memory ordering is already consistent
-// for any individual thread), except for the current table itself.
+            // Note that since the data is essentially thread-local (key is thread ID),
+            // there's a reduced need for fences (memory ordering is already consistent
+            // for any individual thread), except for the current table itself.
 
-// Start by looking for the thread ID in the current and all previous hash tables.
-// If it's not found, it must not be in there yet, since this same thread would
-// have added it previously to one of the tables that we traversed.
+            // Start by looking for the thread ID in the current and all previous hash tables.
+            // If it's not found, it must not be in there yet, since this same thread would
+            // have added it previously to one of the tables that we traversed.
 
-// Code and algorithm adapted from http://preshing.com/20130605/the-worlds-simplest-lock-free-hash-table
+            // Code and algorithm adapted from http://preshing.com/20130605/the-worlds-simplest-lock-free-hash-table
 
 #if MCDBGQ_NOLOCKFREE_IMPLICITPRODHASH
             debug::DebugLock lock(implicitProdMutex);
@@ -4243,7 +4376,7 @@ namespace moodycamel
                 // we try to allocate ourselves).
                 mainHash = implicitProducerHash.load(std::memory_order_acquire);
             }
-        }
+        } // namespace moodycamel
 
 #ifdef MOODYCAMEL_CPP11_THREAD_LOCAL_SUPPORTED
         void implicit_producer_thread_exited(ImplicitProducer* producer)
@@ -4388,7 +4521,8 @@ namespace moodycamel
     };
 
     template <typename T, typename Traits>
-    ProducerToken::ProducerToken(ConcurrentQueue<T, Traits>& queue) : producer(queue.recycle_or_create_producer(true))
+    ProducerToken::ProducerToken(ConcurrentQueue<T, Traits>& queue)
+        : producer(queue.recycle_or_create_producer(true))
     {
         if (producer != nullptr)
         {
@@ -4408,7 +4542,9 @@ namespace moodycamel
 
     template <typename T, typename Traits>
     ConsumerToken::ConsumerToken(ConcurrentQueue<T, Traits>& queue)
-        : itemsConsumedFromCurrent(0), currentProducer(nullptr), desiredProducer(nullptr)
+        : itemsConsumedFromCurrent(0)
+        , currentProducer(nullptr)
+        , desiredProducer(nullptr)
     {
         initialOffset = queue.nextExplicitConsumerId.fetch_add(1, std::memory_order_release);
         lastKnownGlobalOffset = -1;
@@ -4416,7 +4552,9 @@ namespace moodycamel
 
     template <typename T, typename Traits>
     ConsumerToken::ConsumerToken(BlockingConcurrentQueue<T, Traits>& queue)
-        : itemsConsumedFromCurrent(0), currentProducer(nullptr), desiredProducer(nullptr)
+        : itemsConsumedFromCurrent(0)
+        , currentProducer(nullptr)
+        , desiredProducer(nullptr)
     {
         initialOffset = reinterpret_cast<ConcurrentQueue<T, Traits>*>(&queue)->nextExplicitConsumerId.fetch_add(
             1, std::memory_order_release);
@@ -4429,9 +4567,15 @@ namespace moodycamel
         a.swap(b);
     }
 
-    inline void swap(ProducerToken& a, ProducerToken& b) MOODYCAMEL_NOEXCEPT { a.swap(b); }
+    inline void swap(ProducerToken& a, ProducerToken& b) MOODYCAMEL_NOEXCEPT
+    {
+        a.swap(b);
+    }
 
-    inline void swap(ConsumerToken& a, ConsumerToken& b) MOODYCAMEL_NOEXCEPT { a.swap(b); }
+    inline void swap(ConsumerToken& a, ConsumerToken& b) MOODYCAMEL_NOEXCEPT
+    {
+        a.swap(b);
+    }
 
     template <typename T, typename Traits>
     inline void swap(typename ConcurrentQueue<T, Traits>::ImplicitProducerKVP& a,
@@ -4439,7 +4583,7 @@ namespace moodycamel
     {
         a.swap(b);
     }
-}
+} // namespace moodycamel
 
 #if defined(__GNUC__)
 #pragma GCC diagnostic pop

@@ -5,7 +5,6 @@
 
 #include <cstdint>
 
-
 #define COMBINE1(X, Y) X##Y // helper macro
 #define COMBINE(X, Y) COMBINE1(X, Y)
 
@@ -66,7 +65,7 @@ namespace mo
     {
         using type = void;
     };
-}
+} // namespace mo
 
 #define DEFINE_TYPEDEF_DETECTOR(typedef_NAME)                                                                          \
     template <class T, class U = void>                                                                                 \

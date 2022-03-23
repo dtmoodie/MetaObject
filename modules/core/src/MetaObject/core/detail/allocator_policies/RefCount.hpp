@@ -63,4 +63,4 @@ namespace mo
     {
         return m_ref_count;
     }
-}
+} // namespace mo

@@ -5,4 +5,4 @@ namespace mo
     IDataContainer::~IDataContainer()
     {
     }
-}
+} // namespace mo

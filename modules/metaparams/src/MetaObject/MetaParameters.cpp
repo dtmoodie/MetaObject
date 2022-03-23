@@ -18,7 +18,7 @@ namespace mo
     {
         PerModuleInterface::GetInstance()->SetSystemTable(table);
         mo::runtime_reflection::initModule(table);
-        
+
         metaparams::instantiatePOD(table);
         metaparams::instantiateVectors(table);
 #ifdef MO_HAVE_OPENCV

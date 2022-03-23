@@ -402,11 +402,12 @@ struct TestData<cv::Mat>
         return cv::Mat(std::vector<float>{0.0F,1.1F,2.2F,3.3F,4.4F,5.5F});
     }
 
-    static testing::AssertionResult Compare(const char* lhs_expression, const char* rhs_expression, const cv::Mat& lhs, const cv::Mat rhs)
+    static testing::AssertionResult Compare(const char* lhs_expression, const char* rhs_expression, const cv::Mat& lhs,
+const cv::Mat rhs)
     {
         if(lhs.size() != rhs.size())
         {
-            return testing::internal::EqFailure("lhs.size()", "rhs.size()", 
+            return testing::internal::EqFailure("lhs.size()", "rhs.size()",
             testing::internal::FormatForComparisonFailureMessage(lhs.size(), ))
         }
     }
@@ -427,7 +428,7 @@ using RuntimeReflectionTypeTest = ::testing::Types<int,
                                                    cv::Matx33f,
                                                    cv::Matx22f,
                                                    cv::Matx44f,
-                                                   //cv::Mat,
+                                                   // cv::Mat,
                                                    cv::Vec2b,
                                                    cv::Vec2i,
 #endif

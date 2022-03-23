@@ -27,6 +27,6 @@ namespace mo
                 ITAccessibleParam<EnumParam>* _param;
                 Wt::WComboBox* _combo_box;
             };
-        }
-    }
-}
+        } // namespace wt
+    }     // namespace UI
+} // namespace mo

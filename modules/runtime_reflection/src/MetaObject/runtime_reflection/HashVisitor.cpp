@@ -60,4 +60,4 @@ namespace mo
         m_hash = ct::combineHash<size_t>(m_hash, hasher(type.name()));
         m_hash = ct::combineHash<size_t>(m_hash, cnt);
     }
-}
+} // namespace mo

@@ -7,7 +7,11 @@ namespace mo
     template <class T, int N>
     struct SmallVecStorage
     {
-        SmallVecStorage(SmallVecBase<T>& base) : m_base(base) { m_base.m_ptr = m_data; }
+        SmallVecStorage(SmallVecBase<T>& base)
+            : m_base(base)
+        {
+            m_base.m_ptr = m_data;
+        }
 
         ~SmallVecStorage()
         {
@@ -86,4 +90,4 @@ namespace mo
             this->m_size = size;
         }
     };
-}
+} // namespace mo

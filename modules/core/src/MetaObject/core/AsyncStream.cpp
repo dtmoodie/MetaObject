@@ -13,11 +13,11 @@
 #include "AsyncStreamConstructor.hpp"
 #include "AsyncStreamFactory.hpp"
 
-#include <boost/fiber/fiber.hpp>
-#include <boost/fiber/operations.hpp>
-#include <boost/fiber/mutex.hpp>
-#include <boost/fiber/condition_variable.hpp>
 #include <boost/fiber/barrier.hpp>
+#include <boost/fiber/condition_variable.hpp>
+#include <boost/fiber/fiber.hpp>
+#include <boost/fiber/mutex.hpp>
+#include <boost/fiber/operations.hpp>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/thread/tss.hpp>
@@ -28,29 +28,28 @@ namespace mo
     void AsyncStream::workerLoop(AsyncStream* ptr)
     {
         mo::IAsyncStream::setCurrent(ptr->shared_from_this());
-        while(ptr->m_continue)
+        while (ptr->m_continue)
         {
             std::function<void(IAsyncStream*)> work;
             {
                 std::lock_guard<boost::fibers::mutex> lock(ptr->m_mtx);
-                if(!ptr->m_work_queue.empty())
+                if (!ptr->m_work_queue.empty())
                 {
                     work = std::move(std::get<0>(ptr->m_work_queue.front()));
                     ptr->m_work_queue.pop_front();
                 }
             }
-            if(work)
+            if (work)
             {
                 work(ptr);
-            }else
+            }
+            else
             {
                 boost::this_fiber::sleep_for(std::chrono::milliseconds(10));
             }
         }
         (void)ptr;
     }
-
-
 
     AsyncStream::AsyncStream(AllocatorPtr_t alloc)
     {
@@ -94,16 +93,16 @@ namespace mo
         m_work_queue.push_back(std::make_tuple(std::move(work), 0));
     }
 
-    void
-    AsyncStream::pushEvent(std::function<void(IAsyncStream*)>&& event, const uint64_t event_id)
+    void AsyncStream::pushEvent(std::function<void(IAsyncStream*)>&& event, const uint64_t event_id)
     {
         std::lock_guard<boost::fibers::mutex> lock(m_mtx);
-        if(event_id != 0)
+        if (event_id != 0)
         {
-            std::remove_if(m_work_queue.begin(), m_work_queue.end(), [event_id](const std::tuple<IAsyncStream::Work_f, uint64_t>& val)
-            {
-                return std::get<1>(val) == event_id;
-            });
+            std::remove_if(m_work_queue.begin(),
+                           m_work_queue.end(),
+                           [event_id](const std::tuple<IAsyncStream::Work_f, uint64_t>& val) {
+                               return std::get<1>(val) == event_id;
+                           });
         }
         m_work_queue.push_back(std::make_tuple(std::move(event), event_id));
     }
@@ -113,15 +112,12 @@ namespace mo
         mo::ScopedProfile profile("mo::AsyncStream::synchronize");
         boost::fibers::barrier barrier(2);
         {
-            if(m_work_queue.empty())
+            if (m_work_queue.empty())
             {
                 return;
             }
             std::lock_guard<boost::fibers::mutex> lock(m_mtx);
-            m_work_queue.push_back(std::make_tuple([&barrier](IAsyncStream* strm)
-            {
-                barrier.wait();
-            }, 0));
+            m_work_queue.push_back(std::make_tuple([&barrier](IAsyncStream* strm) { barrier.wait(); }, 0));
         }
         barrier.wait();
     }

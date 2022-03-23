@@ -16,4 +16,4 @@ namespace mo
             return new Buffer();
         }
     };
-}
+} // namespace mo

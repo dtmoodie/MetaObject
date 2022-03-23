@@ -116,7 +116,6 @@ namespace mo
                 }
                 return false;
             }
-        }
-    }
-}
-
+        } // namespace qt
+    }     // namespace UI
+} // namespace mo

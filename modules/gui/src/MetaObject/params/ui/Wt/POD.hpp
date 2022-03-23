@@ -22,7 +22,10 @@ namespace mo
             {
               public:
                 static const bool IS_DEFAULT = false;
-                TDataProxy() : _spin_box(nullptr) {}
+                TDataProxy()
+                    : _spin_box(nullptr)
+                {
+                }
                 void CreateUi(IParamProxy* proxy, T& data, bool read_only)
                 {
                     _spin_box = new Wt::WSpinBox(proxy);
@@ -30,9 +33,18 @@ namespace mo
                     _spin_box->setValue(data);
                     _spin_box->changed().connect(proxy, &IParamProxy::onUiUpdate);
                 }
-                void UpdateUi(const T& data) { _spin_box->setValue(data); }
-                void onUiUpdate(T& data) { data = _spin_box->value(); }
-                void SetTooltip(const std::string& tooltip) {}
+                void UpdateUi(const T& data)
+                {
+                    _spin_box->setValue(data);
+                }
+                void onUiUpdate(T& data)
+                {
+                    data = _spin_box->value();
+                }
+                void SetTooltip(const std::string& tooltip)
+                {
+                }
+
               protected:
                 Wt::WSpinBox* _spin_box;
             };
@@ -41,7 +53,10 @@ namespace mo
             {
               public:
                 static const bool IS_DEFAULT = false;
-                TDataProxy() : _spin_box(nullptr) {}
+                TDataProxy()
+                    : _spin_box(nullptr)
+                {
+                }
                 void CreateUi(IParamProxy* proxy, T& data, bool read_only)
                 {
                     _spin_box = new Wt::WDoubleSpinBox(proxy);
@@ -49,9 +64,18 @@ namespace mo
                     _spin_box->setValue(data);
                     _spin_box->changed().connect(proxy, &IParamProxy::onUiUpdate);
                 }
-                void UpdateUi(const T& data) { _spin_box->setValue(data); }
-                void onUiUpdate(T& data) { data = _spin_box->value(); }
-                void SetTooltip(const std::string& tooltip) {}
+                void UpdateUi(const T& data)
+                {
+                    _spin_box->setValue(data);
+                }
+                void onUiUpdate(T& data)
+                {
+                    data = _spin_box->value();
+                }
+                void SetTooltip(const std::string& tooltip)
+                {
+                }
+
               protected:
                 Wt::WDoubleSpinBox* _spin_box;
             };
@@ -63,7 +87,10 @@ namespace mo
             {
               public:
                 static const bool IS_DEFAULT = false;
-                TPlotDataProxy() : _chart(nullptr), _model(nullptr), _model_column(0)
+                TPlotDataProxy()
+                    : _chart(nullptr)
+                    , _model(nullptr)
+                    , _model_column(0)
                 {
                     _data_history.set_capacity(1000);
                 }
@@ -108,7 +135,9 @@ namespace mo
                         _model->setData(i, _model_column, _data_history[i].first);
                     }
                 }
-                void onUiUpdate(T& data) {}
+                void onUiUpdate(T& data)
+                {
+                }
 
                 Wt::Chart::WCartesianChart* _chart;
                 boost::circular_buffer<std::pair<T, mo::Time>> _data_history;

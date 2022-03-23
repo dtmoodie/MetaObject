@@ -67,5 +67,5 @@ namespace mo
         void onInputUpdate(Context* ctx, IParam* param)
         {
         }
-    }
-}
+    } // namespace Buffer
+} // namespace mo

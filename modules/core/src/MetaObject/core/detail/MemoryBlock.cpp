@@ -21,4 +21,4 @@ namespace mo
     }
 
     template struct MemoryBlock<CPU>;
-}
+} // namespace mo

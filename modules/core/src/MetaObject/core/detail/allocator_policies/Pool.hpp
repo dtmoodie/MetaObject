@@ -119,4 +119,4 @@ namespace mo
     {
         m_pool->release();
     }
-}
+} // namespace mo

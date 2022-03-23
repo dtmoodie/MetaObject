@@ -8,5 +8,5 @@ namespace mo
         {
             PerModuleInterface::GetInstance()->SetSystemTable(table);
         }
-    }
-}
+    } // namespace params
+} // namespace mo

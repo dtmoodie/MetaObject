@@ -19,15 +19,16 @@ namespace mo
     struct IAsyncStream;
     struct PriorityScheduler;
 
-    class WorkQueue: public std::enable_shared_from_this<WorkQueue>
+    class WorkQueue : public std::enable_shared_from_this<WorkQueue>
     {
         boost::fibers::scheduler::ready_queue_type m_work_queue;
         mutable boost::fibers::detail::spinlock m_work_spinlock;
         PriorityScheduler* m_scheduler;
-    protected:
+
+      protected:
         WorkQueue(PriorityLevels priority, PriorityScheduler* scheduler);
 
-    public:
+      public:
         static std::shared_ptr<WorkQueue> create(PriorityLevels priority, PriorityScheduler* scheduler);
         static std::shared_ptr<WorkQueue> create(PriorityLevels priority);
         void pushBack(boost::fibers::context& ctx);
@@ -39,7 +40,6 @@ namespace mo
 
         PriorityScheduler* getScheduler() const;
         void setScheduler(PriorityScheduler*);
-
     };
 
     struct MO_EXPORTS PriorityScheduler : public boost::fibers::algo::algorithm_with_properties<FiberProperty>

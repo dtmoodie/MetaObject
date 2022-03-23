@@ -49,16 +49,14 @@ namespace mo
 
     void TraitRegistry::registerTrait(TypeInfo type, const ITraits* trait)
     {
-        SystemTable::dispatchToSystemTable([type, trait](SystemTable* table)
-        {
-            TraitRegistry::instance(table).registerTraitImpl(type, trait);
-        });
+        SystemTable::dispatchToSystemTable(
+            [type, trait](SystemTable* table) { TraitRegistry::instance(table).registerTraitImpl(type, trait); });
     }
 
     void TraitRegistry::registerTraitImpl(TypeInfo type, const ITraits* trait)
     {
         auto itr = m_traits.find(type);
-        if(itr == m_traits.end())
+        if (itr == m_traits.end())
         {
             m_traits[type] = trait;
         }
@@ -68,4 +66,4 @@ namespace mo
     {
         return m_traits;
     }
-}
+} // namespace mo

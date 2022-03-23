@@ -125,9 +125,8 @@ namespace ct
                 "path",
                 ct::selectConstMemberFunctionPointer<boost::filesystem::path, const std::string&>(
                     &boost::filesystem::path::string),
-                ct::selectMemberFunctionPointer<mo::AppendDirectory,
-                                                mo::AppendDirectory&,
-                                                const std::string&>(&mo::AppendDirectory::operator=));
+                ct::selectMemberFunctionPointer<mo::AppendDirectory, mo::AppendDirectory&, const std::string&>(
+                    &mo::AppendDirectory::operator=));
         }
     REFLECT_END;
 

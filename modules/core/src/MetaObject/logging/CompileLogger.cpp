@@ -62,33 +62,27 @@ bool BuildCallback::TestBuildCallback(const char* file, TestBuildResult type)
 {
     switch (type)
     {
-    case TESTBUILDRRESULT_SUCCESS:
-    {
+    case TESTBUILDRRESULT_SUCCESS: {
         mo::getDefaultLogger().info("{} {}", "TEST BUILD RESULT SUCCESS", file);
         break;
     }
-    case TESTBUILDRRESULT_NO_FILES_TO_BUILD:
-    {
+    case TESTBUILDRRESULT_NO_FILES_TO_BUILD: {
         mo::getDefaultLogger().info("{} {}", "TESTBUILDRRESULT_NO_FILES_TO_BUILD", file);
         break;
     }
-    case TESTBUILDRRESULT_BUILD_FILE_GONE:
-    {
+    case TESTBUILDRRESULT_BUILD_FILE_GONE: {
         mo::getDefaultLogger().info("{} {}", "TESTBUILDRRESULT_BUILD_FILE_GONE", file);
         break;
     }
-    case TESTBUILDRRESULT_BUILD_NOT_STARTED:
-    {
+    case TESTBUILDRRESULT_BUILD_NOT_STARTED: {
         mo::getDefaultLogger().info("{} {}", "TESTBUILDRRESULT_BUILD_NOT_STARTED", file);
         break;
     }
-    case TESTBUILDRRESULT_BUILD_FAILED:
-    {
+    case TESTBUILDRRESULT_BUILD_FAILED: {
         mo::getDefaultLogger().info("{} {}", "TESTBUILDRRESULT_BUILD_FAILED", file);
         break;
     }
-    case TESTBUILDRRESULT_OBJECT_SWAP_FAIL:
-    {
+    case TESTBUILDRRESULT_OBJECT_SWAP_FAIL: {
         mo::getDefaultLogger().info("{} {}", "TESTBUILDRRESULT_OBJECT_SWAP_FAIL", file);
         break;
     }

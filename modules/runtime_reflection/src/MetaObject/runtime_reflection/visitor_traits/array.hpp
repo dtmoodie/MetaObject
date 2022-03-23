@@ -90,6 +90,6 @@ namespace mo
         const T* m_const_ptr;
         size_t m_size;
     };
-}
+} // namespace mo
 
 #endif // MO_VISITATION_ARRAY_HPP

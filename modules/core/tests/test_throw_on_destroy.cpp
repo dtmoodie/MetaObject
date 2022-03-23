@@ -4,8 +4,6 @@
 
 #include <gtest/gtest.h>
 
-
 #include <iostream>
 #include <sstream>
 using namespace mo;
-

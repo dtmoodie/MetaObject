@@ -40,23 +40,22 @@ namespace mo
     void initThread()
     {
         thread_local bool initialized = false;
-        if(!initialized)
+        if (!initialized)
         {
             auto table = SystemTable::instance();
             MO_ASSERT(table);
             initThread(*table);
             initialized = true;
         }
-
     }
 
     void initThread(SystemTable& table)
     {
         thread_local bool initialized = false;
-        if(!initialized)
+        if (!initialized)
         {
             std::shared_ptr<mo::ThreadPool> pool = table.getSingleton<mo::ThreadPool>();
-            if(mo::PriorityScheduler::current() == nullptr)
+            if (mo::PriorityScheduler::current() == nullptr)
             {
                 boost::fibers::use_scheduling_algorithm<mo::PriorityScheduler>(pool);
             }
@@ -92,7 +91,7 @@ namespace mo
 
     Thread::Thread(ThreadPool* pool)
     {
-        if(pool == nullptr)
+        if (pool == nullptr)
         {
             pool = SystemTable::instance()->getSingleton<ThreadPool>().get();
         }
@@ -126,7 +125,8 @@ namespace mo
     {
         mo::setThisThreadName("Worker");
         boost::fibers::use_scheduling_algorithm<PriorityScheduler>(m_pool->shared_from_this(), &m_scheduler_wakeup_cv);
-        auto stream = mo::AsyncStreamFactory::instance()->create("WorkerStream", 0, PriorityLevels::MEDIUM, PriorityLevels::MEDIUM);
+        auto stream = mo::AsyncStreamFactory::instance()->create(
+            "WorkerStream", 0, PriorityLevels::MEDIUM, PriorityLevels::MEDIUM);
         {
             // TODO fiber
             Lock_t lock(m_mtx);
@@ -142,7 +142,7 @@ namespace mo
             }
         }};
 
-        while(m_continue)
+        while (m_continue)
         {
             Mutex_t::Lock_t lock(m_mtx);
             m_cv.wait_for(lock, std::chrono::milliseconds(1));

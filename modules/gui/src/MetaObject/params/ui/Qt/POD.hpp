@@ -82,7 +82,11 @@ namespace mo
                 QDoubleSpinBox* box;
 
               public:
-                THandler(IParamProxy& parent) : box(nullptr), UiUpdateHandler(parent) {}
+                THandler(IParamProxy& parent)
+                    : box(nullptr)
+                    , UiUpdateHandler(parent)
+                {
+                }
 
                 void updateUi(const T& data)
                 {
@@ -92,7 +96,10 @@ namespace mo
                     _updating = false;
                 }
 
-                void updateParam(T& data) { data = box->value(); }
+                void updateParam(T& data)
+                {
+                    data = box->value();
+                }
 
                 std::vector<QWidget*> getUiWidgets(QWidget* parent)
                 {
@@ -121,7 +128,11 @@ namespace mo
                 QSpinBox* box;
 
               public:
-                THandler(IParamProxy& parent) : box(nullptr), UiUpdateHandler(parent) {}
+                THandler(IParamProxy& parent)
+                    : box(nullptr)
+                    , UiUpdateHandler(parent)
+                {
+                }
 
                 void updateUi(const T& data)
                 {
@@ -219,6 +230,6 @@ namespace mo
                 void updateParam(ReadFile& data);
                 std::vector<QWidget*> getUiWidgets(QWidget* parent_);
             };
-        }
-    }
-}
+        } // namespace qt
+    }     // namespace UI
+} // namespace mo

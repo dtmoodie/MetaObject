@@ -20,7 +20,7 @@ namespace mo
         void CUDA::deallocate(void* data, const uint64_t)
         {
             cudaError_t err = cudaFree(data);
-            if(err != cudaErrorCudartUnloading)
+            if (err != cudaErrorCudartUnloading)
             {
                 MO_ASSERT_FMT(err == cudaSuccess, "Unable to free device memory due to {}", err);
             }
@@ -38,7 +38,7 @@ namespace mo
         void HOST::deallocate(void* data, const uint64_t)
         {
             cudaError_t err = cudaFreeHost(data);
-            if(err != cudaErrorCudartUnloading)
+            if (err != cudaErrorCudartUnloading)
             {
                 MO_ASSERT_FMT(err == cudaSuccess, "Unable to free host pinned memory due to {}", err);
             }

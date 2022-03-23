@@ -24,7 +24,7 @@ namespace mo
             Stream(Ptr_t stream);
 
             operator cudaStream_t();
-            operator CUstream_st const*() const;
+            operator CUstream_st const *() const;
 
             void waitEvent(Event& event);
             void synchronize() const;

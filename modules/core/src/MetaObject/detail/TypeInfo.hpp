@@ -46,11 +46,7 @@ namespace mo
         std::size_t m_hash = 0;
     };
 
-    
-
     MO_EXPORTS bool operator<(const TypeInfo& lhs, const TypeInfo& rhs);
-
-    
 
     MO_EXPORTS bool operator>(const TypeInfo& lhs, const TypeInfo& rhs);
 
@@ -85,7 +81,6 @@ namespace ct
     REFLECT_END;
 } // namespace ct
 
-
 namespace mo
 {
     template <class T>
@@ -96,5 +91,5 @@ namespace mo
         type.m_hash = g_hash;
         return type;
     }
-}
+} // namespace mo
 #endif // MO_CORE_TYPE_INFO_HPP

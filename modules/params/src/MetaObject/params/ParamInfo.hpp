@@ -30,4 +30,4 @@ namespace mo
         std::string initial_value;
         ParamFlags type_flags;
     };
-}
+} // namespace mo

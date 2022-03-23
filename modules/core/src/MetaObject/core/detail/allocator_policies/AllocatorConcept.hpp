@@ -11,4 +11,4 @@ namespace mo
         void deallocate(uint8_t* ptr, size_t num_bytes);
         void release();
     };
-}
+} // namespace mo

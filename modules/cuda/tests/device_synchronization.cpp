@@ -69,7 +69,7 @@ TEST(cuda_stream_sync, callback)
     // clang-format on
 
     // Can now overwrite a callback
-    //ASSERT_THROW(ev.setCallback([](mo::IAsyncStream&) {}), mo::TExceptionWithCallstack<std::runtime_error>);
+    // ASSERT_THROW(ev.setCallback([](mo::IAsyncStream&) {}), mo::TExceptionWithCallstack<std::runtime_error>);
 
     cuda_tests::multiply(mem.size(), mem.begin(), 2.0F, stream);
     cuda_tests::multiply(mem.size(), mem.begin(), 2.0F, stream);

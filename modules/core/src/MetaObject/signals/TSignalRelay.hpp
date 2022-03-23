@@ -81,54 +81,50 @@ namespace mo
     ///                   Implementation
     //////////////////////////////////////////////////////////////////
 
-    template<class F, class ... ARGS, size_t ... IDX>
+    template <class F, class... ARGS, size_t... IDX>
     void invokeSlotImpl(F& slot, ct::IndexSequence<IDX...>, const std::tuple<ARGS...>& tuple)
     {
         slot(std::get<IDX>(tuple)...);
     }
 
-    template<class F, class ... ARGS>
+    template <class F, class... ARGS>
     void invokeSlot(F& slot, const std::tuple<ARGS...>& tuple)
     {
         invokeSlotImpl(slot, ct::makeIndexSequence<sizeof...(ARGS)>{}, tuple);
     }
 
-    template<class ... SARGS, class ... ARGS>
-    auto invokeOnStreamImpl(IAsyncStream& dst, TSlot<void(SARGS...)>* slot, ARGS&&... args) -> typename std::enable_if<sizeof...(ARGS) && ct::VariadicTypedef<std::decay_t<ARGS>...>::template all<std::is_trivially_copy_constructible>()>::type
+    template <class... SARGS, class... ARGS>
+    auto invokeOnStreamImpl(IAsyncStream& dst, TSlot<void(SARGS...)>* slot, ARGS&&... args) ->
+        typename std::enable_if<sizeof...(ARGS) && ct::VariadicTypedef<std::decay_t<ARGS>...>::template all<
+                                                       std::is_trivially_copy_constructible>()>::type
     {
         std::tuple<std::decay_t<ARGS>...> values(std::forward<ARGS>(args)...);
-        dst.pushWork([slot, values](IAsyncStream* stream)
-        {
-            invokeSlot(*slot, values);
-        });
+        dst.pushWork([slot, values](IAsyncStream* stream) { invokeSlot(*slot, values); });
     }
 
-    template<class ... SARGS, class ... ARGS>
-    auto invokeOnStreamImpl(IAsyncStream& dst, TSlot<void(SARGS...)>* slot, ARGS&&... args) -> typename std::enable_if<sizeof...(ARGS) && ct::VariadicTypedef<std::decay_t<ARGS>...>::template all<std::is_trivially_copy_constructible>() == false>::type
+    template <class... SARGS, class... ARGS>
+    auto invokeOnStreamImpl(IAsyncStream& dst, TSlot<void(SARGS...)>* slot, ARGS&&... args) ->
+        typename std::enable_if<sizeof...(ARGS) && ct::VariadicTypedef<std::decay_t<ARGS>...>::template all<
+                                                       std::is_trivially_copy_constructible>() == false>::type
     {
         auto ptr = std::make_shared<std::tuple<ARGS...>>(std::forward_as_tuple(std::forward<ARGS>(args)...));
-        dst.pushWork([slot, ptr](IAsyncStream* stream) mutable
-        {
-            invokeSlot(*slot, *ptr);
-        });
+        dst.pushWork([slot, ptr](IAsyncStream* stream) mutable { invokeSlot(*slot, *ptr); });
         dst.synchronize();
     }
 
-    template<class ... SARGS, class ... ARGS>
-    auto invokeOnStream(IAsyncStream& dst, TSlot<void(SARGS...)>* slot, ARGS&&... args) -> typename std::enable_if<sizeof...(ARGS) != 0>::type
+    template <class... SARGS, class... ARGS>
+    auto invokeOnStream(IAsyncStream& dst, TSlot<void(SARGS...)>* slot, ARGS&&... args) ->
+        typename std::enable_if<sizeof...(ARGS) != 0>::type
     {
         invokeOnStreamImpl(dst, slot, std::forward<ARGS>(args)...);
     }
 
-    template<class ... SARGS, class ... ARGS>
-    auto invokeOnStream(IAsyncStream& dst, TSlot<void(SARGS...)>* slot, ARGS&&... args) -> typename std::enable_if<sizeof...(ARGS) == 0>::type
+    template <class... SARGS, class... ARGS>
+    auto invokeOnStream(IAsyncStream& dst, TSlot<void(SARGS...)>* slot, ARGS&&... args) ->
+        typename std::enable_if<sizeof...(ARGS) == 0>::type
     {
-        dst.pushWork([slot](IAsyncStream* stream)
-        {
-            (*slot)();
-        });
+        dst.pushWork([slot](IAsyncStream* stream) { (*slot)(); });
     }
-
 
     template <class... T, class Mutex>
     template <class... U>
@@ -137,7 +133,7 @@ namespace mo
         std::unique_lock<Mutex> lock(m_mtx);
         auto slots = m_slots;
         lock.unlock();
-        if(!src)
+        if (!src)
         {
             src = IAsyncStream::current().get();
         }
@@ -148,7 +144,7 @@ namespace mo
             {
                 // WIP
 
-                if(src)
+                if (src)
                 {
                     if (dst_stream->processId() == src->processId())
                     {
@@ -159,7 +155,8 @@ namespace mo
                     {
                         THROW(error, "IPC not implemented yet");
                     }
-                }else
+                }
+                else
                 {
                     // no source stream or current, just directly call
                     if (*slot)
@@ -276,14 +273,14 @@ namespace mo
 
         if (slot && *slot)
         {
-            if(src == nullptr)
+            if (src == nullptr)
             {
                 src = IAsyncStream::current().get();
             }
             IAsyncStream* dst = slot->getStream();
-            if(dst)
+            if (dst)
             {
-                if(src)
+                if (src)
                 {
                     dst->synchronize(*src);
                 }
@@ -293,8 +290,8 @@ namespace mo
                     out = (*slot)(std::forward<U>(args)...);
                 });
                 */
-                //dst->synchronize();
-                //return out;
+                // dst->synchronize();
+                // return out;
             }
             return (*slot)(std::forward<U>(args)...);
         }

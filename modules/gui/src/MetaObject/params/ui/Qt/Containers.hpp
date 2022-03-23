@@ -101,6 +101,6 @@ namespace mo
                     return output;
                 }
             };
-        }
-    }
-}
+        } // namespace qt
+    }     // namespace UI
+} // namespace mo

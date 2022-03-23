@@ -41,6 +41,6 @@ namespace mo
                 void on_update(QString);
                 void on_update(int row, int col);
             };
-        }
-    }
-}
+        } // namespace qt
+    }     // namespace UI
+} // namespace mo

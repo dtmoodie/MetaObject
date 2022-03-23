@@ -8,10 +8,9 @@ namespace mo
         void initModule(SystemTable* table)
         {
             PerModuleInterface::GetInstance()->SetSystemTable(table);
-
         }
-    }
-}
+    } // namespace runtime_reflection
+} // namespace mo
 
 extern "C" {
 void initModuleWithSystemTable(SystemTable* table)

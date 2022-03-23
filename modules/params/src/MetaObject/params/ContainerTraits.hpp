@@ -40,15 +40,11 @@ namespace mo
 
         void record(IAsyncStream& src) const
         {
-
         }
 
         void sync(IAsyncStream& dst) const
         {
-
         }
-
-
     };
 } // namespace mo
 

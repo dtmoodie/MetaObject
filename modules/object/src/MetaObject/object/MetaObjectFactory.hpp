@@ -79,7 +79,7 @@ namespace mo
         };
 
         MO_INLINE static Ptr_t instance();
-        __attribute__ ((noinline)) static Ptr_t instance(SystemTable* table);
+        __attribute__((noinline)) static Ptr_t instance(SystemTable* table);
 
         static uint32_t loadStandardPlugins();
 

@@ -10,7 +10,7 @@ namespace mo
     {
         m_scheduler = scheduler;
         // can't do this from the ctr since attachQueue needs to be able to call shared_from_this
-        //scheduler->attachQueue(*this, priority);
+        // scheduler->attachQueue(*this, priority);
     }
 
     void WorkQueue::pushBack(boost::fibers::context& ctx)
@@ -46,17 +46,16 @@ namespace mo
     void WorkQueue::disable(const uint64_t id)
     {
         boost::fibers::detail::spinlock_lock lk(m_work_spinlock);
-        for(auto itr = m_work_queue.begin(); itr != m_work_queue.end(); ++itr)
+        for (auto itr = m_work_queue.begin(); itr != m_work_queue.end(); ++itr)
         {
             FiberProperty* prop = dynamic_cast<FiberProperty*>(itr->get_properties());
-            if(prop)
+            if (prop)
             {
-                if(prop->getId() == id)
+                if (prop->getId() == id)
                 {
                     prop->disable();
                 }
             }
-
         }
     }
 
@@ -70,12 +69,11 @@ namespace mo
         m_scheduler = scheduler;
     }
 
-    struct WorkQueueImpl: WorkQueue
+    struct WorkQueueImpl : WorkQueue
     {
-        WorkQueueImpl(PriorityLevels priority, PriorityScheduler* scheduler = PriorityScheduler::current()):
-            WorkQueue(priority, scheduler)
+        WorkQueueImpl(PriorityLevels priority, PriorityScheduler* scheduler = PriorityScheduler::current())
+            : WorkQueue(priority, scheduler)
         {
-
         }
     };
 
@@ -90,7 +88,6 @@ namespace mo
         auto output = std::make_shared<WorkQueueImpl>(priority, scheduler);
         return output;
     };
-
 
     static thread_local PriorityScheduler* g_current = nullptr;
 
@@ -118,7 +115,6 @@ namespace mo
         MO_LOG(debug, "Instantiating scheduler");
         m_default_work_queue = WorkQueue::create(PriorityLevels::DEFAULT, this);
         m_default_work_queue->setScheduler(this);
-
     }
 
     PriorityScheduler::PriorityScheduler(std::weak_ptr<ThreadPool> pool, std::condition_variable** wakeup_cv)
@@ -165,11 +161,10 @@ namespace mo
         {
             boost::fibers::detail::spinlock_lock lk(m_work_queue_spinlock);
             queue = m_default_work_queue.get();
-
         }
-        if(queue)
+        if (queue)
         {
-            if(id != 0)
+            if (id != 0)
             {
                 queue->disable(id);
             }
@@ -177,16 +172,15 @@ namespace mo
         }
     }
 
-
     boost::fibers::context* PriorityScheduler::pick_next() noexcept
     {
         boost::fibers::context* victim = nullptr;
 
-        if(!m_default_work_queue->empty())
+        if (!m_default_work_queue->empty())
         {
             victim = m_default_work_queue->front();
             m_default_work_queue->popFront();
-            if(victim->get_scheduler() != boost::fibers::context::active()->get_scheduler())
+            if (victim->get_scheduler() != boost::fibers::context::active()->get_scheduler())
             {
                 boost::fibers::context::active()->attach(victim);
             }

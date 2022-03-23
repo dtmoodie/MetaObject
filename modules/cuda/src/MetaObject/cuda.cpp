@@ -26,8 +26,8 @@ namespace mo
                 std::make_shared<AllocatorPolicies_t<mo::cuda::CUDA>>();
             table->setSingleton(std::move(device_allocator));
         }
-    }
-}
+    } // namespace cuda
+} // namespace mo
 
 extern "C" {
 void initModule(SystemTable* table)

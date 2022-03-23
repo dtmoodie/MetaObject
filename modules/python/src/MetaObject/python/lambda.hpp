@@ -20,9 +20,9 @@ namespace boost
             {
                 return typename functor_signature<Functor>::type();
             }
-        }
-    }
-}
+        } // namespace detail
+    }     // namespace python
+} // namespace boost
 
 #include <boost/python/signature.hpp>
 
@@ -40,8 +40,8 @@ namespace boost
                     instance_argument_iterator;
                 typedef typename mpl::erase<member_function_signature, instance_argument_iterator>::type type;
             };
-        }
-    }
-}
+        } // namespace detail
+    }     // namespace python
+} // namespace boost
 
 #endif // ndef _MSC_VER

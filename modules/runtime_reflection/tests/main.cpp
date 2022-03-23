@@ -9,4 +9,3 @@ int main(int argc, char** argv)
     auto result = RUN_ALL_TESTS();
     return result;
 }
-

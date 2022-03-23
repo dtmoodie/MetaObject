@@ -13,7 +13,7 @@ using namespace mo;
 
 static_assert(std::is_trivially_copy_constructible<mo::IParam>::value == false, "");
 static_assert(std::is_trivially_copy_constructible<const mo::IParam>::value == false, "");
-//static_assert(std::is_trivially_copy_constructible<const mo::IParam&>::value == false, "");
+// static_assert(std::is_trivially_copy_constructible<const mo::IParam&>::value == false, "");
 
 namespace ct
 {

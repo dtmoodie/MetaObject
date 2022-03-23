@@ -4,7 +4,8 @@
 
 using namespace mo::UI::wt;
 
-TDataProxy<bool, void>::TDataProxy() : _check_box(nullptr)
+TDataProxy<bool, void>::TDataProxy()
+    : _check_box(nullptr)
 {
 }
 

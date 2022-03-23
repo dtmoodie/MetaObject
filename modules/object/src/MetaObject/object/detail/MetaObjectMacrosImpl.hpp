@@ -22,7 +22,7 @@ namespace mo
     struct SignalInfo;
     struct SlotInfo;
     struct ParamInfo;
-}
+} // namespace mo
 
 #define REFLECT_START(N_)                                                                                              \
     template <class V, ct::index_t N, class F, class T, class... Args>                                                 \

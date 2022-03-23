@@ -34,4 +34,4 @@ namespace mo
         struct impl;
         std::unique_ptr<impl> m_pimpl;
     };
-}
+} // namespace mo

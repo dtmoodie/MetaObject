@@ -14,7 +14,7 @@ namespace mo
           private:
             uint32_t m_texture_alignment;
         };
-    }
-}
+    } // namespace cuda
+} // namespace mo
 
 #endif // MO_CUDA_ALLOCATOR_HPP

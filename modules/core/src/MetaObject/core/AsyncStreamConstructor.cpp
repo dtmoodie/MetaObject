@@ -7,4 +7,4 @@ namespace mo
     AsyncStreamConstructor::~AsyncStreamConstructor()
     {
     }
-}
+} // namespace mo
