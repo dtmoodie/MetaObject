@@ -17,6 +17,10 @@ namespace mo
             WORKER
         };
         virtual ~ThreadRegistry();
+
+        virtual IAsyncStream::Ptr_t getGUIStream() = 0;
+        virtual void setGUIStream(IAsyncStream::Ptr_t) = 0;
+
         virtual void registerThread(ThreadType type, IAsyncStream::Ptr_t stream = IAsyncStream::current()) = 0;
         virtual IAsyncStream::Ptr_t getThread(ThreadType type) = 0;
 

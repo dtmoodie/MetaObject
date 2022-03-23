@@ -1,6 +1,13 @@
 #pragma once
 #include "../Allocator.hpp"
+#include <MetaObject/logging/logging.hpp>
+#include <MetaObject/logging/logging_macros.hpp>
+
+#include <boost/stacktrace.hpp>
+
 #include <cstdint>
+#include <sstream>
+#include <unordered_map>
 namespace mo
 {
     // Keeps track of how much memory it has allocated
@@ -13,8 +20,12 @@ namespace mo
 
         size_t usage() const;
 
+        void printUsage(std::ostream& os) const;
+
       protected:
         size_t m_usage = 0;
+        size_t m_warn_at = 1024UL * 1024UL * 1024UL * 2UL;
+        std::unordered_map<const void*, std::string> m_stack_traces;
     };
 
     //////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -28,8 +39,27 @@ namespace mo
         if (ptr)
         {
             m_usage += num_bytes;
+
+            std::stringstream ss;
+            boost::stacktrace::stacktrace st;
+            ss << st << '\n';
+            ss << num_bytes;
+            m_stack_traces[ptr] = ss.str();
+            if (m_usage > m_warn_at)
+            {
+                printUsage(std::cout);
+            }
         }
         return ptr;
+    }
+
+    template <class Allocator>
+    void UsagePolicy<Allocator>::printUsage(std::ostream& os) const
+    {
+        for (const auto& itr : m_stack_traces)
+        {
+            os << itr.second << std::endl;
+        }
     }
 
     template <class Allocator>
@@ -37,6 +67,9 @@ namespace mo
     {
         Allocator::deallocate(ptr, num_bytes);
         m_usage -= num_bytes;
+        auto itr = m_stack_traces.find(ptr);
+        MO_ASSERT(itr != m_stack_traces.end());
+        m_stack_traces.erase(itr);
     }
 
     template <class Allocator>
@@ -44,4 +77,4 @@ namespace mo
     {
         return m_usage;
     }
-}
+} // namespace mo

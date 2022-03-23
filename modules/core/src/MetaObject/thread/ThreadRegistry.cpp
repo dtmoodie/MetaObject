@@ -24,6 +24,28 @@ namespace mo
             }
         }
 
+        IAsyncStream::Ptr_t getGUIStream() override
+        {
+            IAsyncStream::Ptr_t out;
+
+            {
+                std::lock_guard<std::mutex> lock(mtx);
+                out = this->m_gui_stream.lock();
+                if (!out)
+                {
+                    out = mo::IAsyncStream::create();
+                    m_gui_stream = out;
+                }
+            }
+            return out;
+        }
+
+        void setGUIStream(IAsyncStream::Ptr_t stream) override
+        {
+            std::lock_guard<std::mutex> lock(mtx);
+            m_gui_stream = stream;
+        }
+
         void registerThread(ThreadType type, IAsyncStream::Ptr_t stream) override
         {
             std::lock_guard<std::mutex> lock(mtx);
@@ -76,8 +98,9 @@ namespace mo
         }
 
         std::map<int, std::vector<std::weak_ptr<IAsyncStream>>> _thread_map;
+        std::weak_ptr<IAsyncStream> m_gui_stream;
         std::vector<std::shared_ptr<Thread>> m_worker_threads;
-        std::mutex mtx;
+        mutable std::mutex mtx;
     };
 
     size_t tid()
