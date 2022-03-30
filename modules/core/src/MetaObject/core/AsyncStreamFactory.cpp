@@ -41,6 +41,7 @@ namespace mo
         if (best_ctr)
         {
             auto ret = best_ctr->create(name, device_id, device_priority, thread_priority);
+            ret->initialize();
             return ret;
         }
         return {};

@@ -14,7 +14,7 @@ namespace mo
 
         SharedPtr_t makeShared() const
         {
-            return SharedPtr_t(create());
+            return std::make_shared<T>();
         }
 
         SharedPtr_t createShared() const

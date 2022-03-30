@@ -25,9 +25,9 @@
 namespace mo
 {
 
-    void AsyncStream::workerLoop(AsyncStream* ptr)
+    void AsyncStream::workerLoop(AsyncStream::Ptr_t ptr)
     {
-        mo::IAsyncStream::setCurrent(ptr->shared_from_this());
+        mo::IAsyncStream::setCurrent(ptr);
         while (ptr->m_continue)
         {
             std::function<void(IAsyncStream*)> work;
@@ -41,7 +41,7 @@ namespace mo
             }
             if (work)
             {
-                work(ptr);
+                work(ptr.get());
             }
             else
             {
@@ -57,7 +57,6 @@ namespace mo
         m_allocator = std::move(alloc);
         m_device_id = -1;
         m_continue = true;
-        m_worker_fiber = boost::fibers::fiber(&AsyncStream::workerLoop, this);
     }
 
     AsyncStream::~AsyncStream()
@@ -181,9 +180,11 @@ namespace mo
         return m_work_queue.size();
     }
 
-    void AsyncStream::initializeFiber()
+    void AsyncStream::initialize()
     {
-        m_worker_fiber.properties<FiberProperty>().setStream(this->shared_from_this());
+        auto ptr = this->shared_from_this();
+        m_worker_fiber = boost::fibers::fiber(&AsyncStream::workerLoop, ptr);
+        m_worker_fiber.properties<FiberProperty>().setStream(ptr);
     }
 
     namespace
@@ -206,7 +207,6 @@ namespace mo
                 auto stream = std::make_shared<AsyncStream>(Allocator::getDefault());
                 stream->setName(name);
                 stream->setHostPriority(thread_priority);
-                stream->initializeFiber();
                 return stream;
             }
         };

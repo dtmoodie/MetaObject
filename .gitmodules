@@ -6,7 +6,7 @@
 	url = ../rcc
 [submodule "dependencies/spdlog"]
 	path = dependencies/spdlog
-	url = https://github.com/gabime/spdlog
+	url = ../spdlog
 [submodule "dependencies/ct"]
 	path = dependencies/ct
 	url = ../ct

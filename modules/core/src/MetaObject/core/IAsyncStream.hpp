@@ -73,6 +73,9 @@ namespace mo
         virtual uint64_t streamId() const = 0;
         virtual AllocatorPtr_t hostAllocator() const = 0;
         virtual size_t size() const = 0;
+
+        // Called by the factory after construction
+        virtual void initialize() = 0;
     }; // class mo::IAsyncStream
 
     struct MO_EXPORTS IDeviceStream : virtual public IAsyncStream

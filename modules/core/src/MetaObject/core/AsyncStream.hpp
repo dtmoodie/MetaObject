@@ -47,7 +47,7 @@ namespace mo
         uint64_t streamId() const override;
         size_t size() const override;
 
-        void initializeFiber();
+        void initialize() override;
 
       private:
         std::string m_name;
@@ -62,8 +62,7 @@ namespace mo
         boost::fibers::fiber m_worker_fiber;
         std::atomic<bool> m_continue;
         mutable boost::fibers::mutex m_mtx;
-
-        static void workerLoop(AsyncStream*);
+        static void workerLoop(AsyncStream::Ptr_t);
     }; // class mo::IContext
 
 } // namespace mo
