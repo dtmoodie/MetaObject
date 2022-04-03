@@ -116,6 +116,19 @@ namespace mo
             T::addParam(param);
         }
 
+        template <class DTYPE, class CTYPE, uint32_t F, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
+        void initParam(ct::MemberObjectPointer<mo::TFSubscriberPtr<DTYPE, F> CTYPE::*, FLAGS, METADATA> ptr,
+                       ct::Indexer<I>)
+        {
+            constexpr const ct::index_t J = ct::indexOfField<T>(ct::getName<I, T>().slice(0, -6));
+            ct::StaticInequality<ct::index_t, J, -1>{};
+            auto wrapped_field_ptr = ct::Reflect<T>::getPtr(Indexer<J>{});
+            auto& param = ptr.set(*this);
+            param.setName(ct::getName<I, T>().slice(0, -6));
+            param.setUserDataPtr(&wrapped_field_ptr.set(*this));
+            T::addParam(param);
+        }
+
         template <class DTYPE, class CTYPE, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
         void initParam(ct::MemberObjectPointer<mo::TPublisher<DTYPE> CTYPE::*, FLAGS, METADATA> ptr, ct::Indexer<I>)
         {
@@ -329,6 +342,20 @@ namespace mo
         {
             static mo::ParamInfo param_info(
                 mo::TypeInfo::create<DTYPE>(), ptr.m_name.slice(0, -6).toString(), "", "", mo::ParamFlags::kINPUT, "");
+            vec.push_back(&param_info);
+        }
+
+        template <class DTYPE, class CTYPE, uint32_t F, ct::Flag_t FLAGS, class METADATA, ct::index_t I>
+        static void paramInfo(std::vector<mo::ParamInfo*>& vec,
+                              ct::MemberObjectPointer<mo::TFSubscriberPtr<DTYPE, F> CTYPE::*, FLAGS, METADATA> ptr,
+                              ct::Indexer<I>)
+        {
+            static mo::ParamInfo param_info(mo::TypeInfo::create<DTYPE>(),
+                                            ptr.m_name.slice(0, -6).toString(),
+                                            "",
+                                            "",
+                                            ct::value(mo::ParamFlags::kINPUT) | F,
+                                            "");
             vec.push_back(&param_info);
         }
 

@@ -25,7 +25,7 @@ args = parser.parse_args()
 
 project_id = -1
 
-link_file_lines = [x.rstrip() for x in open(args.link_path, 'rt').readlines()]
+link_file_lines = [x.rstrip() for x in open(args.link_path + '.in', 'rt').readlines()]
 
 def pruneLibName(name):
     idx = name.find('.so')
@@ -94,8 +94,8 @@ def writeList(out, paths, prefix='', postfix=''):
 
 
 with open(args.in_path, 'rt') as f:
-    with open(args.out_path, 'wt') as out:
-        with open(args.link_path, 'wt') as link_out:
+    with open(args.out_path + '.tmp', 'wt') as out:
+        with open(args.link_path + '.tmp', 'wt') as link_out:
             j = link_file_lines.index('ALL_LIBS')
             link_out.write('\n'.join(link_file_lines[:j]))
             link_file_lines = link_file_lines[j+1:]
@@ -239,3 +239,18 @@ with open(args.in_path, 'rt') as f:
 
             out.write('} // namespace ')
             out.write('{}\n'.format(args.plugin_name))
+
+def updateIfNew(path):
+    if os.path.exists(path):
+        # read current contents
+        with open(path, 'rt') as f:
+            current = f.read()
+        with open(path + '.tmp', 'rt') as f:
+            new = f.read()
+        if(current != new):
+            os.rename(path + '.tmp', path)
+    else:
+        os.rename(path + '.tmp', path)
+
+updateIfNew(args.out_path)
+updateIfNew(args.link_path)

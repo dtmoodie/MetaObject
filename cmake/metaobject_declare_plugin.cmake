@@ -67,9 +67,18 @@ macro(metaobject_declare_plugin tgt)
     string(TIMESTAMP BUILD_DATE "%Y-%m-%d %H:%M")
 
     CONFIGURE_FILE(${plugin_export_template_path} "${CMAKE_BINARY_DIR}/plugins/${tgt}/${tgt}_export.hpp" @ONLY)
-    CONFIGURE_FILE(${plugin_link_lib_input_path} "${CMAKE_BINARY_DIR}/plugins/${tgt}/${tgt}_link_libs.hpp" @ONLY)
+    CONFIGURE_FILE(${plugin_link_lib_input_path} "${CMAKE_BINARY_DIR}/plugins/${tgt}/${tgt}_link_libs.hpp.in" @ONLY)
 
-    CONFIGURE_FILE("${plugin_config_file_path}" "${CMAKE_BINARY_DIR}/plugins/${tgt}/plugin_config.cpp" @ONLY)
+    CONFIGURE_FILE("${plugin_config_file_path}" "${CMAKE_BINARY_DIR}/plugins/${tgt}/plugin_config.cpp.tmp" @ONLY)
+
+    execute_process( COMMAND ${CMAKE_COMMAND} -E compare_files
+                    "${CMAKE_BINARY_DIR}/plugins/${tgt}/plugin_config.cpp.tmp"
+                    "${CMAKE_BINARY_DIR}/plugins/${tgt}/plugin_config.cpp"
+                     RESULT_VARIABLE compare_result
+    )
+    if( compare_result EQUAL 1)
+        CONFIGURE_FILE("${plugin_config_file_path}" "${CMAKE_BINARY_DIR}/plugins/${tgt}/plugin_config.cpp" @ONLY)
+    endif()
 
     FILE(APPEND "${CMAKE_BINARY_DIR}/bin/plugins/${tgt}_config.txt" "\n\nlink_libs:\n")
     if(NOT WIN32)

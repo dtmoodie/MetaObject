@@ -137,7 +137,7 @@ namespace mo
         IDataContainerConstPtr_t getData(const Header* desired = nullptr, IAsyncStream* stream = nullptr) override
         {
             auto data = TSubscriber<std::vector<T, A>>::getData(desired, stream);
-            if (data->getType().template isType<std::vector<T, A>>())
+            if (data && data->getType().template isType<std::vector<T, A>>())
             {
                 auto typed = std::static_pointer_cast<const TDataContainer<std::vector<T, A>>>(data);
                 if (typed && m_user_var)

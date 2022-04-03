@@ -49,6 +49,9 @@ namespace mo
 
         void initialize() override;
 
+      protected:
+        mutable boost::fibers::mutex m_mtx;
+
       private:
         std::string m_name;
         uint64_t m_process_id = 0;
@@ -61,8 +64,8 @@ namespace mo
         std::deque<std::tuple<std::function<void(IAsyncStream*)>, uint64_t>> m_work_queue;
         boost::fibers::fiber m_worker_fiber;
         std::atomic<bool> m_continue;
-        mutable boost::fibers::mutex m_mtx;
-        static void workerLoop(AsyncStream::Ptr_t);
+
+        static void workerLoop(AsyncStream*);
     }; // class mo::IContext
 
 } // namespace mo

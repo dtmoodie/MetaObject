@@ -13,7 +13,7 @@ namespace mo
 {
     struct IAsyncStream;
     class IParam;
-    class ISubscriber;
+    struct ISubscriber;
 
     namespace tags
     {

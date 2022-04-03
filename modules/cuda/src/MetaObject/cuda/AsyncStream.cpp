@@ -26,6 +26,7 @@ namespace mo
             , m_allocator(std::move(allocator))
 
         {
+            m_stream_accessed = false;
             init();
         }
 
@@ -78,11 +79,13 @@ namespace mo
 
         Stream AsyncStream::getStream() const
         {
+            m_stream_accessed = true;
             return m_stream;
         }
 
         AsyncStream::operator cudaStream_t()
         {
+            m_stream_accessed = true;
             return m_stream;
         }
 
@@ -104,11 +107,18 @@ namespace mo
         void AsyncStream::synchronize()
         {
             mo::ScopedProfile profile("mo::cuda::AsyncStream::synchronize");
-            auto event = createEvent();
-            event.record(m_stream);
-
-            mo::AsyncStream::synchronize();
-            event.synchronize();
+            if (m_stream_accessed)
+            {
+                auto event = createEvent();
+                event.record(m_stream);
+                mo::AsyncStream::synchronize();
+                event.synchronize();
+                m_stream_accessed = false;
+            }
+            else
+            {
+                mo::AsyncStream::synchronize();
+            }
         }
 
         void AsyncStream::synchronize(IDeviceStream* other)
@@ -116,11 +126,15 @@ namespace mo
             auto typed = dynamic_cast<AsyncStream*>(other);
             if (typed)
             {
-                auto event = createEvent();
-                event.record(typed->m_stream);
-                this->m_stream.waitEvent(event);
-                // Not sure if this line is necessary
-                mo::AsyncStream::pushWork([event](mo::IAsyncStream*) { event.synchronize(); });
+                if (m_stream_accessed)
+                {
+                    auto event = typed->createEvent();
+                    event.record(typed->m_stream);
+                    this->m_stream.waitEvent(event);
+                    // Not sure if this line is necessary
+                    mo::AsyncStream::pushWork([event](mo::IAsyncStream*) { event.synchronize(); });
+                    // Not sure if we should reset m_stream_accessed since this is a different event
+                }
             }
         }
 
@@ -158,6 +172,7 @@ namespace mo
 
         std::shared_ptr<DeviceAllocator> AsyncStream::deviceAllocator() const
         {
+            std::lock_guard<boost::fibers::mutex> lock(m_mtx);
             return m_allocator;
         }
 

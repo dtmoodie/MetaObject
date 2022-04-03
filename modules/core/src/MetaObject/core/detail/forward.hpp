@@ -43,7 +43,7 @@ namespace mo
 
     template <class>
     struct TSubscriber;
-    template <class>
+    template <class, uint8_t P = 2>
     struct TPublisher;
 
     struct IDataContainer;

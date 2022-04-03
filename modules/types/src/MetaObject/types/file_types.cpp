@@ -69,7 +69,7 @@ namespace mo
             std::transform(ext.begin(), ext.end(), ext.begin(), tolower);
             if (ext == extension)
             {
-                std::string stem = itr->path().stem().string();
+                const std::string& stem = itr->path().stem().string();
                 if (stem.find(stem_) == 0)
                 {
                     auto start = stem.find_last_of("abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ-_");

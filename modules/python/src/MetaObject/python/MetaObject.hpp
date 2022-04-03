@@ -425,9 +425,9 @@ namespace mo
         case 12: {
             return makeConstructorHelper<T, 12, Storage, Creator>(ctr, param_names);
         }
-        case 13: {
-            return makeConstructorHelper<T, 13, Storage, Creator>(ctr, param_names);
-        }
+            /*case 13: {
+                return makeConstructorHelper<T, 13, Storage, Creator>(ctr, param_names);
+            }*/
         }
         return boost::python::object();
     }

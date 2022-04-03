@@ -29,6 +29,8 @@ namespace mo
         return ss.str();
     }
 
+    std::string printPublisher(const mo::IPublisher* param);
+
     std::string printSubscriber(const mo::ISubscriber* param)
     {
         std::stringstream ss;
@@ -37,7 +39,7 @@ namespace mo
         auto input = param->getPublisher();
         if (input)
         {
-            ss << "Input Publisher: " << printParam(input);
+            ss << "Input Publisher: " << printPublisher(input);
         }
         else
         {
@@ -52,6 +54,11 @@ namespace mo
         param->print(ss);
         ss << "\n Headers: ";
         auto headers = param->getAvailableHeaders();
+        const size_t size = headers.size();
+        if (size > 1)
+        {
+            ss << " buffer of size " << size;
+        }
         ss << headers;
         return ss.str();
     }
@@ -261,10 +268,12 @@ namespace mo
         boost::python::class_<ISubscriber, ISubscriber*, boost::python::bases<IParam>, boost::noncopyable> subscriber(
             "InputParam", boost::python::no_init);
         subscriber.def("__repr__", &printSubscriber);
+        subscriber.def("getPublisher", &ISubscriber::getPublisher, boost::python::return_internal_reference<1>());
 
         boost::python::class_<IPublisher, IPublisher*, boost::python::bases<IParam>, boost::noncopyable> publisher(
             "InputParam", boost::python::no_init);
         publisher.def("__repr__", &printPublisher);
+        publisher.def("getAvailableHeaders", &IPublisher::getAvailableHeaders);
 
         boost::python::class_<IControlParam, IControlParam*, boost::python::bases<IParam>, boost::noncopyable> control(
             "IControlParam", boost::python::no_init);
@@ -282,6 +291,14 @@ namespace mo
             .add_property("name", &IAsyncStream::name)
             .add_property("thread_id", &IAsyncStream::threadId)
             .add_property("is_device", &IAsyncStream::isDeviceStream);
+
+        boost::python::class_<Header> header("header");
+        header.add_property("timestamp", &mo::Header::timestamp);
+        header.add_property("frame_number", &mo::Header::frame_number);
+        header.add_property("source_id", &mo::Header::source_id);
+
+        boost::python::class_<std::vector<Header>> header_vec("HeaderVec", boost::python::no_init);
+        iparam_vec.def(boost::python::vector_indexing_suite<std::vector<Header>>());
 
         boost::python::def("setDefaultBufferType", &setDefaultBufferType);
 

@@ -25,9 +25,9 @@
 namespace mo
 {
 
-    void AsyncStream::workerLoop(AsyncStream::Ptr_t ptr)
+    void AsyncStream::workerLoop(AsyncStream* ptr)
     {
-        mo::IAsyncStream::setCurrent(ptr);
+        mo::IAsyncStream::setCurrent(ptr->shared_from_this());
         while (ptr->m_continue)
         {
             std::function<void(IAsyncStream*)> work;
@@ -41,7 +41,7 @@ namespace mo
             }
             if (work)
             {
-                work(ptr.get());
+                work(ptr);
             }
             else
             {
@@ -63,7 +63,10 @@ namespace mo
     {
         this->AsyncStream::synchronize();
         m_continue = false;
-        m_worker_fiber.join();
+        if (m_worker_fiber.joinable())
+        {
+            m_worker_fiber.join();
+        }
     }
 
     void AsyncStream::setName(const std::string& name)
@@ -147,6 +150,7 @@ namespace mo
 
     std::shared_ptr<Allocator> AsyncStream::hostAllocator() const
     {
+        std::lock_guard<boost::fibers::mutex> lock(m_mtx);
         return m_allocator;
     }
 
@@ -183,8 +187,9 @@ namespace mo
     void AsyncStream::initialize()
     {
         auto ptr = this->shared_from_this();
-        m_worker_fiber = boost::fibers::fiber(&AsyncStream::workerLoop, ptr);
+        m_worker_fiber = boost::fibers::fiber(&AsyncStream::workerLoop, this);
         m_worker_fiber.properties<FiberProperty>().setStream(ptr);
+        boost::this_fiber::sleep_for(std::chrono::nanoseconds(1));
     }
 
     namespace

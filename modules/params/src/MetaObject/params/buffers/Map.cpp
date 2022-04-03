@@ -26,12 +26,14 @@ namespace mo
         {
             Lock_t lock(m_mtx);
             m_frame_padding = size;
+            m_time_padding = boost::none;
         }
 
         void Map::setTimePaddingCapacity(const Duration& time)
         {
             Lock_t lock(m_mtx);
             m_time_padding = time;
+            m_frame_padding = boost::none;
         }
 
         boost::optional<uint64_t> Map::getFrameBufferCapacity() const
@@ -67,7 +69,6 @@ namespace mo
             Lock_t lock(m_mtx);
             if (!m_data_buffer.empty())
             {
-                Lock_t lock(this->mtx());
                 start = m_data_buffer.begin()->first.timestamp;
                 end = m_data_buffer.rbegin()->first.timestamp;
                 return true;
@@ -80,7 +81,6 @@ namespace mo
             Lock_t lock(m_mtx);
             if (!m_data_buffer.empty())
             {
-                Lock_t lock(this->mtx());
                 start = m_data_buffer.begin()->first.frame_number;
                 end = m_data_buffer.rbegin()->first.frame_number;
                 return true;
@@ -238,7 +238,7 @@ namespace mo
             if ((m_push_policy == GROW) || (m_push_policy == PRUNE))
             {
                 {
-                    Lock_t lock(this->mtx());
+                    Mutex_t::Lock_t lock(m_mtx);
                     m_data_buffer[data->getHeader()] = data;
                 }
                 m_update_signal(data, *this, ct::value(UpdateFlags::kBUFFER_UPDATED), stream);
@@ -259,7 +259,7 @@ namespace mo
         void Map::pushOrDrop(const IDataContainerConstPtr_t& data, IAsyncStream* stream)
         {
             {
-                Lock_t lock(this->mtx());
+                Mutex_t::Lock_t lock(m_mtx);
                 if (m_frame_padding)
                 {
                     if (m_data_buffer.size() > (*m_frame_padding + 1))
@@ -275,7 +275,7 @@ namespace mo
         void Map::pushAndWait(const IDataContainerConstPtr_t& data, IAsyncStream* stream)
         {
             {
-                Lock_t lock(this->mtx());
+                Mutex_t::Lock_t lock(m_mtx);
                 if (m_frame_padding)
                 {
                     while (m_data_buffer.size() > (*m_frame_padding + 1))
@@ -335,6 +335,7 @@ namespace mo
 
         IDataContainerConstPtr_t Map::search(const Header& hdr) const
         {
+            Lock_t lock(m_mtx);
             if (m_search_policy == EXACT)
             {
                 return searchExact(hdr);
@@ -344,6 +345,7 @@ namespace mo
 
         IDataContainerConstPtr_t Map::searchExact(const Header& hdr) const
         {
+            Lock_t lock(m_mtx);
             if (m_data_buffer.empty())
             {
                 return {};
@@ -371,10 +373,10 @@ namespace mo
             if (m_current_timestamp && m_time_padding)
             {
                 auto itr = m_data_buffer.begin();
+                const mo::Time threshold(*m_current_timestamp - *m_time_padding);
                 while (itr != m_data_buffer.end())
                 {
-                    if (itr->first.timestamp &&
-                        *itr->first.timestamp < mo::Time(*m_current_timestamp - *m_time_padding))
+                    if (itr->first.timestamp && *itr->first.timestamp < threshold)
                     {
                         ++remove_count;
                         itr = m_data_buffer.erase(itr);
@@ -411,6 +413,7 @@ namespace mo
 
         IDataContainerConstPtr_t Map::searchNearest(const Header& hdr) const
         {
+            Lock_t lock(m_mtx);
             if (!hdr.timestamp && !hdr.frame_number.valid())
             {
                 if (!m_data_buffer.empty())
