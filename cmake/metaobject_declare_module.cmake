@@ -60,7 +60,7 @@ function(metaobject_declare_module)
             $<BUILD_INTERFACE:${CMAKE_CURRENT_LIST_DIR}/src>
             $<INSTALL_INTERFACE:include>
     )
-    #set(metaobject_module_includes "${metaobject_module_includes};${CMAKE_CURRENT_LIST_DIR}/src" CACHE INTERNAL "" FORCE)
+
 
     set_target_properties(metaobject_${metaobject_declare_module_NAME} PROPERTIES FOLDER Modules)
     if(metaobject_declare_module_FLAGS)

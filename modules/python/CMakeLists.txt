@@ -6,12 +6,11 @@ if(CT_HAVE_PYTHON AND MO_HAVE_OPENCV)
             metaobject_object
             metaobject_cuda
             ${OpenCV_LIBRARIES}
-            ${PYTHON_LIBRARY}
             ${Python_LIBRARIES}
             ct            
     )
 
-    target_link_directories(metaobject_python
+    target_include_directories(metaobject_python
         PUBLIC
             $<BUILD_INTERFACE:${PYTHON_INCLUDE_DIR}>
             $<BUILD_INTERFACE:${Python_INCLUDE_DIRS}>
@@ -20,6 +19,10 @@ if(CT_HAVE_PYTHON AND MO_HAVE_OPENCV)
             $<BUILD_INTERFACE:${Boost_INCLUDE_DIR}>
             $<BUILD_INTERFACE:${Boost_INCLUDE_DIRS}>
     )
+
+    if(${PYTHON_LIBRARY})
+        target_link_libraries(metaobject_python PUBLIC ${PYTHON_LIBRARY})
+    endif()
 
     if(TARGET Boost::python)
         target_link_libraries(metaobject_python PUBLIC Boost::python)
@@ -60,8 +63,13 @@ if(CT_HAVE_PYTHON AND MO_HAVE_OPENCV)
             ct 
             metaobject_python 
             metaobject_object
-            ${PYTHON_LIBRARY}
         )
+        if(${PYTHON_LIBRARY})
+            target_link_libraries(test_mo_python_init
+                PUBLIC
+                    ${PYTHON_LIBRARY}
+            )
+        endif()
 
         add_test(
             NAME test_mo_python_init
@@ -97,7 +105,4 @@ if(CT_HAVE_PYTHON AND MO_HAVE_OPENCV)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/tests/test_python.py ${out_dir}/Debug/metaobject_python_test.py @ONLY)
         configure_file(${CMAKE_CURRENT_LIST_DIR}/tests/test_python.py ${out_dir}/RelWithDebInfo/metaobject_python_test.py @ONLY)
     endif(UNIX)
-    set(metaobject_param_include
-        "${metaobject_param_include}\n#ifdef slots\n#undef slots\n#endif\n#include <MetaObject/python/PythonPolicy.hpp>\n" CACHE INTERNAL "" FORCE
-    )
 endif()

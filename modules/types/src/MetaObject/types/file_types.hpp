@@ -133,8 +133,7 @@ namespace ct
     template <class T>
     struct ReflectImpl<
         T,
-        ct::EnableIf<ct::VariadicTypedef<mo::ReadFile, mo::ReadDirectory, mo::WriteFile, mo::WriteDirectory>::
-                         template contains<T>()>>
+        ct::EnableIf<ct::VariadicTypedef<mo::ReadFile, mo::ReadDirectory, mo::WriteFile>::template contains<T>()>>
     {
         REFLECT_STUB
             static constexpr decltype(ct::makeMemberPropertyPointer(
@@ -152,6 +151,27 @@ namespace ct
                     ct::selectMemberFunctionPointer<boost::filesystem::path,
                                                     boost::filesystem::path&,
                                                     const std::string&>(&boost::filesystem::path::operator=));
+            }
+        REFLECT_INTERNAL_END;
+    };
+
+    template <>
+    struct ReflectImpl<mo::WriteDirectory, void>
+    {
+        using DType = mo::WriteDirectory;
+        REFLECT_STUB
+            static constexpr decltype(ct::makeMemberPropertyPointer(
+                "path",
+                ct::selectConstMemberFunctionPointer<boost::filesystem::path, const std::string&>(
+                    &boost::filesystem::path::string),
+                ct::selectMemberFunctionPointer<DType, DType&, const std::string&>(&DType::operator=)))
+            getPtr(const ct::Indexer<__COUNTER__ - REFLECT_COUNT_BEGIN>)
+            {
+                return ct::makeMemberPropertyPointer(
+                    "path",
+                    ct::selectConstMemberFunctionPointer<boost::filesystem::path, const std::string&>(
+                        &boost::filesystem::path::string),
+                    ct::selectMemberFunctionPointer<DType, DType&, const std::string&>(&DType::operator=));
             }
         REFLECT_INTERNAL_END;
     };

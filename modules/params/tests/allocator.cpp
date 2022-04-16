@@ -77,7 +77,7 @@ struct LoadStream
         auto next = m_serialization_buffer.slice(bytes);
         MO_ASSERT_EQ(next.size(), m_serialization_buffer.size() - bytes);
         MO_ASSERT_EQ(next.data(), m_serialization_buffer.data() + bytes);
-        m_serialization_buffer = next;
+        m_serialization_buffer = std::move(next);
         return serialize_in_place;
     }
 
@@ -110,7 +110,7 @@ SaveStream::SaveStream(ct::TArrayView<uint8_t> buf)
 }
 
 LoadStream::LoadStream(ct::TArrayView<const uint8_t> buf)
-    : m_serialization_buffer(buf)
+    : m_serialization_buffer(std::move(buf))
 {
 }
 
