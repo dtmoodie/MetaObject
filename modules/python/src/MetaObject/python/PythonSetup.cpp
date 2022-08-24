@@ -407,7 +407,8 @@ namespace mo
                     using Stack_t = mo::LockPolicy<UsagePolicy<mo::StackPolicy<cuda::HOST>>>;
                     using Allocator_t = mo::CombinedPolicy<Pool_t, Stack_t>;
                     m_host_allocator = std::make_shared<Allocator_t>();
-                    m_cv_cpu_allocator.reset(new mo::CvAllocatorProxy(m_host_allocator.get()));
+                    std::shared_ptr<cv::MatAllocator> proxy = std::make_shared<mo::CvAllocatorProxy>(m_host_allocator);
+                    m_cv_cpu_allocator = m_system_table->getSingleton<cv::MatAllocator, mo::NumpyAllocator>(proxy);
                     cv::Mat::setDefaultAllocator(m_cv_cpu_allocator.get());
                 }
                 {
@@ -416,6 +417,9 @@ namespace mo
                     using Allocator_t = mo::CombinedPolicy<Pool_t, Stack_t>;
                     m_device_allocator = std::make_shared<Allocator_t>();
                     m_cv_gpu_allocator = std::make_unique<mo::cuda::AllocatorProxy<>>(m_device_allocator);
+                    m_cv_gpu_allocator =
+                        m_system_table->getSingleton<cv::cuda::GpuMat::Allocator, mo::cuda::AllocatorProxy<>>(
+                            m_device_allocator);
                     cv::cuda::GpuMat::setDefaultAllocator(m_cv_gpu_allocator.get());
                 }
 
@@ -432,7 +436,7 @@ namespace mo
                 }
                 const auto num_cuda_devices = cv::cuda::getCudaEnabledDeviceCount();
                 MO_ASSERT(num_cuda_devices > 0);
-                cv::Mat::setDefaultAllocator(&m_numpy_allocator);
+                cv::Mat::setDefaultAllocator(m_cv_cpu_allocator.get());
                 cv::cuda::GpuMat::setDefaultAllocator(m_cv_gpu_allocator.get());
                 m_callback_registry = python::ParamCallbackContainer::registry();
             }
@@ -446,7 +450,7 @@ namespace mo
             {
                 if (mode == DEFAULT)
                 {
-                    m_numpy_allocator.default_allocator = m_default_opencv_allocator;
+
                     cv::cuda::GpuMat::setDefaultAllocator(m_default_opencv_gpu_allocator);
                 }
             }
@@ -459,10 +463,9 @@ namespace mo
 
             mo::IAsyncStream::Ptr_t m_stream;
 
-            std::unique_ptr<mo::CvAllocatorProxy> m_cv_cpu_allocator;
-            std::unique_ptr<mo::cuda::AllocatorProxy<>> m_cv_gpu_allocator;
+            std::shared_ptr<cv::MatAllocator> m_cv_cpu_allocator;
+            std::shared_ptr<cv::cuda::GpuMat::Allocator> m_cv_gpu_allocator;
 
-            mo::NumpyAllocator m_numpy_allocator;
             cv::MatAllocator* m_default_opencv_allocator = nullptr;
             cv::cuda::GpuMat::Allocator* m_default_opencv_gpu_allocator = nullptr;
             std::shared_ptr<python::ParamCallbackContainer::Registry_t> m_callback_registry;

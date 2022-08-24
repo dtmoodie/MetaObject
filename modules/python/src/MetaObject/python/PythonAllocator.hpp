@@ -39,7 +39,7 @@ namespace mo
     class MO_EXPORTS NumpyAllocator : virtual public cv::MatAllocator
     {
       public:
-        NumpyAllocator(cv::MatAllocator* default_allocator_ = cv::Mat::getDefaultAllocator());
+        NumpyAllocator(std::shared_ptr<cv::MatAllocator> default_allocator);
         ~NumpyAllocator() override;
 
         cv::Mat fromPython(PyObject* arr) const;
@@ -58,6 +58,6 @@ namespace mo
 
         void deallocate(cv::UMatData* u) const override;
 
-        cv::MatAllocator* default_allocator;
+        std::shared_ptr<cv::MatAllocator> default_allocator;
     };
 } // namespace mo

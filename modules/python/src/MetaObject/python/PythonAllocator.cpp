@@ -98,7 +98,7 @@ namespace mo
         importNumpy();
     }
 
-    NumpyAllocator::NumpyAllocator(cv::MatAllocator* default_allocator_)
+    NumpyAllocator::NumpyAllocator(std::shared_ptr<cv::MatAllocator> default_allocator_)
         : default_allocator(default_allocator_)
     {
     }
