@@ -7,7 +7,9 @@
 #include "RuntimeObjectSystem/IObjectFactorySystem.h"
 #include "RuntimeObjectSystem/RuntimeObjectSystem.h"
 
+#include <MetaObject/thread/FiberScheduler.hpp>
 #include <MetaObject/thread/Thread.hpp>
+#include <MetaObject/thread/ThreadPool.hpp>
 #include <MetaObject/thread/fiber_include.hpp>
 
 #include <boost/thread.hpp>
@@ -17,7 +19,7 @@
 
 using namespace mo;
 
-TEST(signals, single_threaded)
+TEST(signal, single_threaded)
 {
     TSignal<int(int)> signal;
     {
@@ -30,36 +32,30 @@ TEST(signals, single_threaded)
     ASSERT_THROW(signal(4), mo::TExceptionWithCallstack<std::runtime_error>);
 }
 
-TEST(signals, multi_threaded)
+TEST(signal, multi_threaded)
 {
-    auto stream = mo::AsyncStreamFactory::instance()->create();
-    IAsyncStreamPtr_t thread_ctx;
+    auto stream = mo::AsyncStream::create();
+    mo::Thread thread;
+    IAsyncStreamPtr_t thread_ctx = thread.asyncStream();
 
+    bool slot_invoked = false;
     TSlot<void(int)> slot = TSlot<void(int)>(std::bind(
-        [&thread_ctx](int value) -> void {
+        [&thread_ctx, &slot_invoked](int value) -> void {
             ASSERT_EQ(thread_ctx->threadId(), mo::getThisThread());
             ASSERT_EQ(5, value);
+            slot_invoked = true;
         },
         std::placeholders::_1));
 
-    boost::thread thread = boost::thread([&thread_ctx]() -> void {
-        mo::initThread();
-        thread_ctx = mo::AsyncStreamFactory::instance()->create("Thread context");
-        while (!boost::this_thread::interruption_requested())
-        {
-            // TODO
-            // ThreadSpecificQueue::run(thread_ctx->threadId());
-        }
-    });
     boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
 
     slot.setStream(*thread_ctx);
 
     TSignal<void(int)> signal;
-    auto Connection = slot.connect(signal);
+    auto connection = slot.connect(signal);
 
     boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
     signal(stream.get(), 5);
-    thread.interrupt();
-    thread.join();
+    thread_ctx->waitForCompletion();
+    ASSERT_TRUE(slot_invoked);
 }

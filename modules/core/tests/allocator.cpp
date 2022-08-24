@@ -80,7 +80,7 @@ TEST(allocation, cpu_stack)
 {
     auto start = Time::now();
     cv::Mat zeroAlloc(2000, 2000, CV_32FC2);
-    for (int i = 0; i < 1000; ++i)
+    for (int i = 0; i < 100; ++i)
     {
         zeroAlloc *= 100;
         zeroAlloc += 10;
@@ -89,7 +89,7 @@ TEST(allocation, cpu_stack)
     const auto zero_alloc_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
     start = Time::now();
-    for (int i = 0; i < 1000; ++i)
+    for (int i = 0; i < 100; ++i)
     {
         cv::Mat vec(2000, 2000, CV_32FC2);
         vec *= 100;
@@ -101,7 +101,7 @@ TEST(allocation, cpu_stack)
     start = Time::now();
     CvAllocator<CPU> pinned_allocator;
     cv::Mat::setDefaultAllocator(&pinned_allocator);
-    for (int i = 0; i < 1000; ++i)
+    for (int i = 0; i < 100; ++i)
     {
         cv::Mat vec(2000, 2000, CV_32FC2);
         vec *= 100;
@@ -113,7 +113,7 @@ TEST(allocation, cpu_stack)
     cv::Mat::setDefaultAllocator(&allocator);
 
     start = Time::now();
-    for (int i = 0; i < 1000; ++i)
+    for (int i = 0; i < 100; ++i)
     {
         cv::Mat vec(2000, 2000, CV_32FC2);
         vec *= 100;
@@ -127,7 +127,7 @@ TEST(allocation, cpu_stack)
     cv::Mat::setDefaultAllocator(&mt_stack_allocator);
 
     start = Time::now();
-    for (int i = 0; i < 1000; ++i)
+    for (int i = 0; i < 100; ++i)
     {
         cv::Mat vec(2000, 2000, CV_32FC2);
         vec *= 100;
