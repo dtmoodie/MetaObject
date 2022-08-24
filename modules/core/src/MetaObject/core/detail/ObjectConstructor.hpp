@@ -12,24 +12,28 @@ namespace mo
         using SharedPtr_t = std::shared_ptr<T>;
         using UniquePtr_t = std::unique_ptr<T>;
 
-        SharedPtr_t makeShared() const
+        template <class... ARGS>
+        SharedPtr_t makeShared(ARGS&&... args) const
         {
-            return std::make_shared<T>();
+            return std::make_shared<T>(std::forward<ARGS>(args)...);
         }
 
-        SharedPtr_t createShared() const
+        template <class... ARGS>
+        SharedPtr_t createShared(ARGS&&... args) const
         {
-            return makeShared();
+            return makeShared(std::forward<ARGS>(args)...);
         }
 
-        UniquePtr_t createUnique() const
+        template <class... ARGS>
+        UniquePtr_t createUnique(ARGS&&... args) const
         {
-            return UniquePtr_t(create());
+            return UniquePtr_t(create(std::forward<ARGS>(args)...));
         }
 
-        T* create() const
+        template <class... ARGS>
+        T* create(ARGS&&... args) const
         {
-            return new T();
+            return new T(std::forward<ARGS>(args)...);
         }
     };
 
