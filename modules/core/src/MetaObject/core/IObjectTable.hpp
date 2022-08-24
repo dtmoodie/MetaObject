@@ -45,8 +45,8 @@ namespace mo
             IObjectContainer() = default;
             virtual ~IObjectContainer();
         };
-        template <class T, class U = T>
-        SharedPtrType<T> getObject();
+        template <class T, class U = T, class... ARGS>
+        SharedPtrType<T> getObject(ARGS&&... args);
         template <class T>
         SharedPtrType<T> getObjectOptional();
 
@@ -84,8 +84,8 @@ namespace mo
     /// IMPLEMENTATION
     /////////////////////////////////////////////////////////////
 
-    template <class T, class U>
-    SharedPtrType<T> IObjectTable::getObject()
+    template <class T, class U, class... ARGS>
+    SharedPtrType<T> IObjectTable::getObject(ARGS&&... args)
     {
         SharedPtrType<T> output;
         mo::TypeInfo tinfo = mo::TypeInfo::create<T>();
@@ -93,7 +93,7 @@ namespace mo
         if (!container)
         {
             ObjectConstructor<U> constructor;
-            output = constructor.createShared();
+            output = constructor.createShared(std::forward<ARGS>(args)...);
             std::unique_ptr<IObjectContainer> owning(new TObjectContainer<T>(output));
             container = owning.get();
             setObjectContainer(tinfo, std::move(owning));

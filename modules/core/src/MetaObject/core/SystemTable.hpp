@@ -43,8 +43,8 @@ struct MO_EXPORTS SystemTable : virtual private mo::IObjectTable
 
     virtual ~SystemTable();
 
-    template <class T, class U = T>
-    mo::SharedPtrType<T> getSingleton();
+    template <class T, class U = T, class... ARGS>
+    mo::SharedPtrType<T> getSingleton(ARGS&&... args);
 
     template <class T>
     mo::SharedPtrType<T> getSingletonOptional();
@@ -67,7 +67,7 @@ struct MO_EXPORTS SystemTable : virtual private mo::IObjectTable
 
     static MO_INLINE void dispatchToSystemTable(std::function<void(SystemTable*)>&& func);
 
-    const std::shared_ptr<spdlog::logger>& getDefaultLogger();
+    std::shared_ptr<spdlog::logger> getDefaultLogger();
     void setDefaultLogger(const std::shared_ptr<spdlog::logger>& logger);
 
     MO_INLINE void registerModule();
@@ -161,11 +161,11 @@ namespace mo
     }
 } // namespace mo
 
-template <class T, class U>
-mo::SharedPtrType<T> SystemTable::getSingleton()
+template <class T, class U, class... ARGS>
+mo::SharedPtrType<T> SystemTable::getSingleton(ARGS&&... args)
 {
     registerModule();
-    return mo::IObjectTable::getObject<T, U>();
+    return mo::IObjectTable::getObject<T, U>(std::forward<ARGS>(args)...);
 }
 
 template <class T>

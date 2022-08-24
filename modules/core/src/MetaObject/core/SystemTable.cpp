@@ -62,6 +62,7 @@ SystemTable::SystemTable()
 
 SystemTable::~SystemTable()
 {
+    m_singletons.clear();
     if (m_logger)
     {
         m_logger->debug("System table cleanup");
@@ -117,7 +118,7 @@ void SystemTable::setObjectContainer(mo::TypeInfo type, IObjectContainer::Ptr_t&
            static_cast<const void*>(this));
 }
 
-const std::shared_ptr<spdlog::logger>& SystemTable::getDefaultLogger()
+std::shared_ptr<spdlog::logger> SystemTable::getDefaultLogger()
 {
     if (!m_logger)
     {
