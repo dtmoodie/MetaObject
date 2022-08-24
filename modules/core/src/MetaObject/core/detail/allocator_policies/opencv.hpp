@@ -19,7 +19,7 @@ namespace mo
 
     struct CvAllocatorProxy : public cv::MatAllocator
     {
-        inline CvAllocatorProxy(mo::Allocator* allocator)
+        inline CvAllocatorProxy(std::shared_ptr<mo::Allocator> allocator)
             : m_allocator(allocator)
         {
         }
@@ -99,7 +99,7 @@ namespace mo
         }
 
       private:
-        mutable mo::Allocator* m_allocator;
+        mutable std::shared_ptr<mo::Allocator> m_allocator;
     };
 
     template <class BASE_ALLOCATOR>
