@@ -45,7 +45,7 @@ spdlog::logger& mo::getDefaultLogger()
     {
         throw std::runtime_error("SystemTable == nullptr");
     }
-    auto logger = table->getDefaultLogger();
+    auto logger = table->getLogger();
     if (logger == nullptr)
     {
         throw std::runtime_error("table->getDefaultLogger() == nullptr");
@@ -53,12 +53,12 @@ spdlog::logger& mo::getDefaultLogger()
     return *logger;
 }
 
-std::shared_ptr<spdlog::logger> mo::getLogger()
+std::shared_ptr<spdlog::logger> mo::getLogger(const std::string& name)
 {
     auto table = PerModuleInterface::GetInstance()->GetSystemTable();
     if (table == nullptr)
     {
         return {};
     }
-    return table->getDefaultLogger();
+    return table->getLogger(name);
 }

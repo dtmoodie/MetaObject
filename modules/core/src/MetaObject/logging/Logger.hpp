@@ -5,7 +5,7 @@
 #include <spdlog/logger.h>
 namespace mo
 {
-    struct MO_EXPORTS Logger
+    /*struct MO_EXPORTS Logger
     {
         Logger(std::shared_ptr<spdlog::logger>&& logger)
             : m_logger(std::move(logger))
@@ -186,6 +186,6 @@ namespace mo
 
       private:
         std::shared_ptr<Logger> m_logger;
-    };
+    };*/
 } // namespace mo
 #endif // MO_LOGGING_LOGGER_HPP
