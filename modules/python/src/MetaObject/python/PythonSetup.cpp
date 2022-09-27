@@ -396,7 +396,7 @@ namespace mo
                 mo::cuda::init(m_system_table.get());
                 m_factory = mo::MetaObjectFactory::instance();
                 m_factory->registerTranslationUnit();
-                m_stream = mo::IAsyncStream::create();
+                m_stream = mo::IAsyncStream::create("python default");
                 mo::IAsyncStream::setCurrent(m_stream);
 
                 m_default_opencv_allocator = cv::Mat::getStdAllocator();
@@ -444,6 +444,8 @@ namespace mo
             ~LibGuard()
             {
                 m_system_table.reset();
+                m_stream->stop();
+                m_stream.reset();
             }
 
             void setAllocator(AllocatorMode mode)
@@ -461,7 +463,7 @@ namespace mo
             std::shared_ptr<mo::Allocator> m_host_allocator;
             std::shared_ptr<mo::DeviceAllocator> m_device_allocator;
 
-            mo::IAsyncStream::Ptr_t m_stream;
+            mo::IAsyncStreamPtr_t m_stream;
 
             std::shared_ptr<cv::MatAllocator> m_cv_cpu_allocator;
             std::shared_ptr<cv::cuda::GpuMat::Allocator> m_cv_gpu_allocator;
@@ -607,7 +609,7 @@ namespace mo
 
             boost::python::def("createThread", &createThread);
 
-            boost::python::class_<mo::IAsyncStream, std::shared_ptr<mo::IAsyncStream>, boost::noncopyable> stream(
+            boost::python::class_<mo::IAsyncStream, mo::IAsyncStreamPtr_t, boost::noncopyable> stream(
                 "Stream", boost::python::no_init);
             ct::detail::addProperties<mo::IAsyncStream>(stream);
 
