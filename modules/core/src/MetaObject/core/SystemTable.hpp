@@ -67,7 +67,7 @@ struct MO_EXPORTS SystemTable : virtual private mo::IObjectTable
 
     static MO_INLINE void dispatchToSystemTable(std::function<void(SystemTable*)>&& func);
 
-    std::shared_ptr<spdlog::logger> getDefaultLogger();
+    std::shared_ptr<spdlog::logger> getLogger(const std::string& name = "default");
     void setDefaultLogger(const std::shared_ptr<spdlog::logger>& logger);
 
     MO_INLINE void registerModule();

@@ -32,7 +32,7 @@ std::shared_ptr<SystemTable> SystemTable::instanceImpl()
     if (!output)
     {
         output.reset(new SystemTable());
-        auto logger = output->getDefaultLogger();
+        auto logger = output->getLogger();
         logger->debug("Created new system table instance at {}", static_cast<void*>(output.get()));
         inst = output;
         initThread(*output);
@@ -118,18 +118,30 @@ void SystemTable::setObjectContainer(mo::TypeInfo type, IObjectContainer::Ptr_t&
            static_cast<const void*>(this));
 }
 
-std::shared_ptr<spdlog::logger> SystemTable::getDefaultLogger()
+std::shared_ptr<spdlog::logger> SystemTable::getLogger(const std::string& name)
 {
-    if (!m_logger)
+    if (name == "default")
     {
-        auto logger = getLoggerRegistry(*this).get("default");
+        if (!m_logger)
+        {
+            auto logger = getLoggerRegistry(*this).get(name);
+            if (!logger)
+            {
+                logger = getLoggerRegistry(*this).create(name, spdlog::sinks::stdout_sink_mt::instance());
+            }
+            m_logger = logger;
+        }
+        return m_logger;
+    }
+    else
+    {
+        auto logger = getLoggerRegistry(*this).get(name);
         if (!logger)
         {
-            logger = getLoggerRegistry(*this).create("default", spdlog::sinks::stdout_sink_mt::instance());
+            logger = getLoggerRegistry(*this).create(name, spdlog::sinks::stdout_sink_mt::instance());
         }
-        m_logger = logger;
+        return logger;
     }
-    return m_logger;
 }
 
 void SystemTable::setDefaultLogger(const std::shared_ptr<spdlog::logger>& logger)
