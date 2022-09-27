@@ -8,7 +8,7 @@ namespace mo
     class WorkQueue;
     struct MO_EXPORTS AsyncStreamConstructor
     {
-        using Ptr_t = std::shared_ptr<IAsyncStream>;
+        using Ptr_t = IAsyncStreamPtr_t;
 
         AsyncStreamConstructor() = default;
         AsyncStreamConstructor(const AsyncStreamConstructor&) = default;

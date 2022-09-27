@@ -19,6 +19,8 @@
 #include <boost/fiber/mutex.hpp>
 #include <boost/fiber/operations.hpp>
 
+#include <boost/stacktrace.hpp>
+
 #include <boost/lexical_cast.hpp>
 #include <boost/thread/tss.hpp>
 
@@ -32,7 +34,7 @@ namespace mo
         {
             std::function<void(IAsyncStream*)> work;
             {
-                std::lock_guard<boost::fibers::mutex> lock(ptr->m_mtx);
+                std::lock_guard<boost::fibers::recursive_mutex> lock(ptr->m_mtx);
                 if (!ptr->m_work_queue.empty())
                 {
                     work = std::move(std::get<0>(ptr->m_work_queue.front()));
@@ -48,6 +50,7 @@ namespace mo
                 boost::this_fiber::sleep_for(std::chrono::milliseconds(10));
             }
         }
+        // std::cout << "Fiber worker loop shutdown from " << ptr->m_source << std::endl;
         (void)ptr;
     }
 
@@ -57,6 +60,8 @@ namespace mo
         m_allocator = std::move(alloc);
         m_device_id = -1;
         m_continue = true;
+        boost::stacktrace::stacktrace stack;
+        m_source = boost::stacktrace::to_string(stack);
     }
 
     AsyncStream::~AsyncStream()
@@ -91,36 +96,45 @@ namespace mo
 
     void AsyncStream::pushWork(std::function<void(IAsyncStream*)>&& work)
     {
-        std::lock_guard<boost::fibers::mutex> lock(m_mtx);
-        m_work_queue.push_back(std::make_tuple(std::move(work), 0));
+        std::lock_guard<boost::fibers::recursive_mutex> lock(m_mtx);
+        std::string location = boost::stacktrace::to_string(boost::stacktrace::stacktrace());
+        m_work_queue.push_back(std::make_tuple(std::move(work), 0, std::move(location)));
     }
 
     void AsyncStream::pushEvent(std::function<void(IAsyncStream*)>&& event, const uint64_t event_id)
     {
-        std::lock_guard<boost::fibers::mutex> lock(m_mtx);
+        std::lock_guard<boost::fibers::recursive_mutex> lock(m_mtx);
         if (event_id != 0)
         {
-            std::remove_if(m_work_queue.begin(),
-                           m_work_queue.end(),
-                           [event_id](const std::tuple<IAsyncStream::Work_f, uint64_t>& val) {
-                               return std::get<1>(val) == event_id;
-                           });
+            auto itr = std::remove_if(m_work_queue.begin(),
+                                      m_work_queue.end(),
+                                      [event_id](const std::tuple<IAsyncStream::Work_f, uint64_t, std::string>& val) {
+                                          return std::get<1>(val) == event_id;
+                                      });
+            m_work_queue.erase(itr, m_work_queue.end());
         }
-        m_work_queue.push_back(std::make_tuple(std::move(event), event_id));
+        std::string location = boost::stacktrace::to_string(boost::stacktrace::stacktrace());
+        m_work_queue.push_back(std::make_tuple(std::move(event), event_id, std::move(location)));
     }
 
     void AsyncStream::synchronize()
     {
         mo::ScopedProfile profile("mo::AsyncStream::synchronize");
-        boost::fibers::barrier barrier(2);
+
+        std::unique_lock<boost::fibers::recursive_mutex> lock(m_mtx);
+        if (m_work_queue.empty())
         {
-            if (m_work_queue.empty())
-            {
-                return;
-            }
-            std::lock_guard<boost::fibers::mutex> lock(m_mtx);
-            m_work_queue.push_back(std::make_tuple([&barrier](IAsyncStream* strm) { barrier.wait(); }, 0));
+            return;
         }
+        boost::fibers::barrier barrier(2);
+        // clang-format off
+        std::string location = boost::stacktrace::to_string(boost::stacktrace::stacktrace());
+        m_work_queue.push_back(std::make_tuple([&barrier](IAsyncStream* strm)
+                                               {
+                                                   barrier.wait();
+                                               }, 0, std::move(location)));
+        // clang-format on
+        lock.unlock();
         barrier.wait();
     }
 
@@ -150,7 +164,7 @@ namespace mo
 
     std::shared_ptr<Allocator> AsyncStream::hostAllocator() const
     {
-        std::lock_guard<boost::fibers::mutex> lock(m_mtx);
+        std::lock_guard<boost::fibers::recursive_mutex> lock(m_mtx);
         return m_allocator;
     }
 
@@ -190,6 +204,19 @@ namespace mo
         m_worker_fiber = boost::fibers::fiber(&AsyncStream::workerLoop, this);
         m_worker_fiber.properties<FiberProperty>().setStream(ptr);
         boost::this_fiber::sleep_for(std::chrono::nanoseconds(1));
+    }
+
+    void AsyncStream::stop()
+    {
+        m_continue = false;
+    }
+
+    void AsyncStream::printDebug() const
+    {
+        for (const auto& item : m_work_queue)
+        {
+            std::cout << std::get<2>(item) << '\n' << std::endl;
+        }
     }
 
     namespace

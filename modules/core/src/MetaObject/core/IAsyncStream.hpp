@@ -17,25 +17,14 @@ namespace mo
     struct IDeviceStream;
     struct IAsyncStream;
 
-    class WorkQueue;
-
-    struct AsyncStreamContextManager
-    {
-        AsyncStreamContextManager(const std::shared_ptr<IAsyncStream>& new_stream);
-        ~AsyncStreamContextManager();
-
-      private:
-        std::shared_ptr<IAsyncStream> m_previous;
-    };
-
     struct MO_EXPORTS IAsyncStream
     {
-        using Ptr_t = std::shared_ptr<IAsyncStream>;
+        using Ptr_t = IAsyncStreamPtr_t;
         using Work_f = std::function<void(IAsyncStream*)>;
 
-        static IAsyncStream::Ptr_t current();
+        static IAsyncStreamPtr_t current();
         static IAsyncStream& currentRef();
-        static void setCurrent(std::shared_ptr<IAsyncStream>);
+        static void setCurrent(IAsyncStreamPtr_t);
 
         static Ptr_t create(const std::string& name = "",
                             int32_t device_id = 0,
@@ -73,10 +62,20 @@ namespace mo
         virtual uint64_t streamId() const = 0;
         virtual AllocatorPtr_t hostAllocator() const = 0;
         virtual size_t size() const = 0;
+        virtual void stop() = 0;
 
         // Called by the factory after construction
         virtual void initialize() = 0;
     }; // class mo::IAsyncStream
+
+    struct AsyncStreamContextManager
+    {
+        AsyncStreamContextManager(const IAsyncStreamPtr_t& new_stream);
+        ~AsyncStreamContextManager();
+
+      private:
+        IAsyncStreamPtr_t m_previous;
+    };
 
     struct MO_EXPORTS IDeviceStream : virtual public IAsyncStream
     {
@@ -108,6 +107,7 @@ namespace ct
         PROPERTY(streamId)
         PROPERTY(isDeviceStream)
         MEMBER_FUNCTION(synchronize, resolveFunctionPointer<mo::IAsyncStream, void>(&mo::IAsyncStream::synchronize))
+        STATIC_FUNCTION(setCurrent, &mo::IAsyncStream::setCurrent)
     REFLECT_END;
 } // namespace ct
 #endif // MO_CORE_IASYNC_STREAM_HPP

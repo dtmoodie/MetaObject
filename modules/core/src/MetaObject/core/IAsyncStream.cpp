@@ -10,7 +10,7 @@
 namespace mo
 {
 
-    AsyncStreamContextManager::AsyncStreamContextManager(const std::shared_ptr<IAsyncStream>& new_stream)
+    AsyncStreamContextManager::AsyncStreamContextManager(const IAsyncStreamPtr_t& new_stream)
     {
         m_previous = IAsyncStream::current();
         IAsyncStream::setCurrent(new_stream);
@@ -29,14 +29,16 @@ namespace mo
         }
     }
 
-    IAsyncStream::Ptr_t IAsyncStream::create(const std::string& name,
-                                             int32_t device_id,
-                                             PriorityLevels device_priority,
-                                             PriorityLevels thread_priority)
+    IAsyncStreamPtr_t IAsyncStream::create(const std::string& name,
+                                           int32_t device_id,
+                                           PriorityLevels device_priority,
+                                           PriorityLevels thread_priority)
     {
         std::shared_ptr<AsyncStreamFactory> instance = AsyncStreamFactory::instance();
         auto stream = instance->create(name, device_id, device_priority, thread_priority);
         return stream;
+        // IAsyncStreamPtr_t output(stream.get(), [stream](IAsyncStream* ptr) { stream->waitForCompletion(); });
+        // return output;
     }
 
     IDeviceStream::Ptr_t IDeviceStream::create(const std::string& name,
@@ -50,12 +52,14 @@ namespace mo
         return typed;
     }
 
-    IAsyncStream::Ptr_t IAsyncStream::current()
+    IAsyncStreamPtr_t IAsyncStream::current()
     {
         boost::fibers::context* ctx = boost::fibers::context::active();
         if (ctx)
         {
-            return boost::this_fiber::properties<FiberProperty>().getStream();
+            FiberProperty& properties = boost::this_fiber::properties<FiberProperty>();
+            auto stream = properties.getStream();
+            return stream;
         }
         return {};
     }
@@ -67,9 +71,22 @@ namespace mo
         return *cur;
     }
 
-    void IAsyncStream::setCurrent(std::shared_ptr<IAsyncStream> stream)
+    void IAsyncStream::setCurrent(IAsyncStreamPtr_t stream)
     {
-        boost::this_fiber::properties<FiberProperty>().setStream(stream);
+        if (stream != nullptr)
+        {
+            // std::cout << "Setting stream '" << stream->name() << "' to current for fiber 0x"
+            //          << boost::this_fiber::get_id() << " on thread " << boost::this_thread::get_id() << std::endl;
+        }
+        else
+        {
+            std::cout << "Setting stream 'null' to current for fiber 0x" << boost::this_fiber::get_id() << " on thread "
+                      << boost::this_thread::get_id() << std::endl;
+        }
+        boost::fibers::context* ctx = boost::fibers::context::active();
+        (void)ctx;
+        FiberProperty& properties = boost::this_fiber::properties<FiberProperty>();
+        properties.setStream(std::move(stream));
     }
 
     void IAsyncStream::makeCurrent()
@@ -88,12 +105,13 @@ namespace mo
     // TODO implement
     void IAsyncStream::synchronize(IAsyncStream& other)
     {
-
-        if (other.size())
+        const size_t other_size = other.size();
+        const size_t my_size = this->size();
+        if (other_size > 0)
         {
-            std::shared_ptr<boost::fibers::barrier> barrier = std::make_shared<boost::fibers::barrier>(2);
-            other.pushWork([barrier](IAsyncStream* stream) { barrier->wait(); });
-            this->pushWork([barrier](IAsyncStream* stream) { barrier->wait(); });
+            // std::shared_ptr<boost::fibers::barrier> barrier = std::make_shared<boost::fibers::barrier>(2);
+            // other.pushWork([barrier](IAsyncStream* stream) { barrier->wait(); });
+            // this->pushWork([barrier](IAsyncStream* stream) { barrier->wait(); });
         }
     }
 

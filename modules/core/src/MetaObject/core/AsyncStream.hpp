@@ -8,6 +8,7 @@
 
 #include <boost/fiber/fiber.hpp>
 #include <boost/fiber/mutex.hpp>
+#include <boost/fiber/recursive_mutex.hpp>
 
 #include <memory>
 #include <string>
@@ -49,8 +50,12 @@ namespace mo
 
         void initialize() override;
 
+        void stop() override;
+
+        void printDebug() const;
+
       protected:
-        mutable boost::fibers::mutex m_mtx;
+        mutable boost::fibers::recursive_mutex m_mtx;
 
       private:
         std::string m_name;
@@ -61,9 +66,10 @@ namespace mo
         AllocatorPtr_t m_allocator;
         uint64_t m_stream_id = 0;
         PriorityLevels m_host_priority = MEDIUM;
-        std::deque<std::tuple<std::function<void(IAsyncStream*)>, uint64_t>> m_work_queue;
+        std::deque<std::tuple<std::function<void(IAsyncStream*)>, uint64_t, std::string>> m_work_queue;
         boost::fibers::fiber m_worker_fiber;
         std::atomic<bool> m_continue;
+        std::string m_source;
 
         static void workerLoop(AsyncStream*);
     }; // class mo::IContext

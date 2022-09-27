@@ -15,7 +15,7 @@ namespace mo
     class WorkQueue;
     struct MO_EXPORTS AsyncStreamFactory
     {
-        using Ptr_t = std::shared_ptr<IAsyncStream>;
+        using Ptr_t = IAsyncStreamPtr_t;
 
         static std::shared_ptr<AsyncStreamFactory> instance();
         static std::shared_ptr<AsyncStreamFactory> instance(SystemTable* table);
