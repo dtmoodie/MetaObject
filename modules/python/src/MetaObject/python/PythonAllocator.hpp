@@ -36,13 +36,14 @@ namespace ct
 namespace mo
 {
     void setupAllocator();
-    class MO_EXPORTS NumpyAllocator : virtual public cv::MatAllocator
+    class MO_EXPORTS NumpyAllocator : virtual public cv::MatAllocator,
+                                      virtual public std::enable_shared_from_this<NumpyAllocator>
     {
       public:
         NumpyAllocator(std::shared_ptr<cv::MatAllocator> default_allocator);
         ~NumpyAllocator() override;
 
-        cv::Mat fromPython(PyObject* arr) const;
+        cv::Mat fromPython(PyObject* arr);
 
         PyObject* toPython(const cv::Mat& mat) const;
 

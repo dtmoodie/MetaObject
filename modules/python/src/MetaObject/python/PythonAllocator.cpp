@@ -107,7 +107,7 @@ namespace mo
     {
     }
 
-    cv::Mat NumpyAllocator::fromPython(PyObject* o) const
+    cv::Mat NumpyAllocator::fromPython(PyObject* o)
     {
         cv::Mat m;
 
@@ -115,7 +115,7 @@ namespace mo
         if (!o || o == Py_None)
         {
             if (!m.data)
-                m.allocator = const_cast<NumpyAllocator*>(this);
+                m.allocator = this;
             return m;
         }
 
@@ -287,7 +287,7 @@ namespace mo
         {
             Py_INCREF(o);
         }
-        m.allocator = const_cast<NumpyAllocator*>(this);
+        m.allocator = this;
         return m;
     }
 
@@ -366,6 +366,7 @@ namespace mo
         }
         auto ret = default_allocator->allocate(dims0, sizes, type, data, step, flags, usageFlags);
         ret->currAllocator = this;
+        ret->allocatorContext = std::const_pointer_cast<NumpyAllocator>(this->shared_from_this());
         return ret;
     }
 
