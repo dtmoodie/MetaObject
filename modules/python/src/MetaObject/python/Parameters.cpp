@@ -244,6 +244,24 @@ namespace mo
         return ts.get();
     }
 
+    size_t getInputBufferSize(const ISubscriber& sub)
+    {
+        const mo::IPublisher* pub = sub.getPublisher();
+        if (pub == nullptr)
+        {
+            return 0;
+        }
+        if (pub->getFlags().test(mo::ParamFlags::kBUFFER))
+        {
+            const mo::buffer::IBuffer* buffer = dynamic_cast<const mo::buffer::IBuffer*>(pub);
+            return buffer->getSize();
+        }
+        else
+        {
+            return 1;
+        }
+    }
+
     void python::setupParameters(const std::string& module_name)
     {
         boost::python::object datatype_module(
@@ -269,6 +287,7 @@ namespace mo
             "InputParam", boost::python::no_init);
         subscriber.def("__repr__", &printSubscriber);
         subscriber.def("getPublisher", &ISubscriber::getPublisher, boost::python::return_internal_reference<1>());
+        subscriber.def("getInputBufferSize", &getInputBufferSize);
 
         boost::python::class_<IPublisher, IPublisher*, boost::python::bases<IParam>, boost::noncopyable> publisher(
             "InputParam", boost::python::no_init);
@@ -286,8 +305,8 @@ namespace mo
         boost::python::class_<std::vector<IPublisher*>> output_param_vec("OutputParamVec", boost::python::no_init);
         output_param_vec.def(boost::python::vector_indexing_suite<std::vector<IPublisher*>>());
 
-        boost::python::class_<IAsyncStream, std::shared_ptr<IAsyncStream>, boost::noncopyable>("AsyncStream",
-                                                                                               boost::python::no_init)
+        boost::python::class_<IAsyncStream, IAsyncStreamPtr_t, boost::noncopyable>("AsyncStream",
+                                                                                   boost::python::no_init)
             .add_property("name", &IAsyncStream::name)
             .add_property("thread_id", &IAsyncStream::threadId)
             .add_property("is_device", &IAsyncStream::isDeviceStream);
