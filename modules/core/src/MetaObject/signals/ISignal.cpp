@@ -7,7 +7,7 @@ namespace mo
     {
     }
 
-    IAsyncStream* ISignal::getStream() const
+    /*IAsyncStream* ISignal::getStream() const
     {
         return m_stream;
     }
@@ -15,5 +15,5 @@ namespace mo
     void ISignal::setStream(IAsyncStream& stream)
     {
         m_stream = &stream;
-    }
+    }*/
 } // namespace mo

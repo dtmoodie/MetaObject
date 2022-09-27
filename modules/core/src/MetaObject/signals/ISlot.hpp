@@ -22,7 +22,7 @@ namespace mo
         virtual const TypeInfo& getSignature() const = 0;
         IMetaObject* getParent() const;
         IAsyncStream* getStream() const;
-        void setStream(IAsyncStream& stream);
+        void setStream(IAsyncStream* stream);
 
       protected:
         IAsyncStream* m_stream = nullptr;

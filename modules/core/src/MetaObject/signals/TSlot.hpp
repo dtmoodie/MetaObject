@@ -145,7 +145,8 @@ namespace mo
     template <class R, class... T>
     std::shared_ptr<Connection> TSlot<R(T...)>::connect(TSignal<R(T...)>& typed)
     {
-        std::shared_ptr<TSignalRelay<R(T...)>> relay(new TSignalRelay<R(T...)>());
+        std::shared_ptr<TSignalRelay<R(T...)>> relay = std::make_shared<TSignalRelay<R(T...)>>();
+        ;
         relay->connect(*this);
         typed.connect(relay);
         _relays.push_back(relay);
@@ -165,7 +166,7 @@ namespace mo
     {
         if (relay == nullptr)
         {
-            relay.reset(new TSignalRelay<R(T...)>());
+            relay = std::make_shared<TSignalRelay<R(T...)>>();
         }
         auto typed = std::dynamic_pointer_cast<TSignalRelay<R(T...)>>(relay);
         if (typed)

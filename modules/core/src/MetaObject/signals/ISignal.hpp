@@ -38,8 +38,8 @@ namespace mo
         virtual bool isConnected() const = 0;
         virtual uint32_t numSlots() const = 0;
 
-        IAsyncStream* getStream() const;
-        void setStream(IAsyncStream& stream);
+        // IAsyncStream* getStream() const;
+        // void setStream(IAsyncStream& stream);
 
       protected:
         IAsyncStream* m_stream = nullptr;
@@ -50,7 +50,7 @@ namespace ct
 {
     REFLECT_BEGIN(mo::ISignal)
         PROPERTY(getSignature)
-        PROPERTY(stream, &DataType::getStream, &DataType::setStream);
+        // PROPERTY(stream, &DataType::getStream, &DataType::setStream);
         MEMBER_FUNCTION(isConnected)
         MEMBER_FUNCTION(numSlots)
     REFLECT_END;

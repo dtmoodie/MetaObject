@@ -86,7 +86,12 @@ namespace mo
     class TSignal;
 
     template <class T>
-    struct IsStream : std::is_same<T, IAsyncStream*>
+    struct IsStream : std::is_same<T, IAsyncStream>
+    {
+    };
+
+    template <class T>
+    struct IsStreamPtr : std::is_same<T, IAsyncStream*>
     {
     };
 
@@ -95,13 +100,32 @@ namespace mo
         ct::EnableIf<ct::VariadicTypedef<ct::decay_t<T>...>::template contains<IAsyncStream>()>;
 
     template <class... T>
+    using EnableIfContainsStreamPtr =
+        ct::EnableIf<ct::VariadicTypedef<ct::decay_t<T>...>::template contains<IAsyncStream*>()>;
+
+    template <class... T>
     using DisableIfContainsStream =
-        ct::EnableIf<!ct::VariadicTypedef<ct::decay_t<T>...>::template contains<IAsyncStream>()>;
+        ct::EnableIf<!ct::VariadicTypedef<ct::decay_t<T>...>::template contains<IAsyncStream>() &&
+                     !ct::VariadicTypedef<ct::decay_t<T>...>::template contains<IAsyncStream*>()>;
 
     template <class R, class... T>
     class TSignal<R(T...), EnableIfContainsStream<T...>> : public TSignalImpl<R(T...)>
     {
         static constexpr int32_t STREAM_INDEX = ct::VariadicTypedef<ct::decay_t<T>...>::template indexOf<IsStream>();
+
+      public:
+        template <class... U>
+        R operator()(U&&... args) const
+        {
+            IAsyncStream& stream = ct::get<STREAM_INDEX>(std::forward<U>(args)...);
+            return TSignalImpl<R(T...)>::operator()(&stream, std::forward<U>(args)...);
+        }
+    };
+
+    template <class R, class... T>
+    class TSignal<R(T...), EnableIfContainsStreamPtr<T...>> : public TSignalImpl<R(T...)>
+    {
+        static constexpr int32_t STREAM_INDEX = ct::VariadicTypedef<ct::decay_t<T>...>::template indexOf<IsStreamPtr>();
 
       public:
         template <class... U>
@@ -116,6 +140,20 @@ namespace mo
     class TSignal<void(T...), EnableIfContainsStream<T...>> : public TSignalImpl<void(T...)>
     {
         static constexpr int32_t STREAM_INDEX = ct::VariadicTypedef<ct::decay_t<T>...>::template indexOf<IsStream>();
+
+      public:
+        template <class... U>
+        void operator()(U&&... args) const
+        {
+            IAsyncStream& stream = ct::get<STREAM_INDEX>(std::forward<U>(args)...);
+            TSignalImpl<void(T...)>::operator()(&stream, std::forward<U>(args)...);
+        }
+    };
+
+    template <class... T>
+    class TSignal<void(T...), EnableIfContainsStreamPtr<T...>> : public TSignalImpl<void(T...)>
+    {
+        static constexpr int32_t STREAM_INDEX = ct::VariadicTypedef<ct::decay_t<T>...>::template indexOf<IsStreamPtr>();
 
       public:
         template <class... U>
@@ -173,11 +211,7 @@ namespace mo
     template <class... U>
     R TSignalImpl<R(T...)>::operator()(U&&... args) const
     {
-        auto stream = this->getStream();
-        if (!stream)
-        {
-            stream = IAsyncStream::current().get();
-        }
+        auto stream = IAsyncStream::current().get();
         return (*this)(stream, std::forward<U>(args)...);
     }
 
@@ -215,7 +249,7 @@ namespace mo
     {
         if (relay == nullptr)
         {
-            relay.reset(new TSignalRelay<R(T...)>());
+            relay = std::make_shared<TSignalRelay<R(T...)>>();
         }
         auto typed = std::dynamic_pointer_cast<TSignalRelay<R(T...)>>(relay);
         if (typed)
@@ -230,7 +264,7 @@ namespace mo
     {
         if (relay == nullptr)
         {
-            relay.reset(new TSignalRelay<R(T...)>());
+            relay = std::make_shared<TSignalRelay<R(T...)>>();
         }
         std::lock_guard<std::recursive_mutex> lock(m_mtx);
         if (relay != m_typed_relay)
@@ -305,11 +339,7 @@ namespace mo
     template <class... U>
     void TSignalImpl<void(T...)>::operator()(U&&... args) const
     {
-        auto stream = this->getStream();
-        if (stream == nullptr)
-        {
-            stream = IAsyncStream::current().get();
-        }
+        auto stream = IAsyncStream::current().get();
         (*this)(stream, std::forward<U>(args)...);
     }
     template <class... T>
@@ -319,7 +349,7 @@ namespace mo
         std::unique_lock<std::recursive_mutex> lock(m_mtx);
         auto relays = m_typed_relays;
         lock.unlock();
-        for (auto& relay : m_typed_relays)
+        for (auto& relay : relays)
         {
             if (relay)
             {
@@ -345,7 +375,7 @@ namespace mo
     {
         if (relay == nullptr)
         {
-            relay.reset(new TSignalRelay<void(T...)>());
+            relay = std::make_shared<TSignalRelay<void(T...)>>();
         }
         auto typed = std::dynamic_pointer_cast<TSignalRelay<void(T...)>>(relay);
         if (typed)
@@ -361,7 +391,7 @@ namespace mo
     {
         if (relay == nullptr)
         {
-            relay.reset(new TSignalRelay<void(T...)>());
+            relay = std::make_shared<TSignalRelay<void(T...)>>();
         }
         std::lock_guard<std::recursive_mutex> lock(m_mtx);
         auto itr = std::find(m_typed_relays.begin(), m_typed_relays.end(), relay);

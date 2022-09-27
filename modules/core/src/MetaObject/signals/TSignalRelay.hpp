@@ -31,6 +31,7 @@ namespace mo
         TypeInfo getSignature() const override;
         bool hasSlots() const override;
         uint32_t numSlots() const override;
+        bool contains(const ISlot*) const override;
 
         bool connect(ISlot& slot) override;
         bool connect(ISignal& signal) override;
@@ -62,6 +63,7 @@ namespace mo
         TypeInfo getSignature() const override;
         bool hasSlots() const override;
         uint32_t numSlots() const override;
+        bool contains(const ISlot*) const override;
 
         bool connect(ISlot& slot) override;
         bool connect(ISignal& signal) override;
@@ -81,10 +83,43 @@ namespace mo
     ///                   Implementation
     //////////////////////////////////////////////////////////////////
 
+    namespace
+    {
+        template <class T>
+        struct SignalStorage
+        {
+            using type = T;
+        };
+
+        template <class T>
+        struct SignalStorage<const T&>
+        {
+            using type = std::reference_wrapper<const T>;
+        };
+
+        template <class T>
+        struct SignalStorage<T&>
+        {
+            using type = std::reference_wrapper<T>;
+        };
+
+        template <class T>
+        T&& unpack(T&& val)
+        {
+            return val;
+        }
+
+        template <class T>
+        T& unpack(std::reference_wrapper<T>& val)
+        {
+            return val.get();
+        }
+    } // namespace
+
     template <class F, class... ARGS, size_t... IDX>
     void invokeSlotImpl(F& slot, ct::IndexSequence<IDX...>, const std::tuple<ARGS...>& tuple)
     {
-        slot(std::get<IDX>(tuple)...);
+        slot(unpack(std::get<IDX>(tuple))...);
     }
 
     template <class F, class... ARGS>
@@ -94,36 +129,45 @@ namespace mo
     }
 
     template <class... SARGS, class... ARGS>
-    auto invokeOnStreamImpl(IAsyncStream& dst, TSlot<void(SARGS...)>* slot, ARGS&&... args) ->
-        typename std::enable_if<sizeof...(ARGS) && ct::VariadicTypedef<std::decay_t<ARGS>...>::template all<
-                                                       std::is_trivially_copy_constructible>()>::type
+    auto invokeOnStream(std::weak_ptr<mo::ISignalRelay> relay,
+                        IAsyncStream& dst,
+                        TSlot<void(SARGS...)>* slot,
+                        ARGS&&... args) -> typename std::enable_if<sizeof...(ARGS) != 0>::type
     {
-        std::tuple<std::decay_t<ARGS>...> values(std::forward<ARGS>(args)...);
-        dst.pushWork([slot, values](IAsyncStream* stream) { invokeSlot(*slot, values); });
+        // So the problem that we are running into here is that slots are being destroyed and then invoked which causes
+        // a segfault. What we are doing here is checking if the relay is still valid since the slot holds ownership of
+        // the relay, if the relay is destroyed then that's a good indicator that the slot has been destroyed.  Ideally
+        // we actually check if the slot is still in the relay since a slot's dtor will remove it from the relay
+        std::tuple<typename SignalStorage<SARGS>::type...> values(std::forward<ARGS>(args)...);
+        dst.pushWork([relay, slot, values](IAsyncStream* stream) {
+            auto lock = relay.lock();
+            if (lock)
+            {
+                if (lock->contains(slot))
+                {
+                    invokeSlot(*slot, values);
+                }
+            }
+        });
+        return;
     }
 
     template <class... SARGS, class... ARGS>
-    auto invokeOnStreamImpl(IAsyncStream& dst, TSlot<void(SARGS...)>* slot, ARGS&&... args) ->
-        typename std::enable_if<sizeof...(ARGS) && ct::VariadicTypedef<std::decay_t<ARGS>...>::template all<
-                                                       std::is_trivially_copy_constructible>() == false>::type
+    auto invokeOnStream(std::weak_ptr<mo::ISignalRelay> relay,
+                        IAsyncStream& dst,
+                        TSlot<void(SARGS...)>* slot,
+                        ARGS&&... args) -> typename std::enable_if<sizeof...(ARGS) == 0>::type
     {
-        auto ptr = std::make_shared<std::tuple<ARGS...>>(std::forward_as_tuple(std::forward<ARGS>(args)...));
-        dst.pushWork([slot, ptr](IAsyncStream* stream) mutable { invokeSlot(*slot, *ptr); });
-        dst.synchronize();
-    }
-
-    template <class... SARGS, class... ARGS>
-    auto invokeOnStream(IAsyncStream& dst, TSlot<void(SARGS...)>* slot, ARGS&&... args) ->
-        typename std::enable_if<sizeof...(ARGS) != 0>::type
-    {
-        invokeOnStreamImpl(dst, slot, std::forward<ARGS>(args)...);
-    }
-
-    template <class... SARGS, class... ARGS>
-    auto invokeOnStream(IAsyncStream& dst, TSlot<void(SARGS...)>* slot, ARGS&&... args) ->
-        typename std::enable_if<sizeof...(ARGS) == 0>::type
-    {
-        dst.pushWork([slot](IAsyncStream* stream) { (*slot)(); });
+        dst.pushWork([relay, slot](IAsyncStream* stream) {
+            auto lock = relay.lock();
+            if (lock)
+            {
+                if (lock->contains(slot))
+                {
+                    (*slot)();
+                }
+            }
+        });
     }
 
     template <class... T, class Mutex>
@@ -139,6 +183,10 @@ namespace mo
         }
         for (auto slot : slots)
         {
+            if (!*slot)
+            {
+                return;
+            }
             auto dst_stream = slot->getStream();
             if (dst_stream)
             {
@@ -146,10 +194,15 @@ namespace mo
 
                 if (src)
                 {
+                    if (src == dst_stream)
+                    {
+                        (*slot)(std::forward<U>(args)...);
+                        return;
+                    }
                     if (dst_stream->processId() == src->processId())
                     {
                         dst_stream->synchronize(*src);
-                        invokeOnStream(*dst_stream, slot, std::forward<U>(args)...);
+                        invokeOnStream(this->weak_from_this(), *dst_stream, slot, std::forward<U>(args)...);
                     }
                     else
                     {
@@ -161,17 +214,13 @@ namespace mo
                     // no source stream or current, just directly call
                     if (*slot)
                     {
-                        invokeOnStream(*dst_stream, slot, std::forward<U>(args)...);
+                        invokeOnStream(this->weak_from_this(), *dst_stream, slot, std::forward<U>(args)...);
                     }
                 }
             }
             else
             {
-                // slot stream == nullptr
-                if (*slot)
-                {
-                    (*slot)(std::forward<U>(args)...);
-                }
+                (*slot)(std::forward<U>(args)...);
             }
         }
     }
@@ -251,6 +300,13 @@ namespace mo
     {
         std::lock_guard<Mutex> lock(m_mtx);
         return m_slots.size();
+    }
+
+    template <class... T, class Mutex>
+    bool TSignalRelay<void(T...), Mutex>::contains(const ISlot* slt) const
+    {
+        std::lock_guard<Mutex> lock(m_mtx);
+        return std::find(m_slots.begin(), m_slots.end(), slt) != m_slots.end();
     }
 
     // ------------------------------------------------------------------
@@ -370,6 +426,13 @@ namespace mo
     {
         std::lock_guard<Mutex> lock(m_mtx);
         return (m_slot != nullptr) ? 1 : 0;
+    }
+
+    template <class R, class... T, class Mutex>
+    bool TSignalRelay<R(T...), Mutex>::contains(const ISlot* slt) const
+    {
+        std::lock_guard<Mutex> lock(m_mtx);
+        return m_slot == slt;
     }
 } // namespace mo
 

@@ -7,7 +7,7 @@
 #include <memory>
 namespace mo
 {
-    class MO_EXPORTS ISignalRelay
+    class MO_EXPORTS ISignalRelay : public std::enable_shared_from_this<ISignalRelay>
     {
       public:
         using Ptr_t = std::shared_ptr<ISignalRelay>;
@@ -17,6 +17,7 @@ namespace mo
         virtual TypeInfo getSignature() const = 0;
         virtual bool hasSlots() const = 0;
         virtual uint32_t numSlots() const = 0;
+        virtual bool contains(const ISlot*) const = 0;
 
       protected:
         friend class ISlot;
