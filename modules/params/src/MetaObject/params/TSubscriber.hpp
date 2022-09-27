@@ -23,6 +23,8 @@ namespace mo
         bool setInput(std::shared_ptr<IPublisher> input) override;
         bool setInput(IPublisher* input = nullptr) override;
 
+        void setStream(IAsyncStream& stream) override;
+
         bool acceptsPublisher(const IPublisher& param) const override;
         bool acceptsType(const TypeInfo& type) const override;
         std::vector<TypeInfo> getInputTypes() const override;
@@ -52,7 +54,7 @@ namespace mo
         TDataContainerConstPtr_t<T> getTypedData(const Header* desired = nullptr, IAsyncStream* stream = nullptr);
 
       protected:
-        void onInputUpdate(const IDataContainerConstPtr_t& data, const IParam& param, UpdateFlags, IAsyncStream*);
+        void onInputUpdate(IDataContainerConstPtr_t data, const IParam& param, UpdateFlags, IAsyncStream*);
         void onInputDelete(const IParam&);
 
         virtual void onData(TDataContainerConstPtr_t<T>, const IParam&, UpdateFlags, IAsyncStream* stream);
@@ -138,6 +140,14 @@ namespace mo
             my_type);
 
         return false;
+    }
+
+    template <class T>
+    void TSubscriberImpl<T>::setStream(IAsyncStream& stream)
+    {
+        TParam<ISubscriber>::setStream(stream);
+        // We specifically do not set the stream of the update slot so that updates are handled on the publisher stream
+        // m_update_slot.setStream(stream);
     }
 
     template <class T>
@@ -268,7 +278,7 @@ namespace mo
     }
 
     template <class T>
-    void TSubscriberImpl<T>::onInputUpdate(const IDataContainerConstPtr_t& data,
+    void TSubscriberImpl<T>::onInputUpdate(IDataContainerConstPtr_t data,
                                            const IParam& param,
                                            UpdateFlags fgs,
                                            IAsyncStream* stream)
@@ -356,7 +366,6 @@ namespace mo
         {
             return;
         }
-        Lock_t lock(this->mtx());
         const auto header = data->getHeader();
         if (fg & ct::value(UpdateFlags::kBUFFER_UPDATED) && update_source.checkFlags(mo::ParamFlags::kBUFFER))
         {
@@ -367,20 +376,26 @@ namespace mo
         auto dst_stream = this->getStream();
         if (dst_stream && dst_stream != stream)
         {
-            m_data = data;
-            if (stream)
             {
-                m_data->record(*stream);
+                Lock_t lock(this->mtx());
+                m_data = data;
+                if (stream)
+                {
+                    m_data->record(*stream);
+                }
+                m_data->sync(*dst_stream);
+                m_new_data_available = true;
             }
-            m_data->sync(*dst_stream);
-            m_new_data_available = true;
             emitUpdate(header, ct::value(UpdateFlags::kINPUT_UPDATED), dst_stream);
             m_update_signal(data, *this, ct::value(UpdateFlags::kINPUT_UPDATED), dst_stream);
         }
         else
         {
-            m_data = data;
-            m_new_data_available = true;
+            {
+                Lock_t lock(this->mtx());
+                m_data = data;
+                m_new_data_available = true;
+            }
             emitUpdate(header, ct::value(UpdateFlags::kINPUT_UPDATED), dst_stream);
             m_update_signal(data, *this, ct::value(UpdateFlags::kINPUT_UPDATED), stream);
         }

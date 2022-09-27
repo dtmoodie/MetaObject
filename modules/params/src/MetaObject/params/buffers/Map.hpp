@@ -103,7 +103,7 @@ namespace mo
             std::ostream& print(std::ostream& os) const override;
 
           protected:
-            void onInputUpdate(const IDataContainerConstPtr_t&, const IParam&, UpdateFlags, IAsyncStream*);
+            void onInputUpdate(IDataContainerConstPtr_t, const IParam&, UpdateFlags, IAsyncStream*);
 
             IDataContainerConstPtr_t search(const Header& hdr) const;
             IDataContainerConstPtr_t searchExact(const Header& hdr) const;

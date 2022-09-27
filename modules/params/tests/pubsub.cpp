@@ -134,10 +134,8 @@ namespace
             update_flag.emplace_back(&param, fg);
         }
 
-        void onDataUpdate(const std::shared_ptr<const IDataContainer>& data,
-                          const IParam& param,
-                          UpdateFlags fg,
-                          IAsyncStream*)
+        void
+        onDataUpdate(std::shared_ptr<const IDataContainer> data, const IParam& param, UpdateFlags fg, IAsyncStream*)
         {
             update_called = true;
             update_flag.emplace_back(&param, fg);

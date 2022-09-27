@@ -30,7 +30,7 @@ namespace mo
         }
 
       private:
-        void onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags);
+        void onInputUpdate(IDataContainerPtr_t, IParam*, UpdateFlags);
         std::tuple<TSubscriberPtr<Types>...> m_inputs;
     };
 
@@ -144,7 +144,7 @@ namespace mo
     }
 
     template <class... Types>
-    void TMultiSubscriber<Types...>::onInputUpdate(const IDataContainerPtr_t&, IParam*, UpdateFlags)
+    void TMultiSubscriber<Types...>::onInputUpdate(IDataContainerPtr_t, IParam*, UpdateFlags)
     {
     }
 } // namespace mo

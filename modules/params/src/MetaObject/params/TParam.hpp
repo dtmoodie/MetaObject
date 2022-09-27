@@ -277,7 +277,7 @@ namespace mo
     template <class BASE>
     void TParam<BASE>::emitUpdate(Header hdr, UpdateFlags fgs, IAsyncStream* stream) const
     {
-        m_update_signal(*this, std::move(hdr), std::move(fgs), stream);
+        m_update_signal(std::cref(*this), std::move(hdr), std::move(fgs), stream);
     }
 
 } // namespace mo

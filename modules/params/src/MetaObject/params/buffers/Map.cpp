@@ -220,10 +220,8 @@ namespace mo
             return m_publisher;
         }
 
-        void Map::onInputUpdate(const IDataContainerConstPtr_t& data,
-                                const IParam& param,
-                                UpdateFlags flags,
-                                IAsyncStream* stream)
+        void
+        Map::onInputUpdate(IDataContainerConstPtr_t data, const IParam& param, UpdateFlags flags, IAsyncStream* stream)
         {
             (void)param;
             (void)flags;
