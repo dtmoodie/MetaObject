@@ -5,6 +5,8 @@
 #include <MetaObject/thread/fiber_include.hpp>
 #include <MetaObject/types/TDynArray.hpp>
 
+#include <MetaObject/logging/profiling.hpp>
+
 #include <MetaObject/thread/Mutex.hpp>
 #include <boost/fiber/operations.hpp>
 
@@ -41,6 +43,7 @@ TEST(cuda_stream, allocate)
 
 TEST(cuda_stream, launch)
 {
+    cudaFree(0);
     auto stream = mo::IAsyncStream::create();
     ASSERT_NE(stream, nullptr);
     auto typed0 = std::dynamic_pointer_cast<mo::cuda::AsyncStream>(stream);
@@ -53,22 +56,31 @@ TEST(cuda_stream, launch)
     ASSERT_NE(typed0, typed1);
     ASSERT_NE(typed0->getStream(), typed1->getStream());
 
-    auto alloc = typed0->deviceAllocator();
-    ASSERT_NE(alloc, nullptr);
-    auto ptr = alloc->allocate(100 * sizeof(float), sizeof(float));
-    ASSERT_NE(ptr, nullptr);
-
     auto device_stream0 = typed0->getStream();
     auto device_stream1 = typed1->getStream();
     ASSERT_NE(device_stream0, device_stream1);
-
     mo::cuda::CUDAMemoryBlock mem(1);
-    cudaMemsetAsync(mem.begin(), 0, 1, device_stream0);
+    {
+        mo::ScopedProfile profile("asdf");
 
-    cuda_tests::wait(ct::ptrCast<const bool>(mem.begin()), device_stream0);
+        cudaMemsetAsync(mem.begin(), 0, 1, device_stream0);
+        // This makes steam0 wait until work is complete
+        cuda_tests::wait(ct::ptrCast<const bool>(mem.begin()), device_stream0);
+    }
+
+    cudaError_t err = cudaPeekAtLastError();
+    ASSERT_EQ(err, cudaSuccess) << "Unable to launch wait kernel due to " << cudaGetErrorString(err);
+
+    // ASSERT_FALSE(device_stream0.query());
 
     volatile bool callback_invoked = false;
-    typed0->enqueueCallback([&callback_invoked](mo::IAsyncStream*) { callback_invoked = true; });
+    // clang-format off
+    typed0->enqueueCallback(
+        [&callback_invoked](mo::IAsyncStream*)
+        {
+            callback_invoked = true;
+        });
+    // clang-format on
 
     ASSERT_EQ(callback_invoked, false);
 
@@ -81,7 +93,6 @@ TEST(cuda_stream, launch)
     {
         typed0->synchronize();
         typed1->synchronize();
-        // boost::this_fiber::yield();
     }
     ASSERT_EQ(callback_invoked, true);
 }
@@ -102,6 +113,8 @@ TEST(cuda_stream, async_copy)
     mo::TDynArray<float, mo::DeviceAllocator> d_data(d_alloc, num_elems);
     ASSERT_NE(d_data.view().data(), nullptr);
     cuda_tests::set(d_data.mutableView().data(), 1.0F, num_elems, typed->getStream());
+    cudaError_t err = cudaPeekAtLastError();
+    ASSERT_EQ(err, cudaSuccess) << "Unable to launch set kernel due to " << cudaGetErrorString(err);
     stream->synchronize();
 
     auto h_alloc = stream->hostAllocator();
@@ -110,6 +123,9 @@ TEST(cuda_stream, async_copy)
     ASSERT_NE(h_data.view().data(), nullptr);
 
     cuda_tests::set(d_data.mutableView().data(), 2.0F, num_elems, typed->getStream());
+    err = cudaPeekAtLastError();
+    ASSERT_EQ(err, cudaSuccess) << "Unable to launch set kernel due to " << cudaGetErrorString(err);
+    ASSERT_FALSE(typed->getStream().query());
     stream->deviceToHost(h_data.mutableView(), d_data.view());
     stream->synchronize();
     for (size_t i = 0; i < h_data.size(); ++i)
@@ -124,6 +140,8 @@ TEST(cuda_stream, async_copy)
     }
     stream->hostToDevice(d_data.mutableView(), h_data.view());
     cuda_tests::square(d_data.mutableView().data(), d_data.size(), typed->getStream());
+    err = cudaPeekAtLastError();
+    ASSERT_EQ(err, cudaSuccess) << "Unable to launch square kernel due to " << cudaGetErrorString(err);
     stream->deviceToHost(h_data.mutableView(), d_data.view());
     stream->synchronize();
     for (size_t i = 0; i < h_data.size(); ++i)
