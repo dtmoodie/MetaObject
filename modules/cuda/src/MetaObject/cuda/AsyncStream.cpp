@@ -30,7 +30,9 @@ namespace mo
             init();
         }
 
-        AsyncStream::~AsyncStream() = default;
+        AsyncStream::~AsyncStream()
+        {
+        }
 
         void AsyncStream::pushWork(std::function<void(mo::IAsyncStream*)>&& work)
         {
@@ -126,14 +128,24 @@ namespace mo
             auto typed = dynamic_cast<AsyncStream*>(other);
             if (typed)
             {
-                if (m_stream_accessed)
+                // Check if the other stream even has work to synchronize against
+                if (!typed->getStream().query())
                 {
-                    auto event = typed->createEvent();
-                    event.record(typed->m_stream);
-                    this->m_stream.waitEvent(event);
-                    // Not sure if this line is necessary
-                    mo::AsyncStream::pushWork([event](mo::IAsyncStream*) { event.synchronize(); });
-                    // Not sure if we should reset m_stream_accessed since this is a different event
+                    if (m_stream_accessed)
+                    {
+                        auto event = typed->createEvent();
+                        event.record(typed->m_stream);
+                        this->m_stream.waitEvent(event);
+                        // Not sure if this line is necessary
+                        mo::AsyncStream::pushWork([event](mo::IAsyncStream*) { event.synchronize(); });
+                        // Not sure if we should reset m_stream_accessed since this is a different event
+                    }
+                }
+                else
+                {
+                    // Consider still doing a synchronize on incomplete host side work?  Currently that seems excessive
+                    // since we aren't publishing buffers to be populated at a later time.  Currently our approach is to
+                    // have a task to check for async host side work, and eventually publish when the data is complete
                 }
             }
         }
@@ -172,7 +184,7 @@ namespace mo
 
         std::shared_ptr<DeviceAllocator> AsyncStream::deviceAllocator() const
         {
-            std::lock_guard<boost::fibers::mutex> lock(m_mtx);
+            std::lock_guard<boost::fibers::recursive_mutex> lock(m_mtx);
             return m_allocator;
         }
 
