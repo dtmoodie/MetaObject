@@ -142,6 +142,11 @@ namespace mo
 
         bool isInitialized() const override;
 
+        virtual void setSlotStream(IAsyncStream* stream);
+        virtual void setPublisherStream(IAsyncStream* stream);
+        virtual void setSubscriberStream(IAsyncStream* stream);
+        virtual void setControlStream(IAsyncStream* stream);
+
       private:
         struct MO_EXPORTS ConnectionInfo
         {

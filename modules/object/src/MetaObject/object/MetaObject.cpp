@@ -153,9 +153,6 @@ namespace mo
         m_slot_param_updated.bind(&MetaObject::onParamUpdate, this);
         m_signals["param_updated"][m_sig_param_updated.getSignature()] = &m_sig_param_updated;
         m_signals["param_added"][m_sig_param_updated.getSignature()] = &m_sig_param_added;
-        // TODO
-        // auto stream = IAsyncStream::current();
-        // setStream();
     }
 
     MetaObject::~MetaObject()
@@ -450,25 +447,91 @@ namespace mo
         SERIALIZE(m_param_server);
     }
 
-    void MetaObject::setStream(const IAsyncStreamPtr_t& ctx)
+    void MetaObject::setSlotStream(IAsyncStream* stream)
     {
-        if (ctx == nullptr)
+        for (auto& slot : m_slots)
+        {
+            for (auto& overload : slot.second)
+            {
+                overload.second->setStream(stream);
+            }
+        }
+        m_slot_param_updated.setStream(stream);
+        for (auto& slot : m_implicit_slots)
+        {
+            slot->setStream(stream);
+        }
+    }
+
+    void MetaObject::setControlStream(IAsyncStream* stream)
+    {
+        for (auto& param : m_implicit_params)
+        {
+            if (param.second->checkFlags(ParamFlags::kCONTROL))
+            {
+                param.second->setStream(*stream);
+            }
+        }
+        for (auto& param : m_params)
+        {
+            if (param.second->checkFlags(ParamFlags::kCONTROL))
+            {
+                param.second->setStream(*stream);
+            }
+        }
+    }
+
+    void MetaObject::setPublisherStream(IAsyncStream* stream)
+    {
+        for (auto& param : m_implicit_params)
+        {
+            if (param.second->checkFlags(ParamFlags::kOUTPUT))
+            {
+                param.second->setStream(*stream);
+            }
+        }
+        for (auto& param : m_params)
+        {
+            if (param.second->checkFlags(ParamFlags::kOUTPUT))
+            {
+                param.second->setStream(*stream);
+            }
+        }
+    }
+
+    void MetaObject::setSubscriberStream(mo::IAsyncStream* stream)
+    {
+        for (auto& param : m_implicit_params)
+        {
+            if (param.second->checkFlags(ParamFlags::kINPUT))
+            {
+                param.second->setStream(*stream);
+            }
+        }
+        for (auto& param : m_params)
+        {
+            if (param.second->checkFlags(ParamFlags::kINPUT))
+            {
+                param.second->setStream(*stream);
+            }
+        }
+    }
+
+    void MetaObject::setStream(const IAsyncStreamPtr_t& stream)
+    {
+        if (stream == nullptr)
         {
             MO_LOG(info, "Attempting to set stream to nullptr");
             return;
         }
-        m_stream = ctx;
-        auto ptr = ctx.get();
+        m_stream = stream;
+        IAsyncStream* ptr = stream.get();
         if (ptr)
         {
-            for (auto& param : m_implicit_params)
-            {
-                param.second->setStream(*ptr);
-            }
-            for (auto& param : m_params)
-            {
-                param.second->setStream(*ptr);
-            }
+            setPublisherStream(ptr);
+            setSubscriberStream(ptr);
+            setControlStream(ptr);
+            // setSlotStream(ptr);
         }
     }
 
@@ -1401,6 +1464,10 @@ namespace mo
     void MetaObject::addSlot(ISlot& slot, const std::string& name)
     {
         m_slots[name][slot.getSignature()] = &slot;
+        /*if (m_stream)
+        {
+            slot.setStream(*m_stream);
+        }*/
     }
 
     void MetaObject::addSlot(std::unique_ptr<ISlot>&& slot, const std::string& name)
@@ -1517,7 +1584,7 @@ namespace mo
 
     void MetaObject::onParamUpdate(const IParam& param, Header hdr, UpdateFlags, IAsyncStream*)
     {
-        m_sig_param_updated(*this, hdr, param);
+        m_sig_param_updated(std::cref(*this), hdr, std::cref(param));
     }
 
     MetaObject::ParamConnectionInfo::ParamConnectionInfo(rcc::weak_ptr<mo::IMetaObject> out,
