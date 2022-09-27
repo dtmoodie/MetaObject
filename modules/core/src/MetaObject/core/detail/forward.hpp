@@ -66,7 +66,7 @@ namespace mo
     class TSlot;
 
     template <class BASE>
-    class TParam;
+    struct TParam;
 
     template <class T>
     struct TDataContainer;
@@ -80,6 +80,7 @@ namespace mo
     using Lock_t = std::unique_lock<Mutex_t>;
 
     using IAsyncStreamPtr_t = std::shared_ptr<IAsyncStream>;
+    using IAsyncStreamWeakPtr_t = std::weak_ptr<IAsyncStream>;
 
     using ConnectionPtr_t = std::shared_ptr<Connection>;
     using IParamPtr_t = std::shared_ptr<IParam>;
@@ -93,9 +94,9 @@ namespace mo
     using Delete_s = void(const IParam&);
 
     using Update_s = void(const IParam&, Header, UpdateFlags, IAsyncStream*);
-    using DataUpdate_s = void(const IDataContainerConstPtr_t&, const IParam&, UpdateFlags, IAsyncStream*);
+    using DataUpdate_s = void(IDataContainerConstPtr_t, const IParam&, UpdateFlags, IAsyncStream*);
     template <class T>
-    using TDataUpdate_s = void(const TDataContainerConstPtr_t<T>&, const IParam&, UpdateFlags, IAsyncStream*);
+    using TDataUpdate_s = void(TDataContainerConstPtr_t<T>, const IParam&, UpdateFlags, IAsyncStream*);
 
     using UpdateSlot_t = TSlot<Update_s>;
 
