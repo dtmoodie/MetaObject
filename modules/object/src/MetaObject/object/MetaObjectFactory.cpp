@@ -73,7 +73,7 @@ class MetaObjectFactoryImpl : public MetaObjectFactory
     using Ptr_t = std::shared_ptr<MetaObjectFactory>;
 
     MetaObjectFactoryImpl(SystemTable* table)
-        : m_logger_ptr(table->getDefaultLogger())
+        : m_logger_ptr(table->getLogger())
         , m_logger(*m_logger_ptr)
     {
         obj_system.Initialise(&m_compiler_logger, table);
