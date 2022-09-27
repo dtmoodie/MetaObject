@@ -36,12 +36,12 @@ TEST(signal, multi_threaded)
 {
     auto stream = mo::AsyncStream::create();
     mo::Thread thread;
-    IAsyncStreamPtr_t thread_ctx = thread.asyncStream();
+    IAsyncStreamPtr_t thread_stream = thread.asyncStream();
 
     bool slot_invoked = false;
     TSlot<void(int)> slot = TSlot<void(int)>(std::bind(
-        [&thread_ctx, &slot_invoked](int value) -> void {
-            ASSERT_EQ(thread_ctx->threadId(), mo::getThisThread());
+        [&thread_stream, &slot_invoked](int value) -> void {
+            ASSERT_EQ(thread_stream->threadId(), mo::getThisThread());
             ASSERT_EQ(5, value);
             slot_invoked = true;
         },
@@ -49,13 +49,13 @@ TEST(signal, multi_threaded)
 
     boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
 
-    slot.setStream(*thread_ctx);
+    slot.setStream(thread_stream.get());
 
     TSignal<void(int)> signal;
     auto connection = slot.connect(signal);
 
     boost::this_thread::sleep_for(boost::chrono::milliseconds(100));
     signal(stream.get(), 5);
-    thread_ctx->waitForCompletion();
+    thread_stream->waitForCompletion();
     ASSERT_TRUE(slot_invoked);
 }
