@@ -156,7 +156,7 @@ namespace mo
             }
         }
 
-        std::shared_ptr<IAsyncStream> stream = props.getStream();
+        IAsyncStreamPtr_t stream = props.getStream();
         WorkQueue* queue = nullptr;
         {
             boost::fibers::detail::spinlock_lock lk(m_work_queue_spinlock);

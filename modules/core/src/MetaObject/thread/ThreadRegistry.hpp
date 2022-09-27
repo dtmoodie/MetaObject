@@ -18,11 +18,11 @@ namespace mo
         };
         virtual ~ThreadRegistry();
 
-        virtual IAsyncStream::Ptr_t getGUIStream() = 0;
-        virtual void setGUIStream(IAsyncStream::Ptr_t) = 0;
+        virtual IAsyncStreamPtr_t getGUIStream() = 0;
+        virtual void setGUIStream(IAsyncStreamPtr_t) = 0;
 
-        virtual void registerThread(ThreadType type, IAsyncStream::Ptr_t stream = IAsyncStream::current()) = 0;
-        virtual IAsyncStream::Ptr_t getThread(ThreadType type) = 0;
+        virtual void registerThread(ThreadType type, IAsyncStreamPtr_t stream = IAsyncStream::current()) = 0;
+        virtual IAsyncStreamPtr_t getThread(ThreadType type) = 0;
 
         static ThreadRegistry* instance();
         static ThreadRegistry* instance(SystemTable* table);

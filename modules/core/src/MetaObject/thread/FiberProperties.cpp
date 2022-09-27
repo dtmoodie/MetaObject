@@ -56,7 +56,7 @@ namespace mo
             notify();
         }
     }
-    void FiberProperty::setAll(PriorityLevels priority, uint64_t id, std::shared_ptr<IAsyncStream> stream)
+    void FiberProperty::setAll(PriorityLevels priority, uint64_t id, IAsyncStreamPtr_t stream)
     {
         if (m_priority != priority || id != m_id)
         {
@@ -79,12 +79,12 @@ namespace mo
         return m_enabled;
     }
 
-    std::shared_ptr<IAsyncStream> FiberProperty::getStream() const
+    IAsyncStreamPtr_t FiberProperty::getStream() const
     {
         return m_stream.lock();
     }
 
-    void FiberProperty::setStream(std::shared_ptr<IAsyncStream> stream)
+    void FiberProperty::setStream(IAsyncStreamPtr_t stream)
     {
         m_stream = std::move(stream);
         notify();

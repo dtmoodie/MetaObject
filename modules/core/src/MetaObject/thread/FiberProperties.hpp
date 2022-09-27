@@ -23,20 +23,20 @@ namespace mo
 
         void setBoth(PriorityLevels priority, uint64_t id);
         void setAll(PriorityLevels priority, uint64_t id);
-        void setAll(PriorityLevels priority, uint64_t id, std::shared_ptr<IAsyncStream>);
+        void setAll(PriorityLevels priority, uint64_t id, IAsyncStreamPtr_t);
 
         void disable();
         bool isEnabled() const;
 
-        std::shared_ptr<IAsyncStream> getStream() const;
+        IAsyncStreamPtr_t getStream() const;
 
-        void setStream(std::shared_ptr<IAsyncStream>);
+        void setStream(IAsyncStreamPtr_t);
 
       private:
         PriorityLevels m_priority = MEDIUM;
         uint64_t m_id = 0;
         bool m_enabled = true;
-        std::weak_ptr<IAsyncStream> m_stream;
+        IAsyncStreamWeakPtr_t m_stream;
     };
 } // namespace mo
 

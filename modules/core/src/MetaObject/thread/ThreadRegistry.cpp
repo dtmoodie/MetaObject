@@ -24,9 +24,9 @@ namespace mo
             }
         }
 
-        IAsyncStream::Ptr_t getGUIStream() override
+        IAsyncStreamPtr_t getGUIStream() override
         {
-            IAsyncStream::Ptr_t out;
+            IAsyncStreamPtr_t out;
 
             {
                 std::lock_guard<std::mutex> lock(mtx);
@@ -40,17 +40,17 @@ namespace mo
             return out;
         }
 
-        void setGUIStream(IAsyncStream::Ptr_t stream) override
+        void setGUIStream(IAsyncStreamPtr_t stream) override
         {
             std::lock_guard<std::mutex> lock(mtx);
             m_gui_stream = stream;
         }
 
-        void registerThread(ThreadType type, IAsyncStream::Ptr_t stream) override
+        void registerThread(ThreadType type, IAsyncStreamPtr_t stream) override
         {
             std::lock_guard<std::mutex> lock(mtx);
             auto& threads = _thread_map[type];
-            auto pred = [stream](const std::weak_ptr<IAsyncStream> weak) { return weak.lock() == stream; };
+            auto pred = [stream](const IAsyncStreamWeakPtr_t weak) { return weak.lock() == stream; };
             const size_t count = std::count_if(threads.begin(), threads.end(), pred);
             if (count == 0)
             {
@@ -58,18 +58,18 @@ namespace mo
             }
         }
 
-        IAsyncStream::Ptr_t getThread(ThreadType type_) override
+        IAsyncStreamPtr_t getThread(ThreadType type_) override
         {
             const int type = type_;
             std::lock_guard<std::mutex> lock(mtx);
             // TODO some kind of load balancing for multiple threads of a specific type
-            IAsyncStream::Ptr_t current_thread = IAsyncStream::current();
+            IAsyncStreamPtr_t current_thread = IAsyncStream::current();
             auto itr = _thread_map.find(type);
             if (itr != _thread_map.end())
             {
                 if (!itr->second.empty())
                 {
-                    auto pred = [current_thread](const std::weak_ptr<IAsyncStream>& weak) {
+                    auto pred = [current_thread](const IAsyncStreamWeakPtr_t& weak) {
                         return weak.lock() == current_thread;
                     };
                     if (std::count_if(itr->second.begin(), itr->second.end(), pred) == 0)
@@ -97,8 +97,8 @@ namespace mo
             return nullptr;
         }
 
-        std::map<int, std::vector<std::weak_ptr<IAsyncStream>>> _thread_map;
-        std::weak_ptr<IAsyncStream> m_gui_stream;
+        std::map<int, std::vector<IAsyncStreamWeakPtr_t>> _thread_map;
+        IAsyncStreamWeakPtr_t m_gui_stream;
         std::vector<std::shared_ptr<Thread>> m_worker_threads;
         mutable std::mutex mtx;
     };
