@@ -31,7 +31,7 @@ int main(int argc, char** argv)
     auto table = SystemTable::instance();
     if (quiet)
     {
-        table->getDefaultLogger()->set_level(spdlog::level::critical);
+        table->getLogger()->set_level(spdlog::level::critical);
     }
     PerModuleInterface::GetInstance()->SetSystemTable(table.get());
     mo::params::init(table.get());
@@ -49,14 +49,14 @@ int main(int argc, char** argv)
 #endif
     if (!quiet)
     {
-        table->getDefaultLogger()->set_level(spdlog::level::debug);
+        table->getLogger()->set_level(spdlog::level::debug);
     }
 
     mo::MetaObjectFactory::loadStandardPlugins();
 
     if (!quiet)
     {
-        table->getDefaultLogger()->set_level(spdlog::level::info);
+        table->getLogger()->set_level(spdlog::level::info);
     }
 
     auto result = RUN_ALL_TESTS();
