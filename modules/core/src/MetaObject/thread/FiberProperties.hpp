@@ -11,6 +11,7 @@ namespace mo
 {
     struct IAsyncStream;
     struct IDeviceStream;
+    struct PriorityScheduler;
     struct MO_EXPORTS FiberProperty : public boost::fibers::fiber_properties
     {
         FiberProperty(boost::fibers::context* ctx);
@@ -32,11 +33,15 @@ namespace mo
 
         void setStream(IAsyncStreamPtr_t);
 
+        void setScheduler(PriorityScheduler*);
+        PriorityScheduler* getScheduler() const;
+
       private:
         PriorityLevels m_priority = MEDIUM;
         uint64_t m_id = 0;
         bool m_enabled = true;
         IAsyncStreamWeakPtr_t m_stream;
+        PriorityScheduler* m_scheduler = nullptr;
     };
 } // namespace mo
 

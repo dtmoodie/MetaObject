@@ -26,6 +26,9 @@ if(CUDA_FOUND)
             find_package(OpenCV QUIET COMPONENTS cudaarithm)
         endif()
 
+        cuda_select_nvcc_arch_flags(ARCH_FLAGS 8.6)
+        list(APPEND CUDA_NVCC_FLAGS ${ARCH_FLAGS})
+
         file(GLOB_RECURSE tests "tests/*.cpp" "tests/*.cu")
         cuda_add_executable(test_mo_cuda ${tests})
         target_include_directories(test_mo_cuda

@@ -66,7 +66,7 @@ namespace mo
 
     AsyncStream::~AsyncStream()
     {
-        this->AsyncStream::synchronize();
+        this->AsyncStream::synchronize(1 * ns);
         m_continue = false;
         if (m_worker_fiber.joinable())
         {
@@ -94,11 +94,22 @@ namespace mo
         m_name = name;
     }
 
-    void AsyncStream::pushWork(std::function<void(IAsyncStream*)>&& work)
+    void AsyncStream::pushWork(std::function<void(IAsyncStream*)>&& work, const bool async)
     {
-        std::lock_guard<boost::fibers::recursive_mutex> lock(m_mtx);
-        std::string location = boost::stacktrace::to_string(boost::stacktrace::stacktrace());
-        m_work_queue.push_back(std::make_tuple(std::move(work), 0, std::move(location)));
+        if (async)
+        {
+            // Create a fiber and add it to the scheduler of this stream
+            boost::fibers::fiber fiber(work, this);
+            // TODO how to ensure it goes to the right scheduler?
+            fiber.properties<FiberProperty>().setScheduler(m_scheduler);
+            fiber.detach();
+        }
+        else
+        {
+            std::lock_guard<boost::fibers::recursive_mutex> lock(m_mtx);
+            std::string location = boost::stacktrace::to_string(boost::stacktrace::stacktrace());
+            m_work_queue.push_back(std::make_tuple(std::move(work), 0, std::move(location)));
+        }
     }
 
     void AsyncStream::pushEvent(std::function<void(IAsyncStream*)>&& event, const uint64_t event_id)
@@ -117,7 +128,7 @@ namespace mo
         m_work_queue.push_back(std::make_tuple(std::move(event), event_id, std::move(location)));
     }
 
-    void AsyncStream::synchronize()
+    void AsyncStream::synchronize(Duration)
     {
         mo::ScopedProfile profile("mo::AsyncStream::synchronize");
 
@@ -203,6 +214,7 @@ namespace mo
         auto ptr = this->shared_from_this();
         m_worker_fiber = boost::fibers::fiber(&AsyncStream::workerLoop, this);
         m_worker_fiber.properties<FiberProperty>().setStream(ptr);
+        m_scheduler = PriorityScheduler::current();
         boost::this_fiber::sleep_for(std::chrono::nanoseconds(1));
     }
 

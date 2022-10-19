@@ -77,7 +77,7 @@ namespace mo
                 return m_complete;
             }
 
-            bool synchronize(const Duration timeout = 0 * ms) const
+            bool synchronize(Duration sleep = 1 * ns, const Duration timeout = 0 * ms) const
             {
                 mo::ScopedProfile profile("mo::cuda::Event::synchronize");
                 if (m_complete)
@@ -92,7 +92,7 @@ namespace mo
                 {
                     while (!queryCompletion())
                     {
-                        boost::this_fiber::sleep_for(std::chrono::microseconds(1));
+                        boost::this_fiber::sleep_for(sleep);
                     }
                     return m_complete;
                 }
@@ -101,7 +101,7 @@ namespace mo
 
                 while (now <= end && !queryCompletion())
                 {
-                    boost::this_fiber::sleep_for(std::chrono::microseconds(1));
+                    boost::this_fiber::sleep_for(sleep);
                     now = Time::now();
                 }
                 return m_complete;
@@ -145,9 +145,9 @@ namespace mo
             return m_impl->queryCompletion();
         }
 
-        bool Event::synchronize(const Duration timeout) const
+        bool Event::synchronize(Duration sleep, const Duration timeout) const
         {
-            return m_impl->synchronize(timeout);
+            return m_impl->synchronize(sleep, timeout);
         }
 
         Event::operator cudaEvent_t()

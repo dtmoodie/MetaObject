@@ -8,6 +8,9 @@ namespace std
     template <class T>
     class shared_ptr;
 
+    template <class T>
+    class weak_ptr;
+
     template <class T, class Alloc>
     class vector;
 

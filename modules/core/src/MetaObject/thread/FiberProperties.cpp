@@ -89,4 +89,15 @@ namespace mo
         m_stream = std::move(stream);
         notify();
     }
+
+    void FiberProperty::setScheduler(PriorityScheduler* scheduler)
+    {
+        m_scheduler = scheduler;
+        notify();
+    }
+
+    PriorityScheduler* FiberProperty::getScheduler() const
+    {
+        return m_scheduler;
+    }
 } // namespace mo

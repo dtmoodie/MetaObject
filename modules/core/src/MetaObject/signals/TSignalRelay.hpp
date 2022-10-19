@@ -139,16 +139,18 @@ namespace mo
         // the relay, if the relay is destroyed then that's a good indicator that the slot has been destroyed.  Ideally
         // we actually check if the slot is still in the relay since a slot's dtor will remove it from the relay
         std::tuple<typename SignalStorage<SARGS>::type...> values(std::forward<ARGS>(args)...);
-        dst.pushWork([relay, slot, values](IAsyncStream* stream) {
-            auto lock = relay.lock();
-            if (lock)
-            {
-                if (lock->contains(slot))
+        dst.pushWork(
+            [relay, slot, values](IAsyncStream* stream) {
+                auto lock = relay.lock();
+                if (lock)
                 {
-                    invokeSlot(*slot, values);
+                    if (lock->contains(slot))
+                    {
+                        invokeSlot(*slot, values);
+                    }
                 }
-            }
-        });
+            },
+            true);
         return;
     }
 
@@ -158,16 +160,18 @@ namespace mo
                         TSlot<void(SARGS...)>* slot,
                         ARGS&&... args) -> typename std::enable_if<sizeof...(ARGS) == 0>::type
     {
-        dst.pushWork([relay, slot](IAsyncStream* stream) {
-            auto lock = relay.lock();
-            if (lock)
-            {
-                if (lock->contains(slot))
+        dst.pushWork(
+            [relay, slot](IAsyncStream* stream) {
+                auto lock = relay.lock();
+                if (lock)
                 {
-                    (*slot)();
+                    if (lock->contains(slot))
+                    {
+                        (*slot)();
+                    }
                 }
-            }
-        });
+            },
+            true);
     }
 
     template <class... T, class Mutex>

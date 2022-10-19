@@ -184,6 +184,12 @@ namespace parallel_dependent_subtasks
     }
 } // namespace parallel_dependent_subtasks
 
+//
+// stream_a:   taskA -> taskB -> taskC    -> taskD
+//                  \               \        /
+// stream_b:         subtaskA       subtaskC
+//
+
 TEST(async_stream, parallel_dependent_subtasks)
 {
     parallel_dependent_subtasks::main_task_counter = 0;
@@ -212,8 +218,51 @@ TEST(async_stream, parallel_dependent_subtasks)
     stream_a->synchronize(*stream_b);
     stream_a->pushWork([stream_b_ptr](mo::IAsyncStream*) { parallel_dependent_subtasks::taskD(); });
     stream_a->waitForCompletion();
-    ASSERT_EQ(parallel_dependent_subtasks::main_task_counter, ((1 + 2) * 4 + 5));
-    ASSERT_EQ(parallel_dependent_subtasks::sub_task_counter, (10 * 3));
+    EXPECT_EQ(parallel_dependent_subtasks::main_task_counter, ((1 + 2) * 4 + 5));
+    EXPECT_EQ(parallel_dependent_subtasks::sub_task_counter, (10 * 3));
+
+    EXPECT_TRUE(parallel_dependent_subtasks::task_a_called)
+        << "Task a was not called, num items still in the queue: " << stream_a->size();
+    EXPECT_TRUE(parallel_dependent_subtasks::task_b_called)
+        << "Task b was not called, num items still in the queue: " << stream_a->size();
+    ;
+    EXPECT_TRUE(parallel_dependent_subtasks::task_c_called)
+        << "Task c was not called, num items still in the queue: " << stream_a->size();
+    ;
+    EXPECT_TRUE(parallel_dependent_subtasks::task_d_called)
+        << "Task d was not called, num items still in the queue: " << stream_a->size();
+    ;
+    EXPECT_TRUE(parallel_dependent_subtasks::subtask_a_called)
+        << "Subtask a was not called, num items still in the queue: " << stream_b->size();
+    EXPECT_TRUE(parallel_dependent_subtasks::subtask_c_called)
+        << "Subtask c was not called, num items still in the queue: " << stream_b->size();
+}
+
+TEST(async_stream, threaded_async_execution)
+{
+    mo::Thread worker_thread;
+    mo::IAsyncStreamPtr_t stream = worker_thread.asyncStream();
+    const size_t thread_id = worker_thread.threadId();
+    bool callback_called_1 = false;
+    bool callback_called_2 = false;
+    boost::fibers::barrier barrier(2);
+    stream->pushWork([&barrier, thread_id, &callback_called_1](mo::IAsyncStream* stream) {
+        size_t tid = mo::getThisThreadId();
+        ASSERT_EQ(thread_id, tid);
+        callback_called_1 = true;
+        barrier.wait();
+    });
+    stream->pushWork(
+        [&barrier, thread_id, &callback_called_2](mo::IAsyncStream* stream) {
+            size_t tid = mo::getThisThreadId();
+            ASSERT_EQ(thread_id, tid);
+            callback_called_2 = true;
+            barrier.wait();
+        },
+        true);
+    stream->synchronize();
+    ASSERT_TRUE(callback_called_1);
+    ASSERT_TRUE(callback_called_2);
 }
 
 TEST(async_stream, threaded_parallel_dependent_subtasks)

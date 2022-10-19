@@ -39,10 +39,19 @@ namespace mo
 
         virtual ~IAsyncStream();
 
-        virtual void pushWork(Work_f&& work) = 0;
+        /**
+         * @brief pushWork to operate on the stream
+         * @param work work functor
+         * @param do not operate on the stream but rather on the scheduler of the stream, AKA operate on the thread of
+         * the stream
+         */
+        virtual void pushWork(Work_f&& work, const bool async = false) = 0;
         virtual void pushEvent(Work_f&& event, uint64_t event_id = 0) = 0;
 
-        virtual void synchronize() = 0;
+        // For the sake of python / gdb, we have an overload that just calls the Duration sleep version with a sleep
+        // value of 1 nano second
+        void synchronize();
+        virtual void synchronize(Duration sleep) = 0;
         virtual void synchronize(IAsyncStream& other);
         void waitForCompletion();
 
@@ -90,7 +99,8 @@ namespace mo
         virtual void deviceToHost(ct::TArrayView<void> dst, ct::TArrayView<const void> src) = 0;
         virtual void deviceToDevice(ct::TArrayView<void> dst, ct::TArrayView<const void> src) = 0;
 
-        virtual void synchronize() override = 0;
+        void synchronize();
+        virtual void synchronize(Duration sleep) override = 0;
         virtual void synchronize(IDeviceStream* other) = 0;
 
         virtual IDeviceStream* getDeviceStream() override;

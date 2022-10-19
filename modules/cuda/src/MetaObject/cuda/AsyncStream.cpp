@@ -34,21 +34,28 @@ namespace mo
         {
         }
 
-        void AsyncStream::pushWork(std::function<void(mo::IAsyncStream*)>&& work)
+        void AsyncStream::pushWork(std::function<void(mo::IAsyncStream*)>&& work, const bool async)
         {
-            Event event = this->createEvent();
-            event.record(m_stream);
-            // clang-format off
-            auto callback = [work, event](mo::IAsyncStream* stream)
+            if (!async)
             {
-                while(!event.queryCompletion())
+                Event event = this->createEvent();
+                event.record(m_stream);
+                // clang-format off
+                auto callback = [work, event](mo::IAsyncStream* stream)
                 {
-                    boost::this_fiber::sleep_for(std::chrono::nanoseconds(1000));
-                }
-                work(stream);
-            };
-            // clang-format on
-            mo::AsyncStream::pushWork(std::move(callback));
+                    while(!event.queryCompletion())
+                    {
+                        boost::this_fiber::sleep_for(std::chrono::nanoseconds(1000));
+                    }
+                    work(stream);
+                };
+                // clang-format on
+                mo::AsyncStream::pushWork(std::move(callback), async);
+            }
+            else
+            {
+                mo::AsyncStream::pushWork(std::move(work), async);
+            }
         }
 
         void AsyncStream::pushEvent(std::function<void(mo::IAsyncStream*)>&& event, uint64_t event_id)
@@ -65,7 +72,7 @@ namespace mo
 
         void AsyncStream::setName(const std::string& name)
         {
-            setStreamName(name.c_str(), getStream());
+            setStreamName(name.c_str(), m_stream);
             mo::AsyncStream::setName(name);
         }
 
@@ -108,18 +115,23 @@ namespace mo
 
         void AsyncStream::synchronize()
         {
+            this->synchronize(1 * ns);
+        }
+
+        void AsyncStream::synchronize(Duration sleep)
+        {
             mo::ScopedProfile profile("mo::cuda::AsyncStream::synchronize");
-            if (m_stream_accessed)
+            if (m_stream.query())
             {
                 auto event = createEvent();
                 event.record(m_stream);
-                mo::AsyncStream::synchronize();
-                event.synchronize();
+                mo::AsyncStream::synchronize(sleep);
+                event.synchronize(sleep);
                 m_stream_accessed = false;
             }
             else
             {
-                mo::AsyncStream::synchronize();
+                mo::AsyncStream::synchronize(sleep);
             }
         }
 
@@ -129,7 +141,7 @@ namespace mo
             if (typed)
             {
                 // Check if the other stream even has work to synchronize against
-                if (!typed->getStream().query())
+                if (!typed->m_stream.query())
                 {
                     if (m_stream_accessed)
                     {

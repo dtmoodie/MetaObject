@@ -157,19 +157,12 @@ namespace mo
         }
 
         IAsyncStreamPtr_t stream = props.getStream();
-        WorkQueue* queue = nullptr;
+        boost::fibers::detail::spinlock_lock lk(m_work_queue_spinlock);
+        if (id != 0)
         {
-            boost::fibers::detail::spinlock_lock lk(m_work_queue_spinlock);
-            queue = m_default_work_queue.get();
+            m_default_work_queue->disable(id);
         }
-        if (queue)
-        {
-            if (id != 0)
-            {
-                queue->disable(id);
-            }
-            queue->pushBack(*ctx);
-        }
+        m_default_work_queue->pushBack(*ctx);
     }
 
     boost::fibers::context* PriorityScheduler::pick_next() noexcept
@@ -198,6 +191,16 @@ namespace mo
     {
         if (!ctx->ready_is_linked())
         {
+            return;
+        }
+        PriorityScheduler* scheduler = props.getScheduler();
+        if (scheduler != this && scheduler != nullptr)
+        {
+            // Need to migrate the fiber to a different scheduler
+            boost::fibers::detail::spinlock_lock lk1{m_work_queue_spinlock};
+            // This removes the context from any existing work queues
+            ctx->ready_unlink();
+            scheduler->awakened(ctx, props);
             return;
         }
         {

@@ -39,7 +39,7 @@ namespace mo
             Stream getStream() const override;
             operator cudaStream_t() override;
 
-            void pushWork(std::function<void(mo::IAsyncStream*)>&& work) override;
+            void pushWork(std::function<void(mo::IAsyncStream*)>&& work, const bool async = false) override;
             void pushEvent(std::function<void(mo::IAsyncStream*)>&& event, uint64_t event_id = 0) override;
 
             Event createEvent();
@@ -48,7 +48,8 @@ namespace mo
             // This differs from Stream::synchronize in that it uses an event and boost::fibers to allow other fibers to
             // execute while the stream is waiting for completion.  Thus this should be more efficient than just
             // getStream().synchronize();
-            void synchronize() override;
+            void synchronize();
+            void synchronize(Duration sleep) override;
             void synchronize(IDeviceStream* other) override;
 
             void setName(const std::string& name) override;

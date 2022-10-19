@@ -39,7 +39,7 @@ namespace mo
              * @param timeout how long to wait, 0 = infinity
              * @return true on completion, false on timeout exceeded
              */
-            bool synchronize(Duration timeout = 0 * ms) const;
+            bool synchronize(Duration sleep = 1 * ns, Duration timeout = 0 * ms) const;
 
             /**
              * @brief setCallback to be called on event completion. Callback can be called from ANY thread that services

@@ -18,6 +18,7 @@ struct SystemTable;
 
 namespace mo
 {
+    struct PriorityScheduler;
     struct AsyncStreamConstructor;
 
     struct MO_EXPORTS AsyncStream : virtual public IAsyncStream, public std::enable_shared_from_this<AsyncStream>
@@ -31,13 +32,13 @@ namespace mo
         AsyncStream& operator=(AsyncStream&&) = delete;
         ~AsyncStream() override;
 
-        void pushWork(std::function<void(IAsyncStream*)>&& work) override;
+        void pushWork(std::function<void(IAsyncStream*)>&& work, const bool async = false) override;
         void pushEvent(std::function<void(IAsyncStream*)>&& event, uint64_t event_id = 0) override;
 
         void setName(const std::string& name) override;
         void setHostPriority(PriorityLevels p) override;
         PriorityLevels hostPriority() const;
-        void synchronize() override;
+        void synchronize(Duration sleep) override;
         void hostToHost(ct::TArrayView<void> dst, ct::TArrayView<const void> src) override;
 
         std::string name() const override;
@@ -70,6 +71,8 @@ namespace mo
         boost::fibers::fiber m_worker_fiber;
         std::atomic<bool> m_continue;
         std::string m_source;
+
+        PriorityScheduler* m_scheduler = nullptr;
 
         static void workerLoop(AsyncStream*);
     }; // class mo::IContext

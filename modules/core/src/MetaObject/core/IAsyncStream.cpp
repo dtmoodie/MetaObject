@@ -102,16 +102,20 @@ namespace mo
         this->synchronize();
     }
 
-    // TODO implement
+    void IAsyncStream::synchronize()
+    {
+        this->synchronize(1 * ns);
+    }
+
     void IAsyncStream::synchronize(IAsyncStream& other)
     {
         const size_t other_size = other.size();
         const size_t my_size = this->size();
         if (other_size > 0)
         {
-            // std::shared_ptr<boost::fibers::barrier> barrier = std::make_shared<boost::fibers::barrier>(2);
-            // other.pushWork([barrier](IAsyncStream* stream) { barrier->wait(); });
-            // this->pushWork([barrier](IAsyncStream* stream) { barrier->wait(); });
+            std::shared_ptr<boost::fibers::barrier> barrier = std::make_shared<boost::fibers::barrier>(2);
+            other.pushWork([barrier](IAsyncStream* stream) { barrier->wait(); });
+            this->pushWork([barrier](IAsyncStream* stream) { barrier->wait(); });
         }
     }
 
@@ -123,6 +127,11 @@ namespace mo
     const IDeviceStream* IAsyncStream::getDeviceStream() const
     {
         return nullptr;
+    }
+
+    void IDeviceStream::synchronize()
+    {
+        this->synchronize(1 * ns);
     }
 
     IDeviceStream::Ptr_t IDeviceStream::current()
