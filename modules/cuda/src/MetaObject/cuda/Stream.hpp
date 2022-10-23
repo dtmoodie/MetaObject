@@ -28,7 +28,11 @@ namespace mo
 
             void waitEvent(Event& event);
             void synchronize() const;
-            bool query() const;
+            /**
+             * @brief queryCompletion status of stream
+             * @return true if steam doesn't have any remaining work, false if the stream still has work to complete
+             */
+            bool queryCompletion() const;
 
           private:
             Ptr_t m_stream;

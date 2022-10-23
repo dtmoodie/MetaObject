@@ -125,9 +125,10 @@ TEST(cuda_stream, async_copy)
     cuda_tests::set(d_data.mutableView().data(), 2.0F, num_elems, typed->getStream());
     err = cudaPeekAtLastError();
     ASSERT_EQ(err, cudaSuccess) << "Unable to launch set kernel due to " << cudaGetErrorString(err);
-    ASSERT_FALSE(typed->getStream().query());
+    // ASSERT_FALSE(typed->getStream().queryCompletion());
     stream->deviceToHost(h_data.mutableView(), d_data.view());
     stream->synchronize();
+    ASSERT_TRUE(typed->getStream().queryCompletion());
     for (size_t i = 0; i < h_data.size(); ++i)
     {
         ASSERT_EQ(h_data.view()[i], 2.0F);

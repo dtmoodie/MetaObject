@@ -72,7 +72,7 @@ namespace mo
             CHECK_CUDA_ERROR(&cudaStreamSynchronize, m_stream.get());
         }
 
-        bool Stream::query() const
+        bool Stream::queryCompletion() const
         {
             return cudaStreamQuery(m_stream.get()) == cudaSuccess;
         }

@@ -24,9 +24,9 @@ TEST(cuda_stream_sync, two_streams)
     cuda_tests::wait(ct::ptrCast<const bool>(mem.begin()), stream1);
 
     // The above kernel will wait and thus block stream1 until the set kernel is invoked
-    ASSERT_EQ(stream1.query(), false);
+    ASSERT_FALSE(stream1.queryCompletion());
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    ASSERT_EQ(stream1.query(), false);
+    ASSERT_FALSE(stream1.queryCompletion());
 
     // If stream1 == stream2, the set kernel will not be invoked because still waiting on wait kernel
     // Thus this tests to make sure two separate streams are created and used
@@ -34,11 +34,11 @@ TEST(cuda_stream_sync, two_streams)
 
     // This call may not always work in case stream2 executes setKernel so fast that stream1 completes, but it is highly
     // unlikely
-    ASSERT_EQ(stream1.query(), false);
+    ASSERT_FALSE(stream1.queryCompletion());
 
     stream2.synchronize();
     stream1.synchronize();
-    ASSERT_EQ(stream1.query(), true);
+    ASSERT_TRUE(stream1.queryCompletion());
 }
 
 TEST(cuda_stream_sync, callback)

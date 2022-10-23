@@ -70,8 +70,6 @@ namespace mo
             std::shared_ptr<ObjectPool<CUevent_st>> m_event_pool;
             int m_device_id = -1;
             std::shared_ptr<DeviceAllocator> m_allocator;
-            // flag to indicate if a stream was accessed since the last synchronize
-            mutable std::atomic<bool> m_stream_accessed;
         }; // struct mo::cuda::Context
 
     } // namespace cuda

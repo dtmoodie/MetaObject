@@ -26,7 +26,6 @@ namespace mo
             , m_allocator(std::move(allocator))
 
         {
-            m_stream_accessed = false;
             init();
         }
 
@@ -88,13 +87,11 @@ namespace mo
 
         Stream AsyncStream::getStream() const
         {
-            m_stream_accessed = true;
             return m_stream;
         }
 
         AsyncStream::operator cudaStream_t()
         {
-            m_stream_accessed = true;
             return m_stream;
         }
 
@@ -121,13 +118,14 @@ namespace mo
         void AsyncStream::synchronize(Duration sleep)
         {
             mo::ScopedProfile profile("mo::cuda::AsyncStream::synchronize");
-            if (m_stream.query())
+            // Unfortunately queryCompletion can incorrectly return true when work isn't actually done :(
+            // So we always put an event on the stream to synchronize based off of
+            if (true || m_stream.queryCompletion())
             {
                 auto event = createEvent();
                 event.record(m_stream);
                 mo::AsyncStream::synchronize(sleep);
                 event.synchronize(sleep);
-                m_stream_accessed = false;
             }
             else
             {
@@ -140,18 +138,15 @@ namespace mo
             auto typed = dynamic_cast<AsyncStream*>(other);
             if (typed)
             {
-                // Check if the other stream even has work to synchronize against
-                if (!typed->m_stream.query())
+                // Unfortuantely queryCompletion can incorrectly return true when work isn't done so we always have to
+                // sync on an event :(
+                if (true || typed->m_stream.queryCompletion())
                 {
-                    if (m_stream_accessed)
-                    {
-                        auto event = typed->createEvent();
-                        event.record(typed->m_stream);
-                        this->m_stream.waitEvent(event);
-                        // Not sure if this line is necessary
-                        mo::AsyncStream::pushWork([event](mo::IAsyncStream*) { event.synchronize(); });
-                        // Not sure if we should reset m_stream_accessed since this is a different event
-                    }
+                    auto event = typed->createEvent();
+                    event.record(typed->m_stream);
+                    this->m_stream.waitEvent(event);
+                    // Not sure if this line is necessary
+                    mo::AsyncStream::pushWork([event](mo::IAsyncStream*) { event.synchronize(); });
                 }
                 else
                 {
