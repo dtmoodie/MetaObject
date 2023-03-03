@@ -22,7 +22,9 @@ https://github.com/dtmoodie/MetaObject
 #include <MetaObject/types.hpp>
 
 #include <boost/filesystem/path.hpp>
+#include <ct/enum.hpp>
 #include <ct/reflect.hpp>
+#include <ct/reflect_traits.hpp>
 
 #include <string>
 #include <vector>
@@ -86,10 +88,13 @@ namespace mo
 
     struct MO_EXPORTS EnumParam
     {
+        EnumParam();
         EnumParam(const EnumParam&) = default;
         EnumParam(const std::initializer_list<std::pair<const char*, int>>& values);
         EnumParam(const std::initializer_list<const char*>& string, const std::initializer_list<int>& values);
-        EnumParam();
+
+        template <class T>
+        EnumParam(const T&, ct::EnableIfIsEnum<T>* = nullptr);
 
         void setValue(const std::initializer_list<const char*>& string, const std::initializer_list<int>& values);
 
@@ -100,6 +105,33 @@ namespace mo
         std::vector<int> values;
         int current_selection = 0;
     };
+
+    template <class NAME, ct::index_t I>
+    void populateEnumerations(std::vector<std::string>& names, std::vector<int>& values, ct::Indexer<I> idx)
+    {
+        auto ptr = ct::Reflect<NAME>::getPtr(idx);
+        names.push_back(ptr.name.toString());
+        values.push_back(ptr.value());
+    }
+
+    template <class NAME>
+    void recursePopulateEnumerations(std::vector<std::string>& names, std::vector<int>& values, ct::Indexer<0> idx)
+    {
+        populateEnumerations<NAME>(names, values, idx);
+    }
+
+    template <class NAME, ct::index_t I>
+    void recursePopulateEnumerations(std::vector<std::string>& names, std::vector<int>& values, ct::Indexer<I> idx)
+    {
+        recursePopulateEnumerations<NAME>(names, values, --idx);
+        populateEnumerations<NAME>(names, values, idx);
+    }
+
+    template <class T>
+    EnumParam::EnumParam(const T&, ct::EnableIfIsEnum<T>*)
+    {
+        recursePopulateEnumerations<T>(enumerations, values, ct::Reflect<T>::end());
+    }
 } // namespace mo
 
 namespace ct
