@@ -1,4 +1,5 @@
-#pragma once
+#ifndef METAOBJECT_RUNTIME_REFLECTION_TYPE_TRAITS_HPP
+#define METAOBJECT_RUNTIME_REFLECTION_TYPE_TRAITS_HPP
 #include "export.hpp"
 
 #include <cstdint>
@@ -90,3 +91,4 @@ namespace std
 } // namespace std
 
 #endif
+#endif // METAOBJECT_RUNTIME_REFLECTION_TYPE_TRAITS_HPP
