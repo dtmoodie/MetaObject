@@ -71,11 +71,13 @@ SystemTable::~SystemTable()
 
 void SystemTable::deleteSingleton(mo::TypeInfo type)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     m_singletons.erase(type);
 }
 
 mo::AllocatorPtr_t SystemTable::getDefaultAllocator()
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     if (m_default_allocator == nullptr)
     {
         m_default_allocator = createAllocator();
@@ -85,22 +87,26 @@ mo::AllocatorPtr_t SystemTable::getDefaultAllocator()
 
 void SystemTable::setDefaultAllocator(mo::AllocatorPtr_t alloc)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     m_default_allocator = std::move(alloc);
 }
 
 void SystemTable::setAllocatorConstructor(std::function<mo::AllocatorPtr_t()>&& ctr)
 {
     MO_ASSERT_FMT(ctr, "Can't set an empty function for allocator construction");
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     m_allocator_constructor = ctr;
 }
 
 mo::AllocatorPtr_t SystemTable::createAllocator() const
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     return m_allocator_constructor();
 }
 
 mo::IObjectTable::IObjectContainer* SystemTable::getObjectContainer(const mo::TypeInfo type) const
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     auto itr = m_singletons.find(type);
     if (itr != m_singletons.end())
     {
@@ -111,6 +117,7 @@ mo::IObjectTable::IObjectContainer* SystemTable::getObjectContainer(const mo::Ty
 
 void SystemTable::setObjectContainer(mo::TypeInfo type, IObjectContainer::Ptr_t&& container)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     m_singletons[type] = std::move(container);
     MO_LOG(trace,
            "Creating new singleton instance of type {} in system table {}",
@@ -120,6 +127,7 @@ void SystemTable::setObjectContainer(mo::TypeInfo type, IObjectContainer::Ptr_t&
 
 std::shared_ptr<spdlog::logger> SystemTable::getLogger(const std::string& name)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     if (name == "default")
     {
         if (!m_logger)
@@ -146,5 +154,6 @@ std::shared_ptr<spdlog::logger> SystemTable::getLogger(const std::string& name)
 
 void SystemTable::setDefaultLogger(const std::shared_ptr<spdlog::logger>& logger)
 {
+    std::lock_guard<std::recursive_mutex> lock(m_mtx);
     m_logger = logger;
 }

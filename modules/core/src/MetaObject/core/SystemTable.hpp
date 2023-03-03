@@ -84,6 +84,7 @@ struct MO_EXPORTS SystemTable : virtual private mo::IObjectTable
     IObjectContainer* getObjectContainer(mo::TypeInfo) const override;
     void setObjectContainer(mo::TypeInfo, IObjectContainer::Ptr_t&&) override;
     std::shared_ptr<spdlog::logger> m_logger;
+    mutable std::recursive_mutex m_mtx;
 }; // struct SystemTable
 
 //////////////////////////////////////////////////////////////////////////////
