@@ -28,7 +28,7 @@
 
 #define ENUM_PARAM(name, ...)                                                                                          \
     mo::TControlParam<mo::EnumParam*> name##_param;                                                                    \
-    mo::EnumParam name = mo::EnumParam(ENUM_EXPAND(__VA_ARGS__));                                                      \
+    mo::EnumParam name = mo::EnumParam{ENUM_EXPAND(__VA_ARGS__)};                                                      \
     PUBLIC_ACCESS(name);
 
 #define INPUT(TYPE, NAME)                                                                                              \
