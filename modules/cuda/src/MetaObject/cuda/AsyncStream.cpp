@@ -120,7 +120,7 @@ namespace mo
             mo::ScopedProfile profile("mo::cuda::AsyncStream::synchronize");
             // Unfortunately queryCompletion can incorrectly return true when work isn't actually done :(
             // So we always put an event on the stream to synchronize based off of
-            if (true || m_stream.queryCompletion())
+            if (!m_stream.queryCompletion())
             {
                 auto event = createEvent();
                 event.record(m_stream);
@@ -140,7 +140,7 @@ namespace mo
             {
                 // Unfortuantely queryCompletion can incorrectly return true when work isn't done so we always have to
                 // sync on an event :(
-                if (true || typed->m_stream.queryCompletion())
+                if (!typed->m_stream.queryCompletion())
                 {
                     auto event = typed->createEvent();
                     event.record(typed->m_stream);

@@ -99,7 +99,7 @@ TEST(cuda_stream, launch)
 
 TEST(cuda_stream, async_copy)
 {
-    const size_t num_elems = 10000;
+    const size_t num_elems = 10000000;
 
     auto stream = mo::IDeviceStream::create();
     ASSERT_NE(stream, nullptr);
@@ -121,6 +121,10 @@ TEST(cuda_stream, async_copy)
     ASSERT_NE(h_alloc, nullptr);
     mo::TDynArray<float, mo::Allocator> h_data(h_alloc, num_elems);
     ASSERT_NE(h_data.view().data(), nullptr);
+    for (auto& val : h_data.mutableView())
+    {
+        val = -1.0F;
+    }
 
     cuda_tests::set(d_data.mutableView().data(), 2.0F, num_elems, typed->getStream());
     err = cudaPeekAtLastError();

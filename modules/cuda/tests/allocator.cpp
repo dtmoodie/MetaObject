@@ -20,6 +20,8 @@
 
 #include <gtest/gtest.h>
 
+#include <memory>
+
 using namespace mo;
 namespace
 {
