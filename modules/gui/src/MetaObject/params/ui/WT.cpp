@@ -1,3 +1,4 @@
+#include "MetaObject/params/IControlParam.hpp"
 #include "MetaObject/params/IParam.hpp"
 #include "MetaObject/params/ui/WidgetFactory.hpp"
 #include <map>
@@ -54,11 +55,14 @@ wt::WidgetFactory* wt::WidgetFactory::Instance()
 wt::IParamProxy*
 wt::WidgetFactory::CreateWidget(mo::IParam* param, MainApplication* app, Wt::WContainerWidget* container)
 {
-    if (param->checkFlags(mo::ParamFlags::Input_e))
+    if (param->checkFlags(mo::ParamFlags::kINPUT))
         return nullptr;
-    if (param->checkFlags(mo::ParamFlags::Output_e))
+    if (param->checkFlags(mo::ParamFlags::kOUTPUT))
         return nullptr;
-    auto itr = _pimpl->_widget_constructors.find(param->getTypeInfo());
+    auto control = dynamic_cast<mo::IControlParam*>(param);
+    if (control == nullptr)
+        return nullptr;
+    auto itr = _pimpl->_widget_constructors.find(control->getTypeInfo());
     if (itr != _pimpl->_widget_constructors.end())
     {
         return itr->second(param, app, container);
@@ -80,11 +84,14 @@ void wt::WidgetFactory::RegisterConstructor(const mo::TypeInfo& type, const Plot
 
 wt::IPlotProxy* wt::WidgetFactory::CreatePlot(mo::IParam* param, MainApplication* app, Wt::WContainerWidget* container)
 {
-    if (param->checkFlags(mo::ParamFlags::Input_e))
+    if (param->checkFlags(mo::ParamFlags::kINPUT))
         return nullptr;
-    if (param->checkFlags(mo::ParamFlags::Output_e))
+    if (param->checkFlags(mo::ParamFlags::kOUTPUT))
         return nullptr;
-    auto itr = _pimpl->_plot_constructors.find(param->getTypeInfo());
+    auto control = dynamic_cast<mo::IControlParam*>(param);
+    if (control == nullptr)
+        return nullptr;
+    auto itr = _pimpl->_plot_constructors.find(control->getTypeInfo());
     if (itr != _pimpl->_plot_constructors.end())
     {
         return itr->second(param, app, container);
@@ -93,6 +100,9 @@ wt::IPlotProxy* wt::WidgetFactory::CreatePlot(mo::IParam* param, MainApplication
 }
 bool wt::WidgetFactory::CanPlot(mo::IParam* param)
 {
-    auto itr = _pimpl->_plot_constructors.find(param->getTypeInfo());
+    auto control = dynamic_cast<mo::IControlParam*>(param);
+    if (control == nullptr)
+        return false;
+    auto itr = _pimpl->_plot_constructors.find(control->getTypeInfo());
     return itr != _pimpl->_plot_constructors.end();
 }
