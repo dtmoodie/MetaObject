@@ -3,6 +3,8 @@ FILE(GLOB_RECURSE src "src/*.hpp" "src/*.cu" "src/*.cpp")
 metaobject_declare_module(NAME core SRC src DEPENDS
     Boost::thread
     Boost::fiber
+    Boost::context
+    Boost::chrono
     Boost::system
     cereal
     RuntimeObjectSystem
