@@ -137,7 +137,7 @@ namespace mo
 
         std::string name() const override
         {
-            return ct::Reflect<T>::getName();
+            return ct::GetName<T>::getName();
         }
     };
 
@@ -170,7 +170,7 @@ namespace mo
 
         std::string name() const override
         {
-            return ct::Reflect<T>::getName();
+            return ct::GetName<T>::getName();
         }
     };
 
