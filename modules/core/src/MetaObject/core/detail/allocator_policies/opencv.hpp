@@ -17,14 +17,14 @@ namespace mo
         }
 
         inline cv::UMatData*
-        allocate(int dims, const int* sizes, int type, void* data, size_t* step, int, cv::UMatUsageFlags) const override
+        allocate(int dims, const int* sizes, int type, void* data, size_t* step, cv::AccessFlag, cv::UMatUsageFlags) const override
         {
             auto total = static_cast<size_t>(CV_ELEM_SIZE(type));
             for (int i = dims - 1; i >= 0; i--)
             {
                 if (step)
                 {
-                    if (data && step[i] != CV_AUTOSTEP)
+                    if (data && step[i] != cv::Mat::AUTO_STEP)
                     {
                         CV_Assert(total <= step[i]);
                         total = step[i];
@@ -55,7 +55,7 @@ namespace mo
             return u;
         }
 
-        inline bool allocate(cv::UMatData*, int, cv::UMatUsageFlags) const override
+        inline bool allocate(cv::UMatData*, cv::AccessFlag, cv::UMatUsageFlags) const override
         {
             return false;
         }
@@ -96,9 +96,9 @@ namespace mo
                                int type,
                                void* data,
                                size_t* step,
-                               int flags,
+                               cv::AccessFlag flags,
                                cv::UMatUsageFlags usageFlags) const override;
-        bool allocate(cv::UMatData* data, int accessflags, cv::UMatUsageFlags usageFlags) const override;
+        bool allocate(cv::UMatData* data, cv::AccessFlag accessflags, cv::UMatUsageFlags usageFlags) const override;
         void deallocate(cv::UMatData* data) const override;
 
       private:
@@ -118,14 +118,14 @@ namespace mo
 
     template <class BASE_ALLOCATOR>
     cv::UMatData* CvAllocator<BASE_ALLOCATOR>::allocate(
-        int dims, const int* sizes, int type, void* data, size_t* step, int, cv::UMatUsageFlags) const
+        int dims, const int* sizes, int type, void* data, size_t* step, cv::AccessFlag, cv::UMatUsageFlags) const
     {
         auto total = static_cast<size_t>(CV_ELEM_SIZE(type));
         for (int i = dims - 1; i >= 0; i--)
         {
             if (step)
             {
-                if (data && step[i] != CV_AUTOSTEP)
+                if (data && step[i] != cv::Mat::AUTO_STEP)
                 {
                     CV_Assert(total <= step[i]);
                     total = step[i];
@@ -157,7 +157,7 @@ namespace mo
     }
 
     template <class BASE_ALLOCATOR>
-    bool CvAllocator<BASE_ALLOCATOR>::allocate(cv::UMatData*, int, cv::UMatUsageFlags) const
+    bool CvAllocator<BASE_ALLOCATOR>::allocate(cv::UMatData*, cv::AccessFlag, cv::UMatUsageFlags) const
     {
         return false;
     }

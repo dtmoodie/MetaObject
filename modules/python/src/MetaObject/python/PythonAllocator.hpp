@@ -49,10 +49,10 @@ namespace mo
                                        int type,
                                        void* data,
                                        size_t* step,
-                                       int flags,
+                                       cv::AccessFlag flags,
                                        cv::UMatUsageFlags usageFlags) const override;
 
-        virtual bool allocate(cv::UMatData* u, int accessFlags, cv::UMatUsageFlags usageFlags) const override;
+        virtual bool allocate(cv::UMatData* u, cv::AccessFlag accessFlags, cv::UMatUsageFlags usageFlags) const override;
 
         void deallocate(cv::UMatData* u) const override;
 

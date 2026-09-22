@@ -349,7 +349,7 @@ namespace mo
     }
 
     cv::UMatData* NumpyAllocator::allocate(
-        int dims0, const int* sizes, int type, void* data, size_t* step, int flags, cv::UMatUsageFlags usageFlags) const
+        int dims0, const int* sizes, int type, void* data, size_t* step, cv::AccessFlag flags, cv::UMatUsageFlags usageFlags) const
     {
         if (data != 0)
         {
@@ -360,7 +360,7 @@ namespace mo
         return ret;
     }
 
-    bool NumpyAllocator::allocate(cv::UMatData* u, int accessFlags, cv::UMatUsageFlags usageFlags) const
+    bool NumpyAllocator::allocate(cv::UMatData* u, cv::AccessFlag accessFlags, cv::UMatUsageFlags usageFlags) const
     {
         return default_allocator->allocate(u, accessFlags, usageFlags);
     }
