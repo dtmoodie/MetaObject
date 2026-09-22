@@ -42,7 +42,10 @@
 # For details see the accompanying COPYING-CMAKE-SCRIPTS file.
 
 set(Wt_DIR "$ENV{Wt_DIR}" CACHE PATH "Directory with wt install")
-FIND_PATH( Wt_INCLUDE_DIR NAMES Wt/WObject PATHS ${Wt_DIR} ENV ${Wt_DIR} PATH PATH_SUFFIXES include wt )
+# Modern CMake (3.28, verified) does not append header extensions to
+# extension-less NAMES, so list the candidates explicitly (Wt < 4.10 used
+# .hpp, Wt 4.10+ ships .h).
+FIND_PATH( Wt_INCLUDE_DIR NAMES Wt/WObject.h Wt/WObject.hpp PATHS ${Wt_DIR} ENV ${Wt_DIR} PATH PATH_SUFFIXES include wt )
 
 SET( Wt_FIND_COMPONENTS Release Debug )
 
