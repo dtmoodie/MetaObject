@@ -12,6 +12,10 @@ namespace mo
     {
       public:
         using Allocator_t = typename XPU::Allocator_t;
+        StackPolicy()
+            : m_deallocate_delay(CLOCKS_PER_SEC) // in clock() ticks, see clear()
+        {
+        }
         uint8_t* allocate(size_t num_bytes, size_t elem_size) override;
 
         void deallocate(uint8_t* ptr, size_t num_bytes) override;

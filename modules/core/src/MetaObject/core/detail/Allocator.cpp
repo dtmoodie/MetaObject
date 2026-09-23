@@ -28,7 +28,11 @@ namespace mo
 
     size_t alignmentOffset(const uint8_t* ptr, const size_t elem_size)
     {
-        return elem_size - (reinterpret_cast<const size_t>(ptr) % elem_size);
+        // Number of bytes to add to ptr to reach elem_size alignment;
+        // 0 when already aligned. (Must be 0, not elem_size, when aligned,
+        // callers test `alignmentOffset(...) == 0` for reuse and skip by it.)
+        const auto offset = reinterpret_cast<const size_t>(ptr) % elem_size;
+        return offset == 0 ? 0 : elem_size - offset;
     }
 
     Allocator::~Allocator() = default;

@@ -101,10 +101,11 @@ namespace mo
                 if (gap_size > size_)
                 {
                     auto alignment = alignmentOffset(prev_end, elem_size_);
-                    // Check if still the correct size after fixing alignment
-                    if (static_cast<size_t>(itr.first - prev_end + alignment) >= size_)
+                    // Check if still the correct size after fixing alignment:
+                    // the usable region is [prev_end + alignment, itr.first)
+                    if (gap_size > alignment && gap_size - alignment >= size_)
                     {
-                        candidates.emplace_back(size_t(itr.first - prev_end + alignment), prev_end + alignment);
+                        candidates.emplace_back(gap_size - alignment, prev_end + alignment);
                     }
                 }
                 prev_end = itr.second;
