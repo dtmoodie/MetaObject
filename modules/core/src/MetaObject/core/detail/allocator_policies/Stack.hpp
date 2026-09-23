@@ -16,6 +16,16 @@ namespace mo
             : m_deallocate_delay(CLOCKS_PER_SEC) // in clock() ticks, see clear()
         {
         }
+        ~StackPolicy() override
+        {
+            // The delayed-free list only keeps blocks alive for reuse while
+            // this allocator exists; return any remainder to the XPU so it
+            // does not leak when the allocator goes away.
+            for (auto& block : m_deallocate_list)
+            {
+                XPU::deallocate(block.ptr);
+            }
+        }
         uint8_t* allocate(size_t num_bytes, size_t elem_size) override;
 
         void deallocate(uint8_t* ptr, size_t num_bytes) override;
