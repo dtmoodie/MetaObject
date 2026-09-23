@@ -63,6 +63,18 @@ namespace mo
         IMetaObject& operator=(const IMetaObject&) = delete;
         IMetaObject& operator=(IMetaObject&&) noexcept = delete;
 
+        // Objects are normally created through the RCC object factory, which
+        // wraps each class in TActual<T> and supplies the real per-type id,
+        // constructor, and type name. These fallbacks keep MetaObject-derived
+        // user classes concrete: ct's compile-time reflection (member
+        // offsets) requires a default-constructible, non-abstract type, and
+        // tests print the reflection of user classes directly. The fallback
+        // values are only observable on objects never created through the
+        // factory.
+        PerTypeObjectId GetPerTypeId() const override { return 0; }
+        IObjectConstructor* GetConstructor() const override { return nullptr; }
+        const char* GetTypeName() const override { return "IMetaObject"; }
+
         // Setup
         virtual void setStream(const IAsyncStreamPtr_t& ctx) = 0;
         virtual IAsyncStreamPtr_t getStream() const = 0;

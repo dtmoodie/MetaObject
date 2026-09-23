@@ -29,22 +29,29 @@ namespace mo
 
         void Init(bool firstInit) override; // inherited from RCC, thus the PascalCase
         void initCustom(bool firstInit) override;
+        void initParams(bool firstInit) override;
+        int initSignals(bool firstInit) override;
+        void bindSlots(bool firstInit) override;
 
         void Serialize(ISimpleSerializer* pSerializer) override; // Inherit from RCC's IObject
         void serializeConnections(ISimpleSerializer* pSerializer) override;
+        void serializeParams(ISimpleSerializer* pSerializer) override;
+
+        void load(ILoadVisitor& visitor) override;
+        void save(ISaveVisitor& visitor) const override;
 
         // ------- Introspection
         // Get vector of info objects for each corresponding introspection class
         // optional name Param can be used to get information for corresponding exact matches
-        void getParamInfo(ParamInfoVec_t& info) const override = 0;
+        void getParamInfo(ParamInfoVec_t& info) const override;
         ParamInfoVec_t getParamInfo(const std::string& name_filter) const override;
         ParamInfoVec_t getParamInfo() const override;
 
-        void getSignalInfo(SignalInfoVec_t& info) const override = 0;
+        void getSignalInfo(SignalInfoVec_t& info) const override;
         SignalInfoVec_t getSignalInfo(const std::string& name_filter) const override;
         SignalInfoVec_t getSignalInfo() const override;
 
-        void getSlotInfo(SlotInfoVec_t& info) const override = 0;
+        void getSlotInfo(SlotInfoVec_t& info) const override;
         SlotInfoVec_t getSlotInfo(const std::string& name_filter) const override;
         SlotInfoVec_t getSlotInfo() const override;
 

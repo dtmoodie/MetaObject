@@ -366,6 +366,25 @@ namespace mo
     {
     }
 
+    // No-op defaults. Factory-created objects are wrapped in
+    // TMetaObjectInterfaceHelper<T> (MetaObjectInfo.hpp), which overrides
+    // these with the ct::Reflect-driven versions for the class's declared
+    // params/signals/slots. The defaults only run when a user class object is
+    // constructed directly, which keeps those classes concrete -- a
+    // requirement of ct's compile-time reflection (member offsets).
+    void MetaObject::initParams(bool /*firstInit*/)
+    {
+    }
+
+    int MetaObject::initSignals(bool /*firstInit*/)
+    {
+        return 0;
+    }
+
+    void MetaObject::bindSlots(bool /*firstInit*/)
+    {
+    }
+
     int MetaObject::setupSignals(const std::shared_ptr<RelayManager>& manager)
     {
         m_sig_manager = manager;
@@ -447,6 +466,21 @@ namespace mo
         SERIALIZE(m_stream);
         SERIALIZE(m_sig_manager);
         SERIALIZE(m_param_server);
+    }
+
+    // No-op defaults; TMetaObjectInterfaceHelper<T> (MetaObjectInfo.hpp)
+    // overrides these with the ct::Reflect-driven versions for
+    // factory-created objects.
+    void MetaObject::serializeParams(ISimpleSerializer* /*pSerializer*/)
+    {
+    }
+
+    void MetaObject::load(ILoadVisitor& /*visitor*/)
+    {
+    }
+
+    void MetaObject::save(ISaveVisitor& /*visitor*/) const
+    {
     }
 
     void MetaObject::setStream(const IAsyncStreamPtr_t& ctx)
@@ -1144,6 +1178,21 @@ namespace mo
         {
             param.second->setTreeRoot(root);
         }
+    }
+
+    // No-op defaults; TMetaObjectInterfaceHelper<T> (MetaObjectInfo.hpp)
+    // overrides these with the static introspection for the class's declared
+    // params/signals/slots.
+    void MetaObject::getParamInfo(ParamInfoVec_t& /*info*/) const
+    {
+    }
+
+    void MetaObject::getSignalInfo(SignalInfoVec_t& /*info*/) const
+    {
+    }
+
+    void MetaObject::getSlotInfo(SlotInfoVec_t& /*info*/) const
+    {
     }
 
     std::vector<ParamInfo*> MetaObject::getParamInfo(const std::string& /*name*/) const
