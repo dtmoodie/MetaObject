@@ -65,7 +65,10 @@ TEST(allocation, cpu_pooled)
     }
     end = Time::now();
     auto mt_pooled_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    cv::Mat::setDefaultAllocator(nullptr);
+    // nullptr is not a valid reset: OpenCV 4.x dereferences the global
+    // allocator without a null check in Mat::create, so any later Mat
+    // allocation segfaults. Restore OpenCV's standard allocator instead.
+    cv::Mat::setDefaultAllocator(cv::Mat::getStdAllocator());
 
     // BOOST_REQUIRE_LT(pooled_time, non_pooled_time);
     std::cout << "\n ======================================================================== \n";
@@ -135,7 +138,9 @@ TEST(allocation, cpu_stack)
     }
     end = Time::now();
     const auto mt_pooled_time = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
-    cv::Mat::setDefaultAllocator(nullptr);
+    // Restore OpenCV's standard allocator (see cpu_pooled: nullptr would
+    // segfault the next Mat::create under OpenCV 4.x).
+    cv::Mat::setDefaultAllocator(cv::Mat::getStdAllocator());
 
     // BOOST_REQUIRE_LT(pooled_time, non_pooled_time);
     std::cout << "\n ======================================================================== \n";
@@ -172,7 +177,7 @@ TEST(allocation, cpu_combined)
     const auto set_size = std::chrono::duration_cast<std::chrono::milliseconds>(end - start).count();
 
     CvAllocator<LockPolicy<CombinedPolicy<PoolPolicy<CPU>, StackPolicy<CPU>>>> mt_allocator;
-    cv::Mat::setDefaultAllocator(&allocator);
+    cv::Mat::setDefaultAllocator(&mt_allocator);
     start = Time::now();
     for (int i = 0; i < 1000; ++i)
     {
@@ -200,6 +205,10 @@ TEST(allocation, cpu_combined)
               << "------------ Thread safe ---------------\n"
               << " Random Allocation Pattern: " << mt_random_size << "\n"
               << " Set Allocation Pattern:    " << mt_set_size << "\n";
+
+    // The allocators above are locals; return the global to OpenCV's
+    // standard allocator so later tests do not use a destroyed one.
+    cv::Mat::setDefaultAllocator(cv::Mat::getStdAllocator());
 }
 #endif
 
