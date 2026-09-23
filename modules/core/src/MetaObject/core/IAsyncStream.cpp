@@ -32,7 +32,15 @@ namespace mo
 
     auto IAsyncStream::current() -> Ptr_t
     {
-        auto props = boost::fibers::context::active()->get_properties();
+        auto active = boost::fibers::context::active();
+        if (!active)
+        {
+            // No active fiber context (plain thread, or final process
+            // teardown while static objects are destroyed): no stream is
+            // associated with this context.
+            return {};
+        }
+        auto props = active->get_properties();
         if (!props)
         {
             initThread();
@@ -49,8 +57,13 @@ namespace mo
 
     void IAsyncStream::setCurrent(Ptr_t stream)
     {
-        auto props = boost::fibers::context::active()->get_properties();
-        if (!props)
+        auto active = boost::fibers::context::active();
+        if (!active)
+        {
+            // No active fiber context to associate the stream with.
+            return;
+        }
+        if (!active->get_properties())
         {
             initThread();
         }
@@ -70,11 +83,20 @@ namespace mo
 
     auto IDeviceStream::current() -> Ptr_t
     {
+        if (!boost::fibers::context::active())
+        {
+            // No active fiber context: no device stream is associated.
+            return {};
+        }
         return boost::this_fiber::properties<FiberProperty>().deviceStream();
     }
 
     void IDeviceStream::setCurrent(Ptr_t stream)
     {
+        if (!boost::fibers::context::active())
+        {
+            return;
+        }
         IAsyncStream::setCurrent(stream);
         boost::this_fiber::properties<FiberProperty>().setDeviceStream(std::move(stream));
     }
