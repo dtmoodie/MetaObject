@@ -36,7 +36,10 @@ struct SaveStream
         auto next = m_serialization_buffer.slice(bytes);
         MO_ASSERT_EQ(next.size(), m_serialization_buffer.size() - bytes);
         MO_ASSERT_EQ(next.data(), m_serialization_buffer.data() + bytes);
-        m_serialization_buffer = next;
+        // Copy assignment on a non-const dynamic view copies the pointed-to
+        // elements (std::array-like), not the view; move assignment rebinds
+        // ptr/size, which is what advancing the head requires.
+        m_serialization_buffer = std::move(next);
         return serialize_in_place;
     }
 
