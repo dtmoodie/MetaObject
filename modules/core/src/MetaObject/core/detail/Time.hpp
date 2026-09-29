@@ -8,6 +8,7 @@
 #include <ct/reflect.hpp>
 
 #include <chrono>
+#include <type_traits>
 
 namespace mo
 {
@@ -54,6 +55,20 @@ namespace mo
     };
 
     using OptionalTime = boost::optional<Time>;
+
+    // Absolute value for a signed std::chrono::duration. The standard only
+    // gained std::abs(duration) in C++14, and declaring this in std::chrono
+    // (as it used to be) was undefined behavior: libstdc++ >= 13 defines its
+    // own std::chrono::abs in C++17 mode, making the call ambiguous.
+    template <class Rep,
+              class Period,
+              class = typename std::enable_if<std::chrono::duration<Rep, Period>::min() <
+                                              std::chrono::duration<Rep, Period>::zero()>::type>
+    constexpr std::chrono::duration<Rep, Period>
+    abs(const std::chrono::duration<Rep, Period> d)
+    {
+        return d >= d.zero() ? d : -d;
+    }
 
     template <class T>
     struct MorePreciseTime;
@@ -154,19 +169,6 @@ namespace mo
 namespace std
 {
     MO_EXPORTS std::ostream& operator<<(std::ostream& lhs, const mo::Time& rhs);
-#ifndef _MSC_VER
-    namespace chrono
-    {
-        template <class Rep,
-                  class Period,
-                  class = typename std::enable_if<std::chrono::duration<Rep, Period>::min() <
-                                                  std::chrono::duration<Rep, Period>::zero()>::type>
-        constexpr std::chrono::duration<Rep, Period> abs(const duration<Rep, Period> d)
-        {
-            return d >= d.zero() ? d : -d;
-        }
-    } // namespace chrono
-#endif
 } // namespace std
 
 namespace cereal
