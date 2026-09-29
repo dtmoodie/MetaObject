@@ -1,6 +1,33 @@
 if(WITH_PYTHON)
-    find_package(PythonLibs 2.7 QUIET)
-    find_package(PythonInterp 2.7 QUIET)
+    # CMake 3.27 removed the legacy FindPythonInterp/FindPythonLibs modules:
+    # on newer CMake (noble and the cuda12 image ship 3.28) the calls fail
+    # silently and the python module never builds, so use the modern
+    # FindPython module there and replicate the legacy variables the rest of
+    # this file expects. The legacy path remains for the older CMake the
+    # old-toolchain support targets (cmake_minimum_required is 2.8).
+    if(CMAKE_VERSION VERSION_LESS 3.12)
+        find_package(PythonLibs 2.7 QUIET)
+        find_package(PythonInterp 2.7 QUIET)
+    else()
+        find_package(Python COMPONENTS Interpreter Development NumPy)
+        if(Python_FOUND)
+            # Replicate the legacy variables, in BOTH casings: find_package
+            # sets <PackageName>_FOUND (PythonLibs_FOUND), while the legacy
+            # FindPythonLibs/FindPythonInterp modules also exported the all
+            # caps PYTHONLIBS_FOUND/PYTHONINTERP_FOUND, which the vendored
+            # FindNumPy checks. CMake variables are case-sensitive, so both
+            # spellings are needed downstream.
+            set(PythonLibs_FOUND TRUE)
+            set(PYTHONLIBS_FOUND TRUE)
+            set(PythonInterp_FOUND TRUE)
+            set(PYTHONINTERP_FOUND TRUE)
+            set(PYTHON_EXECUTABLE "${Python_EXECUTABLE}")
+            # the modern FindPython module sets the plural Python_INCLUDE_DIRS
+            set(PYTHON_INCLUDE_DIR "${Python_INCLUDE_DIRS}")
+            set(PYTHON_LIBRARY "${Python_LIBRARIES}")
+            set(PYTHONLIBS_VERSION_STRING "${Python_VERSION}")
+        endif()
+    endif()
     if(PythonLibs_FOUND AND PythonInterp_FOUND)
         if(WIN32)
             find_package(Boost QUIET COMPONENTS python python2)
@@ -68,6 +95,19 @@ if(WITH_PYTHON)
                 endwhile()
             endif()
 
+
+            # Config-mode Boost (Debian/Ubuntu ship BoostConfig.cmake, which
+            # the vendored FindBoost delegates to) sets none of the legacy
+            # Boost_PYTHON*_FOUND / *_LIBRARY_RELEASE variables, so if the
+            # chains above found nothing, detect the imported boost::python
+            # target directly (the same way ct's python detection does).
+            if(NOT Boost_PYTHON_FOUND)
+                find_package(Boost QUIET COMPONENTS python3)
+                if(TARGET Boost::python3)
+                    set(Boost_PYTHON_FOUND TRUE)
+                    set(Boost_PYTHON_LIBRARY_RELEASE "Boost::python3" CACHE PATH "" FORCE)
+                endif()
+            endif()
 
             if(Boost_PYTHON_FOUND)
                 find_package(NumPy 1.7.1)

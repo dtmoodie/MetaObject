@@ -77,8 +77,16 @@ macro(metaobject_declare_plugin tgt)
     FILE(APPEND "${CMAKE_BINARY_DIR}/bin/plugins/${tgt}_config.txt" "\n\nlink_libs_debug:\n${LINK_LIBS_DEBUG}")
     FILE(APPEND "${CMAKE_BINARY_DIR}/bin/plugins/${tgt}_config.txt" "\n\nlink_libs_release:\n${LINK_LIBS_RELEASE}")
 
+    # RESULT_CHECK: a failed `python` (e.g. a dangling `python -> python3`
+    # symlink when python3 is not installed) used to fail the build much
+    # later and less obviously, at add_library's "Cannot find source file
+    # plugin_config2.cpp".
     execute_process(
-        COMMAND python ${plugin_config_script} ${CMAKE_BINARY_DIR}/bin/plugins/${tgt}_config.txt ${CMAKE_BINARY_DIR}/plugins/${tgt}/plugin_config2.cpp ${tgt})
+        COMMAND python ${plugin_config_script} ${CMAKE_BINARY_DIR}/bin/plugins/${tgt}_config.txt ${CMAKE_BINARY_DIR}/plugins/${tgt}/plugin_config2.cpp ${tgt}
+        RESULT_VARIABLE plugin_config_gen_result)
+    if(NOT plugin_config_gen_result EQUAL 0)
+        message(FATAL_ERROR "plugin_config2.cpp generation for ${tgt} failed (exit ${plugin_config_gen_result}); is a `python` interpreter available?")
+    endif()
 
     set_property(TARGET ${tgt} APPEND PROPERTY SOURCES "${CMAKE_BINARY_DIR}/plugins/${tgt}/plugin_config.cpp")
     set_property(TARGET ${tgt} APPEND PROPERTY SOURCES "${CMAKE_BINARY_DIR}/plugins/${tgt}/plugin_config2.cpp")
