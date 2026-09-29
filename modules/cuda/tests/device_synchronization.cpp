@@ -18,25 +18,29 @@ TEST(cuda_stream_sync, two_streams)
 {
     mo::cuda::Stream stream1;
     mo::cuda::Stream stream2;
-    mo::cuda::CUDAMemoryBlock mem(1);
-    cudaMemsetAsync(mem.begin(), 0, 1, stream1);
+    mo::cuda::CUDAMemoryBlock mem(1024);
 
-    cuda_tests::wait(ct::ptrCast<const bool>(mem.begin()), stream1);
+    // Keep stream1 busy with a bounded, memory-less kernel. The indefinite
+    // spin-on-a-device-flag kernel this test used to launch stalls work on
+    // other streams on some drivers (e.g. RTX 5090 + 580.x), hanging the
+    // test at 100% GPU utilization; a bounded kernel cannot stall the device
+    // and needs no release.
+    cuda_tests::hold(2000000, stream1); // ~2 s
 
-    // The above kernel will wait and thus block stream1 until the set kernel is invoked
     ASSERT_EQ(stream1.query(), false);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
     ASSERT_EQ(stream1.query(), false);
 
-    // If stream1 == stream2, the set kernel will not be invoked because still waiting on wait kernel
-    // Thus this tests to make sure two separate streams are created and used
-    cuda_tests::set(ct::ptrCast<bool>(mem.begin()), stream2);
+    // Do real work on stream2; it must complete while the hold is still
+    // running. If stream1 == stream2, the memset would be queued behind the
+    // hold, so stream2.synchronize() would wait ~2 s and stream1 would
+    // already be complete at the query below — thus this tests to make sure
+    // two separate streams are created and used.
+    cudaMemsetAsync(mem.begin(), 0xAB, mem.size(), stream2);
+    stream2.synchronize();
 
-    // This call may not always work in case stream2 executes setKernel so fast that stream1 completes, but it is highly
-    // unlikely
     ASSERT_EQ(stream1.query(), false);
 
-    stream2.synchronize();
     stream1.synchronize();
     ASSERT_EQ(stream1.query(), true);
 }

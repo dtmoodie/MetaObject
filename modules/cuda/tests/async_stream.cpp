@@ -1,6 +1,5 @@
 #include <MetaObject/cuda/AsyncStream.hpp>
 #include <MetaObject/cuda/Event.hpp>
-#include <MetaObject/cuda/MemoryBlock.hpp>
 #include <MetaObject/cuda/Stream.hpp>
 #include <MetaObject/thread/fiber_include.hpp>
 #include <MetaObject/types/TDynArray.hpp>
@@ -58,12 +57,14 @@ TEST(cuda_stream, launch)
     auto ptr = alloc->allocate(100 * sizeof(float), sizeof(float));
     ASSERT_NE(ptr, nullptr);
 
-    auto device_stream = typed0->getStream();
-
-    mo::cuda::CUDAMemoryBlock mem(1);
-    cudaMemsetAsync(mem.begin(), 0, 1, typed0->getStream());
-
-    cuda_tests::wait(ct::ptrCast<const bool>(mem.begin()), typed0->getStream());
+    // Keep typed0's stream busy with a bounded, memory-less kernel, so the
+    // callback (enqueued behind it) cannot fire while it runs. The
+    // spin-on-a-device-flag kernel this test used to launch never terminates
+    // until released from another stream, and on some drivers (e.g. RTX 5090
+    // + 580.x) an indefinite resident kernel stalls work on other streams,
+    // hanging the test at 100% GPU utilization. A bounded kernel cannot
+    // stall the device and needs no release.
+    cuda_tests::hold(2000000, typed0->getStream()); // ~2 s
 
     volatile bool callback_invoked = false;
     typed0->enqueueCallback([&callback_invoked]() { callback_invoked = true; });
@@ -74,7 +75,17 @@ TEST(cuda_stream, launch)
 
     ASSERT_EQ(callback_invoked, false);
 
-    cuda_tests::set(ct::ptrCast<bool>(mem.begin()), typed1->getStream());
+    // typed1 is a separate stream, so its work completes while typed0's hold
+    // is still running (and long before it finishes). Use a raw stream
+    // synchronize rather than AsyncStream::synchronize(): the latter yields
+    // until every other fiber has finished as well, which includes the
+    // callback fiber still pending behind the hold, and would wait for the
+    // hold to complete — defeating the point of the test.
+    cudaMemsetAsync(ptr, 0xCD, 100 * sizeof(float), typed1->getStream());
+    cudaStreamSynchronize(typed1->getStream());
+
+    ASSERT_EQ(callback_invoked, false);
+
     while (!callback_invoked)
     {
         boost::this_fiber::yield();

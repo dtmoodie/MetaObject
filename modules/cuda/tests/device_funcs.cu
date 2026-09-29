@@ -11,16 +11,18 @@ namespace cuda_tests
         return (total + threads - 1) / threads;
     }
 
-    __global__ void waitKernel(volatile const bool* quit)
+    // Bounded, memory-less hold kernel. The spin-on-a-device-flag kernels
+    // (waitKernel/setKernel) these tests used to launch never terminate until
+    // released from another stream, and on some drivers (e.g. RTX 5090 +
+    // 580.x) an indefinite resident kernel stalls work on other streams,
+    // hanging the tests at 100% GPU utilization. A bounded kernel cannot
+    // stall the device and needs no release.
+    __global__ void holdKernel(const uint32_t iterations)
     {
-        while (!*quit)
+        for (uint32_t i = 0; i < iterations; ++i)
         {
+            __nanosleep(1000);
         }
-    }
-
-    __global__ void setKernel(volatile bool* quit)
-    {
-        *quit = true;
     }
 
     __global__ void mulKernel(const uint32_t N, float* data, const float scale)
@@ -50,19 +52,9 @@ namespace cuda_tests
         }
     }
 
-    __global__ void sigKernel(volatile bool* quit)
+    void hold(const uint32_t iterations, cudaStream_t stream)
     {
-        *quit = true;
-    }
-
-    void wait(volatile const bool* quit, cudaStream_t stream)
-    {
-        waitKernel<<<1, 1, 0, stream>>>(quit);
-    }
-
-    void set(volatile bool* quit, cudaStream_t stream)
-    {
-        setKernel<<<1, 1, 0, stream>>>(quit);
+        holdKernel<<<1, 1, 0, stream>>>(iterations);
     }
 
     void set(float* data, float val, int N, cudaStream_t stream)

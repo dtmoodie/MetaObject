@@ -5,9 +5,11 @@ struct CUstream_st;
 using cudaStream_t = CUstream_st*;
 namespace cuda_tests
 {
-    void wait(volatile const bool* quit, cudaStream_t stream);
-
-    void set(volatile bool* quit, cudaStream_t stream);
+    // Keep `stream` busy for a bounded time (~1 us per iteration) with a
+    // memory-less kernel, so that work enqueued behind it cannot complete
+    // while it runs. See device_funcs.cu for why this replaces the old
+    // spin-on-a-device-flag wait/set kernels.
+    void hold(uint32_t iterations, cudaStream_t stream);
 
     void set(float* data, float val, int N, cudaStream_t stream);
 

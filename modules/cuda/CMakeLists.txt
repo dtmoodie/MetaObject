@@ -56,6 +56,11 @@ if(CUDA_FOUND)
         
         set_target_properties(test_mo_cuda PROPERTIES FOLDER Tests/MetaObject/cuda)
         set_target_properties(test_mo_cuda_fiber PROPERTIES FOLDER Tests/MetaObject/cuda_fiber)
+        # The vendored googletest requires C++17, but these targets inherit the
+        # directory-level -std=c++11 (needed for nvcc host-flag propagation).
+        # The CXX_STANDARD flag is appended after CMAKE_CXX_FLAGS, so it wins
+        # for the C++ sources; the .cu files keep the C++11 host standard.
+        set_target_properties(test_mo_cuda test_mo_cuda_fiber PROPERTIES CXX_STANDARD 17)
         setup_msvc_target(test_mo_cuda)
         setup_msvc_target(test_mo_cuda_fiber)
 
