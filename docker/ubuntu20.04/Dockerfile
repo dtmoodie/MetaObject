@@ -47,6 +47,10 @@ RUN apt-get update \
         cmake \
         g++-10 \
         clang \
+        # focal's cmake package does not depend on python3 (unlike jammy and
+        # noble), so the `python` symlink below would be dangling and the
+        # configure-time plugin generation (parse_cmake.py) would fail.
+        python3 \
         libboost1.71-dev \
         libboost-fiber1.71-dev \
         libboost-context1.71-dev \

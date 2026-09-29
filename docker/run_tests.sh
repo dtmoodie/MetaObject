@@ -21,6 +21,11 @@
 #               CUDA-enabled OpenCV: only the cuda12 image sets it ON.
 #   CUDA_ARCH_BIN  -gencode architectures for nvcc (default: FindCUDA default)
 #   JOBS           parallelism for make (default: nproc)
+#   TEST_TIMEOUT   per-test-binary wall clock in seconds (default 600). A hung
+#               binary must fail its cell instead of freezing the matrix
+#               (this is what happened when a driver stalled the GPU under
+#               test_mo_cuda's spin kernels); the default is generous — the
+#               slowest binary finishes in well under a minute.
 set -uo pipefail
 
 SRCDIR=${SRCDIR:-/src}
@@ -28,6 +33,7 @@ BUILDDIR=${BUILDDIR:-/build}
 WITH_PYTHON=${WITH_PYTHON:-OFF}
 CUDA_ARCH_BIN=${CUDA_ARCH_BIN:-}
 JOBS=${JOBS:-$(nproc)}
+TEST_TIMEOUT=${TEST_TIMEOUT:-600}
 
 if [ -n "${COMPILERS:-}" ]; then
     read -r -a COMPILERS <<<"$COMPILERS"
@@ -117,19 +123,19 @@ PYEOF
             # also requires a writable source tree (TestBuildFile utime-
             # touches the runtime sources). Upstream Linux CI (travis) has
             # excluded them with this same filter for that reason; match it.
-            if ! (cd "$b" && "./$test" --gtest_filter='object.*:object_factory.*:object_reflection.*:object_initialization.*:serialization.*:signal.*:slot.*'); then
-                echo "!!!! $test failed for $cxx"
+            if ! (cd "$b" && timeout -s KILL "$TEST_TIMEOUT" "./$test" --gtest_filter='object.*:object_factory.*:object_reflection.*:object_initialization.*:serialization.*:signal.*:slot.*'); then
+                echo "!!!! $test failed (or exceeded ${TEST_TIMEOUT}s) for $cxx"
                 fail=1
             fi
-        elif ! (cd "$b" && "./$test"); then
-            echo "!!!! $test failed for $cxx"
+        elif ! (cd "$b" && timeout -s KILL "$TEST_TIMEOUT" "./$test"); then
+            echo "!!!! $test failed (or exceeded ${TEST_TIMEOUT}s) for $cxx"
             fail=1
         fi
     done
     for test in "${OPTIONAL_TESTS[@]}"; do
         [ -x "$b/$test" ] || continue
-        if ! (cd "$b" && "./$test"); then
-            echo "!!!! $test failed for $cxx"
+        if ! (cd "$b" && timeout -s KILL "$TEST_TIMEOUT" "./$test"); then
+            echo "!!!! $test failed (or exceeded ${TEST_TIMEOUT}s) for $cxx"
             fail=1
         fi
     done
@@ -138,8 +144,8 @@ PYEOF
     # which needs CUDA-enabled OpenCV).
     if [ -f "$b/metaobject_python_test.py" ]; then
         rewrite_python_wrapper "$b"
-        if ! (cd "$b" && python3 metaobject_python_test.py); then
-            echo "!!!! python interop test failed for $cxx"
+        if ! (cd "$b" && timeout -s KILL "$TEST_TIMEOUT" python3 metaobject_python_test.py); then
+            echo "!!!! python interop test failed (or exceeded ${TEST_TIMEOUT}s) for $cxx"
             fail=1
         fi
     fi
