@@ -6,9 +6,11 @@ using namespace mo;
 
 ThreadPool::~ThreadPool()
 {
-    for (auto sched : m_schedulers)
+    for (auto& entry : m_schedulers)
     {
-        sched->releaseAssistant();
+        // Entries are alive-checked: a scheduler that already retired at
+        // its thread exit is simply skipped (its entry reports nullptr).
+        entry->releaseAssistant();
     }
     cleanup();
     m_running_threads.clear();
@@ -48,20 +50,29 @@ void ThreadPool::returnThread(const std::shared_ptr<Thread>& thread)
 void ThreadPool::addScheduler(PriorityScheduler* sched)
 {
     std::lock_guard<std::mutex> lock(m_mtx);
-    m_schedulers.insert(sched);
+    m_schedulers.insert(std::make_shared<SchedulerEntry>(sched));
 }
 
 void ThreadPool::removeScheduler(PriorityScheduler* sched)
 {
     std::lock_guard<std::mutex> lock(m_mtx);
-    auto itr = m_schedulers.find(sched);
+    auto itr = std::find_if(
+        m_schedulers.begin(),
+        m_schedulers.end(),
+        [sched](const std::shared_ptr<SchedulerEntry>& entry) { return entry->scheduler() == sched; });
     if (itr != m_schedulers.end())
     {
+        (*itr)->retire();
         m_schedulers.erase(itr);
     }
 }
 
-std::vector<PriorityScheduler*> ThreadPool::getSchedulers() const
+void ThreadPool::retireScheduler(PriorityScheduler* sched)
+{
+    removeScheduler(sched);
+}
+
+std::vector<std::shared_ptr<SchedulerEntry>> ThreadPool::getSchedulers() const
 {
     std::lock_guard<std::mutex> lock(m_mtx);
     return {m_schedulers.begin(), m_schedulers.end()};

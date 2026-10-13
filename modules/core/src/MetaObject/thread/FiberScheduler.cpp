@@ -160,12 +160,25 @@ namespace mo
             auto locked = m_pool.lock();
             if (locked)
             {
+                // Entries, not raw pointers: the list is copied out of the
+                // pool lock and dereferenced after unlocking, so a worker
+                // whose thread exits in between would otherwise leave a
+                // stale PriorityScheduler* here (TOCTOU). Each entry checks
+                // liveness under its own mutex and returns nullptr once its
+                // scheduler has been retired (the worker retires its own
+                // entry before its thread, and thus its scheduler, exits).
                 const auto schedulers = locked->getSchedulers();
                 if (schedulers.size() == 1)
                 {
                     return victim;
                 }
-                const auto id_ = std::find(schedulers.begin(), schedulers.end(), this) - schedulers.begin();
+                const auto id_ = std::find_if(
+                                     schedulers.begin(),
+                                     schedulers.end(),
+                                     [this](const std::shared_ptr<SchedulerEntry>& entry) {
+                                         return entry->scheduler() == this;
+                                     }) -
+                                 schedulers.begin();
                 std::size_t count = 0, size = schedulers.size();
                 static thread_local std::minstd_rand generator{std::random_device{}()};
                 std::uniform_int_distribution<std::uint32_t> distribution{0, static_cast<std::uint32_t>(size - 1)};
@@ -204,12 +217,21 @@ namespace mo
 
     void PriorityScheduler::property_change(boost::fibers::context* ctx, FiberProperty& props) noexcept
     {
-        if (!ctx->ready_is_linked())
-        {
-            return;
-        }
+        // The ready_is_linked() check and the unlink MUST be atomic with
+        // steal()/pick_next()/awakened() on the SAME spinlock. They race
+        // across threads: a context is inserted into m_work_queue by the
+        // fiber constructor on thread A, and a worker on thread B may steal
+        // it (pop + detach) at the same instant. If the check runs before
+        // the steal and the unlink after it, ready_unlink() corrupts the
+        // intrusive ready-list of a node that is no longer linked. (Seen as
+        // a delayed SIGSEGV in context::~context during release_terminated_
+        // on the other scheduler.)
         {
             boost::fibers::detail::spinlock_lock lk1{m_work_spinlock};
+            if (!ctx->ready_is_linked())
+            {
+                return;
+            }
             ctx->ready_unlink();
         }
         awakened(ctx, props);

@@ -36,6 +36,11 @@ namespace mo
         m_cv->wait(lt);
     }
 
+    void ConditionVariable::wait(TimedMutex::Lock_t& lt, std::function<bool(void)> pred)
+    {
+        m_cv->wait(lt, pred);
+    }
+
     ConditionVariable::STATUS ConditionVariable::wait_until(RecursiveMutex::Lock_t& lt,
                                                             const std::chrono::steady_clock::time_point& timeout_time_)
     {

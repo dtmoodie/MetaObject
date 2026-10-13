@@ -56,6 +56,61 @@ namespace mo
         bool m_is_worker = false;
         static void setCurrent(PriorityScheduler*);
     };
+
+    // Pool-owned lifetime guard for a scheduler.
+    //
+    // pick_next() copies the pool's scheduler list under the pool lock and
+    // dereferences the entries AFTER unlocking; a worker's scheduler is
+    // destroyed when its thread exits (thread-local boost scheduler
+    // teardown), so a raw PriorityScheduler* copied that way is a
+    // use-after-free hazard (check-then-use TOCTOU). The pool keeps one of
+    // these per scheduler: the entry outlives the scheduler (the pool is a
+    // process-lifetime singleton) and every access checks liveness under
+    // its own mutex. A worker retires its own entry at the end of
+    // Thread::main(), i.e. before its thread (and thus its scheduler) is
+    // destroyed.
+    struct MO_EXPORTS SchedulerEntry
+    {
+        explicit SchedulerEntry(PriorityScheduler* s)
+            : m_sched(s)
+        {
+        }
+
+        // The scheduler, or nullptr once retired.
+        PriorityScheduler* scheduler()
+        {
+            std::lock_guard<std::mutex> lk(m_mtx);
+            return m_sched;
+        }
+
+        // Steal work from the scheduler if it is still alive.
+        boost::fibers::context* steal()
+        {
+            std::lock_guard<std::mutex> lk(m_mtx);
+            return nullptr != m_sched ? m_sched->steal() : nullptr;
+        }
+
+        void releaseAssistant()
+        {
+            std::lock_guard<std::mutex> lk(m_mtx);
+            if (nullptr != m_sched)
+            {
+                m_sched->releaseAssistant();
+            }
+        }
+
+        // Idempotent: called by the retiring worker and (again) by
+        // ~PriorityScheduler at thread exit.
+        void retire()
+        {
+            std::lock_guard<std::mutex> lk(m_mtx);
+            m_sched = nullptr;
+        }
+
+      private:
+        std::mutex m_mtx;
+        PriorityScheduler* m_sched = nullptr;
+    };
 } // namespace mo
 
 #endif // MO_THREAD_FIBER_SCHEDULER_HPP

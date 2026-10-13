@@ -39,10 +39,12 @@ namespace mo
         void wait(Mutex::Lock_t& lt);
         void wait(TimedMutex::Lock_t& lt);
 
-        template <class PREDICATE>
-        void wait(RecursiveMutex::Lock_t& lt, PREDICATE pred);
-        template <class PREDICATE>
-        void wait(TimedMutex::Lock_t& lt, PREDICATE pred);
+        // Predicate-based wait (std::condition_variable-style). Concrete
+        // type rather than a template so the definition can live in the
+        // .cpp (which is the only TU allowed to include boost.fiber) and
+        // still be linked from other TUs (used by Thread::main's shutdown
+        // wait, where the lock is a TimedMutex::Lock_t).
+        void wait(TimedMutex::Lock_t& lt, std::function<bool(void)> pred);
 
         STATUS wait_until(Mutex::Lock_t& lt, const std::chrono::steady_clock::time_point& timeout_time_);
         STATUS wait_until(RecursiveMutex::Lock_t& lt, const std::chrono::steady_clock::time_point& timeout_time_);

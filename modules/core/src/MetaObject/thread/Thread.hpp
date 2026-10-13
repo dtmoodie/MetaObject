@@ -11,8 +11,11 @@
 
 #include <boost/thread.hpp>
 
+#include <atomic>
 #include <chrono>
+#include <condition_variable>
 #include <functional>
+#include <mutex>
 #include <queue>
 
 namespace mo
@@ -62,7 +65,24 @@ namespace mo
         ThreadPool* m_pool = nullptr;
 
         std::string m_name;
+
+        // Set by the worker (Thread::main) once its scheduler is installed
+        // and the wakeup cv pointer below is written. ~Thread() waits on
+        // this handshake (bounded) before signaling shutdown, so the
+        // publish of m_scheduler_wakeup_cv is synchronized and the worker
+        // is known to have started.
+        std::mutex m_ready_mtx;
+        std::condition_variable m_ready_cv;
+        bool m_scheduler_ready = false;
+
+        // Written by the worker's scheduler constructor
+        // (use_scheduling_algorithm); published under m_ready_mtx.
         std::condition_variable* m_scheduler_wakeup_cv = nullptr;
+
+        // Set by ~Thread(); the worker's main() parks in a wait() whose
+        // predicate checks this (see Thread::main). Atomic: it is set from
+        // the owner thread and read from the worker thread.
+        std::atomic<bool> m_shutdown{false};
     };
 } // namespace mo
 #endif // MO_THREAD_HPP
