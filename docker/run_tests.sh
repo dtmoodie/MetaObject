@@ -18,8 +18,21 @@
 #   COMPILERS   space-separated cxx drivers to test; default: auto-detect
 #   WITH_PYTHON ON/OFF (default OFF). The python module unconditionally
 #               includes <opencv2/core/cuda.hpp>, so it only builds against
-#               CUDA-enabled OpenCV: only the cuda12 image sets it ON.
-#   CUDA_ARCH_BIN  -gencode architectures for nvcc (default: FindCUDA default)
+#               CUDA-enabled OpenCV: only the cuda* images set it ON.
+#   WITH_WT     ON/OFF (default ON). The 26.04 images export OFF: Wt 4.10.2
+#               cannot be built against the Asio that ships with their
+#               Boost 1.90 (see README), so the wtgui module is not built
+#               there.
+#   CUDA_ARCH_BIN  -gencode architectures for nvcc. When set, it is passed as
+#               -DCUDA_ARCH_NAME=Manual (the vendored FindCUDA silently
+#               discards -DCUDA_ARCH_BIN in the default Auto mode, which
+#               auto-detects the attached GPUs and emits SASS only). Unset
+#               keeps Auto: SASS for the attached GPU. The cuda11 images set
+#               it to 90 because nvcc 11.8 cannot target sm_120.
+#   CUDA_ARCH_PTX  extra PTX architectures (passed with -DCUDA_ARCH_PTX when
+#               CUDA_ARCH_BIN is set). The cuda11 images set it to 90 so the
+#               embedded compute_90 PTX is JIT'd by the driver on newer GPUs
+#               (e.g. sm_120) and the device tests still execute.
 #   JOBS           parallelism for make (default: nproc)
 #   TEST_TIMEOUT   per-test-binary wall clock in seconds (default 600). A hung
 #               binary must fail its cell instead of freezing the matrix
@@ -31,15 +44,33 @@ set -uo pipefail
 SRCDIR=${SRCDIR:-/src}
 BUILDDIR=${BUILDDIR:-/build}
 WITH_PYTHON=${WITH_PYTHON:-OFF}
+WITH_WT=${WITH_WT:-ON}
 CUDA_ARCH_BIN=${CUDA_ARCH_BIN:-}
+CUDA_ARCH_PTX=${CUDA_ARCH_PTX:-}
 JOBS=${JOBS:-$(nproc)}
 TEST_TIMEOUT=${TEST_TIMEOUT:-600}
+
+# The 26.04 images ship CMake 4.x, which rejects this tree's
+# cmake_minimum_required(2.8) (CMake 4 dropped compatibility with < 3.5).
+# The env var downgrades the policy floor for the whole configure; CMake 3.x
+# ignores it.
+export CMAKE_POLICY_VERSION_MINIMUM=3.5
+
+# An explicit arch list selects FindCUDA's Manual mode (see the
+# CUDA_ARCH_BIN note above); otherwise the default Auto mode applies.
+arch_args=()
+if [ -n "$CUDA_ARCH_BIN" ]; then
+    arch_args+=(-DCUDA_ARCH_NAME=Manual -DCUDA_ARCH_BIN="$CUDA_ARCH_BIN")
+    if [ -n "$CUDA_ARCH_PTX" ]; then
+        arch_args+=(-DCUDA_ARCH_PTX="$CUDA_ARCH_PTX")
+    fi
+fi
 
 if [ -n "${COMPILERS:-}" ]; then
     read -r -a COMPILERS <<<"$COMPILERS"
 else
     COMPILERS=()
-    for c in g++ g++-9 g++-10 g++-12 g++-13 clang++ clang++-10 clang++-14 clang++-16 clang++-18; do
+    for c in g++ g++-9 g++-10 g++-11 g++-12 g++-13 g++-14 g++-15 g++-16 clang++ clang++-10 clang++-14 clang++-16 clang++-18 clang++-19 clang++-20 clang++-21; do
         command -v "$c" >/dev/null 2>&1 && COMPILERS+=("$c")
     done
 fi
@@ -68,9 +99,9 @@ for cxx in "${COMPILERS[@]}"; do
         -DBUILD_DEPENDENCIES=ON \
         -DWITH_QT=ON \
         -DWITH_OPENCV=ON \
-        -DWITH_WT=ON \
+        -DWITH_WT="$WITH_WT" \
         -DWITH_PYTHON="$WITH_PYTHON" \
-        ${CUDA_ARCH_BIN:+-DCUDA_ARCH_BIN="$CUDA_ARCH_BIN"}; then
+        "${arch_args[@]}"; then
         echo "!!!! configure failed for $cxx"
         overall=1
         continue
@@ -140,7 +171,7 @@ PYEOF
         fi
     done
 
-    # Python interop test (cuda12 image only: requires the python module,
+    # Python interop test (cuda* images only: requires the python module,
     # which needs CUDA-enabled OpenCV).
     if [ -f "$b/metaobject_python_test.py" ]; then
         rewrite_python_wrapper "$b"
