@@ -5,7 +5,6 @@ metaobject_declare_module(NAME core SRC src DEPENDS
     Boost::fiber
     Boost::context
     Boost::chrono
-    Boost::system
     cereal
     RuntimeObjectSystem
     spdlog

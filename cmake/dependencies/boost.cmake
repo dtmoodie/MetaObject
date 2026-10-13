@@ -5,11 +5,23 @@ if(Boost_DIR)
     endif()
 endif()
 
-set(Boost_required_components system thread fiber filesystem chrono context)
+# No 'system': Boost.System has been header-only (empty library) since
+# Boost 1.69, and Ubuntu 26.04's Boost 1.90 packaging no longer ships the
+# stub libboost_system at all (no package provides it), so requiring it
+# breaks configure there. Nothing links against real code in it.
+set(Boost_required_components thread fiber filesystem chrono context)
 set(Boost_USE_STATIC_LIBS        OFF)
 set(Boost_USE_MULTITHREADED      ON)
 set(Boost_USE_STATIC_RUNTIME     OFF)
 ADD_DEFINITIONS(-DBOOST_ALL_DYN_LINK)
+# Force the classic FindBoost module search instead of the boost-cmake
+# package-configuration (CONFIG) search. Newer distro packaging (Ubuntu
+# 26.04's Boost 1.90) ships a BoostConfig.cmake whose per-component
+# resolution (find_package(boost_system), ...) finds no matching
+# boost_<cmp>Config.cmake anywhere in the distribution, so CONFIG mode
+# dies at configure; the module path (headers + version-suffixed libs)
+# works on all supported distros.
+set(Boost_NO_BOOST_CMAKE ON)
 find_package(Boost REQUIRED COMPONENTS ${Boost_required_components})
 link_directories(${Boost_LIBRARY_DIR_DEBUG})
 link_directories(${Boost_LIBRARY_DIR})
