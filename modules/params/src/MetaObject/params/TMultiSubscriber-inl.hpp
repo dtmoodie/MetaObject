@@ -4,8 +4,19 @@
 #include <ct/Indexer.hpp>
 namespace mo
 {
-    template <class T, class U>
-    constexpr int indexOfHelper(int idx, std::tuple<U>* = nullptr)
+    // The base case is an empty pack, not a single element. A
+    // `std::tuple<U>` base case is an equally good match as the variadic
+    // recursion once the pack pops down to one element (the explicit
+    // argument lists tie); gcc resolves the tie via [temp.func.order]
+    // partial ordering, clang rejects the call as ambiguous. An empty-pack
+    // base never ties: the recursive call passes either >= 2 explicit
+    // arguments (base case inapplicable) or exactly 1 (recursion cannot
+    // deduce its `U` from `std::tuple<>`).
+    // A type that is not in the tuple now yields sizeof...(Ts) (out of
+    // range, a hard error if ever used as an index) instead of silently
+    // returning the last element as the old base case did.
+    template <class T>
+    constexpr int indexOfHelper(int idx, std::tuple<>* = nullptr)
     {
         return idx;
     }
