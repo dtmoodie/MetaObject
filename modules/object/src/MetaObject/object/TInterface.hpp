@@ -1,6 +1,8 @@
 #ifndef MO_OBJECT_TINTERFACE_HPP
 #define MO_OBJECT_TINTERFACE_HPP
 
+#include <type_traits>
+
 #include <RuntimeObjectSystem/IObject.h>
 #include <RuntimeObjectSystem/InterfaceDatabase.hpp>
 
@@ -56,7 +58,11 @@ struct TObjectControlBlockImpl<T, ct::VariadicTypedef<U...>, void> : virtual TOb
         TObjectControlBlock<U1>::SetObject(obj);
     }
 
-    template <class U1, class... Us>
+    // The recursive overload is only viable with a non-empty trailing pack:
+    // with an empty Us... it would be ambiguous with the single-type overload
+    // above (clang rejects it, gcc silently picks one). See the note in
+    // ct/VariadicTypedef.hpp.
+    template <class U1, class... Us, class = typename std::enable_if<sizeof...(Us) >= 1>::type>
     void setObject(IObject* obj, ct::VariadicTypedef<U1, Us...>)
     {
         TObjectControlBlock<U1>::SetObject(obj);
