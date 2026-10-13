@@ -60,15 +60,25 @@ namespace mo
     {
         const auto ctx_priority = props.getPriority();
         const auto id = props.getId();
-        if (m_is_worker)
-        {
-            if (!ctx->is_context(boost::fibers::type::pinned_context))
-            {
-                ctx->detach();
-            }
-        }
 
         boost::fibers::detail::spinlock_lock lk{m_work_spinlock};
+
+        // Detach the context from its current worker-queue (if it is
+        // attached to a scheduler) BEFORE the ready-queue insert, under
+        // the same lock that guards the ready queue. boost.fiber's
+        // worker_queue_ + the ctx's scheduler_ pointer carry no lock of
+        // their own: fiber construction attaches a ctx on the creating
+        // thread (boost fiber::start_ -> context::attach), and a stealer
+        // otherwise unlinks stolen contexts on another thread. Detaching
+        // here (same thread as the creating attach, before the insert)
+        // leaves every ready-queue context with scheduler_ == nullptr, so
+        // no thread except the queue owner ever touches its
+        // worker_queue_ (invariant relied on by steal()).
+        if (m_is_worker && !ctx->is_context(boost::fibers::type::pinned_context) && nullptr != ctx->get_scheduler())
+        {
+            ctx->detach();
+        }
+
         if (id == 0)
         {
             auto itr =
@@ -127,7 +137,14 @@ namespace mo
             return nullptr;
         }
         m_work_queue.pop_back();
-        victim->detach();
+        // Ready-queue contexts are detached on enqueue (awakened), so
+        // scheduler_ is normally null here and there is nothing to
+        // unlink. The check keeps steal safe (and null-deref-free) if a
+        // context is ever enqueued while still attached.
+        if (nullptr != victim->get_scheduler())
+        {
+            victim->detach();
+        }
         return victim;
     }
 
@@ -150,6 +167,11 @@ namespace mo
                 boost::context::detail::prefetch_range(victim, sizeof(boost::fibers::context));
                 if (!victim->is_context(boost::fibers::type::pinned_context))
                 {
+                    // Link into this scheduler's worker-queue under the
+                    // work lock (the same lock guarding the ready queue
+                    // the victim was just popped from and the lock
+                    // steal()/awakened() use for worker-queue unlinks).
+                    boost::fibers::detail::spinlock_lock lk{m_work_spinlock};
                     boost::fibers::context::active()->attach(victim);
                 }
             }
@@ -201,6 +223,7 @@ namespace mo
             {
                 boost::context::detail::prefetch_range(victim, sizeof(boost::fibers::context));
                 BOOST_ASSERT(!victim->is_context(boost::fibers::type::pinned_context));
+                boost::fibers::detail::spinlock_lock lk{m_work_spinlock};
                 boost::fibers::context::active()->attach(victim);
             }
         }
@@ -244,7 +267,15 @@ namespace mo
             if (std::chrono::steady_clock::time_point::max() == time_point)
             {
                 std::unique_lock<std::mutex> lk{m_mtx};
-                m_cv.wait(lk, [this]() { return m_flag; });
+                // Bounded park: an unbounded wait would deadlock the
+                // dispatch loop's shutdown path (boost checks
+                // worker_queue_.empty() every iteration to break out) if
+                // a worker-linked context with a future sleep deadline
+                // outlives it - only a loop iteration (sleep2ready_) can
+                // drain the sleep queue, and a parked loop never iterates.
+                // Periodic wakes keep that drain reachable at the cost of
+                // one idle wakeup per interval.
+                m_cv.wait_for(lk, std::chrono::milliseconds(500), [this]() { return m_flag; });
                 m_flag = false;
             }
             else

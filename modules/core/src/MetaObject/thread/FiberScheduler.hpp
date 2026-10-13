@@ -53,7 +53,17 @@ namespace mo
         std::weak_ptr<ThreadPool> m_pool;
         uint64_t m_work_threshold;
         std::shared_ptr<Thread> m_assistant;
-        bool m_is_worker = false;
+        // Every scheduler (main-thread and pool workers) runs the worker
+        // attach/detach discipline: a context is attached to the
+        // scheduler's worker-queue when picked (pick_next) and detached
+        // when re-enqueued (awakened). boost.fiber's worker_queue_ is
+        // unsynchronized, so this keeps each worker_queue_ single-threaded
+        // (only its owning thread links/unlinks it: fiber construction
+        // on the owning thread attaches and is immediately followed by
+        // the same-thread detach in awakened), which the cross-thread
+        // steal path relies on (steal never unlinks ready-queue contexts
+        // - see steal/awakened in FiberScheduler.cpp).
+        bool m_is_worker = true;
         static void setCurrent(PriorityScheduler*);
     };
 
