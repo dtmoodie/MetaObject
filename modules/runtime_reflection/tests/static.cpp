@@ -127,7 +127,12 @@ namespace ct
 
 TEST(static_reflection, DetectSimilarity)
 {
-    mo::TTraits<std::array<float, 4>, 4, void> test;
+    // compile-time check that std::array dispatches to the level-4 container
+    // specialization (visitor_traits/array_adapter.hpp); the behavioral
+    // coverage for that path lives in the std::array entries of
+    // RuntimeReflectionTypeTest / testTypes in common.hpp
+    static_assert(mo::is_complete<mo::TTraits<std::array<float, 4>, 4, void>>::value,
+                  "std::array must have a complete container trait");
     {
         mo::HashVisitor hasher(true, false);
         const auto trait_a = mo::makeTraits(static_cast<VecA*>(nullptr));

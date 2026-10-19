@@ -21,6 +21,7 @@
 #include <cereal/types/memory.hpp>
 #include <cereal/types/vector.hpp>
 
+#include <array>
 #include <iostream>
 #include <memory>
 
@@ -479,6 +480,25 @@ void testTypes(Tester& tester)
         vec.push_back({6, 7, 8});
         vec.push_back({9, 10, 11});
         tester.test(vec);
+    }
+    {
+        // fixed-size owning container: exercises TTraits<std::array<T, N>>
+        // (visitor_traits/array_adapter.hpp). This is a distinct use case
+        // from the removed mo::ArrayContainerTrait, which adapted a raw
+        // (pointer, size) span with no owning object; that use case is
+        // covered by the ct::TArrayView traits in the same file, tested in
+        // serialization_test.cpp (rawArrayView*).
+        //
+        // std::array is deliberately NOT in RuntimeReflectionTypeTest: the
+        // typed suites cross-validate against cereal, and cereal's
+        // std::array formats are not mo-compatible in either direction:
+        // binary is raw elements with no count (mo frames containers with
+        // a uint64 count prefix), and JSON is a flat nested object of
+        // scalars (mo writes a single array). The mo-own std::array
+        // load/save path is covered by stdArrayBinaryRoundtrip and
+        // stdArrayJson in serialization_test.cpp instead.
+        std::array<float, 4> arr{1.0F, 2.0F, 3.0F, 4.0F};
+        tester.test(arr);
     }
     {
         VecOwner owner;

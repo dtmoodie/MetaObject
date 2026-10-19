@@ -16,19 +16,15 @@ namespace mo
         {
             m_ar.setNextName(name.c_str());
         }
-        if (cnt > 1)
+        // The enclosing container op (operator()(IContainerTraits*, ...)) has
+        // already opened the JSON array for cnt > 1; opening a second one here
+        // produced double-wrapped output ([[...]]) that neither this loader
+        // nor cereal could read back. Struct-element containers never reach
+        // writePod (their elements go through the IStructTraits op), and the
+        // cnt == 1 scalar path is unchanged.
+        for (size_t i = 0; i < cnt; ++i)
         {
-            m_ar.startNode();
-            m_ar.makeArray();
-            for (size_t i = 0; i < cnt; ++i)
-            {
-                m_ar(ptr[i]);
-            }
-            m_ar.finishNode();
-        }
-        else
-        {
-            m_ar(ptr[0]);
+            m_ar(ptr[i]);
         }
 
         return *this;
@@ -219,17 +215,24 @@ namespace mo
     template <class T>
     ILoadVisitor& JSONLoader::readPod(T* ptr, const std::string& name, const size_t cnt)
     {
-        if (!name.empty())
+        // The enclosing container op (operator()(IContainerTraits*, ...)) has
+        // already opened the array node and validated its size through
+        // setContainerSize; the elements sit directly in it. The inner
+        // framing here is what made the writer double-wrap POD-element
+        // containers ([[...]]); removing it is what makes mo's JSON layout
+        // a single array.
+        //
+        // setNextName is only valid for named object members: array elements
+        // are anonymous, and a leftover name makes cereal's input-side
+        // search() run a member search over the (unnamed) array and throw
+        // "provided NVP (...) not found" on the first element. getNodeName()
+        // is non-null exactly in the named-member (scalar) case, where the
+        // unconditional setNextName of the old code is what supported
+        // out-of-order member loading.
+        char const* node_name = m_ar.getNodeName();
+        if (!name.empty() && node_name)
         {
             m_ar.setNextName(name.c_str());
-        }
-        auto node_name = m_ar.getNodeName();
-        if (cnt > 1)
-        {
-            m_ar.startNode();
-            cereal::size_type size;
-            m_ar.loadSize(size);
-            MO_ASSERT_EQ(size, cnt);
         }
         for (size_t i = 0; i < cnt; ++i)
         {
@@ -239,10 +242,6 @@ namespace mo
             {
                 m_last_read_name = name;
             }
-        }
-        if (cnt > 1)
-        {
-            m_ar.finishNode();
         }
         return *this;
     }

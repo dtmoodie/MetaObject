@@ -663,6 +663,161 @@ struct TestData<RawPointerTestStruct>
     Serialization<RawPointerTestStruct>::loadBinaryRuntime("test.bin");
 }*/
 
+namespace
+{
+    const size_t kRawArraySize = 5;
+
+    template <class T>
+    void expectArrayEquals(const T* expected, const ct::TArrayView<T>& loaded)
+    {
+        for (size_t i = 0; i < kRawArraySize; ++i)
+        {
+            EXPECT_EQ(expected[i], loaded[i]) << "element " << i;
+        }
+    }
+} // namespace
+
+// The removed mo::ArrayContainerTrait adapted a raw (pointer, size) span —
+// externally owned memory with no owning object — into a load/save container.
+// The live code covering that use case is ct::TArrayView<T> (TArrayView<T, -1>
+// holds the data pointer and the size) together with
+// TTraits<ct::TArrayView<T>, 4, void> in visitor_traits/array_adapter.hpp:
+// load/save move exactly view.size() elements to/from the memory the view
+// points at. This is a different use case than std::array (an owning
+// fixed-size container, covered by stdArrayBinaryRoundtrip / stdArrayJson
+// below and the testTypes entry in common.hpp — see the comments there for
+// why std::array stays out of the typed cross-format suites).
+TEST(serialization, rawArrayViewBinary)
+{
+    static float src[kRawArraySize] = {1.0F, 2.0F, 3.0F, 4.0F, 5.0F};
+    static float dst[kRawArraySize] = {0.0F, 0.0F, 0.0F, 0.0F, 0.0F};
+    ct::TArrayView<float> view(src, kRawArraySize);
+    ct::TArrayView<float> loaded(dst, kRawArraySize);
+
+    std::stringstream stream;
+    {
+        mo::BinarySaver saver(stream);
+        mo::ISaveVisitor& visitor = saver;
+        visitor(&view, "data");
+    }
+    {
+        mo::BinaryLoader loader(stream);
+        mo::ILoadVisitor& visitor = loader;
+        visitor(&loaded, "data");
+    }
+    expectArrayEquals(src, loaded);
+}
+
+// The removed trait also took a const pointer for save-only use; the
+// ct::TArrayView<const T> specialization keeps that asymmetry: save works,
+// load throws.
+TEST(serialization, rawArrayViewConstSave)
+{
+    static float src[kRawArraySize] = {1.0F, 2.0F, 3.0F, 4.0F, 5.0F};
+    static float dst[kRawArraySize] = {0.0F, 0.0F, 0.0F, 0.0F, 0.0F};
+    const ct::TArrayView<const float> view(src, kRawArraySize);
+    ct::TArrayView<float> loaded(dst, kRawArraySize);
+
+    std::stringstream stream;
+    {
+        mo::BinarySaver saver(stream);
+        mo::ISaveVisitor& visitor = saver;
+        visitor(&view, "data");
+    }
+    {
+        mo::BinaryLoader loader(stream);
+        mo::ILoadVisitor& visitor = loader;
+        visitor(&loaded, "data");
+    }
+    expectArrayEquals(src, loaded);
+}
+
+// Mo-own roundtrip for std::array (TTraits<std::array<T, N>, 4, void>).
+// Deliberately not part of the typed cross-format suites: mo's container
+// binary path frames containers with a uint64 count (BinarySaver/Loader
+// IContainerTraits ops), while cereal writes std::array as raw elements with
+// no count, so the two formats are not byte-compatible.
+TEST(serialization, stdArrayBinaryRoundtrip)
+{
+    std::array<float, 4> data{1.0F, 2.0F, 3.0F, 4.0F};
+    std::array<float, 4> loaded{0.0F, 0.0F, 0.0F, 0.0F};
+
+    std::stringstream stream;
+    {
+        mo::BinarySaver saver(stream);
+        mo::ISaveVisitor& visitor = saver;
+        visitor(&data, "data");
+    }
+    {
+        mo::BinaryLoader loader(stream);
+        mo::ILoadVisitor& visitor = loader;
+        visitor(&loaded, "data");
+    }
+    for (size_t i = 0; i < loaded.size(); ++i)
+    {
+        EXPECT_EQ(data[i], loaded[i]) << "element " << i;
+    }
+}
+
+// std::array in JSON. After the doubled array framing was removed from
+// JSONSaver::writePod / JSONLoader::readPod, mo emits a single array
+// ({"value0": [1, 2, 3, 4]} at top level) — the same layout cereal uses for
+// std::vector, which is why the typed vector JSON cross-tests pass.
+//
+// mo-own roundtrip only, deliberately: cereal has NO array layout for
+// std::array in JSON. Its array.hpp save is `for (i) ar(i)` with no SizeTag,
+// so a top-level std::array<float,4> comes out as
+// {"value0": {"value0": 1, "value1": 2, "value2": 3, "value3": 4}} — a flat
+// nested object of scalars. mo's loader reads that as a 4-member container
+// whose first member is not an array (throws), and cereal reads mo's
+// [1,2,3,4] as a single number (throws). Same incompatibility class as the
+// binary path (cereal array = raw elements, mo container = uint64 count
+// prefix), see stdArrayBinaryRoundtrip above.
+TEST(serialization, stdArrayJson)
+{
+    std::array<float, 4> data{1.0F, 2.0F, 3.0F, 4.0F};
+
+    std::stringstream ss;
+    {
+        mo::JSONSaver saver(ss);
+        mo::ISaveVisitor& visitor = saver;
+        visitor(&data);
+    }
+    std::array<float, 4> loaded{};
+    std::stringstream ss1(ss.str());
+    mo::JSONLoader reader(ss1);
+    mo::ILoadVisitor& visitor = reader;
+    visitor(&loaded);
+    for (size_t i = 0; i < data.size(); ++i)
+    {
+        EXPECT_EQ(data[i], loaded[i]) << "element " << i << ":\n"
+                                      << ss.str();
+    }
+}
+
+// mo-only JSON roundtrip for the raw-span view (ct::TArrayView has no cereal
+// equivalent). Exercises the view trait's load/save in the single-array
+// layout; the binary counterpart is rawArrayViewBinary above.
+TEST(serialization, rawArrayViewJson)
+{
+    static float src[kRawArraySize] = {1.0F, 2.0F, 3.0F, 4.0F, 5.0F};
+    static float dst[kRawArraySize] = {0.0F, 0.0F, 0.0F, 0.0F, 0.0F};
+    ct::TArrayView<float> view(src, kRawArraySize);
+    ct::TArrayView<float> loaded(dst, kRawArraySize);
+
+    std::stringstream ss;
+    {
+        mo::JSONSaver saver(ss);
+        mo::ISaveVisitor& visitor = saver;
+        visitor(&view);
+    }
+    std::stringstream ss1(ss.str());
+    mo::JSONLoader reader(ss1);
+    mo::ILoadVisitor& visitor = reader;
+    visitor(&loaded);
+    expectArrayEquals(src, loaded);
+}
+
 template <class T>
 void testBinarySpeed(size_t count)
 {
