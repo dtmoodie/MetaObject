@@ -60,4 +60,5 @@ if(BUILD_TESTS)
     
     set_target_properties(test_mo_core PROPERTIES FOLDER Tests/MetaObject/core)
     setup_msvc_target(test_mo_core)
+    add_test(NAME test_mo_core COMMAND test_mo_core)
 endif()

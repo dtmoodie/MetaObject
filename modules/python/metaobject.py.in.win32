@@ -1,10 +1,30 @@
-def __bootstrap__():
-    global __bootstrap__, __loader__, __file__
-    import sys, pkg_resources, imp, glob
-    files = glob.glob('metaobject_python*.dll')
-    if(len(files) == 1):
-        __file__ = pkg_resources.resource_filename(__name__,files[0])
-        __loader__ = None; del __bootstrap__, __loader__
-        imp.load_dynamic(__name__,__file__)
-__bootstrap__()
+import glob
+import os
+import sys
 
+# Prefer the copy next to this wrapper; fall back to the CWD (the old
+# bootstrap only looked in the CWD).
+_here = os.path.dirname(os.path.abspath(__file__))
+files = glob.glob(os.path.join(_here, 'metaobject_python*.dll')) or glob.glob('metaobject_python*.dll')
+if len(files) != 1:
+    raise ImportError('expected exactly one metaobject_python*.dll, found %r' % files)
+_dll = files[0]
+
+try:
+    # Python 3.5+; the imp module used by the fallback below was removed
+    # in Python 3.12.
+    import importlib.machinery
+    import importlib.util
+except ImportError:
+    importlib = None
+
+if importlib:
+    _spec = importlib.util.spec_from_file_location(
+        __name__, _dll,
+        loader=importlib.machinery.ExtensionFileLoader(__name__, _dll))
+    _module = importlib.util.module_from_spec(_spec)
+    _spec.loader.exec_module(_module)
+    sys.modules[__name__] = _module
+else:
+    import imp
+    imp.load_dynamic(__name__, _dll)

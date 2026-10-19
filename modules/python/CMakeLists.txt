@@ -57,6 +57,15 @@ if(MO_HAVE_PYTHON AND MO_HAVE_OPENCV)
             ${PYTHON_LIBRARY}
         )
 
-        add_test(NAME test_mo_python COMMAND python2 test_mo_python.py)
+        add_test(NAME test_mo_python_init COMMAND test_mo_python_init)
+
+        if(UNIX)
+            # tests/test_python.py is configured into the build root as
+            # metaobject_python_test.py (see configure_file above) and globs
+            # for libmo_objectplugin*.so relative to the CWD, so run it with
+            # the build root as the working directory.
+            add_test(NAME test_mo_python COMMAND ${PYTHON_EXECUTABLE} metaobject_python_test.py)
+            set_tests_properties(test_mo_python PROPERTIES WORKING_DIRECTORY ${CMAKE_BINARY_DIR})
+        endif()
     endif()
 endif()

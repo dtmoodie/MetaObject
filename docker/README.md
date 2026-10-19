@@ -161,11 +161,11 @@ the cuda11 cells' baked-in `CUDA_ARCH_BIN=90`). `WT_VERSION` /
 (`WT_VERSION=4.10.3 ./build.sh …`), overriding the per-cell defaults.
 
 Tests are run by executing the `test_mo_*` binaries in the build dir
-directly rather than via ctest, because ctest coverage is incomplete:
-`test_mo_core`/`test_mo_types` have no `add_test()` entry, the params test
-is mis-registered as `test_mo_cuda` (colliding with the cuda module's test),
-and the python ctest entry invokes `python2` on a file name that does not
-exist.
+directly. A full `ctest` run from the build dir now passes end-to-end as
+well (the `ct` submodule's test entries resolve to the build-root binaries
+as of ct e0ddb75); the binaries are still driven directly here because
+that is the canonical CI flow and the per-binary timeout catches a hung
+test instead of freezing the matrix.
 
 ## Prerequisites
 

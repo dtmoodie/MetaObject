@@ -39,7 +39,7 @@ Per-module googletest binaries, all in the build root. The `gtest`/`gtest_main` 
 ./test_mo_cuda
 ```
 
-CI (`.travis.yml` / `.appveyor.yml`) runs the binaries directly rather than `ctest` — that's the canonical flow. `ctest` also works, but note `modules/params/CMakeLists.txt` registers its test as `add_test(NAME test_mo_cuda COMMAND test_mo_params)` (copy-paste bug; name collides with the cuda test). `test_mo_params` is built with AddressSanitizer on GCC. The python ctest entry is doubly broken: `add_test(NAME test_mo_python COMMAND python2 test_mo_python.py)` invokes `python2` (absent on modern distros) against a file name that does not exist (the configured copy is `metaobject_python_test.py`).
+CI (`.travis.yml` / `.appveyor.yml`) runs the binaries directly rather than `ctest` — that's the canonical flow. `ctest` works for the metaobject suite: every test target (`test_mo_core`, `test_mo_types`, `test_mo_params`, `test_mo_serialization`, `test_mo_runtime_reflection`, `test_mo_object`, `test_mo_cuda`, `test_mo_cuda_fiber`, `test_mo_python_init`, `test_mo_python`) has an `add_test` entry, and the `test_mo_object`/`test_mo_python` entries set `WORKING_DIRECTORY` to the build root (the object tests load `./libmo_objectplugin.so` and the python test globs `libmo_objectplugin*.so` relative to the CWD). The `test_mo_object` entry applies the same `--gtest_filter` as CI (excludes `recompile.*`, which need a writable source tree); run the binary directly from the build root for the full suite. `test_mo_params` is built with AddressSanitizer on GCC ≥ 11 (libasan 9/10 crash at startup on modern host kernels). A full `ctest` from the build root also runs the `ct` submodule's suites; since ct dev @ e0ddb75 its `add_test` entries use the `NAME/COMMAND` form so they resolve to the build-root binaries and pass, and a full `ctest` now runs the whole tree (45 tests in the cuda12/GCC-13 configuration).
 
 `modules/object/tests/plugin/` builds `mo_objectplugin` — a shared object of test classes loaded via the RCC plugin machinery, which is what `test_mo_object` exercises for runtime reflection/recompile.
 
@@ -58,7 +58,7 @@ COMPILERS="g++-13" ./test.sh cuda12
 - `test.sh` forwards `COMPILERS`, `CUDA_ARCH_BIN` and `JOBS` to the container only when they are set on the host (a bare `-e VAR` for an unset variable would blank the image's own `ENV`, e.g. cuda12's `CUDA_ARCH_BIN=120;90`); `JOBS` caps `make` parallelism inside the image.
 - `cuda12` is the only full-coverage image: it's the only one with `WITH_PYTHON=ON`, because the python module unconditionally includes `<opencv2/core/cuda.hpp>` (see gotchas) and therefore needs CUDA-enabled OpenCV, which it builds from source (4.14, with contrib) inside the image. It also runs with `--gpus all` and passes `CUDA_ARCH_BIN=120;90` (sm_120 = Blackwell/RTX 5090).
 - The three ubuntu images keep `WITH_PYTHON=OFF` and use apt OpenCV (CPU); they cover the compiler/toolchain spread (GCC 9/10 + Clang 10, GCC 11/12 + Clang 14, GCC 13/12 + Clang 18).
-- The generated `metaobject.py` wrapper uses `import imp`, removed in Python 3.12 — `run_tests.sh` rewrites it with `importlib` before the interop test (harness shim; `modules/python/metaobject.py.in.unix` still needs the real fix).
+- The generated `metaobject.py` wrapper loads the extension via `importlib` with an `imp` fallback, so it works from Python 2.7/3.5 up through 3.12+, where the `imp` module was removed.
 
 ## Architecture
 

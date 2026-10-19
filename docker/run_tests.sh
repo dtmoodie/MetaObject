@@ -5,12 +5,12 @@
 # read-only at /src. Build output goes to /build/<compiler> (container-local,
 # discarded on exit).
 #
-# The test binaries are executed directly rather than via ctest, because:
-#   - test_mo_core and test_mo_types have no add_test() entry at all
-#   - the params test is mis-registered in ctest as "test_mo_cuda"
-#     (name collision with the cuda module's test)
-#   - the python ctest entry invokes python2 on a file name that does not
-#     exist (the configured copy is metaobject_python_test.py)
+# The test binaries are executed directly rather than via ctest. A full
+# `ctest` run from the build root now passes end-to-end (every metaobject
+# target and the ct submodule's suites register resolvable paths, as of
+# ct e0ddb75), but the binaries are driven directly here: it is the
+# canonical CI flow, and the per-binary TEST_TIMEOUT catches a hung test
+# (e.g. a stalled GPU kernel) instead of freezing the matrix.
 #
 # Env:
 #   SRCDIR      source tree (default /src)
@@ -112,34 +112,6 @@ for cxx in "${COMPILERS[@]}"; do
         continue
     fi
 
-    # The python module's generated wrapper (metaobject.py) uses `import imp`,
-    # which was removed in Python 3.12. Rewrite it with importlib so the C++
-    # module can still be exercised; this is a test-harness shim, not a fix.
-    rewrite_python_wrapper() {
-        local dir=$1
-        [ -f "$dir/metaobject.py" ] || return 0
-        if python3 -c "import imp" >/dev/null 2>&1; then
-            return 0
-        fi
-        echo "  (rewriting metaobject.py to use importlib: 'imp' removed in Python 3.12)"
-        cat > "$dir/metaobject.py" <<'PYEOF'
-import glob
-import importlib.machinery
-import importlib.util
-import os
-import sys
-
-_here = os.path.dirname(os.path.abspath(__file__))
-_so = glob.glob(os.path.join(_here, "libmetaobject_python*.so"))[0]
-_spec = importlib.util.spec_from_file_location(
-    __name__, _so, loader=importlib.machinery.ExtensionFileLoader(__name__, _so)
-)
-_ext = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_ext)
-sys.modules[__name__] = _ext
-PYEOF
-    }
-
     fail=0
     for test in "${REQUIRED_TESTS[@]}"; do
         if [ ! -x "$b/$test" ]; then
@@ -174,7 +146,6 @@ PYEOF
     # Python interop test (cuda* images only: requires the python module,
     # which needs CUDA-enabled OpenCV).
     if [ -f "$b/metaobject_python_test.py" ]; then
-        rewrite_python_wrapper "$b"
         if ! (cd "$b" && timeout -s KILL "$TEST_TIMEOUT" python3 metaobject_python_test.py); then
             echo "!!!! python interop test failed (or exceeded ${TEST_TIMEOUT}s) for $cxx"
             fail=1

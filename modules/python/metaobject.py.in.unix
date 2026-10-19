@@ -1,2 +1,24 @@
-import imp
-imp.load_dynamic('metaobject','libmetaobject_python@POSTFIX@.so')
+import os
+import sys
+
+_so = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                   'libmetaobject_python@POSTFIX@.so')
+
+try:
+    # Python 3.5+; the imp module used by the fallback below was removed
+    # in Python 3.12.
+    import importlib.machinery
+    import importlib.util
+except ImportError:
+    importlib = None
+
+if importlib:
+    _spec = importlib.util.spec_from_file_location(
+        __name__, _so,
+        loader=importlib.machinery.ExtensionFileLoader(__name__, _so))
+    _module = importlib.util.module_from_spec(_spec)
+    _spec.loader.exec_module(_module)
+    sys.modules[__name__] = _module
+else:
+    import imp
+    imp.load_dynamic(__name__, _so)

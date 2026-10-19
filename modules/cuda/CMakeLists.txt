@@ -103,6 +103,7 @@ if(CUDA_FOUND)
         target_compile_options(test_mo_cuda_fiber PRIVATE -std=c++17)
         setup_msvc_target(test_mo_cuda)
         setup_msvc_target(test_mo_cuda_fiber)
+        add_test(NAME test_mo_cuda_fiber COMMAND test_mo_cuda_fiber)
 
     endif()
 endif()
