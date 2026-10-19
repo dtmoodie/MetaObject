@@ -146,6 +146,14 @@ namespace mo
 
         boost::python::detail::keyword_range range() const
         {
+            // For N == 0, m_keywords is a zero-length std::array and &m_keywords[0] is
+            // undefined behavior (GCC 13 traps on the out-of-bounds element access).
+            // Boost's own no-keyword type represents an empty range as a
+            // default-constructed pair, which the keyword matching never dereferences.
+            if (N == 0)
+            {
+                return boost::python::detail::keyword_range();
+            }
             return std::make_pair<boost::python::detail::keyword const*, boost::python::detail::keyword const*>(
                 &m_keywords[0], &m_keywords[0] + N);
         }
@@ -183,6 +191,14 @@ namespace mo
 
         boost::python::detail::keyword_range range() const
         {
+            // For N == 0, m_keywords is a zero-length std::array and &m_keywords[0] is
+            // undefined behavior (GCC 13 traps on the out-of-bounds element access).
+            // Boost's own no-keyword type represents an empty range as a
+            // default-constructed pair, which the keyword matching never dereferences.
+            if (N == 0)
+            {
+                return boost::python::detail::keyword_range();
+            }
             return std::make_pair<boost::python::detail::keyword const*, boost::python::detail::keyword const*>(
                 &m_keywords[0], &m_keywords[0] + N);
         }

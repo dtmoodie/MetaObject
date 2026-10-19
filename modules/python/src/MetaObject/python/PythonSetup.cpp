@@ -456,6 +456,7 @@ namespace mo
             boost::shared_ptr<LibGuard> lib_guard(new LibGuard());
             mo::initProfiling();
             mo::initCoreModule(lib_guard->m_system_table.get());
+            python::registerPodConverters(lib_guard->m_system_table.get());
             mo::setupEnums(module_name);
             setupParameters(module_name);
             boost::python::def("listConstructableObjects", &listConstructableObjects);

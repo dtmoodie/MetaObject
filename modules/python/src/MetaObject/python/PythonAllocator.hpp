@@ -13,13 +13,16 @@
 
 namespace ct
 {
-    template <>
-    struct MO_EXPORTS PythonConverter<cv::Mat, 5, void>
+    namespace bp
     {
-        static boost::python::object convertToPython(const cv::Mat& mat);
-        static bool convertFromPython(const boost::python::object& obj, cv::Mat& result);
-        static void registerToPython(const char* name);
-    };
+        template <>
+        struct MO_EXPORTS PythonConverter<cv::Mat, 5, void>
+        {
+            static boost::python::object convertToPython(const cv::Mat& mat);
+            static bool convertFromPython(const boost::python::object& obj, cv::Mat& result);
+            static void registerToPython(const char* name);
+        };
+    } // namespace bp
 
     class PyEnsureGIL
     {

@@ -18,7 +18,7 @@ namespace mo
     void registerPythonConverters(SystemTable* table, const char* name)
     {
         python::ParamConverter<T> param_converter(table);
-        ct::registerToPython<T>();
+        ct::bp::registerToPython<T>();
     }
 
 #define MO_METAPARAM_PYTHON_(N)                                                                                        \

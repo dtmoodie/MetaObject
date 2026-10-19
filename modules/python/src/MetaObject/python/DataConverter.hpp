@@ -14,6 +14,11 @@
 #include <boost/python/extract.hpp>
 
 #include <ct/interop/boost_python/PythonConverter.hpp>
+// ReflectedConverter adds the PythonConverter<T, 3, EnableIfReflected<T>>
+// partial specialization; it must be visible in every TU that instantiates
+// PythonConverter for a reflected type, or the class hierarchy (and the
+// convertToPython/convertFromPython behavior) differs per TU (ODR violation).
+#include <ct/interop/boost_python/ReflectedConverter.hpp>
 
 #include <map>
 
@@ -21,6 +26,10 @@ namespace mo
 {
     namespace python
     {
+        // SystemTable is the global core type, already forward-declared by
+        // converters.hpp (a mo::python::SystemTable here would shadow it).
+        MO_EXPORTS void registerPodConverters(SystemTable* table);
+
         struct MO_EXPORTS DataConverterRegistry
         {
             using Set_t = std::function<bool(mo::IControlParam*, const boost::python::object&)>;
@@ -43,7 +52,7 @@ namespace mo
             ParamConverter(SystemTable* table)
             {
                 DataConverterRegistry::instance(table)->registerConverters(
-                    mo::TypeInfo(typeid(T)),
+                    mo::TypeInfo::create<T>(),
                     std::bind(&ParamConverter<T>::set, std::placeholders::_1, std::placeholders::_2),
                     std::bind(&ParamConverter<T>::get, std::placeholders::_1));
             }
@@ -53,12 +62,12 @@ namespace mo
                 if (param->checkFlags(mo::ParamFlags::kCONTROL))
                 {
                     auto control = dynamic_cast<IControlParam*>(param);
-                    if (control->getTypeInfo() == TypeInfo(typeid(T)))
+                    if (control->getTypeInfo().isType<T>())
                     {
                         if (auto typed = dynamic_cast<ITControlParam<T>*>(control))
                         {
                             T value = typed->getValue();
-                            if (ct::convertFromPython(obj, value))
+                            if (ct::bp::convertFromPython(obj, value))
                             {
                                 typed->setValue(std::move(value));
                             }
@@ -77,7 +86,7 @@ namespace mo
                     auto typed = dynamic_cast<const ITControlParam<T>*>(param);
                     if (typed)
                     {
-                        return ct::convertToPython(typed->getValue());
+                        return ct::bp::convertToPython(typed->getValue());
                     }
                 }
 

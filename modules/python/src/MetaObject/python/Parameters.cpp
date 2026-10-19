@@ -1,4 +1,15 @@
 #define NPY_NO_DEPRECATED_API NPY_1_7_API_VERSION
+// Must precede every other include here: ct's std::operator<< (installed by
+// ct/reflect/print.hpp) SFINAE-probes ct::IsReflected<T> for any `os << t`
+// expression, which instantiates the primary ReflectImpl<T>. OpenCV's
+// cvstd.inl.hpp contains such an expression for cv::Mat (operator<< for
+// UMat), so the ReflectImpl<cv::Mat> specialization in ct/types/opencv.hpp
+// must already be declared by the time <opencv2/core.hpp> is first compiled.
+#include <ct/types/opencv.hpp>
+// Needed for the PythonConverter<T, 3, EnableIfReflected<T>> partial
+// specialization; without it the reflected registerToPython resolves to the
+// no-op PythonConverter<T, 0, void> base.
+#include <ct/interop/boost_python/ReflectedConverter.hpp>
 #include "Parameters.hpp"
 #include "MetaObject/core/TypeTable.hpp"
 #include "MetaObject/object/IMetaObject.hpp"
@@ -264,5 +275,11 @@ namespace mo
 
         boost::python::class_<mo::OptionalTime, boost::noncopyable> optional_time("OptionalTime");
         // optional_time.def("get", &getTime);
+
+        // cv::Point_ is ct-reflected in ct/types/opencv.hpp. Register the
+        // double instantiation with an explicit name: the derived type name
+        // ("cv::Point_<double>") would not produce "Point2d". The
+        // datatype_scope above keeps it in the datatypes module.
+        ct::bp::PythonConverter<cv::Point2d>::registerToPython("Point2d");
     }
 } // namespace mo

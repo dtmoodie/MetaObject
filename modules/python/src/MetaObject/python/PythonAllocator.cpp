@@ -7,42 +7,46 @@
 
 namespace ct
 {
-
-    boost::python::object PythonConverter<cv::Mat, 5, void>::convertToPython(const cv::Mat& mat)
+    namespace bp
     {
-        if (!mat.empty())
+
+        boost::python::object PythonConverter<cv::Mat, 5, void>::convertToPython(const cv::Mat& mat)
         {
-            auto alloc = dynamic_cast<const mo::NumpyAllocator*>(mat.u->currAllocator);
-            if (alloc)
+            if (!mat.empty())
             {
-                auto arr = alloc->toPython(mat);
-                if (arr)
+                auto alloc = dynamic_cast<const mo::NumpyAllocator*>(mat.u->currAllocator);
+                if (alloc)
                 {
-                    return boost::python::object(boost::python::handle<>(arr));
+                    auto arr = alloc->toPython(mat);
+                    if (arr)
+                    {
+                        return boost::python::object(boost::python::handle<>(arr));
+                    }
                 }
             }
+            return {};
         }
-        return {};
-    }
 
-    bool PythonConverter<cv::Mat, 5, void>::convertFromPython(const boost::python::object& obj, cv::Mat& result)
-    {
-        PyObject* o = obj.ptr();
-        if (PyArray_Check(o))
+        bool PythonConverter<cv::Mat, 5, void>::convertFromPython(const boost::python::object& obj, cv::Mat& result)
         {
-            auto alloc = dynamic_cast<mo::NumpyAllocator*>(cv::Mat::getDefaultAllocator());
-            if (alloc)
+            PyObject* o = obj.ptr();
+            if (PyArray_Check(o))
             {
-                result = alloc->fromPython(o);
-                return true;
+                auto alloc = dynamic_cast<mo::NumpyAllocator*>(cv::Mat::getDefaultAllocator());
+                if (alloc)
+                {
+                    result = alloc->fromPython(o);
+                    return true;
+                }
             }
+            return false;
         }
-        return false;
-    }
 
-    void PythonConverter<cv::Mat, 5, void>::registerToPython(const char*)
-    {
-    }
+        void PythonConverter<cv::Mat, 5, void>::registerToPython(const char*)
+        {
+        }
+
+    } // namespace bp
 
     PyEnsureGIL::PyEnsureGIL()
         : _state(PyGILState_Ensure())
