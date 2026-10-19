@@ -1,4 +1,10 @@
 find_package(OpenCV 3.0 QUIET COMPONENTS core)
+if(NOT OpenCV_FOUND)
+    # OpenCV 4+ generates its config version file with SameMajorVersion,
+    # which rejects a "3.0" request (major 3 != 4) and there is no
+    # find-time override, so retry without the version to accept OpenCV 4+.
+    find_package(OpenCV QUIET COMPONENTS core)
+endif()
 if(OpenCV_FOUND)
     set(MO_HAVE_OPENCV 1 CACHE BOOL INTERNAL FORCE)
     if(OpenCV_CUDA_VERSION)

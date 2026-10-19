@@ -440,8 +440,8 @@ namespace mo
                         --lower;
                         ts_lower = *lower->first.timestamp;
                     }
-                    const auto upperdelta = std::chrono::abs(*ts_upper - *hdr.timestamp);
-                    const auto lowerdelta = std::chrono::abs(*ts_lower - *hdr.timestamp);
+                    const auto upperdelta = mo::abs(*ts_upper - *hdr.timestamp);
+                    const auto lowerdelta = mo::abs(*ts_lower - *hdr.timestamp);
                     if (upperdelta < lowerdelta)
                     {
                         return upper->second.getData();

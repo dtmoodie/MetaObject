@@ -39,7 +39,11 @@ namespace mo
 
 }
 
-#if __GNUG__ && __GNUC__ < 5
+// GCC < 5 lacks std::is_trivially_copyable. Clang is excluded even where it
+// reports __GNUC__ < 5 (Ubuntu's clang claims __GNUC__ 4): it compiles
+// against libstdc++, which provides the trait, so specializing it in std
+// would be a redefinition.
+#if defined(__GNUG__) && !defined(__clang__) && __GNUC__ < 5
 
 
 

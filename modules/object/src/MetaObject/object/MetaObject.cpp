@@ -348,6 +348,16 @@ namespace mo
         {
             return;
         }
+        if (!m_stream)
+        {
+            // The constructor can only inherit the current fiber's stream,
+            // which is null on plain OS threads (python, console apps).
+            // Init() only runs through the factory once the SystemTable is
+            // up; it must not move to the constructor, because ct's
+            // MemberOffsetObject statics construct reflected instances
+            // before main().
+            m_stream = IAsyncStream::create();
+        }
         initParams(first_init);
         initSignals(first_init);
         bindSlots(first_init);

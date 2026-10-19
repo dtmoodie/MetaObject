@@ -28,12 +28,13 @@ int main()
         std::cout << info->Print() << std::endl;
     }
 
-    // Construct an object
-    mo::IMetaObject* obj = factory->create("ConcreteImplementation");
-    if (ExampleInterface* interface_object = dynamic_cast<ExampleInterface*>(obj))
+    // Construct an object. Keep the shared_ptr alive: factory->create returns
+    // an rcc::shared_ptr, whose implicit operator T*() would leave a dangling
+    // raw pointer once the temporary is destroyed at the end of the statement.
+    rcc::shared_ptr<mo::IMetaObject> obj = factory->create("ConcreteImplementation");
+    if (ExampleInterface* interface_object = dynamic_cast<ExampleInterface*>(obj.get()))
     {
         interface_object->foo();
     }
-    delete obj;
     return 0;
 }

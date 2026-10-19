@@ -40,9 +40,14 @@ namespace mo
         IPublisher* getPublisher();
         const IPublisher* getPublisher() const;
 
+      protected:
+        // TMultiOutput::publish (a derived-class member) writes this, so it
+        // cannot be private: the access is ill-formed and clang rejects it
+        // (gcc silently accepts it).
+        TypeInfo m_current_type = TypeInfo::Void();
+
       private:
         std::vector<IPublisher*> m_outputs;
-        TypeInfo m_current_type = TypeInfo::Void();
     };
 
     template <class... Types>

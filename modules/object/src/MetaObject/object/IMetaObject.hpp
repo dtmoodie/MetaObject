@@ -240,10 +240,14 @@ namespace mo
     template <class T>
     const ITControlParam<T>* IMetaObject::getParam(const std::string& name) const
     {
-        IControlParam* param = getParam(name);
+        // In a const member only the const getParam overload is callable, so
+        // the pointer is const throughout; the result is const anyway.
+        // (Binding it to a non-const pointer is ill-formed — clang rejects
+        // it, gcc silently accepts it.)
+        const IControlParam* param = getParam(name);
         if (param->getTypeInfo().isType<T>())
         {
-            ITControlParam<T>* typed = static_cast<ITControlParam<T>*>(param);
+            const ITControlParam<T>* typed = static_cast<const ITControlParam<T>*>(param);
             if (typed)
             {
                 return typed;

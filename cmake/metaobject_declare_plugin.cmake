@@ -27,6 +27,14 @@ macro(metaobject_declare_plugin tgt)
             RCC_MODULE ON
     )
 
+    # The runtime recompiler derives its -std from the INTERFACE compile features of
+    # linked targets (ct advertises cxx_return_type_deduction, which rcc_config.cmake
+    # translates to -std=c++14). The gtest vendored by the ct submodule requires C++17,
+    # and the recompiled TUs include gtest headers, so pin plugins to C++17: with
+    # CXX_STANDARD_REQUIRED set, RCC_TARGET_CONFIG appends -std=c++<CXX_STANDARD> after
+    # the derived flag, and the compiler takes the last -std.
+    set_target_properties(${tgt} PROPERTIES CXX_STANDARD 17 CXX_STANDARD_REQUIRED ON)
+
     TARGET_INCLUDE_DIRECTORIES(${tgt} PUBLIC ${CMAKE_CURRENT_LIST_DIR}/src)
     target_include_directories(${tgt}
         PUBLIC
