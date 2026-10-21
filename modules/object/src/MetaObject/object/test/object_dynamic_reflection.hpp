@@ -144,6 +144,13 @@ namespace mo
 
     // static reflection
 
+    template <class T, class U, class V, ct::Flag_t FLAGS, class MDATA>
+    void testStaticReflection(const IMetaObjectInfo&, ct::MemberPropertyPointer<U, V, FLAGS, MDATA>)
+    {
+        // properties (e.g. the IMetaObject stream property) have no runtime
+        // counterpart to check against, so there is nothing to assert
+    }
+
     template <class T, class U, class SIG, ct::Flag_t FLAGS, class MDATA>
     void testStaticReflection(const IMetaObjectInfo& info,
                               ct::MemberObjectPointer<mo::TSignal<SIG> U::*, FLAGS, MDATA> ptr)

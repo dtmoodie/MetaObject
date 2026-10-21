@@ -427,10 +427,14 @@ namespace mo
         {
             return makeConstructorHelper<T, 12, Storage, Creator>(ctr, param_names);
         }
-        case 13:
+        /*case 13:
         {
             return makeConstructorHelper<T, 13, Storage, Creator>(ctr, param_names);
         }
+        Disabled: boost.python cannot bind more than BOOST_PYTHON_MAX_ARITY (15) parameters,
+        and creators like aq::python::CreateNode add extra keyword arguments on top of the N
+        params, so N=13 overflows the signature machinery (signature_arity<N> is incomplete past
+        BOOST_PYTHON_MAX_ARITY).*/
         }
         return boost::python::object();
     }

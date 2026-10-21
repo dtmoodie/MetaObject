@@ -137,6 +137,17 @@ namespace mo
         using ConstPtr_t = std::shared_ptr<const TDataContainer<type>>;
         using Super_t = TDataContainerBase<typename ContainerTraits<T>::type, ContainerTraits<T>::CONST>;
 
+        // The data member is stored as the normalized ContainerTraits<T>::type
+        // (e.g. mo::vector for std::vector), but the parameter's type identity
+        // is the declared T (see TParamImpl<T>::getTypeInfo and
+        // TPublisher<T>::providesOutput), so report T. Otherwise a
+        // TSubscriber<std::vector<T>> silently drops data published through a
+        // TPublisher<std::vector<T>> because of the allocator-type mismatch.
+        TypeInfo getType() const override
+        {
+            return TypeInfo::create<T>();
+        }
+
         template <class... ARGS>
         TDataContainer(typename ParamAllocator::Ptr_t alloc, ARGS&&... args);
 
